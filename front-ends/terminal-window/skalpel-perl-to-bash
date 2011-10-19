@@ -1,0 +1,435 @@
+#!/usr/bin/perl
+
+##############################################################
+##############################################################
+##
+## Copyright 2010 Vincent Rahli
+## Copyright 2009, 2010 Steven Shiells
+##
+## skalpel is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This file is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+##
+## Authors: Steven Shiells, Vincent Rahli
+## Date: November 2009
+## Description: This is a perl script which transforms the
+##              perl output from Skalpel into
+##              bash format so that the slices can be
+##              displayed in a command-line terminal .
+##
+###############################################################
+###############################################################
+
+use strict;
+use warnings;
+use Switch;
+use File::Basename;
+
+
+# SML source file
+my $filein = $ARGV[0];
+# Perl output from Skalpel
+my $filepl = $ARGV[1];
+
+my %errorlist;
+
+## standard
+my $stand="\e[1;40;37m";
+my $title="\e[4;33m";
+
+## dark colours - normal
+my $red="\e[41m";
+my $purple="\e[45m";
+my $blue="\e[44m";
+my $green="\e[42m";
+my $yellow="\e[43m";
+my $cyan="\e[46m";
+my $gray="\e[47m";
+
+## dark colours - boxes
+my $boxRed="\e[4;31m";
+my $boxPurple="\e[4;35m";
+my $boxBlue="\e[4;34m";
+my $boxGreen="\e[4;32m";
+my $boxYellow="\e[4;33m";
+my $boxCyan="\e[4;36m";
+my $boxGray="\e[4;37m";
+
+## dark colours - nested boxes
+my $nestedBoxRed="\e[9;31m";
+my $nestedBoxPurple="\e[9;35m";
+my $nestedBoxBlue="\e[9;34m";
+my $nestedBoxGreen="\e[9;32m";
+my $nestedBoxYellow="\e[9;33m";
+my $nestedBoxCyan="\e[9;36m";
+my $nestedBoxGray="\e[9;37m";
+
+## reset colours
+my $endCol="\e[0m";
+my $resetCol=$endCol . $stand;
+
+my $prevline = 0;
+
+############################################
+## A function which prints the error regions
+############################################
+sub printRegions {
+    my (@regs) = @_;
+    foreach my $i (@regs) {
+	print "one\n";
+	my $nd = $i->{'node'};
+	my $l1 = $i->{'l1'};
+	my $c1 = $i->{'c1'};
+	my $l2 = $i->{'l2'};
+	my $c2 = $i->{'c2'};
+	my $co = $i->{'col'};
+	print "(" . $nd . "," . $l1 . "," . $c1 . "," . $l2 .  "," . $c2 . "," . $co .  ")\n";
+    }
+}
+
+##########################################################
+## A function which gets the line on which a region occurs
+##########################################################
+sub getRegsLine {
+    my ($regs, $line) = @_;
+    my @ret;
+    foreach my $i (@{$regs}) {
+	my $l1 = $i->{'l1'};
+	if ($l1 == $line) {
+	    push(@ret,$i);
+	}
+    }
+    return @ret;
+}
+############################################################
+## A function which gets the appropriate highlighting code
+## for a clash
+############################################################
+sub fromColToClash {
+    my ($col) = @_;
+    switch ($col) {
+	case "R" {return $red}
+	case "P" {return $cyan}
+	case "B" {return $blue}
+	case "G" {return $green}
+	case "Y" {return $yellow}
+	case "O" {return $purple}
+    }
+}
+###########################################################
+## A function which gets the appropriate highlighting code
+## for a clash (Box)
+###########################################################
+sub fromColToClashBox {
+    my ($col) = @_;
+    switch ($col) {
+	case "R" {return $boxRed}
+	case "P" {return $boxCyan}
+	case "B" {return $boxBlue}
+	case "G" {return $boxGreen}
+	case "Y" {return $boxYellow}
+	case "O" {return $boxPurple}
+    }
+}
+##########################################################
+## A function which gets the appropriate highlighting code
+##  for a clash (Nested Box)
+##########################################################
+sub fromColToClashNestedBox {
+    my ($col) = @_;
+    switch ($col) {
+	case "R" {return $nestedBoxRed}
+	case "P" {return $nestedBoxCyan}
+	case "B" {return $nestedBoxBlue}
+	case "G" {return $nestedBoxGreen}
+	case "Y" {return $nestedBoxYellow}
+	case "O" {return $nestedBoxPurple}
+    }
+}
+
+##########################################
+## A function which treats a lines of code
+##########################################
+sub treatLine {
+    my ($line, $regs, $pos, $isBox, $lineno) = @_;
+    my $newline;
+    my $boxCount = 0;
+    ## If there are some lines of code which are not related to the error
+    ## add some context to the error messages by showing the user that there
+    ## are some lines of code missing from what is being displayed.
+    if ($isBox) {}
+    else {
+ 	if ($prevline < ($lineno - 1)){
+	    my $missfrom = $prevline + 1;
+	    my $missto = $lineno - 1;
+	    if ($missfrom eq $missto){
+		$newline = "echo -e \"Line $missto:\t\t ...\"\n";
+	    }else{
+		$newline = "echo -e \"Lines $missfrom-$missto:\t ...\"\n";
+	    }
+ 	}
+	$newline .= "echo -en \"Line $lineno: ";
+    }
+    chomp $line;
+    ## Extract the details of the region and apply the appropraite highlighting
+    foreach my $reg (@{$regs}) {
+	my $nd = $reg->{'node'};
+	my $l1 = $reg->{'l1'};
+	my $c1 = $reg->{'c1'};
+	my $l2 = $reg->{'l2'};
+	my $c2 = $reg->{'c2'};
+	my $co = $reg->{'col'};
+	my $re = $reg->{'reg'};
+	switch ($nd) {
+	    ## If the region is a leaf (Normal Highlighting)
+	    case "L" {
+		my $st1 = substr ($line, $pos, $c1 - $pos - 1);
+		my $st2 = substr ($line, $c1 - 1, $c2 - $c1 + 1);
+		my $clashb = (fromColToClash $co);
+		my $clashe = "\e[40m";
+		$pos = $c2;
+		$newline .= $st1 . $clashb . $st2 . $clashe;
+	    }
+	    ## If the region is a node (Box)
+	    case "N" {
+		my $st1 = substr ($line, $pos, $c1 - $pos - 1);
+		my $st2 = treatLine (substr ($line, 0, $c2), $re, $c1 - 1, 1);
+		$boxCount++;
+		my $clashb;
+		## Keep track of whether or not the current box is within a box
+		if ($boxCount == 1){
+		    $clashb = (fromColToClashBox $co);
+		}else{
+		    $clashb = (fromColToClashNestedBox $co);
+		}
+		$boxCount--;
+		my $clashe = $resetCol;
+		$pos = $c2;
+		$newline .= $st1 . $clashb . $st2 . "echo -en \"" . $clashe;
+	    }
+	    ## If the region is a head (pipe)
+	    case "H" {
+		if ($c1 == $c2) {} else {die ("DeadBranch");} # for such a region the end and beginning have to be equal
+		my $st = substr ($line, $pos, $c1 - $pos - 1);
+		my $clashb = (fromColToClash $co);
+		my $clashe = $resetCol;
+		$pos = $c2 - 1;
+		$newline .= $st . $clashb . $clashe;
+	    }
+	}
+    }
+    if ($pos < (length $line)){
+	$newline .= substr ($line, $pos, (length $line) - $pos);
+    }
+    $newline .= "\"\n";
+    if ($isBox) {} else {$newline .= "echo\n";}
+    return $newline;
+}
+
+##########################################
+## A function which treats an error region
+##########################################
+sub treatRegions {
+    my ($file, $bname, $regs) = @_; # $regs is a pointer to a list of regions
+    open (FILE, $file) || die ("Could not open " . $file);
+    my @data = <FILE>;
+    close (FILE);
+    ## line number
+    my $cline = 1;
+    ## previos line number
+    $prevline = 0;
+    my @ret;
+    ## For each line of source SML code...
+    foreach my $line (@data) {
+	## Get the line of code for which the region applies.
+	my @lregs = getRegsLine ($regs, $cline);
+	## Treat the line.
+	my $treatedLine = treatLine ($line, \@lregs, 0, 0, $cline);
+	my $newline = $treatedLine;
+#	if (($bname ne "/usr/share/skalpel/basis.sml") || (@lregs)){
+	## If the line of code contains some error regions
+	## add it to the output.
+	if (@lregs){
+	    push (@ret, $newline);
+	    $prevline = $cline;
+	}
+	$cline += 1;
+    }
+    ## If there are some lines of code which are not related to the error
+    ## add some context to the error messages by showing the user that there
+    ## are some lines of code missing from what is being displayed. (EOF)
+    if ($prevline < ($cline - 1)){
+	my $endofcode;
+	my $missfrom = $prevline + 1;
+	my $missto = $cline - 1;
+	## Show the line numbers of the code that has been missed out.
+	if ($missfrom eq $missto){
+	    $endofcode = "echo -e \"Line $missto:\t\t ...\"\n";
+	}else{
+	    $endofcode = "echo -e \"Lines $missfrom-$missto:\t ...\"\n";
+	}
+	push (@ret, $endofcode);
+    }
+    ## Return the treated regions.
+    return @ret;
+}
+
+###############################################################
+## A function which treats the errors within a single perl file
+###############################################################
+sub treatError {
+    my ($file, $error, $shfile) = @_;
+    my $ret;
+    ## For each error contained in the perl file.
+    foreach my $err (@{$error}) {
+	## Get the different parts of the error.
+	my $aregs  = $err->{'regions'};
+	my $id     = $err->{'id'};
+	my $slice  = $err->{'slice'};
+	my $cds    = $err->{'assumptions'};
+	my $kind   = $err->{'kind'};
+	my $msg    = $kind->{'msg'};
+	my $remove = $err->{'remove'};
+	my @lines;
+	## Treat each of the regions in the error.
+	foreach my $oregs (@{$aregs}) {
+	    my $filein = $oregs->{'file'};
+	    my $regs = $oregs->{'regs'};
+	    my $bname = $filein;
+	    ## Determine whether the region belongs in the basis file or not and
+	    ## add an appropriate title to the section of the output.
+	    if ($bname eq "/usr/share/skalpel/basis.sml"){
+		push (@lines, "\necho -e \"" . $title . "Basis:" . $resetCol . "\"\n")
+	    }else{
+		push (@lines, "\necho -e \"" . $title . "Code:" . $resetCol . "\"\n")
+	    }
+	    ## Treat the region
+	    @lines = (@lines, treatRegions ($filein, $bname, $regs));
+	}
+
+	my @cds    = @{$cds};
+	## Remove any slices which the current slice replaces (merges).
+	my @remove = @{$remove};
+	$errorlist{$id} = $shfile;
+	foreach my $removefile (@remove){
+	    system ("rm $errorlist{$removefile}");
+	}
+	#### Error Type ####
+	$ret .= "#! /bin/bash\n";
+	$ret .= "\necho -e \"" . $stand . $title . $msg . ":" . $resetCol . "\"\n";
+	$ret .= "echo\n";
+	#### Highlighted Code ####
+	$ret .= "@lines";
+	$ret .= "echo\n";
+	#### Slice ####
+	$ret .= "\necho -e \"" . $title . "Slice:\n" . $resetCol;
+	$ret .= $slice;
+	$ret .= "\"\necho -e \"" . $resetCol . "\"";
+	#### Context Dependencies ####
+	my $dependTitle="\necho -e \"" . $title . "Context Dependencies:" . $resetCol . " ";
+	my $numOfCds = "";
+	$numOfCds = scalar(@cds);
+	switch ($numOfCds){
+	    ## There are no context dependencies.
+	    case 0 {
+		$ret .= "$endCol";
+	    }
+	    ## There is one context dependencies.
+	    case 1 {
+		my $dependTitle="\necho -e \"" . $title . "Context Dependency:" . $resetCol . " ";
+		$ret .= $dependTitle;
+		$ret .= "$cds[0] is neither a datatype nor an exception constructor.\"\n";
+	     	$ret .= "echo -e $endCol";
+	    }
+	    ## There are more than one context dependencies
+	    {
+		$ret .= $dependTitle;
+		foreach my $cd (@cds){
+		    $ret .= $cd . ", ";
+		}
+		$ret = substr ($ret, 0, -2);
+		$ret .= " are neither datatype nor exception constructors.\"\n";
+		$ret .= "echo -e $endCol";
+	    }
+	}
+    }
+    ## Return the formatted output.
+    return $ret;
+}
+
+
+##############################################################
+## A function which creates a bash output file for a perl file
+##############################################################
+sub treatFile {
+    my ($filein, $filepl) = @_;
+    ## Get the name of the shell file to store the output to.
+    my $filesh;
+    if ($filepl =~ /^.*\.pl$/) {
+	$filesh = substr ($filepl, 0, (length $filepl) - 3) . ".sh";
+    } else {
+	die "Not a perl file!";
+    }
+    ## Make sure we can open the apporpriate perl file.
+    require $filepl || die ("Could not open " . $filepl);
+    ## Get the error from the perl file.
+    my @error = getError ();
+    ## Treat the error.
+    my $sterrors = treatError ($filein, \@error, $filesh);
+    ## Store the processed error in the appropriate bash file
+    open (FILE, ">", $filesh) || die ("Could not open " . $filesh);
+    print FILE $sterrors;    close FILE;
+}
+
+##########################################################
+## A function which creates bash output files for a number
+## of perl files
+##########################################################
+sub treatFiles {
+    ## Get the sml source file and the perl input files
+    my ($filein, $filepl) = @_;
+    my $rootfile;
+    ## Get the basename of the perl input files
+    if ($filepl =~ /^.*\.pl$/) {
+	$rootfile = substr ($filepl, 0, (length $filepl) - 3);
+    } else {
+	die "Not a perl file!";
+    }
+    ## Counter keeps track of the number of next file to be processed.
+    my $counter = 1;
+    ## tempFile keeps track of the name of the next file to process.
+    my $tempFile = $rootfile . "-" . $counter . ".pl";
+    ## flag keeps track of whether or not any file has been processed.
+    my $flag = 0;
+    ## While temp file exists, process tempfile
+    while (-e $tempFile) {
+	$flag = 1;
+	treatFile ($filein, $tempFile);
+	$counter += 1;
+	$tempFile = $rootfile . "-" . $counter . ".pl";
+    }
+    ## If flag is 0 then no errors were found, create a shell script file
+    ## to display this information to the user.
+    if ($flag == 0){
+ 	my $noerrorfile = $rootfile . "-1.sh";
+ 	open (FILE, ">", $noerrorfile);
+	print FILE "#! /bin/bash\n";
+ 	print FILE "echo -e \"". $stand . $title . "No error was found\"" . $endCol . "\n";
+ 	close FILE;
+     }
+
+    my $fileFinished = $rootfile . "-finished.sh";
+    open (FILE, ">", $fileFinished) || die ("Could not open " . $fileFinished);
+    close FILE;
+}
+## Run the treat files function
+treatFiles ($filein, $filepl);

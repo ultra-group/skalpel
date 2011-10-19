@@ -1,0 +1,193 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Copyright 2009, 2010 Steven Shiells
+;; Copyright 2011 John Pirie
+;; Copyright 2011 Heriot-Watt University
+;;
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; * Authors: Steven Shiells
+;; * Affiliation: Heriot-Watt University, MACS
+;; * Date: 10 November 2009
+;; * Description: Help file explaining the details of how to use
+;;	Skalpel and  how to interprate its output
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+1 USING SKALPEL
+
+  1.1 RUNNING SKALPEL
+
+  NOTE: When running Skalpel, please ensure that all of the files you
+  intend to run Skalpel on are saved - otherwise Skalpel will not
+  execute.
+
+  1.1.1 RUNNING SKALPEL ON A SINGLE FILE:
+
+  	- Open Emacs.
+	- Load the SML file you wish to check.
+	- From the "Errors" menu select the "Run Skalpel" option.
+
+  1.1.2 RUNNING SKALPEL ON MULTIPLE FILES
+
+  	- Open Emacs.
+	- Load the Skalpel control file (.tes) or .CM file for the
+  	  files you wish to check.
+	- From the "Errors" menu select the "Run Skalpel" option.
+
+  NOTE: If you do not know what a Skalpel control file is
+  	please read section 1.6 Creating a Skalpel Control
+  	File.
+
+
+  1.2 VIEWING THE ERRORS
+
+  Skalpel reports any errors by highlighting sections of
+  the source code. There may be multiple errors per file, some of
+  which may highlight parts of the source code that are also
+  highlighted by some other errors. In order to distinguish between
+  the highlighting of one error from another, the type error slice
+  allows you to cycle through all of the errors one at a time.
+
+
+  1.2.1 VIEW THE NEXT ERROR SLICE
+
+  	- From the "Errors" menu select the "Next Slice" option.
+
+  1.2.2 VIEW THE PREVIOUS ERROR SLICE
+
+  	- From the "Errors" menu select the "Previous Slice" option.
+
+  1.2.3 NAVIGATING THROUGH THE DIFFERENT PARTS OF THE ERROR SLICE
+
+  Type Error Slices may be quite large and may be at the opposite end
+  of a file, or in different files altogether. In these cases, it may
+  not be possible to view the whole slice all at the one time. In
+  order to determine what the problem is, it may be necessary to view
+  all of parts of the slice. Skalpel allows the user to
+  cycle through the different parts of the error slice that are not
+  currently in visible on screen. Details on how to use this feature
+  can be seen below.
+
+        - From the "Errors" menu select the "Next Part of Slice" option.
+
+  1.2.4 VIEWING THE DETAILS OF THE ERROR
+
+  To view the details of the error, hover the mouse over a highlighted
+  section of code.  The details will be displayed after a few seconds
+  and will be displayed as a tool-tip.
+
+  1.3 REMOVING THE HIGHLIGHTING
+
+  1.3.1 REMOVING THE HIGHLIGHTING FROM THE CURRENT FILE
+
+  	- From the "Errors menu" select the
+	  "Remove Highlighting from Current File" option.
+
+  NOTE: The highlighting in the current file is automatically removed
+  	each time Skalpel is run, allowing for the new
+	highlighting to be displayed properly.
+
+  1.3.2 REMOVING THE HIGHLIGHTING FROM ALL FILES
+
+  	- From the "Errors" menu select the
+	  "Remove Highlighting from all Files" option.
+
+  1.4 TURN VERBOSE ERROR MESSAGES ON/OFF
+
+  Verbose error messages contain additional details of the errors
+  which may be useful for users who are not familiar with SML. We
+  allow users to decide whether or not they wish to display these
+  error messages. Details of how to turn the verbose error messages
+  on/off can be seen below.
+
+  1.4.1 TURNING VERBOSE ERROR MESSAGES ON
+
+  	- From the "Errors" menu SELECT the "Verbose Error Messages?"
+	  option.
+
+  1.4.2 TURNING VERBOSE ERROR MESSAGES OFF
+
+  	- From the "Errors" menu DESELECT the
+	  "Verbose Error Messages?" option.
+
+  1.5 CREATING A SKALPEL CONTROL FILE
+
+  A Skalpel control file is a file that allows the type
+  Skalpel uses to slice multiple files. It is essentially a file that
+  contains an ordered list of files you wish to run Skalpel on. The
+  steps needed to create a Skalpel control file are listed
+  below.
+
+	1. Create a new file with the ".tes" extension.
+	2. Add a list of files you wish to check - these files can
+	   either be SML (.sml) or other Skalpel control
+	   (.tes) files.
+	3. Save the file.
+
+  NOTE: The order in which you list the files is important. Please
+	list all files which depend on other files after the
+	files they depend on, otherwise some errors may not
+	be found.
+
+
+  1.6 USING SKALPEL WITH A LOCAL VERSION OF EMACS
+
+  In order to use Skalpel with a locally
+  installed version of Emacs you must load the file
+  '/usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-config.el'
+
+  To save the hassle of having to do this each time you start Emacs you
+  may wish to load this file in your .emacs(.el) file.
+
+  2 PERSONALISING SKALPEL
+
+  2.1 CHANGING COLOURS
+
+  In order to highlight the sections of source code we use a feature
+  of Emacs call "faces". A face can be used to change the way that
+  text can be displayed. We use a number of faces to display all of
+  the supported types of highlighting.
+
+  If you do not like the default colours (or any way the parts of the
+  code are highlighted) then you can edit them to something that you
+  feel more comfortable with. If you wish to change any of the
+  features you can do so by using Emacs customize-faces command and
+  selecting the face you wish to edit. A list of the faces that we use
+  can be seen below;
+
+  skalpel-standard-error-focus
+  skalpel-standard-error-non-focus
+  skalpel-standard-error-box-focus
+  skalpel-standard-error-box-non-focus
+  skalpel-standard-error-head-focus
+  skalpel-end-point-one-focus
+  skalpel-end-point-one-non-focus
+  skalpel-end-point-one-box-focus
+  skalpel-end-point-one-box-non-focus
+  skalpel-end-point-one-head-focus
+  skalpel-end-point-two-focus
+  skalpel-end-point-two-nonfocus
+  skalpel-end-point-two-box-focus
+  skalpel-end-point-two-box-nonfocus
+  skalpel-end-point-two-head-focus
+  skalpel-merged-regions-focus
+  skalpel-merged-regions-non-focus
+  skalpel-merged-regions-box-focus
+  skalpel-merged-regions-box-non-focus
+  skalpel-further-explanations-focus
+  skalpel-further-explanation-non-focus
+  skalpel-further-explanations-box-focus
+  skalpel-further-explanation-box-non-focus
+  skalpel-parsing-error-focus
+  skalpel-parsing-error-non-focus
