@@ -1,0 +1,66 @@
+X-From-Line: dieselpower44@me.com  Sun Oct 16 01:18:11 2011
+Return-path: <dieselpower44@me.com>
+Envelope-to: jbw@macs.hw.ac.uk
+Delivery-date: Sun, 16 Oct 2011 01:18:17 +0100
+Received: from nk11p99mm-asmtpout003.mac.com ([17.158.233.224]:44244)
+	by izanami.macs.hw.ac.uk with esmtp (Exim 4.72)
+	(envelope-from <dieselpower44@me.com>)
+	id 1RFEQi-0000YH-PZ
+	for jbw@macs.hw.ac.uk; Sun, 16 Oct 2011 01:18:17 +0100
+MIME-version: 1.0
+Content-type: multipart/alternative;
+ boundary="Boundary_(ID_jWuKeEvQ25uUTfFiRlqP3A)"
+Received: from [192.168.0.3] (5ac6fd5d.bb.sky.com [90.198.253.93])
+ by nk11p99mm-asmtp003.mac.com
+ (Oracle Communications Messaging Exchange Server 7u4-22.01 64bit (built Apr 21
+ 2011)) with ESMTPSA id <0LT400KCYU6DEYB0@nk11p99mm-asmtp003.mac.com> for
+ jbw@macs.hw.ac.uk; Sat, 15 Oct 2011 17:18:16 -0700 (PDT)
+X-Proofpoint-Virus-Version: vendor=fsecure
+ engine=2.50.10432:5.4.6813,1.0.211,0.0.0000
+ definitions=2011-10-15_06:2011-10-15,2011-10-15,1970-01-01 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0
+ ipscore=0 suspectscore=2 phishscore=0 bulkscore=0 adultscore=0 classifier=spam
+ adjust=0 reason=mlx scancount=1 engine=6.0.2-1012030000
+ definitions=main-1110150330
+From: Scott Fotheringham <dieselpower44@me.com>
+X-Mailer: iPhone Mail (9A334)
+X-Gnus-Mail-Source: pop:jbw@127.0.0.1
+Message-id: <03378E20-A610-4E7B-A7C2-5F398ECA38EA@me.com>
+Date: Sun, 16 Oct 2011 01:18:11 +0100
+To: Joe Wells <jbw@macs.hw.ac.uk>
+X-SA-Exim-Connect-IP: 17.158.233.224
+X-SA-Exim-Mail-From: dieselpower44@me.com
+X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on
+	izanami.macs.hw.ac.uk
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.8 required=7.0 tests=AWL,BAYES_00,GREYLIST_ISWHITE,
+	HTML_FONT_FACE_BAD,HTML_MESSAGE,SPF_SOFTFAIL autolearn=ham version=3.3.1
+Subject: GPL License Agreement
+X-SA-Exim-Version: 4.2.1 (built Mon, 13 Dec 2010 16:16:31 +0000)
+X-SA-Exim-Scanned: Yes (on izanami.macs.hw.ac.uk)
+Status:   
+X-Content-Length: 1201
+Lines: 21
+Xref: jbw mail.misc:134598
+
+
+--Boundary_(ID_jWuKeEvQ25uUTfFiRlqP3A)
+Content-type: text/plain; CHARSET=US-ASCII
+Content-transfer-encoding: 7BIT
+
+I hereby permit redistribution and/or modification of all files I wrote
+in 2010 and 2011 as part of my work on type error slicing  under the
+terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+--
+Scott
+
+--Boundary_(ID_jWuKeEvQ25uUTfFiRlqP3A)
+Content-type: text/html; CHARSET=US-ASCII
+Content-transfer-encoding: 7BIT
+
+<html><head></head><body bgcolor="#FFFFFF"><div></div><div>I hereby permit redistribution and/or modification of all files I wrote<br><span>in 2010 and 2011 as part of my work on type error slicing &nbsp;under the</span><br><span>terms of the GNU General Public License as published by the Free</span><br><span>Software Foundation, either version 3 of the License, or (at your</span><br>option) any later version.<br><br><div><font class="Apple-style-span" face="'.Helvetica NeueUI'" size="4">--</font></div><div><font class="Apple-style-span" face="'.Helvetica NeueUI'" size="4">Scott</font></div></div></body></html>
+
+--Boundary_(ID_jWuKeEvQ25uUTfFiRlqP3A)--

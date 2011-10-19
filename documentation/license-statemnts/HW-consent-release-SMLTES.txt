@@ -1,0 +1,24 @@
+12 May 2010
+
+TO WHOM IT MAY CONCERN
+
+On behalf of Heriot-Watt University, I confirm that the university consents to
+the distribution of the ULTRA SML Type Error Slicer software and any improvements,
+updates and amendments relating to that software, free of charge, under the GNU
+General Public License.
+
+For and on behalf of Heriot-Watt University
+
+[signature]
+
+D G Brown
+Legal Services Manager
+
+Email D.G.Brown@hw.ac.uk
+Tel 0131 451 3405
+Fax 0131 451 3193
+
+DGB/HC
+
+cc Dr Joe Wells
+   Dr Vincent Rahli

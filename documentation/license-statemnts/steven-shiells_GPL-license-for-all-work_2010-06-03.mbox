@@ -1,0 +1,297 @@
+X-From-Line: ss215@hw.ac.uk  Thu Jun 3 20:14:21 2010
+Return-path: <ss215@hw.ac.uk>
+Envelope-to: jbw@macs.hw.ac.uk
+Delivery-date: Thu, 03 Jun 2010 20:16:34 +0100
+Received: from mail-r.hw.ac.uk ([137.195.101.217]:38434)
+	by izanami.macs.hw.ac.uk with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <ss215@hw.ac.uk>)
+	id 1OKFu6-0008PA-BP; Thu, 03 Jun 2010 20:16:34 +0100
+Received: from ex5.mail.win.hw.ac.uk ([137.195.170.205])
+	by mail-r.hw.ac.uk with esmtp (Exim 4.69)
+	(envelope-from <ss215@hw.ac.uk>)
+	id 1OKFu2-0000dZ-8n; Thu, 03 Jun 2010 20:16:30 +0100
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01CB0351.3DBE81B5"
+Subject: RE: copyright and license for TES files
+Date: Thu, 3 Jun 2010 20:14:21 +0100
+X-Gnus-Mail-Source: pop:jbw@127.0.0.1
+Message-ID: <E80EE8E9730A4149B9B570ABCFEDE14A0373312B@ex5.mail.win.hw.ac.uk>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: copyright and license for TES files
+Thread-Index: AcsDBqu4gaSTBY+QR8Gp1jx30e115gASkzqE
+References: <1149282036-1275552503-cardhu_decombobulator_blackberry.rim.net-1333462922-@bda2190.bisx.produk.on.blackberry> <86mxvcct5o.fsf@macs.hw.ac.uk>
+From: "Shiells, Steven" <ss215@hw.ac.uk>
+To: "Joe Wells" <jbw@macs.hw.ac.uk>
+Cc: <rahli@macs.hw.ac.uk>
+X-HW-MailScanner-Information: Please contact the HW Helpdesk for more information
+X-HW-MailScanner: Found to be clean
+X-HW-MailScanner-SpamCheck: not spam, SpamAssassin (score=-2.598, required 5,
+	autolearn=not spam, BAYES_00 -2.60, HTML_MESSAGE 0.00)
+X-HW-MailScanner-From: ss215@hw.ac.uk
+X-SA-Do-Not-Run: Yes
+X-SA-Exim-Connect-IP: 137.195.101.217
+X-SA-Exim-Mail-From: ss215@hw.ac.uk
+X-SA-Exim-Scanned: No (on izanami.macs.hw.ac.uk); SAEximRunCond expanded to false
+Status:  O
+X-Content-Length: 7436
+Lines: 253
+Xref: localhost.localdomain mail.misc:127973
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01CB0351.3DBE81B5
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+  I hereby permit redistribution and/or modification of all files
+I wrote in 2009 and 2010 as part of my work on type error slicing
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+Regards
+
+Steven Shiells
+
+-----Original Message-----
+From: Joe Wells [mailto:jbw@macs.hw.ac.uk]
+Sent: Thu 03/06/2010 11:22
+To: Shiells, Steven
+Cc: rahli@macs.hw.ac.uk; dd35@macs.hw.ac.uk; jp95@macs.hw.ac.uk
+Subject: Re: copyright and license for TES files
+=20
+ss215@hw.ac.uk writes:
+
+> Fine with me.
+
+Great, Steven!
+
+It would be a big help if you could put your statement in a legally
+unambiguous form, because what you've written could easily be subject
+to adverse interpretation in court.  Something like this would be
+good:
+
+  I hereby permit redistribution and/or modification of XXX under the
+  terms of the GNU General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your
+  option) any later version.
+
+The placeholder XXX could be replaced by something like "the file
+sml-tes-dev-config.el (which I wrote in 2009 and 2010)", or "all files
+I wrote in 2009 and 2010 as part of my work on type error slicing".
+
+The statement would need to be phrased as coming from you.  If you
+reply to this message saying merely "I agree", that could be
+interpreted adversely in court.
+
+Would you do that for us?  It would be really helpful if we could
+actually use your code!
+
+--=20
+Joe
+
+> Cheers
+>
+> Steven
+> ------Original Message------
+> From: Joe Wells
+> To: rahli@macs.hw.ac.uk
+> Cc: dd35@macs.hw.ac.uk
+> Cc: ss215@macs.hw.ac.uk
+> Cc: jp95@macs.hw.ac.uk
+> Subject: Re: copyright and license for TES files
+> Sent: 3 Jun 2010 08:52
+>
+> Joe Wells <jbw@macs.hw.ac.uk> writes:
+>
+>> Hi, Vincent,
+>>
+>> I notice you marked sml-tes-main.el as being partially copyright by
+>> Dave.  Do we have Dave's agreement to license his contributions to
+>> this file under the GNU GPL?  If not, we have to remove this before
+>> distributing.
+>
+> I notice that you also added a license statement to
+> sml-tes-dev-config.el, which was marked as copyrighted by Steven.  So
+> we also do not have confirmation that Steven agrees to this licensing.
+>
+> It is *not* okay to put words into other peoples mouths.  Only Steven
+> can agree to license things whose copyright he owns.
+>
+> Can you please get the necessary confirmations from Steven and Dave
+> for any such licensing statements?
+>
+> --=20
+> Thanks,
+>
+> Joe
+>
+>> I'm assuming if someone makes a git commit of a file containing a
+>> statement that they have copyright and that the file is licensed =
+under
+>> the GPL, then this means they agree with this licensing.  However, in
+>> this case, the commit is not by Dave, so we do not have confirmation
+>> of agreement to license just from this git commit.
+>>
+>> --=20
+>> Joe
+>
+>
+> Sent from my BlackBerry=AE wireless device
+
+
+------_=_NextPart_001_01CB0351.3DBE81B5
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
+charset=3Diso-8859-1">
+<META NAME=3D"Generator" CONTENT=3D"MS Exchange Server version =
+6.5.7652.24">
+<TITLE>RE: copyright and license for TES files</TITLE>
+</HEAD>
+<BODY>
+<!-- Converted from text/plain format -->
+
+<P><FONT SIZE=3D2>Hi,<BR>
+<BR>
+&nbsp; I hereby permit redistribution and/or modification of all =
+files<BR>
+I wrote in 2009 and 2010 as part of my work on type error slicing<BR>
+&nbsp; under the terms of the GNU General Public License as published =
+by<BR>
+&nbsp; the Free Software Foundation, either version 3 of the License, =
+or<BR>
+&nbsp; (at your option) any later version.<BR>
+<BR>
+Regards<BR>
+<BR>
+Steven Shiells<BR>
+<BR>
+-----Original Message-----<BR>
+From: Joe Wells [<A =
+HREF=3D"mailto:jbw@macs.hw.ac.uk">mailto:jbw@macs.hw.ac.uk</A>]<BR>
+Sent: Thu 03/06/2010 11:22<BR>
+To: Shiells, Steven<BR>
+Cc: rahli@macs.hw.ac.uk; dd35@macs.hw.ac.uk; jp95@macs.hw.ac.uk<BR>
+Subject: Re: copyright and license for TES files<BR>
+<BR>
+ss215@hw.ac.uk writes:<BR>
+<BR>
+&gt; Fine with me.<BR>
+<BR>
+Great, Steven!<BR>
+<BR>
+It would be a big help if you could put your statement in a legally<BR>
+unambiguous form, because what you've written could easily be =
+subject<BR>
+to adverse interpretation in court.&nbsp; Something like this would =
+be<BR>
+good:<BR>
+<BR>
+&nbsp; I hereby permit redistribution and/or modification of XXX under =
+the<BR>
+&nbsp; terms of the GNU General Public License as published by the =
+Free<BR>
+&nbsp; Software Foundation, either version 3 of the License, or (at =
+your<BR>
+&nbsp; option) any later version.<BR>
+<BR>
+The placeholder XXX could be replaced by something like &quot;the =
+file<BR>
+sml-tes-dev-config.el (which I wrote in 2009 and 2010)&quot;, or =
+&quot;all files<BR>
+I wrote in 2009 and 2010 as part of my work on type error =
+slicing&quot;.<BR>
+<BR>
+The statement would need to be phrased as coming from you.&nbsp; If =
+you<BR>
+reply to this message saying merely &quot;I agree&quot;, that could =
+be<BR>
+interpreted adversely in court.<BR>
+<BR>
+Would you do that for us?&nbsp; It would be really helpful if we =
+could<BR>
+actually use your code!<BR>
+<BR>
+--<BR>
+Joe<BR>
+<BR>
+&gt; Cheers<BR>
+&gt;<BR>
+&gt; Steven<BR>
+&gt; ------Original Message------<BR>
+&gt; From: Joe Wells<BR>
+&gt; To: rahli@macs.hw.ac.uk<BR>
+&gt; Cc: dd35@macs.hw.ac.uk<BR>
+&gt; Cc: ss215@macs.hw.ac.uk<BR>
+&gt; Cc: jp95@macs.hw.ac.uk<BR>
+&gt; Subject: Re: copyright and license for TES files<BR>
+&gt; Sent: 3 Jun 2010 08:52<BR>
+&gt;<BR>
+&gt; Joe Wells &lt;jbw@macs.hw.ac.uk&gt; writes:<BR>
+&gt;<BR>
+&gt;&gt; Hi, Vincent,<BR>
+&gt;&gt;<BR>
+&gt;&gt; I notice you marked sml-tes-main.el as being partially =
+copyright by<BR>
+&gt;&gt; Dave.&nbsp; Do we have Dave's agreement to license his =
+contributions to<BR>
+&gt;&gt; this file under the GNU GPL?&nbsp; If not, we have to remove =
+this before<BR>
+&gt;&gt; distributing.<BR>
+&gt;<BR>
+&gt; I notice that you also added a license statement to<BR>
+&gt; sml-tes-dev-config.el, which was marked as copyrighted by =
+Steven.&nbsp; So<BR>
+&gt; we also do not have confirmation that Steven agrees to this =
+licensing.<BR>
+&gt;<BR>
+&gt; It is *not* okay to put words into other peoples mouths.&nbsp; Only =
+Steven<BR>
+&gt; can agree to license things whose copyright he owns.<BR>
+&gt;<BR>
+&gt; Can you please get the necessary confirmations from Steven and =
+Dave<BR>
+&gt; for any such licensing statements?<BR>
+&gt;<BR>
+&gt; --<BR>
+&gt; Thanks,<BR>
+&gt;<BR>
+&gt; Joe<BR>
+&gt;<BR>
+&gt;&gt; I'm assuming if someone makes a git commit of a file containing =
+a<BR>
+&gt;&gt; statement that they have copyright and that the file is =
+licensed under<BR>
+&gt;&gt; the GPL, then this means they agree with this licensing.&nbsp; =
+However, in<BR>
+&gt;&gt; this case, the commit is not by Dave, so we do not have =
+confirmation<BR>
+&gt;&gt; of agreement to license just from this git commit.<BR>
+&gt;&gt;<BR>
+&gt;&gt; --<BR>
+&gt;&gt; Joe<BR>
+&gt;<BR>
+&gt;<BR>
+&gt; Sent from my BlackBerry=AE wireless device<BR>
+<BR>
+</FONT>
+</P>
+
+</BODY>
+</HTML>
+------_=_NextPart_001_01CB0351.3DBE81B5--
+
