@@ -1,0 +1,8 @@
+*.log
+*.aux
+*.dvi
+*.pdf
+*.ps
+*.toc
+user-guide.pdf.gz
+user-guide-simple.tex

@@ -1,0 +1,1222 @@
+
+\documentclass{article}
+
+\input{jbw-switch}
+
+\usepackage{graphicx}
+\usepackage{a4}
+
+\DeclareSwitch{incolor} % true to have colors such as comments in color
+\DeclareSwitch{comm}    % true to print display the comments
+
+% my switches
+
+\incolortrue
+\commfalse
+
+\input{macros-steven}
+
+\title{User Guide for a Type Error Slicer for SML}
+\author{Steven Shiells\\ John Pirie}
+\date{\today}
+
+\begin{document}
+
+
+\maketitle
+\vspace{110mm}
+\small{
+\noindent \textcopyright 2009 Steven Shiells, \textcopyright 2009 Vincent Rahli, \textcopyright 2010, 2011 John Pirie
+\\
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled "GNU Free
+Documentation License".}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+\textbf{\LARGE User Guide}
+
+\section{Using Skalpel in Emacs}
+
+%%%%%%%% RUNNING SKALPEL %%%%%%%%
+
+\subsection{Running Skalpel}
+
+%% \note{When running Skalpel, please ensure that all of
+%%  the files you intend to run Skalpel on are saved -
+%%  otherwise Skalpel will not execute.}
+
+\subsubsection{Running Skalpel on a Single File}
+
+\begin{itemize}
+\item Open Emacs.
+\item Load the SML file you wish to check.
+\item From the \textbf{Errors} menu select the \textbf{Run Slicer}
+  option (or alternatively press \incodebody{F6}).
+\end{itemize}
+
+\subsubsection{Running Skalpel on Multiple Files}
+
+\begin{itemize}
+\item Open Emacs.
+\item Load Skalpel control file (\incodebody{.tes}) for
+  the files you wish to check.
+
+\note{If you do not know what a type error slicer control file is
+  please read Section~\ref{sec:skalpel-control-files}.}
+\item From the \textbf{Errors} menu select the \textbf{Run Slicer}
+  option (or alternatively press \incodebody{F6}).
+\end{itemize}
+
+%%%%%%%% VIEWING THE ERRORS %%%%%%%%
+
+\subsection{Viewing the Errors}
+
+Skalpel reports any errors by highlighting sections of
+the source code. There may be multiple errors per file, some of which
+may highlight parts of the source code that are also highlighted by
+some other errors. In order to distinguish between the highlighting
+of one error from another, the type error slice allows you to cycle
+through all of the errors one at a time.
+
+\subsubsection{View the Next Error Slice}
+
+\begin{itemize}
+\item From the \textbf{Errors} menu select the \textbf{Next Slice}
+  option (or alternatively press \incodebody{F7}).
+\end{itemize}
+
+\subsubsection{View the Previous Error Slice}
+
+\begin{itemize}
+\item From the \textbf{Errors} menu select the \textbf{Previous Slice}
+  option (or alternatively press \incodebody{F8}).
+\end{itemize}
+
+\subsubsection{Navigating Through the Different Parts of the Error Slice}
+Type Error Slices may be quite large and may be at the opposite end of
+a file, or in different files altogether. In these cases, it may not
+be possible to view the whole slice all at the one time. In order to
+determine what the problem is, it may be necessary to view all of
+parts of the slice. Skalpel allows the user to cycle
+through the different parts of the error slice that are not currently
+in visible on screen. Details on how to use this feature can be seen below.
+
+\begin{itemize}
+\item From the \textbf{Errors} menu select the \textbf{Next Part of
+  Slice} option (or alternatively press \incodebody{Shift-F7}).
+\end{itemize}
+
+\subsubsection{Viewing the Details of the Error}
+
+\begin{itemize}
+\item Details of an error are automatically shown via a buffer which
+  appears whenever the slicer is ran. If the user does not wish to see
+  details of the error, they can disable this by unchecking the menu
+  item \texttt{Type Error Slicer -> Slicing -> Automatically display
+    slice information}.
+\end{itemize}
+
+\subsection{Removing basis information during overloading errors}
+\begin{itemize}
+\item When encountering overloading errors, a lot of the information
+  which is related to the errors lies in the basis. While this
+  information is needed for correctness, there can be quite a lot of
+  information to display and it is often of little help. In order to
+  hide this information, make sure the \texttt{Type Error Slicing ->
+    Slicing -> Show basis information for overloading errors} checkbox
+  is not ticked.
+\end{itemize}
+
+%%%%%%%% REMOVING THE HIGHLIGHTING %%%%%%%%
+
+\subsection{Removing the Highlighting}
+
+\subsubsection{Removing the Highlighting from the Current File}
+
+\begin{itemize}
+\item From the \textbf{Errors} menu select the \textbf{Remove
+  Highlighting from Current File} option (or alternatively press
+  \incodebody{F9}).
+\end{itemize}
+
+\subsubsection{Removing the Highlighting from all Files}
+
+\begin{itemize}
+\item From the \textbf{Errors} menu select the \textbf{Remove
+  Highlighting from all Files} option (or alternatively press
+  \incodebody{F10}).
+\end{itemize}
+
+\note{All highlighting in all the files are automatically removed
+  each time Skalpel is run, allowing for the new
+  highlighting to be displayed properly.}
+
+\subsection{Turn Verbose Error Messages On/Off}
+
+Verbose error messages contain additional details of the errors which
+may be useful for users who are not familiar with SML.  We allow users
+to decide whether or not they wish to display these error messages.
+Details of how to turn the verbose error messages on/off can be seen
+below.  Note that verbosity of error messages only affect whether a
+buffer includes explanations on the kind of the error in focus and
+explanations on the colours used in the highlighting.
+
+\subsubsection{Turning Verbose Error Messages On}
+
+  \begin{itemize}
+  \item From the \textbf{Errors}
+    menu select the \textbf{Verbose Error Messages?} option.
+  \end{itemize}
+
+\subsubsection{Turning Verbose Error Messages Off}
+
+  \begin{itemize}
+  \item From the \textbf{Errors} menu
+    deselect the \textbf{Verbose Error Messages?} option.
+  \end{itemize}
+
+%%%%%%%% MAKING THE SLICER EASIER TO USE %%%%%%%%
+
+\subsection{Making Skalpel Easier to Use}
+
+\textbf{NOTE:} You may wish to set up some key bindings that will
+allow you to operate Skalpel without the need to
+constantly selecting menu items (it can become a pain).  All of the
+code that you need to do this is supplied and can be found in the
+\incodebody{skalpel-config.el} file in the \incodebody{EmacsUI} folder.
+For details on how to make the key bindings active, please see
+Section~\ref{sec:setting-key-bindings}.
+
+%%%%%%%% CREATING A TES CONTROL FILE %%%%%%%%
+
+\subsection{Creating a Type Error Slicer Control File}
+\label{sec:skalpel-control-files}
+
+A type error slicer control file is a file that allows Skalpel to
+slice multiple files. It is essentially a file that contains an
+ordered list of files you wish to run the slicer on. The steps needed
+to create a type error slicer control file are listed below.
+
+\begin{enumerate}
+\item Create a new file with the \incodebody{.tes} extension.
+\item Add a list of files you wish to check - these files can either
+  be SML (\incodebody{.sml}) or other type error slicer control
+  (\incodebody{.tes}) files.
+
+\note{The order in which you list the files is important.  Please list
+  all files which depend on other files \textbf{after} the files they
+  depend on, otherwise some errors may not be found.  Listing files in
+  the wrong order in a \incodebody{.tes} file may also cause false
+  errors to be found.}
+\item Save the file.
+\end{enumerate}
+
+\todo{2009-07-01}{Change section number of ``intergrating the type
+  error slicer with emacs'' as the installation guide changes}
+
+\newpage
+
+%%%%%%%%% PERSONALISING SKALPEL %%%%%%%%%%
+
+\section{Personalising Skalpel}
+
+%%%%%%%%% SETTING UP KEY BINDINGS %%%%%%%%%%
+
+\subsection{Setting up Key Bindings}
+\label{sec:setting-key-bindings}
+
+Constantly having to select menu items when trying to use the type
+error slicer can become painstakingly annoying.  To stop this from
+happening we set up default key bindings for the features of the type
+error slicer.
+
+%% (You may be wondering why we do not set up key-bindings
+%% automatically. The reason for this is that there is a high possibility
+%% a lot of the people who wish to use Skalpel will have
+%% set up their own key bindings for other purposes. With no way of
+%% guaranteeing that the key bindings we choose that are not being used
+%% by any user of Emacs anywhere in the world, we felt it would be left
+%% to the user to decide; if they wish to use key bindings at all, and if
+%% they do, then they can choose bindings that suits them.)
+
+Our default key bindings are set up in the file
+\incodebody{emacs-config.el} (which can be found in the
+\incodebody{EmacsUI} in Skalpel directory) and are only
+active in SML modes (the SML program editing mode and the mode for
+interacting with a running SML implementation).
+
+%% is all of the code you need to set up the
+%% bindings, all you need to do is remove the appropriate comments and
+%% change the key bindings if you so wish.
+
+\medskip
+An example of setting up a key-binding can be seen below.
+
+In the file \incodebody{emacs-config.el} there will be a number of
+pieces of code that look like;
+\codebody{\Bl(define-key map [f6] 'skalpel-run-slicer-exec)\El}
+
+If \incodebody{F6} does not suit you and you wish to use another
+binding such as \incodebody{CONTROL-F6}, you have to change the
+code between the square brackets.  The binding would then be:
+
+\codebody{\Bl(define-key map [C-f6] 'skalpel-run-slicer-exec)\El}
+
+\medskip
+Below is the part of our code which sets key bindings (extracted from
+the \incodebody{emacs-config.el} file):
+
+\codebody{
+  \Bl
+  \redtext{;; Make "F6" run Skalpel.}\\
+  (define-key map [f6] 'skalpel-run-slicer-exec)\\
+  \redtext{;; Make "F7" display the next error slice.}\\
+  (define-key map [f7] 'skalpel-next-slice)\\
+  \redtext{;; Make "Shift-F7" display the next part of the slice currently in focus.}\\
+  (define-key map [S-f7] 'skalpel-next-part-of-slice)\\
+  \redtext{;; Make "F8" display the previous error slice.}\\
+  (define-key map [f8] 'skalpel-prev-slice)\\
+  \redtext{;; Make "F9" remove all of the error slices from the current file.}\\
+  (define-key map [f9] 'skalpel-forget-all-slices-file)\\
+  \redtext{;; Make "F10" remove all of the error slices from all files.}\\
+  (define-key map [f10] 'skalpel-forget-all-slices)\\
+  \redtext{;; Make "F11" display the help buffer.}\\
+  (define-key map [f11] 'skalpel-show-help))
+  \El
+}
+
+
+\newpage
+
+%%%%%%%%% CHANGING COLOURS %%%%%%%%%%
+
+\subsection{Changing Colours}
+
+In order to highlight the sections of source code we use a feature of
+Emacs call ``faces''. A face can be used to change the way that text
+can be displayed. We use a number of faces to display all of the
+supported types of highlighting.
+
+If you do not like the default colours (or any way the parts of the
+code are highlighted) then you can edit them to something that you
+feel more comfortable with. If you wish to change any of the features
+you can do so by using Emacs \incodebody{customize-faces} command and
+selecting the face you wish to edit. A list of the faces that we use
+and an example of what they look like can be seen below;
+
+\medskip
+
+\textbf{The list of Faces used to highlight sections of source code in
+  Emacs;}
+
+\begin{center}
+  \begin{tabular*}{0.75\textwidth}{@{\extracolsep{\fill}}  l l}
+    \multicolumn{1}{c}{\textbf{Name of Face}} &
+    \multicolumn{1}{c}{\textbf{Example of Face}} \\
+    skalpel-standard-error-focus &
+    \incodebody{\boxR{highlighted code}} \\
+    skalpel-standard-error-non-focus &
+    \incodebody{\examplebox{mypink}{highlighted code}} \\
+    skalpel-standard-error-box-focus &
+    \incodebody{\fboxR{highlighted code}} \\
+    skalpel-standard-error-box-non-focus &
+    \incodebody{\examplefbox{mypink}{highlighted code}} \\
+    skalpel-standard-error-head-focus &
+    \incodebody{\boxR{\whitetext{\textbf{highlighted code}}}} \\
+    skalpel-end-point-one-focus &
+    \incodebody{\boxB{highlighted code}} \\
+    skalpel-end-point-one-non-focus &
+    \incodebody{\examplebox{mylightblue}{highlighted code}} \\
+    skalpel-end-point-one-box-focus &
+    \incodebody{\fboxB{highlighted code}} \\
+    skalpel-end-point-one-box-non-focus &
+    \incodebody{\examplefbox{mylightblue}{highlighted code}} \\
+    skalpel-end-point-one-head-focus &
+    \incodebody{\boxB{\whitetext{\textbf{highlighted code}}}} \\
+    skalpel-end-point-two-focus &
+    \incodebody{\boxEnd{highlighted code}} \\
+    skalpel-end-point-two-nonfocus &
+    \incodebody{\examplebox{ltgray}{highlighted code}} \\
+    skalpel-end-point-two-box-focus &
+    \incodebody{\fboxEnd{highlighted code}} \\
+    skalpel-end-point-two-box-nonfocus &
+    \incodebody{\examplefbox{ltgray}{highlighted code}} \\
+    skalpel-end-point-two-head-focus &
+    \incodebody{\boxEnd{\whitetext{\textbf{highlighted code}}}} \\
+    skalpel-merged-regions-focus &
+    \incodebody{\boxG{highlighted code}} \\
+    skalpel-merged-regions-non-focus &
+    \incodebody{\examplebox{mylightgreen}{highlighted code}} \\
+    skalpel-further-explanations-focus &
+    \incodebody{\boxP{highlighted code}} \\
+    skalpel-further-explanation-non-focus &
+    \incodebody{\examplebox{mylightpurple}{highlighted code}} \\
+    skalpel-further-explanations-box-focus &
+    \incodebody{\fboxP{highlighted code}} \\
+    skalpel-further-explanation-box-non-focus &
+    \incodebody{\examplefbox{mylightpurple}{highlighted code}} \\
+    skalpel-parsing-error-focus &
+    \incodebody{\boxY{highlighted code}} \\
+    skalpel-parsing-error-non-focus &
+    \incodebody{\boxY{highlighted code}} \\
+  \end{tabular*}
+\end{center}
+
+\textbf{NOTE:} The colours shown above may be inaccurate due to
+differences in printers. For a more accurate representation please
+refer to PDF version which can be found on-line at \incodebody{http://www2.macs.hw.ac.uk/{\textasciitilde}ss215/cgi-bin/slicer/docs.html}
+
+\newpage
+
+%%%%%%%%% INTERPRETING THE SLICES %%%%%%%%%%
+
+\section{Interpreting the Type Error Slices}
+
+Our type error slicer uses a colour coded system to distinguish
+between the different components of the type error slices, and
+recognises a number of different kinds of errors. This section
+contains a brief description of the different kinds of error that the
+type error slicer recognises, a description of the different kinds of
+information provided by Skalpel when reporting errors
+and finally, an example of how Skalpel highlights the
+erroneous code for each of the kinds of errors that are picked up by
+the slicer.
+
+%%%%%%%%% KINDS OF ERRORS %%%%%%%%%%
+
+\subsection{Brief Description of the Kinds of Type Errors}
+
+This section contains a brief description of each of the different
+kinds of type errors that Skalpel handles. For a more
+detailed explanation of type errors, along with examples, refer to
+section 3.3 (Type Errors Explained).
+
+\begin{itemize}
+
+\item Type Constructor Clash; \subitem -- occurs
+  when two type constructors are constrained to be equal but
+  are not, for example, \incodebody{int = bool}
+\item Arity Clash; \subitem -- occurs when a sequence of length N is
+  constrained to be equal to a sequence of length M where N $\neq$ M.
+\item Record Clash; \subitem -- occurs when two records are
+  constrained to be equal but a label appears in one record and does
+  not appear in the other.
+\item Circularity Error; \subitem -- occurs when a type is
+  constrained to contain itself (an infinite type).
+\item Inclusion Error; \subitem -- occurs when there is a free type
+  variable in a datatype or type declaration.
+\item Multi-occurrence Error; \subitem -- occurs when an identifier
+  is bound more than once in one declaration.
+\item Applied Value Variable Error; \subitem -- occurs when a value
+  variable is supplied an argument in a pattern.
+\item Different Function Name Error; \subitem -- occurs when a
+  function is declared with 2 differing names.
+\item Free Explicit Type Variable at Top Level Error; \subitem --
+  occurs when there is a type variable in the top level environment
+  that is not bound to anything (free).
+\item Value on the Left of \incodebody{as} Error; \subitem --
+  occurs when the identifier on the left of an \incodebody{as} is
+  not a value variable.
+\todo{2009-06-10}{this no longer occurs in the back-end and the next
+  version of this document should reflect this}
+\item An Identifier Occurs in a Pattern Both Applied and Not Applied to
+  an Argument. \subitem -- as the name suggests.
+\item Different Number of Arguments Error.  \subitem -- occurs when a
+  function is defined to take an inconsistent number of arguments.
+\item Ungeneralisable Bound Type Variable.  \subitem -- occurs when SML does
+  not allow generalisation of type variables at certain value
+  declarations.
+\item Unmatched Specification Error. \subitem -- Occurs when a structure does not declare an identifier that it is supposed to..
+\end{itemize}
+
+\todo{2009-09-15}{New kind of errors: When the body a recursive
+  function is not a function; When a real number occurs in a pattern;
+  free identifiers.}
+
+\newpage
+
+%%%%%%%%% WHAT THE COLOURS MEAN %%%%%%%%%%
+
+\subsection{What the Colours Mean}
+
+\todo{2009-06-08}{Go through with Vincent to make sure correct, what
+  else to add etc}
+
+\done{2009-06-11}{Vincent went through the document and some changes will be
+  made based on the feedback received.}
+
+\textbf{Note:} For an explanation of the meaning of the ``jargon'', please
+refer to section 3.3 (Type errors Explained).
+
+\begin{itemize}
+
+\item \incodebody{\boxR{Red}}
+
+\begin{itemize}
+\item Indicates that the highlighted text contributes to the error.
+\end{itemize}
+
+\item \incodebody{\boxEnd{gray}/\boxB{blue}}
+
+\todo{2009-07-07}{Changed to and blue \tesEndPointOne}
+
+\begin{itemize}
+\item Indicates that the highlighted text is an end point of a
+  type constructor clash, an arity clash, or a record clash.
+
+\todo{2009-06-08}{What is a type constructor clash????}
+
+\done{2009-06-09}{above note has been resolved, an explanations is
+  given on the next page}
+\end{itemize}
+
+\item \incodebody{\boxG{Green}}
+
+\todo{2009-07-07}{Changed to green}
+
+\begin{itemize}
+\item Indicates an endpoint of a record clash. The highlighted text
+  appears in both clashing records. When there is green
+  highlighting in a slice, it means that the slice merges at least two
+  minimal slices.
+\end{itemize}
+
+\todo{2009-06-11}{above explanation of ``green'' changed based on
+  feedback from Vincent, need to check it over to make sure i
+  understood the feedback}
+
+\done{2009-06-29}{above note done}
+\item \incodebody{\fboxBl{Box}}
+\todo{2009-06-08}{What is a box with fill????}
+\done{2009-06-09}{above note resolved}
+
+\subitem If the box is just an outline, with no colour inside the box,
+  this signifies that the content of the box might be irrelevant, but its
+  presence definitely contributes to the error.
+
+\subitem If there is a colour in the box, then the
+  content of the box is relevant to the error, and the reason why it
+  is relevant is dependant on its colour (which are explained above).
+
+\subitem A box can indicate one of two things;
+
+\begin{enumerate}
+\item The application of a
+  function to an argument (the content of the box) takes part in an
+  error. It is usually convenient to surround the argument of a
+  function when the application participates in the error.
+\item The contents of the box are the unique argument of a type name
+  to make explicit its arity is 1 (that is, has one argument). This is
+  because there is no section of code to highlight, making explicit the
+  arity of a type name when its arity is 1.
+\end{enumerate}
+
+\item \incodebody{\boxY{Yellow}}
+
+\begin{itemize}
+\item Indicates that Skalpel cannot parse the file. This
+  may be because the file contains a feature of SML that has not yet
+  been implemented in Skalpel, or, the file contains a
+  syntax error.
+\end{itemize}
+
+\item \incodebody{|\hspace{-0.03in}code}
+
+\begin{itemize}
+\item The use of a vertical bar (\incodebody{|}) indicates an empty sequence of type
+  arguments. \textbf{Note:} The colour of the vertical bar will be one of those
+  above.
+
+  For example, consider the following piece of code:
+
+  \codebody{\Bl val x:t t = y \El}
+
+  The slicer produces the following output;
+
+  \codebody{\Bl \boxR{val} x:\fboxGen{mygray}{\hspace{-0.028in}\bluetext{|}\hspace{-0.03in}t}{myred}\boxR{ t} \boxR{=} y \El}
+
+  The reason this is an error is that the first occurrence of t has no
+  arguments, where as the second occurrence of t has one. The blue
+  vertical bar is used to show that the first occurrence of t has no arguments
+  and the \tesEndPointOne box is used to show the unique argument of the second
+  occurrence of t.
+\end{itemize}
+
+\end{itemize}
+
+\todo{2009-06-08}{Is there anything else?}
+
+\todo{2009-06-08}{Include some simple examples to show user how
+  slices should be interpreted?????}
+
+\done{2009-06-10}{examples are being added along with the
+  explanation of the different types of errors}
+
+\newpage
+
+\subsection{Type Errors Explained (with examples)}
+
+\todo{2009-06-09}{Do we want to show errors generated by SML command
+  line? Or will this clutter things up?}
+
+\done{2009-06-11}{VINCENT -perhaps in another section for advanced users???}
+
+\todo{2009-06-10}{anything else to add to the above?? does the above
+  make sense??}
+
+\subsubsection{Explanation of useful terms}
+\begin{itemize}
+
+%%%%%%%% TYPE ERROR SLICE %%%%%%%%%
+
+\item Type Error Slice;
+
+  \subitem A type error slice is a piece of code that contains all of
+  the points in a program that contribute to a type error with all of
+  the other details omitted. In this document type error slices will
+  normally be referred to as ``slices''.
+
+  \todo{2009-06-11}{get clarification on the above, to make sure it
+    is absolutely correct}
+
+%%%%%%% MINIMAL SLICE %%%%%%%%%%
+
+\item Minimal Slice;
+
+  \subitem A minimal slice is an error slice which contains all of the
+  program points that are required for the error to exist and nothing
+  more.
+
+  \todo{2009-06-11}{get clarification on the above, to make sure it
+    is absolutely correct}
+
+%%%%%%% PROGRAMMING ERRORS %%%%%%%%
+
+\item Programming Errors;
+
+  \subitem A programming error is an error which causes the program to
+  do something other than it is meant to do. A programming error may
+  or may not be responsible for type errors, but can contribute to an
+  arbitrary number of type errors.
+
+%%%%%%%% CONTEXT DEPENDENCY %%%%%%%%%
+
+\item Context Dependencies;
+
+  \subitem In some of the errors reported by Skalpel, it
+  will be only be an error if some identifiers are value variables,
+  this is a context dependency: the error is dependent on the context
+  of the identifier in a pattern.When there is not information to
+  determine the true status of an identifier(s), Skalpel
+  will report the error under the context dependency that the
+  identifier is a value variable, as values in patterns are more often
+  variables than constructors. If such a situation arises, then the
+  error reported by Skalpel contain details of all
+  context dependencies associated with the error.
+
+
+%%%%%%%% TYPE ERRORS %%%%%%%%%%%%%%
+
+\item Type Error;
+
+  \subitem For a program to be correctly typed, there is a large
+  number of constraints that have to be met. A type error occurs when
+  all of these constraints cannot be satisfied simultaneously.
+
+  \todo{2009-06-09}{Not sure about the wording, think we will also
+    need a bit about why this differs to the users wrong view}
+
+%%%%%%% TYPE CONSTRAINT %%%%%%%%%
+
+\item Type Constraint;
+
+  \subitem A type constraint is when a value variable is constrained
+  to be of a certain type, for example, in the piece of code below, \incodebody{x}
+  is constrained to be of type \incodebody{bool},
+\codebody{\Bl val x = true \El}
+
+\todo{2009-06-19}{Is the above correct}
+
+\newpage
+
+%%%%%%%% TYPE CONSTRUCTOR CLASH %%%%%%%%%%%
+
+{\large The rest of this section contains explanations of the type errors
+recognised by Skalpel.}
+\vspace{0.1in}
+\subsubsection{Type Constructor Clash;}
+
+  \subitem A type constructor clash occurs when two type constructors
+  are constrained (by the constraints mentioned previously) to be equal but
+  they are not.
+
+  For example, consider the following code;
+
+\codebody{\Bl fun count x = x + true \El}
+
+As one can see from the example, we have a \incodebody{+} which is
+an infix operator that represents numeric addition. One of the
+arguments that is applied to this operator is \incodebody{true}
+which is a Boolean. As a Boolean is not a number and \incodebody{+}
+is not a Boolean operator, there is no way that this statement can be
+assigned to have one type.
+
+\todo{2009-06-09}{and the \incodebody{+} operator cannot be
+  overloaded} \done{2009-06-09}{\incodebody{+} can be
+  overloaded but hasn't been implemented in the slicer just yet}
+\todo{2009-06-09}{check wording to make sure it is correct}
+
+The slicer highlights the error in the following way;
+
+\codebody{\Bl fun count x = x \boxB{+}\boxR{ }\boxEnd{true} \El}
+
+As you can see, the \incodebody{+} operator has been highlighted in blue and
+\incodebody{true} in \tesEndPointOne. The differing colours indicate that
+\incodebody{true} and \incodebody{+} are not of the same type,
+thus causing an error.
+
+\newpage
+
+%%%%%%%%% ARITY CLASH %%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Arity Clash;}
+
+  \subitem An arity clash happens when a sequence of length N is
+  constrained to be equal to a sequence of length M, where N $\neq$ M.
+
+\todo{2009-06-09}{get proper note equal sign?? ( =/=)}
+
+For example, consider the following piece of code.
+
+\codebody{\Bl datatype 'a t = T of 'a t | U of ('a, 'a) t \El}
+
+In the example above, \incodebody{t} occurs with one argument,
+\incodebody{'a t}, as well as occurring with two arguments
+\incodebody{('a, 'a) t}. In this example, the slicer provides two
+slices;
+
+\codebody{\Bl datatype 'a t = T of \fboxB{'a}\boxR{ t} | U of
+  \boxEnd{(}'a\boxEnd{,} 'a\boxEnd{)}\boxR{t} \El}
+
+as well as;
+
+\codebody{\Bl \boxR{datatype} \fboxB{'a}\boxR{ t} \boxR{=} T of 'a
+  t | U of \boxEnd{(}'a\boxEnd{,} 'a\boxEnd{)}\boxR{t} \El}
+
+As you can see from the slices, both occurrences of \incodebody{'a
+  t} have been highlighted, with the \incodebody{'a} part being
+highlighted with the use of a box, indicating that it is the unique
+argument of \incodebody{t}, with the \incodebody{t} being
+highlighted in red. In this case, the box is used to stress that
+\incodebody{t} takes one argument and also indicating that the name
+of the type variable \incodebody{'a} is irrelevant. In both slices,
+the brackets and the comma of the section of code \incodebody{('a,
+  'a)t} have been highlighted in \tesEndPointOne, with the following
+\incodebody{t} again being highlighted in red. The \tesEndPointOne highlights
+clearly show that the last occurrence of \incodebody{t} is supplied
+with two arguments. The user can therefore determine from both slices
+provided that all occurrences of \incodebody{t} should be supplied
+with the same number of arguments but this is not the case.
+
+In order to correct the error, the user can alter the code so that all
+occurrences of \incodebody{t} have the same number of arguments
+(same arity).
+
+\todo{2009-06-09}{changing to all ('a, 'a)t leads to a multi
+  occurrence error, why???}
+\done{2009-06-11}{Because i don't know SML that well, if you
+  insert \incodebody{('a, 'b) t} into the definition instead of
+  \incodebody{(a', a') t},all is well}
+\done{2009-06-11}{Both of the above notes are irrelevant as the
+  explanation has been changed to not include a specific way to correct
+the example}
+
+\newpage
+
+%%%%%%%%% RECORD CLASH %%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection {Record Clash;}
+
+\subitem A record clash occurs when two records are constrained to be
+equal but a label appears in one record and does not appear in the other.
+\\
+For example, consider the following code;
+
+\codebody{\Bl val \{foo,bar\} = \{fool=0,bar=1\} \El}
+
+As you can see, the label \incodebody{foo} appears in the first record but does
+not appear in the second one. Also the label \incodebody{fool} appears in
+the second record but does not appear in the first one. Hence, we have
+a record clash. Skalpel returns the following output;
+
+\codebody{\Bl \boxR{val}
+  \boxR{\{}\boxB{foo}\boxR{,}\boxG{bar}\boxR{\} =
+    \{}\boxEnd{fool}\boxR{=}0\boxR{,}\boxG{bar}\boxR{=}1\boxR{\}} \El}
+
+The above example is actually two minimal slices merged together. With
+this kind of error, merging the slices together makes the causes of
+the error easier to identify. Finding record clashes can be time
+consuming, so sometimes the merged slice will not be returned. The two
+slices that are merged to make the slice above can be seen below;
+
+\todo{2009-06-11}{add definition of minimal slice}
+
+\codebody{\Bl \boxR{val}
+  \boxR{\{}\boxB{foo}\boxR{,}bar\boxR{\} =
+    \{}\boxEnd{fool}\boxR{=}0\boxR{,}\boxEnd{bar}\boxR{=}1\boxR{\}} \El}
+
+\codebody{\Bl \boxR{val}
+  \boxR{\{}\boxB{foo}\boxR{,}\boxB{bar}\boxR{\} =
+    \{}\boxEnd{fool}\boxR{=}0\boxR{,}bar\boxR{=}1\boxR{\}} \El}
+
+In the first slice above, \incodebody{foo} is highlighted in blue
+and all of the labels in the right-hand side are highlighted in
+\tesEndPointOne. This is because \incodebody{foo} does not
+appear in the set on the right hand side, \incodebody{\{fool,bar\}}
+
+In the second slice above, \incodebody{fool} is highlighted in
+\tesEndPointOne and all of the labels in the left-hand side are
+highlighted in blue. This is because \incodebody{fool} does not appear
+in the set on the left hand side, \incodebody{\{foo,bar\}}
+
+As you can see from the merged slice, the slicer highlights
+\incodebody{foo} in blue and \incodebody{fool} in
+\tesEndPointOne. This is a combination of the two minimal slices. The slicer
+also highlights both occurrences of \incodebody{bar} in
+\tesEndPointOne. This is because it appears in both clashing records.
+
+\todo{2009-06-09}{Not sure on wording - or correctness of last part
+  - confirm with Vincent}
+
+\newpage
+
+%%%%%%%% CIRCULARITY ERROR %%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Circularity Error;}
+
+\subitem Circularity errors occur when a type is constrained to
+contain itself. This kind of error is best explained through the use
+of an example.
+
+Consider the following pieces of code;
+
+\codebody{\Bl fun f () = f () \El}
+
+and;
+
+\codebody{\Bl fun f () = f () () \El}
+
+In the first piece of code, the function f has type:
+\incodebody{unit -> 'a}.  In the second piece of code, we assume
+that the right hand side of the function is of type \incodebody{'a}
+then the second occurrence of \incodebody{f} would be of type
+\incodebody{unit -> unit -> 'a} and the first occurrence of
+\incodebody{f} would be of type \incodebody{unit -> 'a}
+
+This means that;
+\codebody{\Bl unit -> 'a =  unit -> unit -> 'a \\ 'a = unit -> 'a\El}
+
+\todo{2009-06-15}{Need better explanation for the above???}
+
+As a result of this:
+
+ \codebody{\Bl 'a = unit -> unit -> 'a = unit -> unit -> unit ->
+ unit -> 'a = ...\El}
+
+This can be better viewed as a tree structure;
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[scale=0.4]{tree.eps}
+\end{center}
+\end{figure}
+
+\todo{2009-06-11}{does the tree match the explanation of the error??
+  does it need to be changed to have \incodebody{unit -> unit ->
+    'a} on as the leaves??}
+\done{2009-06-15}{Yes (above note)}
+
+\todo{2009-06-09}{add tree to illustrate example better}
+
+\done{2009-06-10}{tree added}
+
+As illustrated by the tree, the type of the function for the second
+piece of code cannot be defined, as it would be assigned an infinite
+type, which are not supported by SML, hence there is an error.
+
+\todo{2009-06-09}{get right arrow instead of upside down question
+  mark}
+
+\todo{2009-06-09}{Not sure on the use of bold to represent the types
+  in the explanation as it is inconsistent with the rest of the
+  document, however, it seems to make the explanation easier to
+  read. Perhaps the rest of the explanations should be changed to the
+  same format to be consistent????}
+
+\done{2009-06-11}{both of the above notes have been resolved}
+
+\newpage
+
+%%%%%%%%% INCLUSION ERROR %%%%%%%%%%%%%%%%%
+
+\subsubsection{Inclusion Error;}
+
+\subitem An inclusion error occurs when there is a free type variable
+in a datatype declaration.
+
+For example, consider the following piece of code;
+
+\codebody{\Bl datatype 'a t = T of (bool -> ('a, 'b) w) \El}
+
+The slicer highlights the code in the following way;
+
+\codebody{\Bl \boxR{datatype} \boxR{'a }t \boxR{=} T of (bool ->
+  ('a, \boxR{'b}) w) \El}
+
+An important thing to notice here is that the slicer highlights the
+space between \incodebody{'a} and \incodebody{t} in the
+expression \incodebody{datatype 'a t = ...}. This is to show that
+it is the only type variable in the declaration of the datatype. The
+occurrence of \incodebody{'b} is also highlighted as
+\incodebody{'b} is the free
+type variable that causes the error.
+
+\todo{2009-06-10}{Not sure if the reason or explanation of why the
+  space is highlighted is correct}
+
+\done{2009-06-11}{according to Vincent it is correct, :-)}
+
+\vspace{1in}
+
+%%%%%%%%%%%%% MULTI-OCCURRENCE ERROR %%%%%%%%%%%
+
+\subsubsection{Multi-occurrence Error;}
+
+\subitem A multi-occurrence error occurs when an identifier is
+declared twice in a unique declaration (binding).
+
+For example, consider the following code;
+
+\codebody{\Bl val (x, x) = (1, 1) \El}
+
+Even though we are trying to assign the value \incodebody{1} to
+\incodebody{x} twice, \incodebody{x} appears more than once in
+the pattern \incodebody{val (x, x)} which is not permitted if x is
+a value variable.
+
+The slicer highlights the code in the following way (under the
+context dependency that x is a value variable;
+
+\codebody{\Bl \boxR{val} (\boxR{x}, \boxR{x}) \boxR{=} (1,1) \El}
+
+As both occurrences of \incodebody{x} are highlighted, and the fact
+that this is a ``multi-occurrence'' error, the programmer can easily
+see that the problem lies with the fact that there is more than one
+occurrence of \incodebody{x} is the reason behind the error. Also,
+with the context dependency that \incodebody{x} is value variable being
+explicitly stated by the slicer, the programmer can then provide the
+datatype defining \incodebody{x} if his/her intentions were for
+\incodebody{x} to be a value constructor.
+
+\newpage
+
+%%%%%%%% APPLIED VALUE VARIABLE ERROR %%%%%%%%%%
+
+\subsubsection{Applied Value Variable Error;}
+
+\subitem This error occurs when a value variable is supplied an
+argument in a pattern.
+
+For example, consider the following piece of code;
+
+\codebody{\Bl val (x y, z, w) = (1, 2, 3) \El}
+
+With the context dependency, \incodebody{x} is a value variable,
+ the slicer highlights the code as follows;
+
+\codebody{\Bl \boxR{val} (\boxR{x }\fboxR{y}, z, w) \boxR{=} (1, 2,
+  3)\El}
+
+As \incodebody{y} is highlighted by a box with a red line, it shows
+that the content of the argument is irrelevant to the error, but the
+presence of it is relevant. Going by the type of error and the context
+dependency that \incodebody{x} is a value variable, and the
+application of \incodebody{x} to an argument (\incodebody{y}) is
+highlighted, it is clear that the problem is caused by the mentioned
+application, as SML does not allow value variables to be applied in a
+pattern.
+
+\textbf{Please Note:} this would not be the same error if x was a value
+constructor (this is the reason the context dependencies of the error are
+explicitly stated).
+
+\todo{2009-06-10}{Check wording to make sure it is technically
+  correct}
+
+\vspace{0.5in}
+
+%%%%%%% DIFFERENT FUNCTION NAME ERROR %%%%%%%
+
+\subsubsection{Different Function Name Error;}
+
+  \subitem One of the constraints (we mentioned constraints in the
+  section explaining type errors) that has to be met for a piece of
+  code to be a valid SML program is that in a function definition,
+  there must only be one name for the function.
+
+Consider the following piece of code;
+
+\codebody{\Bl fun count 0 = 1 | cout n = n + 1 \El}
+
+As you can see in the code above, we have tried to give one function
+two names. The slicer correctly identifies that this piece of code is
+not correct and highlights it as follows;
+
+\codebody{\Bl \boxR{fun} \boxR{count} 0 \boxR{=} 1 \boxR{|} \boxR{cout} n
+  \boxR{=} n + 1 \El}
+
+The slicer highlights \incodebody{fun} which indicates that the
+declaration of the function participates in the error. Both of the
+names of the function are also highlighted. The equal signs and the
+pipe character are also highlighted as they are essential parts of the
+function definition. After a quick inspection of the slice, it becomes
+easy to see that the function has two differing names, and the
+programmer can correct the error accordingly.
+
+\todo{2009-06-09}{Not sure if the above is correct, or even makes
+  sense but i am approaching the end of a 12 hour day, so will tackle
+  it all guns blazing in the morning when i am raring to go (if i
+  remember)}
+
+\done{2009-06-10}{Makes a bit of sense, sounds good (perhaps not
+  correct) but I will speak to Vincent when more of the section has
+  been completed to get feedback and make any changes that are needed}
+
+\todo{2009-06-09}{Again, not sure on wording}
+
+\newpage
+
+%%%%%%%%%% FREE EXPLICIT TYPE VARIABLE AT TOP LEVEL ERROR %%%%%%%%%%%%
+
+\subsubsection{Free Explicit Type Variable at Top Level Error;}
+
+\subitem This error occurs when there is type variable in the top
+level environment that is not bound to anything.
+
+\todo{2009-06-10}{does the above make sense???}
+
+For example, consider the following piece of code;
+
+\codebody{\Bl exception e of 'a \El}
+
+The slicer highlights the code as (under the context dependency that
+\incodebody{'a} is at top level);
+
+\codebody{\Bl \boxR{exception} e \boxR{of} \boxR{'a} \El}
+
+The problem here is that \incodebody{exception} does not implicitly
+bind type variables.
+
+\todo{2009-06-10}{we correct this by binding 'a ourselves, but
+  how??}
+
+\vspace{0.5in}
+
+%%%%%%%% VALUE ON THE LEFT OF AS MUST BE A VALUE ERROR %%%%%%%%%%
+
+\subsubsection{Value on the Left of ``as'' Must be a Variable Error;}
+
+\subitem No matter what the situation is, the identifier on the left
+of an \incodebody{as} must be a value variable, otherwise there is
+a ``value on the left of \incodebody{as} must be a value'' error.
+
+Consider the following piece of code;
+
+\codebody{\Bl datatype t = c; val c as (x, y) = (1, true) \El}
+
+The problem here is that the identifier on the left of the
+\incodebody{as} (in this case \incodebody{c}) is a value
+constructor and not a value variable.
+
+The slicer highlights the code as follows;
+
+\codebody{\Bl \boxR{datatype} t \boxR{=} \boxR{c}; \boxR{val}
+  \boxR{c as} (x, y) \boxR{=} (1, true) \El}
+
+From the section \incodebody{\boxR{datatype} t \boxR{=} \boxR{c}}
+it can be seen that \incodebody{c} is a value constructor. Using this
+fact and the section \incodebody{\boxR{val} \boxR{c as} ...} the
+programmer can conclude that the error is caused by the use of a value
+constructor on the left hand side of an \incodebody{as} instead of
+a value variable, and can go about correcting the error.
+
+It should be noted that this error also occurs when the value on the
+left hand side of the \incodebody{as} is an exception constructor.
+An example of an error involving this is shown below, along with the
+highlighting produced by the slicer.
+
+\codebody{\Bl exception e val e as x = 1; \El}
+
+\codebody{\Bl \boxR{exception} \boxR{e} \boxR{val} \boxR{e as} x
+  \boxR{=} 1; \El}
+
+\todo{2009-06-10}{add code once bug has been fixed}
+
+\done{2009-06-19}{example added}
+
+\newpage
+
+%%%%%%%%%% AN IDENTIFIER OCCURS IN A PATTERN BOTH APPLIED AND NOT APPLIED
+
+\subsubsection{An Identifier Occurs in a Pattern Both Applied and not Applied
+  to an Argument;}
+
+\subitem This error is pretty self explanatory from the title, but the
+reasons for such an error can be best explained through the use of an
+example.
+
+Consider the following piece of code;
+
+\codebody{\Bl fn (f, f y, g x) => x + y \El}
+
+The slicer highlights the code in the following way (the slicer
+identifies other errors but this is the one we are interested in);
+
+\codebody{\Bl \boxR{fn} (\boxR{f}, \boxR{f
+  }\fboxR{y}, g x ) \boxR{=>} x + y \El}
+
+As you can see, the slicer highlights both occurrences of
+\incodebody{f} with a solid red box, highlights
+\incodebody{y} with a clear box with a red outline and also
+highlights the white space(s) between the occurrence of
+\incodebody{f} and its argument. This indicates
+that the application of \incodebody{f} to \incodebody{y} is
+significant in the error.
+
+This error only occurs when the identifier appears inside a pattern
+and can be caused by one of three things. The identifier in
+question (in this case \incodebody{f}) can either be;
+
+\begin{enumerate}
+\item A value variable --- in which case the identifier should not be
+  applied to an argument,
+\item A value constructor which is defined to take an argument --- in
+  which case all occurrences of the identifier inside a pattern must take
+  an argument, or
+\item A value constructor which is defined to take no arguments --- in
+  which case all occurrences of the identifier inside a pattern must take no arguments.
+\end{enumerate}
+
+%%%%%%% DIFFERENT NUMBER OF ARGUMENTS ERROR %%%%%%%%
+\newpage
+
+\subsubsection{Different Number of Arguments Error;}
+
+\subitem This error occurs when a function is defined to have an
+inconsistent number of arguments.
+
+Consider the following function declaration;
+
+\codebody{\Bl fun foo 0 = 1 \\ \hspace{0.06in} | foo x y = x + y \El}
+
+As you can see the function \incodebody{foo} is defined to handle
+both one argument and two arguments. This is not permitted in SML and
+is therefore incorrect code. The slicer highlights the code as;
+
+\codebody{\Bl \boxR{fun} foo\boxR{ }\fboxR{0}\boxR{ =} 1 \\
+  \hspace{0.06in} \boxR{|} foo\boxR{ }\fboxR{x}\boxR{ }\fboxR{y}
+  \boxR{=} x + y \El}
+The slicer highlights the arguments of the function with a red
+outline. This indicates that the presence of the arguments is
+important in contributing to the error. Also, the slicer highlights
+all of the code from the name of the function (\incodebody{foo})
+until \incodebody{=} in the line(s) that contain less arguments
+than the line(s) with the most. The reason for this is so that the
+user can see all of the arguments in these lines and see that there
+are not as many arguments on these lines as there are on other lines.
+\textbf{Note:} The slicer is not implying that each of the lines in
+the declaration should contain the same number of arguments as the
+line that has the most, only that all lines should have the same number.
+\todo{2009-06-30}{Better words other than ``lines'' in the above?}
+
+%%%%%%% UNGERNERALISABLE TYPE VARIABLE ERROR %%%%%%%%
+
+\subsubsection{Ungeneralisable Bound Type Variable Error}
+
+\subitem Explicit type variables are usually generalisable at value
+bindings but for some cases these type variables cannot be generalised
+(due to some internal features of SML). These situations usually occur
+when an explicit type variable occurs in the type of the bound
+expression of a value declaration and this expression is expansive. It is
+in these situations that a \incodebody{Ungeneralisable Bound Type
+  Variable Error} occurs.
+
+An example of one of these situations can be seen below.
+
+\codebody{\Bl val x = (fn y => fn x : \hspace{-0.1in}'a => x) [\hspace{0.05in}] \El}
+
+The error occurs because the expression on the right hand side of the
+\incodebody{=} is expansive (application of an \incodebody{fn} expression) and when you apply the function
+\incodebody{y} to the empty list (\incodebody{[]}) you get a function
+from type \incodebody{'a} to type \incodebody{'a} and the type
+\incodebody{'a} cannot be generalised.
+
+The slicer highlights the error in the following way.
+
+\codebody{\Bl \boxR{val} \boxR{x = (fn} y \boxR{=> fn} x \boxR{: \hspace{-0.1in}'a =>} x\boxR{) }\fboxR{[\hspace{0.05in}]} \El}
+
+\newpage
+
+%%%%%%% UNMATCHED SPECIFICATION ERROR %%%%%%%%
+
+\subsubsection{Unmatched Specification Error}
+
+\subitem This kind of error occurs when a structure does not declare
+an identifier that it is supposed to.
+
+Consider the following example;
+\codebody{\Bl structure foo = struct val x = () end; \\ foo.y;\El}
+There is an error in the above code because the structure
+\incodebody{foo} does not declare the identifier \incodebody{y}.
+The slicer highlights the code as;
+\codebody{\Bl \boxR{structure} \boxR{foo} \boxR{=} \boxR{struct} \boxR{val} \boxR{x = }() \boxR{end}; \\ \boxR{foo.y};\El}
+
+\end{itemize}
+
+\section {Credits}
+Current Implementation (for full SML)\\
+
+	Vincent Rahli: Type Error Slicer Theory and Implementation.\\
+
+	Joe Wells: Theory and Implementation Consulting Advice and Emacs
+   		   Interface.\\
+
+	John Pirie: Type Error Slicer Implementation and Emacs Interface\\
+
+        Scott Fotheringham: Setup of bugzilla and Emacs Interface
+
+        Mark Wyper: Testing of the effectiveness of the Slicer.\\
+
+	Steven Shiells: Web Interface Implementation and Emacs Interface.\\
+
+	David Dunsmore: Testing of the effectiveness of the Slicer.\\
+
+	Fairouz Kamareddine: Theory Consulting\\
+
+Earlier Implementation (for a tiny subset of SML)\\
+
+	Joe Wells: Theory and Implementation Consulting Advice and Emacs
+	    	   Interface.\\
+
+	Christian Haack: Type Error Slicer Theory and Implementation.\\
+
+	Sébastien Carlier: Web Interface Implementation.
+
+\end{document}
