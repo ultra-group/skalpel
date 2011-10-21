@@ -1,0 +1,143 @@
+#!/bin/bash
+
+###############################################################
+###############################################################
+##
+## Copyright 2010 Heriot-Watt University
+## Copyright 2010 John Pirie
+##
+## This file is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This file is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+##
+##
+## Authors: Steven Shiells
+## Date: December 2009
+## Description: This is a shell script to run Skalpel, type 
+##              error slicer for SML.
+##
+################################################################
+################################################################
+
+case $USER in
+    ss215)
+	SMLBINDIR=/u1/pg/rahli/softwares/smlnj/bin
+	;;
+    dd35)
+	SMLBINDIR=/u1/pg/rahli/softwares/smlnj/bin
+	;;
+#    jbw)
+#	SMLBINDIR=/home/jbw/smlnj/bin
+#	;;
+esac
+
+
+# If not already set, we set the following variables:
+#   SMLBINDIR, POLYBINDIR, POLYLIBDIR, TEXTEDITOR, WEBBROWSER,
+#   TMPDIR, and SHAREDIR
+
+# SMLBINDIR is the directory of the SML/NJ binaries
+# Uses the /usr/bin directory by default
+SMLLOC=`which sml | sed 's#[/]*sml$##'`
+if [ "${SMLLOC}" == "" ]; then
+    : ${SMLBINDIR:=/usr/bin}
+else
+    : ${SMLBINDIR:=${SMLLOC}}
+fi
+
+# POLYBINDIR is the directory of the Poly/ML binaries
+# Uses the /usr/bin directory by default
+POLYLOC=`which poly | sed 's#[/]*poly$##'`
+if [ "${POLYLOC}" == "" ]; then
+    : ${POLYBINDIR:=/usr/bin}
+else
+    : ${POLYBINDIR:=${POLYLOC}}
+fi
+
+# TEXTEDITOR is the prefered editor, emacs by default
+# We should use EDITOR
+if [ "${EDITOR}" == "" ]; then
+    : ${TEXTEDITOR:=emacs}
+else
+    : ${TEXTEDITOR:=${EDITOR}}
+fi
+
+# WEBBROWSER is the prefered web browser, firefox by default
+# We should use BROWSER
+if [ "${BROWSER}" == "" ]; then
+    : ${WEBBROWSER:=firefox}
+else
+    : ${WEBBROWSER:=${BROWSER}}
+fi
+
+# POLYLIBDIR is the directory of the Poly/ML libraries
+: ${POLYLIBDIR:=`cd ${POLYBINDIR}/../lib; pwd`}
+
+# TMPDIR is the temporary directory
+# If undefined then it is /tmp
+: ${TMPDIR:=/tmp}
+
+# SHAREDIR is where some generated files that one might want to keep are put
+# If undefined then it is ${TMPDIR}, which is /tmp is undefined
+: ${SHAREDIR:=${TMPDIR}}
+
+
+# maybe we should try to catch an error and have default values in case of and error
+# an error would be an empty string I guess
+# to get the architecture we could also use: SMLofNJ.SysInfo.getHostArch ()
+## USING SML/NJ
+ARCH=`echo "Compiler.architecture" | ${SMLBINDIR}/sml | grep "val it" | sed 's/.*\"\(.*\)\".*/\1/'`
+OS=`echo "SMLofNJ.SysInfo.getOSKind ()" | ${SMLBINDIR}/sml | grep "val it" | sed 's/val it = \(.*\) \: .*/\1/' | sed 's/.*/\L&/'`
+# The ARCH and OS variables are only used in targets specific to SML/NJ
+
+## USING MLTON
+#ARCH=`echo "print (MLton.Platform.Arch.toString MLton.Platform.Arch.host);" > ${TMPDIR}/mlton-file.sml; mlton ${TMPDIR}/mlton-file.sml; ${TMPDIR}/mlton-file | tr '[A-Z]' '[a-z]'`
+
+# Current directory
+CURDIR=`pwd`
+
+# Writing of the Makefile
+echo "############################~~~ WARNING ~~~###########################" >  Makefile
+echo "#"                                                                      >> Makefile
+echo "# THE EDITION OF THIS MAKEFILE WILL NOT BE PERMANENT "                  >> Makefile
+echo "#"                                                                      >> Makefile
+echo "# THIS MAKEFILE HAS BEEN GENERATED FROM Makefile.in USING configure"    >> Makefile
+echo "#"                                                                      >> Makefile
+echo "######################################################################" >> Makefile
+echo                                                                          >> Makefile
+echo "ARCH       = ${ARCH}"                                                   >> Makefile
+echo "OS         = ${OS}"                                                     >> Makefile
+echo "SMLBINDIR  = ${SMLBINDIR}"                                              >> Makefile
+echo "POLYBINDIR = ${POLYBINDIR}"                                             >> Makefile
+echo "POLYLIBDIR = ${POLYLIBDIR}"                                             >> Makefile
+echo "TEXTEDITOR = ${TEXTEDITOR}"                                             >> Makefile
+echo "WEBBROWSER = ${WEBBROWSER}"                                             >> Makefile
+echo "TMPDIR     = ${TMPDIR}"                                                 >> Makefile
+echo "SHAREDIR   = ${SHAREDIR}"                                               >> Makefile
+echo "CURDIR     = ${CURDIR}"                                                 >> Makefile
+echo                                                                          >> Makefile
+
+# ARCH and OS should only be copied after the copyright/license statements.
+
+cat Makefile.in >> Makefile
+
+make sml-tes-deps
+
+make cmtomlb
+
+echo                                                  >> Makefile
+echo "${CURDIR}/bin/slicer-mlton: \\"                 >> Makefile
+cat mlton-dependencies | sed 's/^\(.*\)$/    \1 \\/g' >> Makefile
+cat mlton-dependencies | sed 's/^\(.*\)$/    \1 \\/g' >> Makefile
+echo -e "\tmake mlton-bin-gen"                        >> Makefile
+cat Makefile | sed ':a;N;$!ba;s/ \\\(\n\tmake mlton-bin-gen\)/\1/' > Makefile.tmp
+mv Makefile.tmp Makefile
