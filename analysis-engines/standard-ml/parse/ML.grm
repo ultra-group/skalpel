@@ -1,0 +1,3699 @@
+(* Copyright 2002 Heriot-Watt University
+ * Copyright 2009 Heriot-Watt University
+ * Copyright 2010 Heriot-Watt University
+ *
+ *
+ * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
+ * a Type Error Slicer for Standard ML written by the ULTRA Group of
+ * Heriot-Watt University, Edinburgh.
+ *
+ * SMLTES is a free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMLTES is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  o Authors:     Vincent Rahli, Christian Haack
+ *  o Affiliation: Heriot-Watt University, MACS
+ *  o Date:        25 May 2010
+ *  o File name:   ML.grm
+ *  o Description: Defines a parser for SML.
+ *      2 shift/reduce conflicts
+ *)
+
+
+structure A  = AstSML
+structure R  = Reg
+structure L  = Label
+structure I  = Id
+structure D  = Debug
+structure F  = Infix
+structure PD = ParseDefs
+structure EH = ErrorHandler
+
+type associd = I.assoc
+type pack  = L.label * associd
+type 'a t  = pack -> 'a * pack
+
+fun getRegion left right = R.getRegionList left right
+
+fun updateAscId st ascid = I.updateAssoc st ascid
+
+fun gettypevar st ascid = I.updateAssoc st ascid
+
+fun createId st left right n ascid =
+    let val reg = R.consReg left right
+	val (v, ascid') = updateAscId st ascid
+    in case st of
+	   "ref"   => (A.IdentPcon (A.PconRef  ("ref",   v, reg, n, L.nextLabel n)), L.nextLabel n, ascid')
+	 | "nil"   => (A.IdentPcon (A.PconNil  ("nil",   v, reg, n, L.nextLabel n)), L.nextLabel n, ascid')
+	 | "true"  => (A.IdentPcon (A.PconBool ("true",  v, reg, n, L.nextLabel n)), L.nextLabel n, ascid')
+	 | "false" => (A.IdentPcon (A.PconBool ("false", v, reg, n, L.nextLabel n)), L.nextLabel n, ascid')
+	 | _       => (A.Ident (st, v, reg, n, L.nextLabel n), L.nextLabel n, ascid')
+    end
+
+fun explodeIdGen st ascid n beg f1 f2 f3 =
+    let val tks = List.rev (String.tokens (fn #"." => true | _ => false) st)
+	val id  = List.hd tks handle Empty => raise EH.DeadBranch ""
+	val idl = List.rev (List.tl tks) handle Empty => raise EH.DeadBranch ""
+	fun create [] n asc beg =
+	    let val (c, l) = beg
+		val reg = R.consReg beg (c, l + (String.size id) - 1)
+		val (v, asc') = updateAscId id asc
+		val (af3, m) = (f3 (id, v, reg, n, L.nextLabel n), L.nextLabel n)
+	    in (f1 af3, m, asc')
+	    end
+	  | create (x :: xs) n asc beg =
+	    let
+		val (c, l1) = beg
+		val l2   = l1 + (String.size x) - 1
+		val reg1 = R.consReg beg (c, l2)
+		val reg2 = R.consReg (c, l2 + 1) (c, l2 + 1)
+		val (lid, m, asc') = create xs (L.nextLabN n 2) asc (c, l2 + 2)
+		val (v, asc'') = updateAscId x asc'
+		val lid' = f2 (A.StrId (x, v, reg1, L.nextLabel n, L.nextLabN n 2), lid, reg2, n, m)
+	    in (lid', m, asc'')
+	    end
+    in create idl n ascid beg
+    end
+
+fun explodeId    st ascid n beg = explodeIdGen st
+					       ascid
+					       n
+					       beg
+					       A.LongIdId
+					       A.LongIdQual
+		                               A.Ident
+fun explodeStrId st ascid n beg = explodeIdGen st
+					       ascid
+					       n
+					       beg
+					       A.LongStrIdId
+					       A.LongStrIdQual
+					       A.StrId
+fun explodeTyCon st ascid n beg = explodeIdGen st
+					       ascid
+					       n
+					       beg
+					       A.LongTyConId
+					       A.LongTyConQual
+					       A.TyCon
+
+
+%%
+
+
+%name ML
+
+
+%term
+  LLIST
+| RLIST
+| COMMA
+| LPAREN
+| RPAREN
+| LBRACE
+| RBRACE
+| STAR
+| TYPEARROW
+| OF
+| CASE
+| WHILE
+| DO
+| PIPE
+| DARROW
+| EQUALOP
+| REC
+| AND
+| VAL
+| DATATYPE
+| FUN
+| LET
+| IN
+| END
+| FN
+| IF
+| THEN
+| ELSE
+| WILD
+| COLON
+| WILDCARD
+| SHARP
+| SEMICOLON
+| TYPE
+| RAISE
+| HANDLE
+| EXCEPTION
+| STRUCTURE
+| STRUCT
+| SEAL
+| SIGNATURE
+| FUNCTOR
+| SIG
+| AS
+| OPEN
+| INFIX
+| INFIXR
+| NONFIX
+| OVERLOAD
+| LOCAL
+| ABSTYPE
+| SHARING
+| WHERE
+| WITH
+| WITHTYPE
+| EQTYPE
+| INCLUDE
+| OP
+| ORELSE
+| ANDALSO
+| ID      of string
+| INID    of string
+| LONGID  of string
+| NUM     of string
+| TYPEVAR of string
+| INT     of string
+| WORD    of string
+| REAL    of string
+| STRING  of string
+| CHAR    of string
+| FILE    of string
+| QUOTE   of string
+| AQUOTE  of string
+| BQUOTE
+| EQUOTE  of string
+| STDEC
+| STSPEC
+| STUSE
+| STCBAS
+| STSBAS
+| STQUOTE
+| STTYPE
+| QQVALUE of string
+| STEND
+| EOF
+
+
+%nonterm
+  prog             of A.prog t
+| progonelist      of A.progone list t
+| progone          of A.progone t
+| topdec           of A.topdec t
+| topdeconelist    of A.topdecone list t
+| topdecone        of A.topdecone t
+| smltes           of A.smltes t
+| atopdec          of A.atopdec t
+| sigdec           of A.sigdec t
+| strdec           of A.strdec t
+| strdeconelist    of (A.strdecone list * R.region list) t
+| strdecone        of A.strdecone t
+| funbind          of A.funbind t
+| funbindone       of A.funbindone t
+| funbindonelist   of (A.funbindone list * R.region list) t
+| sigbind          of A.sigbind t
+| sigbindone       of A.sigbindone t
+| sigbindonelist   of (A.sigbindone list * R.region list) t
+| strbind          of A.strbind t
+| strbindonelist   of (A.strbindone list * R.region list) t
+| strbindone       of A.strbindone t
+| ltreadescone     of A.ltreadescone t
+| ltreadesconelist of (A.ltreadescone list * R.region list) t
+| ltreadesc        of A.ltreadesc t
+| labsigexp        of (R.region list -> A.labsigexp) t
+| sigexp           of A.sigexp t
+| labstrexp        of (R.region list -> A.labstrexp) t
+| strexp           of A.strexp t
+| longtyconeqseq   of (A.longtycon list * R.region list) t
+| longtyconeq      of A.longtyconeq t
+| longstrideqseq   of (A.longstrid list * R.region list) t
+| longstrideq      of A.longstrideq t
+| sigidlist        of A.sigid list t
+| sigidseq         of A.sigidseq t
+| spec             of A.spec t
+| specone          of A.specone t
+| speconeseq       of A.specone list t
+| speconeseq'      of A.specone list t
+| speconeseq''     of A.specone list t
+| valdescone       of A.valdescone t
+| typdescone       of A.typdescone t
+| tdrdescone       of A.tdrdescone t
+| excdescone       of A.excdescone t
+| datdescone       of A.datdescone t
+| strdescone       of A.strdescone t
+| valdesconeseq    of (A.valdescone list * R.region list) t
+| typdesconeseq    of (A.typdescone list * R.region list) t
+| tdrdesconeseq    of (A.tdrdescone list * R.region list) t
+| excdesconeseq    of (A.excdescone list * R.region list) t
+| datdesconeseq    of (A.datdescone list * R.region list) t
+| strdesconeseq    of (A.strdescone list * R.region list) t
+| valdesc          of A.valdesc t
+| typdesc          of A.typdesc t
+| tdrdesc          of A.tdrdesc t
+| excdesc          of A.excdesc t
+| datdesc          of A.datdesc t
+| strdesc          of A.strdesc t
+| condescone       of A.condescone t
+| condescbar       of (A.condescone list * R.region list) t
+| condesc          of A.condesc t
+| labid            of (R.region list -> A.labid) t
+| ident            of A.ident t
+| identid          of A.ident t
+| identop          of A.ident t
+| identop'         of A.ident t
+| class            of A.class t
+| labclass         of (R.region list -> A.labclass) t
+| strid            of A.strid t
+| sigid            of A.sigid t
+| funid            of A.funid t
+| longid           of A.longid t
+| longidid         of A.longid t
+| longid'          of A.longid t
+| longstrid        of A.longstrid t
+| longstridseq'    of A.longstrid list t
+| longstridseq     of A.longstrseq t
+| identseq'        of A.ident list t
+| identseq         of A.identseq t
+| longtycon        of A.longtycon t
+| scon             of A.scon t
+| tylab            of A.tylab t
+| tycon            of A.tycon t
+| typevar          of A.typevar t
+| labtyvar         of (R.region list -> A.labtyvar) t
+| tyvarseqcomma    of ((R.region list -> R.region list -> A.labtyvar list) * R.region list) t
+| tyvarseq         of A.tyvarseq t
+| typetuple        of (A.types t) list * R.region list list * R.region list
+| consty           of A.types t
+| onetyrow         of A.tyrow t
+| tyrow            of (A.tyrow list * R.region list) t
+| tyrowopt         of (A.tyrow list * R.region list) t
+| atty             of A.types t
+| labtype          of (R.region list -> A.labtype) t
+| types            of A.types t
+| tupty            of A.types t
+| typeseqcomma     of ((R.region list -> R.region list -> A.labtype list) * R.region list) t
+| tyclass          of A.tyclass t
+| labtyclass       of (R.region list -> A.labtyclass) t
+| tyclassseq       of A.tyclassseq t
+| tyclassseqcomma  of ((R.region list -> R.region list -> A.labtyclass list) * R.region list) t
+| typeseq          of A.typeseq t
+| conbind          of A.conbind t
+| conbindbar       of A.conbind list t
+| conbindseq       of A.conbindseq t
+| valbindcore      of A.valbindcore t
+| valbindcorelist  of (A.valbindcore list * R.region list) t
+| valbindseq       of A.valbindseq t
+| valbind          of A.valbind t
+| datname          of A.datname t
+| ldatname         of A.ldatname t
+| datbind          of A.datbind t
+| datbindseqand    of (A.datbind list * R.region list) t
+| datbindseq       of A.datbindseq t
+| typbind          of A.typbind t
+| typbindseqand    of (A.typbind list * R.region list) t
+| typbindseq       of A.typbindseq t
+| exbind           of A.exbind t
+| exbindseqand     of (A.exbind list * R.region list) t
+| exbindseq        of A.exbindseq t
+| labpator         of ((R.region list -> R.region list -> A.labpat list) * R.region list) t
+| labatpat         of A.labatpat t
+| labatpats        of (A.labatpat t * R.pos * R.pos) list
+| fmatch           of A.fmatch t
+| labfmatch        of (R.region list -> A.labfmatch) t
+| fmatchty         of (R.region list -> A.fmatchty) t
+| fmvalbindcore    of A.fvalbindcore t
+| fvalbindcorelist of (A.fvalbindcore list * R.region list) t
+| fvalbindone      of A.fvalbindone t
+| fvalbindonelist  of (A.fvalbindone list * R.region list) t
+| fvalbind         of A.fvalbind t
+| d_opt            of int
+| dec              of A.dec t
+| dec'             of A.dec t
+| decmc            of A.dec list t
+| decs             of A.decs t
+| atexptuple       of ((R.region list -> R.region list -> A.labexp list) * R.region list) t
+| labexpseq        of ((R.region list -> R.region list -> A.labexp list) * R.region list * R.region) t
+| explist          of ((R.region list -> R.region list -> A.labexp list) * R.region list) t
+| neexplist        of ((R.region list -> R.region list -> A.labexp list) * R.region list) t
+| seqexp           of (R.region list -> R.region list -> A.seqexp) t
+| labexp           of (R.region list -> A.labexp) t
+| oneexprow        of (R.region list -> A.exprow) t
+| exprow           of ((R.region list -> A.exprow list) * R.region list) t
+| exprowopt        of ((R.region list -> A.exprow list) * R.region list) t
+| atexp            of A.atexp t
+| appexp           of (A.atexp t) F.tree list
+| infexp           of A.exp t
+| exp              of A.exp t
+| matchbar         of (A.mrule list * R.region list) t
+| match            of A.match t
+| mrule            of A.mrule t
+| identty          of A.identty t
+| labidty          of (R.region list -> A.labidty) t
+| atpattuple       of ((R.region list -> R.region list -> A.labpat list) * R.region list * R.region list) t
+| patlist          of ((R.region list -> R.region list -> A.labpat list) * R.region list) t
+| nepatlist        of ((R.region list -> R.region list -> A.labpat list) * R.region list) t
+| labpat           of (R.region list -> A.labpat) t
+| labpatcpx        of (R.region list -> A.labpat) t
+| onepatrow        of A.patrow t
+| patrow           of (A.patrow list * R.region list) t
+| patrowopt        of (A.patrow list * R.region list) t
+| atpat            of A.atpat t
+| atpat'           of A.atpat t
+| coltylist        of R.region list -> ((R.region list -> A.labtype) t * R.region * R.region list * R.region list * R.region) list
+| pat              of A.pat t
+| patsp            of A.pat t
+| patcpx           of A.pat t
+| apppat           of (A.atpat t) F.tree list
+| infpat           of A.pat t
+| quotelist        of A.quote list t
+| aquote           of (A.quote * A.quote) t
+
+
+%nonassoc WITHTYPE
+%right COMMA
+%right AND
+%right TYPEARROW
+%right DARROW
+%left  STAR
+%left  DO
+%left  ELSE
+%left  RAISE
+%right HANDLE
+%right ORELSE
+%right ANDALSO
+%right AS
+%left  COLON
+
+
+%change           -> VAL
+      |           -> THEN
+      |           -> ELSE
+      |           -> LPAREN
+      |           -> SEMICOLON
+      | DARROW    -> EQUALOP
+      | EQUALOP   -> DARROW
+      | AND       -> ANDALSO
+      | COLON     -> OF
+      | SEMICOLON -> COMMA
+      | COMMA     -> SEMICOLON
+      |           -> IN ID END
+      |           -> ELSE ID
+
+
+%pos R.pos
+
+
+%eop EOF
+
+
+%noshift EOF
+
+
+%start prog
+
+
+%verbose
+
+
+%%
+
+
+prog :
+  progonelist
+    (fn nasc =>
+	let val (tdl, masc) = progonelist nasc
+	in (A.Prog tdl, masc)
+	end)
+
+progonelist :
+   (fn nasc => ([], nasc))
+| progone
+    (fn nasc =>
+	let val (p, masc)  = progone nasc
+	in ([p], masc)
+	end)
+| SEMICOLON progonelist
+    (progonelist)
+| progone SEMICOLON progonelist
+    (fn nasc =>
+	let val (p, masc)  = progone nasc
+	    val (ps, pasc) = progonelist masc
+	in (p :: ps, pasc)
+	end)
+
+progone :
+  topdec
+    (fn nasc =>
+	let val (td, masc) = topdec nasc
+	in (A.ProgOneDec td, masc)
+	end)
+| exp
+    (fn (n, nasc) =>
+	let val (v, masc) = updateAscId "it" nasc
+	    val (e, (m, pasc)) = exp (L.nextLabel n, masc)
+	    val reg = R.consReg expleft expleft
+	in (A.ProgOneExp (e, v, reg, n, m), (m, pasc))
+	end)
+
+topdec :
+  topdeconelist
+    (fn nasc =>
+	let val (tds, masc) = topdeconelist nasc
+	in (A.TopDec tds, masc)
+	end)
+
+topdeconelist :
+  topdecone
+    (fn nasc =>
+	let val (td, masc)  = topdecone nasc
+	in ([td], masc)
+	end)
+| topdecone topdeconelist
+    (fn nasc =>
+	let val (td, masc)  = topdecone nasc
+	    val (tdl, pasc) = topdeconelist masc
+	in (td :: tdl, pasc)
+	end)
+
+topdecone :
+  smltes
+    (fn nasc =>
+	let val (x, (m, masc)) = smltes nasc
+	in (A.TopDecOneTes (x, m), (m, masc))
+	end)
+| atopdec
+    (fn nasc =>
+	let val (x, (m, masc)) = atopdec nasc
+	in (A.TopDecOneDec (x, m), (m, masc))
+	end)
+
+smltes :
+  STDEC atopdec STEND
+    (fn nasc =>
+	let val (s, (m, masc)) = atopdec nasc
+	    val reg1 = R.consReg STDECleft STDECright
+	    val reg2 = R.consReg STENDleft STENDright
+	in (A.SmlTesDec (s, [reg1, reg2], m), (m, masc))
+	end)
+| STSPEC spec STEND
+    (fn nasc =>
+	let val (s, (m, masc)) = spec nasc
+	    val reg1 = R.consReg STSPECleft STSPECright
+	    val reg2 = R.consReg STENDleft STENDright
+	in (A.SmlTesSpec (s, [reg1, reg2], m), (m, masc))
+	end)
+| STUSE FILE STEND
+    (fn (n, nasc) =>
+	let val reg1 = R.consReg STUSEleft STUSEright
+	    val reg2 = R.consReg FILEleft FILEright
+	    val reg3 = R.consReg STENDleft STENDright
+	    val af   = (A.AFile (FILE, reg2, n, L.nextLabel n))
+	in (A.SmlTesUse (af, [reg1, reg3], L.nextLabel n), (L.nextLabel n, nasc))
+	end)
+| STSBAS FILE STEND
+    (fn (n, nasc) =>
+	let val reg1 = R.consReg STSBASleft STSBASright
+	    val reg2 = R.consReg FILEleft FILEright
+	    val reg3 = R.consReg STENDleft STENDright
+	    val af   = (A.AFile (FILE, reg2, n, L.nextLabel n))
+	in (A.SmlTesSBas (af, [reg1, reg3], L.nextLabel n), (L.nextLabel n, nasc))
+	end)
+| STCBAS STEND
+    (fn (n, nasc) =>
+	let val reg1 = R.consReg STCBASleft STCBASright
+	    val reg2 = R.consReg STENDleft STENDright
+	in (A.SmlTesCBas ([reg1, reg2], n, L.nextLabel n), (L.nextLabel n, nasc))
+	end)
+| STQUOTE QQVALUE STEND
+    (fn (n, nasc) =>
+	let val reg1 = R.consReg STQUOTEleft STQUOTEright
+	    val reg2 = R.consReg QQVALUEleft QQVALUEright
+	    val reg3 = R.consReg STENDleft   STENDright
+	    val boolValue = (A.ABool (QQVALUE, reg2, n, L.nextLabel n))
+	in (A.SmlTesQuote(boolValue, [reg1, reg3], L.nextLabel n), (L.nextLabel n, nasc))
+	end)
+| STTYPE ID STEND
+    (fn (n, nasc) =>
+	let val reg1 = R.consReg STTYPEleft STTYPEright
+	    val reg2 = R.consReg STENDleft STENDright
+	in (A.SmlTesType (ID, [reg1, reg2], n), (n, nasc))
+	end)
+
+atopdec :
+  strdecone
+    (fn (n, nasc) =>
+	let val (d, (m, masc)) = strdecone (L.nextLabel n, nasc)
+	in (A.ATopDecStr (A.StrDec ([d], n, m)), (m, masc))
+	end)
+| sigdec
+    (fn nasc =>
+	let val (d, masc) = sigdec nasc
+	in (A.ATopDecSig d, masc)
+	end)
+
+funbindone :
+  funid LPAREN strid COLON labsigexp RPAREN EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sid, pasc) = strid masc
+	    val (si, qasc) = labsigexp pasc
+	    val (se, (r, rasc)) = labstrexp qasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg COLONleft   COLONright
+	    val reg3 = R.consReg RPARENleft  RPARENright
+	    val reg4 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3, reg4]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion COLONright labsigexpleft
+	    val ri2  = getRegion labsigexpright RPARENleft
+	in (A.FunBindO (fid, sid, si (ri1 @ ri2), se re, regs, n, r), (r, rasc))
+	end)
+| funid LPAREN strid COLON labsigexp RPAREN SEAL labsigexp EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sid, pasc) = strid masc
+	    val (si1, qasc) = labsigexp1 pasc
+	    val (si2, rasc) = labsigexp2 qasc
+	    val (se, (s, sasc)) = labstrexp rasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg COLONleft   COLONright
+	    val reg3 = R.consReg RPARENleft  RPARENright
+	    val reg4 = R.consReg SEALleft    SEALright
+	    val reg5 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3, reg4, reg5]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri11 = getRegion COLONright labsigexp1left
+	    val ri12 = getRegion labsigexp1right RPARENleft
+	    val ri21 = getRegion SEALright labsigexp2left
+	    val ri22 = getRegion labsigexp2right EQUALOPleft
+	in (A.FunBindOO (fid, sid, si1 (ri11 @ ri12), si2 (ri21 @ ri22), se re, regs, n, s), (s, sasc))
+	end)
+| funid LPAREN strid COLON labsigexp RPAREN COLON labsigexp EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sid, pasc) = strid masc
+	    val (si1, qasc) = labsigexp1 pasc
+	    val (si2, rasc) = labsigexp2 qasc
+	    val (se, (s, sasc)) = labstrexp rasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg COLON1left  COLON1right
+	    val reg3 = R.consReg RPARENleft  RPARENright
+	    val reg4 = R.consReg COLON2left  COLON2left
+	    val reg5 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3, reg4, reg5]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri11 = getRegion COLON1right labsigexp1left
+	    val ri12 = getRegion labsigexp1right RPARENleft
+	    val ri21 = getRegion COLON2right labsigexp2left
+	    val ri22 = getRegion labsigexp2right EQUALOPleft
+	in (A.FunBindOT (fid, sid, si1 (ri11 @ ri12), si2 (ri21 @ ri22), se re, regs, n, s), (s, sasc))
+	end)
+| funid LPAREN spec RPAREN EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sp,  pasc) = spec masc
+	    val (se, (q, qasc)) = labstrexp pasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg RPARENleft  RPARENright
+	    val reg3 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	in (A.FunBindOS (fid, sp, se re, regs, n, q), (q, qasc))
+	end)
+| funid LPAREN spec RPAREN SEAL labsigexp EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sp,  pasc) = spec masc
+	    val (si,  qasc) = labsigexp pasc
+	    val (se, (r, rasc)) = labstrexp qasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg RPARENleft  RPARENright
+	    val reg3 = R.consReg SEALleft    SEALright
+	    val reg4 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3, reg4]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion SEALright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.FunBindOSO (fid, sp, si (ri1 @ ri2), se re, regs, n, r), (r, rasc))
+	end)
+| funid LPAREN spec RPAREN COLON labsigexp EQUALOP labstrexp
+    (fn (n, nasc) =>
+	let val (fid, masc) = funid (L.nextLabel n, nasc)
+	    val (sp,  pasc) = spec masc
+	    val (si,  qasc) = labsigexp pasc
+	    val (se, (r, rasc)) = labstrexp qasc
+	    val reg1 = R.consReg LPARENleft  LPARENright
+	    val reg2 = R.consReg RPARENleft  RPARENright
+	    val reg3 = R.consReg COLONleft   COLONleft
+	    val reg4 = R.consReg EQUALOPleft EQUALOPright
+	    val regs = [reg1, reg2, reg3, reg4]
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion COLONright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.FunBindOST (fid, sp, si (ri1 @ ri2), se re, regs, n, r), (r, rasc))
+	end)
+
+funbindonelist :
+  funbindone
+    (fn nasc =>
+	let val (fbo, masc) = funbindone nasc
+	in (([fbo], []), masc)
+	end)
+| funbindone AND funbindonelist
+    (fn nasc =>
+	let val (fbo, masc) = funbindone nasc
+	    val ((fbos, regs), pasc) = funbindonelist masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((fbo :: fbos, reg :: regs), pasc)
+	end)
+
+funbind :
+  funbindonelist
+    (fn nasc =>
+	let val ((fbos, regs), (m, asc)) = funbindonelist nasc
+	in (A.FunBind (fbos, regs, m), (m, asc))
+	end)
+
+sigdec :
+  SIGNATURE sigbind
+    (fn nasc =>
+	let val (sb, (m, asc)) = sigbind nasc
+	    val reg = R.consReg SIGNATUREleft SIGNATUREright
+	in (A.SigDec (sb, reg, m), (m, asc))
+	end)
+
+sigbindone :
+  sigid EQUALOP labsigexp
+    (fn (n, asc) =>
+	let val (id, masc) = sigid (L.nextLabel n, asc)
+	    val (se, (p, asc')) = labsigexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val re  = getRegion EQUALOPright labsigexpleft
+	in (A.SigBindOne (id, se re, reg, n, p), (p, asc'))
+	end)
+
+sigbindonelist :
+  sigbindone
+    (fn nasc =>
+	let val (sbo, masc) = sigbindone nasc
+	in (([sbo], []), masc)
+	end)
+| sigbindone AND sigbindonelist
+    (fn nasc =>
+	let val (sbo, masc) = sigbindone nasc
+	    val ((sbos, regs), pasc) = sigbindonelist masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((sbo :: sbos, reg :: regs), pasc)
+	end)
+
+sigbind :
+  sigbindonelist
+    (fn nasc =>
+	let val ((sbos, regs), (m, asc)) = sigbindonelist nasc
+	in (A.SigBind (sbos, regs, m), (m, asc))
+	end)
+
+strdec :
+  strdeconelist
+    (fn (n, nasc) =>
+	let val ((xs, regs), (m, masc)) = strdeconelist (L.nextLabel n, nasc)
+	in (A.StrDec (xs, n, m), (m, masc))
+	end)
+
+strdeconelist :
+    (fn nasc => (([], []), nasc))
+| SEMICOLON strdeconelist
+    (strdeconelist)
+| strdecone strdeconelist
+    (fn nasc =>
+	let val (sd, masc) = strdecone nasc
+	    val ((sdl, regs), pasc) = strdeconelist masc
+	    val reg = R.consReg strdeconeright strdeconelistleft
+	in ((sd :: sdl, reg :: regs), pasc)
+	end)
+
+strdecone :
+  dec'
+    (fn nasc =>
+	let val (d, (m, masc)) = dec' nasc
+	in (A.StrDecOneDec (A.Decs ([d], m)), (m, masc))
+	end)
+| STRUCTURE strbind
+    (fn (n, asc) =>
+	let val (sb, (m, asc')) = strbind (n, asc)
+	    val reg = R.consReg STRUCTUREleft STRUCTUREright
+	in (A.StrDecOneStr (sb, reg, m), (m, asc'))
+	end)
+| LOCAL strdec IN strdec END
+    (fn (n, asc) =>
+	let val _ = F.newScope n
+	    val (sd1, masc) = strdec1 (L.nextLabel n, asc)
+	    val (sd2, (p, pasc)) = strdec2 masc
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg LOCALleft LOCALright
+	    val reg2 = R.consReg INleft    INright
+	    val reg3 = R.consReg ENDleft   ENDright
+	in (A.StrDecOneLoc (sd1, sd2, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+| FUNCTOR funbind
+    (fn (n, nasc) =>
+	let val (fb, (m, masc)) = funbind (L.nextLabel n, nasc)
+	    val reg = R.consReg FUNCTORleft FUNCTORright
+	in (A.StrDecOneFun (fb, reg, n, m), (m, masc))
+	end)
+
+strbind :
+  strbindonelist
+    (fn nasc =>
+	let val ((xs, regs), (m, masc)) = strbindonelist nasc
+	in (A.StrBind (xs, regs, m), (m, masc))
+	end)
+
+strbindonelist :
+  strbindone
+    (fn nasc =>
+	let val (x, masc) = strbindone nasc
+	in (([x], []), masc)
+	end)
+| strbindone AND strbindonelist
+    (fn nasc =>
+	let val (x, masc) = strbindone nasc
+	    val ((xs, regs), pasc) = strbindonelist masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((x :: xs, reg :: regs), pasc)
+	end)
+
+strbindone :
+  strid SEAL labsigexp EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (si, pasc) = labsigexp masc
+	    val (se, (q, asc')) = labstrexp pasc
+	    val reg1 = R.consReg SEALleft SEALright
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion SEALright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.StrBindOneOp (sid, si (ri1 @ ri2), se re, [reg1, reg2], n, q), (q, asc'))
+	end)
+| strid COLON labsigexp EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (si, pasc) = labsigexp masc
+	    val (se, (q, asc')) = labstrexp pasc
+	    val reg1 = R.consReg COLONleft COLONright
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion COLONright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.StrBindOneTr (sid, si (ri1 @ ri2), se re, [reg1, reg2], n, q), (q, asc'))
+	end)
+| strid EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (se, (p, asc')) = labstrexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	in (A.StrBindOne (sid, se re, reg, n, p), (p, asc'))
+	end)
+
+ltreadescone :
+  TYPE ldatname EQUALOP labtype
+    (fn (n, nasc) =>
+	let val (dn, masc) = ldatname (L.nextLabel n, nasc)
+	    val (ty, (p, pasc)) = labtype masc
+	    val rt   = getRegion EQUALOPright labtypeleft
+	    val reg1 = R.consReg TYPEleft TYPEright
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	in (A.LTReaDOne (dn, ty rt, [reg1, reg2], n, p), (p, pasc))
+	end)
+
+ltreadesconelist :
+  ltreadescone
+    (fn nasc =>
+	let val (x, masc) = ltreadescone nasc
+	in (([x], []), masc)
+	end)
+| ltreadescone AND ltreadesconelist
+    (fn nasc =>
+	let val (x, masc) = ltreadescone nasc
+	    val ((xs, regl), pasc) = ltreadesconelist masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((x :: xs, reg :: regl), pasc)
+	end)
+
+ltreadesc :
+  ltreadesconelist
+    (fn (n, nasc) =>
+	let val ((xs, regs), (m, masc)) = ltreadesconelist (L.nextLabel n, nasc)
+	in (A.LTReaDesc (xs, regs, n, m), (m, masc))
+	end)
+
+labsigexp :
+  sigexp
+    (fn (n, asc) =>
+	let val (e, (m, asc')) = sigexp (L.nextLabel n, asc)
+	    val re = [R.consReg sigexpleft sigexpright]
+	in (fn rs => A.LabSigExp (e, rs, re, n, m), (m, asc'))
+	end)
+
+sigexp :
+  SIG spec END
+    (fn (n, asc) =>
+	let val (sp, (m, asc')) = spec (L.nextLabel n, asc)
+	    val reg1 = R.consReg SIGleft SIGright
+	    val reg2 = R.consReg ENDleft ENDright
+	in (A.SigExpBasic (sp, [reg1, reg2], n, m), (m, asc'))
+	end)
+| sigid
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = sigid (L.nextLabel n, asc)
+	in (A.SigExpId (id, n, m), (m, asc'))
+	end)
+| labsigexp WHERE ltreadesc
+    (fn (n, nasc) =>
+	let val (se, masc) = labsigexp (L.nextLabel n, nasc)
+	    val (rea, (p, pasc)) = ltreadesc masc
+	    val reg = R.consReg WHEREleft WHEREright
+	    val re  = getRegion labsigexpright WHEREleft
+	in (A.SigExpRea (se re, rea, [reg], n, p), (p, pasc))
+	end)
+
+labstrexp :
+  strexp
+    (fn (n, asc) =>
+	let val (e, (m, asc')) = strexp (L.nextLabel n, asc)
+	    val re = [R.consReg strexpleft strexpright]
+	in (fn rs => A.LabStrExp (e, rs, re, n, m), (m, asc'))
+	end)
+
+strexp :
+  STRUCT strdec END
+    (fn (n, asc) =>
+	let val _ = F.newScope n
+	    val (sd, (m, asc')) = strdec (L.nextLabel n, asc)
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg STRUCTleft STRUCTright
+	    val reg2 = R.consReg ENDleft ENDright
+	in (A.StrExpBasic (sd, [reg1, reg2], n, m), (m, asc'))
+	end)
+| longstrid
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = longstrid (L.nextLabel n, asc)
+	in (A.StrExpId (id, n, m), (m, asc'))
+	end)
+| labstrexp SEAL labsigexp
+    (fn (n, nasc) =>
+	let val (se, masc) = labstrexp (L.nextLabel n, nasc)
+	    val (si, (p, pasc)) = labsigexp masc
+	    val reg = R.consReg SEALleft SEALright
+	    val re  = getRegion labstrexpright SEALleft
+	    val ri  = getRegion SEALright labsigexpleft
+	in (A.StrExpOp (se re, si ri, reg, n, p), (p, pasc))
+	end)
+| labstrexp COLON labsigexp
+    (fn (n, nasc) =>
+	let val (se, masc) = labstrexp (L.nextLabel n, nasc)
+	    val (si, (p, pasc)) = labsigexp masc
+	    val reg = R.consReg COLONleft COLONright
+	    val re  = getRegion labstrexpright COLONleft
+	    val ri  = getRegion COLONright labsigexpleft
+	in (A.StrExpTr (se re, si ri, reg, n, p), (p, pasc))
+	end)
+| funid LPAREN labstrexp RPAREN
+    (fn (n, nasc) =>
+	let val (id, masc) = funid (L.nextLabel n, nasc)
+	    val (se, (p, pasc)) = labstrexp masc
+	    val reg1 = R.consReg LPARENleft LPARENright
+	    val reg2 = R.consReg RPARENleft RPARENright
+	    val re1  = getRegion LPARENright labstrexpleft
+	    val re2  = getRegion labstrexpright RPARENleft
+	in (A.StrExpFExp (id, se (re1 @ re2), [reg1, reg2], n, p), (p, pasc))
+	end)
+| funid LPAREN strdec RPAREN
+    (fn (n, nasc) =>
+	let val (id, masc) = funid (L.nextLabel n, nasc)
+	    val (sd, (p, pasc)) = strdec masc
+	    val reg1 = R.consReg LPARENleft LPARENright
+	    val reg2 = R.consReg RPARENleft RPARENright
+	in (A.StrExpFDec (id, sd, [reg1, reg2], n, p), (p, pasc))
+	end)
+| LET strdec IN labstrexp END
+    (fn (n, nasc) =>
+	let val _ = F.newScope n
+	    val (sd, masc) = strdec (L.nextLabel n, nasc)
+	    val (se, (p, pasc)) = labstrexp masc
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg LETleft LETright
+	    val reg2 = R.consReg INleft  INright
+	    val reg3 = R.consReg ENDleft ENDright
+	    val re1  = getRegion INright labstrexpleft
+	    val re2  = getRegion labstrexpright ENDleft
+	in (A.StrExpLocal (sd, se (re1 @ re2), [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+
+longtyconeqseq :
+  longtycon EQUALOP longtycon
+    (fn nasc =>
+	let val (x1, masc) = longtycon1 nasc
+	    val (x2, pasc) = longtycon2 masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (([x1, x2], [reg]), pasc)
+	end)
+| longtycon EQUALOP longtyconeqseq
+    (fn nasc =>
+	let val (x, masc) = longtycon nasc
+	    val ((xs, rs), pasc) = longtyconeqseq masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in ((x :: xs, reg :: rs), pasc)
+	end)
+
+longtyconeq :
+  longtyconeqseq
+    (fn (n, nasc) =>
+	let val ((xs, rs), (m, masc)) = longtyconeqseq (L.nextLabel n, nasc)
+	in (A.LongTyConEq (xs, rs, n, m), (m, masc))
+	end)
+
+longstrideqseq :
+  longstrid EQUALOP longstrid
+    (fn nasc =>
+	let val (x1, masc) = longstrid1 nasc
+	    val (x2, pasc) = longstrid1 masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (([x1, x2], [reg]), pasc)
+	end)
+| longstrid EQUALOP longstrideqseq
+    (fn nasc =>
+	let val (x, masc) = longstrid nasc
+	    val ((xs, rs), pasc) = longstrideqseq masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in ((x :: xs, reg :: rs), pasc)
+	end)
+
+longstrideq :
+  longstrideqseq
+    (fn nasc =>
+	let val ((xs, rs), (m, masc)) = longstrideqseq nasc
+	in (A.LongStrIdEq (xs, rs, m), (m, masc))
+	end)
+
+sigidlist :
+  sigid sigid
+    (fn nasc =>
+	let val (s1, masc) = sigid1 nasc
+	    val (s2, pasc) = sigid2 masc
+	in ([s1, s2], pasc)
+	end)
+| sigid sigidlist
+    (fn nasc =>
+	let val (x, masc) = sigid nasc
+	    val (xs, pasc) = sigidlist masc
+	in (x :: xs, pasc)
+	end)
+
+sigidseq :
+  sigidlist
+    (fn nasc =>
+	let val (xs, (m, masc)) = sigidlist nasc
+	in (A.SigIdSeq (xs, m), (m, masc))
+	end)
+
+spec :
+  speconeseq
+    (fn nasc =>
+	let val (spl, (m, asc')) = speconeseq nasc
+	in (A.Spec (spl, m), (m, asc'))
+	end)
+|   (fn (n, nasc) => (A.Spec ([], n), (n, nasc)))
+
+speconeseq'' :
+  speconeseq'' SHARING TYPE longtyconeq
+    (fn (n, nasc) =>
+	let val (spl, (m, masc)) = speconeseq'' (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtyconeq (m, masc)
+	    val reg1 = R.consReg SHARINGleft SHARINGright
+	    val reg2 = R.consReg TYPEleft TYPEright
+	    val regs = [reg1, reg2]
+	    val spec = A.Spec (spl, m)
+	in ([A.SpecSha (spec, ltc, regs, n, p)], (p, pasc))
+	end)
+| speconeseq' SHARING TYPE longtyconeq
+    (fn (n, nasc) =>
+	let val (spl, (m, masc)) = speconeseq' (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtyconeq (m, masc)
+	    val reg1 = R.consReg SHARINGleft SHARINGright
+	    val reg2 = R.consReg TYPEleft TYPEright
+	    val regs = [reg1, reg2]
+	    val spec = A.Spec (spl, m)
+	in ([A.SpecSha (spec, ltc, regs, n, p)], (p, pasc))
+	end)
+| speconeseq'' SHARING longstrideq
+    (fn (n, nasc) =>
+	let val (spl, (m, masc)) = speconeseq'' (L.nextLabel n, nasc)
+	    val (lsi, (p, pasc)) = longstrideq (m, masc)
+	    val reg = R.consReg SHARINGleft SHARINGright
+	    val spec = A.Spec (spl, m)
+	in ([A.SpecSsi (spec, lsi, [reg], n, p)], (p, pasc))
+	end)
+| speconeseq' SHARING longstrideq
+    (fn (n, nasc) =>
+	let val (spl, (m, masc)) = speconeseq' (L.nextLabel n, nasc)
+	    val (lsi, (p, pasc)) = longstrideq (m, masc)
+	    val reg = R.consReg SHARINGleft SHARINGright
+	    val spec = A.Spec (spl, m)
+	in ([A.SpecSsi (spec, lsi, [reg], n, p)], (p, pasc))
+	end)
+
+speconeseq :
+  speconeseq''
+    (speconeseq'')
+| speconeseq'
+    (speconeseq')
+| speconeseq'' speconeseq
+    (fn nasc =>
+	let val (spe1, masc) = speconeseq'' nasc
+	    val (spe2, pasc) = speconeseq masc
+	in (spe1 @ spe2, pasc)
+	end)
+
+speconeseq' :
+  specone
+    (fn nasc =>
+	let val (sp, masc) = specone nasc
+	in ([sp], masc)
+	end)
+| SEMICOLON
+    (fn nasc => ([], nasc))
+| specone speconeseq'
+    (fn nasc =>
+	let val (sp, masc) = specone nasc
+	    val (spl, pasc) = speconeseq' masc
+	in (sp :: spl, pasc)
+	end)
+| SEMICOLON speconeseq'
+    (speconeseq')
+
+specone :
+  VAL valdesc
+    (fn (n, asc) =>
+	let val (vd, (m, asc')) = valdesc (L.nextLabel n, asc)
+	    val reg = R.consReg VALleft VALright
+	in (A.SpecVal (vd, reg, n, m), (m, asc'))
+	end)
+| TYPE typdesc
+    (fn (n, asc) =>
+	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
+	    val reg = R.consReg TYPEleft TYPEright
+	in (A.SpecTyp (td, reg, n, m), (m, asc'))
+	end)
+| EQTYPE typdesc
+    (fn (n, asc) =>
+	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
+	    val reg = R.consReg EQTYPEleft EQTYPEright
+	in (A.SpecEqT (td, reg, n, m), (m, asc'))
+	end)
+| EXCEPTION excdesc
+    (fn (n, asc) =>
+	let val (ed, (m, asc')) = excdesc (L.nextLabel n, asc)
+	    val reg = R.consReg EXCEPTIONleft EXCEPTIONright
+	in (A.SpecExc (ed, reg, n, m), (m, asc'))
+	end)
+| TYPE tdrdesc
+    (fn (n, asc) =>
+	let val (td, (m, asc')) = tdrdesc (L.nextLabel n, asc)
+	    val reg = R.consReg TYPEleft TYPEright
+	in (A.SpecTdr (td, reg, n, m), (m, asc'))
+	end)
+| DATATYPE datdesc
+    (fn (n, asc) =>
+	let val (dd, (m, asc')) = datdesc (L.nextLabel n, asc)
+	    val reg = R.consReg DATATYPEleft DATATYPEright
+	in (A.SpecDat (dd, reg, n, m), (m, asc'))
+	end)
+| STRUCTURE strdesc
+    (fn (n, asc) =>
+	let val (sd, (m, asc')) = strdesc (L.nextLabel n, asc)
+	    val reg = R.consReg STRUCTUREleft STRUCTUREright
+	in (A.SpecStr (sd, reg, n, m), (m, asc'))
+	end)
+| INCLUDE labsigexp
+    (fn (n, asc) =>
+	let val (si, (m, asc')) = labsigexp (L.nextLabel n, asc)
+	    val reg = R.consReg INCLUDEleft INCLUDEright
+	    val re  = getRegion INCLUDEright labsigexpleft
+	in (A.SpecInc (si re, reg, n, m), (m, asc'))
+	end)
+| INCLUDE sigidseq
+    (fn (n, nasc) =>
+	let val (sis, (m, masc)) = sigidseq (L.nextLabel n, nasc)
+	    val reg = R.consReg INCLUDEleft INCLUDEright
+	in (A.SpecIsi (sis, reg, n, m), (m, masc))
+	end)
+| DATATYPE tycon EQUALOP DATATYPE longtycon
+    (fn (n, nasc) =>
+	let val (tc, masc) = tycon (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtycon masc
+	    val reg1 = R.consReg DATATYPE1left DATATYPE1right
+	    val reg2 = R.consReg EQUALOPleft   EQUALOPright
+	    val reg3 = R.consReg DATATYPE2left DATATYPE2right
+	in (A.SpecRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+
+condescone :
+  ident
+    (fn nasc =>
+	let val (id, (m, asc')) = ident nasc
+	in (A.ConDescOneId (id, m), (m, asc'))
+	end)
+| labid OF labtype
+    (fn (n, asc) =>
+	let val (id, pasc) = labid (L.nextLabel n, asc)
+	    val (t, (m, asc')) = labtype pasc
+	    val reg = R.consReg OFleft OFright
+	    val rlt = getRegion OFright labtypeleft
+	    val rli = getRegion labidright OFleft
+	in (A.ConDescOneOf (id rli, t rlt, reg, n, m), (m, asc'))
+	end)
+
+condescbar :
+  condescone
+    (fn nasc =>
+	let val (cd, masc) = condescone nasc
+	in (([cd], []), masc)
+	end)
+| condescone PIPE condescbar
+    (fn nasc =>
+	let val (cd, masc) = condescone nasc
+	    val ((cds, regs), pasc) = condescbar masc
+	    val reg = R.consReg PIPEleft PIPEright
+	in ((cd :: cds, reg :: regs), pasc)
+	end)
+
+condesc :
+  condescbar
+    (fn nasc =>
+	let val ((cds, regs), (m, asc')) = condescbar nasc
+	in (A.ConDesc (cds, regs, m), (m, asc'))
+	end)
+
+datdescone :
+  tyvarseq tycon EQUALOP condesc
+    (fn (n, nasc) =>
+	let val (tn, masc) = tycon (L.nextLabel n, nasc)
+	    val (tvs, (p, pasc)) = tyvarseq masc
+	    val (cd, (q, qasc)) = condesc (p, pasc)
+	    val reg1 = getRegion tyvarseqright tyconleft
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	in (A.DatDescOne (A.DatName (tvs, tn, reg1, p), cd, reg2, n, q), (q, qasc))
+	end)
+| tycon EQUALOP condesc
+    (fn (n, nasc) =>
+	let val (tn, (p, pasc)) = tycon (L.nextLabel n, nasc)
+	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val (cd, (q, qasc)) = condesc (L.nextLabel p, pasc)
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.DatDescOne (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), cd, reg, n, q), (q, qasc))
+	end)
+
+datdesconeseq :
+  datdescone
+    (fn nasc =>
+	let val (dd, masc) = datdescone nasc
+	in (([dd], []), masc)
+	end)
+| datdescone AND datdesconeseq
+    (fn nasc =>
+	let val (dd, masc) = datdescone nasc
+	    val ((ddl, rl), pasc) = datdesconeseq masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((dd :: ddl, reg :: rl), pasc)
+	end)
+
+datdesc :
+  datdesconeseq
+    (fn nasc =>
+	let val ((ddl, rl), (m, asc')) = datdesconeseq nasc
+	in (A.DatDesc (ddl, rl, m), (m, asc'))
+	end)
+
+strdescone :
+  strid COLON labsigexp
+    (fn (n, asc) =>
+	let val (id, masc) = strid (L.nextLabel n, asc)
+	    val (se, (p, pasc)) = labsigexp masc
+	    val reg = R.consReg COLONleft COLONright
+	    val re  = getRegion COLONright labsigexpleft
+	in (A.StrDescOne (id, se re, reg, n, p), (p, pasc))
+	end)
+
+strdesconeseq :
+  strdescone
+    (fn nasc =>
+	let val (sd, masc) = strdescone nasc
+	in (([sd], []), masc)
+	end)
+| strdescone AND strdesconeseq
+    (fn nasc =>
+	let val (sd, masc) = strdescone nasc
+	    val ((sdl, rl), pasc) = strdesconeseq masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((sd :: sdl, reg :: rl), pasc)
+	end)
+
+strdesc :
+  strdesconeseq
+    (fn nasc =>
+	let val ((sdl, rl), (m, asc')) = strdesconeseq nasc
+	in (A.StrDesc (sdl, rl, m), (m, asc'))
+	end)
+
+valdescone :
+  labid COLON labtype
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (t, (p, asc')) = labtype masc
+	    val ri = getRegion labidright COLONleft
+	    val rt = getRegion COLONright labtypeleft
+	    val reg = R.consReg COLONleft COLONright
+	in (A.ValDescOne (id ri, t rt, reg, n, p), (p, asc'))
+	end)
+
+valdesconeseq :
+  valdescone
+    (fn nasc =>
+	let val (vd, masc) = valdescone nasc
+	in (([vd], []), masc)
+	end)
+| valdescone AND valdesconeseq
+    (fn nasc =>
+	let val (vd, masc) = valdescone nasc
+	    val ((vdl, rl), pasc) = valdesconeseq masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((vd :: vdl, reg :: rl), pasc)
+	end)
+
+valdesc :
+  valdesconeseq
+    (fn nasc =>
+	let val ((vdl, rl), (m, asc')) = valdesconeseq nasc
+	in (A.ValDesc (vdl, rl, m), (m, asc'))
+	end)
+
+typdescone :
+  datname
+    (fn (n, asc) =>
+	let val (dn, (m, masc)) = datname (L.nextLabel n, asc)
+	in (A.TypDescOne (dn, n, m), (m, masc))
+	end)
+
+tdrdescone :
+  datname EQUALOP labtype
+    (fn (n, asc) =>
+	let val (dn, masc) = datname (L.nextLabel n, asc)
+	    val (ty, (p, asc')) = labtype masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rr = getRegion EQUALOPright labtypeleft
+	in (A.TdrDescOne (dn, ty rr, reg, n, p), (p, asc'))
+	end)
+
+typdesconeseq :
+  typdescone
+    (fn nasc =>
+	let val (td, masc) = typdescone nasc
+	in (([td], []), masc)
+	end)
+| typdescone AND typdesconeseq
+    (fn nasc =>
+	let val (td, masc) = typdescone nasc
+	    val ((tdl, rl), pasc) = typdesconeseq masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((td :: tdl, reg :: rl), pasc)
+	end)
+
+tdrdesconeseq :
+  tdrdescone
+    (fn nasc =>
+	let val (td, masc) = tdrdescone nasc
+	in (([td], []), masc)
+	end)
+| tdrdescone AND tdrdesconeseq
+    (fn nasc =>
+	let val (td, masc) = tdrdescone nasc
+	    val ((tdl, rl), pasc) = tdrdesconeseq masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((td :: tdl, reg :: rl), pasc)
+	end)
+
+typdesc :
+  typdesconeseq
+    (fn nasc =>
+      let val ((tdl, rl), (m, asc')) = typdesconeseq nasc
+      in (A.TypDesc (tdl, rl, m), (m, asc'))
+      end)
+
+tdrdesc :
+  tdrdesconeseq
+    (fn nasc =>
+      let val ((tdl, rl), (m, asc')) = tdrdesconeseq nasc
+      in (A.TdrDesc (tdl, rl, m), (m, asc'))
+      end)
+
+excdescone :
+  ident
+    (fn (n, asc) =>
+      let val (id, (m, asc')) = ident (L.nextLabel n, asc)
+      in (A.ExcDescOne (id, n, m), (m, asc'))
+      end)
+| labid OF labtype
+    (fn (n, asc) =>
+      let val (id, masc) = labid (L.nextLabel n, asc)
+	  val (t, (p, asc')) = labtype masc
+	  val reg = R.consReg OFleft OFright
+	  val rt = getRegion OFright labtypeleft
+	  val ri = getRegion labidright OFleft
+      in (A.ExcDescOf (id ri, t rt, reg, n, p), (p, asc'))
+      end)
+
+excdesconeseq :
+  excdescone
+    (fn nasc =>
+      let val (ed, masc) = excdescone nasc
+      in (([ed], []), masc)
+      end)
+| excdescone AND excdesconeseq
+    (fn nasc =>
+      let val (ed, masc) = excdescone nasc
+	  val ((edl, rl), pasc) = excdesconeseq masc
+	  val reg = R.consReg ANDleft ANDright
+      in ((ed :: edl, reg :: rl), pasc)
+      end)
+
+excdesc :
+  excdesconeseq
+    (fn nasc =>
+	let val ((edl, rl), (m, asc')) = excdesconeseq nasc
+	in (A.ExcDesc (edl, rl, m), (m, asc'))
+	end)
+
+scon :
+  NUM
+    (fn (n, nasc) =>
+	let val reg = R.consReg NUMleft NUMright
+	    val (v, masc) = updateAscId "Int" nasc
+	in (A.SconInt (NUM, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| INT
+    (fn (n, nasc) =>
+	let val reg = R.consReg INTleft INTright
+	    val (v, masc) = updateAscId "Int" nasc
+	in (A.SconInt (INT, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| WORD
+    (fn (n, nasc) =>
+	let val reg = R.consReg WORDleft WORDright
+	    val (v, masc) = updateAscId "Word" nasc
+	in (A.SconWord (WORD, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| REAL
+    (fn (n, nasc) =>
+	let val reg = R.consReg REALleft REALright
+	    val (v, masc) = updateAscId "Real" nasc
+	in (A.SconReal (REAL, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| STRING
+    (fn (n, nasc) =>
+	let val reg = R.consReg STRINGleft STRINGright
+	    val (v, masc) = updateAscId "String" nasc
+	in (A.SconString (STRING, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| CHAR
+    (fn (n, nasc) =>
+	let val reg = R.consReg CHARleft CHARright
+	    val (v, masc) = updateAscId "Char" nasc
+	    val st  = String.substring (CHAR, 2, (String.size CHAR) - 3)
+		handle Subscript => raise EH.DeadBranch ""
+	in (A.SconChar (CHAR, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+ident :
+  identid (identid)
+| identop (identop)
+
+identid :
+  ID
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId ID IDleft IDright n nasc
+	in(id, (m, masc))
+	end)
+| INID
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId INID INIDleft INIDright n nasc
+	in(id, (m, masc))
+	end)
+
+identop' :
+  STAR
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId "*" STARleft STARright n nasc
+	in(id, (m, masc))
+	end)
+
+identop :
+  STAR
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId "*" STARleft STARright n nasc
+	in(id, (m, masc))
+	end)
+| EQUALOP
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId "=" EQUALOPleft EQUALOPright n nasc
+	in(id, (m, masc))
+	end)
+
+labid :
+  ident
+    (fn (n, nasc) =>
+	let val (id, (m, masc)) = ident (L.nextLabel n, nasc)
+	in (fn rs => A.LabId (id, rs, n, m), (m, masc))
+	end)
+
+identseq' :
+  ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in ([id], masc)
+	end)
+| ident identseq'
+    (fn nasc =>
+	let val (id,  masc) = ident nasc
+	    val (ids, pasc) = identseq' masc
+	in (id :: ids, pasc)
+	end)
+
+identseq :
+  identseq'
+    (fn nasc =>
+	let val (ids, (m, asc)) = identseq' nasc
+	in (A.IdentSeq (ids, m), (m, asc))
+	end)
+
+labclass :
+  class
+    (fn (n, asc) =>
+	let val (cl, (m, asc')) = class (L.nextLabel n, asc)
+	in (fn rs => A.LabClass (cl, rs, n, m), (m, asc'))
+	end)
+
+class :
+  ID
+    (fn (n, nasc) =>
+	let val reg = R.consReg IDleft IDright
+	    val (v, masc) = updateAscId ID nasc
+	in (A.Class (ID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+strid :
+  ID
+    (fn (n, nasc) =>
+	let val reg = R.consReg IDleft IDright
+	    val (v, masc) = updateAscId ID nasc
+	in (A.StrId (ID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| INID
+    (fn (n, nasc) =>
+	let val reg = R.consReg INIDleft INIDright
+	    val (v, masc) = updateAscId INID nasc
+	in (A.StrId (INID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+sigid :
+  ID
+    (fn (n, nasc) =>
+	let val reg = R.consReg IDleft IDright
+	    val (v, masc) = updateAscId ID nasc
+	in (A.SigId (ID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| INID
+    (fn (n, nasc) =>
+	let val reg = R.consReg INIDleft INIDright
+	    val (v, masc) = updateAscId INID nasc
+	in (A.SigId (INID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+funid :
+  ID
+    (fn (n, nasc) =>
+	let val reg = R.consReg IDleft IDright
+	    val (v, masc) = updateAscId ID nasc
+	in (A.FunId (ID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| INID
+    (fn (n, nasc) =>
+	let val reg = R.consReg INIDleft INIDright
+	    val (v, masc) = updateAscId INID nasc
+	in (A.FunId (INID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+tycon :
+  ID
+    (fn (n, nasc) =>
+	let val reg = R.consReg IDleft IDright
+	    val (v, masc) = updateAscId ID nasc
+	in (A.TyCon (ID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+| INID
+    (fn (n, nasc) =>
+	let val reg = R.consReg INIDleft INIDright
+	    val (v, masc) = updateAscId INID nasc
+	in (A.TyCon (INID, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+longstridseq' :
+  longstrid
+    (fn nasc =>
+	let val (id, masc) = longstrid nasc
+	in ([id], masc)
+	end)
+| longstrid longstridseq'
+    (fn nasc =>
+	let val (id,  masc) = longstrid nasc
+	    val (ids, pasc) = longstridseq' masc
+	in (id :: ids, pasc)
+	end)
+
+longstridseq :
+  longstridseq'
+    (fn nasc =>
+	let val (ids, (m, asc)) = longstridseq' nasc
+	in (A.LongStrSeq (ids, m), (m, asc))
+	end)
+
+longstrid :
+  strid
+    (fn nasc =>
+	let val (sid, masc) = strid nasc
+	in (A.LongStrIdId sid, masc)
+	end)
+| LONGID
+    (fn (n, nasc) =>
+	let val (lid, m, masc) = explodeStrId LONGID nasc n LONGIDleft
+	in (lid, (m, masc))
+	end)
+
+longid :
+  ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in (A.LongIdId id, masc)
+	end)
+| longid'
+    (longid')
+
+(*longidid :
+  identid
+    (fn nasc =>
+	let val (id, masc) = identid nasc
+	in (A.LongIdId id, masc)
+	end)
+| longid'
+    (longid')*)
+
+longid' :
+  LONGID
+    (fn (n, nasc) =>
+	let val (lid, m, masc) = explodeId LONGID nasc n LONGIDleft
+	in (lid, (m, masc))
+	end)
+
+longtycon :
+  tycon
+    (fn nasc =>
+	let val (tc, masc) = tycon nasc
+	in (A.LongTyConId tc, masc)
+	end)
+| LONGID
+    (fn (n, nasc) =>
+	let val (lid, m, masc) = explodeTyCon LONGID nasc n LONGIDleft
+	in (lid, (m, masc))
+	end)
+
+tylab :
+  ID
+    (fn (n, asc) =>
+	let val reg = R.consReg IDleft IDright
+	in (A.TyLab (ID, reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| NUM
+    (fn (n, asc) =>
+	let val reg = R.consReg NUMleft NUMright
+	in (A.TyLab (NUM, reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| STAR
+    (fn (n, asc) =>
+	let val reg = R.consReg STARleft STARright
+	in (A.TyLab ("*", reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| EQUALOP
+    (fn (n, asc) =>
+	let val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.TyLab ("=", reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+
+typevar :
+  TYPEVAR
+    (fn (n, nasc) =>
+	let val reg = R.consReg TYPEVARleft TYPEVARright
+	    val (t, masc) = gettypevar TYPEVAR nasc
+	in (A.TypeVar (TYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+labtyvar :
+  typevar
+    (fn (n, asc) =>
+	let val (tv, (m, ascm)) = typevar (L.nextLabel n, asc)
+	in (fn rs => A.LabTyVar (tv, rs, n, m), (m, ascm))
+	end)
+
+tyvarseqcomma :
+  labtyvar
+    (fn nasc =>
+	let val (tv, masc) = labtyvar nasc
+	in ((fn rl => fn rr => [tv (rl @ rr)], []), masc)
+	end)
+| labtyvar COMMA tyvarseqcomma
+    (fn nasc =>
+	let val (tv, masc) = labtyvar nasc
+	    val ((tvc, regl), pasc) = tyvarseqcomma masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labtyvarright COMMAleft
+	    val rr' = getRegion COMMAright tyvarseqcommaleft
+	in ((fn rl => fn rr => (tv (rl @ rl')) :: (tvc rr' rr), reg :: regl), pasc)
+	end)
+
+tyvarseq :
+  typevar
+    (fn (n, asc) =>
+	let val (tv, (m, asc')) = typevar (L.nextLabel n, asc)
+	    val reg = R.consReg typevarleft typevarright
+	in (A.TyVarSeqOne (tv, reg, n, m), (m, asc'))
+	end)
+| LPAREN tyvarseqcomma RPAREN
+    (fn (n, asc) =>
+	let val ((ltv, regl'), (m, asc')) = tyvarseqcomma (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright tyvarseqcommaleft
+	    val rr = getRegion tyvarseqcommaright RPARENleft
+	in (A.TyVarSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
+	end)
+
+labtype :
+  types
+    (fn (n, asc) =>
+	let val (t, (m, ascm)) = types (L.nextLabel n, asc)
+	in (fn rs => A.LabType (t, rs, n, m), (m, ascm))
+	end)
+
+types :
+  tupty
+    (tupty)
+| tupty TYPEARROW labtype
+    (fn (n, asc) =>
+	let val (t1, (m, ascm)) = tupty (L.nextLabN n 2, asc)
+	    val (t2, (p, ascp)) = labtype (m, ascm)
+	    val reg = R.consReg TYPEARROWleft TYPEARROWright
+	    val rl1 = getRegion tuptyright TYPEARROWleft
+	    val rl2 = getRegion TYPEARROWright labtypeleft
+	in (A.TypeArrow (A.LabType(t1, rl1, L.nextLabel n, m), t2 rl2, reg, n, p), (p, ascp))
+	end)
+
+tupty :
+  typetuple
+    (fn (n, asc) =>
+	let val (ct, rl, sr) = typetuple
+	in case ct of
+	       []   => raise EH.DeadBranch ""
+	     | [ty] => ty (n, asc)
+	     | _    =>
+	       let
+		   fun reorderreg []             = raise EH.DeadBranch ""
+		     | reorderreg [x]            = [x]
+		     | reorderreg (x :: y :: xs) = (x @ y) :: (reorderreg xs)
+		   val rl' = case rl of [] => raise EH.DeadBranch "" | (x :: xs) => x :: (reorderreg xs)
+		   fun labct ((ct, rs), (ctl, n, asc)) =
+		       let
+			   val (t, (m, asc')) = ct (L.nextLabel n, asc)
+		       in ((A.LabType (t, rs, n, m)) :: ctl, m, asc')
+		       end
+		   val (ctl, m, asc') = foldl labct ([], L.nextLabel n, asc) (ListPair.zip (ct, rl'))
+		       handle UnequalLengths => raise EH.DeadBranch ""
+	       in (A.TypeTuple (List.rev ctl, sr, n, m), (m, asc'))
+	       end
+	end)
+
+typetuple :
+  consty
+    ([consty], [], [])
+| consty STAR typetuple
+    (let
+	 val (ct, lreg, sreg) = typetuple
+	 val reg = R.consReg STARleft STARright
+	 val rl  = getRegion constyright STARleft
+	 val rr  = getRegion STARright typetupleleft
+     in (consty :: ct, rl :: rr :: lreg, reg :: sreg)
+     end)
+
+consty :
+  atty
+    (atty)
+| typeseq longtycon
+    (fn (n, asc) =>
+	let val (tn, masc) = longtycon (L.nextLabel n, asc)
+	    val (ts, (p, asc')) = typeseq masc
+	    val reg = getRegion typeseqright longtyconleft
+	in (A.TypeTyCon (ts, tn, reg, n, p), (p, asc'))
+	end)
+| longtycon
+    (fn (n, asc) =>
+	let val (tn, (m, asc')) = longtycon (L.nextLabel n, asc)
+	    val regts = R.consReg longtyconleft longtyconleft
+	    val ts = A.TypeSeqEm (regts, m, L.nextLabel m)
+	in (A.TypeTyCon (ts, tn, [regts], n, L.nextLabel m), (L.nextLabel m, asc'))
+	end)
+
+onetyrow :
+ tylab COLON labtype
+    (fn (n, asc) =>
+	let val (l, masc) = tylab (L.nextLabel n, asc)
+	    val (t, (p, asc')) = labtype masc
+	    val reg = R.consReg COLONleft COLONright
+	    val rlt = getRegion COLONright labtypeleft
+	in (A.TyRow (l, t rlt, reg, n, p), (p, asc'))
+	end)
+
+tyrow :
+  onetyrow
+    (fn nasc =>
+	let val (otr, masc) = onetyrow nasc
+	in (([otr], []), masc)
+	end)
+| onetyrow COMMA tyrow
+    (fn nasc =>
+	let val (otr, masc) = onetyrow nasc
+	    val ((tr, regl), pasc) = tyrow masc
+	    val reg = R.consReg COMMAleft COMMAright
+	in ((otr :: tr, reg :: regl), pasc)
+	end)
+
+tyrowopt :
+    (fn nasc => (([], []), nasc))
+| tyrow
+    (tyrow)
+
+atty :
+  typevar
+    (fn nasc =>
+	let val (tv, masc) = typevar nasc
+	in (A.TypeOneVar tv, masc)
+	end)
+| LBRACE tyrowopt RBRACE
+    (fn (n, asc) =>
+	let val ((trl, regl), (m, asc')) = tyrowopt (L.nextLabel n, asc)
+	    val reg1 = R.consReg LBRACEleft LBRACEright
+	    val reg2 = R.consReg RBRACEleft RBRACEright
+	in (A.TypeRecord (trl, [reg1, reg2], regl, n, m), (m, asc'))
+	end)
+| LPAREN labtype RPAREN
+    (fn (n, asc) =>
+	let val (t, (m, asc')) = labtype (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val rlt  = (getRegion LPARENright labtypeleft) @ (getRegion labtyperight RPARENleft)
+	in (A.TypeParen (t rlt, reg1, reg2, n, m), (m, asc'))
+	end)
+
+typeseqcomma :
+  labtype COMMA labtype
+    (fn nasc =>
+	let val (tv1, masc) = labtype1 nasc
+	    val (tv2, pasc) = labtype2 masc
+	    val reg = R.consReg COMMAleft COMMAright
+	    val rl' = getRegion labtype1right COMMAleft
+	    val rr' = getRegion COMMAright labtype2left
+	in ((fn rl => fn rr => [tv1 (rl @ rl'), tv2 (rr' @ rr)], [reg]), pasc)
+	end)
+| labtype COMMA typeseqcomma
+    (fn nasc =>
+	let val (t, masc) = labtype nasc
+	    val ((tc, regl), pasc) = typeseqcomma masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labtyperight COMMAleft
+	    val rr' = getRegion COMMAright typeseqcommaleft
+	in ((fn rl => fn rr => (t (rl @ rl')) :: (tc rr' rr), reg :: regl), pasc)
+	end)
+
+typeseq :
+  consty
+    (fn (n, asc) =>
+	let val (ty, (m, ascm)) = consty (L.nextLabel n, asc)
+	    val rs = [R.consReg constyleft constyright]
+	in (A.TypeSeqOne (ty, rs, n, m), (m, ascm))
+	end)
+| LPAREN typeseqcomma RPAREN
+    (fn (n, asc) =>
+	let val ((ltv, regl'), (m, asc')) = typeseqcomma (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright typeseqcommaleft
+	    val rr = getRegion typeseqcommaright RPARENleft
+	in (A.TypeSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
+	end)
+
+tyclass :
+  IN labclass
+    (fn (n, nasc) =>
+	let val (cl, (m, masc)) = labclass (L.nextLabel n, nasc)
+	    val reg = R.consReg INleft INright
+	    val rl  = getRegion INright labclassleft
+	in (A.TyClassCl (cl rl, reg, n, m), (m, masc))
+	end)
+| types
+    (fn (n, nasc) =>
+	let val (t, (m, masc)) = types (L.nextLabel n, nasc)
+	in (A.TyClassTy (t, n, m), (m, masc))
+	end)
+
+labtyclass :
+  tyclass
+    (fn (n, asc) =>
+	let val (t, (m, ascm)) = tyclass (L.nextLabel n, asc)
+	in (fn rs => A.LabTyClass (t, rs, n, m), (m, ascm))
+	end)
+
+tyclassseqcomma :
+  labtyclass
+    (fn nasc =>
+	let val (tc, masc) = labtyclass nasc
+	in ((fn rl => fn rr => [tc (rl @ rr)], []), masc)
+	end)
+| labtyclass COMMA tyclassseqcomma
+    (fn nasc =>
+	let val (t, masc) = labtyclass nasc
+	    val ((tc, regl), pasc) = tyclassseqcomma masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labtyclassright COMMAleft
+	    val rr' = getRegion COMMAright tyclassseqcommaleft
+	in ((fn rl => fn rr => (t (rl @ rl')) :: (tc rr' rr), reg :: regl), pasc)
+	end)
+
+tyclassseq :
+  LPAREN RPAREN
+    (fn (n, asc) =>
+	let val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	in (A.TyClassSeqSeq ([], [reg1, reg2], n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| LPAREN tyclassseqcomma RPAREN
+    (fn (n, asc) =>
+	let val ((ltv, regl'), (m, asc')) = tyclassseqcomma (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright tyclassseqcommaleft
+	    val rr = getRegion tyclassseqcommaright RPARENleft
+	in (A.TyClassSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
+	end)
+
+conbind :
+  ident
+    (fn nasc =>
+	let val (id, (m, asc')) = ident nasc
+	in (A.ConBind (id, m), (m, asc'))
+	end)
+| OP ident
+    (fn nasc =>
+	let val (id, (m, asc')) = ident nasc
+	in (A.ConBind (id, m), (m, asc'))
+	end)
+| labid OF labtype
+    (fn (n, asc) =>
+	let val (id, pasc) = labid (L.nextLabel n, asc)
+	    val (t, (m, asc')) = labtype pasc
+	    val reg = R.consReg OFleft OFright
+	    val rlt = getRegion OFright labtypeleft
+	    val rli = getRegion labidright OFleft
+	in (A.ConBindOf (id rli, t rlt, reg, n, m), (m, asc'))
+	end)
+| OP labid OF labtype
+    (fn (n, asc) =>
+	let val (id, pasc) = labid (L.nextLabel n, asc)
+	    val (t, (m, asc')) = labtype pasc
+	    val reg = R.consReg OFleft OFright
+	    val rlt = getRegion OFright labtypeleft
+	    val rli = getRegion labidright OFleft
+	in (A.ConBindOf (id rli, t rlt, reg, n, m), (m, asc'))
+	end)
+
+conbindbar :
+  conbind
+    (fn nasc =>
+	let val (tc, masc) = conbind nasc
+	in ([tc], masc)
+	end)
+| conbind PIPE conbindbar
+    (fn nasc =>
+	let val (tc, masc) = conbind nasc
+	    val (tcb, pasc) = conbindbar masc
+	in (tc :: tcb, pasc)
+	end)
+
+conbindseq :
+  conbindbar
+    (fn nasc =>
+	let val (tcb, masc) = conbindbar nasc
+	in (A.ConBindSeq tcb, masc)
+	end)
+
+valbindcore :
+  labpat EQUALOP labexp
+    (fn (n, asc) =>
+	let val (pt, masc) = labpat (L.nextLabel n, asc)
+	    val (xp, (p, asc')) = labexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rle = getRegion EQUALOPright labexpleft
+	    val rlp = getRegion labpatright EQUALOPleft
+	in (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc'))
+	end)
+
+valbindcorelist :
+  valbindcore
+    (fn nasc =>
+	let val (vb, masc) = valbindcore nasc
+	in (([vb], []), masc)
+	end)
+| valbindcore AND valbindcorelist
+    (fn nasc =>
+	let val (vb, masc) = valbindcore nasc
+	    val ((vbl, regl), pasc) = valbindcorelist masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((vb :: vbl, reg :: regl), pasc)
+	end)
+
+valbindseq :
+  valbindcorelist
+    (fn nasc =>
+	let val ((vbl, regl), (m, asc')) = valbindcorelist nasc
+	in (A.ValBindSeq (vbl, regl, m), (m, asc'))
+	end)
+
+valbind :
+  REC valbindseq
+  (fn (n, nasc) =>
+      let
+	  val (vbs, (m, masc)) = valbindseq (L.nextLabel n, nasc)
+	  val reg = R.consReg RECleft RECright
+      in (A.ValBindRec (vbs, reg, n, m), (m, masc))
+      end)
+| valbindseq
+    (fn nasc =>
+	let val (vbs, masc) = valbindseq nasc
+	in (A.ValBind vbs, masc)
+	end)
+
+datname :
+  tyvarseq tycon
+    (fn nasc =>
+	let val (tn, masc) = tycon nasc
+	    val (tvs, (p, asc')) = tyvarseq masc
+	    val reg = getRegion tyvarseqright tyconleft
+	in (A.DatName (tvs, tn, reg, p), (p, asc'))
+	end)
+| tycon
+    (fn nasc =>
+	let val (tn, (p, asc')) = tycon nasc
+	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	in (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), (L.nextLabel p, asc'))
+	end)
+
+ldatname :
+  tyvarseq longtycon
+    (fn nasc =>
+	let val (tn, masc) = longtycon nasc
+	    val (tvs, (p, asc')) = tyvarseq masc
+	    val reg = getRegion tyvarseqright longtyconleft
+	in (A.LDatName (tvs, tn, reg, p), (p, asc'))
+	end)
+| longtycon
+    (fn nasc =>
+	let val (tn, (p, asc')) = longtycon nasc
+	    val tvsreg = R.consReg (R.downPos longtyconleft) (R.downPos longtyconleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	in (A.LDatName (tvs, tn, [tvsreg], L.nextLabel p), (L.nextLabel p, asc'))
+	end)
+
+datbind :
+  tyvarseq tycon EQUALOP conbindseq
+    (fn (n, nasc) =>
+	let val (tn, masc) = tycon (L.nextLabel n, nasc)
+	    val (tvs, (p, pasc)) = tyvarseq masc
+	    val (cbs, (q, qasc)) = conbindseq (p, pasc)
+	    val reg1 = getRegion tyvarseqright tyconleft
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	in (A.DatBind (A.DatName (tvs, tn, reg1, p), cbs, reg2, n, q), (q, qasc))
+	end)
+| tycon EQUALOP conbindseq
+    (fn (n, nasc) =>
+	let val (tn, (p, pasc)) = tycon (L.nextLabel n, nasc)
+	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val (cbs, (q, qasc)) = conbindseq (L.nextLabel p, pasc)
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.DatBind (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), cbs, reg, n, q), (q, qasc))
+	end)
+
+datbindseqand :
+  datbind
+    (fn nasc =>
+	let val (db, masc) = datbind nasc
+	in (([db], []), masc)
+	end)
+| datbind AND datbindseqand
+    (fn nasc =>
+	let val (db, masc) = datbind nasc
+	    val ((dbs, regl), pasc) = datbindseqand masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((db::dbs, reg :: regl), pasc)
+	end)
+
+datbindseq :
+  datbindseqand
+    (fn nasc =>
+	let val ((dbs, regl), (m, asc)) = datbindseqand nasc
+	in (A.DatBindSeq (dbs, regl, m), (m, asc))
+	end)
+
+labpator :
+  labpat PIPE labpat
+    (fn nasc =>
+	let val (x1, masc) = labpat1 nasc
+	    val (x2, pasc) = labpat2 masc
+	    val rp = R.consReg PIPEleft PIPEright
+	    val rl = getRegion labpat1right PIPEleft
+	    val rr = getRegion PIPEright labpat2left
+	in ((fn rl' => fn rr' => [x1 (rl' @ rl), x2 (rr @ rr')], [rp]), pasc)
+	end)
+| labpat PIPE labpator
+    (fn nasc =>
+	let val (x, masc) = labpat nasc
+	    val ((xs, rs), pasc) = labpator masc
+	    val rp = R.consReg PIPEleft PIPEright
+	    val rl = getRegion labpatright PIPEleft
+	    val rr = getRegion PIPEright labpatorleft
+	in ((fn rl' => fn rr' => ((x (rl' @ rl)) :: (xs rr rr')), rp :: rs), pasc)
+	end)
+
+labatpat :
+  identid
+    (fn (n, nasc) =>
+	let val (id, (m, masc)) = identid (L.nextLabel n, nasc)
+	    val reg = R.consReg identidleft identidright
+	in (A.LabAtPat (A.AtPatId (A.LongIdId id), reg, n, m), (m, masc))
+	end)
+| identop'
+    (fn (n, nasc) =>
+	let val (id, (m, masc)) = identop' (L.nextLabel n, nasc)
+	    val reg = R.consReg identop'left identop'right
+	in (A.LabAtPat (A.AtPatId (A.LongIdId id), reg, n, m), (m, masc))
+	end)
+| longid'
+    (fn (n, nasc) =>
+	let val (id, (m, masc)) = longid' (L.nextLabel n, nasc)
+	    val reg = R.consReg longid'left longid'right
+	in (A.LabAtPat (A.AtPatId id, reg, n, m), (m, masc))
+	end)
+| atpat
+    (fn (n, nasc) =>
+	let val (ap, (m, masc)) = atpat (L.nextLabel n, nasc)
+	    val reg = R.consReg atpatleft atpatright
+	in (A.LabAtPat (ap, reg, n, m), (m, masc))
+	end)
+
+labatpats :
+  labatpat
+    ([(labatpat, labatpatleft, labatpatright)])
+| labatpat labatpats
+    ((labatpat, labatpatleft, labatpatright) :: labatpats)
+
+fmatch :
+  labatpats
+    (fn nasc =>
+	let fun cons masc [] = raise EH.DeadBranch ""
+	      | cons (m, masc) [(labatpat, from, to)] =
+		let val (labatpat, (p, pasc)) = labatpat (m, masc)
+		    val reg = R.consReg from to
+		in case labatpat of
+		       A.LabAtPat (A.AtPatId (A.LongIdId (A.Ident (st, id, reg, _, _))), _, _, _) =>
+		       (A.FMatchId (A.Ident (st, id, reg, m, L.nextLabel m), false, R.consReg from to), (L.nextLabel m, pasc), to, SOME reg)
+		     | A.LabAtPat (A.AtPatParen (A.LabPat (A.PatOp (st, id, labpat1, labpat2, r4, l4, n4), rs3P, rs3C, l3, n3), r2L, r2R, l2, n2), r1, l1, n1) =>
+		       if F.isInfix st
+		       then let val fmatchid  = A.FMatchId (A.Ident (st, id, r4, l2, L.nextLabel l2), true, r4)
+				val pair      = A.AtPatTuple ([labpat1, labpat2], [r2R, reg, r2L], l4, n4)
+				val labatpat' = A.LabAtPat (pair, reg, l3, n3)
+				val fmatchapp = A.FMatchApp (fmatchid, labatpat', [], reg, l1, n1)
+			    in (fmatchapp, (p, pasc), to, NONE)
+			    end
+		       else raise PD.ParseError ("infix operator required between parentheses", [reg])
+		     | _ => raise PD.ParseError ("function name should be an identifier", [reg])
+		end
+	      | cons (m, masc) ((labatpat, from, to) :: labatpats) =
+		let val (fmatch, pasc, pos, _) = cons (L.nextLabel m, masc) labatpats
+		    val (labatpat, (q, qasc)) = labatpat pasc
+		    val regs = getRegion pos from
+		    val rpat = R.consReg from to
+		in (A.FMatchApp (fmatch, labatpat, regs, rpat, m, q), (q, qasc), to, NONE)
+		end
+	    fun cons' nasc labatpats =
+		(case cons nasc labatpats of
+		     (fmatch, masc, to, NONE) => (fmatch, masc, to)
+		   | (_, _, _, SOME reg) =>
+		     raise PD.ParseError ("function should take at least one argument", [reg]))
+	    fun preCons (m, masc) (labatpats as [(labatpat1, from1, to1), (labatpat, from, to), (labatpat2, from2, to2)]) =
+		(case labatpat (m, masc) of
+		     (A.LabAtPat (A.AtPatId (A.LongIdId (ident as A.Ident (st, _, reg, _, _))), _, _, _), (p, pasc)) =>
+		     if F.isInfix st
+		     then let val fmatchid = A.FMatchId (ident, true, reg)
+			      val (labatpat1, qasc) = labatpat1 (L.nextLabN p 2, pasc)
+			      val (labatpat2, (r, rasc)) = labatpat2 qasc
+			      val regs  = [R.consReg to1 from, reg, R.consReg to from2]
+			      val regs1 = getRegion to1 from
+			      val regs2 = getRegion to from2
+			      val rpat  = R.consReg from1 to2
+			  in case (labatpat1, labatpat2) of
+				 (A.LabAtPat (atpat1, r1, l1, n1), A.LabAtPat (atpat2, r2, l2, n2)) =>
+				 let val labpat1   = A.LabPat (A.PatAtPat atpat1, regs1, [r1], l1, n1)
+				     val labpat2   = A.LabPat (A.PatAtPat atpat2, regs2, [r2], l2, n2)
+				     val pair      = A.AtPatTuple ([labpat1, labpat2], regs, L.nextLabel p, r)
+				     val labatpat  = A.LabAtPat (pair, rpat, p, r)
+				     val fmatchapp = A.FMatchApp (fmatchid, labatpat, [], rpat, m, r)
+				 in (fmatchapp, (r, rasc), to2)
+				 end
+			       | _ => raise EH.DeadBranch ""
+			  end
+		     else cons' (m, masc) (List.rev labatpats)
+		   | _ => cons' (m, masc) (List.rev labatpats))
+	      | preCons masc labatpats = cons' masc (List.rev labatpats)
+	    val (fmatch, masc, _) = preCons nasc labatpats
+	in (fmatch, masc)
+	end handle PD.ParseError (st, regs) =>
+		       let val ih  = PD.mkErrorHandler true st regs
+			   val _   = PD.setErrorHandler ih
+		       in (A.FMatchDots, nasc)
+		       end)
+
+labfmatch :
+  fmatch
+    (fn (n, asc) =>
+	let val (fm, (m, asc')) = fmatch (L.nextLabel n, asc)
+	in (fn rs => A.LabFMatch (fm, rs, n, m), (m, asc'))
+	end)
+
+fmatchty :
+  labfmatch
+    (fn nasc =>
+	let val (fm, masc) = labfmatch nasc
+	in (fn rs => A.FMatchT (fm rs), masc)
+	end)
+| labfmatch COLON labtype
+    (fn (n, nasc) =>
+	let val (fm, masc) = labfmatch (L.nextLabel n, nasc)
+	    val (ty, (p, pasc)) = labtype masc
+	    val rf  = getRegion labfmatchright COLONleft
+	    val rt  = getRegion COLONright labtypeleft
+	    val reg = R.consReg COLONleft COLONright
+	in (fn rs => A.FMatchTTy (fm rf, ty (rt @ rs), reg, n, p), (p, pasc))
+	end)
+
+fmvalbindcore :
+  fmatchty EQUALOP labexp
+    (fn (n, asc) =>
+	let val (lfm, masc) = fmatchty (L.nextLabel n, asc)
+	    val (e, (p, asc')) = labexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rle = getRegion EQUALOPright labexpleft
+	    val rlm = getRegion fmatchtyright EQUALOPleft
+	in (A.FValBindCore (lfm rlm, e rle, reg, n, p), (p, asc'))
+	end)
+
+fvalbindcorelist :
+  fmvalbindcore
+    (fn nasc =>
+	let val (fvb, masc) = fmvalbindcore nasc
+	in (([fvb], []), masc)
+	end)
+| fmvalbindcore PIPE fvalbindcorelist
+    (fn nasc =>
+	let val (fvb, masc) = fmvalbindcore nasc
+	    val ((fvbl, regl), pasc) = fvalbindcorelist masc
+	    val reg = R.consReg PIPEleft PIPEleft
+	in ((fvb :: fvbl, reg :: regl), pasc)
+	end)
+
+fvalbindone :
+  fvalbindcorelist
+    (fn (n, asc) =>
+	let val ((fvbl, regl), (m, asc')) = fvalbindcorelist (L.nextLabel n, asc)
+	in (A.FValBindOne (fvbl, regl, n, m), (m, asc'))
+	end)
+
+fvalbindonelist :
+  fvalbindone
+    (fn nasc =>
+	let val (fvbo, masc) = fvalbindone nasc
+	in (([fvbo], []), masc)
+	end)
+| fvalbindone AND fvalbindonelist
+    (fn nasc =>
+	let val (fvbo, masc) = fvalbindone nasc
+	    val ((fvbol, regl), pasc) = fvalbindonelist masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((fvbo :: fvbol, reg :: regl), pasc)
+	end)
+
+fvalbind :
+ fvalbindonelist
+    (fn nasc =>
+	let val ((fvbol, regl), (m, asc')) = fvalbindonelist nasc
+	in (A.FValBind (fvbol, regl, m), (m, asc'))
+	end)
+
+typbind :
+  datname EQUALOP labtype
+    (fn (n, asc) =>
+	let val (dn, masc) = datname (L.nextLabel n, asc)
+	    val (ty, (p, asc')) = labtype masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rr  = getRegion EQUALOPright labtypeleft
+	in (A.TypBind (dn, ty rr, reg, n, p), (p, asc'))
+	end)
+
+typbindseqand :
+  typbind
+    (fn nasc =>
+	let val (tb, masc) = typbind nasc
+	in (([tb], []), masc)
+	end)
+| typbind AND typbindseqand
+    (fn nasc =>
+	let val (tb, masc) = typbind nasc
+	    val ((tbs, regl), pasc) = typbindseqand masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((tb :: tbs, reg :: regl), pasc)
+	end)
+
+typbindseq :
+  typbindseqand
+    (fn nasc =>
+	let val ((tbs, regl), (m, asc)) = typbindseqand nasc
+	in (A.TypBindSeq (tbs, regl, m), (m, asc))
+	end)
+
+exbind :
+  ident
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = ident (L.nextLabel n, asc)
+	in (A.ExBind (id, n, m), (m, asc'))
+	end)
+| OP ident
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = ident (L.nextLabel n, asc)
+	in (A.ExBind (id, n, m), (m, asc'))
+	end)
+| labid OF labtype
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (t, (p, asc')) = labtype masc
+	    val reg = R.consReg OFleft OFright
+	    val rlt = getRegion OFright labtypeleft
+	    val rli = getRegion labidright OFleft
+	in (A.ExBindOf (id rli, t rlt, reg, n, p), (p, asc'))
+	end)
+| OP labid OF labtype
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (t, (p, asc')) = labtype masc
+	    val reg = R.consReg OFleft OFright
+	    val rlt = getRegion OFright labtypeleft
+	    val rli = getRegion labidright OFleft
+	in (A.ExBindOf (id rli, t rlt, reg, n, p), (p, asc'))
+	end)
+| labid EQUALOP longid
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (sid, (p, asc')) = longid masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rli = getRegion labidright EQUALOPleft
+	in (A.ExBindEq (id rli, sid, reg, n, p), (p, asc'))
+	end)
+| OP labid EQUALOP longid
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (sid, (p, asc')) = longid masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rli = getRegion labidright EQUALOPleft
+	in (A.ExBindEq (id rli, sid, reg, n, p), (p, asc'))
+	end)
+| labid EQUALOP OP longid
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (sid, (p, asc')) = longid masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rli = getRegion labidright EQUALOPleft
+	in (A.ExBindEq (id rli, sid, reg, n, p), (p, asc'))
+	end)
+| OP labid EQUALOP OP longid
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (sid, (p, asc')) = longid masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rli = getRegion labidright EQUALOPleft
+	in (A.ExBindEq (id rli, sid, reg, n, p), (p, asc'))
+	end)
+
+exbindseqand :
+  exbind
+    (fn nasc =>
+	let val (eb, masc) = exbind nasc
+	in (([eb], []), masc)
+	end)
+| exbind AND exbindseqand
+    (fn nasc =>
+	let val (eb, masc) = exbind nasc
+	    val ((ebs, regl), pasc) = exbindseqand masc
+	    val reg = R.consReg ANDleft ANDleft
+	in ((eb :: ebs, reg :: regl), pasc)
+	end)
+
+exbindseq :
+  exbindseqand
+    (fn nasc =>
+	let val ((ebs, regl), (m, asc)) = exbindseqand nasc
+	in (A.ExBindSeq (ebs, regl, m), (m, asc))
+	end)
+
+dec :
+  dec' (dec')
+| LOCAL decs IN decs END
+    (fn (n, asc) =>
+	let val _ = F.newScope n
+	    val (d1, masc) = decs1 (L.nextLabel n, asc)
+	    val (d2, (p, pasc)) = decs2 masc
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg LOCALleft LOCALright
+	    val reg2 = R.consReg INleft    INright
+	    val reg3 = R.consReg ENDleft   ENDright
+	in (A.DecLocal (d1, d2, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+
+d_opt :
+  INT
+    (Option.valOf (Int.fromString INT)
+     handle Option   => raise EH.DeadBranch ""
+	  | Overflow => raise EH.DeadBranch "")
+| NUM
+    (Option.valOf (Int.fromString NUM)
+     handle Option   => raise EH.DeadBranch ""
+	  | Overflow => raise EH.DeadBranch "")
+|   (0)
+
+dec' :
+  VAL valbind
+    (fn (n, nasc) =>
+	let val tvsreg = R.consReg (R.downPos valbindleft) (R.downPos valbindleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, n, L.nextLabel n)
+	    val reg = R.consReg VALleft VALright
+	    val (vb, (m, masc)) = valbind (L.nextLabel n, nasc)
+	in (A.DecVal (tvs, vb, reg, m), (m, masc))
+	end)
+| VAL tyvarseq valbind
+    (fn nasc =>
+	let val (tvs, masc) = tyvarseq nasc
+	    val (vb,  (p, pasc)) = valbind masc
+	    val reg = R.consReg VALleft VALright
+	in (A.DecVal (tvs, vb, reg, p), (p, pasc))
+	end)
+| DATATYPE datbindseq
+    (fn nasc =>
+	let val (db, (m, masc)) = datbindseq nasc
+	    val reg = R.consReg DATATYPEleft DATATYPEright
+	in (A.DecDatType (db, reg, m), (m, masc))
+	end)
+| DATATYPE datbindseq WITHTYPE typbindseq
+    (fn (n, nasc) =>
+	let val (db, masc) = datbindseq (L.nextLabel n, nasc)
+	    val (tb, (p, pasc)) = typbindseq masc
+	    val reg1 = R.consReg DATATYPEleft DATATYPEright
+	    val reg2 = R.consReg WITHTYPEleft WITHTYPEright
+	in (A.DecDatWith (db, tb, [reg1, reg2], n, p), (p, pasc))
+	end)
+| DATATYPE tycon EQUALOP DATATYPE longtycon
+    (fn (n, nasc) =>
+	let val (tc, masc) = tycon (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtycon masc
+	    val reg1 = R.consReg DATATYPE1left DATATYPE1right
+	    val reg2 = R.consReg EQUALOPleft   EQUALOPright
+	    val reg3 = R.consReg DATATYPE2left DATATYPE2right
+	in (A.DecDatRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+| ABSTYPE datbindseq WITH decs END
+    (fn (n, asc) =>
+	let val (db, masc) = datbindseq (L.nextLabel n, asc)
+	    val (ds, (p, pasc)) = decs masc
+	    val reg1 = R.consReg ABSTYPEleft ABSTYPEright
+	    val reg2 = R.consReg WITHleft    WITHright
+	    val reg3 = R.consReg ENDleft     ENDright
+	in (A.DecAbsType (db, ds, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+| ABSTYPE datbindseq WITHTYPE typbindseq WITH decs END
+    (fn (n, asc) =>
+	let val (db, masc) = datbindseq (L.nextLabel n, asc)
+	    val (tb, pasc) = typbindseq masc
+	    val (ds, (q, qasc)) = decs pasc
+	    val reg1 = R.consReg ABSTYPEleft  ABSTYPEright
+	    val reg2 = R.consReg WITHleft     WITHright
+	    val reg3 = R.consReg WITHTYPEleft WITHTYPEright
+	    val reg4 = R.consReg ENDleft      ENDright
+	in (A.DecAbsWith (db, tb, ds, [reg1, reg2, reg3, reg4], n, q), (q, qasc))
+	end)
+| FUN fvalbind
+    (fn (n, nasc) =>
+	let val tvsreg = R.consReg (R.downPos fvalbindleft) (R.downPos fvalbindleft)
+	    val tvs = A.TyVarSeqEm (tvsreg, n, L.nextLabel n)
+	    val reg = R.consReg FUNleft FUNright
+	    val (fvb, (m, masc)) = fvalbind (L.nextLabel n, nasc)
+	in (A.DecFVal (tvs, fvb, reg, m), (m, masc))
+	end)
+| FUN tyvarseq fvalbind
+    (fn nasc =>
+	let val (tvs, masc) = tyvarseq nasc
+	    val (fvb, (p, pasc)) = fvalbind masc
+	    val reg = R.consReg FUNleft FUNright
+	in (A.DecFVal (tvs, fvb, reg, p), (p, pasc))
+	end)
+| TYPE typbindseq
+    (fn nasc =>
+	let val (tbs, (m, masc)) = typbindseq nasc
+	    val reg = R.consReg TYPEleft TYPEright
+	in (A.DecType (tbs, reg, m), (m, masc))
+	end)
+| EXCEPTION exbindseq
+    (fn nasc =>
+	let val (ebs, (m, masc)) = exbindseq nasc
+	    val reg = R.consReg EXCEPTIONleft EXCEPTIONright
+	in (A.DecEx (ebs, reg, m), (m, masc))
+	end)
+| OPEN longstridseq
+    (fn (n, asc) =>
+	let val (ids, (m, masc)) = longstridseq (L.nextLabel n, asc)
+	    val reg = R.consReg OPENleft OPENright
+	in (A.DecOpen (ids, reg, n, m), (m, masc))
+	end)
+| INFIX d_opt identseq
+    (fn (n, asc) =>
+	let val (ids, (m, masc)) = identseq (L.nextLabel n, asc)
+	    val reg = R.consReg INFIXleft INFIXright
+	    val _   = map (fn st => F.addInfixL st d_opt) (A.getNamesIdentSeq ids)
+	in (A.DecInfix (d_opt, ids, reg, n, m), (m, masc))
+	end)
+| INFIXR d_opt identseq
+    (fn (n, asc) =>
+	let val (ids, (m, masc)) = identseq (L.nextLabel n, asc)
+	    val reg = R.consReg INFIXRleft INFIXRright
+	    val _   = map (fn st => F.addInfixR st d_opt) (A.getNamesIdentSeq ids)
+	in (A.DecInfixr (d_opt, ids, reg, n, m), (m, masc))
+	end)
+| NONFIX identseq
+    (fn (n, asc) =>
+	let val (ids, (m, masc)) = identseq (L.nextLabel n, asc)
+	    val reg = R.consReg NONFIXleft NONFIXright
+	    val _   = map (fn st => F.rmInfix st) (A.getNamesIdentSeq ids)
+	in (A.DecNonfix (ids, reg, n, m), (m, masc))
+	end)
+| OVERLOAD labid COLON labtype WITH labtyvar IN tyclassseq
+    (fn (n, nasc) =>
+	let val (id, masc) = labid (L.nextLabel n, nasc)
+	    val (ty, pasc) = labtype masc
+	    val (tv, qasc) = labtyvar pasc
+	    val (ts, (u, uasc)) = tyclassseq qasc
+	    val reg1 = R.consReg OVERLOADleft OVERLOADright
+	    val reg2 = R.consReg COLONleft COLONright
+	    val reg3 = R.consReg WITHleft WITHright
+	    val reg4 = R.consReg INleft INright
+	    val rli  = getRegion OVERLOADright labidleft
+	    val rri  = getRegion labidright COLONleft
+	    val rlt  = getRegion COLONright labtypeleft
+	    val rrt  = getRegion labtyperight WITHleft
+	    val rlv  = getRegion WITHright labtyvarleft
+	    val rrv  = getRegion labtyvarright INleft
+	    val rs   = [reg1, reg2, reg3, reg4]
+	in (A.DecOverload (id (rli @ rri), ty (rlt @ rrt), tv (rlv @ rrv), ts, rs, n, u), (u, uasc))
+	end)
+| OVERLOAD labclass tyclassseq
+    (fn (n, nasc) =>
+	let val (cl, masc) = labclass (L.nextLabel n, nasc)
+	    val (ts, (p, pasc)) = tyclassseq masc
+	    val reg = R.consReg OVERLOADleft OVERLOADright
+	    val rl  = getRegion OVERLOADright labclassleft
+	    val rr  = getRegion labclassright tyclassseqleft
+	in (A.DecClass (cl (rl @ rr), ts, reg, n, p), (p, pasc))
+	end)
+
+decmc :
+    (fn nasc => ([], nasc))
+| SEMICOLON decmc
+    (decmc)
+| dec decmc
+    (fn nasc =>
+	let val (d, masc) = dec nasc
+	    val (dl, pasc) = decmc masc
+	in (d :: dl, pasc)
+	end)
+
+decs :
+  decmc
+    (fn nasc =>
+	let val (ds, (m, asc)) = decmc nasc
+	in (A.Decs (ds, m), (m, asc))
+	end)
+
+atexptuple :
+  labexp COMMA labexp
+    (fn nasc =>
+	let val (xp1, masc) = labexp1 nasc
+	    val (xp2, pasc) = labexp2 masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labexp1right COMMAleft
+	    val rr' = getRegion COMMAright labexp2left
+	in ((fn rl => fn rr => [xp1 (rl @ rl'), xp2 (rr' @ rr)], [reg]), pasc)
+	end)
+| labexp COMMA atexptuple
+    (fn nasc =>
+	let val (xp, masc) = labexp nasc
+	    val ((xt, regl), pasc) = atexptuple masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labexpright COMMAleft
+	    val rr' = getRegion COMMAright atexptupleleft
+	in ((fn rl => fn rr => (xp (rl @ rl')) :: (xt rr' rr), reg :: regl), pasc)
+	end)
+
+labexpseq :
+  labexp SEMICOLON labexp
+    (fn nasc =>
+	let val (e1, masc) = labexp1 nasc
+	    val (e2, pasc) = labexp2 masc
+	    val reg = R.consReg SEMICOLONleft SEMICOLONright
+	    val rl' = getRegion labexp1right SEMICOLONleft
+	    val rr' = getRegion SEMICOLONright labexp2left
+	in ((fn rl => fn rr => [e1 (rl @ rl'), e2 (rr' @ rr)], [], reg), pasc)
+	end)
+| labexp SEMICOLON labexpseq
+    (fn (n, nasc) =>
+	let val (e, (m, masc)) = labexp (n, nasc)
+	    val ((el, rl, r), (p, pasc)) = labexpseq (m, masc)
+	    val reg = R.consReg SEMICOLONleft SEMICOLONright
+	    val rl' = getRegion labexpright SEMICOLONleft
+	    val rr' = getRegion SEMICOLONright labexpseqleft
+	in ((fn rl => fn rr => (e (rl @ rl')) :: (el rr' rr), reg :: rl, r), (p, pasc))
+	end)
+
+seqexp :
+  labexpseq
+    (fn (n, asc) =>
+	let val ((ell', rs, r), (m, asc')) = labexpseq (L.nextLabel n, asc)
+	    val ell  = fn rl => fn rr => ell' rl rr
+	    val e    = fn rr => List.hd (List.rev (ell [] rr)) handle Empty => raise EH.DeadBranch ""
+	    val el   = fn rl => List.rev (List.tl (List.rev (ell rl []))) handle Empty => raise EH.DeadBranch ""
+	in (fn rl => fn rr => A.SeqExp (el rl, e rr, r, rs, n, m), (m, asc'))
+	end)
+
+explist :
+    (fn nasc =>	((fn _ => fn _ => [], []), nasc))
+| neexplist (neexplist)
+
+neexplist :
+  labexp
+    (fn nasc =>
+	let val (e, masc) = labexp nasc
+	in ((fn rl => fn rr => [e (rl @ rr)], []), masc)
+	end)
+| labexp COMMA neexplist
+    (fn nasc =>
+	let val (e, masc) = labexp nasc
+	    val ((es, regl), pasc) = neexplist masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labexpright COMMAleft
+	    val rr' = getRegion COMMAright neexplistleft
+	in ((fn rl => fn rr => (e (rl @ rl')) :: (es rr' rr), reg :: regl), pasc)
+	end)
+
+labexp :
+  exp
+    (fn (n, asc) =>
+	let val (e, (m, asc')) = exp (L.nextLabel n, asc)
+	    val re = [R.consReg expleft expright]
+	in (fn rs => A.LabExp (e, rs, re, n, m), (m, asc'))
+	end)
+
+oneexprow :
+ tylab EQUALOP labexp
+    (fn (n, asc) =>
+	let val (l, masc) = tylab (L.nextLabel n, asc)
+	    val (e, (p, asc')) = labexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rle = getRegion EQUALOPright labexpleft
+	    val rlt = getRegion tylabright EQUALOPleft
+	in (fn rl => A.ExpRow (l, e rle, reg, rl @ rlt, n, p), (p, asc'))
+	end)
+
+exprow :
+  oneexprow
+    (fn nasc =>
+	let val (oer, masc) = oneexprow nasc
+	in ((fn rl => [oer rl], []), masc)
+	end)
+| oneexprow COMMA exprow
+    (fn nasc =>
+	let val (oer, masc) = oneexprow nasc
+	    val ((er, regl), pasc) = exprow masc
+	    val reg = R.consReg COMMAleft COMMAright
+	    val rr  = getRegion COMMAright exprowleft
+	in ((fn rl => ((oer rl) :: (er rr)), reg :: regl), pasc)
+	end)
+
+exprowopt :
+    (fn nasc => ((fn _ => [], []), nasc))
+| exprow
+    (exprow)
+
+atexp :
+  OP longid
+    (fn nasc =>
+	let val (id, masc) = longid nasc
+	in (A.AtExpId id, masc)
+	end)
+| scon
+    (fn nasc =>
+	let val (sc, masc) = scon nasc
+	in (A.AtExpScon sc, masc)
+	end)
+| SHARP tylab
+    (fn (n, asc) =>
+	let val (tl, (m, asc')) = tylab (L.nextLabel n, asc)
+	    val reg = R.consReg SHARPleft SHARPright
+	    val rt  = R.consReg tylableft tylabright
+	in (A.AtExpProj (tl, reg, rt, n, m), (m, asc'))
+	end)
+| LPAREN RPAREN
+    (fn (n, asc) =>
+	let val reg = R.consReg LPARENleft RPARENright
+	in (A.AtExpTuple ([], [reg], n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| LPAREN atexptuple RPAREN
+    (fn (n, asc) =>
+	let val ((xs, regl'), (m, asc')) = atexptuple (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright atexptupleleft
+	    val rr = getRegion atexptupleright RPARENleft
+	in (A.AtExpTuple (xs rl rr, regl, n, m), (m, asc'))
+	end)
+| LPAREN seqexp RPAREN
+    (fn (n, asc) =>
+	let val (seq, (m, asc')) = seqexp (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENright
+	    val reg2 = R.consReg RPARENleft RPARENright
+	    val rl   = getRegion LPARENright seqexpleft
+	    val rr   = getRegion seqexpright RPARENleft
+	in (A.AtExpSeq (seq rl rr, [reg1, reg2], n, m), (m, asc'))
+	end)
+| LPAREN labexp RPAREN
+    (fn (n, asc) =>
+	let val (e, (m, asc')) = labexp (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val rle1 = getRegion LPARENright labexpleft
+	    val rle2 = getRegion labexpright RPARENleft
+	in (A.AtExpParen (e (rle1 @ rle2), reg1, reg2, n, m), (m, asc'))
+	end)
+| LBRACE exprowopt RBRACE
+    (fn (n, asc) =>
+	let val ((erl, regl), (m, asc')) = exprowopt (L.nextLabel n, asc)
+	    val reg1 = R.consReg LBRACEleft LBRACEright
+	    val reg2 = R.consReg RBRACEleft RBRACEright
+	    val rl   = getRegion LBRACEright exprowoptleft
+	in (A.AtExpRecord (erl rl, [reg1, reg2], regl, n, m), (m, asc'))
+	end)
+| LET decs IN labexp END
+    (fn (n, asc) =>
+	let val _ = F.newScope n
+	    val (d, masc) = decs (L.nextLabel n, asc)
+	    val (e, (p, asc')) = labexp masc
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg LETleft LETright
+	    val reg2 = R.consReg INleft  INright
+	    val reg3 = R.consReg ENDleft ENDright
+	    val rle1 = getRegion INright labexpleft
+	    val rle2 = getRegion labexpright ENDleft
+	in (A.AtExpLet (d, e (rle1 @ rle2), [reg1, reg2, reg3], n, p), (p, asc'))
+	end)
+| LET decs IN seqexp END
+    (fn (n, asc) =>
+	let val _ = F.newScope n
+	    val (d, masc) = decs (L.nextLabel n, asc)
+	    val (s, (p, asc')) = seqexp masc
+	    val _ = F.rmScope n
+	    val reg1 = R.consReg LETleft LETright
+	    val reg2 = R.consReg INleft  INright
+	    val reg3 = R.consReg ENDleft ENDright
+	    val rl   = getRegion INright seqexpleft
+	    val rr   = getRegion seqexpright ENDleft
+	in (A.AtExpDLet (d, s rl rr, [reg1, reg2, reg3], n, p), (p, asc'))
+	end)
+| LLIST explist RLIST
+    (fn (n, asc) =>
+	let val ((xs, regl'), (m, asc')) = explist (L.nextLabel n, asc)
+	    val reg1 = R.consReg LLISTleft LLISTleft
+	    val reg2 = R.consReg RLISTleft RLISTleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LLISTright explistleft
+	    val rr = getRegion explistright RLISTleft
+	in (A.AtExpList (xs rl rr, regl, n, m), (m, asc'))
+	end)
+| BQUOTE quotelist EQUOTE
+    (fn (currentNode, assoc) =>
+	let val (quotelist, (nextNode, newAssoc)) = quotelist (L.nextLabel currentNode, assoc)
+	    val regBquote = R.consReg BQUOTEleft BQUOTEright
+	    val regEquote = R.consReg EQUOTEleft EQUOTEright
+	in (A.AtExpQuote (quotelist, [regBquote, regEquote], currentNode, nextNode), (nextNode, newAssoc))
+	end)
+
+quotelist :
+
+    (fn currNodeAssoc => ([], currNodeAssoc))
+| aquote quotelist
+    (fn currNodeAssoc =>
+	let val ((qquote, aquote), newNodeAssoc) = aquote currNodeAssoc
+	    val (quotelist, newNodeAssoc) = quotelist newNodeAssoc
+	in (qquote::aquote::quotelist, newNodeAssoc)
+	end)
+
+aquote :
+  AQUOTE LPAREN exp RPAREN
+    (fn (currentNode, assoc) =>
+	let val AQuoteRegion = R.consReg AQUOTEleft AQUOTEright
+	    val LParenRegion = R.consReg LPARENleft LPARENright
+	    val RParenRegion = R.consReg RPARENleft RPARENright
+	    val qquote = A.Quote (AQUOTE, R.consReg AQUOTEleft AQUOTEright, currentNode, L.nextLabel currentNode)
+	    val (astexp, (newNode, newAssoc)) = exp (L.nextLabN currentNode 2, assoc)
+	    val aquote = A.Antiquote (astexp, [AQuoteRegion, LParenRegion, RParenRegion], L.nextLabel currentNode, newNode)
+	in ((qquote, aquote), (newNode, newAssoc))
+	end)
+| AQUOTE ident
+    (fn (currentNode, assoc) =>
+	let val AQuoteRegion = R.consReg AQUOTEleft AQUOTEright
+	    val qquote = A.Quote (AQUOTE, R.consReg AQUOTEleft AQUOTEright, currentNode, L.nextLabel currentNode)
+	    val (astIdent, (newNode, newAssoc)) = ident (L.nextLabN currentNode 2, assoc)
+	    val exp = A.ExpAtExp (A.AtExpId ( A.LongIdId astIdent))
+	    val aquote = A.Antiquote (exp, [AQuoteRegion], L.nextLabel currentNode, newNode)
+	in ((qquote, aquote), (newNode, newAssoc))
+	end)
+
+appexp :
+  ID
+    ([F.O (ID, R.consReg IDleft IDright)])
+| INID
+    ([F.O (INID, R.consReg INIDleft INIDright)])
+| EQUALOP
+    ([F.O ("=", R.consReg EQUALOPleft EQUALOPright)])
+| STAR
+    ([F.O ("*", R.consReg STARleft STARright)])
+| longid'
+    ([F.L (fn nasc => let val (id, masc) = longid' nasc in (A.AtExpId id, masc) end, R.consReg longid'left longid'right)])
+| atexp
+    ([F.L (atexp, R.consReg atexpleft atexpright)])
+| ID appexp
+    ((F.O (ID, R.consReg IDleft IDright)) :: appexp)
+| INID appexp
+    ((F.O (INID, R.consReg INIDleft INIDright)) :: appexp)
+| EQUALOP appexp
+    ((F.O ("=", R.consReg EQUALOPleft EQUALOPright)) :: appexp)
+| STAR appexp
+    ((F.O ("*", R.consReg STARleft STARright)) :: appexp)
+| longid' appexp
+    ((F.L (fn nasc => let val (id, masc) = longid' nasc in (A.AtExpId id, masc) end, R.consReg longid'left longid'right)) :: appexp)
+| atexp appexp
+    ((F.L (atexp, R.consReg atexpleft atexpright)) :: appexp)
+
+infexp :
+  appexp
+    (fn (n, nasc) =>
+	let fun cons2 (F.L (exp, reg)) (n, nasc) =
+	    	let val (e, (m, masc)) = exp (L.nextLabel n, nasc)
+		in (fn rs => A.LabExp (e, rs, [reg], n, m), (m, masc))
+		end
+	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch ""
+	      | cons2 (F.N ((st, r), t1, t2)) (n, nasc) =
+		let val (e, (m, masc)) = cons1 (F.N ((st, r), t1, t2)) (L.nextLabel n, nasc)
+		    val rl = getRegion (R.getFrom (F.getLeft t1)) (R.getTo (F.getRight t2))
+		in (fn rs => A.LabExp (e, rs, rl, n, m), (m, masc))
+		end
+
+	    and cons1 (F.L (exp, reg)) nasc = exp nasc
+	      | cons1 (F.O _) _ = raise EH.DeadBranch ""
+	      | cons1 (F.N ((st, r), t1, t2)) (n, nasc) =
+		let val (v, masc) = updateAscId st nasc
+		    val (e1, (n1, asc1)) = cons2 t1 (L.nextLabel n, masc)
+		    val (e2, (n2, asc2)) = cons2 t2 (n1, asc1)
+		    val rle1  = getRegion (R.getTo (F.getRight t1)) (R.getFrom r)
+		    val rle2  = getRegion (R.getTo r) (R.getFrom (F.getLeft t2))
+		in (A.ExpOp (st, v, e1 rle1, e2 rle2, r, n, n2), (n2, asc2))
+		end
+
+	    fun toAtExp (F.O (st, reg)) (n, nasc) =
+		let val (v, masc) = updateAscId st nasc
+		    val next = L.nextLabel n
+		in (A.AtExpId (A.LongIdId (A.Ident (st, v, reg, n, next))), (next, masc), reg)
+		end
+	      | toAtExp (F.L (atexp, reg)) (n, nasc) =
+		let val (ae, masc) = atexp (n, nasc)
+		in (ae, masc, reg)
+		end
+	      | toAtExp (F.N _) _ = raise EH.DeadBranch "there should be no node at this stage yet"
+
+	    fun toApp [] nasc = raise EH.DeadBranch ""
+	      | toApp [atexp] nasc =
+		let val (ae, masc, reg) = atexp nasc
+		in (A.ExpAtExp ae, masc, reg)
+		end
+	      | toApp atexps (n, nasc) =
+		let val atexpEnd = List.hd (List.rev atexps)
+		    val atexpsBeg = List.rev (List.tl (List.rev atexps))
+		    val (exp, masc, reg1) = toApp atexpsBeg (L.nextLabel n, nasc)
+		    val (ae, (p, pasc), reg2) = atexpEnd masc
+		    val regs = getRegion (R.getTo reg1) (R.getFrom reg2)
+		    val reg = R.consReg (R.getFrom reg1) (R.getTo reg2)
+		in (A.ExpApp (exp, ae, regs, reg1, reg2, n, p), (p, pasc), reg)
+		end
+
+	    fun toApp' [] = []
+	      | toApp' atexps =
+		let val fst = List.hd atexps
+		    val lst = List.hd (List.rev atexps)
+		    val reg = R.consReg (R.getFrom (F.getLeft fst)) (R.getTo (F.getRight lst))
+		    val atexps' = map toAtExp atexps
+		    val fexp = fn nasc => let val (exp, masc, reg) = toApp atexps' nasc in (exp, masc) end
+		in [F.L (fexp, reg)]
+		end
+
+	    fun convNonOp [] rest = toApp' rest
+	      | convNonOp ((F.O (st, reg)) :: xs) rest =
+		if F.isInfix st
+		then (toApp' rest) @ [F.O (st, reg)] @ (convNonOp xs [])
+		else let val atexp =
+			  fn (n, nasc) =>
+			     let val (v, masc) = updateAscId st nasc
+				 val next = L.nextLabel n
+			     in (A.AtExpId (A.LongIdId (A.Ident (st, v, reg, n, next))), (next, masc))
+			     end
+		     in convNonOp xs (rest @ [F.L (atexp, reg)])
+		     end
+	      | convNonOp ((F.L (atexp, reg)) :: xs) rest = convNonOp xs (rest @ [F.L (atexp, reg)])
+	      | convNonOp ((F.N _) :: xs) _ = raise EH.DeadBranch "there should be no node at this stage"
+
+	    val cv = (F.convert (convNonOp appexp []))
+
+	in cons1 cv (n, nasc)
+	end handle EH.DeadBranch st =>
+		       let val reg = R.consReg appexpleft appexpright
+			   val ih  = PD.mkErrorHandler true st [reg]
+			   val _   = PD.setErrorHandler ih
+		       in (A.ExpDots [], (n, nasc))
+		       end)
+
+exp :
+  infexp
+    (infexp)
+| labexp ORELSE labexp
+    (fn (n, asc) =>
+	let val (exp1, masc) = labexp1 (L.nextLabel n, asc)
+	    val (exp2, (p, pasc)) = labexp2 masc
+	    val reg  = R.consReg ORELSEleft ORELSEright
+	    val rle1 = getRegion labexp1right ORELSEleft
+	    val rle2 = getRegion ORELSEright labexp2left
+	in (A.ExpOr (exp1 rle1, exp2 rle2, reg, n, p), (p, pasc))
+	end)
+| labexp ANDALSO labexp
+    (fn (n, asc) =>
+	let val (exp1, masc) = labexp1 (L.nextLabel n, asc)
+	    val (exp2, (p, pasc)) = labexp2 masc
+	    val reg  = R.consReg ANDALSOleft ANDALSOright
+	    val rle1 = getRegion labexp1right ANDALSOleft
+	    val rle2 = getRegion ANDALSOright labexp2left
+	in (A.ExpAnd (exp1 rle1, exp2 rle2, reg, n, p), (p, pasc))
+	end)
+| labexp COLON labtype
+    (fn (n, asc) =>
+	let val (e, masc) = labexp (L.nextLabel n, asc)
+	    val (t, (p, asc')) = labtype masc
+	    val reg = R.consReg COLONleft COLONright
+	    val rle = getRegion labexpright COLONleft
+	    val rlt = getRegion COLONright labtypeleft
+	in (A.ExpTyped (e rle, t rlt, reg, n, p), (p, asc'))
+	end)
+| labexp HANDLE match
+    (fn (n, asc) =>
+	let val (e, masc)      = labexp (L.nextLabel n, asc)
+	    val (m, (p, asc')) = match masc
+	    val reg = R.consReg HANDLEleft HANDLEright
+	    val rle = getRegion labexpright HANDLEleft
+	in (A.ExpHandle (e rle, m, reg, n, p), (p, asc'))
+	end)
+| FN match
+    (fn (n, asc) =>
+	let val (mt, (m, asc')) = match (L.nextLabel n, asc)
+	    val reg = R.consReg FNleft FNright
+	in (A.ExpFn (mt, reg, n, m), (m, asc'))
+	end)
+| CASE labexp OF match
+    (fn (n, asc) =>
+	let val (e, masc) = labexp (L.nextLabel n, asc)
+	    val (m, (p, asc')) = match masc
+	    val reg1 = R.consReg CASEleft CASEright
+	    val reg2 = R.consReg OFleft OFright
+	    val rle1 = getRegion CASEright labexpleft
+	    val rle2 = getRegion labexpright OFleft
+	in (A.ExpCase (e (rle1 @ rle2), m, reg1, reg2, n, p), (p, asc'))
+	end)
+| IF labexp THEN labexp ELSE labexp
+    (fn (n, asc) =>
+	let val (e1, (n1, asc1)) = labexp1 (L.nextLabel n, asc)
+	    val (e2, (n2, asc2)) = labexp2 (n1, asc1)
+	    val (e3, (n3, asc3)) = labexp3 (n2, asc2)
+	    val reg1 = R.consReg IFleft IFright
+	    val reg2 = R.consReg THENleft THENright
+	    val reg3 = R.consReg ELSEleft ELSEright
+	    val rle1 = (getRegion IFright labexp1left) @ (getRegion labexp1right THENleft)
+	    val rle2 = (getRegion THENright labexp2left) @ (getRegion labexp2right ELSEleft)
+	    val rle3 = getRegion ELSEright labexp3left
+	in (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3))
+	end)
+| WHILE labexp DO labexp
+    (fn (n, asc) =>
+	let val (e1, pasc) = labexp1 (L.nextLabel n, asc)
+	    val (e2, (m, asc')) = labexp2 pasc
+	    val r1 = R.consReg WHILEleft WHILEright
+	    val r2 = R.consReg DOleft DOright
+	    val rle1 = (getRegion WHILEright labexp1left) @ (getRegion labexp1right DOleft)
+	    val rle2 = getRegion DOright labexp2left
+	in (A.ExpWhile (e1 rle1, e2 rle2, r1, r2, n, m), (m, asc'))
+	end)
+| RAISE labexp
+    (fn (n, asc) =>
+	let val (e, (m, asc')) = labexp (L.nextLabel n, asc)
+	    val reg = R.consReg RAISEleft RAISEright
+	    val rle = getRegion RAISEright labexpleft
+	in (A.ExpRaise (e rle, reg, n, m), (m, asc'))
+	end)
+
+matchbar :
+  mrule
+    (fn nasc =>
+	let val (mr, masc) = mrule nasc
+	in (([mr], []), masc)
+	end)
+| mrule PIPE matchbar
+    (fn nasc =>
+	let val (mr, masc) = mrule nasc
+	    val ((mb, mbr), pasc) = matchbar masc
+	    val reg = R.consReg PIPEleft PIPEleft
+	in ((mr :: mb, reg :: mbr), pasc)
+	end)
+
+match :
+  matchbar
+    (fn (n, asc) =>
+	let val ((mb, mbr), (m, asc')) = matchbar (n, asc)
+	in (A.Match (mb, mbr, m), (m, asc'))
+	end)
+
+mrule :
+  labpat DARROW labexp
+    (fn (n, asc) =>
+	let val (pt, masc) = labpat (L.nextLabel n, asc)
+	    val (e, (p, asc')) = labexp masc
+	    val reg = R.consReg DARROWleft DARROWright
+	    val rle = getRegion DARROWright labexpleft
+	    val rlp = getRegion labpatright DARROWleft
+	in (A.Mrule (pt rlp, e rle, reg, n, p), (p, asc'))
+	end)
+
+atpattuple :
+  labpat COMMA labpat
+    (fn nasc =>
+	let val (pt1, masc) = labpat1 nasc
+	    val (pt2, pasc) = labpat2 masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labpat1right COMMAleft
+	    val rr' = getRegion COMMAright labpat2left
+	    val r1  = R.consReg labpat1left labpat1right
+	    val r2  = R.consReg labpat2left labpat2right
+	in ((fn rl => fn rr => [pt1 (rl @ rl'), pt2 (rr' @ rr)], [reg], [r1, r2]), pasc)
+	end)
+|  labpat COMMA atpattuple
+    (fn nasc =>
+	let val (pt, masc) = labpat nasc
+	    val ((tt, regl, regsc), pasc) = atpattuple masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labpatright COMMAleft
+	    val rr' = getRegion COMMAright atpattupleleft
+	    val r   = R.consReg labpatleft labpatright
+	in ((fn rl => fn rr => (pt (rl @ rl')) :: (tt rr' rr), reg :: regl, r :: regsc), pasc)
+	end)
+
+patlist :
+    (fn nasc => ((fn _ => fn _ => [], []), nasc))
+| nepatlist
+    (nepatlist)
+
+nepatlist :
+  labpat
+    (fn nasc =>
+	let val (p, masc) = labpat nasc
+	in ((fn rl => fn rr => [p (rl @ rr)], []), masc)
+	end)
+| labpat COMMA nepatlist
+    (fn nasc =>
+	let val (p, masc) = labpat nasc
+	    val ((ps, regl), pasc) = nepatlist masc
+	    val reg = R.consReg COMMAleft COMMAleft
+	    val rl' = getRegion labpatright COMMAleft
+	    val rr' = getRegion COMMAright nepatlistleft
+	in ((fn rl => fn rr => (p (rl @ rl')) :: (ps rr' rr), reg :: regl), pasc)
+	end)
+
+labpat :
+  pat
+    (fn (n, asc) =>
+	let val (p, (m, asc')) = pat (L.nextLabel n, asc)
+	    val rp = [R.consReg patleft patright]
+	in (fn rs => A.LabPat (p, rs, rp, n, m), (m, asc'))
+	end)
+
+(*labpatcpx :
+  patcpx
+    (fn (n, asc) =>
+	let val (p, (m, asc')) = patcpx (L.nextLabel n, asc)
+	    val rp = [R.consReg patcpxleft patcpxright]
+	in (fn rs => A.LabPat (p, rs, rp, n, m), (m, asc'))
+	end)*)
+
+identty :
+  ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in (A.IdentTyId id, masc)
+	end)
+| labid COLON labtype
+    (fn (n, asc) =>
+	let val (id, masc) = labid (L.nextLabel n, asc)
+	    val (t, (m, asc')) = labtype masc
+	    val reg = R.consReg COLONleft COLONright
+	    val rt  = getRegion COLONright labtypeleft
+	    val ri  = getRegion labidright COLONleft
+	in (A.IdentTyTy (id ri, t rt, reg, n, m), (m, asc'))
+	end)
+
+labidty :
+  identty
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = identty (L.nextLabel n, asc)
+	in (fn rs => A.LabIdTy (id, rs, n, m), (m, asc'))
+	end)
+
+onepatrow :
+ tylab EQUALOP labpat
+    (fn (n, asc) =>
+	let val (l, masc) = tylab (L.nextLabel n, asc)
+	    val (pa, (p, asc')) = labpat masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val rlp = getRegion EQUALOPright labpatleft
+	    val rlt = getRegion tylabright EQUALOPleft
+	in (A.PatRow (l, pa rlp, reg, rlt, n, p), (p, asc'))
+	end)
+| identty
+    (fn (n, asc) =>
+	let val (id, (m, asc')) = identty (n, asc)
+	in (A.PatRowId (id, m), (m, asc'))
+	end)
+| labidty AS labpat
+    (fn (n, asc) =>
+	let val (id, masc) = labidty (L.nextLabel n, asc)
+	    val (pa, (p, asc')) = labpat masc
+	    val reg = R.consReg ASleft ASright
+	    val rlp = getRegion ASright labpatleft
+	    val rli = getRegion labidtyright ASleft
+	in (A.PatRowAs (id rli, pa rlp, reg, n, p), (p, asc'))
+	end)
+| WILDCARD
+    (fn (n, asc) =>
+	let val reg = R.consReg WILDCARDleft WILDCARDright
+	in (A.PatRowWild (reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+
+patrow :
+  onepatrow
+    (fn nasc =>
+	let val (opr, masc) = onepatrow nasc
+	in (([opr], []), masc)
+	end)
+| onepatrow COMMA patrow
+    (fn nasc =>
+	let val (opr, masc) = onepatrow nasc
+	    val ((pr, regl), pasc) = patrow masc
+	    val reg = R.consReg COMMAleft COMMAright
+	in ((opr :: pr, reg :: regl), pasc)
+	end)
+
+patrowopt :
+    (fn nasc => (([], []), nasc))
+| patrow
+    (patrow)
+
+(*atpat' :
+  WILD
+    (fn (n, asc) =>
+	let val reg = R.consReg WILDleft WILDright
+	in (A.AtPatWild (reg, n), (n, asc))
+	end)
+| scon
+    (fn nasc =>
+	let val (sc, masc) = scon nasc
+	in (A.AtPatScon sc, masc)
+	end)
+| LPAREN RPAREN
+    (fn (n, asc) =>
+	let val reg = R.consReg LPARENleft RPARENright
+	in (A.AtPatTuple ([], [reg], n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| LPAREN atpattuple RPAREN
+    (fn (n, asc) =>
+	let val ((tt, regl', regsc), (m, asc')) = atpattuple (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright atpattupleleft
+	    val rr = getRegion atpattupleright RPARENleft
+	in (A.AtPatTuple (tt rl rr, regl, n, m), (m, asc'))
+	end)
+| LPAREN labpator RPAREN
+    (fn (n, nasc) =>
+	let val ((xs, rs), (m, masc)) = labpator (L.nextLabel n, nasc)
+	    val reg1 = R.consReg LPARENleft LPARENright
+	    val reg2 = R.consReg RPARENleft RPARENright
+	    val regs = reg1 :: rs @ [reg2]
+	    val rl   = getRegion LPARENright labpatorleft
+	    val rr   = getRegion labpatorright RPARENleft
+	in (A.AtPatOr (xs rl rr, regs, n, m), (m, masc))
+	end)
+| LBRACE patrowopt RBRACE
+    (fn (n, asc) =>
+	let val ((prl, regl), (m, asc')) = patrowopt (L.nextLabel n, asc)
+	    val reg1 = R.consReg LBRACEleft LBRACEright
+	    val reg2 = R.consReg RBRACEleft RBRACEright
+	in (A.AtPatRecord (prl, [reg1, reg2], regl, n, m), (m, asc'))
+	end)
+| LPAREN labpat RPAREN
+    (fn (n, asc) =>
+	let val (pt, (m, asc')) = labpat (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val rlp  = (getRegion LPARENright labpatleft) @ (getRegion labpatright RPARENleft)
+	in (A.AtPatParen (pt rlp, reg1, reg2, n, m), (m, asc'))
+	end)
+| LLIST patlist RLIST
+    (fn (n, asc) =>
+	let val ((ps, regl'), (m, asc')) = patlist (L.nextLabel n, asc)
+	    val reg1 = R.consReg LLISTleft LLISTleft
+	    val reg2 = R.consReg RLISTleft RLISTleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl   = getRegion LLISTright patlistleft
+	    val rr   = getRegion patlistright RLISTleft
+	in (A.AtPatList (ps rl rr, regl, n, m), (m, asc'))
+	end)
+
+atpat :
+  atpat'
+    (atpat')
+| longidid
+    (fn nasc =>
+	let val (id, masc) = longidid nasc
+	in (A.AtPatId id, masc)
+	end)
+| OP longid
+    (fn nasc =>
+	let val (id, masc) = longid nasc
+	in (A.AtPatId id, masc)
+	end)
+
+
+coltylist :
+  COLON labtype
+    (let val reg = R.consReg COLONleft COLONright
+	 val rt  = getRegion COLONright labtypeleft
+	 val r   = R.consReg labtypeleft labtyperight
+     in fn rl => [(labtype, reg, rt, rl, r)]
+     end)
+| COLON labtype coltylist
+    (let
+	 val reg   = R.consReg COLONleft COLONright
+	 val rt    = getRegion COLONright labtypeleft
+	 val r     = R.consReg labtypeleft labtyperight
+	 val rr    = getRegion labtyperight coltylistleft
+	 val compl = coltylist
+     in fn rl => (labtype, reg, rt, rl, r) :: (compl rr)
+     end)
+
+patsp :
+  atpat'
+    (fn nasc =>
+	let val (ap, masc) = atpat' nasc
+	in (A.PatAtPat ap, masc)
+	end)
+| longidid atpat
+    (fn (n, asc) =>
+	let val (id, masc) = longidid (L.nextLabel n, asc)
+	    val (ap, (p, asc')) = atpat masc
+	    val reg = getRegion longididright atpatleft
+	    val ra  = R.consReg atpatleft atpatright
+	in (A.PatApp (id, ap, reg, ra, n, p), (p, asc'))
+	end)
+| OP longid atpat
+    (fn (n, asc) =>
+	let val (id, masc) = longid (L.nextLabel n, asc)
+	    val (ap, (p, asc')) = atpat masc
+	    val reg = getRegion longidright atpatleft
+	    val ra  = R.consReg atpatleft atpatright
+	in (A.PatApp (id, ap, reg, ra, n, p), (p, asc'))
+	end)
+
+patcpx :
+  ident AS labpat
+    (fn (n, asc) =>
+	let val (id, (m, ascm)) = ident (L.nextLabN n 2, asc)
+	    val (lp, (p, ascp)) = labpat (m, ascm)
+	    val reg = R.consReg ASleft ASright
+	    val rlp = getRegion ASright labpatleft
+	    val rli = getRegion identright ASleft
+	in (A.PatAs (A.LabIdTy (A.IdentTyId id, rli, L.nextLabel n, m), lp rlp, reg, n, p), (p, ascp))
+	end)
+| OP ident AS labpat
+    (fn (n, asc) =>
+	let val (id, (m, ascm)) = ident (L.nextLabN n 2, asc)
+	    val (lp, (p, ascp)) = labpat (m, ascm)
+	    val reg = R.consReg ASleft ASright
+	    val rlp = getRegion ASright labpatleft
+	    val rli = getRegion identright ASleft
+	in (A.PatAs (A.LabIdTy (A.IdentTyId id, rli, L.nextLabel n, m), lp rlp, reg, n, p), (p, ascp))
+	end)
+| ident COLON labtype AS labpat
+    (fn (n, asc) =>
+	let val (id, (q, ascq)) = ident (L.nextLabN n 4, asc)
+	    val (ty, (m, ascm)) = labtype (q, ascq)
+	    val (lp, (p, ascp)) = labpat (m, ascm)
+	    val reg1 = R.consReg COLONleft COLONright
+	    val reg2 = R.consReg ASleft ASright
+	    val rt   = getRegion COLONright labtypeleft
+	    val rp   = getRegion ASright labpatleft
+	    val rl   = getRegion labtyperight ASleft
+	    val ri   = getRegion identright COLONleft
+	in (A.PatAs (A.LabIdTy (A.IdentTyTy (A.LabId (id, ri, L.nextLabN n 3, q), ty rt, reg1, L.nextLabN n 2, m), rl, L.nextLabel n, m), lp rp, reg2, n, p), (p, ascp))
+	end)
+| OP ident COLON labtype AS labpat
+    (fn (n, asc) =>
+	let val (id, (q, ascq)) = ident (L.nextLabN n 4, asc)
+	    val (ty, (m, ascm)) = labtype (q, ascq)
+	    val (lp, (p, ascp)) = labpat (m, ascm)
+	    val reg1 = R.consReg COLONleft COLONright
+	    val reg2 = R.consReg ASleft ASright
+	    val rt   = getRegion COLONright labtypeleft
+	    val rp   = getRegion ASright labpatleft
+	    val rl   = getRegion labtyperight ASleft
+	    val ri   = getRegion identright COLONleft
+	in (A.PatAs (A.LabIdTy (A.IdentTyTy (A.LabId (id, ri, L.nextLabN n 3, q), ty rt, reg1, L.nextLabN n 2, m), rl, L.nextLabel n, m), lp rp, reg2, n, p), (p, ascp))
+	end)
+| ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
+	end)
+| OP ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
+	end)
+| longid'
+    (fn nasc =>
+	let val (lid, masc) = longid' nasc
+	in (A.PatAtPat (A.AtPatId lid), masc)
+	end)
+| OP longid'
+    (fn nasc =>
+	let val (lid, masc) = longid' nasc
+	in (A.PatAtPat (A.AtPatId lid), masc)
+	end)
+| patsp
+    (patsp)
+| patsp coltylist
+    (fn nasc =>
+	let val fps = fn u => patsp u
+	    val compl = coltylist (getRegion patspright coltylistleft)
+	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
+				fn (n, asc) =>
+				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
+				       val (ty, (p, asc'')) = fty (m, asc')
+				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
+				   end)
+			    fps
+			    compl
+	in fpa nasc
+	end)
+| ident coltylist
+    (fn nasc =>
+	let val fps = fn u =>
+			 let val (id, masc) = ident u
+			 in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
+			 end
+	    val compl = coltylist (getRegion identright coltylistleft)
+	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
+				fn (n, asc) =>
+				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
+				       val (ty, (p, asc'')) = fty (m, asc')
+				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
+				   end)
+			    fps
+			    compl
+	in fpa nasc
+	end)
+| OP ident coltylist
+    (fn nasc =>
+	let val fps = fn u =>
+			 let val (id, masc) = ident u
+			 in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
+			 end
+	    val compl = coltylist (getRegion identright coltylistleft)
+	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
+				fn (n, asc) =>
+				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
+				       val (ty, (p, asc'')) = fty (m, asc')
+				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
+				   end)
+			    fps
+			    compl
+	in fpa nasc
+	end)
+| longid' coltylist
+    (fn nasc =>
+	let val fps = fn u =>
+			 let val (lid, masc) = longid' u
+			 in (A.PatAtPat (A.AtPatId lid), masc)
+			 end
+	    val compl = coltylist (getRegion longid'right coltylistleft)
+	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
+				fn (n, asc) =>
+				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
+				       val (ty, (p, asc'')) = fty (m, asc')
+				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
+				   end)
+			    fps
+			    compl
+	in fpa nasc
+	end)
+| OP longid' coltylist
+    (fn nasc =>
+	let val fps = fn u =>
+			 let val (lid, masc) = longid' u
+			 in (A.PatAtPat (A.AtPatId lid), masc)
+			 end
+	    val compl = coltylist (getRegion longid'right coltylistleft)
+	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
+				fn (n, asc) =>
+				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
+				       val (ty, (p, asc'')) = fty (m, asc')
+				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
+				   end)
+			    fps
+			    compl
+	in fpa nasc
+	end)
+
+pat :
+  patcpx
+    (patcpx)
+| labpatcpx CONSLIST labpat
+    (fn (n, nasc) =>
+	let val (v, masc)       = updateAscId "::" nasc
+	    val (pax, pasc)     = labpatcpx (L.nextLabel n, masc)
+	    val (pa, (p, qasc)) = labpat pasc
+            val reg = R.consReg CONSLISTleft CONSLISTright
+	    val rp1 = getRegion labpatcpxright CONSLISTleft
+	    val rp2 = getRegion CONSLISTright labpatleft
+	in (A.PatConsList (v, pax rp1, pa rp2, reg, n, p), (p, qasc))
+	end)*)
+
+(* New stuff *)
+
+pat :
+  labpat AS labpat
+    (fn (n, nasc) =>
+	let val (labpat1, (m, masc)) = labpat1 (L.nextLabN n 4, nasc)
+	    val reg  = R.consReg ASleft ASright
+	    val regs1 = getRegion labpat1left ASleft
+	    val regs2 = getRegion ASright labpat2left
+	in case labpat1 regs1 of
+	       A.LabPat (A.PatAtPat (A.AtPatId (A.LongIdId (A.Ident (st, id, reg1, _, _)))), regs3, _, _, _) =>
+	       let val labidty = A.LabIdTy (A.IdentTyId (A.Ident (st, id, reg1, L.nextLabN n 2, L.nextLabN n 3)), regs3, L.nextLabel n, L.nextLabN n 3)
+		   val (labpat2, (p, pasc)) = labpat2 (L.nextLabN n 3, masc)
+	       in (A.PatAs (labidty, labpat2 regs2, reg, n, p), (p, pasc))
+	       end
+	     | A.LabPat (A.PatTyped (A.LabPat (A.PatAtPat (A.AtPatId (A.LongIdId id)), regs3, _, lab3, nxt3), labtyp, reg4, lab4, nxt4), regs5, _, lab5, nxt5) =>
+	       let val labidty = A.LabIdTy (A.IdentTyTy (A.LabId (id, regs3, lab3, nxt3), labtyp, reg4, lab4, nxt4), regs5, lab5, nxt5)
+		   val (labpat2, (p, pasc)) = labpat2 (m, masc)
+	       in (A.PatAs (labidty, labpat2 regs2, reg, n, p), (p, pasc))
+	       end
+	     | _ => raise PD.ParseError ("left of AS does not follow SML syntax", getRegion labpatleft labpatright)
+	end)
+| labpat COLON labtype
+    (fn (n, nasc) =>
+	let val (labpat, masc) = labpat (L.nextLabel n, nasc)
+	    val (labtyp, (p, pasc)) = labtype masc
+	    val regsPat = getRegion labpatright COLONleft
+	    val regsTyp = getRegion COLONright labtypeleft
+	    val reg = R.consReg COLONleft COLONright
+	in (A.PatTyped (labpat regsPat, labtyp regsTyp, reg, n, p), (p, pasc))
+	end)
+| infpat
+    (infpat)
+
+apppat :
+  ID
+    ([F.O (ID, R.consReg IDleft IDright)])
+| INID
+    ([F.O (INID, R.consReg INIDleft INIDright)])
+| STAR
+    ([F.O ("*", R.consReg STARleft STARright)])
+| longid'
+    ([F.L (fn nasc => let val (id, masc) = longid' nasc in (A.AtPatId id, masc) end, R.consReg longid'left longid'right)])
+| atpat
+    ([F.L (atpat, R.consReg atpatleft atpatright)])
+| ID apppat
+    ((F.O (ID, R.consReg IDleft IDright)) :: apppat)
+| INID apppat
+    ((F.O (INID, R.consReg INIDleft INIDright)) :: apppat)
+| STAR apppat
+    ((F.O ("*", R.consReg STARleft STARright)) :: apppat)
+| longid' apppat
+    ((F.L (fn nasc => let val (id, masc) = longid' nasc in (A.AtPatId id, masc) end, R.consReg longid'left longid'right)) :: apppat)
+| atpat apppat
+    ((F.L (atpat, R.consReg atpatleft atpatright)) :: apppat)
+
+infpat :
+  apppat
+    (fn (n, nasc) =>
+	let fun cons2 (F.L (pat, reg)) (n, nasc) =
+	    	let val (p, (m, masc)) = pat (L.nextLabel n, nasc)
+		in (fn rs => A.LabPat (p, rs, [reg], n, m), (m, masc))
+		end
+	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch ""
+	      | cons2 (F.N ((st, r), t1, t2)) (n, nasc) =
+		let val (p, (m, masc)) = cons1 (F.N ((st, r), t1, t2)) (L.nextLabel n, nasc)
+		    val rl = getRegion (R.getFrom (F.getLeft t1)) (R.getTo (F.getRight t2))
+		in (fn rs => A.LabPat (p, rs, rl, n, m), (m, masc))
+		end
+
+	    and cons1 (F.L (pat, reg)) nasc = pat nasc
+	      | cons1 (F.O _) _ = raise EH.DeadBranch ""
+	      | cons1 (F.N ((st, r), t1, t2)) (n, nasc) =
+		let val (v, masc) = updateAscId st nasc
+		    val (p1, (n1, asc1)) = cons2 t1 (L.nextLabel n, masc)
+		    val (p2, (n2, asc2)) = cons2 t2 (n1, asc1)
+		    val rlp1  = getRegion (R.getTo (F.getRight t1)) (R.getFrom r)
+		    val rlp2  = getRegion (R.getTo r) (R.getFrom (F.getLeft t2))
+		in (A.PatOp (st, v, p1 rlp1, p2 rlp2, r, n, n2), (n2, asc2))
+		end
+
+	    fun toAtPat (F.O (st, reg)) (n, nasc) =
+		let val (v, masc) = updateAscId st nasc
+		    val next = L.nextLabel n
+		in (A.AtPatId (A.LongIdId (A.Ident (st, v, reg, n, next))), (next, masc), reg)
+		end
+	      | toAtPat (F.L (atpat, reg)) (n, nasc) =
+		let val (ap, masc) = atpat (n, nasc)
+		in (ap, masc, reg)
+		end
+	      | toAtPat (F.N _) _ = raise EH.DeadBranch "there should be no node at this stage yet"
+
+	    fun toApp [] nasc = raise EH.DeadBranch ""
+	      | toApp [atpat] nasc =
+		let val (ap, masc, reg) = atpat nasc
+		in (A.PatAtPat ap, masc, reg)
+		end
+	      | toApp atpats (n, nasc) =
+		let val atpatEnd = List.hd (List.rev atpats)
+		    val atpatsBeg = List.rev (List.tl (List.rev atpats))
+		    val (pat, masc, reg1) = toApp atpatsBeg (L.nextLabel n, nasc)
+		    val (ap, (p, pasc), reg2) = atpatEnd masc
+		    val regs = getRegion (R.getTo reg1) (R.getFrom reg2)
+		    val reg = R.consReg (R.getFrom reg1) (R.getTo reg2)
+		in case pat of
+		       A.PatAtPat (A.AtPatId longid) =>
+		       (A.PatApp (longid, ap, regs, reg2, n, p), (p, pasc), reg)
+		     | _ => raise PD.ParseError ("non identifier applied in a pattern", [reg])
+		end
+
+	    fun toApp' [] = []
+	      | toApp' atpats =
+		let val fst = List.hd atpats
+		    val lst = List.hd (List.rev atpats)
+		    val reg = R.consReg (R.getFrom (F.getLeft fst)) (R.getTo (F.getRight lst))
+		    val atpats' = map toAtPat atpats
+		    val fpat = fn nasc => let val (pat, masc, reg) = toApp atpats' nasc in (pat, masc) end
+		in [F.L (fpat, reg)]
+		end
+
+	    fun convNonOp [] rest = toApp' rest
+	      | convNonOp ((F.O (st, reg)) :: xs) rest =
+		if F.isInfix st
+		then (toApp' rest) @ [F.O (st, reg)] @ (convNonOp xs [])
+		else let val atpat =
+			  fn (n, nasc) =>
+			     let val (v, masc) = updateAscId st nasc
+				 val next = L.nextLabel n
+			     in (A.AtPatId (A.LongIdId (A.Ident (st, v, reg, n, next))), (next, masc))
+			     end
+		     in convNonOp xs (rest @ [F.L (atpat, reg)])
+		     end
+	      | convNonOp ((F.L (atpat, reg)) :: xs) rest =
+		convNonOp xs (rest @ [F.L (atpat, reg)])
+	      | convNonOp ((F.N _) :: xs) _ = raise EH.DeadBranch "there should be no node at this stage"
+
+	    val cv = (F.convert (convNonOp apppat []))
+
+	in cons1 (F.convert (convNonOp apppat [])) (n, nasc)
+	end handle EH.DeadBranch st =>
+		   let val reg = R.consReg apppatleft apppatright
+		       val ih  = PD.mkErrorHandler true st [reg]
+		       val _   = PD.setErrorHandler ih
+		   in (A.PatDots [], (n, nasc))
+		   end)
+
+atpat :
+  atpat'
+    (atpat')
+| LPAREN RPAREN
+    (fn (n, asc) =>
+	let val reg = R.consReg LPARENleft RPARENright
+	in (A.AtPatTuple ([], [reg], n, L.nextLabel n), (L.nextLabel n, asc))
+	end)
+| LPAREN atpattuple RPAREN
+    (fn (n, asc) =>
+	let val ((tt, regl', regsc), (m, asc')) = atpattuple (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl = getRegion LPARENright atpattupleleft
+	    val rr = getRegion atpattupleright RPARENleft
+	in (A.AtPatTuple (tt rl rr, regl, n, m), (m, asc'))
+	end)
+| LPAREN labpator RPAREN
+    (fn (n, nasc) =>
+	let val ((xs, rs), (m, masc)) = labpator (L.nextLabel n, nasc)
+	    val reg1 = R.consReg LPARENleft LPARENright
+	    val reg2 = R.consReg RPARENleft RPARENright
+	    val regs = reg1 :: rs @ [reg2]
+	    val rl   = getRegion LPARENright labpatorleft
+	    val rr   = getRegion labpatorright RPARENleft
+	in (A.AtPatOr (xs rl rr, regs, n, m), (m, masc))
+	end)
+| LPAREN labpat RPAREN
+    (fn (n, asc) =>
+	let val (pt, (m, asc')) = labpat (L.nextLabel n, asc)
+	    val reg1 = R.consReg LPARENleft LPARENleft
+	    val reg2 = R.consReg RPARENleft RPARENleft
+	    val rlp  = (getRegion LPARENright labpatleft) @ (getRegion labpatright RPARENleft)
+	in (A.AtPatParen (pt rlp, reg1, reg2, n, m), (m, asc'))
+	end)
+
+atpat' :
+  OP ident
+    (fn nasc =>
+	let val (id, masc) = ident nasc
+	in (A.AtPatId (A.LongIdId id), masc)
+	end)
+| WILD
+    (fn (n, asc) =>
+	let val reg = R.consReg WILDleft WILDright
+	in (A.AtPatWild (reg, n), (n, asc))
+	end)
+| scon
+    (fn nasc =>
+	let val (sc, masc) = scon nasc
+	in (A.AtPatScon sc, masc)
+	end)
+| LBRACE patrowopt RBRACE
+    (fn (n, asc) =>
+	let val ((prl, regl), (m, asc')) = patrowopt (L.nextLabel n, asc)
+	    val reg1 = R.consReg LBRACEleft LBRACEright
+	    val reg2 = R.consReg RBRACEleft RBRACEright
+	in (A.AtPatRecord (prl, [reg1, reg2], regl, n, m), (m, asc'))
+	end)
+| LLIST patlist RLIST
+    (fn (n, asc) =>
+	let val ((ps, regl'), (m, asc')) = patlist (L.nextLabel n, asc)
+	    val reg1 = R.consReg LLISTleft LLISTleft
+	    val reg2 = R.consReg RLISTleft RLISTleft
+	    val regl = reg1 :: regl' @ [reg2]
+	    val rl   = getRegion LLISTright patlistleft
+	    val rr   = getRegion patlistright RLISTleft
+	in (A.AtPatList (ps rl rr, regl, n, m), (m, asc'))
+	end)

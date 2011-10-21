@@ -1,0 +1,378 @@
+(* Copyright 2010 Heriot-Watt University
+ *
+ *
+ * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
+ * a Type Error Slicer for Standard ML written by the ULTRA Group of
+ * Heriot-Watt University, Edinburgh.
+ *
+ * SMLTES is a free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMLTES is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  o Authors:     Vincent Rahli
+ *  o Affiliation: Heriot-Watt University, MACS
+ *  o Date:        19 June 2010
+ *  o File name:   MLB.grm
+ *  o Description: Defines a parser for MLB files.
+ *)
+
+
+structure A  = AstMLB
+structure R  = Reg
+structure L  = Label
+structure I  = Id
+structure D  = Debug
+structure EH = ErrorHandler
+
+type associd = I.assoc
+type pack  = L.label * associd
+type 'a t  = pack -> 'a * pack
+
+fun getRegion left right = R.getRegionList left right
+
+fun updateAscId st ascid = I.updateAssoc st ascid
+
+fun createId st left right n ascid =
+    let val reg = R.consReg left right
+	val (v, ascid') = updateAscId st ascid
+    in (A.NODE (A.IDENT v, [], [reg], n), L.nextLabel n, ascid')
+    end
+
+
+%%
+
+
+%name MLB
+
+%term
+  EQUALOP
+| SEMICOLON
+| OPEN
+| BASIS
+| BAS
+| AND
+| LOCAL
+| LET
+| IN
+| END
+| STRUCTURE
+| SIGNATURE
+| FUNCTOR
+| SMLFILE of string
+| SIGFILE of string
+| FUNFILE of string
+| MLBFILE of string
+| ID      of string
+| EOF
+
+%nonterm
+  basdec      of A.code t
+| onebasdec   of A.code t
+| onebasdecs  of (A.code list * R.region list) t
+| basexp      of A.code t
+| ident       of A.code t
+| basid       of A.code t
+| strid       of A.code t
+| sigid       of A.code t
+| funid       of A.code t
+| basids      of A.code list t
+| basbind     of A.code t
+| basbinds    of (A.code list * R.region list) t
+| basstr      of A.code t
+| bassig      of A.code t
+| basfun      of A.code t
+| basstrs     of (A.code list * R.region list) t
+| bassigs     of (A.code list * R.region list) t
+| basfuns     of (A.code list * R.region list) t
+
+%right AND
+
+%pos R.pos
+
+%eop EOF
+
+%noshift EOF
+
+%start basdec
+
+
+%%
+
+ident :
+  ID
+    (fn (n, nasc) =>
+	let val (id, m, masc) = createId ID IDleft IDright n nasc
+	in (id, (m, masc))
+	end)
+
+basid :
+  ident
+    (fn (n, nasc) =>
+	let val (id, masc) = ident (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASID, A.CR_BASID), [id], [], n), masc)
+	end)
+
+strid :
+  ident
+    (fn (n, nasc) =>
+	let val (id, masc) = ident (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_STRID, A.CR_STRID), [id], [], n), masc)
+	end)
+
+sigid :
+  ident
+    (fn (n, nasc) =>
+	let val (id, masc) = ident (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_SIGID, A.CR_SIGID), [id], [], n), masc)
+	end)
+
+funid :
+  ident
+    (fn (n, nasc) =>
+	let val (id, masc) = ident (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_FUNID, A.CR_FUNID), [id], [], n), masc)
+	end)
+
+onebasdec :
+  BASIS basbinds
+    (fn (n, nasc) =>
+	let val ((xs, regs), masc) = basbinds (L.nextLabel n, nasc)
+	    val reg = R.consReg BASISleft BASISright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECBAS), xs, reg :: regs, n), masc)
+	end)
+| OPEN basids
+    (fn (n, nasc) =>
+	let val (xs, masc) = basids (L.nextLabel n, nasc)
+	    val reg = R.consReg OPENleft OPENright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECOPN), xs, [reg], n), masc)
+	end)
+| LOCAL basdec IN basdec END
+    (fn (n, nasc) =>
+	let val (basdec1, masc) = basdec1 (L.nextLabel n, nasc)
+	    val (basdec2, pasc) = basdec2 masc
+	    val reg1 = R.consReg LOCALleft LOCALright
+	    val reg2 = R.consReg INleft    INright
+	    val reg3 = R.consReg ENDleft   ENDright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECLOC), [basdec1, basdec2], [reg1, reg2, reg3], n), masc)
+	end)
+| STRUCTURE basstrs
+    (fn (n, nasc) =>
+	let val ((basstrs, regs), masc) = basstrs (L.nextLabel n, nasc)
+	    val reg = R.consReg STRUCTUREleft STRUCTUREright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECDSTR), basstrs, reg :: regs, n), masc)
+	end)
+| SIGNATURE bassigs
+    (fn (n, nasc) =>
+	let val ((bassigs, regs), masc) = bassigs (L.nextLabel n, nasc)
+	    val reg = R.consReg SIGNATUREleft SIGNATUREright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECDSIG), bassigs, reg :: regs, n), masc)
+	end)
+| FUNCTOR basfuns
+    (fn (n, nasc) =>
+	let val ((basfuns, regs), masc) = basfuns (L.nextLabel n, nasc)
+	    val reg = R.consReg FUNCTORleft FUNCTORright
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECDFUN), basfuns, reg :: regs, n), masc)
+	end)
+| SMLFILE
+    (fn (n, nasc) =>
+	let val reg = R.consReg SMLFILEleft SMLFILEright
+	    val file = A.NODE (A.FILE SMLFILE, [], [reg], L.nextLabel n)
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECSML), [file], [], n), (L.nextLabN n 2, nasc))
+	end)
+| SIGFILE
+    (fn (n, nasc) =>
+	let val reg = R.consReg SIGFILEleft SIGFILEright
+	    val file = A.NODE (A.FILE SIGFILE, [], [reg], L.nextLabel n)
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECSIG), [file], [], n), (L.nextLabN n 2, nasc))
+	end)
+| FUNFILE
+    (fn (n, nasc) =>
+	let val reg = R.consReg FUNFILEleft FUNFILEright
+	    val file = A.NODE (A.FILE FUNFILE, [], [reg], L.nextLabel n)
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECFUN), [file], [], n), (L.nextLabN n 2, nasc))
+	end)
+| MLBFILE
+    (fn (n, nasc) =>
+	let val reg = R.consReg MLBFILEleft MLBFILEright
+	    val file = A.NODE (A.FILE MLBFILE, [], [reg], L.nextLabel n)
+	in (A.NODE (A.NORMAL (A.NT_BASODEC, A.CR_BASODECMLB), [file], [], n), (L.nextLabN n 2, nasc))
+	end)
+
+onebasdecs :
+  onebasdec
+    (fn nasc =>
+	let val (x, masc) = onebasdec nasc
+	in (([x], []), masc)
+	end)
+| onebasdec onebasdecs
+    (fn nasc =>
+	let val (x, masc) = onebasdec nasc
+	    val ((xs, regs), pasc) = onebasdecs masc
+	in ((x :: xs, regs), pasc)
+	end)
+| onebasdec SEMICOLON onebasdecs
+    (fn nasc =>
+	let val (x, masc) = onebasdec nasc
+	    val ((xs, regs), pasc) = onebasdecs masc
+	    val reg = R.consReg SEMICOLONleft SEMICOLONright
+	in ((x :: xs, reg :: regs), pasc)
+	end)
+
+basdec :
+  onebasdecs
+    (fn (n, nasc) =>
+	let val ((xs, regs), masc) = onebasdecs (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASDEC, A.CR_BASDEC), xs, regs, n), masc)
+	end)
+
+basids :
+  basid
+    (fn nasc =>
+	let val (x, masc) = basid nasc
+	in ([x], masc)
+	end)
+| basid basids
+    (fn nasc =>
+	let val (x, masc) = basid nasc
+	    val (xs, pasc) = basids masc
+	in (x :: xs, pasc)
+	end)
+
+basbind :
+  basid EQUALOP basexp
+    (fn (n, nasc) =>
+	let val (basid, masc) = basid (L.nextLabel n, nasc)
+	    val (basexp, pasc) = basexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.NODE (A.NORMAL (A.NT_BASBIND, A.CR_BASBIND), [basid, basexp], [reg], n), pasc)
+	end)
+
+basbinds :
+  basbind
+    (fn nasc =>
+	let val (x, masc) = basbind nasc
+	in (([x], []), masc)
+	end)
+| basbind AND basbinds
+    (fn nasc =>
+	let val (x, masc) = basbind nasc
+	    val ((xs, regs), pasc) = basbinds masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((x :: xs, reg :: regs), pasc)
+	end)
+
+basstr :
+  strid
+    (fn (n, nasc) =>
+	let val (strid, masc) = strid (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASSTR, A.CR_BASSTR), [strid], [], n), masc)
+	end)
+| strid EQUALOP strid
+    (fn (n, nasc) =>
+	let val (strid1, masc) = strid1 (L.nextLabel n, nasc)
+	    val (strid2, pasc) = strid2 masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.NODE (A.NORMAL (A.NT_BASSTR, A.CR_BASSTREQ), [strid1, strid2], [reg], n), pasc)
+	end)
+
+basstrs :
+  basstr
+    (fn nasc =>
+	let val (basstr, masc) = basstr nasc
+	in (([basstr], []), masc)
+	end)
+| basstr AND basstrs
+    (fn nasc =>
+	let val (basstr, masc) = basstr nasc
+	    val ((basstrs, regs), pasc) = basstrs masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((basstr :: basstrs, reg :: regs), pasc)
+	end)
+
+bassig :
+  sigid
+    (fn (n, nasc) =>
+	let val (sigid, masc) = sigid (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASSIG, A.CR_BASSIG), [sigid], [], n), masc)
+	end)
+| sigid EQUALOP sigid
+    (fn (n, nasc) =>
+	let val (sigid1, masc) = sigid1 (L.nextLabel n, nasc)
+	    val (sigid2, pasc) = sigid2 masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.NODE (A.NORMAL (A.NT_BASSIG, A.CR_BASSIGEQ), [sigid1, sigid2], [reg], n), pasc)
+	end)
+
+bassigs :
+  bassig
+    (fn nasc =>
+	let val (bassig, masc) = bassig nasc
+	in (([bassig], []), masc)
+	end)
+| bassig AND bassigs
+    (fn nasc =>
+	let val (bassig, masc) = bassig nasc
+	    val ((bassigs, regs), pasc) = bassigs masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((bassig :: bassigs, reg :: regs), pasc)
+	end)
+
+basfun :
+  funid
+    (fn (n, nasc) =>
+	let val (funid, masc) = funid (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASFUN, A.CR_BASFUN), [funid], [], n), masc)
+	end)
+| funid EQUALOP funid
+    (fn (n, nasc) =>
+	let val (funid1, masc) = funid1 (L.nextLabel n, nasc)
+	    val (funid2, pasc) = funid2 masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	in (A.NODE (A.NORMAL (A.NT_BASFUN, A.CR_BASFUNEQ), [funid1, funid2], [reg], n), pasc)
+	end)
+
+basfuns :
+  basfun
+    (fn nasc =>
+	let val (basfun, masc) = basfun nasc
+	in (([basfun], []), masc)
+	end)
+| basfun AND basfuns
+    (fn nasc =>
+	let val (basfun, masc) = basfun nasc
+	    val ((basfuns, regs), pasc) = basfuns masc
+	    val reg = R.consReg ANDleft ANDright
+	in ((basfun :: basfuns, reg :: regs), pasc)
+	end)
+
+basexp :
+  BAS basdec END
+    (fn (n, nasc) =>
+	let val (basdec, masc) = basdec (L.nextLabel n, nasc)
+	    val reg1 = R.consReg BASleft BASright
+	    val reg2 = R.consReg ENDleft ENDright
+	in (A.NODE (A.NORMAL (A.NT_BASEXP, A.CR_BASEXPBAS), [basdec], [reg1, reg2], n), masc)
+	end)
+| basid
+    (fn (n, nasc) =>
+	let val (basid, masc) = basid (L.nextLabel n, nasc)
+	in (A.NODE (A.NORMAL (A.NT_BASEXP, A.CR_BASEXPID), [basid], [], n), masc)
+	end)
+| LET basdec IN basexp END
+    (fn (n, nasc) =>
+	let val (basdec, masc) = basdec (L.nextLabel n, nasc)
+	    val (basexp, pasc) = basexp masc
+	    val reg1 = R.consReg LETleft LETright
+	    val reg2 = R.consReg INleft  INright
+	    val reg3 = R.consReg ENDleft ENDright
+	in (A.NODE (A.NORMAL (A.NT_BASEXP, A.CR_BASEXPLET), [basdec, basexp], [reg1, reg2, reg3], n), masc)
+	end)

@@ -1,0 +1,235 @@
+######################################################################
+# Copyright 2009 Heriot-Watt University
+# Copyright 2010 Heriot-Watt University
+#
+#
+# This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
+# a Type Error Slicer for Standard ML written by the ULTRA Group of
+# Heriot-Watt University, Edinburgh.
+#
+# SMLTES is a free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# SMLTES is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+#
+#  o Authors:     Vincent Rahli
+#  o Affiliation: Heriot-Watt University, MACS
+#  o Date:        25 May 2010
+#  o File name:   Makefile.in
+#  o Description: initial Makefile from which a Makefile file can be
+#      generated using the configure script
+######################################################################
+
+SOURCESDIR = ${CURDIR}
+
+#MLTONPROFOP can be one of these:
+#  - time:  how much time is spent on each function
+#  - alloc: how many bytes each function allocates
+#  - count: how many times each function is called
+MLTONPROFOP=time
+date=`date +%Y-%m-%d`
+
+# the binary target should be called smlnj-bin
+default:
+	# you can either
+	#  - generate a binary (using SML/NJ)                           : 'smlnj-bin'
+	#  - generate a binary (using MLton)                            : 'mlton-bin'
+	#  - generate a binary (using Poly/ML)                          : 'polyml-bin'
+	#  - generate a binary to be used in the webdemo (using SML/NJ) : 'smlnj-bin-webdemo'
+	#  - generate a binary to be used in the webdemo (using MLton)  : 'mlton-bin-webdemo'
+	#  - run the profiler on the database (using SML/NJ)            : 'smlnj-profile'
+	#  - run the profiler on test-prog.sml (using MLton)            : 'mlton-profile'
+	#  - generate a cmtotes binary to transform a .cm into a .tes   : 'cmtotes'
+	#  - generate sources.mlb from sources.cm                       : 'cmtomlb'
+	#  - recreate the dependencies of the slicer                    : 'sml-tes-deps'
+	#  - clean the directory                                        : 'clean'
+	#  - clean but keep the Makefile                                : 'cleaner'
+	#  - (DEV) load the programming environment                     : 'load'
+	#  - (DEV) generate bin based on myslicer                       : 'my-smlnj-binary'
+	#  - (DEV) cmtodot generates a .dot from the .cm                : 'cmtodot'
+
+
+check:
+	# Compiles the slicer with SML/NJ
+	make smlnj-bin
+	# Compiles the slicer with MLton
+	make mlton-bin
+	# Compiles the slicer with Poly/ML
+	make polyml-bin
+	# Run the MLton profiler on a piece of code.
+	# Which one?  It would be good to pick one.  Always the same one?
+	cp test-prog.sml test-prog.sml_backup
+	cp ../database/code2.sml test-prog.sml
+	make mlton-profile
+	mv test-prog.sml_backup test-prog.sml
+	# Run the slicer on the database
+	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; checktests [];" | sml
+
+load:
+	# loads emacs, starts emacs and compile TES
+	# ${TEXTEDITOR} -font fixed --eval "(myfun-load-sml)" &
+	${TEXTEDITOR} --eval "(myfun-load-sml)" &
+	# loads the default test file in emacs
+	${TEXTEDITOR} test-prog.sml ../lib/alltests.sml &
+	# load THE main file of the implementation in emacs
+	${TEXTEDITOR} generation/Analyze.sml --eval "(switch-colors)" &
+	# loads the default html file in a web browser
+	# galeon res.html &
+	${WEBBROWSER} -new-window res.html &
+
+ml-binary:
+	# creates the heap image file
+	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", slicerpp);" | sml
+	# above should be doable as: mlbuild sources.cm Slice.slicerpp slicer
+	# creates the normal executable
+	heap2exec ${TMPDIR}/slicer.x86-linux ${TMPDIR}/slicer
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+	# copies the executable into the bin directory in the implementation directory
+	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/slicer-smlnj
+	# makes a copy of the slicer-smlnj binary called slicer
+	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel-bin
+	# copies the executable to the shared directory (makes a dated backup)
+	mv ${TMPDIR}/slicer ${SHAREDIR}/slicer-$(date)
+
+smlnj-bin-webdemo:
+	# creates the heap image file
+	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; setWebDemo true; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", slicerpp);" | sml
+	# creates the normal executable
+	heap2exec ${TMPDIR}/slicer.x86-linux ${TMPDIR}/slicer
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+	# copies the executable into the bin directory in the implementation directory
+	mv ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel-webdemo-bin
+
+mlton-base:
+	mllex  parse/ML.lex
+	mlyacc parse/ML.grm
+	sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
+	mv parse/ML.grm.sml.tmp parse/ML.grm.sml 
+	mllex  parse/MLB.lex
+	mlyacc parse/MLB.grm
+	mv parse/ML.lex.sml parse/ML-mlton.lex.sml
+	mv parse/ML.grm.sml parse/ML-mlton.grm.sml
+	mv parse/ML.grm.sig parse/ML-mlton.grm.sig
+	mv parse/MLB.lex.sml parse/MLB-mlton.lex.sml
+	mv parse/MLB.grm.sml parse/MLB-mlton.grm.sml
+	mv parse/MLB.grm.sig parse/MLB-mlton.grm.sig
+	cp mlton-control.sml.in mlton-control.sml
+
+mlton-bin-webdemo: mlton-base
+	echo "val _ = Slicer.setWebDemo true;" >> mlton-control.sml
+	echo "val _ = slicerpp ();" >> mlton-control.sml
+	mlton -output bin/skalpel-webdemo-bin sources.mlb
+
+## my-smlnj-binary is similar to binary but for another function.
+## We don't bother checking the dependencies for this one.
+## With MLton we would have to add:
+## 	echo "val _ = myslicer ();" >> mlton-control.sml
+my-smlnj-binary:
+	# creates the heap image file
+	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/myslicer\", myslicerp);" | sml
+	# creates the normal executable
+	heap2exec ${TMPDIR}/myslicer.x86-linux ${TMPDIR}/myslicer
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+	# copies the executable to the implementation directory
+	mv ${TMPDIR}/myslicer ${SOURCESDIR}/bin/myslicer
+
+bin/cmtotes: PGOps.sml
+	make cmtotes
+
+bin/cmtodot: PGOps.sml
+	make cmtodot
+
+## cmtotes generates a cmtotes binary to transform a cm file into a tes file.
+cmtotes:
+	# creates the heap image file
+	@echo "use \"${SOURCESDIR}/PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtotes\", cmToTes);" | sml
+	# creates the normal executable
+	heap2exec ${TMPDIR}/cmtotes.x86-linux ${TMPDIR}/cmtotes
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+	# copies the executable to the implementation directory
+	mv ${TMPDIR}/cmtotes ${SOURCESDIR}/bin/cmtotes
+
+## cmtodot generates a cmtodot binary to transform a cm file into a dot file.
+cmtodot:
+	# creates the heap image file
+	@echo "use \"${SOURCESDIR}/PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtodot\", cmToDot);" | sml
+	# creates the normal executable
+	heap2exec ${TMPDIR}/cmtodot.x86-linux ${TMPDIR}/cmtodot
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+	# copies the executable to the implementation directory
+	mv ${TMPDIR}/cmtodot ${SOURCESDIR}/bin/cmtodot
+
+### cmtomlb generates a .mlb file from a .cm file.
+cmtomlb:
+	./cmtomlb.sh
+
+sml-tes-deps:
+	# after this is done, add 'make ml-binary' as command in the created entry
+	# Is there another way to achieve that apart from sed or something like that?
+	# I still have to write some code to delete the stuff obtained via sml-makedepend.
+	ml-makedepend "${SOURCESDIR}/sources.cm" "${SOURCESDIR}/bin/slicer-smlnj"
+	cat Makefile | sed "s/^\(# END  : ml-makedepend\)/\tmake ml-binary\n\1/" > tmp-makefile
+	mv tmp-makefile Makefile
+
+cleaner:
+	# removes the .cm folder created by CM and the files created by the lexer and parser
+	rm -R bin/*
+	rm -R .cm cbt-sets/.cm                              # .cm directories
+	rm parse/*.grm.sml parse/*.grm.sig prase/*.lex.sml  # files generated by the parser and lexer
+	rm thelibrary.sml                                   # files generated by PGOps.sml
+	rm -R sources.mlb                                   # .mlb files are generated from .cm files
+	rm mlton-control.sml                                # generated from mlton-control.sml.in
+
+clean: cleaner
+	rm Makefile
+
+smlnj-bin: ${SOURCESDIR}/bin/slicer-smlnj
+
+mlton-bin-gen: mlton-base
+	echo "val _ = slicerpp ();" >> mlton-control.sml
+	mlton -output bin/skalpel-bin sources.mlb
+
+# We need mlton-base here ohterwise the ML-mlton-grm.sml and such
+# might not exists and make is going to complain when checking
+# the dependencies of the mlton binary.
+# The problem is that then it is done twice because it's done
+# again in mlton-bin-gen.
+mlton-bin: mlton-base ${SOURCESDIR}/bin/slicer-mlton
+
+polyml-bin:
+	./cmtomlb.sh cmtopoly
+	poly < FILES.sml
+	cc -o slicer-poly slicer-poly.o -L ${POLYLIBDIR} -lpolymain -lpolyml
+	rm slicer-poly.o
+	mv slicer-poly bin/slicer-poly
+
+mlton-profile: mlton-base
+	#echo "val _ = Slicer.setsol 8;" >> mlton-control.sml
+	echo "val _ = slicerpp ();" >> mlton-control.sml
+	#mlton -profile alloc -profile-branch true -profile-stack true -profile-val true sources.mlb
+	mlton -verbose 3 -profile ${MLTONPROFOP} -profile-branch true -profile-stack true -profile-val true sources.mlb
+	./sources ../lib/basis.sml test-prog.sml out.html "" "" "" "" 2 60000
+	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-$(date)
+
+smlnj-profile:
+	# (OS.Process.system "rm -r .cm"; Backend.Profile.setProfMode true; CM.make "sources.cm");
+	# (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);
+	make cleaner
+	@echo "(Backend.Profile.setProfMode true; CM.make \"${SOURCESDIR}/sources.cm\"); (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);" | sml > profile-smlnj-$(date)
+
+#
+# THIS IS THE END OF THE NON AUTOMATICALY CREATED STUFF
+#

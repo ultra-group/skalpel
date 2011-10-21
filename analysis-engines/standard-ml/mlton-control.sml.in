@@ -1,0 +1,84 @@
+(* Copyright 2009 Heriot-Watt University
+ * Copyright 2010 Heriot-Watt University
+ *
+ *
+ * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
+ * a Type Error Slicer for Standard ML written by the ULTRA Group of
+ * Heriot-Watt University, Edinburgh.
+ *
+ * SMLTES is a free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMLTES is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  o Authors:     Vincent Rahli
+ *  o Affiliation: Heriot-Watt University, MACS
+ *  o Date:        25 May 2010
+ *  o File name:   mlton-control.sml.in
+ *  o Description: Initial file used by MLton to generate a binary for
+ *      the slicer.
+ *)
+
+
+structure Args = SlicerOptArgs (*optional arguments for slicer*)
+
+fun printArgs args =
+    (print ("arguments(" ^ Int.toString (List.length args) ^ "):\n");
+     app (fn arg => print ("  " ^ arg ^ "\n")) args)
+
+fun printName name = print ("name: " ^ name ^ "\n");
+
+fun myslicer () =
+    let val (arg1, arg2) =
+	    case CommandLine.arguments () of
+		[x1, x2] => (x1, x2)
+	      | _ => raise Fail "wrong number of arguments"
+	val b = Option.valOf (Int.fromString arg1)
+	    handle Option => raise Fail "the first argument should be an int"
+	val n = Option.valOf (Int.fromString arg2)
+	    handle Option => raise Fail "the second argument should be a int"
+	val _ = Slicer.smltes (Args.optArg
+				   [[Args.BASOP (Option.valOf(Int.fromString(arg1))),
+				     Args.BCS (Option.valOf(Int.fromString(arg2)))]])
+    in ()
+    end
+
+fun genslicer () =
+    let val (arg1, arg2, arg3) =
+	    case CommandLine.arguments () of
+		[x1, x2, x3] => (x1, x2, x3)
+	      | _ => raise Fail "wrong number of arguments"
+	val b = Option.valOf (Bool.fromString arg1)
+	    handle Option => raise Fail "the first argument should be an int"
+	val n = Option.valOf (Int.fromString arg2)
+	    handle Option => raise Fail "the second argument should be a int"
+	val t = Option.valOf (Int.fromString arg3)
+	    handle Option => raise Fail "the third argument should be a int"
+	val _ = Slicer.smltes (Args.optArg
+				     [[Args.BASOP (Option.valOf(Int.fromString(arg1))),
+				       Args.BCS (Option.valOf(Int.fromString(arg2))),
+				       Args.TIMELIM (Option.valOf(Int.fromString(arg3)))]])
+    in ()
+    end
+
+(* (2010-06-30)Wrap that in an error handler *)
+fun slicerGen [] name =
+    Slicer.smlTesStrArgs ""
+  | slicerGen args name =
+    Slicer.smlTesStrArgs (foldr (fn (a,b) => a^" "^b) "" args)
+
+fun slicerpp () = slicerGen (CommandLine.arguments ()) (CommandLine.name ())
+
+fun slicerPoly () =
+    OS.Process.exit (slicerGen (CommandLine.arguments ()) (CommandLine.name ());
+		     OS.Process.success)
+
+fun checktests () = (Slicer.checktests []; ())

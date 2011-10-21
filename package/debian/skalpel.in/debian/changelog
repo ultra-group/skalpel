@@ -1,0 +1,29 @@
+skalpel (0.7) unstable; urgency=low
+
+  * Fifth release
+
+ -- John Pirie <jp95@macs.hw.ac.uk>  Sat, 01 Oct 2010 14:28:00 +0000
+
+smltes (0.6.1-1) unstable; urgency=low
+
+  * New release that essentially solve an issue with structure sharing.
+
+ -- Vincent Rahli <rahli@macs.hw.ac.uk>  Sat, 01 Oct 2010 14:28:00 +0000
+
+smltes (0.6-1) unstable; urgency=low
+
+  * Third release.
+
+ -- Vincent Rahli <rahli@macs.hw.ac.uk>  Sat, 10 Jul 2010 22:22:00 +0000
+
+smltes (0.5-1) unstable; urgency=low
+
+  * Second release.
+
+ -- Vincent Rahli <rahli@macs.hw.ac.uk>  Fri, 04 Jun 2010 17:30:00 +0000
+
+smltes (0.1-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Steven Shiells <ss215@hw.ac.uk>  Mon, 25 Jan 2010 11:49:00 +0000

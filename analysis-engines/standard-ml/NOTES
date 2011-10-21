@@ -1,0 +1,495 @@
+o (2010-10-23) Vincent Rahli
+
+  * Important issues to solve with the slicer:
+    - Circling through an error.
+    - Slicing the entire slicer from any file of its implementation.
+    - Key bindings on TES files.
+
+
+o (2010-08-25) Vincent Rahli
+
+  * Compilation with Poly/ML:
+      PolyML.use "FILES.sml";
+    when in a polyml interactive session.
+    Or directly: poly < FILES.sml
+
+    To create a binary:
+      poly < FILES.sml
+      cc -o slicer-poly slicer-poly.o -L /u1/pg/rahli/softwares/polyml/lib/ -lpolymain -lpolyml
+
+    Then run as usual, something like:
+      ./slicer-poly ../lib/basis.sml test-prog.sml res2.html "" "" "" ""
+
+    For now the file FILES.sml is created by hand but it would have to
+    be automatically generated at some point.
+    First test: MLton seems to take 3/4 of the time that Poyl/ML takes.
+
+
+o (2010-08-23) Vincent Rahli
+
+  * For free datatype constructors, add a special kind of free
+    identifier error.
+
+
+o (2010-08-18) Vincent Rahli
+
+  * I should create a dep structure in sets that will be a set of
+    dependencies where a dependency can either be (1) a label, (2) a
+    label related to the value polymorphism restriction or (3) a value
+    variable.  Then in ExtLab, instead of having three fields we will
+    have only one.  The Tuple should be changed to a record as well.
+
+
+o (2010-08-03) Vincent Rahli
+
+  * Any file that has "mlton" in its name should also contain an
+    "smlnj" version with "smlnj" replacing "mlton" in its name.
+    Explain that in the README FILE.
+
+
+o (2010-07-31) Vincent Rahli
+
+  * Source archive/packages.
+    We should distribute our configure and Makefile and the other
+    makefile the one that get copied into the source archive should
+    use it because we currently have redundancies.
+
+  * Debian binary package.
+    Not all the files get cleaned up when removing the packages.
+
+
+o (2010-07-31) Vincent Rahli
+
+  * Source packages.
+    This is to add our ChangeLog once we get the source packages working.
+
+	* New feature:  Debian (Ubuntu) source package (and our Debian binary package can now be generated via this).
+	* New feature:  Red-Hat (Fedora, CentOS) source package (and our Red-Hat binary package can now be generated via this).
+
+
+o (2010-07-27) Vincent Rahli
+
+  * Supported syntax webpage: document the OR patterns, quasiquotes...
+
+  * Functors as declarations: we should __warn__ the user that this is
+    only SML/NJ syntax.  This applies to OR patterns, ... as well.
+    (We should parse long functor identifiers as part of SML/NJ
+    syntax.)
+
+
+o (2010-07-26) Vincent Rahli
+
+  * Testing the slicer.
+
+    After a while the slicer crashes on simple1.sml.
+
+
+o (2010-07-24) Vincent Rahli
+
+  * Running the slicer on the slicer:
+
+    utils/sources.tes
+    sets/sources.tes
+    region/sources.tes
+    constraint/sources.tes
+    ast/sources.tes
+    ppp/sources.tes
+    slicing/sources.tes
+    generation/sources.tes
+    error/sources.tes
+    enum/sources.tes
+    parse/sources.tes
+    sources.tes
+
+    It takes about 30 seconds to the slicer to check that the code of
+    the slicer is typable (30299ms).  This is using a binary compiled
+    with MLton.
+
+  * HOL:
+     - We need to handle include.
+       ((2010-07-26)Handled?)
+       They also use abstype and eqtype
+     - We need to handle:
+         infix f
+	 fun (x f y) = ...
+	 fun (x f y) z = ...
+       ((2010-07-26)Should be handled now.)
+     - We need to parse
+         \uxxxx as a string.
+       ((2010-07-27)Should be fixed now.)
+     - Structure SML90?
+     - We have the problem that _::xs is parsed as _:: applied to xs
+       in patterns!
+       ((2010-07-27)Should be fixed now.)
+     - We have a worst problem with '_:t'!
+       To solve that we force _id identifiers to not contain ":".
+       We could also simplify these special identifiers to a simple
+       form such as _dummy, or a special comment.
+
+
+o (2010-07-12) Vincent Rahli
+
+  * Minimality
+
+    Testcase 446 shows the non minimality of the slicer.
+
+  * Status constraints
+
+    Testcase 457 shows that fn bindings should not constraint
+    statuses as we currently do in the implementation.
+
+  * Unmatched errors
+
+    Testcase 476 should not report that an identifier from a signature
+    is missing in a structure but should use another kind of error
+    that is that an identifier is unmatched in a signature.
+
+  * Signatures/functors
+
+    Testcase 492 is untypable but the slicer does not complain.
+
+  * Sharing
+
+    The slicer brakes on testcase 497.
+    Slices missing for testcases 511 and 512.
+
+  * Where clause
+
+    Slice missing for testcase 513.
+
+
+o (2010-07-11) Vincent Rahli
+
+  * Slicing
+
+    - In:
+
+      structure X : sig val f : 'a -> 'a end = struct
+      fun g () = fn x => x
+      val f = g ()
+      end
+      val _ = (X.f 1, X.f true)
+
+    The current problem is that f in the signature (and so of the
+    constrained structure) is marked as polymorphic and that does not
+    change even when we match the signature against the structure.
+
+    I should either change the polymorphic/monomorphic constraint of
+    the generated constrained structure or turn all of f's type
+    variables into monomorphic type variables.
+
+    (2010-07-14) Should be fixed now.
+
+    - It would be goof to highlight the 'a with another colour in:
+
+      val x : 'a list = rev [];
+
+
+  * 5 best testcases demonstrating the strength of our type error
+    slicer:
+    - 1: Type constructor clash involving a possibly higher order
+    function.
+    - 2/114: Type constructor clash involving datatype
+    declarations.  The slicer accurately reports the parts of the
+    datatypes involved in the type errors.
+    - 250: I like this example because it shows the utility of end
+    points and colours (even though end points are not yet well
+    defined).  I believe that this kind of errors would help someone
+    who is not completely familiar with the SML syntax.
+    - 450/522: Type constructor clash involving of chain of structure
+    openings.  This kind of error can be really confusing and tedious
+    to track down because of the hiding of bindings due to the
+    openings.
+    - 266: Many record clashes.
+
+  * 5 other interesting examples that require a deeper knowledge of SML:
+    - 465: Error involving going through the parameter of a functor.
+    - 467/531: Value polymorphism restriction through a structure.
+    - ??
+    - ??
+    - ??
+
+
+o (2010-07-09) Vincent Rahli
+
+  * DeadBranch errors: 167, 241, 246, 322, 323, 390 (Solved)
+
+  * Running the slicer on its implementation
+
+    The slicer takes 541056ms on (everything except the parser because
+    some structures/signatures/functors are missing.)
+
+       utils/Debug.sig
+       utils/Debug.sml
+       utils/ErrorHandler.sig
+       utils/ErrorHandler.sml
+       utils/Solution.sig
+       utils/Solution.sml
+       utils/SymbSlice.sml
+       utils/Tools.sig
+       utils/Tools.sml
+       utils/VTimer.sig
+       utils/VTimer.sml
+
+       sets/Label.sig
+       sets/OrdKey.sml
+       sets/Label.sml
+       sets/Ident.sig
+       sets/OrdStr.sml
+       sets/Ident.sml
+       sets/LongId.sig
+       sets/OrdId.sml
+       sets/OrdLid.sml
+       sets/LongId.sml
+       sets/OrdSet.sig
+       sets/OrdSet.sml
+
+       region/Region.sig
+       region/Region.sml
+
+       constraint/ClassId.sig
+       constraint/ClassId.sml
+       constraint/Expans.sig
+       constraint/Expans.sml
+       constraint/Poly.sig
+       constraint/Poly.sml
+       constraint/Ty.sig
+       constraint/Ty.sml
+       constraint/ConsId.sig
+       constraint/ConsId.sml
+       constraint/Env.sig
+       constraint/Env.sml
+
+       ast/AstMLB.sml
+       ast/AstSML.sig
+       ast/AstSML.sml
+       ast/AstTest.sig
+       ast/AstTest.sml
+
+       ppp/PPP.sig
+       ppp/PPP-mlton.sml
+
+       slicing/Slice.sig
+       slicing/Slice.sml
+
+       generation/Analyze.sig
+       generation/Name.sig
+       generation/Name.sml
+       generation/Op.sig
+       generation/Op.sml
+       generation/Analyze.sml
+
+       error/ErrorKind.sig
+       error/ErrorKind.sml
+       error/ExtReg.sig
+       error/ExtReg.sml
+       error/Error.sig
+       error/Error.sml
+       error/Tag.sig
+       error/Tag.sml
+       error/Html.sig
+       error/Html.sml
+
+       enum/SearchSpace.sig
+       enum/SearchSpace.sml
+       enum/Enumeration.sig
+       enum/State.sig
+       enum/Filter.sig
+       enum/Filter.sml
+       enum/Unification.sig
+       enum/Fresh.sig
+       enum/Fresh.sml
+       enum/Unification.sml
+       enum/StateEnv.sml
+       enum/Minimisation.sig
+       enum/Minimisation.sml
+       enum/Enumeration.sml
+
+     Most of the missing stuff are in ml-yacc/lib/base.sig
+
+  * Parsing
+
+    I've solved some parsing issues w.r.t. strings, but why is the
+    slicer not complaining about:
+
+      "foo
+      bar"
+
+    It actually silently discards the entire file.
+    (2010-07-12)This is fixed.
+
+    Parsing is really slow?!?!
+
+
+o (2010-06-30) Vincent Rahli
+
+  * Running the slicer on its implementation
+
+    - It does not take too long to type check (12275 lines of code):
+       utils/Debug.sig
+       utils/Debug.sml
+       utils/ErrorHandler.sig
+       utils/ErrorHandler.sml
+       utils/Solution.sig
+       utils/Solution.sml
+       utils/SymbSlice.sml
+       utils/Tools.sig
+       utils/Tools.sml
+       utils/VTimer.sig
+       utils/VTimer.sml
+
+       sets/Label.sig
+       sets/OrdKey.sml
+       sets/Label.sml
+       sets/Ident.sig
+       sets/OrdStr.sml
+       sets/Ident.sml
+       sets/LongId.sig
+       sets/OrdId.sml
+       sets/OrdLid.sml
+       sets/LongId.sml
+       sets/OrdSet.sig
+       sets/OrdSet.sml
+
+       region/Region.sig
+       region/Region.sml
+
+       constraint/ClassId.sig
+       constraint/ClassId.sml
+       constraint/Expans.sig
+       constraint/Expans.sml
+       constraint/Poly.sig
+       constraint/Poly.sml
+       constraint/Ty.sig
+       constraint/Ty.sml
+       constraint/ConsId.sig
+       constraint/ConsId.sml
+       constraint/Env.sig
+       constraint/Env.sml
+
+       ast/AstMLB.sml
+       ast/AstSML.sig
+       ast/AstSML.sml
+       ast/AstTest.sig
+       ast/AstTest.sml
+
+       ppp/PPP.sig
+       ppp/PPP-mlton.sml
+
+    But constraint solving is getting really slow when adding:
+
+       slicing/Slice.sig
+       slicing/Slice.sml
+
+    And even slower when adding (25176 lines of code):
+
+       generation/Analyze.sig
+       generation/Name.sig
+       generation/Name.sml
+       generation/Op.sig
+       generation/Op.sml
+       generation/Analyze.sml
+
+    I'm not quite sure but it might be coming from the way we handle
+    the multi-recursive function declarations?!
+
+
+o (2010-06-29) Vincent Rahli
+
+  * Testcase database (49 failures) 350 502 505
+
+    - Binding of explicit type variables:
+    2, 36, 62, 63, 111, 214, 295, 367, 421, 422, 423, 435
+    - Applied value variables:
+    46, 49, 50, 58, 81, 101, 108, 132, 328
+    - Variable at top-level:
+    70
+    - Enumeration?:
+    72, 75, 153, 240, 276, 349
+    - As:
+    142, 145
+    - Basis changed (not a problem):
+    283, 287, 335, 338, 357
+    - Overloaded operators (new feature - not a problem):
+    285, 375, 376, 377
+    - Exception binding:
+    298
+    - Type/Datatype Signature/Structure:
+    351
+    - Incomplete structure:
+    355, 356, 379
+    - Value polymorphism:
+    364
+    - SML-TES-SPEC accepts any kind of specification (not a problem):
+    315, 330
+    - ???:
+    420
+    - Strings fixed?:
+    296
+
+    Ordered by id (10 per line):
+    2,   36,  46,  49,  50,  58,  62,  63,  70,  72,
+    75,  81,  101, 108, 111, 132, 142, 145, 153, 214,
+    240, 276, 283, 285, 287, 295, 296, 298, 315, 328,
+    330, 335, 338, 349, 350, 351, 355, 356, 357, 364,
+    367, 375, 376, 377, 379, 420, 421, 422, 423, 435,
+    502, 505
+
+    For the 'enumeration' problems, it seems that the enumeration
+    algorithm takes time to find all the errors, and the errors are
+    found in a different order.
+
+    For the 'as' problems, I'm not quite sure the recoded slices are
+    that sensible because some context is missing.
+
+    For the 'binding of explicit type variables' problems, we can add
+    a new environment which indicates where the type variables of type
+    and datatype declarations should be bound but it seems to beat the
+    purpose of having explicit type variable binders at all.
+
+
+o (2010-06-28) Vincent Rahli
+
+  * Running the slicer on our code
+    - Parsing seems to actually take a lot of time (more than
+    constraint generation?).  Adding sets/OrdId.sml to:
+
+      utils/Debug.sig
+      utils/Debug.sml
+      utils/ErrorHandler.sig
+      utils/ErrorHandler.sml
+      utils/Solution.sig
+      utils/Solution.sml
+      utils/SymbSlice.sml
+      utils/Tools.sig
+      utils/Tools.sml
+      utils/VTimer.sig
+      utils/VTimer.sml
+      sets/Label.sig
+      sets/OrdKey.sml
+      sets/Label.sml
+      sets/Ident.sig
+      sets/Ident.sml
+      sets/LongId.sig
+
+    makes a _huge_ difference!?!?
+    This has been solved.  It was a programming error in the function
+    calling the parser.
+
+    - Adding generation/Analyze.sml seems to really slow down the
+    unification algorithm.
+
+
+o (2010-06-25) Vincent Rahli
+
+  * Testcases:
+    - 349 is wrongly recorded, in the first slice 't' in the basis
+    should be highlighted.
+    - 335 fails because I changed 'Char : CHAR' into 'Char :> CHAR'
+    in the basis.sml file.
+    - 364 fails because we don't have the same strategy when dealing
+    with expansiveness.  We now highlight the code that shows that an
+    expression is expansive because of a value identifier being a
+    bound unconfirmed value variable (so bound to a val declaration
+    that is not itself in the context of fun declaration or datatype
+    declaration of the same identifier - see testcase 479).

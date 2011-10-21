@@ -1,0 +1,16 @@
+;; Emacs startup file, e.g.  /etc/emacs/site-start.d/50skalpelemacs.el
+
+(if (not (file-exists-p "/usr/local/share/emacs/site-lisp/skalpelemacs"))
+    (message "Package skalpelemacs removed but not purged.  Skipping setup.")
+
+  ;; The skalpelemacs package follows the Debian/GNU Linux 'emacsen' policy
+  ;; and byte-compiles its elisp files for each 'emacs flavor'.  The compiled
+  ;; code is then installed in a subdirectory of the respective site-lisp
+  ;; directory.
+  (debian-pkg-add-load-path-item
+   (concat 
+    "/usr/local/share/" (symbol-name debian-emacs-flavor) "/site-lisp/skalpelemacs"))
+
+  (load "skalpel-config"))
+
+

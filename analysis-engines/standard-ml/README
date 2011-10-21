@@ -1,0 +1,452 @@
+~~~~~~ WeLcOmE tO ThE wOnDeRFul WoRlD oF tYpE eRrOr SlIcInG,
+~~~~~~ here are the topics covered in this README file.
+~~
+~~ How to add, replace, move tests in the testcase database
+~~ How to run the slicer on the testcase database
+~~ How to generate a binary compiled using MLton
+~~ SMLTES special commands/comments
+~~ Files
+~~
+
+
+===================================================================
+     HOW TO ADD, REPLACE, MOVE TESTS IN THE TESTCASE DATABASE
+===================================================================
+
+== GROUND RULES ==
+- Never replace a test which is currently broken, because it means
+that slicer fails for this test and if it gets replaced, we would
+lose track of this failure (see: HOW TO RUN THE DATABASE, to check
+whether or not the slicer brakes an a testcase).
+- Never replace a test by a different test.
+- Never add text to a testcase (to the generated code file).  It is
+currently safe to add comments to a testcase (this will not brake
+the database checking) but it will mess up the regions (source
+locations) of the recorded errors that are not currently checked but
+might be one day.
+
+== DIRECTORIES ==
+- We are using a hard coded path to the database directory.  The
+database directory is called 'database' and is located one directory
+up the root directory of the implementation (where the RunSlicer.sml
+file is).
+- When checking the testcase database (see below) or when adding a
+testcase checked against the basis, the slicer uses a hard coded path
+to the basis file.  The basis file is called 'basis.sml' and is in a
+directory called 'lib' which is located one directory up the root
+directory of the implementation (where the RunSlicer.sml file is).
+
+== ADDING A TEST ==
+How to add a test to the database:
+  - (1) Go to the implementation/tes-seq directory.
+  - (2) Start an SML/NJ session.
+  - (3) Load the sources.cm file:  CM.make "sources.cm".
+  - (4) Open the Slicer structure: Open Slicer.
+  - (5) Put your code in a file called "test-prog.sml".
+  - (6) Add the testcase to the database:
+      addtest id bool string bas
+    where
+      + id is an integer, it should be such that id - 1 is the id of
+      the last testcase entered in the database.  (To check what is
+      the identifier of the last testcase enter in the database type
+      'listtests false' and the largest identifier will be the last
+      integer on the line returned by SML/NJ.)
+      + bool is true if your are currently happy with the slices
+      obtained for your code.
+      + string is a short message detailing the interesting points in
+      your code.
+      + bas should either be 1 or 2: 1 if the slicer has to only use
+      the builtin basis when recoding the testcase and 2 if the slicer
+      has to use the basis.sml file when recording the testcase.
+    NOTES:
+      + The slicer will only run for 5seconds when recoding the new
+      testcase.
+      + 3 files will be generated in the database directory:
+      code<id>.sml containing the testcase, test<id>.sml containing
+      the error reports in the SML format and output<id>.html
+      containing the error reports in the HTML format.
+
+== REPLACING A TEST ==
+One can also update a test as follows:
+  - (1)-(5) are the same as for "add a test to the database".
+  - (6) Replace the testcase in the database
+      readdtest id bool string bas
+    where
+      + id (an integer) is the identifier of the testcase to replace.
+      + bool string and bas are as for "add a test to the database".
+
+== MOVING A TEST ==
+One might to move the testcases around in the database:
+  - (1)-(4) are the same as for "add a test to the database".
+  - (5) Swap 2 testcases:
+      mvtest id1 id2
+    will swap the testcases with identifiers id1 and id2 (integers).
+
+
+===================================================================
+         HOW TO RUN THE SLICER ON THE TESTCASE DATABASE
+===================================================================
+
+- (1) Go to the implementation/tes-seq directory.
+- (2) Start an SML/NJ session.
+- (3) Load the sources.cm file:  CM.make "sources.cm".
+- (4) Open the Slicer structure: Open Slicer.
+- (5) Run the slicer on the testcase database:
+    checktests list
+  where list is an integer list: the identifiers of the testcases that
+  one wants to check.
+  NOTE:
+    + If the list is empty, the slicer will run on the whole database.
+    + If the list contains 2 identifiers id1 and id2 and id1 < id2
+    then the slicer will run on the testcases that have an identifier
+    between id1 and id2
+    + Otherwise the slicer will run on the testcases provided in the
+    list passed as argument to checktests.
+
+
+===================================================================
+          HOW TO GENERATE A BINARY COMPILED USING MLTON
+===================================================================
+
+If there is no Makefile in the tes-seq directory, run:
+   ./configure
+Then generate the .mlb files from the .cm files by running:
+   make cmtomlb
+Then generate the binary:
+   make mlton-bin
+
+If one has installed the smltes debian package and wants to replace
+the old binary with the new one, the generated binary (called slicer
+and located in implementation/tes-seq/bin in the git repository)
+should be renamed smltes-bin and copied into the /usr/local/bin
+directory.
+
+
+===================================================================
+                SMLTES SPECIAL COMMANDS/COMMENTS
+===================================================================
+
+We allow 5 special SMLTES commands.  These commands are in the form of
+comments:
+  - (**SML-TES-DEC topdec *) where topdec is a unique topdec.
+  - (**SML-TES-SPEC spec *) where spec is a spec
+  - (**SML-TES-USE-FILE file *) where file is the path to a file.
+  Unfortunately right now a file name cannot contain spaces, for
+  example, as our parser would think two files are specified instead
+  of one and that would be a parsing error.
+  - (**SML-TES-SET-BASIS file *) where file is the path to a file.
+  The same comment applies here concerning file.
+  - (**SML-TES-CLEAR-BASIS*)
+  - (**SML-TES-QUASIQUOTES bool*) true to turn on the use of
+  quasiquotations.  WARNING: this switch is not working yet.  The
+  default value is true.
+
+These commands can only be topdecs.   The SML-TES-USE-FILE,
+SML-TES-SET-BASIS and SML-TES-CLEAR-BASIS commands will always have
+the entire file in which they are placed as scope, even if used say at
+the end of a file.
+
+
+===================================================================
+                             FILES
+===================================================================
+
+Makefile.in
+
+PGOps.sml
+  Contains functions using SML/NJ graph features to compute the
+  dependencies of a cm file.  There are functions to generate .dot
+  or .tes files from a .cm file.
+
+README
+
+RunSlicer.sig
+RunSlicer.sml
+  Signature and structure of the interface with the slicer.
+
+Tester.sig
+Tester.sml
+  Main loops to run the slicer and testing framework.
+
+ast (Abstract syntax)
+
+  -- AstMLB.sml
+       Abstract syntax for MLB files.
+
+  -- AstSML.sig
+  -- AstSML.sml
+       Abstract syntax for SML files.
+
+  -- AstTest.sig
+  -- AstTest.sml
+       Testing module of the SML parser.
+
+  -- sources.cm
+
+configure
+
+constraint (Constraint system)
+
+  -- ClassId.sig
+  -- ClassId.sml
+       Module to deal with identifier's classes.
+
+  -- ConsId.sig
+  -- ConsId.sml
+       Module to deal with binders.
+
+  -- Env.sig
+  -- Env.sml
+       Constraint system.
+
+  -- Expans.sig
+  -- Expans.sml
+       Module to deal with constraints on expression expansiveness.
+
+  -- Poly.sig
+  -- Poly.sml
+       Module to deal with constraints on type polymorphism.
+
+  -- Ty.sig
+  -- Ty.sml
+       Types.
+
+  -- sources.cm
+
+enum (Enumeration, minimisation, unification algorithms)
+
+  -- Enumeration.sig
+  -- Enumeration.sml
+       Enumeration algorithm
+
+  -- SearchSpace.sig
+  -- SearchSpace.sml
+       Search space for the enumeration algorithm.
+
+  -- Filter.sig
+  -- Filter.sml
+       Filters.
+
+  -- Fresh.sig
+  -- Fresh.sml
+       Definition of the substitutions used to refresh types and such
+
+  -- Minimisation.sig
+  -- Minimisation.sml
+       Minimisation algorithm.
+
+  -- State.sig
+  -- StateEnv.sml
+       Unification environment (unifiers, type environment)
+
+  -- Unification.sig
+  -- Unification.sml
+       Constraint solver.
+
+  -- sources.cm
+
+
+error (Error data structure)
+
+  -- Error.sig
+  -- Error.sml
+        Definition of the data structure of a type error.
+        Export functions.
+
+  -- ErrorKind.sig
+  -- ErrorKind.sml
+       Kinds of errors.
+
+  -- ExtReg.sig
+  -- ExtReg.sml
+       Extended errors (coloured) used to distinguish between the
+       different parts of an error.
+
+  -- Html.sig
+  -- Html.sml
+       Function to export errors to an HTML file.
+
+  -- Tag.sig
+  -- Tag.sml
+       Tags used by the Html structure to export errors.
+
+  -- sources.cm
+
+generation (Constraint generator)
+
+  -- Analyze.sig
+  -- Analyze.sml
+       Constraint generation algorithm
+
+  -- ValuePol.sig
+  -- ValuePol.sml
+       Deals with the value polymorphism restriction
+
+  -- Name.sig
+  -- Name.sml
+       Builtin type names
+
+  -- Op.sig
+  -- Op.sml
+       Builtin operators
+
+  -- sources.cm
+
+mlton-control.sml.in
+  Initial file from which a file is generated (mlton-control.sml)
+  that serves as an interface with the slicer and is used to compile
+  the slicer with MLton.
+
+parse (Parsers and lexers)
+
+  -- Comment.sig
+  -- Comment.sml
+       To deal with comments and quotes when parsing a file.
+
+  -- Infix.sig
+  -- Infix.sml
+       To deal with infix operators when parsing a file.
+
+  -- LexDefs.sig
+  -- LexDefs.sml
+       To handles lex errors when parsing a file.
+
+  -- ParseDefs.sig
+  -- ParseDefs.sml
+       To handles some parsing errors.
+
+  -- ML.grm
+  -- ML.lex
+       Parser and lexer for SML programs.
+
+  -- MLB.grm
+  -- MLB.lex
+       Parser and lexer for MLB bases.
+
+  -- Parser.sig
+  -- Parser.sml
+       Calls the parser, deal with tes files and with the special
+       SMLTES commands
+
+  -- sources.cm
+
+ppp (Printer and pretty printer)
+
+  -- PPP.sig
+  -- PPP.sml
+       Parsing and pretty printing of our SML asts.
+
+  -- sources.cm
+
+region (Regions in source code)
+
+  -- Region.sig
+  -- Region.sml
+       To deal with regions of bits of codes in files.
+
+  -- sources.cm
+
+sets (Various sets such as identifier or label sets)
+
+  -- Ident.sig
+  -- Ident.sml
+       Identifiers, long identifiers, sets of identifiers.
+
+
+  -- Label.sig
+  -- Label.sml
+       Labels, sets of labels.
+
+  -- LongId.sig
+  -- LongId.sml
+       Sets of long identifiers.
+
+  -- OrdId.sml
+       Ordered identifiers.
+
+  -- OrdKey.sml
+       Ordered integers.
+
+  -- OrdLid.sml
+       Ordered Long identifiers.
+
+  -- OrdLabLid.sml
+       Ordered pairs: label, Long identifier.
+
+  -- OrdIdl.sml
+       Ordered labelled identifiers.
+
+  -- OrdStr.sml
+       Ordered strings.
+
+  -- OrdSet.sig
+  -- OrdSet.sml
+       Sets of integers.
+
+  -- sources.cm
+
+slicing (Slicing algorithm)
+
+  -- Slice.sig
+  -- Slice.sml
+       Slicing algorithm.
+
+  -- sources.cm
+
+sources.cm
+
+utils (Various useful structures)
+
+  -- Debug.sig
+  -- Debug.sml
+       To print debugging information.
+
+  -- ErrorHandler.sig
+  -- ErrorHandler.sml
+       To deal with todo and impossible cases.
+
+  -- Solution.sig
+  -- Solution.sml
+       To deal with various implementation of the slicer.
+
+  -- SymbSlice.sml
+       defines some symbols, such as the ones used in the slices.
+
+  -- Tools.sig
+  -- Tools.sml
+       Some useful functions.
+
+  -- VTimer.sig
+  -- VTimer.sml
+       A timer and useful functions to deal with timers.
+
+  -- sources.cm
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Copyright 2010 Heriot-Watt University
+;;
+;;
+;; This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
+;; a Type Error Slicer for Standard ML written by the ULTRA Group of
+;; Heriot-Watt University, Edinburgh.
+;;
+;; SMLTES is a free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; SMLTES is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;;  o Authors:     Vincent Rahli
+;;  o Affiliation: Heriot-Watt University, MACS
+;;  o Date:        July 2010
+;;  o File name:   README
+;;  o Description: see top of the file.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

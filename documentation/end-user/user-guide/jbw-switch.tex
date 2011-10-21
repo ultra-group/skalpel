@@ -1,0 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Copyright 2010 Heriot Watt University
+%%
+%% This file is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License as published by
+%% the Free Software Foundation, either version 3 of the License, or
+%% (at your option) any later version.
+%%
+%% This file is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LaTeX (and TeX) do not provide any easy way to pass parameters to a
+% document from the command line.  This file sets up switches to
+% easily allow formatting different versions of document from the
+% command line.  The idea is that the main document main.tex begins
+% with:
+%
+%   \input{jbw-switch}
+%   \DeclareSwitch{XXX}
+%
+% Following this, the TeX conditional \ifXXX can be used.  It will
+% default to \iffalse, if it has not already been created
+% To get per-person formatting, create a file main-XXX.tex containing:
+%
+%   \newif\ifXXX
+%   \XXXtrue
+%   \input main.tex
+%
+% Then you can run latex on the document with \ifXXX set to \iftrue
+% by:
+%
+%   latex main-XXX
+%
+% You can run latex on the document with \ifXXX set to \iffalse by:
+%
+%   latex main
+
+% This can not be a package because \usepackage barfs and dies if you
+% try to use it before \documentclass.  We need to load this file
+% before invoking \documentclass because we often need the features of
+% this file to decide what arguments to feed to \documentclass.
+
+\makeatletter
+  \input{jbw-switch.sty}
+\makeatother

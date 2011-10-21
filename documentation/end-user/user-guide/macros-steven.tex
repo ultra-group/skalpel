@@ -1,0 +1,275 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Copyright 2009, 2010 Steven Shiells
+%%
+%% This file is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License as published by
+%% the Free Software Foundation, either version 3 of the License, or
+%% (at your option) any later version.
+%%
+%% This file is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+%%
+%%
+%% Authors: Steven Shiells
+%% Date: December 2009
+%% Description: My macros file
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\usepackage{color}
+
+% my colors
+
+\definecolor{mygray}{gray}{0.4}
+\definecolor{fkgray}{gray}{0.2}
+\definecolor{dkgray}{gray}{0.1}
+\definecolor{ltgray}{cmyk}{0, 0, 0, 0.11}
+
+
+\ifincolor
+\definecolor{mywhite}{cmyk}{0.01, 0, 0.06, 0}
+\definecolor{myyellow}{cmyk}{0, 0, 1, 0}
+\definecolor{myred}{cmyk}{0, 0.443, 0.443, 0.0}
+\definecolor{myorange}{cmyk}{0, 0.5, 0.8, 0.0}
+\definecolor{myred2}{cmyk}{0, 0.9, 0.7, 0.1}
+\definecolor{myblue}{cmyk}{0.4, 0.4, 0, 0}
+\definecolor{mygreen}{cmyk}{1, 0, 1, 0}
+\definecolor{mypurple}{cmyk}{0, 0.276, 0, 0.133}
+\definecolor{mygrey}{cmyk}{0, 0, 0, 0.255}
+\definecolor{inboxcol}{cmyk}{0,0,0,0}
+\definecolor{mypink}{cmyk}{0,0.102,0.102,0}
+\definecolor{mylightblue}{cmyk}{0.112,0.112,0,0}
+\definecolor{mylightgreen}{cmyk}{0.122, 0, 0.122, 0}
+\definecolor{mylightpurple}{cmyk}{0.008, 0.127, 0, 0.016}
+\else
+\definecolor{mywhite}{cmyk}{0, 0, 0, 0.05}
+\definecolor{myyellow}{cmyk}{0, 0, 0, 0.1}
+\definecolor{myred}{cmyk}{0, 0, 0, 0.2}
+\definecolor{myorange}{cmyk}{0, 0, 0, 0.28}
+\definecolor{myblue}{cmyk}{0, 0, 0, 0.35}
+\definecolor{mygreen}{cmyk}{0, 0, 0, 0.5}
+\definecolor{mypurple}{cmyk}{0, 0, 0, 0.41}
+\definecolor{inboxcol}{cmyk}{0,0,0,0}
+\fi
+
+\newcommand{\whitetext}[1]{\textcolor{mywhite}{#1}}
+\newcommand{\blacktext}[1]{\textcolor{black}{#1}}
+\newcommand{\redtext}[1]{\textcolor{myred}{#1}}
+\newcommand{\bluetext}[1]{\ifincolor
+                \textcolor{blue}{#1}
+        \else
+                \textcolor{myblue}{#1}
+        \fi}
+\newcommand{\orangetext}[1]{\textcolor{myorange}{#1}}
+\newcommand{\purpletext}[1]{\textcolor{mypurple}{#1}}
+\newcommand{\greentext}[1]{\textcolor{mygreen}{#1}}
+\newcommand{\yellowtext}[1]{\textcolor{myyellow}{#1}}
+
+% commands for comments
+
+\ifcomm
+  \newcommand{\personal}[1]{}
+  \ifincolor
+  \newcommand{\todo}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{blue}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+  \newcommand{\done}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{mygreen}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+  \newcommand{\urgent}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{red}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+ \newcommand{\comment}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{myorange}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+  \else
+  \newcommand{\todo}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{mygray}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+ \newcommand{\done}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{fkgray}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+  \newcommand{\urgent}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{dkgray}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+      \end{footnotesize}
+  }
+  \newcommand{\comment}[2]{
+    \noindent
+    \begin{footnotesize}
+      \textcolor{dkgray}{
+        \textbf{
+          [\begin{tiny}(#1)\end{tiny}: #2]}
+      }
+    \end{footnotesize}
+  }
+  \fi
+\else
+\newcommand{\personal}[1]{}
+\newcommand{\todo}[2]{}
+\newcommand{\done}[2]{}
+\newcommand{\urgent}[2]{}
+\newcommand{\comment}[2]{}
+\fi
+
+\newcommand{\codebody}[1]{{\tt\small\renewcommand{\arraystretch}{1}$$#1$$}}
+\newcommand{\incodebody}[1]{{\tt\small\renewcommand{\arraystretch}{0.8}$\Bl#1\El$}}
+\newcommand{\Bl}{\begin{tabular}[t]{@{}l@{}}}
+\newcommand{\El}{\end{tabular}}
+\newcommand{\Bi}{\begin{tabular}[t]{@{\quad}l}}
+\newcommand{\Ei}{\end{tabular}}
+\newcommand{\modifyboxdimen}[2]
+  {% trashes \dimen0
+   \dimen0=#1%
+   \advance\dimen0 by #2%
+   #1=\dimen0 % <- space is significant
+  }
+
+\newcommand{\examplebox}[2]
+  {\begingroup
+     \setbox0=\hbox{(g)}% use to determine standard height and depth
+     \modifyboxdimen{\ht0}{0.5pt}%
+     \modifyboxdimen{\dp0}{0pt}%
+     \setbox1=\hbox{#2}%
+     \ht1=\ht0%
+     \dp1=\dp0%
+     \setlength{\fboxsep}{0pt}% default 3pt
+     \setbox2=\hbox{%\TraceExec
+                    \colorbox{#1}{\box1}}%
+                    % \colorbox{#1}{{\color{black}\box1}}}% only for talk
+     %\bgroup
+     % \tracingonline=1\relax
+     % \showboxdepth=9999\relax
+     % \showboxbreadth=9999\relax
+     % \showbox2\relax
+     %\egroup
+     \modifyboxdimen{\ht2}{-0.5pt}%
+     \modifyboxdimen{\dp2}{-0pt}%
+     \box2%
+   \endgroup}
+\newcommand{\examplefbox}[2]
+  {\begingroup
+     \setbox0=\hbox{(g)}% use to determine standard height and depth
+     \modifyboxdimen{\ht0}{0.5pt}%
+     \modifyboxdimen{\dp0}{0pt}%
+     \setbox1=\hbox{#2}%
+     \ht1=\ht0%
+     \dp1=\dp0%
+     \setlength{\fboxrule}{1pt}% for talk only
+     \setlength{\fboxsep}{0pt}% default 3pt
+     \setbox2=\hbox{%\TraceExec
+                    \fcolorbox{#1}{inboxcol}{\box1}}%
+     %\bgroup
+     % \tracingonline=1\relax
+     % \showboxdepth=9999\relax
+     % \showboxbreadth=9999\relax
+     % \showbox2\relax
+     %\egroup
+     \modifyboxdimen{\ht2}{-0.5pt}%
+     \modifyboxdimen{\dp2}{-0pt}%
+     \box2%
+   \endgroup}
+\newcommand{\exampleffbox}[3]
+  {\begingroup
+     \setbox0=\hbox{(g)}% use to determine standard height and depth
+     \modifyboxdimen{\ht0}{0.5pt}%
+     \modifyboxdimen{\dp0}{0pt}%
+     \setbox1=\hbox{#2}%
+     \ht1=\ht0%
+     \dp1=\dp0%
+     \setlength{\fboxrule}{1pt}% for talk only
+     \setlength{\fboxsep}{0pt}% default 3pt
+     \setbox2=\hbox{%\TraceExec
+                    \fcolorbox{#1}{#3}{\box1}}%
+     %\bgroup
+     % \tracingonline=1\relax
+     % \showboxdepth=9999\relax
+     % \showboxbreadth=9999\relax
+     % \showbox2\relax
+     %\egroup
+     \modifyboxdimen{\ht2}{-0.5pt}%
+     \modifyboxdimen{\dp2}{-0pt}%
+     \box2%
+   \endgroup}
+
+\newcommand{\boxBl}[1]{\examplebox{black}{#1}}
+\newcommand{\boxW}[1]{\examplebox{mywhite}{#1}}
+\newcommand{\boxY}[1]{\examplebox{myyellow}{#1}}
+\newcommand{\boxR}[1]{\examplebox{myred}{#1}}
+\newcommand{\boxO}[1]{\examplebox{myorange}{#1}}
+\newcommand{\boxB}[1]{\examplebox{myblue}{#1}}
+\newcommand{\boxG}[1]{\examplebox{mygreen}{#1}}
+\newcommand{\boxP}[1]{\examplebox{mypurple}{#1}}
+\newcommand{\boxEnd}[1]{\examplebox{mygrey}{#1}}
+\newcommand{\fboxBl}[1]{\examplefbox{black}{#1}}
+\newcommand{\fboxW}[1]{\examplefbox{mywhite}{#1}}
+\newcommand{\fboxY}[1]{\examplefbox{myyellow}{#1}}
+\newcommand{\fboxR}[1]{\examplefbox{myred}{#1}}
+\newcommand{\fboxB}[1]{\examplefbox{myblue}{#1}}
+\newcommand{\fboxG}[1]{\examplefbox{mygreen}{#1}}
+\newcommand{\fboxO}[1]{\examplefbox{myorange}{#1}}
+\newcommand{\fboxP}[1]{\examplefbox{mypurple}{#1}}
+\newcommand{\fboxEnd}[1]{\examplefbox{mygrey}{#1}}
+\newcommand{\fboxGen}[3]{\exampleffbox{#1}{#2}{#3}} %% #1 colour outside, #2 text, #3 colour inside
+
+\newcommand{\instruction}[1]{\incodebody{<{#1}>}}
+
+\newcommand{\tesEndPointOne}[0]{gray }
+
+\newcommand{\note}[1]{\medskip\textbf{NOTE:} {#1}}
+
+\newcommand{\tesDownloadURL}[0]{\codebody{\Bl http://www2.macs.hw.ac.uk/{\textasciitilde}rahli/cgi-bin/slicer/downloads.html \El}}
+\newcommand{\tes}[0]{type error slicer}
+\newcommand{\tesing}[0]{type error slicing}
+\newcommand{\Tesing}[0]{Type Error Slicing}
+\newcommand{\Tes}[0]{Type Error Slicer}
+\newcommand{\file}[1]{\textsf{#1}}

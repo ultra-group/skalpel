@@ -1,0 +1,176 @@
+-*-change-log-*-
+
+0.7 John Pirie October 2011
+    o Name information
+	* New project name: This project and software is now known as the Skalpel.
+	* Note that if you have installed a previous smltes debian package, this will not automatically be removed when installing this package.
+    o Back-end (Formally known as 'slicer'):
+	* Fixed bug:   Skalpel used to suffer from silent failures, where the back-end would terminate without alert the user looking at the front-end. There should no longer be any cases of this.
+	* Improvement: Parser errors are now reported much more accurately than in previous releases (and shouldn't lead to silent failures).
+	* Improvement: Overloading errors (such as 1+5.0) are reported by default with the basis information removed (flag specified by front-end), and as a result slices reported for overloading errors have substantially reduced in size.
+    o Packaging
+	* New feature: There is now a package (installer) for the windows operating system
+    o Emacs User Interface:
+	* Improvement: Program slices are now shown in buffers rather than in tooltips
+	* New feature: Flag in the menu for changing whether or not basis information ( should be shown to the user with regard to overloading errors
+	* New feature: The showing of slice information in a buffer may be turned off, so that the user only sees the highlighting of the program
+	* New feature: Automatic arranging of windows (for example buffers displaying files popping up when an error is seen in that file) can be turned off
+    o Command-Line interface:
+	* New feature: The skalpel-bin program now has a usable command-line interface. It is not recommended that this is used for this release, but it is intended to replace our current command-line interface script. If for any reason the user is having problems with the command-line interface script, it is recommended that skalpel-bin is executed directly.
+    o Known bugs and limitations:
+	* Bug:        Forcing overloading resolution to occur at structure declaration level is not done, so some overloading errors (such as 1+5.0) will not be detected.  (Anyway, SML compilers differ on their overloading resolution scope, and we have no mechanism yet for following these specific compiler differences.)
+	* Limitation: Many features are not yet dealt with such as: sharing (many simple cases work, but there are bugs affecting complex cases), equality types (they work, but errors due to types not supporting equality are not detected).
+
+0.6.1 Vincent Rahli September 2010
+    o Slicer:
+	* Fixed bug:   We fixed a bug that was leading to find false errors in pieces of code involving signature sharing.
+	* Improvement: We have added dependencies on types and environments so that now errors are in general smaller when first found by the enumeration algorithm
+    o User Interface:
+	* Improvement: Temporary files are now created in the /tmp directory when using our terminal window UI.
+    o Known bugs and limitations:
+	* Bug:        When highlighting parts of the SML basis definition involved in error slices, the Emacs user interface hides irrelevant parts, but this feature has been partially broken since we added overloading declarations, resulting in some irrelevant parts not being hidden.
+	* Bug:        Forcing overloading resolution to occur at structure declaration level is not done, so some overloading errors will not be detected.  (Anyway, SML compilers differ on their overloading resolution scope, and we have no mechanism yet for following these specific compiler differences.)
+	* Limitation: Some features are not yet dealt with such as: sharing (many simple cases work, but there are bugs affecting complex cases), equality types (they work, but errors due to types not supporting equality are not detected).
+	* Limitation: Errors involving overloaded identifiers often drag in large parts of the basis to explain why types do not match.  This is correct, but confusing, and a better user interface is needed.
+
+0.6 Vincent Rahli July 2010
+    o Slicer:
+	* New feature: The slicer now quickly sends non-minimal error slices to the user interface and then sends a minimal replacement error slice after doing more time-consuming work.
+	* New feature: Special constants such as 1 or "foo" are now overloaded to their respective overloading classes (for example, Int for 1).
+	* New feature: We support some uses of functors (that is, we report some type errors involving functors).
+	* New feature: We support some uses of the “include” signature feature.
+	* New feature: We support abstype declarations but do not catch some errors (we use Rossberg's suggested definition of abstype as syntactic sugar in terms of other features).
+	* New feature: We partially support fixity declarations (that is, we parse programs using them correctly).  Highlighting of infix declarations and identifiers in error slices is not yet correct.
+	* New feature: We support SML/NJ's quasiquotations.  This feature can be turned on and off using a magic comment (either (**SML-TES-QUASIQUOTES true*) or (**SML-TES-QUASIQUOTES false*)).
+	* New feature: We support some other SML/NJ extensions, like or-patterns and functors inside structures (but not higher-order functors).  (These may have already been in our previous version.)
+	* Fixed bug:   Free identifiers are reported again.  This feature worked earlier but was lost in the previous release (version 0.5).
+	* Fixed bug:   We fixed a bug that was occurring when using ";" and was leading to incorrect constraint generation.
+	* Fixed bug:   We fixed various parsing problems, such as the parsing of andalso and orelse in expressions and the parsing of strings.
+	* Fixed bug:   We fixed many bugs related to “where” clauses.
+	* Improvement: The slicer is 10 to 100 times faster in many cases, and can reasonably be used on programs containing 10s of thousands of lines of code.
+	* Improvement: We supply definitions covering much more of the SML basis (and, as before, the user can always add missing declarations).
+	* Improvement: We entirely redesigned the constraint system we use internally resulting in other improvements not mentioned here.
+	* Improvement: We report more kinds of errors and the error messages have been improved.
+    o Packaging:
+	* New feature:  Source archive (that is, a .tar.gz file which you unpack and run “./configure; make install” in the unpacked directory).
+	* Lost feature: We no longer make a binary package that installs independently of either the Debian or Red-Hat package mechanism.
+    o User interfaces:
+	* New feature: In the Emacs interface, we now quickly report non minimal error slices, which are replaced by smaller and smaller slices until a minimal one is found.
+	* Improvement: Temporary files are now created in the /tmp directory.
+    o Known bugs and limitations:
+	* Bug:        When highlighting parts of the SML basis definition involved in error slices, the Emacs user interface hides irrelevant parts, but this feature has been partially broken since we added overloading declarations, resulting in some irrelevant parts not being hidden.
+	* Limitation: Some features are not yet dealt with such as: sharing (many simple cases work, but there are bugs affecting complex cases), equality types (they work, but errors due to types not supporting equality are not detected).
+	* Limitation: Errors involving overloaded identifiers often drag in large parts of the basis to explain why types do not match.  This is correct, but confusing, and a better user interface is needed.
+	* Bug:        Forcing overloading resolution to occur at structure declaration level is not done, so some overloading errors will not be detected.  (Anyway, SML compilers differ on their overloading resolution scope, and we have no mechanism yet for following these specific compiler differences.)
+
+0.5 Vincent Rahli May 2010
+    o Slicer:
+	* New feature: The slicer handles the 'open' feature.
+	* New feature: The slicer handles the datatype replication feature.
+	* Improvement: We improved our minimisation algorithm.
+	* Improvement: Larger testcase database.
+    o User interfaces:
+	* New feature: Type error slices can now be viewed in a terminal window or in a web browser.  Previously type error slices were only viewable inside Emacs (or using our webdemo).
+	* Emacs:
+	  - New feature: The user documentation can now be viewed in Emacs.
+	  - New feature: In Emacs, the colours of the highlightings can easily be customised (in sml-tes-main.el).
+	  - Improvement: The Emacs functions used by our type error slicer are now well documented.
+	  - Improvement: More versions of Emacs are now supported by our type error slicer
+	  - Fixed bug: Parts of slices which are not in focus are not displayed over parts of the slice that is in focus.
+    o Packaging:
+	* New feature: We now provide Ubuntu (Debian based) and Fedora (Red-Hat based) packages.
+    o Documentation
+	* Improvement: We updated our documentation
+	* New feature: We provide man pages for each executable file distributes with the packages.
+    o Known bugs and limitations:
+	* Bug: We have some issues with ';' that can lead to incorrect constraint generations and so to wrong error messages.
+	* Bug: We do not report free identifiers anymore.
+	* Limitation: The slicer does not scale large programs.
+	* Limitation: Some features are not yet dealt with such as: functors, overloaded constants, equality types, fixity declarations.
+
+0.4.1 Vincent Rahli November 2009
+    o Slicer:
+	* Fixed bug: Fixed many bugs related to monomorphism and type realisation ('where' clauses)
+	* Fixed bug: We don't reject correct pieces of code due to bad handling of context dependencies on long identifiers (this was marked as a limitation in release 0.4).
+	* New feature: We now support withtype in datatype declaration.
+	* New feature: new error related to structures being not as general as their signatures.
+	* Improvement: The parser should be able to parse any SML piece of code.  (We are aware of some limitations: we currently have 1 reduce/reduce conflict and 10 shift/reduce conflicts; we can't parse declaration of multiple structures with 'and'.)
+
+0.4 Vincent Rahli November 2009
+    o Slicer:
+	* Fixed bug: We don't reject syntactically correct string and char anymore.
+	* Fixed bug: Syntactic errors in the basis.sml file are now caught.
+	* Fixed bug: We don't reject anymore long exception constructors in patterns.
+	* Fixed bug: The slicer is faster because the minimisation algorithm does not try anymore during the "reduce" phase to remove labels that do not participate in the slice being minimised.
+	* Fixed bug: The slicer is not crashing anymore when unifying the constraints associated to an incomplete structure.
+	* Fixed bug: We now handle regions spanning over multiple lines.
+	* Fixed bug: fn z => let val x = fn y : 'a => (z y) in () end; is untypable because 'a cannot be generalised at the inner val.  'a cannot be generalised because it occurs in z's type.  This error was not reported before but is now.
+	* New feature: (**SML-TES-CLEAR-BASIS*).  We provide a basis file called basis.sml.  This file can be ignored using the (**SML-TES-CLEAR-BASIS*) comment.
+	* New feature: (**SML-TES-SET-BASIS file*) to set a file as one of the basis file.  On can then have many basis files using such comments.
+	* New feature: (**SML-TES-DEC atopdec*) where atopdec is a top-level declaration.  It introduces identifiers in the environment with their types/signatures.
+	* New feature: (**SML-TES-SPEC aspec*) where aspec is a specification.  It introduces identifiers in the environment with their types/signatures.
+	* New feature: (**SML-TES-USE-FILE file*) acts as if file was containing some code to be type checked before the current code.
+	* New feature: We provide new errors on identifier statuses (use/definition): clash between exception/datatype, exception/variable, constructor/variable, datatype/exception.
+	* New feature: We provide new errors reporting the definition of a constructor as taking an argument but being not applied in a pattern and vice versa.
+	* New feature: The slicer reports when a type is defined with type in a structure and datatype in its signature.
+	* New feature: Overloading (this is only for use in the basis, it is not code that will run): for example one can overload the identifier id with the declaration: overload id : 'a * 'a -> 'a with 'a in (int, real, word).
+	* Improvement: Better slices and highlightings for record related errors (multi-occurrence error for field names in a record, record clashes between tuples and records, merged slices are directly generated).
+	* Improvement: Better slices and highlightings for errors reporting that an identifier is specified in the signature of a structure but is not declared in the structure itself (called unmatched error).
+	* Improvement: Better highlightings of white spaces for structure related terms.
+	* Improvement: Larger basis.
+	* Improvement: More tests.
+	* Improvement: Better pretty printing of slices.
+	* Improvement: The slicer reports better status messages to the	Emacs interface (if it failed (sometimes provides reason of the	failure), if it succeeded (with type errors or without type errors)).
+    o Emacs interface:
+	* code to help track down & clean up after slicer failures; more correct basis hiding for structures
+	* emacs-ui/EmacsUI/emacs-new.el:
+          - Added code attempting to debug strange failures.
+          - Fixing hiding in basis when nested structures are present.
+	  - We now hide parts of the basis on line boundaries.
+	  - Deletion of the sml-tes process (the process of the slicer) before starting a new one and before removing all the highlightings.
+	* Variables. Three variables need to be defined in order to use	our slicer in Emacs:
+	  - sml-tes-emacs-directory is the directory containing all the	Emacs Lisp code.
+	  - sml-tes-bin-directory is the directory containing the binary of the slicer.
+	  - sml-tes-lib-directory is the directory containing the basis file.
+    o Known bugs and limitations:
+	* Bug: Bad slices for errors involving an expansive expression because of a long identifier being a value variable.
+	* Bug: Some context dependencies are not computed correctly.
+	* Bug: Unnecessary boxes for type sequences of length 1.
+	* Limitation: Some specifications are still unparsable and many features are still not dealt with.
+    o Work in progress:
+	* Or patterns in functions defined with the fun feature (SML/NJ extension).
+	* Debian package.
+	* Generalisation of our slicer so that most of it can be reused for other languages.
+	* Working on getting open handled by our slicer.
+
+0.3 Vincent Rahli September 2009
+    o The package contains:
+	* Installation instructions and an installation shell script (INSTALL and tes-install).
+	* A compiled SML binary for Linux on the i386 architecture (bin/slicer). We have tested this on CentOS 5.3, Fedora 7, Ubuntu 9.04 and Gentoo.
+	* Emacs Lisp code that extends GNU Emacs with commands that highlight source code with information about type error slices (EmacsUI/*).  We have tested this with GNU Emacs versions 22.1, 22.3 and 23.1.
+	* A 19 page user guide containing detailed explanations of how to use the software and interpret the type error slices (docs/user-guide.pdf).
+	* A very large number of sample test cases (test/*).
+    o Known limitations:
+	* We have not yet built the software for other operating systems than Linux.
+	* The only currently supported user interface is via GNU Emacs (or our web demo).
+	* Some features of the SML language are not parsed (the user will be notified if this is the case), and some type errors are not yet discovered (the user will need to rely on their usual type checker in these cases). Notable spots where the implementation is incomplete are functors, overloading, equality types, and fixity declarations. (See the Supported Syntax page for more details.)
+	* The details of the SML basis library are woefully incomplete (fortunately the user can add any additional details they are using).
+	* The software does not currently scale well to very large programs (we are still improving this). It is currently suitable for small programs and use in teaching.
+	* We have some known issues with statuses of long identifiers and exceptions which yields wrong error reports.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Copyright 2009 2010 2011 Heriot-Watt University
+;;
+;; Skalpel is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Skalpel is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
