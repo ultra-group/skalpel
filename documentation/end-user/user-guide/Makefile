@@ -24,7 +24,7 @@
 
 
 default:
-	rubber user-guide
+	rubber -d user-guide
 
 clean:
 	rm -f user-guide.dvi
