@@ -92,11 +92,6 @@ o (2010-07-12) Vincent Rahli
 
     Testcase 492 is untypable but the slicer does not complain.
 
-  * Sharing
-
-    The slicer brakes on testcase 497.
-    Slices missing for testcases 511 and 512.
-
   * Where clause
 
     Slice missing for testcase 513.

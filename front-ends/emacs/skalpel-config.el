@@ -53,6 +53,7 @@
   "Sets up key bindings for functions to use skalpel"
   ;; Make "F6" run skalpel.
   (define-key map [f6] 'skalpel-run-slicer-exec)
+  (define-key map [tcedilla] 'skalpel-run-slicer-exec)
   ;; Make "F7" display the next error slice.
   (define-key map [f7] 'skalpel-next-slice)
   ;; Make "Shift-F7" display the next part of the slice currently in focus.

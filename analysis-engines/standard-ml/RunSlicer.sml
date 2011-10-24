@@ -523,6 +523,8 @@ fun smlTesStrArgs strArgs =
 	     then bcs:=str
 	     else if option = "--search-space"
 	     then search:=str
+	     else if option = "--check-tests"
+	     then Tester.checktests []
 	     else (print ("Unknown option: "^option); raise Fail "Unknown argument fed as input"));
 	     parse tail)
     in

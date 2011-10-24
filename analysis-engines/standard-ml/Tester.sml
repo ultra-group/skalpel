@@ -141,9 +141,9 @@ exception NewerTest             (* The slicer currently uses an older SOL than t
 val sep        = "    "
 val emacstab   = "        "
 
-val testFolder = "../database"
+val testFolder = "../../../../tes/implementation/database"
 val mytempfile = "/tmp/smltes-tmp"
-val myfilebas  = "../lib/basis.sml"
+val myfilebas  = "../../../lib/basis.sml"
 val myfilein   = "test-prog.sml"
 val myfilehtml = "res.html"
 
@@ -1237,10 +1237,12 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
-                  PP.silence_compiler ();
-		  PP.use (getfileerr nb) handle Error => error := NONE;
-		  PP.unsilence_compiler ();
-		  (let val errs1  = getErrors   ()
+                  (* PP.silence_compiler (); *)
+		  (* PP.use (getfileerr nb) handle Error => error := NONE; *)
+		  (* PP.unsilence_compiler (); *)
+		  (let val _ = print "mark-1"
+		       val errs1  = getErrors   ()
+		       val _ = print "mark-2"
 		       val bfinal = getFinal    ()
 		       val tenum1 = getTimeEnum ()
 		       val tcg1   = getTimeCg   ()
