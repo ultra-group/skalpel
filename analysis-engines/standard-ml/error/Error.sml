@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -203,6 +204,21 @@ fun printOneSmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice
        then "regions     = " ^ "[" ^ ER.printSmlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]"
        else "regions     = " ^ "[" ^ ER.printSmlExtRegs regs ^ "]"))
     end
+
+fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice basisoverloading =
+    let val ll = "\"labels\"      : " ^ "{\"count\": " ^ Int.toString (L.length labs) ^ ", " ^ "\"labelNumbers\": " ^ L.toString labs ^ "}"
+	val cd = "\"assumptions\" : " ^ CD.toStringOut deps
+	val ek = "\"kind\"        : " ^ EK.printSmlErrKind ek
+	val tm = "\"time\"        : " ^ LargeInt.toString time
+	val id = "\"identifier\"  : " ^ Int.toString id
+	val sl = "\"slice\"       : " ^ "\"" ^ transfun2 (S.printSlice sl bslice) ^ "\""
+	val re = "\"regions\"     : " ^ "[" ^ ER.printSmlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]"
+    in (id, ll, cd, ek, tm, sl,
+       (if basisoverloading = 0
+       then "regions     = " ^ "[" ^ ER.printSmlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]"
+       else "regions     = " ^ "[" ^ ER.printSmlExtRegs regs ^ "]"))
+    end
+
 
 fun toListSep xs sep p =
     #1 (foldr (fn (x, (y, z)) => (p ^ x ^ p ^ z ^ y, sep)) ("", "") xs)

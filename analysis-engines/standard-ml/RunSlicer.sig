@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -85,10 +86,6 @@ signature SLICER = sig
      * no SML-TES-USE-FILE and no SML-TES-SET-BASIS *)
     val setWebDemo         : bool -> unit
 
-    (*val slicerp            : (string * string list) -> OS.Process.status*)
-
-    val slicerpp           : (string * string list) -> OS.Process.status
-
     (*val commslicer         : string -> (* basis file       *)
 			     string list -> (* input files *)
 			     string -> (* HTML output file *)
@@ -124,6 +121,7 @@ signature SLICER = sig
 			      fileHtml    : string,
 			      fileXml     : string,
 			      fileSml     : string,
+			      fileJson    : string,
 			      fileLisp    : string,
 			      filePerl    : string,
 			      basOp       : int,

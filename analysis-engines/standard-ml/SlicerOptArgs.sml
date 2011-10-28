@@ -1,4 +1,5 @@
 (* Copyright 2010 John Pirie
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -37,6 +38,7 @@ datatype ('a, 'b) opt_key_arg =
        | FILEHTML    of string
        | FILEXML     of string
        | FILESML     of string
+       | FILEJSON    of string
        | FILELISP    of string
        | FILEPERL    of string
        | BASOP       of int
@@ -55,6 +57,7 @@ fun optArg argListList =
         val fileHtmlRef    = ref []
         val fileXmlRef     = ref []
         val fileSmlRef     = ref []
+        val fileJsonRef    = ref []
         val fileLispRef    = ref []
         val filePerlRef    = ref []
         val basOpRef       = ref []
@@ -70,6 +73,7 @@ fun optArg argListList =
           | handleArg (FILEHTML x)    = fileHtmlRef    := x :: !(fileHtmlRef)
           | handleArg (FILEXML x)     = fileXmlRef     := x :: !(fileXmlRef)
           | handleArg (FILESML x)     = fileSmlRef     := x :: !(fileSmlRef)
+          | handleArg (FILEJSON x)    = fileJsonRef    := x :: !(fileJsonRef)
           | handleArg (FILELISP x)    = fileLispRef    := x :: !(fileLispRef)
           | handleArg (FILEPERL x)    = filePerlRef    := x :: !(filePerlRef)
           | handleArg (BASOP x)       = basOpRef       := x :: !(basOpRef)
@@ -86,6 +90,7 @@ fun optArg argListList =
         fileHtml    = (fn nil => ""    | x => hd x) (!fileHtmlRef),
         fileXml     = (fn nil => ""    | x => hd x) (!fileXmlRef),
         fileSml     = (fn nil => ""    | x => hd x) (!fileSmlRef),
+        fileJson    = (fn nil => ""    | x => hd x) (!fileJsonRef),
         fileLisp    = (fn nil => ""    | x => hd x) (!fileLispRef),
         filePerl    = (fn nil => ""    | x => hd x) (!filePerlRef),
         basOp       = (fn nil => 2     | x => hd x) (!basOpRef),

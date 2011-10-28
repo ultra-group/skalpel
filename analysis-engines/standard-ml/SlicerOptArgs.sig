@@ -1,4 +1,5 @@
 (* Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -70,6 +71,7 @@ signature SLICEROPTARGS = sig
       | FILELISP    of string
       | FILEPERL    of string
       | FILESML     of string
+      | FILEJSON    of string
       | FILEXML     of string
       | MIN         of bool
       | SEARCHSPACE of int
@@ -86,6 +88,7 @@ signature SLICEROPTARGS = sig
 		     fileLisp    : string,
                      filePerl    : string,
 		     fileSml     : string,
+		     fileJson    : string,
 		     fileXml     : string,
                      min         : bool,
 		     searchSpace : int,

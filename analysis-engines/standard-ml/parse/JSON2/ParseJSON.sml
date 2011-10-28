@@ -52,5 +52,5 @@ end;
 (* val () = ParseJSON.getJsonObject () *)
 
 print ("mark-1\n");
-ParseJSON.printMyVariable(ParseJSON.getJSONObject ());
+ParseJSON.getJSONObject ();
 print ("mark-2\n");

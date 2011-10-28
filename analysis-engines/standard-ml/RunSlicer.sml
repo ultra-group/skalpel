@@ -244,17 +244,19 @@ fun printFound counter errors time =
 
 (* calls the necessary functions to write the *.html, *.xml, *.sml etc
  * to the system *)
-fun export nenv filebas (bhtml, fhtml) bfxml bfsml bflisp bfperl basisoverloading
+fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading
 	   errs parse bmin times cs initlab name st counter time =
     let val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading Tester.removeBasisSlice
 	val dbgxml   = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbgsml   = Tester.debuggingSML  errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgjson  = Tester.debuggingJSON  errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbglisp  = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _ = if bhtml then dbghtml' st else ()
 	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st
 	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st
+	val _ = genOutputFile bfjson  ""    counter dbgjson st
 	val _ = genOutputFile bflisp ".el"  counter dbglisp st
 	val _ = genOutputFile bfperl ".pl"  counter dbgperl st
 	val _ = printFound counter errs time
@@ -263,18 +265,19 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bflisp bfperl basisoverloadin
 
 (* the primary function in this file which calls the functions necessary to
  * run the slicer, including the main Testing.slicing function *)
-fun commslicerp' filebas filesin filehtml filexml filesml filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
+fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
     let val (nenv, filebas) = getFileBasAndNum nenv filebas
 
 	(* check that the files have the correct extension*)
 	val bfhtml = getBoolFile filehtml ".html"
 	val bfxml  = getBoolFile filexml  ".xml"
 	val bfsml  = getBoolFile filesml  ".sml"
+	val bfjson = getBoolFile filejson ""
 	val bflisp = getBoolFile filelisp ".el"
 	val bfperl = getBoolFile fileperl ".pl"
 
 	(* write the files to the system *)
-	val fout   = export nenv filebas bfhtml bfxml bfsml bflisp bfperl basisoverloading
+	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading
 
 	(* get various information from Tester, such as solution number *)
 	val tmpsol = Tester.getsol ()
@@ -317,19 +320,19 @@ fun commslicerp' filebas filesin filehtml filexml filesml filelisp fileperl nenv
 
 (* calls commslicerp', if we are not developing (¬dev) then the error is
  * handled, otherwise we leave the error so we can debug *)
-fun slicerCheckDevMode filebas filesin filehtml filexml filesml filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
+fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
     if dev
-    then commslicerp' filebas filesin filehtml filexml filesml filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
-    else commslicerp' filebas filesin filehtml filexml filesml filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
+    then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
+    else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
 	 handle _ => (print "the slicer failed for some unknown reason\n"; ())
 
 (* called by the emacs interface; sets no tab and uses the solution from sol in
  * utils/Solution.sml *)
 fun commslicerp  filebas filesin filehtml filexml filesml filelisp fileperl nenv time basisoverloading =
-    slicerCheckDevMode filebas filesin filehtml filexml filesml filelisp fileperl nenv time NONE (Tester.getsol ()) true false false 1 basisoverloading
+    slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl nenv time NONE (Tester.getsol ()) true false false 1 basisoverloading
 
 (* the full version of the slicer function with all arguments *)
-fun slicerFull [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
+fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp, fileperl, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
     let
 	val mtl = Int.fromLarge Tester.mytimelimit
 	val mso = Tester.getsol ()
@@ -350,7 +353,7 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl,
 	val basisoverloading = Option.valOf(Int.fromString  basisoverloading)
 	val _   =
 	    slicerCheckDevMode
-		filebas [filein] filehtml filexml filesml filelisp fileperl
+		filebas [filein] filehtml filexml filesml filejson filelisp fileperl
 		n
 		t
 		(Int.fromString tab handle Overflow => NONE)
@@ -364,15 +367,6 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl,
     in OS.Process.success
     end
   | slicerFull _ = (print("Incorrect arguments specified. Run with --help to see arguments list"); OS.Process.failure)
-
-(* old invokation mechanism. Left in case we decide we want to use it in version 0.7 for any reason *)
-fun slicerpp (_, [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl, basop, tlim, tab, sol, min]) =
-    (* the emacs user interface uses this case *)
-    slicerFull   [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl, basop, tlim, tab, sol, min, "",  "",  ""]
-  | slicerpp (_, [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl, basop, tlim]) =
-    (* the command line uses this case *)
-    slicerFull   [filebas, filein, filehtml, filexml, filesml, filelisp, fileperl, basop, tlim,   "", "", "",  "",  "",  ""]
-  | slicerpp _ = slicerFull []
 
 fun temp 1 (SOME nb) _ = Tester.vinnie nb
   | temp 2 _ (SOME file) =
@@ -392,6 +386,7 @@ fun smltes ({fileBas     : string,
 	     fileHtml    : string,
 	     fileXml     : string,
 	     fileSml     : string,
+	     fileJson    : string,
 	     fileLisp    : string,
 	     filePerl    : string,
 	     tab         : int,
@@ -402,7 +397,7 @@ fun smltes ({fileBas     : string,
 	     searchSpace : int,
 	     basOp       : int,
 	     timeLim     : int}) =
-    slicerFull [fileBas, fileIn, fileHtml, fileXml, fileSml, fileLisp, filePerl,
+    slicerFull [fileBas, fileIn, fileHtml, fileXml, fileSml, fileJson, fileLisp, filePerl,
 		Int.toString  (basOp),
 		Int.toString  (timeLim),
 		Int.toString  (tab),
@@ -442,6 +437,7 @@ fun smlTesStrArgs strArgs =
 	val filehtml = ref ""
 	val filexml  = ref ""
 	val filesml  = ref ""
+	val filejson = ref ""
 	val filelisp = ref ""
 	val fileperl = ref ""
 	val basop    = ref ""
@@ -458,8 +454,9 @@ fun smlTesStrArgs strArgs =
 	    print ("usage: slicer [option ...] FILE \n\
 				    \    FILE file taken as input to be sliced\n\
 				    \    -l <file> place output in <file> in lisp format\n\
-				    \    -h <file> place output in <file> in html format\n\
-				    \    -s <file> place output in <file> in sml format\n\
+				    \    -h <file> place output in <file> in HTML format\n\
+				    \    -s <file> place output in <file> in SML format\n\
+				    \    -j <file> place output in <file> in JSON format\n\
 				    \    -x <file> place output in <file> in XML format\n\
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
@@ -498,6 +495,8 @@ fun smlTesStrArgs strArgs =
 	     then filexml:=str
 	     else if option = "-s"
 	     then filesml:=str
+	     else if option = "-j"
+	     then filejson:=str
 	     else if option = "-l"
 	     then filelisp:=str
 	     else if option = "-p"
@@ -539,7 +538,7 @@ fun smlTesStrArgs strArgs =
 	 else ();
 
 	 (* check that the user specified an output file *)
-	 if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl) = "")
+	 if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl)^(!filejson) = "")
 	 then (print ("Error: No output files specified.");
 	       raise Fail("No output files specified"))
 	 else ();
@@ -550,6 +549,7 @@ fun smlTesStrArgs strArgs =
 		    !filehtml,
 		    !filexml,
 		    !filesml,
+		    !filejson,
 		    !filelisp,
 		    !fileperl,
 		    !basop,

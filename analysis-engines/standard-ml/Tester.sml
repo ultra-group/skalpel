@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -439,6 +440,35 @@ fun errorsToSML [] _ _ _ = ""
     in err ^ ",\n" ^ begsep ^ (errorsToSML xs begsep bslice basisoverloading)
     end
 
+fun errorsToJSON [] _ _ _ = ""
+  | errorsToJSON [x] begsep bslice basisoverloading =
+    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneSmlErr x bslice basisoverloading
+	val err   = "{"          ^ id ^ ",\n" ^
+		    begsep ^ " " ^ ll ^ ",\n" ^
+		    begsep ^ " " ^ sa ^ ",\n" ^
+		    begsep ^ " " ^ sk ^ ",\n" ^
+		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
+		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     else (begsep ^ " " ^ sl ^ ",\n")) ^
+		    begsep ^ " " ^ tm ^ ",\n" ^
+		    begsep ^ " " ^ re ^ "}"
+    in err
+    end
+  | errorsToJSON (x :: xs) begsep bslice basisoverloading =
+    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneSmlErr x bslice basisoverloading
+	val err   = "{"          ^ id ^ ",\n" ^
+		    begsep ^ " " ^ ll ^ ",\n" ^
+		    begsep ^ " " ^ sa ^ ",\n" ^
+		    begsep ^ " " ^ sk ^ ",\n" ^
+		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
+		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     else (begsep ^ " " ^ sl ^ ",\n")) ^
+		    begsep ^ " " ^ tm ^ ",\n" ^
+		    begsep ^ " " ^ re ^ "}"
+    in err ^ ",\n" ^ begsep ^ (errorsToSML xs begsep bslice basisoverloading)
+    end
+
+
 fun debuggingSML errl
 		 (ast, m, ascid)
 		 bmin
@@ -502,6 +532,70 @@ fun debuggingSML errl
 		  newsep ^ "}"
     in st
     end
+
+fun debuggingJSON errl
+		 (ast, m, ascid)
+		 bmin
+		 (t1, t2, t3, t4, t5)
+		 envcss
+		 initlab
+		 bfinal
+		 name
+		 bslice
+		 nenv
+		 basisoverloading
+		 _ =
+    let val tmpsep = "      "
+	val newsep = emacstab ^ tmpsep
+	val errsep = emacstab ^ emacstab ^ emacstab ^ tmpsep
+	val str = newsep ^ "\"errors\"       : {" ^ errorsToSML errl errsep bslice basisoverloading ^ "}"
+        val stb = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
+        val std = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
+        val stu = newsep ^ "\"basis\"        : " ^ Int.toString nenv
+	val sts = newsep ^ "\"solution\"     : " ^ Int.toString (SOL.toInt (SOL.getSol ()))
+        val stt = newsep ^ "\"timelimit\"    : " ^ Int.toString (Int.fromLarge (gettimelimit ()))
+        val stj = newsep ^ "\"final\"        : " ^ Bool.toString bfinal
+        val stk = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
+        val stf = newsep ^ "\"time\"         : " ^
+		  "{" ^
+		  "\"analysis = \""     ^ Int.toString (Int.fromLarge t1) ^ ", " ^
+		  "\"enumeration = \""  ^ Int.toString (Int.fromLarge t2) ^ ", " ^
+		  "\"minimisation = \"" ^ Int.toString (Int.fromLarge t3) ^ ", " ^
+		  "\"slicing\" : \""      ^ Int.toString (Int.fromLarge t4) ^ ", " ^
+		  "\"html : \""         ^ Int.toString (Int.fromLarge t5) ^
+		  "}"
+        val stg = newsep ^ "tyvar        = " ^
+		  "(" ^
+		  Int.toString (T.tyvarToInt (T.gettyvar ())) ^
+		  ", " ^
+		  I.printAssoc' ascid ^
+		  ")"
+        val sth = newsep ^ "ident        = " ^ I.printAssoc' ascid
+	val sti = newsep ^ "constraint   = " ^
+		  "{" ^
+		  "total = "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
+		  "top = "       ^ Int.toString (EV.getnbcsttop envcss)  ^ ", " ^
+		  "syntactic = " ^ Int.toString (EV.getnbcss envcss)     ^
+		  "}"
+	val stl = newsep ^ "\"labels\"       : " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
+	val st  = "{\n" ^
+		  str ^ ",\n" ^
+		  stf ^ ",\n" ^
+		  stg ^ ",\n" ^
+		  sth ^ ",\n" ^
+		  sti ^ ",\n" ^
+		  stl ^ ",\n" ^
+		  std ^ ",\n" ^
+		  sts ^ ",\n" ^
+		  stu ^ ",\n" ^
+		  stt ^ ",\n" ^
+		  stb ^ ",\n" ^
+		  stj ^ ",\n" ^
+		  stk ^ "\n"  ^
+		  newsep ^ "}"
+    in st
+    end
+
 
 fun debuggingLISP' [] _ _ _ _ = ""
   | debuggingLISP' [err] ascid ind bslice basisoverloading =

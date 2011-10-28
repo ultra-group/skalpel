@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -101,6 +102,7 @@ signature TESTER = sig
     (* FUNCTIONS GENERATING FORMATED ERRORS *)
     val debuggingXML  : string temptype
     val debuggingSML  : string temptype
+    val debuggingJSON : string temptype
     val debuggingLISP : string temptype
     val debuggingPERL : string temptype
     val debuggingHTML : Error.error list ->

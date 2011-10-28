@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -95,6 +96,8 @@ fun disjShort deps set = isEmpty (inter (toLong deps) set)
 (* print functions for the structure *)
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(* the foldr is always going to get us the empty list *)
+(* we can get the same output in the test files via an list of integers? *)
 fun printsetgen xs f = "[" ^ #1 (CD.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
 (*fun toStringIdList xs = printlistgen xs I.printId
