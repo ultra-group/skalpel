@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -160,6 +161,14 @@ fun printSmlExtRegs [] = ""
   | printSmlExtRegs [(file, regs)] =
     "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])"
   | printSmlExtRegs ((file, regs) :: xs) =
+    "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])" ^
+    "," ^ printSmlExtRegs xs
+
+(* prints extended regions to be used with the JSON format *)
+fun printJsonExtRegs [] _ = ""
+  | printJsonExtRegs [(file, regs)] counter =
+    "\"fileName"^(Int.toString counter)^"\": \"" ^ file ^ "\", \"fileRegions"^(Int.toString counter)^"\": [" ^ printSmlExtRegList regs ^ "])"
+  | printJsonExtRegs ((file, regs) :: xs) counter =
     "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])" ^
     "," ^ printSmlExtRegs xs
 

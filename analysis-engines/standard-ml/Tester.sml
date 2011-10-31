@@ -560,18 +560,18 @@ fun debuggingJSON errl
 		  "\"slicing\" : \""      ^ Int.toString (Int.fromLarge t4) ^ ", " ^
 		  "\"html : \""         ^ Int.toString (Int.fromLarge t5) ^
 		  "}"
-        val stg = newsep ^ "tyvar        = " ^
+        val stg = newsep ^ "\"tyvar\"        : " ^
 		  "(" ^
 		  Int.toString (T.tyvarToInt (T.gettyvar ())) ^
 		  ", " ^
 		  I.printAssoc' ascid ^
 		  ")"
-        val sth = newsep ^ "ident        = " ^ I.printAssoc' ascid
-	val sti = newsep ^ "constraint   = " ^
+        val sth = newsep ^ "\"ident\"        : " ^ I.printAssoc' ascid
+	val sti = newsep ^ "\"constraint\"   = " ^
 		  "{" ^
-		  "total = "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
-		  "top = "       ^ Int.toString (EV.getnbcsttop envcss)  ^ ", " ^
-		  "syntactic = " ^ Int.toString (EV.getnbcss envcss)     ^
+		  "\"total\" : "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
+		  "\"top\" : "       ^ Int.toString (EV.getnbcsttop envcss)  ^ ", " ^
+		  "\"syntactic\" : " ^ Int.toString (EV.getnbcss envcss)     ^
 		  "}"
 	val stl = newsep ^ "\"labels\"       : " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
 	val st  = "{\n" ^

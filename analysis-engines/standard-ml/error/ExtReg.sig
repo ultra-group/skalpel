@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -58,6 +59,7 @@ signature EXTREG = sig
 
     val printOneRegs     : regs -> string
     val printSmlExtRegs  : regs -> string
+    val printJsonExtRegs : regs -> int -> string
     val printLispExtRegs : regs -> string
     val printPerlExtRegs : regs -> string
 
