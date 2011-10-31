@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -183,6 +184,14 @@ signature ERROR = sig
 
 
     val printOneSmlErr   : error -> bool  -> int ->
+			   string * (* identifier           *)
+			   string * (* labels               *)
+			   string * (* context dependencies *)
+			   string * (* error kind           *)
+			   string * (* time information     *)
+			   string * (* slice                *)
+			   string   (* regions              *)
+    val printOneJsonErr  : error -> bool  -> int ->
 			   string * (* identifier           *)
 			   string * (* labels               *)
 			   string * (* context dependencies *)

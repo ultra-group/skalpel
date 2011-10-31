@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -50,6 +51,7 @@ signature ID = sig
     val getTopLab   : lid -> Label.label
     val getLabId    : lid -> Label.label
     val getTopIdl   : lid -> idl
+    val getLidOut   : lid -> idl list * idl
 
     (* Returns the left-most identifier in a long identifier *)
     val getLeftId   : lid -> idl

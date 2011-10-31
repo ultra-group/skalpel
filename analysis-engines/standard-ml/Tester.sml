@@ -3,24 +3,20 @@
  * Copyright 2011 Heriot-Watt University
  *
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Tester.sml
@@ -442,30 +438,30 @@ fun errorsToSML [] _ _ _ = ""
 
 fun errorsToJSON [] _ _ _ = ""
   | errorsToJSON [x] begsep bslice basisoverloading =
-    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneSmlErr x bslice basisoverloading
+    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
 	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
     in err
     end
   | errorsToJSON (x :: xs) begsep bslice basisoverloading =
-    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneSmlErr x bslice basisoverloading
+    let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
 	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
-    in err ^ ",\n" ^ begsep ^ (errorsToSML xs begsep bslice basisoverloading)
+    in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading)
     end
 
 
@@ -548,7 +544,7 @@ fun debuggingJSON errl
     let val tmpsep = "      "
 	val newsep = emacstab ^ tmpsep
 	val errsep = emacstab ^ emacstab ^ emacstab ^ tmpsep
-	val str = newsep ^ "\"errors\"       : {" ^ errorsToSML errl errsep bslice basisoverloading ^ "}"
+	val str = newsep ^ "\"errors\"       : {" ^ errorsToJSON errl errsep bslice basisoverloading ^ "}"
         val stb = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val std = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
         val stu = newsep ^ "\"basis\"        : " ^ Int.toString nenv
@@ -689,14 +685,14 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 
     let fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
 	    let val _ = resetAll ()
-		val _ = print ("[TES: parsing...]\n")
+		val _ = print ("[Skalpel: parsing...]\n")
 		val (progs, m, ascid, nenv) =
 		    consProgs filebas nenv filesin initLab I.emAssoc webdemo
 		val parse = (progs, m, ascid)
 		val _ = L.setNextLab m
-		val _ = print ("[TES: constraint generation...]\n")
+		val _ = print ("[Skalpel: constraint generation...]\n")
 		val envcss = AN.fullConsGen progs ascid nenv
-		val _ = print ("[TES: enumeration...]\n")
+		val _ = print ("[Skalpel: enumeration...]\n")
 		val (errl1, filters) = preEnum envcss parse
 		val errl2 = ERR.setSlices progs errl1
 		val errl3 = ERR.setRegs errl2 true
@@ -748,7 +744,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 			runSlicing funout' counter' parse envcs found' filters' timerEnum (preEnum, initEnum, runEnum)
 		val timeEN = VT.getMilliTime timer
 		val time   = Int.fromLarge (VT.getMilliTime timerEnum)
-		val _      = print ("[TES: finished time=" ^ Int.toString time ^ "]\n")
+		val _      = print ("[Skalpel: finished time=" ^ Int.toString time ^ "]\n")
 	    in (counter'', errors, parse, envcs, timeCG, timeEN)
 	    end
 
