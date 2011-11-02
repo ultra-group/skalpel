@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -74,6 +75,7 @@ signature REG = sig
     val printPos        : pos -> string
     val printReg        : region -> string
     val printSmlReg     : region -> string
+    val printJsonReg    : region -> string
     val printLispReg    : region -> string
     val printRegList    : region list -> string
 

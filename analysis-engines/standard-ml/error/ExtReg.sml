@@ -156,6 +156,18 @@ and printSmlExtRegList []         = ""
   | printSmlExtRegList [t]        = printSmlExtReg t
   | printSmlExtRegList (t :: tl)  = printSmlExtReg t ^ "," ^ printSmlExtRegList tl
 
+(* prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
+fun printJsonExtReg (L (r, c, w))     =
+    "{\"nodeType\": \"leaf\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ "}\n"
+  | printJsonExtReg (H (r, c, w))     =
+    "{\"nodeType\": \"head\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ "}\n"
+  | printJsonExtReg (N (r, c, w, tl)) =
+    "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ ", \"regionList\": " ^ printJsonExtRegList tl ^ "\n}"
+
+and printJsonExtRegList []         = ""
+  | printJsonExtRegList [t]        = printJsonExtReg t
+  | printJsonExtRegList (t :: tl)  = printJsonExtReg t ^ "," ^ printJsonExtRegList tl
+
 (* prints extended regions SML style for files in a list of tuples (file, regions) *)
 fun printSmlExtRegs [] = ""
   | printSmlExtRegs [(file, regs)] =
@@ -167,7 +179,7 @@ fun printSmlExtRegs [] = ""
 (* prints extended regions to be used with the JSON format *)
 fun printJsonExtRegs [] _ = ""
   | printJsonExtRegs [(file, regs)] counter =
-    "\"fileName"^(Int.toString counter)^"\": \"" ^ file ^ "\", \"fileRegions"^(Int.toString counter)^"\": [" ^ printSmlExtRegList regs ^ "])"
+    "\"fileName"^(Int.toString counter)^"\": \"" ^ file ^ "\", \"fileRegions"^(Int.toString counter)^"\": [" ^ printJsonExtRegList regs ^ "]"
   | printJsonExtRegs ((file, regs) :: xs) counter =
     "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])" ^
     "," ^ printSmlExtRegs xs

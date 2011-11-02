@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -400,8 +401,106 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind FreeOpen        = "ErrorKind.FreeOpen"
 
 
-(*--------------------*)
-
+fun printJsonErrKind Circularity = "\"ErrorKind.Circularity\""
+  | printJsonErrKind (Overload ((id, lid), (l, tn), ltns)) =
+    "\"ErrorKind.Overload\"("
+    ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ "),"
+    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+  | printJsonErrKind (OverloadCst ((id, lid, str), (l, tn), ltns)) =
+    "ErrorKind.OverloadCst("
+    ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ ",\"" ^ str ^ "\"" ^ "),"
+    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+  | printJsonErrKind (OverloadClash ((id1, lid1, str1), ltns1, (id2, lid2, str2), ltns2)) =
+    "ErrorKind.OverloadClash("
+    ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ ",\"" ^  String.translate transfun str1 ^ "\"" ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
+    ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^  String.translate transfun str2 ^ "\"" ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+  | printJsonErrKind (OverloadIdCst ((id1, lid1), ltns1, (id2, lid2, str2), ltns2)) =
+    "ErrorKind.OverloadIdCst("
+    ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
+    ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^ String.translate transfun str2 ^ "\"" ^ "),"
+    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+  | printJsonErrKind (ArityClash ((l1, n1), (l2, n2))) =
+    "ErrorKind.ArityClash("
+    ^ "(" ^ printLab l1 ^ "," ^ Int.toString n1 ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ Int.toString n2 ^ "))"
+  | printJsonErrKind (TyConsClash ((l1, tn1), (l2, tn2))) =
+    "ErrorKind.TyConsClash("
+    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
+  | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
+    "ErrorKind.NotGenClash("
+    ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
+  | printJsonErrKind (TooGenSig ((l1, id), (l2, tv), labs)) =
+    "ErrorKind.TooGenSig("
+    ^ "(" ^ printLab l1 ^ "," ^ Int.toString id ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ Int.toString tv ^ "),"
+    ^ printlistgen labs Int.toString ^ ")"
+  | printJsonErrKind (TyFunClash ((l1, tv), (l2, tn))) =
+    "ErrorKind.TyFunClash("
+    ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
+  | printJsonErrKind (LabTyClash (ll1, ll2, ll3, ll4)) =
+    "ErrorKind.LabTyClash("
+    ^ "[" ^ printSmlLabErr ll1 ^ "]" ^ "," ^ "[" ^ printSmlLabErr ll2 ^ "]" ^ ","
+    ^ "[" ^ printSmlLabErr ll3 ^ "]" ^ "," ^ "[" ^ printSmlLabErr ll4 ^ "]" ^ ")"
+  | printJsonErrKind (Unmatched ((l, n), ls, lab)) =
+    "ErrorKind.Unmatched("
+    ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
+    ^ "," ^ "[" ^ printSmlUnm ls ^ "]"
+    ^ "," ^ printLab lab ^ ")"
+  | printJsonErrKind (UnbWhere ((l, n), ls, lab)) =
+    "ErrorKind.UnbWhere("
+    ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
+    ^ "," ^ "[" ^ printSmlUnm ls ^ "]"
+    ^ "," ^ printLab lab ^ ")"
+  | printJsonErrKind (MissConsSig ((l, n), ls)) =
+    "ErrorKind.MissConsSig("
+    ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
+    ^ "," ^ "[" ^ printSmlUnm ls ^ "]" ^ ")"
+  | printJsonErrKind (MissConsStr ((l, n), ls)) =
+    "ErrorKind.MissConsStr("
+    ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
+    ^ "," ^ "[" ^ printSmlUnm ls ^ "]" ^ ")"
+  | printJsonErrKind (DatTypClash (n, l1, l2)) =
+    "ErrorKind.DatTypClash(" ^ Int.toString n ^ "," ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+  | printJsonErrKind (ConsArgNApp (l1, l2)) =
+    "ErrorKind.ConsArgNApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+  | printJsonErrKind (ConsNArgApp (l1, l2)) =
+    "ErrorKind.ConsNArgApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+  | printJsonErrKind (NonFlexWhere ((lab1, id1), (lab2, id2))) =
+    "ErrorKind.NonFlexWhere(" ^
+    "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
+    "(" ^ printLab lab2 ^ "," ^ Int.toString id2 ^ "))"
+  | printJsonErrKind (IllFormedWhere ((lab1, id1), (lab2, id2))) =
+    "ErrorKind.IllFormedWhere(" ^
+    "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
+    "(" ^ printLab lab2 ^ "," ^ Int.toString id2 ^ "))"
+  | printJsonErrKind (MultiOcc   eo) = "ErrorKind.MultiOcc("   ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (ValVarApp  eo) = "ErrorKind.ValVarApp("  ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (ExcIsVar   eo) = "ErrorKind.ExcIsVar("   ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (ExcIsDat   eo) = "ErrorKind.ExcIsDat("   ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (ConIsVar   eo) = "ErrorKind.ConIsVar("   ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (DatIsExc   eo) = "ErrorKind.DatIsExc("   ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (TyVarBind  eo) = "ErrorKind.TyVarBind("  ^ printSmlAsmpOp eo ^ ")"
+  | printJsonErrKind (Warning    st) = "ErrorKind.Warning(\""  ^ st ^ "\")"
+  | printJsonErrKind (Parsing    st) = "ErrorKind.Parsing(\""  ^ st ^ "\")"
+  | printJsonErrKind RigidWhere      = "ErrorKind.RigidWhere"
+  | printJsonErrKind Inclusion       = "ErrorKind.Inclusion"
+  | printJsonErrKind AppNotApp       = "ErrorKind.AppNotApp"
+  | printJsonErrKind DiffFunName     = "ErrorKind.DiffFunName"
+  | printJsonErrKind DiffNbArgFun    = "ErrorKind.DiffNbArgFun"
+  | printJsonErrKind FreeTyVarTop    = "ErrorKind.FreeTyVarTop"
+  | printJsonErrKind AsPatVar        = "ErrorKind.AsPatVar"
+  | printJsonErrKind FnRecExp        = "ErrorKind.FnRecExp"
+  | printJsonErrKind RealInPat       = "ErrorKind.RealInPat"
+  | printJsonErrKind FreeIdent       = "ErrorKind.FreeIdent"
+  | printJsonErrKind FreeOpen        = "ErrorKind.FreeOpen"
 
 fun issem Circularity        = true
   | issem (Overload       _) = true

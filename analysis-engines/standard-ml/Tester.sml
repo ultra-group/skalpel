@@ -554,11 +554,11 @@ fun debuggingJSON errl
         val stk = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
         val stf = newsep ^ "\"time\"         : " ^
 		  "{" ^
-		  "\"analysis = \""     ^ Int.toString (Int.fromLarge t1) ^ ", " ^
-		  "\"enumeration = \""  ^ Int.toString (Int.fromLarge t2) ^ ", " ^
-		  "\"minimisation = \"" ^ Int.toString (Int.fromLarge t3) ^ ", " ^
-		  "\"slicing\" : \""      ^ Int.toString (Int.fromLarge t4) ^ ", " ^
-		  "\"html : \""         ^ Int.toString (Int.fromLarge t5) ^
+		  "\"analysis\": "     ^ Int.toString (Int.fromLarge t1) ^ ", " ^
+		  "\"enumeration\": "  ^ Int.toString (Int.fromLarge t2) ^ ", " ^
+		  "\"minimisation\": " ^ Int.toString (Int.fromLarge t3) ^ ", " ^
+		  "\"slicing\": "      ^ Int.toString (Int.fromLarge t4) ^ ", " ^
+		  "\"html\": "         ^ Int.toString (Int.fromLarge t5) ^
 		  "}"
         val stg = newsep ^ "\"tyvar\"        : " ^
 		  "(" ^

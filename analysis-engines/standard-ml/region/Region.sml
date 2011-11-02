@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -79,6 +80,12 @@ fun printSmlReg {from, to} =
     "{from=" ^ printSmlPos from ^
     ",to="   ^ printSmlPos to   ^
     "}"
+
+fun printJsonReg {from=(fromLine, fromColumn), to=(toLine, toColumn)} =
+    "\"fromLine\": " ^ Int.toString(fromLine) ^ ", " ^
+    "\"fromColumn\": " ^ Int.toString(fromColumn) ^ ", " ^
+    "\"toLine\": " ^ Int.toString(toLine) ^ ", " ^
+    "\"toColumn\": " ^ Int.toString(toColumn)
 
 fun printLispReg {from = (x1, y1), to = (x2, y2)} =
     "(" ^ Int.toString x2 ^ " " ^ Int.toString y1 ^
