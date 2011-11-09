@@ -282,6 +282,9 @@ fun printSmlAsmpStr []        = ""
 fun printSmlAsmpOp NONE           = "NONE"
   | printSmlAsmpOp (SOME (nl, n)) = "SOME ([" ^ printSmlAsmpStr nl ^ "]," ^ Int.toString n ^ ")"
 
+fun printJsonAsmpOp NONE           = "\"asmpOp\": \"NONE\"}"
+  | printJsonAsmpOp (SOME (nl, n)) = "\"asmpOp\": {\"synerrList\": [" ^ printSmlAsmpStr nl ^ "], \"synerrInt\": " ^ Int.toString n ^ "}}"
+
 fun printSmlLabErr []              = ""
   | printSmlLabErr [(l, st)]       = "(" ^ printLab l ^ ",\"" ^ st ^ "\")"
   | printSmlLabErr ((l, st) :: xs) = "(" ^ printLab l ^ ",\"" ^ st ^ "\")," ^ printSmlLabErr xs
@@ -293,6 +296,10 @@ fun printSmlUnm []             = ""
 fun printSmlLabTyNames []              = ""
   | printSmlLabTyNames [(l, tn)]       = "(" ^ printLab l ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ ")"
   | printSmlLabTyNames ((l, tn) :: xs) = "(" ^ printLab l ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ ")," ^ printSmlLabTyNames xs
+
+fun printJsonLabTyNames []             = ""
+  | printJsonLabTyNames [(l, tn)]       = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}"
+  | printJsonLabTyNames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}, " ^ printSmlLabTyNames xs
 
 val transfun = fn #"\n" => ""
 		| #"\\" => "\\\\"
@@ -401,106 +408,109 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind FreeOpen        = "ErrorKind.FreeOpen"
 
 
-fun printJsonErrKind Circularity = "\"ErrorKind.Circularity\""
+fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\"}"
   | printJsonErrKind (Overload ((id, lid), (l, tn), ltns)) =
-    "\"ErrorKind.Overload\"("
-    ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ "),"
-    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+    "{\"errorKindName\": \"ErrorKind.Overload\" \"errrorKindInfo\": {"
+    ^ "\"iderrLabel\": " ^ printLab id ^ ", \"iderrId\": " ^ Int.toString lid
+    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^
+    ^ ", \"tnerrList\": [" ^ printJsonLabTyNames ltns ^ "]}}"
   | printJsonErrKind (OverloadCst ((id, lid, str), (l, tn), ltns)) =
-    "ErrorKind.OverloadCst("
-    ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ ",\"" ^ str ^ "\"" ^ "),"
-    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+    "{\"errorKindName\": \"ErrorKind.OverloadCst\" \"errorKindInfo\": {".
+    ^ "\"idserrLabel\": " ^ printLab id ^ ", \"idserrId\": " ^ Int.toString lid ^ ", \"idserrString\": \""^ str ^"\""
+    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^
+    ^ ", \"tnerrList\": [" ^ printJsonLabTyNames ltns ^ "]}}"
   | printJsonErrKind (OverloadClash ((id1, lid1, str1), ltns1, (id2, lid2, str2), ltns2)) =
-    "ErrorKind.OverloadClash("
-    ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ ",\"" ^  String.translate transfun str1 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
-    ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^  String.translate transfun str2 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+    "{\"errorKindName\": \"ErrorKind.OverloadClash\" \"errorKindInfo\": {"
+    ^ "\"idserrLabel1\": " ^ printLab id1 ^ ", \"idserrId1\": " ^ Int.toString lid1 ^ ", \"idserrString1\": \""^ String.translate transfun str1 ^"\""
+    ^ ", \"tnerrList1\": [" ^ printJsonLabTyNames ltns1 ^ "]"
+    ^ ", \"idserrLabel2\": " ^ printLab id2 ^ ", \"idserrId2\": " ^ Int.toString lid2 ^ ", \"idserrString2\": \""^ String.translate transfun str2 ^"\""
+    ^ ", \"tnerrList2\": [" ^ printJsonLabTyNames ltns2 ^ "]}}"
   | printJsonErrKind (OverloadIdCst ((id1, lid1), ltns1, (id2, lid2, str2), ltns2)) =
-    "ErrorKind.OverloadIdCst("
-    ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
-    ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^ String.translate transfun str2 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+    "{\"errorKindName\": \"ErrorKind.OverloadIdCst\" \"errorKindInfo\": {"
+    ^ "\"iderrLabel1\": " ^ printLab id1 ^ ", \"iderrId1\": " ^ Int.toString lid1
+    ^ ", \"tnerrList1\": [" ^ printJsonLabTyNames ltns1 ^ "]"
+    ^ ", \"idserrLabel2\": " ^ printLab id2 ^ ", \"idserrId2\": " ^ Int.toString lid2 ^ ", \"idserrString2\": \""^ String.translate transfun str2 ^"\""
+    ^ ", \"tnerrList2\": [" ^ printJsonLabTyNames ltns2 ^ "]}}"
   | printJsonErrKind (ArityClash ((l1, n1), (l2, n2))) =
-    "ErrorKind.ArityClash("
-    ^ "(" ^ printLab l1 ^ "," ^ Int.toString n1 ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ Int.toString n2 ^ "))"
+    "{\"errorKindName\": \"ErrorKind.ArityClash\" \"errorKindInfo\": {"
+    ^ "\"arrerrLabel1\": " ^ printLab l1 ^ ", \"arrerrId1\": " ^ Int.toString n1
+    ^ "\"arrerrLabel2\": " ^ printLab l2 ^ ", \"arrerrId2\": " ^ Int.toString n2 ^"}}"
   | printJsonErrKind (TyConsClash ((l1, tn1), (l2, tn2))) =
-    "ErrorKind.TyConsClash("
-    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
+    "{\"errorKindName\": \"ErrorKind.TyConsClash\" \"errorKindInfo\": {"
+    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
+    ^ "\"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
   | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
-    "ErrorKind.NotGenClash("
+    "{\"errorKindName\": \"ErrorKind.NotGenClash\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
   | printJsonErrKind (TooGenSig ((l1, id), (l2, tv), labs)) =
-    "ErrorKind.TooGenSig("
+    "{\"errorKindName\": \"ErrorKind.TooGenSig\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString id ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ Int.toString tv ^ "),"
     ^ printlistgen labs Int.toString ^ ")"
   | printJsonErrKind (TyFunClash ((l1, tv), (l2, tn))) =
-    "ErrorKind.TyFunClash("
+    "{\"errorKindName\": \"ErrorKind.TyFunClash\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
   | printJsonErrKind (LabTyClash (ll1, ll2, ll3, ll4)) =
-    "ErrorKind.LabTyClash("
+    "{\"errorKindName\": \"ErrorKind.LabTyClash\" \"errorKindInfo\": {"
     ^ "[" ^ printSmlLabErr ll1 ^ "]" ^ "," ^ "[" ^ printSmlLabErr ll2 ^ "]" ^ ","
     ^ "[" ^ printSmlLabErr ll3 ^ "]" ^ "," ^ "[" ^ printSmlLabErr ll4 ^ "]" ^ ")"
   | printJsonErrKind (Unmatched ((l, n), ls, lab)) =
-    "ErrorKind.Unmatched("
+    "{\"errorKindName\": \"ErrorKind.Unmatched\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
     ^ "," ^ "[" ^ printSmlUnm ls ^ "]"
     ^ "," ^ printLab lab ^ ")"
   | printJsonErrKind (UnbWhere ((l, n), ls, lab)) =
-    "ErrorKind.UnbWhere("
+    "{\"errorKindName\": \"ErrorKind.UnbWhere\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
     ^ "," ^ "[" ^ printSmlUnm ls ^ "]"
     ^ "," ^ printLab lab ^ ")"
   | printJsonErrKind (MissConsSig ((l, n), ls)) =
-    "ErrorKind.MissConsSig("
+    "{\"errorKindName\": \"ErrorKind.MissConsSig\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
     ^ "," ^ "[" ^ printSmlUnm ls ^ "]" ^ ")"
   | printJsonErrKind (MissConsStr ((l, n), ls)) =
-    "ErrorKind.MissConsStr("
+    "{\"errorKindName\": \"ErrorKind.MissConsStr\" \"errorKindInfo\": {"
     ^ "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
     ^ "," ^ "[" ^ printSmlUnm ls ^ "]" ^ ")"
+
+    (* haven't assigned the errKindName tag for these three yet *)
   | printJsonErrKind (DatTypClash (n, l1, l2)) =
     "ErrorKind.DatTypClash(" ^ Int.toString n ^ "," ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
   | printJsonErrKind (ConsArgNApp (l1, l2)) =
     "ErrorKind.ConsArgNApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
   | printJsonErrKind (ConsNArgApp (l1, l2)) =
     "ErrorKind.ConsNArgApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+
   | printJsonErrKind (NonFlexWhere ((lab1, id1), (lab2, id2))) =
-    "ErrorKind.NonFlexWhere(" ^
+    "{\"errorKindName\": \"ErrorKind.NonFlexWhere\" \"errorKindInfo\": {"
     "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
     "(" ^ printLab lab2 ^ "," ^ Int.toString id2 ^ "))"
   | printJsonErrKind (IllFormedWhere ((lab1, id1), (lab2, id2))) =
-    "ErrorKind.IllFormedWhere(" ^
+    "{\"errorKindName\": \"ErrorKind.IllFormedWhere\" \"errorKindInfo\": {"
     "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
     "(" ^ printLab lab2 ^ "," ^ Int.toString id2 ^ "))"
-  | printJsonErrKind (MultiOcc   eo) = "ErrorKind.MultiOcc("   ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (ValVarApp  eo) = "ErrorKind.ValVarApp("  ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (ExcIsVar   eo) = "ErrorKind.ExcIsVar("   ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (ExcIsDat   eo) = "ErrorKind.ExcIsDat("   ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (ConIsVar   eo) = "ErrorKind.ConIsVar("   ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (DatIsExc   eo) = "ErrorKind.DatIsExc("   ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (TyVarBind  eo) = "ErrorKind.TyVarBind("  ^ printSmlAsmpOp eo ^ ")"
-  | printJsonErrKind (Warning    st) = "ErrorKind.Warning(\""  ^ st ^ "\")"
-  | printJsonErrKind (Parsing    st) = "ErrorKind.Parsing(\""  ^ st ^ "\")"
-  | printJsonErrKind RigidWhere      = "ErrorKind.RigidWhere"
-  | printJsonErrKind Inclusion       = "ErrorKind.Inclusion"
-  | printJsonErrKind AppNotApp       = "ErrorKind.AppNotApp"
-  | printJsonErrKind DiffFunName     = "ErrorKind.DiffFunName"
-  | printJsonErrKind DiffNbArgFun    = "ErrorKind.DiffNbArgFun"
-  | printJsonErrKind FreeTyVarTop    = "ErrorKind.FreeTyVarTop"
-  | printJsonErrKind AsPatVar        = "ErrorKind.AsPatVar"
-  | printJsonErrKind FnRecExp        = "ErrorKind.FnRecExp"
-  | printJsonErrKind RealInPat       = "ErrorKind.RealInPat"
-  | printJsonErrKind FreeIdent       = "ErrorKind.FreeIdent"
-  | printJsonErrKind FreeOpen        = "ErrorKind.FreeOpen"
+  | printJsonErrKind (MultiOcc   eo) = "{\"errorKindName\": \"ErrorKind.MultiOcc"   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ValVarApp  eo) = "{\"errorKindName\": \"ErrorKind.ValVarApp"  ^ printJsonAsmpOp eo
+  | printJsonErrKind (ExcIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsVar"   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ExcIsDat   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsDat"   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ConIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ConIsVar"   ^ printJsonAsmpOp eo
+  | printJsonErrKind (DatIsExc   eo) = "{\"errorKindName\": \"ErrorKind.DatIsExc"   ^ printJsonAsmpOp eo
+  | printJsonErrKind (TyVarBind  eo) = "{\"errorKindName\": \"ErrorKind.TyVarBind"  ^ printJsonAsmpOp eo
+  | printJsonErrKind (Warning    st) = "{\"errorKindName\": \"ErrorKind.Warning\", \"warningStr\": \"" ^ st ^ "\"}"
+  | printJsonErrKind (Parsing    st) = "{\"errorKindName\": \"ErrorKind.Parsing\", \"parsingStr\": \"" ^ st ^ "\"}"
+  | printJsonErrKind RigidWhere      = "{\"errorKindName\": \"ErrorKind.RigidWhere\"}"
+  | printJsonErrKind Inclusion       = "{\"errorKindName\": \"ErrorKind.Inclusion\"}"
+  | printJsonErrKind AppNotApp       = "{\"errorKindName\": \"ErrorKind.AppNotApp\"}"
+  | printJsonErrKind DiffFunName     = "{\"errorKindName\": \"ErrorKind.DiffFunName\"}"
+  | printJsonErrKind DiffNbArgFun    = "{\"errorKindName\": \"ErrorKind.DiffNbArgFun\"}"
+  | printJsonErrKind FreeTyVarTop    = "{\"errorKindName\": \"ErrorKind.FreeTyVarTop\"}"
+  | printJsonErrKind AsPatVar        = "{\"errorKindName\": \"ErrorKind.AsPatVar\"}"
+  | printJsonErrKind FnRecExp        = "{\"errorKindName\": \"ErrorKind.FnRecExp\"}"
+  | printJsonErrKind RealInPat       = "{\"errorKindName\": \"ErrorKind.RealInPat\"}"
+  | printJsonErrKind FreeIdent       = "{\"errorKindName\": \"ErrorKind.FreeIdent\"}"
+  | printJsonErrKind FreeOpen        = "{\"errorKindName\": \"ErrorKind.FreeOpen\"}"
 
 fun issem Circularity        = true
   | issem (Overload       _) = true
