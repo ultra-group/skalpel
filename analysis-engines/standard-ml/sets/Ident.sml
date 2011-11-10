@@ -207,6 +207,11 @@ fun printLidOut lid =
     in "(" ^ printlistgen xs printIdLOut ^ "," ^ printIdLOut x ^ ")"
     end
 
+fun printJsonLidOut lid =
+    let val (xs, x) = getLidOut lid
+    in "\"lidout\": {\"listgen\": " ^ printlistgen xs printIdLOut ^ ", \"Idl\": " ^ printIdLOut x ^ "}"
+    end
+
 fun toString set = printsetgen set (fn x => printId x)
 
 (*fun toStringList set ascid =
@@ -224,6 +229,14 @@ fun printAssoc {assocId, assocSt} =
 
 fun printAssoc' {assocId, assocSt} =
     let fun printIdSt id st = "(" ^ printId id ^ "," ^ "\"" ^ st ^ "\"" ^ ")"
+    in "[" ^ #1 (IS.foldri (fn (id, st, (out, c)) =>
+			       (printIdSt id st ^ c ^ out, ","))
+			   ("", "")
+			   assocId) ^ "]"
+    end
+
+fun printJsonAssoc {assocId, assocSt} =
+    let fun printIdSt id st = "{\"id\": " ^ printId id ^ ", \"string\": \"" ^ st ^ "\"}"
     in "[" ^ #1 (IS.foldri (fn (id, st, (out, c)) =>
 			       (printIdSt id st ^ c ^ out, ","))
 			   ("", "")

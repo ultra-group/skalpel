@@ -114,6 +114,8 @@ fun toString set = printsetgen set I.printLid
 
 fun toStringOut set = printsetgen set I.printLidOut
 
+fun toJsonStringOut set = printsetgen set I.printJsonLidOut
+
 fun toStringList set ascid =
     CD.foldr (fn (x, y) => (I.printLidSt x ascid) :: y) [] set
 

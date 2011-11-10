@@ -69,9 +69,10 @@ signature LONGID = sig
     val diffShort      : Id.set -> set -> set
     val disjShort      : Id.set -> set -> bool
 
-    val toString       : set -> string
-    val toStringOut    : set -> string
-    val toStringList   : set -> Id.assoc -> string list
-    val toStringListSt : set -> Id.assoc -> string
+    val toString        : set -> string
+    val toStringOut     : set -> string
+    val toJsonStringOut : set -> string
+    val toStringList    : set -> Id.assoc -> string list
+    val toStringListSt  : set -> Id.assoc -> string
 
 end

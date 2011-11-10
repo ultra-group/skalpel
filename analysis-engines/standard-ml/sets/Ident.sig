@@ -98,18 +98,20 @@ signature ID = sig
     val inAssoc     : assocOut -> assoc
 
     (* printing functions *)
-    val printId     : id      -> string
-    val printId'    : id      -> assoc  -> string
-    val printIdL    : idl     -> string
-    val printIdL'   : idl     -> assoc  -> string
-    val printLid    : lid     -> string
-    val printLid'   : lid     -> assoc  -> string
-    val printLidSt  : lid     -> assoc  -> string
-    val printIdList : id list -> string
-    val printLidOut : lid     -> string
-    val toString    : set     -> string
-    val printAssoc  : assoc   -> string
-    val printAssoc' : assoc   -> string
+    val printId        : id      -> string
+    val printId'       : id      -> assoc  -> string
+    val printIdL       : idl     -> string
+    val printIdL'      : idl     -> assoc  -> string
+    val printLid       : lid     -> string
+    val printLid'      : lid     -> assoc  -> string
+    val printLidSt     : lid     -> assoc  -> string
+    val printIdList    : id list -> string
+    val printLidOut    : lid     -> string
+    val printJsonLidOut    : lid     -> string
+    val toString       : set     -> string
+    val printAssoc     : assoc   -> string
+    val printAssoc'    : assoc   -> string
+    val printJsonAssoc : assoc   -> string
 
     (*
      val consAssoc    : id -> string -> assoc -> assoc

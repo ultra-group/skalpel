@@ -164,7 +164,7 @@ fun printJsonExtReg (L (r, c, w))     =
   | printJsonExtReg (N (r, c, w, tl)) =
     "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ ", \"regionList\": " ^ printJsonExtRegList tl ^ "\n}"
 
-and printJsonExtRegList []         = ""
+and printJsonExtRegList []         = "{}"
   | printJsonExtRegList [t]        = printJsonExtReg t
   | printJsonExtRegList (t :: tl)  = printJsonExtReg t ^ "," ^ printJsonExtRegList tl
 

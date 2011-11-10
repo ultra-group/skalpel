@@ -207,7 +207,7 @@ fun printOneSmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice
 
 fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice basisoverloading =
     let val ll = "\"labels\"      : " ^ "{\"count\": " ^ Int.toString (L.length labs) ^ ", " ^ "\"labelNumbers\": " ^ L.toString labs ^ "}"
-	val cd = "\"assumptions\" : {" ^ CD.toStringOut deps ^ "}"
+	val cd = "\"assumptions\" : " ^ CD.toJsonStringOut deps
 	val ek = "\"kind\"        : " ^ EK.printJsonErrKind ek
 	val tm = "\"time\"        : " ^ LargeInt.toString time
 	val id = "\"identifier\"  : " ^ Int.toString id
