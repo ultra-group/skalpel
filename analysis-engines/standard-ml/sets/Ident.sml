@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -209,7 +210,7 @@ fun printLidOut lid =
 
 fun printJsonLidOut lid =
     let val (xs, x) = getLidOut lid
-    in "\"lidout\": {\"listgen\": " ^ printlistgen xs printIdLOut ^ ", \"Idl\": " ^ printIdLOut x ^ "}"
+    in "{\"listgen\": " ^ printlistgen xs printIdLOut ^ ", \"Idl\": " ^ printIdLOut x ^ "}"
     end
 
 fun toString set = printsetgen set (fn x => printId x)

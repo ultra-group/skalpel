@@ -158,11 +158,11 @@ and printSmlExtRegList []         = ""
 
 (* prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
 fun printJsonExtReg (L (r, c, w))     =
-    "{\"nodeType\": \"leaf\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ "}\n"
+    "{\"nodeType\": \"leaf\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ "}\n"
   | printJsonExtReg (H (r, c, w))     =
-    "{\"nodeType\": \"head\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ "}\n"
+    "{\"nodeType\": \"head\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ "}\n"
   | printJsonExtReg (N (r, c, w, tl)) =
-    "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": " ^ printColor c ^ ", \"weight\": " ^ Int.toString w ^ ", \"regionList\": " ^ printJsonExtRegList tl ^ "\n}"
+    "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ ", \"regionList\": " ^ printJsonExtRegList tl ^ "\n}"
 
 and printJsonExtRegList []         = "{}"
   | printJsonExtRegList [t]        = printJsonExtReg t
