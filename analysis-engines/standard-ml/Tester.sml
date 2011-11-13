@@ -564,7 +564,7 @@ fun debuggingJSON errl
 		  "}"
         val stg = newsep ^ "\"tyvar\"        : " ^
 		  "{\"nexttyvar\": " ^ Int.toString (T.tyvarToInt (T.gettyvar ()))
-		  ^ ", " ^ I.printJsonAssoc ascid ^ "}"
+		  ^ ", \"ascid\": " ^ I.printJsonAssoc ascid ^ "}"
         val sth = newsep ^ "\"ident\"        : " ^ (I.printJsonAssoc ascid)
 	val sti = newsep ^ "\"constraint\"   : " ^
 		  "{" ^
@@ -1326,12 +1326,10 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
-                  (* PP.silence_compiler (); *)
-		  (* PP.use (getfileerr nb) handle Error => error := NONE; *)
-		  (* PP.unsilence_compiler (); *)
-		  (let val _ = print "mark-1"
-		       val errs1  = getErrors   ()
-		       val _ = print "mark-2"
+                  PP.silence_compiler ();
+		  PP.use (getfileerr nb) handle Error => error := NONE;
+		  PP.unsilence_compiler ();
+		  (let val errs1  = getErrors   ()
 		       val bfinal = getFinal    ()
 		       val tenum1 = getTimeEnum ()
 		       val tcg1   = getTimeCg   ()
