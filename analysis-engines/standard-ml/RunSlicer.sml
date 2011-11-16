@@ -433,7 +433,7 @@ fun smlTesStrArgs strArgs =
     let
 	(* these are the arguments passed to slicerFull *in order* *)
 	val filebas  = ref "../lib/basis.sml"
-	val filein   = ref "test-prog.sml"
+	val filein   = ref ""
 	val filehtml = ref ""
 	val filexml  = ref ""
 	val filesml  = ref ""
@@ -448,6 +448,7 @@ fun smlTesStrArgs strArgs =
 	val dev      = ref ""
 	val bcs      = ref ""
 	val search   = ref ""
+	val runtests = ref false
 	val basisoverloading = ref "1"
 
 	fun printHelp () =
@@ -477,6 +478,8 @@ fun smlTesStrArgs strArgs =
  	  | parse [option] =
 	    if option = "--help" then
 		printHelp ()
+	    else if option = "--check-tests" then
+		(runtests := true; checktests [])
 	    else
 		filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
@@ -519,8 +522,6 @@ fun smlTesStrArgs strArgs =
 	     then bcs:=str
 	     else if option = "--search-space"
 	     then search:=str
-	     else if option = "--check-tests"
-	     then checktests []
 	     else (print ("Unknown option: "^option); raise Fail "Unknown argument fed as input"));
 	     parse tail)
     in
@@ -529,39 +530,42 @@ fun smlTesStrArgs strArgs =
 	then (printHelp ();
 	      raise Fail "No arguments specified.")
 	else
-	(parse split;
+	    (parse split;
 
-	 (* check that the user specified an input file *)
-	 if (!filein = "")
-	 then (print ("Error: No input file specified.");
-	       raise Fail("No input file specified"))
-	 else ();
+	     (* check that the user specified an input file *)
+	     if (!filein = "" andalso !runtests = false)
+	     then (print ("Error: No input file specified.");
+		   raise Fail("No input file specified"))
+	     else
+		 if (!filein = "")
+		 then OS.Process.success (* the user was checking tests *)
+		 else (
+		     (* check that the user specified an output file *)
+		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl)^(!filejson) = ""
+			 andalso !runtests = false)
+		     then (print ("Error: No output files specified.");
+			   raise Fail("No output files specified"))
+		     else ();
 
-	 (* check that the user specified an output file *)
-	 if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl)^(!filejson) = "")
-	 then (print ("Error: No output files specified.");
-	       raise Fail("No output files specified"))
-	 else ();
-
-	(* now all arguments are dereferenced and passed to slicerFull *)
-	slicerFull [!filebas,
-		    !filein,
-		    !filehtml,
-		    !filexml,
-		    !filesml,
-		    !filejson,
-		    !filelisp,
-		    !fileperl,
-		    !basop,
-		    !tlim,
-		    !tab,
-		    !sol,
-		    !min,
-		    !dev,
-		    !bcs,
-		    !search,
-		    !basisoverloading];
-	OS.Process.success)
+		     (* now all arguments are dereferenced and passed to slicerFull *)
+		     slicerFull [!filebas,
+				 !filein,
+				 !filehtml,
+				 !filexml,
+				 !filesml,
+				 !filejson,
+				 !filelisp,
+				 !fileperl,
+				 !basop,
+				 !tlim,
+				 !tab,
+				 !sol,
+				 !min,
+				 !dev,
+				 !bcs,
+				 !search,
+				 !basisoverloading];
+		     OS.Process.success))
     end
     handle Fail _ => OS.Process.failure
 

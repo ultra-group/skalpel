@@ -1,6 +1,5 @@
 (* Copyright 2011 Heriot-Watt University
  *
- *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -14,13 +13,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli, John Pirie
+ *  o Authors:     John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
- *  o Date:        24 May 2010
+ *  o Date:        05 November 2011
  *  o File name:   RunSlicer.sml
- *  o Description: Contains the functions that serve as interface with
- *      the slicer.  The file defines the structure Slicer which has
- *      the signature Slicer.
+ *  o Description: Parses the test answer JSON files
  *)
 
 (****************************************************************************
@@ -32,6 +29,7 @@ signature ParseJSON =
 sig
     val getJSONObject : unit -> JSON.value
     val printMyVariable : JSON.value -> unit
+    val parseTest : unit -> unit
 end
 
 structure ParseJSON : ParseJSON =
@@ -47,6 +45,9 @@ fun printMyVariable (JSON.OBJECT objectlist) =
     in
 	getname (List.hd objectlist)
     end
+
+fun parseTest () =
+    ()
 end;
 
 (* val () = ParseJSON.getJsonObject () *)

@@ -55,6 +55,7 @@ structure EH  = ErrorHandler
 structure ERR = Error
 structure SOL = Solution
 structure CDS = SplaySetFn(OrdStr)
+structure JP  = JsonParser
 
 (* the type which we use to represent a singular error *)
 type oneerror = {labels       : int * int list,
@@ -138,7 +139,8 @@ exception NewerTest             (* The slicer currently uses an older SOL than t
 val sep        = "    "
 val emacstab   = "        "
 
-val testFolder = "../../../../tes/implementation/database"
+(* val testFolder = "../../../../tes/implementation/database" *)
+val testFolder = "../../../testing/analysis-engine-tests/standard-ml"
 val mytempfile = "/tmp/smltes-tmp"
 val myfilebas  = "../../../lib/basis.sml"
 val myfilein   = "test-prog.sml"
@@ -179,7 +181,7 @@ fun getTabSize () = R.getTabSize ()
 fun setTabSize ts = R.setTabSize ts
 
 (* functions to grab code and correct output from the test database *)
-fun getfileerr  nb = testFolder ^ "/test"   ^ Int.toString nb ^ ".sml"
+fun getfileerr  nb = testFolder ^ "/test"   ^ Int.toString nb
 fun getfilecode nb = testFolder ^ "/code"   ^ Int.toString nb ^ ".sml"
 fun getfilehtml nb = testFolder ^ "/output" ^ Int.toString nb ^ ".html"
 
@@ -1004,24 +1006,22 @@ fun mverror nb1 nb2 bforce =
 	     | NoWrite => print "This test cannot be moved\n"
 
 fun getTests _ =
-    let fun stripnb file = String.substring (file, 4, (String.size file) - 8)
+    let fun stripnb file = String.substring (file, 4, (String.size file) - 4)
 	    handle Subscript => raise EH.DeadBranch ""
 	val dir = OS.FileSys.openDir testFolder
 	val b   = ref true
 	val l   = ref (IntListSet.empty)
 	val _   = while !b do case OS.FileSys.readDir dir of
-				  SOME file => (if String.isPrefix "test" file
-						   andalso
-						   String.isSuffix ".sml" file
-						then case Int.fromString (stripnb file) of
+				  SOME file =>  if String.isPrefix "test" file
+						then (case Int.fromString (stripnb file) of
 							 SOME nb => l := IntListSet.add (!l, nb)
-						       | NONE    => ()
-						else ())
+						       | NONE    => ())
+						else ()
 				| NONE => b := false
 	val _   = OS.FileSys.closeDir dir
     in IntListSet.listItems (!l)
     end
-	handle SysErr => (print "problem in reading tests\n"; [])
+	handle SysErr => raise EH.DeadBranch "problem in reading tests\n"
 
 fun printIntervals [] = ""
   | printIntervals ((x, y) :: xs) =
@@ -1194,10 +1194,7 @@ fun compareErrors2 [] [] (true,  id) = ()
     case removeSlice slice ys of
 	(SOME (id', slice', cds', regs'), ys') =>
 	if compareCDS cds cds'
-	then if true (*ER.checkSimRegs regs regs'*) (*ER.checkSameRegs regs regs'*) (* This is too strong *)
-	     then compareErrors2 xs ys' bid
-	     else (D.printdebug2 (ER.printOneRegs regs ^ "\n" ^ ER.printOneRegs regs');
-		   raise RegsTest)
+	then compareErrors2 xs ys' bid
 	else compareErrors2 xs ys' (false, id)
       | (NONE, _)  => raise MissingTest (Int.toString id) (* means new algo is less efficient or at least one error is different *)
 
@@ -1326,9 +1323,10 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
-                  PP.silence_compiler ();
-		  PP.use (getfileerr nb) handle Error => error := NONE;
-		  PP.unsilence_compiler ();
+                  (* PP.silence_compiler (); *)
+		  (* PP.use (getfileerr nb) handle Error => error := NONE; *)
+		  (*error := *) JP.parseTest (getfileerr nb);
+		  (* PP.unsilence_compiler (); *)
 		  (let val errs1  = getErrors   ()
 		       val bfinal = getFinal    ()
 		       val tenum1 = getTimeEnum ()

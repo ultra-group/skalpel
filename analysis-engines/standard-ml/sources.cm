@@ -1,5 +1,5 @@
 (* Copyright 2010 Heriot-Watt University
- *
+ * Copyright 2011 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -37,6 +37,7 @@ Library
   structure ErrorKind
   structure Ppp
   structure SlicerOptArgs
+  structure JsonParser
   (*structure Slicer*)
   (*structure SmlTesDeps*)
   

@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -29,6 +30,8 @@
 
 
 structure Args = SlicerOptArgs (*optional arguments for slicer*)
+
+structure EH = ErrorHandler
 
 fun printArgs args =
     (print ("arguments(" ^ Int.toString (List.length args) ^ "):\n");
@@ -75,7 +78,7 @@ fun slicerGen [] name =
   | slicerGen args name =
     Slicer.smlTesStrArgs (foldr (fn (a,b) => a^" "^b) "" args)
 
-fun slicerpp () = slicerGen (CommandLine.arguments ()) (CommandLine.name ())
+fun slicerpp () = slicerGen (CommandLine.arguments ()) (CommandLine.name ()) handle EH.DeadBranch str => (print ("Error: "^str); OS.Process.failure)
 
 fun slicerPoly () =
     OS.Process.exit (slicerGen (CommandLine.arguments ()) (CommandLine.name ());
