@@ -31,34 +31,6 @@
 
 signature TESTER = sig
 
-    (*(2010-03-04)An error should also contain the id of the error
-     * We should also include the solution used when the error was recorded. *)
-    type error = {errors       : {labels       : int * int list,
-				  assumptions  : LongId.keyOut list,
-				  kind         : ErrorKind.kind,
-				  slice        : string,
-				  time         : LargeInt.int,
-				  identifier   : int,           (* unique identifier of the error, ~1 if can't do that.*)
-				  regions      : ExtReg.regs} list,
-		  time         : {analysis     : LargeInt.int,
-				  enumeration  : LargeInt.int,
-				  minimisation : LargeInt.int,
-				  slicing      : LargeInt.int,
-				  html         : LargeInt.int},
-		  tyvar        : int * Id.assocOut,
-		  ident        : Id.assocOut,
-		  constraint   : {syntactic : int,
-				  top       : int,
-				  total     : int},
-		  labels       : int,
-		  minimisation : bool,
-		  solution     : int,
-		  basis        : int,
-		  timelimit    : LargeInt.int,
-		  labelling    : string,
-		  final        : bool,
-		  name         : string} option ref
-
     type 'a debug = Error.error list ->
 		    AstSML.packs     -> (* the int the next label w.r.t. progs *)
 		    bool        -> (* true if minimiser was called (this not used anymore, because the minimiser is always called now) *)
@@ -179,7 +151,7 @@ signature TESTER = sig
     val setTabSize    : int  -> unit
 
     (**)
-    val error         : error
+    val error         : JsonParser.error
     val myfilebas     : string
     val myfilein      : string
     val myfilehtml    : string

@@ -38,7 +38,6 @@ val webdemo = ref false
 val data_tmp = PP.data_tmp
 
 (* localise Tester functions *)
-val error          = Tester.error
 val myfilein       = Tester.myfilein
 val myfilehtml     = Tester.myfilehtml
 val myfilebas      = Tester.myfilebas

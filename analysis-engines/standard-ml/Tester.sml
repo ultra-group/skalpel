@@ -57,35 +57,8 @@ structure SOL = Solution
 structure CDS = SplaySetFn(OrdStr)
 structure JP  = JsonParser
 
-(* the type which we use to represent a singular error *)
-type oneerror = {labels       : int * int list,
-		 assumptions  : CD.keyOut list,
-		 kind         : EK.kind,
-		 slice        : string,
-		 time         : LargeInt.int,
-		 identifier   : int,
-		 regions      : ER.regs}
-
-(* the type we use to represent the errors in the input program *)
-type error = {errors       : oneerror list,
-	      time         : {analysis     : LargeInt.int,
-			      enumeration  : LargeInt.int,
-			      minimisation : LargeInt.int,
-			      slicing      : LargeInt.int,
-			      html         : LargeInt.int},
-	      tyvar        : int * I.assocOut,
-	      ident        : I.assocOut,
-	      constraint   : {syntactic : int,
-			      top       : int,
-			      total     : int},
-	      labels       : int,
-	      minimisation : bool,
-	      solution     : int,
-	      basis        : int,
-	      timelimit    : LargeInt.int,
-	      labelling    : string,
-              final        : bool,
-	      name         : string} option ref
+type oneerror = JP.oneerror
+type error = JP.error
 
 type 'a debug = ERR.error list ->
 		A.packs        ->
@@ -1323,10 +1296,7 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
-                  (* PP.silence_compiler (); *)
-		  (* PP.use (getfileerr nb) handle Error => error := NONE; *)
-		  (*error := *) JP.parseTest (getfileerr nb);
-		  (* PP.unsilence_compiler (); *)
+		  error := !(JP.parseTest (getfileerr nb));
 		  (let val errs1  = getErrors   ()
 		       val bfinal = getFinal    ()
 		       val tenum1 = getTimeEnum ()

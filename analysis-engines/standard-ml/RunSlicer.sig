@@ -31,8 +31,6 @@
 
 signature SLICER = sig
 
-    val error    : Tester.error
-
     (* As explained in Analyze.sig
      * the integer was before a Boolean and now it is:
      * 0 if we don't want any environemnt
