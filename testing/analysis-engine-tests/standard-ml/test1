@@ -2,7 +2,7 @@
  "errors" :      [{ "identifier"  : 0,
 		    "labels"      : {"count": 1, "labelNumbers": [153]},
 		    "assumptions" : [],
-		    "kind"        : {"errorKind": "ErrorKind.FreeIdent"},
+		    "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
 		    "slice"       : "⟨..foldl..⟩",
 		    "time"        : 7,
 		    "regions"     : [
@@ -15,7 +15,7 @@
 		  {"identifier"  : 1,
 		   "labels"      : {"count": 16, "labelNumbers": [8,9,10,11,39,40,80,81,82,83,93,94,95,169,170,171]},
 		   "assumptions" : [2],
-		   "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"label1": 39, "typename1": 1, "label2": 171, "typename2": 3}},
+		   "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 39, "tnerrTyname1": 1, "tnerrLabel2": 171, "tnerrTyname2": 3}},
 		   "slice"       : "⟨..fun ⟨..⟩ ⟨..⟨..average weight..= ⟨..weight ⟨..⟩..⟩..⟩..⟩..fun ⟨..⟩ ⟨..⟨..find_best weight..= ⟨..average weight..⟩..⟩..⟩..find_best 1..⟩",
 		   "time"        : 56,
 		   "regions"     : [
@@ -38,8 +38,7 @@
 						      {"nodeType": "leaf", "fromLine": 10, "fromColumn": 28, "toLine": 10, "toColumn": 28, "color": "red", "weight": 1},
 						      {"nodeType": "leaf", "fromLine": 11, "fromColumn": 24, "toLine": 11, "toColumn": 37, "color": "red", "weight": 1},
 						      {"nodeType": "leaf", "fromLine": 22, "fromColumn": 24, "toLine": 22, "toColumn": 33, "color": "red", "weight": 1},
-						      {"nodeType": "leaf", "fromLine": 22," fromColumn": 34, "toLine": 22, "toColumn": 34, "color": "purple", "weight": 1}
-				                    ]}
+						      {"nodeType": "leaf", "fromLine": 22, "fromColumn": 34, "toLine": 22, "toColumn": 34, "color": "purple", "weight": 1}]}
 				   ]
 		 }],
  "time"         : {"analysis": 3, "enumeration": 128, "minimisation": 128, "slicing": 128, "html": 128},

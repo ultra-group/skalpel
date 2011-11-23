@@ -308,7 +308,7 @@ fun printSmlLabTyNames []              = ""
 
 fun printJsonLabTyNames []             = ""
   | printJsonLabTyNames [(l, tn)]       = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}"
-  | printJsonLabTyNames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}, " ^ printSmlLabTyNames xs
+  | printJsonLabTyNames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}, " ^ printJsonLabTyNames xs
 
 val transfun = fn #"\n" => ""
 		| #"\\" => "\\\\"
