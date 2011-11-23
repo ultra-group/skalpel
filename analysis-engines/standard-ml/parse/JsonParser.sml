@@ -164,6 +164,27 @@ fun parseTest testfile =
 			(getInt(label), getInt(tyname))::(getTnerrList (JSON.ARRAY(t)))
 		    end
 		  | getTnerrList _ = raise EH.DeadBranch ("Format error with JSON test file (getTnerrList got something other than an array)")
+
+		fun getRecErr (JSON.ARRAY []) = []
+		  | getRecErr (JSON.ARRAY (h::t)) =
+		    let
+			val (label, rest) = getObject h "label"
+			val (str, rest) = getObject h "string"
+		    in
+			(getInt label, getString str)::(getRecErr (JSON.ARRAY t))
+		    end
+		  | getRecErr _ = raise EH.DeadBranch ("Format error with JSON test file (getRecErr got something other than an array)")
+
+		(* for the specerr list part of unmerr *)
+		fun getUnmErr (JSON.ARRAY []) = []
+		  | getUnmErr (JSON.ARRAY (h::t)) =
+		    let
+			val (label, rest) = getObject h "label"
+			val (id, rest) = getObject h "id"
+		    in
+			(getInt label, getInt id)::(getUnmErr (JSON.ARRAY t))
+		    end
+		  | getUnmErr _ = raise EH.DeadBranch ("Format error with JSON test file (getUnmErr got something other than an array)")
 	    in
 		case getString(ek) of
 		    "ErrorKind.Circularity" => EK.Circularity
@@ -208,6 +229,67 @@ fun parseTest testfile =
 			EK.NotGenClash( (getInt(findIdVal errInfo "iderrLabel1"), getInt(findIdVal errInfo "iderrId1")),
 					(getInt(findIdVal errInfo "tnerrLabel2"), getInt(findIdVal errInfo "tnerrTyname2")) )
 		    end
+		  | "ErrorKind.TooGenSig" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.TooGenSig( (getInt(findIdVal errInfo "iderrLabel1"), getInt(findIdVal errInfo "iderrId1")),
+					(getInt(findIdVal errInfo "iderrLabel2"), getInt(findIdVal errInfo "iderrId2")),
+					(getIntArray(findIdVal errInfo "labsList")) )
+		    end
+		  | "ErrorKind.TyFunClash" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.TyFunClash( (getInt(findIdVal errInfo "iderrLabel1"), getInt(findIdVal errInfo "iderrId1")),
+				       (getInt(findIdVal errInfo "tnerrLabel2"), getInt(findIdVal errInfo "tnerrTyname2")) )
+		    end
+		  | "ErrorKind.LabTyClash" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.LabTyClash( getRecErr(findIdVal errInfo "laberr1"), getRecErr(findIdVal errInfo "laberr2"), getRecErr(findIdVal errInfo "laberr3"), getRecErr(findIdVal errInfo "laberr4") )
+		    end
+		  | "ErrorKind.Unmatched" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.Unmatched( (getInt(findIdVal errInfo "specerrLabel"), getInt(findIdVal errInfo "specerrId")),
+				      (getUnmErr (findIdVal errInfo "unmerr")),
+				      (getInt(findIdVal errInfo "unmerrLabel")) )
+		    end
+		  | "ErrorKind.UnbWhere" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.UnbWhere( (getInt(findIdVal errInfo "specerrLabel"), getInt(findIdVal errInfo "specerrId")),
+				     (getUnmErr (findIdVal errInfo "unmerr")),
+				     (getInt(findIdVal errInfo "unmerrLabel")) )
+		    end
+		  | "ErrorKind.MissConsSig" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.MissConsSig( (getInt(findIdVal errInfo "label"), getInt(findIdVal errInfo "id")),
+					(getUnmErr (findIdVal errInfo "unmerr")) )
+		    end
+		  | "ErrorKind.MissConsStr" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.MissConsStr( (getInt(findIdVal errInfo "label"), getInt(findIdVal errInfo "id")),
+					(getUnmErr (findIdVal errInfo "unmerr")) )
+		    end
+		  | "ErrorKind.DatTypClash" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.DatTypClash( getInt(findIdVal errInfo "id"), getInt(findIdVal errInfo "label1"), getInt(findIdVal errInfo "label2") )
+		    end
+		  | "ErrorKind.ConsArgNApp" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.ConsArgNApp( getInt(findIdVal errInfo "label1"), getInt(findIdVal errInfo "label2") )
+		    end
+		  | "ErrorKind.ConsNArgApp" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.ConsArgNApp( getInt(findIdVal errInfo "label1"), getInt(findIdVal errInfo "label2") )
+		    end
+		  | "ErrorKind.NonFlexWhere" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.NonFlexWhere( (getInt(findIdVal errInfo "iderr1Label1"), getInt(findIdVal errInfo "iderr1Id")),
+					 (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id2")) )
+		    end
+		  | "ErrorKind.IllFormedWhere" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.IllFormedWhere( (getInt(findIdVal errInfo "iderr1Label1"), getInt(findIdVal errInfo "iderr1Id")),
+					   (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id2")) )
+		    end
+		  | "ErrorKind.Warning" => EK.Warning(getString(findIdVal rest "warningStr"))
+		  | "ErrorKind.Parsing" => EK.Parsing(getString(findIdVal rest "parsingStr"))
 		  | "ErrorKind.RigidWhere" => EK.RigidWhere
 		  | "ErrorKind.Inclusion"  => EK.Inclusion
 		  | "ErrorKind.AppNotApp"  => EK.AppNotApp
