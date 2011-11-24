@@ -411,11 +411,10 @@ fun errorsToSML [] _ _ _ = ""
     in err ^ ",\n" ^ begsep ^ (errorsToSML xs begsep bslice basisoverloading)
     end
 
-fun errorsToJSON [] _ _ _ _ = ""
-  | errorsToJSON [x] begsep bslice basisoverloading errCount =
+fun errorsToJSON [] _ _ _ = ""
+  | errorsToJSON [x] begsep bslice basisoverloading =
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
-	val err   = "\"error" ^ (Int.toString errCount) ^ "\": "
-		    ^ "{"          ^ id ^ ",\n" ^
+	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
@@ -426,10 +425,9 @@ fun errorsToJSON [] _ _ _ _ = ""
 		    begsep ^ " " ^ re ^ "}"
     in err
     end
-  | errorsToJSON (x :: xs) begsep bslice basisoverloading errCount =
+  | errorsToJSON (x :: xs) begsep bslice basisoverloading =
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
-	val err   = "\"error" ^ (Int.toString errCount) ^ "\": "
-		    ^ " {"          ^ id ^ ",\n" ^
+	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
@@ -438,7 +436,7 @@ fun errorsToJSON [] _ _ _ _ = ""
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
-    in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading (errCount+1))
+    in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading)
     end
 
 
@@ -521,7 +519,7 @@ fun debuggingJSON errl
     let val tmpsep = "      "
 	val newsep = emacstab ^ tmpsep
 	val errsep = emacstab ^ emacstab ^ emacstab ^ tmpsep
-	val str = newsep ^ "\"errors\"       : {" ^ errorsToJSON errl errsep bslice basisoverloading 1 ^ "}"
+	val str = newsep ^ "\"errors\"       : [" ^ errorsToJSON errl errsep bslice basisoverloading ^ "]"
         val stb = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val std = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
         val stu = newsep ^ "\"basis\"        : " ^ Int.toString nenv
@@ -538,9 +536,8 @@ fun debuggingJSON errl
 		  "\"html\": "         ^ Int.toString (Int.fromLarge t5) ^
 		  "}"
         val stg = newsep ^ "\"tyvar\"        : " ^
-		  "{\"nexttyvar\": " ^ Int.toString (T.tyvarToInt (T.gettyvar ()))
-		  ^ ", \"ascid\": " ^ I.printJsonAssoc ascid ^ "}"
-        val sth = newsep ^ "\"ident\"        : " ^ (I.printJsonAssoc ascid)
+		  "{\"tyvar\": " ^ Int.toString (T.tyvarToInt (T.gettyvar ()))
+		  ^ ", \"assoc\": " ^ I.printJsonAssoc ascid ^ "}"
 	val sti = newsep ^ "\"constraint\"   : " ^
 		  "{" ^
 		  "\"total\" : "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
@@ -552,7 +549,6 @@ fun debuggingJSON errl
 		  str ^ ",\n" ^
 		  stf ^ ",\n" ^
 		  stg ^ ",\n" ^
-		  sth ^ ",\n" ^
 		  sti ^ ",\n" ^
 		  stl ^ ",\n" ^
 		  std ^ ",\n" ^

@@ -500,13 +500,13 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
     "{\"errorKindName\": \"ErrorKind.IllFormedWhere\", \"errorKindInfo\": {"
     ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
     ^ "\"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
-  | printJsonErrKind (MultiOcc   eo) = "{\"errorKindName\": \"ErrorKind.MultiOcc, "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (ValVarApp  eo) = "{\"errorKindName\": \"ErrorKind.ValVarApp, "  ^ printJsonAsmpOp eo
-  | printJsonErrKind (ExcIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsVar, "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (ExcIsDat   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsDat, "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (ConIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ConIsVar, "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (DatIsExc   eo) = "{\"errorKindName\": \"ErrorKind.DatIsExc, "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (TyVarBind  eo) = "{\"errorKindName\": \"ErrorKind.TyVarBind, "  ^ printJsonAsmpOp eo
+  | printJsonErrKind (MultiOcc   eo) = "{\"errorKindName\": \"ErrorKind.MultiOcc\", "   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ValVarApp  eo) = "{\"errorKindName\": \"ErrorKind.ValVarApp\", "  ^ printJsonAsmpOp eo
+  | printJsonErrKind (ExcIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsVar\", "   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ExcIsDat   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsDat\", "   ^ printJsonAsmpOp eo
+  | printJsonErrKind (ConIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ConIsVar\", "   ^ printJsonAsmpOp eo
+  | printJsonErrKind (DatIsExc   eo) = "{\"errorKindName\": \"ErrorKind.DatIsExc\", "   ^ printJsonAsmpOp eo
+  | printJsonErrKind (TyVarBind  eo) = "{\"errorKindName\": \"ErrorKind.TyVarBind\", "  ^ printJsonAsmpOp eo
   | printJsonErrKind (Warning    st) = "{\"errorKindName\": \"ErrorKind.Warning\", \"warningStr\": \"" ^ st ^ "\"}"
   | printJsonErrKind (Parsing    st) = "{\"errorKindName\": \"ErrorKind.Parsing\", \"parsingStr\": \"" ^ st ^ "\"}"
   | printJsonErrKind RigidWhere      = "{\"errorKindName\": \"ErrorKind.RigidWhere\"}"

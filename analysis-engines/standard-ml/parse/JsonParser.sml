@@ -131,16 +131,16 @@ fun parseTest testfile =
 			val (color, rest) = getObject rest "color"
 			val (weight, rest) = getObject rest "weight"
 
-			fun getColor "blue"   = ExtReg.Blue
-			  | getColor "red"    = ExtReg.Red
-			  | getColor "purple" = ExtReg.Purple
-			  | getColor "green"  = ExtReg.Green
-			  | getColor "orange" = ExtReg.Orange
-			  | getColor "yellow" = ExtReg.Yellow
-			  | getColor _ = raise EH.DeadBranch ("Format error with JSON test file (getColor got something other than blue, red, purple, green, orange or yellow)")
+			fun getColor "B"   = ExtReg.Blue
+			  | getColor "R"    = ExtReg.Red
+			  | getColor "P" = ExtReg.Purple
+			  | getColor "G"  = ExtReg.Green
+			  | getColor "O" = ExtReg.Orange
+			  | getColor "Y" = ExtReg.Yellow
+			  | getColor other = raise EH.DeadBranch ("Format error with JSON test file (getColor got \"" ^ other ^ "\", which is  something other than B, R, P, G, O or Y)")
 		    in
 			if getString(nodeType) = "node"
-			then ExtReg.N({from=(getInt(fromLine),getInt(fromColumn)),to=(getInt(toLine), getInt(toColumn))}, getColor(getString color), getInt(weight), parseFileRegions(findIdVal rest "regList"))::(parseFileRegions(JSON.ARRAY t))
+			then ExtReg.N({from=(getInt(fromLine),getInt(fromColumn)),to=(getInt(toLine), getInt(toColumn))}, getColor(getString color), getInt(weight), parseFileRegions(findIdVal rest "regionList"))::(parseFileRegions(JSON.ARRAY t))
 			else if getString(nodeType) = "head"
 			then ExtReg.H({from=(getInt(fromLine),getInt(fromColumn)),to=(getInt(toLine), getInt(toColumn))}, getColor(getString color), getInt(weight))::(parseFileRegions(JSON.ARRAY t))
 			else ExtReg.L({from=(getInt(fromLine),getInt(fromColumn)),to=(getInt(toLine), getInt(toColumn))}, getColor(getString color), getInt(weight))::(parseFileRegions(JSON.ARRAY t))
@@ -287,6 +287,48 @@ fun parseTest testfile =
 		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
 			EK.IllFormedWhere( (getInt(findIdVal errInfo "iderr1Label1"), getInt(findIdVal errInfo "iderr1Id")),
 					   (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id2")) )
+		    end
+		  | "ErrorKind.MultiOcc" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.MultiOcc (NONE)
+			else EK.MultiOcc (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.ValVarApp" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.ValVarApp (NONE)
+			else EK.ValVarApp (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.ExcIsVar" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.ExcIsVar (NONE)
+			else EK.ExcIsVar (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.ExcIsDat" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.ExcIsDat (NONE)
+			else EK.ExcIsDat (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.ConIsVar" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.ConIsVar (NONE)
+			else EK.ConIsVar (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.DatIsExc" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.DatIsExc (NONE)
+			else EK.DatIsExc (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+		    end
+		  | "ErrorKind.TyVarBind" =>
+		    let val (errInfo, rest) = getObject rest "asmpOp" in
+			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
+			then EK.TyVarBind (NONE)
+			else EK.TyVarBind (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
 		    end
 		  | "ErrorKind.Warning" => EK.Warning(getString(findIdVal rest "warningStr"))
 		  | "ErrorKind.Parsing" => EK.Parsing(getString(findIdVal rest "parsingStr"))
