@@ -62,30 +62,6 @@ function cmtomlb {
 	echo
 	echo "converting ${cmfile} to ${mlbfile}..."
 
-        # We add the copyright/license statements in the mlb file
-	echo "(* Copyright 2010 Heriot-Watt University"                                >  ${mlbfile}
-	echo " *"                                                                      >> ${mlbfile}
-	echo " *"                                                                      >> ${mlbfile}
-	echo " * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -"      >> ${mlbfile}
-	echo " * a Type Error Slicer for Standard ML written by the ULTRA Group of"    >> ${mlbfile}
-	echo " * Heriot-Watt University, Edinburgh."                                   >> ${mlbfile}
-	echo " *"                                                                      >> ${mlbfile}
-	echo " * SMLTES is a free software: you can redistribute it and/or modify"     >> ${mlbfile}
-	echo " * it under the terms of the GNU General Public License as published by" >> ${mlbfile}
-	echo " * the Free Software Foundation, either version 3 of the License, or"    >> ${mlbfile}
-	echo " * (at your option) any later version."                                  >> ${mlbfile}
-	echo " *"                                                                      >> ${mlbfile}
-	echo " * SMLTES is distributed in the hope that it will be useful,"            >> ${mlbfile}
-	echo " * but WITHOUT ANY WARRANTY; without even the implied warranty of"       >> ${mlbfile}
-	echo " * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"        >> ${mlbfile}
-	echo " * GNU General Public License for more details."                         >> ${mlbfile}
-	echo " *"                                                                      >> ${mlbfile}
-	echo " * You should have received a copy of the GNU General Public License"    >> ${mlbfile}
-	echo " * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>."      >> ${mlbfile}
-	echo " *)"                                                                     >> ${mlbfile}
-	echo                                                                           >> ${mlbfile}
-	echo                                                                           >> ${mlbfile}
-
         # We add the SML/NJ libraries to the mlb file
 	echo "local"                                             >> ${mlbfile}
 	echo                                                     >> ${mlbfile}

@@ -214,8 +214,8 @@ fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslic
 	val sl = "\"slice\"       : " ^ "\"" ^ transfun2 (S.printSlice sl bslice) ^ "\""
     in (id, ll, cd, ek, tm, sl,
        (if basisoverloading = 0
-       then "\"regions\"     : " ^ "{" ^ ER.printJsonExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs ) 1 ^ "}"
-       else "\"regions\"     : " ^ "{" ^ ER.printJsonExtRegs regs 1 ^ "}"))
+       then "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs ) ^ "]"
+       else "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs regs ^ "]"))
     end
 
 

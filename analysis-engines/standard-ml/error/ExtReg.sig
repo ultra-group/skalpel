@@ -59,7 +59,7 @@ signature EXTREG = sig
 
     val printOneRegs     : regs -> string
     val printSmlExtRegs  : regs -> string
-    val printJsonExtRegs : regs -> int -> string
+    val printJsonExtRegs : regs -> string
     val printLispExtRegs : regs -> string
     val printPerlExtRegs : regs -> string
 

@@ -447,11 +447,11 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (TyConsClash ((l1, tn1), (l2, tn2))) =
     "{\"errorKindName\": \"ErrorKind.TyConsClash\", \"errorKindInfo\": {"
     ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
   | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.NotGenClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
   | printJsonErrKind (TooGenSig ((l1, id), (l2, tv), labs)) =
     "{\"errorKindName\": \"ErrorKind.TooGenSig\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString id
@@ -460,7 +460,7 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (TyFunClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.TyFunClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
   | printJsonErrKind (LabTyClash (ll1, ll2, ll3, ll4)) =
     "{\"errorKindName\": \"ErrorKind.LabTyClash\", \"errorKindInfo\": {"
     ^ "\"laberr1\": [" ^ printJsonLabErr ll1 ^ "], \"laberr2\": [" ^ printJsonLabErr ll2 ^ "], "

@@ -164,7 +164,7 @@ fun printJsonExtReg (L (r, c, w))     =
   | printJsonExtReg (N (r, c, w, tl)) =
     "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ ", \"regionList\": [" ^ printJsonExtRegList tl ^ "]}"
 
-and printJsonExtRegList []         = "{}"
+and printJsonExtRegList []         = ""
   | printJsonExtRegList [t]        = printJsonExtReg t
   | printJsonExtRegList (t :: tl)  = printJsonExtReg t ^ "," ^ printJsonExtRegList tl
 
@@ -177,12 +177,11 @@ fun printSmlExtRegs [] = ""
     "," ^ printSmlExtRegs xs
 
 (* prints extended regions to be used with the JSON format *)
-fun printJsonExtRegs [] _ = ""
-  | printJsonExtRegs [(file, regs)] counter =
-    "\"fileName"^(Int.toString counter)^"\": \"" ^ file ^ "\", \"fileRegions"^(Int.toString counter)^"\": [" ^ printJsonExtRegList regs ^ "]"
-  | printJsonExtRegs ((file, regs) :: xs) counter =
-    "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])" ^
-    "," ^ printSmlExtRegs xs
+fun printJsonExtRegs [] = ""
+  | printJsonExtRegs [(file, regs)] =
+    "{\"fileName\": \"" ^ file ^ "\", \"regionList\": [" ^ printJsonExtRegList regs ^ "]}"
+  | printJsonExtRegs ((file, regs) :: xs) =
+    "{\"fileName\": \"" ^ file ^ "\", \"regionList\": [" ^ printJsonExtRegList regs ^ "]}, "^(printJsonExtRegs xs)
 
 fun printLispExtReg (L (r, c, w))     = "(L " ^ R.printLispReg r ^ " " ^ printColor c ^ ")"
   | printLispExtReg (H (r, c, w))     = "(H " ^ R.printLispReg r ^ " " ^ printColor c ^ ")"
