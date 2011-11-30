@@ -293,9 +293,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;(defvar skalpel-first t)
-
-
 (defvar skalpel-fake-lines 0 "Variable to keep track of the number lines added to the file being sliced")
 
 ;; Variable to keep track of the number of errors found by skalpel
@@ -699,12 +696,10 @@ value nil.")
 	  ;; Highlight the slice
           ;; *** pass these as separate arguments!!!
 	  (skalpel-highlight-slice (cons regs (cons (skalpel-format-slice-info slice assumptions kind) (cons id nil))))
-	  ;; ;; foucs the first slice
-	  ;; (if skalpel-first
-	  ;;     (skalpel-next-slice)
-	  ;;     (skalpel-next-slice)
-	  ;;     )
-	  ;; (setq skalpel-first nil)
+
+	  ;; foucs the first slice
+	  (skalpel-next-slice-by-id 0)
+
 	  ;; Some slices may require some other slices to be removed (slices that are two or more minimal slices merged)
 	  (when (not (equal 0 (safe-length remove)))
 	    ;; Remove all of the slices that are no longer needed
