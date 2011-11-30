@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [4, 5, 6, 14] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 4, "tnerrTyname1": 1, "tnerrLabel2": 14, "tnerrTyname2": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 = 〚..f of 〚..〛..〛..〛..val 〚..〚..f..〛 = 〚..〛..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 14, "toLine": 1, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 16, "toLine": 1, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 5, "toLine": 2, "toColumn": 5, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 7, "toLine": 2, "toColumn": 7, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 6, "enumeration": 7, "minimisation": 7, "slicing": 7, "html": 13},
+"tyvar"        : {"tyvar": 30, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "f"},{"id": 2, "str": "int"},{"id": 3, "str": "g"}],
+"constraint"   : {"total": 35, "top": 1, "syntactic": 0},
+"labels"       : 20,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {{f,6},5} {of,4} {{{,10} {int,9},8},7} | {g,11};val {{f,14},13} {=,12} {{fn,16} {_,18} {=>,17}{{g,20},19},15};",
+"final"        : true,
+"name"         : "98"
+}

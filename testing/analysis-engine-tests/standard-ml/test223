@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 42, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "C"},{"id": 2, "str": "f"},{"id": 3, "str": "x"},{"id": 4, "str": "y"},{"id": 5, "str": "+"}],
+"constraint"   : {"total": 44, "top": 1, "syntactic": 0},
+"labels"       : 31,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{datatype {,3} {t,2} {=,1} {C,4} fun {,5} {{{{f,10} {{x,12},11},9},8} {=,7} {{({{{x,17} {C,18},16},15},{{{x,21} {y,22},20},19}),14},13},6} val {,23} {_,25} {=,24} {{{y,29},28}{+,27}{{1,31},30},26};,database/code223.sml}",
+"final"        : true,
+"name"         : "223"
+}

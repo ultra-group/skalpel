@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 15, "labelNumbers": [1, 2, 3, 4, 5, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 23, "tnerrTyname1": 5, "tnerrLabel2": 17, "tnerrTyname2": 3}},
+                               "time"        : ~1,
+                               "slice"       : "(fn 〚..〛) 〚..〛;〚..1 :: it..true :: it..〛",
+                               "assumptions" : [0],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 11, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 1, "fromColumn": 13, "toLine": 1, "toColumn": 14, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 15, "toLine": 1, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 2, "toLine": 2, "toColumn": 2, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 3, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 14, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 15, "toLine": 2, "toColumn": 20, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 10},
+"tyvar"        : {"tyvar": 94, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "x"}],
+"constraint"   : {"total": 41, "top": 1, "syntactic": 0},
+"labels"       : 25,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{({{fn,5} {{x,8},7} {=>,6}{{x,10},9},4}),3} {[],11},2};,1};{{({{{1,17},16}{::,15}{{it,19},18},14},{{{true,23},22}{::,21}{{it,25},24},20}),13};,12};",
+"final"        : true,
+"name"         : "175"
+}

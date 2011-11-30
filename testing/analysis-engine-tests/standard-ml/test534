@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 57, "assoc": [{"id": 1, "str": "t"},{"id": 2, "str": "'a"},{"id": 3, "str": "int"},{"id": 4, "str": "X"},{"id": 5, "str": "f"},{"id": 6, "str": "g"},{"id": 7, "str": "x"}]},
+"ident"        : [{"id": 1, "str": "t"},{"id": 2, "str": "'a"},{"id": 3, "str": "int"},{"id": 4, "str": "X"},{"id": 5, "str": "f"},{"id": 6, "str": "g"},{"id": 7, "str": "x"}],
+"constraint"   : {"total": 62, "top": 62, "syntactic": 0},
+"labels"       : 64,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "534"
+}

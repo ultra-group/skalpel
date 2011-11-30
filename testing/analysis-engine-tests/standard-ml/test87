@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [3] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..Env..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code87.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 0, "minimisation": 0, "slicing": 0, "html": 0},
+"tyvar"        : {"tyvar": 5, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "X"},{"id": 2, "str": "Foo"},{"id": 3, "str": "Env"}],
+"constraint"   : {"total": 8, "top": 1, "syntactic": 1},
+"labels"       : 6,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨⟨Env,3⟩.⟨⟨Foo,5⟩.⟨X,6⟩,4⟩,2⟩;,1⟩,/u1/pg/rahli/work/implementation/database/code87.sml⟩",
+"final"        : true,
+"name"         : "free structure"
+}

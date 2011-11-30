@@ -419,7 +419,7 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
 
 fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\"}"
   | printJsonErrKind (Overload ((id, lid), (l, tn), ltns)) =
-    "{\"errorKindName\": \"ErrorKind.Overload\", \"errrorKindInfo\": {"
+    "{\"errorKindName\": \"ErrorKind.Overload\", \"errorKindInfo\": {"
     ^ "\"iderrLabel\": " ^ printLab id ^ ", \"iderrId\": " ^ Int.toString lid
     ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTyname\": " ^ T.printsmltn (T.tynameFromInt tn)
     ^ ", \"tnerrList\": [" ^ printJsonLabTyNames ltns ^ "]}}"
@@ -495,11 +495,11 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (NonFlexWhere ((lab1, id1), (lab2, id2))) =
     "{\"errorKindName\": \"ErrorKind.NonFlexWhere\", \"errorKindInfo\": {"
     ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
-    ^ "\"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
+    ^ ", \"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
   | printJsonErrKind (IllFormedWhere ((lab1, id1), (lab2, id2))) =
     "{\"errorKindName\": \"ErrorKind.IllFormedWhere\", \"errorKindInfo\": {"
     ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
-    ^ "\"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
+    ^ ", \"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
   | printJsonErrKind (MultiOcc   eo) = "{\"errorKindName\": \"ErrorKind.MultiOcc\", "   ^ printJsonAsmpOp eo
   | printJsonErrKind (ValVarApp  eo) = "{\"errorKindName\": \"ErrorKind.ValVarApp\", "  ^ printJsonAsmpOp eo
   | printJsonErrKind (ExcIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsVar\", "   ^ printJsonAsmpOp eo

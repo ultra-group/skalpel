@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 19, "labelNumbers": [1, 2, 3, 4, 6, 7, 10, 11, 12, 15, 17, 18, 19, 20, 21, 23, 24, 27, 28] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyFunClash", "errorKindInfo": {"iderrLabel1": 28, "iderrId1": 53, "tnerrLabel2": 12, "tnerrTyname2": 6}},
+                               "time"        : 12,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..type ⟨..⟩ t = ⟨..⟩ bool..⟩ end..⟩..structure ⟨..⟨..⟩ :> s = struct ⟨..type ⟨..⟨..⟩ t = 'a..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code435.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 26, "toLine": 2, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 31, "toLine": 2, "toColumn": 34, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 36, "toLine": 2, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 27, "toLine": 3, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 34, "toLine": 3, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 39, "toLine": 3, "toColumn": 40, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 42, "toLine": 3, "toColumn": 44, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 27, "minimisation": 27, "slicing": 27, "html": 27},
+"tyvar"        : {"tyvar": 100, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "bool"},{"id": 3, "str": "S"}],
+"constraint"   : {"total": 22, "top": 1, "syntactic": 0},
+"labels"       : 28,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "inconsistent type function in structure/signature"
+}

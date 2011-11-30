@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 25, "labelNumbers": [3, 4, 5, 6, 8, 9, 10, 11, 24, 25, 26, 27, 30, 31, 32, 33, 34, 47, 86, 88, 94, 97, 98, 99, 100] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 98, "tnerrTyname1": 3, "tnerrLabel2": 34, "tnerrTyname2": 6}},
+                               "time"        : 20,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..structure ⟨..Y = struct ⟨..structure ⟨..X = struct ⟨..val ⟨..⟩ ⟨..x = false..⟩..⟩ end..⟩;..⟩ end..⟩;..open ⟨..Y..⟩..⟩ end..⟩;..open ⟨..S..⟩..open ⟨..X..⟩..if ⟨..⟩ then 1 else x..⟩",
+                               "assumptions" : [4],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code450.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 5, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 19, "toLine": 5, "toColumn": 28, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 30, "toLine": 5, "toColumn": 32, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 34, "toLine": 5, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 38, "toLine": 5, "toColumn": 42, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 44, "toLine": 5, "toColumn": 46, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 5, "toLine": 7, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 5, "toLine": 8, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 10, "toLine": 8, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 11, "fromColumn": 1, "toLine": 11, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 14, "fromColumn": 5, "toLine": 14, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 14, "fromColumn": 10, "toLine": 14, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 15, "fromColumn": 5, "toLine": 15, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 15, "fromColumn": 10, "toLine": 15, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 13, "toLine": 17, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 18, "toLine": 17, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 23, "toLine": 17, "toColumn": 23, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 24, "toLine": 17, "toColumn": 30, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 67, "minimisation": 67, "slicing": 67, "html": 67},
+"tyvar"        : {"tyvar": 84, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "Y"},{"id": 3, "str": "A"},{"id": 4, "str": "x"},{"id": 5, "str": "false"},{"id": 6, "str": "X"},{"id": 7, "str": "M"},{"id": 8, "str": "true"},{"id": 9, "str": "m"},{"id": 10, "str": "T"},{"id": 11, "str": "Int"},{"id": 12, "str": "y"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "Y"},{"id": 3, "str": "A"},{"id": 4, "str": "x"},{"id": 5, "str": "false"},{"id": 6, "str": "X"},{"id": 7, "str": "M"},{"id": 8, "str": "true"},{"id": 9, "str": "m"},{"id": 10, "str": "T"},{"id": 11, "str": "Int"},{"id": 12, "str": "y"}],
+"constraint"   : {"total": 53, "top": 53, "syntactic": 0},
+"labels"       : 99,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Chain of opens"
+}

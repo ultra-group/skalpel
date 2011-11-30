@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [1] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "sorry, 'functors' have not been implemented yet"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..functor ⟨..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code292.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 7, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 1, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "F"},{"id": 1, "str": "S"},{"id": 2, "str": "u"},{"id": 3, "str": "+"},{"id": 4, "str": "g"}],
+"constraint"   : {"total": 1, "top": 0, "syntactic": 1},
+"labels"       : 52,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨functor ⟨⟨F,3⟩ (⟨S,4⟩ : ⟨sig ⟨val ⟨⟨⟨u,9⟩,8⟩ : ⟨⟨'a,11⟩,10⟩,7⟩,6⟩;⟨val ⟨⟨⟨+,15⟩,14⟩ : ⟨⟨'a,17⟩,16⟩,13⟩,12⟩ end,5⟩) = ⟨struct ⟨open ⟨S,20⟩,19⟩ val ⟨,21⟩ ⟨⟨_,23⟩ = ⟨⟨let val ⟨,26⟩ ⟨rec⟨⟨⟨g,30⟩,29⟩ = ⟨⟨fn ⟨⟨_,34⟩ => ⟨⟨⟨⟨1,38⟩,37⟩ + ⟨⟨u,40⟩,39⟩,36⟩,35⟩,33⟩,32⟩,31⟩,28⟩,27⟩ in ⟨⟨if ⟨⟨u,44⟩,43⟩ then ⟨⟨⟨g,47⟩ ⟨(),48⟩,46⟩,45⟩ else ⟨⟨⟨g,51⟩ ⟨(),52⟩,50⟩,49⟩,42⟩,41⟩ end,25⟩,24⟩,22⟩ end,18⟩,2⟩,1⟩,/u1/pg/rahli/work/implementation/database/code292.sml⟩",
+"final"        : false,
+"name"         : "292"
+}

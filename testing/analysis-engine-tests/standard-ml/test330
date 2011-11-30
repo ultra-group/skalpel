@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 29, "labelNumbers": [2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 18, 23, 27, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43, 44] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 34, "tnerrTyname1": 3, "tnerrLabel2": 44, "tnerrTyname2": 6}},
+                               "time"        : 12,
+                               "slice"       : "⟨..(**SML-TES-SPEC ⟨..val f : 'a -> ⟨..⟩ -> 'a..⟩*)..fun ⟨..⟩ ⟨..⟨..⟨..⟩..⟨..x..⟩..= ⟨..x (f 1 ⟨..⟩)..x (f true ⟨..⟩)..⟩..⟩..⟩..⟩",
+                               "assumptions" : [2],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code330.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 17, "toLine": 1, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 21, "toLine": 1, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 34, "toLine": 1, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 7, "toLine": 2, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 9, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 17, "toLine": 2, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 18, "toLine": 2, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 22, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 23, "toLine": 2, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 26, "toLine": 2, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 31, "toLine": 2, "toColumn": 34, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 35, "toLine": 2, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 36, "toLine": 2, "toColumn": 36, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 37, "toLine": 2, "toColumn": 37, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 27, "minimisation": 27, "slicing": 27, "html": 27},
+"tyvar"        : {"tyvar": 380, "assoc": [{"id": 0, "str": "'a"},{"id": 1, "str": "'b"}]},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "g"},{"id": 2, "str": "x"},{"id": 3, "str": "true"}],
+"constraint"   : {"total": 46, "top": 1, "syntactic": 0},
+"labels"       : 45,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨SML-TES-SPEC⟨val ⟨⟨⟨f,4⟩,3⟩ : ⟨⟨⟨⟨'a,8⟩,7⟩ -> ⟨⟨⟨⟨'b,12⟩,11⟩ -> ⟨⟨'a,14⟩,13⟩,10⟩,9⟩,6⟩,5⟩,2⟩,1⟩ ⟨fun ⟨,16⟩ ⟨⟨⟨⟨⟨g,21⟩ ⟨⟨x,23⟩,22⟩,20⟩,19⟩ = ⟨⟨(⟨⟨⟨x,28⟩ ⟨(⟨⟨⟨⟨f,33⟩ ⟨1,34⟩,32⟩ ⟨true,35⟩,31⟩,30⟩),29⟩,27⟩,26⟩,⟨⟨⟨x,38⟩ ⟨(⟨⟨⟨⟨f,43⟩ ⟨true,44⟩,42⟩ ⟨1,45⟩,41⟩,40⟩),39⟩,37⟩,36⟩),25⟩,24⟩,18⟩,17⟩,15⟩,/u1/pg/rahli/work/implementation/database/code330.sml⟩",
+"final"        : true,
+"name"         : "error using SML-TES-SPEC"
+}

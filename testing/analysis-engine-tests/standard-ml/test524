@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 5},
+"tyvar"        : {"tyvar": 85, "assoc": [{"id": 1, "str": "s2"},{"id": 2, "str": "key"},{"id": 3, "str": "insert"},{"id": 4, "str": "'a"},{"id": 5, "str": "F"},{"id": 6, "str": "k"},{"id": 7, "str": "x"},{"id": 8, "str": "y"},{"id": 9, "str": "S"},{"id": 10, "str": "int"},{"id": 11, "str": "foo"},{"id": 12, "str": "lab"}]},
+"ident"        : [{"id": 1, "str": "s2"},{"id": 2, "str": "key"},{"id": 3, "str": "insert"},{"id": 4, "str": "'a"},{"id": 5, "str": "F"},{"id": 6, "str": "k"},{"id": 7, "str": "x"},{"id": 8, "str": "y"},{"id": 9, "str": "S"},{"id": 10, "str": "int"},{"id": 11, "str": "foo"},{"id": 12, "str": "lab"}],
+"constraint"   : {"total": 101, "top": 101, "syntactic": 0},
+"labels"       : 112,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Functor, signature and where clause (typable)"
+}

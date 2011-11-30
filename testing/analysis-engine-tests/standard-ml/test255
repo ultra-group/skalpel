@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 68, "assoc": []},
+"ident"        : [{"id": 0, "str": "Z"},{"id": 1, "str": "X"},{"id": 2, "str": "x"},{"id": 3, "str": "w"},{"id": 4, "str": "u"},{"id": 5, "str": "Y"},{"id": 6, "str": "y"}],
+"constraint"   : {"total": 86, "top": 1, "syntactic": 0},
+"labels"       : 79,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{structure {{Z,2} = {struct structure {{X,5} = {struct val {,7} {{x,10},9} {=,8} {{{({{fn,15} {{w,18},17} {=>,16}{{w,20},19},14}),13} {({{fn,23} {{u,26},25} {=>,24}{{u,28},27},22}),21},12},11} end,6},4} structure {{Y,30} = {struct val {,32} {{y,35},34} {=,33} {{{{X,39}.{x,40},38} {1,41},37},36} end,31},29} end,3},1};structure {{X,43} = {struct val {,45} {{x,48},47} {=,46} {{{({{fn,53} {{w,56},55} {=>,54}{{w,58},57},52}),51} {({{fn,61} {{u,64},63} {=>,62}{{u,66},65},60}),59},50},49} end,44},42} structure {{Y,68} = {struct val {,70} {{y,73},72} {=,71} {{{{X,77}.{x,78},76} {1,79},75},74} end,69},67},/u1/pg/rahli/work/implementation/database/code255.sml}",
+"final"        : false,
+"name"         : "255"
+}

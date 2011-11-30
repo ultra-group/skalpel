@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 7, "labelNumbers": [1, 2, 3, 6, 7, 8, 9] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 7, "tnerrTyname1": 2, "tnerrLabel2": 9, "tnerrTyname2": 3}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..〛 : {} = 1..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 7, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 9, "toLine": 2, "toColumn": 10, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 14, "color": "G", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 5},
+"tyvar"        : {"tyvar": 10, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"}],
+"constraint"   : {"total": 11, "top": 1, "syntactic": 0},
+"labels"       : 9,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{{x,5},4}{:,3}{{{},7},6},2} {=,1} {{1,9},8};",
+"final"        : true,
+"name"         : "86"
+}

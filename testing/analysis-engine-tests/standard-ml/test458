@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [8, 9, 13, 14, 17, 22, 23, 24, 25, 26, 27, 41, 42, 43] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 9, "tnerrTyname1": 18, "tnerrLabel2": 14, "tnerrTyname2": 19}},
+                               "time"        : 18,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ t = ⟨..⟩..⟩..datatype ⟨..⟨..⟩ w = ⟨..W..⟩..⟩..datatype ⟨..⟨..⟩ = ⟨..U of ⟨..⟩ t..⟩..⟩..U W..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code458.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 15, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 16, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 3, "toLine": 4, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 14, "toLine": 4, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 15, "toLine": 4, "toColumn": 15, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 16, "toLine": 4, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 19, "toLine": 4, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 3, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 17, "toLine": 5, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 19, "toLine": 5, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 26, "toLine": 5, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 23, "toLine": 6, "toColumn": 25, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 5, "enumeration": 36, "minimisation": 36, "slicing": 36, "html": 36},
+"tyvar"        : {"tyvar": 114, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T"},{"id": 5, "str": "w"},{"id": 6, "str": "W"},{"id": 7, "str": "u"},{"id": 8, "str": "U"},{"id": 9, "str": "f"},{"id": 10, "str": "v"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T"},{"id": 5, "str": "w"},{"id": 6, "str": "W"},{"id": 7, "str": "u"},{"id": 8, "str": "U"},{"id": 9, "str": "f"},{"id": 10, "str": "v"}],
+"constraint"   : {"total": 48, "top": 48, "syntactic": 0},
+"labels"       : 42,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Simple datatype constructor clash"
+}

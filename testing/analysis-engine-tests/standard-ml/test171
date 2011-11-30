@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [4, 5, 6, 24] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 4, "tnerrTyname1": 1, "tnerrLabel2": 24, "tnerrTyname2": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 = 〚..x of 〚..〛..〛..〛..val 〚..〚..x..〛 = 〚..〛..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 16, "toLine": 3, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 8, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 12, "toLine": 5, "toColumn": 12, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 14, "toLine": 5, "toColumn": 14, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 16},
+"tyvar"        : {"tyvar": 55, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "x"},{"id": 2, "str": "int"},{"id": 3, "str": "C"},{"id": 4, "str": "S"},{"id": 5, "str": "u"}],
+"constraint"   : {"total": 39, "top": 1, "syntactic": 0},
+"labels"       : 33,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {{x,6},5} {of,4} {{{,10} {int,9},8},7} | {{C,13},12} {of,11} {{{,17} {int,16},15},14};structure {{S,19} = {sig  end,20} :> {struct val {{x,24},23} {=,22} {{fn,26} {{u,29},28} {=>,27}{{{C,32} {u,33},31},30},25} end,21},18};",
+"final"        : false,
+"name"         : "171"
+}

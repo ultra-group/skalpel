@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 25, "labelNumbers": [8, 9, 10, 11, 13, 14, 16, 17, 18, 21, 22, 23, 24, 25, 26, 36, 37, 38, 39, 40, 65, 66, 72, 73, 74] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 72, "tnerrTyname1": 3, "tnerrLabel2": 18, "tnerrTyname2": 6}},
+                               "time"        : 33,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..type ⟨..⟩ t = ⟨..⟩ bool..val x : ⟨..⟩ t..⟩ end..⟩..structure ⟨..S :> s = ⟨..⟩..⟩;..open ⟨..S..⟩..x + ⟨..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code399.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 28, "toLine": 3, "toColumn": 31, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 33, "toLine": 3, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 37, "toLine": 3, "toColumn": 41, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 43, "toLine": 3, "toColumn": 45, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 1, "toLine": 7, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 6, "toLine": 7, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 9, "toLine": 8, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 11, "toLine": 8, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 4, "enumeration": 73, "minimisation": 73, "slicing": 73, "html": 74},
+"tyvar"        : {"tyvar": 341, "assoc": []},
+"ident"        : [{"id": 0, "str": "y"},{"id": 1, "str": "s"},{"id": 2, "str": "t"},{"id": 3, "str": "bool"},{"id": 4, "str": "x"},{"id": 5, "str": "z"},{"id": 6, "str": "S"},{"id": 7, "str": "true"},{"id": 8, "str": "+"}],
+"constraint"   : {"total": 71, "top": 1, "syntactic": 0},
+"labels"       : 76,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "opening of a structure involving an opaque signature"
+}

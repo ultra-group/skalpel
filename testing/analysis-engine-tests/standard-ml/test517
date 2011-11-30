@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 38, "assoc": [{"id": 1, "str": "s1"},{"id": 2, "str": "t"},{"id": 3, "str": "S1"},{"id": 4, "str": "_S1"},{"id": 5, "str": "s2"},{"id": 6, "str": "g"},{"id": 7, "str": "unit"},{"id": 8, "str": "S2"},{"id": 9, "str": "_S2"},{"id": 10, "str": "s3"},{"id": 11, "str": "f"},{"id": 12, "str": "S3"},{"id": 13, "str": "_S3"}]},
+"ident"        : [{"id": 1, "str": "s1"},{"id": 2, "str": "t"},{"id": 3, "str": "S1"},{"id": 4, "str": "_S1"},{"id": 5, "str": "s2"},{"id": 6, "str": "g"},{"id": 7, "str": "unit"},{"id": 8, "str": "S2"},{"id": 9, "str": "_S2"},{"id": 10, "str": "s3"},{"id": 11, "str": "f"},{"id": 12, "str": "S3"},{"id": 13, "str": "_S3"}],
+"constraint"   : {"total": 55, "top": 55, "syntactic": 0},
+"labels"       : 95,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Opaque signatures"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [12, 13, 14, 26] },
+                               "kind"        : {"errorKindName": "ErrorKind.ValVarApp", "asmpOp": "NONE"},
+                               "time"        : 3,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..c of ⟨..⟩..⟩..⟩..fn ⟨..⟨..c..⟩ => ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code462.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 17, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 15, "toLine": 4, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 18, "toLine": 4, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 20, "toLine": 4, "toColumn": 21, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 9, "minimisation": 9, "slicing": 10, "html": 10},
+"tyvar"        : {"tyvar": 63, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "c"},{"id": 5, "str": "f"},{"id": 6, "str": "g"},{"id": 7, "str": "x"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "c"},{"id": 5, "str": "f"},{"id": 6, "str": "g"},{"id": 7, "str": "x"}],
+"constraint"   : {"total": 40, "top": 40, "syntactic": 0},
+"labels"       : 43,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Applied value variable"
+}

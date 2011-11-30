@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 8, "labelNumbers": [3, 4, 5, 6, 17, 25, 26, 27] },
+                               "kind"        : {"errorKindName": "ErrorKind.Unmatched", "errorKindInfo": {"specerrLabel": 27, "specerrId": 4, "unmerr": [{ "label": 17, "id": 2 }], "unmerrLabel": 0}},
+                               "time"        : 3,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..val ⟨..⟩ ⟨..⟨..x..⟩ = ⟨..⟩..⟩..⟩ end..⟩;..S.y..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code546.sml", "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 11, "toLine": 4, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 35, "toLine": 4, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 39, "toLine": 4, "toColumn": 39, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 41, "toLine": 4, "toColumn": 41, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 46, "toLine": 4, "toColumn": 48, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 8, "minimisation": 8, "slicing": 8, "html": 8},
+"tyvar"        : {"tyvar": 17, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "x"},{"id": 3, "str": "true"},{"id": 4, "str": "y"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "x"},{"id": 3, "str": "true"},{"id": 4, "str": "y"}],
+"constraint"   : {"total": 15, "top": 15, "syntactic": 0},
+"labels"       : 26,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Unmatched error"
+}

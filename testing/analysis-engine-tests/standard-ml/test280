@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 6, "labelNumbers": [1, 2, 3, 11, 40, 41] },
+                               "kind"        : {"errorKindName": "ErrorKind.ConIsVar", "asmpOp": "NONE"},
+                               "time"        : 3,
+                               "slice"       : "⟨..structure ⟨..S :> sig ⟨..val ⟨..C..⟩ : ⟨..⟩..⟩ end = ⟨..⟩..⟩;..val ⟨..⟩ ⟨..⟨..S.C..⟩ = ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code280.sml", "regionList": [{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 13, "toLine": 5, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 16, "toLine": 5, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 12, "toLine": 6, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 16, "toLine": 6, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 18, "toLine": 6, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 1, "toLine": 7, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 5, "toLine": 7, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 1, "toLine": 8, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 6, "toLine": 8, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 13, "toLine": 8, "toColumn": 13, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 4, "enumeration": 17, "minimisation": 17, "slicing": 17, "html": 17},
+"tyvar"        : {"tyvar": 107, "assoc": []},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "t"},{"id": 2, "str": "C"},{"id": 3, "str": "int"},{"id": 4, "str": "x"}],
+"constraint"   : {"total": 39, "top": 1, "syntactic": 0},
+"labels"       : 89,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨structure ⟨⟨S,2⟩ = ⟨sig ⟨type ⟨⟨,7⟩ ⟨t,6⟩,5⟩,4⟩;⟨val ⟨⟨⟨C,11⟩,10⟩ : ⟨⟨⟨⟨⟨,17⟩ ⟨int,16⟩,15⟩,14⟩ -> ⟨⟨⟨,21⟩ ⟨t,20⟩,19⟩,18⟩,13⟩,12⟩,9⟩,8⟩ end,3⟩ :> ⟨struct datatype ⟨⟨,25⟩ ⟨t,24⟩ = ⟨⟨⟨C,28⟩,27⟩ of ⟨⟨⟨,32⟩ ⟨int,31⟩,30⟩,29⟩,26⟩,23⟩ end,22⟩,1⟩;val ⟨,33⟩ ⟨⟨⟨(⟨⟨⟨⟨S,40⟩.⟨C,41⟩,39⟩ ⟨x,42⟩,38⟩,37⟩),36⟩,35⟩ = ⟨⟨⟨⟨S,46⟩.⟨C,47⟩,45⟩ ⟨1,48⟩,44⟩,43⟩,34⟩;structure ⟨⟨S,50⟩ = ⟨sig ⟨datatype ⟨⟨,55⟩ ⟨t,54⟩ = ⟨⟨⟨C,58⟩,57⟩ of ⟨⟨⟨,62⟩ ⟨int,61⟩,60⟩,59⟩,56⟩,53⟩,52⟩ end,51⟩ :> ⟨struct datatype ⟨⟨,66⟩ ⟨t,65⟩ = ⟨⟨⟨C,69⟩,68⟩ of ⟨⟨⟨,73⟩ ⟨int,72⟩,71⟩,70⟩,67⟩,64⟩ end,63⟩,49⟩;val ⟨,74⟩ ⟨⟨⟨(⟨⟨⟨⟨S,81⟩.⟨C,82⟩,80⟩ ⟨x,83⟩,79⟩,78⟩),77⟩,76⟩ = ⟨⟨⟨⟨S,87⟩.⟨C,88⟩,86⟩ ⟨1,89⟩,85⟩,84⟩,75⟩,/u1/pg/rahli/work/implementation/database/code280.sml⟩",
+"final"        : true,
+"name"         : "status clash: variable/constructor"
+}

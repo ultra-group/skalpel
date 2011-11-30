@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [6] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "sorry, 'functors' have not been implemented yet"},
+                               "time"        : ~1,
+                               "slice"       : "",
+                               "assumptions" : [],
+                               "regions"     : []}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 0, "assoc": []},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "F"},{"id": 2, "str": "X"}],
+"constraint"   : {"total": 4, "top": 3, "syntactic": 1},
+"labels"       : 12,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨structure ⟨⟨S,3⟩ = ⟨struct ⟨⟨functor ⟨⟨F,8⟩ (⟨X,9⟩ : ⟨sig  end,10⟩) = ⟨struct ⟨,12⟩ end,11⟩,7⟩,6⟩,5⟩ end,4⟩,2⟩,1⟩,/u1/pg/rahli/work/implementation/database/code321.sml⟩",
+"final"        : false,
+"name"         : "321"
+}

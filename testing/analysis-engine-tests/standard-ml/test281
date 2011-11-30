@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 3, "labelNumbers": [4, 7, 10] },
+                               "kind"        : {"errorKindName": "ErrorKind.ExcIsVar", "asmpOp": {"synerrList": [], "synerrInt": 0}},
+                               "time"        : ~1,
+                               "slice"       : "⟨..val ⟨..⟩ ⟨..⟨..x..⟩ = ⟨..⟩..⟩..exception ⟨..⟨..⟩ = x..⟩..⟩",
+                               "assumptions" : [0],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code281.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 5, "toLine": 2, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 7, "toLine": 2, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 12, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "f"}],
+"constraint"   : {"total": 12, "top": 1, "syntactic": 1},
+"labels"       : 10,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨val ⟨,1⟩ ⟨⟨⟨x,4⟩,3⟩ = ⟨⟨2,6⟩,5⟩,2⟩ exception ⟨⟨⟨f,9⟩,8⟩ = ⟨x,10⟩,7⟩,/u1/pg/rahli/work/implementation/database/code281.sml⟩",
+"final"        : false,
+"name"         : "281"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 10, "labelNumbers": [31, 36, 43, 44, 45, 46, 47, 52, 53, 54] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 47, "tnerrTyname1": 0, "tnerrLabel2": 52, "tnerrTyname2": 3}},
+                               "time"        : 8,
+                               "slice"       : "⟨..fun ⟨..⟩ ⟨..⟨..⟨..⟩..⟨..x..⟩..= ⟨..x : 'a..x + ⟨..⟩..⟩..⟩..⟩..⟩",
+                               "assumptions" : [1],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 7, "toLine": 6, "toColumn": 7, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 9, "toLine": 6, "toColumn": 9, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 23, "toLine": 6, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 27, "toLine": 6, "toColumn": 28, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 38, "toLine": 6, "toColumn": 39, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 40, "toLine": 6, "toColumn": 40, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 4, "enumeration": 17, "minimisation": 17, "slicing": 17, "html": 17},
+"tyvar"        : {"tyvar": 142, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "x"},{"id": 2, "str": "+"}],
+"constraint"   : {"total": 83, "top": 1, "syntactic": 0},
+"labels"       : 65,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{fun {,1} {{{{f,6} {{x,8},7},5},4} {=,3} {{let,10} val {,11} {_,13} {=,12} {{{x,17},16}{:,15}{{'a,19},18},14} in {{(),21},20} end,9},2} val {,22} {_,24} {=,23} {{{f,27} {1,28},26},25} fun {,29} {{{{f,34} {{x,36},35},33},32} {=,31} {{let,38} val {,39} {_,41} {=,40} {{{x,45},44}{:,43}{{'a,47},46},42} val {,48} {_,50} {=,49} {{{x,54},53}{+,52}{{1,56},55},51} in {{(),58},57} end,37},30} val {,59} {_,61} {=,60} {{{f,64} {1,65},63},62};,database/code158.sml}",
+"final"        : false,
+"name"         : "158"
+}

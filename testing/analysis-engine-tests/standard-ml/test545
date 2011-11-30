@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [2, 3, 4, 5, 14, 15, 17, 23, 25, 26, 27, 28, 29, 40] },
+                               "kind"        : {"errorKindName": "ErrorKind.Unmatched", "errorKindInfo": {"specerrLabel": 17, "specerrId": 4, "unmerr": [{ "label": 40, "id": 2 }], "unmerrLabel": 0}},
+                               "time"        : 12,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..val ⟨..y..⟩ : ⟨..⟩..⟩ end..⟩..structure ⟨..⟨..⟩ :> s = struct ⟨..val ⟨..⟩ ⟨..⟨..x..⟩ = ⟨..⟩..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code545.sml", "regionList": [{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 11, "toLine": 6, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 33, "toLine": 6, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 37, "toLine": 6, "toColumn": 37, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 39, "toLine": 6, "toColumn": 39, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 46, "toLine": 6, "toColumn": 48, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 1, "toLine": 7, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 13, "toLine": 7, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 40, "toLine": 7, "toColumn": 42, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 44, "toLine": 7, "toColumn": 44, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 46, "toLine": 7, "toColumn": 46, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 51, "toLine": 7, "toColumn": 53, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 29, "minimisation": 29, "slicing": 29, "html": 29},
+"tyvar"        : {"tyvar": 51, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "x"},{"id": 3, "str": "unit"},{"id": 4, "str": "y"},{"id": 5, "str": "bool"},{"id": 6, "str": "S"},{"id": 7, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "x"},{"id": 3, "str": "unit"},{"id": 4, "str": "y"},{"id": 5, "str": "bool"},{"id": 6, "str": "S"},{"id": 7, "str": "true"}],
+"constraint"   : {"total": 33, "top": 33, "syntactic": 0},
+"labels"       : 41,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Unmatched error"
+}

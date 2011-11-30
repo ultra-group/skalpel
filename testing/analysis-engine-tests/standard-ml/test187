@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 25, "labelNumbers": [3, 4, 5, 6, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 31, 32, 33, 35, 36, 37] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 33, "tnerrTyname1": 3, "tnerrLabel2": 37, "tnerrTyname2": 5}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..f..〛 = u1 〚..〛..〛..val 〚..g = (fn 〚..h => 〚..h :: f..〛..〛)..〛..g 1..g true..〛",
+                               "assumptions" : [0, 1, 3, 4],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 5, "toLine": 1, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 7, "toLine": 1, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 13, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 17, "toLine": 2, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 25, "toLine": 2, "toColumn": 28, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 36, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 42, "toLine": 2, "toColumn": 43, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 44, "toLine": 2, "toColumn": 44, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 47, "toLine": 2, "toColumn": 48, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 49, "toLine": 2, "toColumn": 52, "color": "G", "weight": 1}]}]}],
+"time"         : {"analysis": 5, "enumeration": 29, "minimisation": 29, "slicing": 29, "html": 35},
+"tyvar"        : {"tyvar": 272, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "u1"},{"id": 2, "str": "u2"},{"id": 3, "str": "g"},{"id": 4, "str": "h"}],
+"constraint"   : {"total": 49, "top": 1, "syntactic": 0},
+"labels"       : 37,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{f,3},2} {=,1} {{{u1,6} {u2,7},5},4} val {_,9} {=,8} {{let,11} val {{g,14},13} {=,12} {{({{fn,18} {{h,21},20} {=>,19}{{{h,25},24}{::,23}{{f,27},26},22},17}),16},15} in {{({{{g,32} {1,33},31},30},{{{g,36} {true,37},35},34}),29},28} end,10};",
+"final"        : true,
+"name"         : "187"
+}

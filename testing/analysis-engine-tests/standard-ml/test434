@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 37, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "bool"},{"id": 3, "str": "S1"},{"id": 4, "str": "_typet"},{"id": 5, "str": "f"},{"id": 6, "str": "x"},{"id": 7, "str": "+"}],
+"constraint"   : {"total": 21, "top": 1, "syntactic": 0},
+"labels"       : 50,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "434"
+}

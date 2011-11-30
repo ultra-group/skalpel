@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 28, "labelNumbers": [2, 3, 4, 5, 6, 7, 8, 11, 12, 15, 16, 17, 18, 19, 20, 22, 23, 24, 26, 27, 28, 43, 46, 47, 48, 49, 52, 53] },
+                               "kind"        : {"errorKindName": "ErrorKind.Overload", "errorKindInfo": {"iderrLabel": 0, "iderrId": 0, "tnerrLabel": 53, "tnerrTyname": 0, "tnerrList": [{ "label": 20, "tyname": 3}, { "label": 24, "tyname": 5}, { "label": 28, "tyname": 4}]}},
+                               "time"        : 8,
+                               "slice"       : "⟨..overload + : ⟨..⟩*'a -> ⟨..⟩ with 'a in (⟨..⟩ int,⟨..⟩ real,⟨..⟩ word)..⟨..⟩ + (⟨..⟩ : 'a)..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code336.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 17, "toLine": 1, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 28, "toLine": 1, "toColumn": 40, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 41, "toLine": 1, "toColumn": 43, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 44, "toLine": 1, "toColumn": 45, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 46, "toLine": 1, "toColumn": 49, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 50, "toLine": 1, "toColumn": 51, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 52, "toLine": 1, "toColumn": 55, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 56, "toLine": 1, "toColumn": 56, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 20, "toLine": 3, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 22, "toLine": 3, "toColumn": 23, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 24, "toLine": 3, "toColumn": 24, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 28, "minimisation": 28, "slicing": 28, "html": 28},
+"tyvar"        : {"tyvar": 363, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "+"},{"id": 1, "str": "int"},{"id": 2, "str": "real"},{"id": 3, "str": "word"},{"id": 4, "str": "f"},{"id": 5, "str": "x"},{"id": 6, "str": "y"}],
+"constraint"   : {"total": 110, "top": 1, "syntactic": 0},
+"labels"       : 79,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨overload ⟨⟨+,4⟩,3⟩ : ⟨⟨⟨⟨⟨⟨'a,10⟩,9⟩ * ⟨⟨'a,12⟩,11⟩,8⟩,7⟩ -> ⟨⟨'a,14⟩,13⟩,6⟩,5⟩ with ⟨⟨'a,16⟩,15⟩ in ⟨(⟨⟨⟨,21⟩ ⟨int,20⟩,19⟩,18⟩, ⟨⟨⟨,25⟩ ⟨real,24⟩,23⟩,22⟩, ⟨⟨⟨,29⟩ ⟨word,28⟩,27⟩,26⟩),17⟩,1⟩ ⟨fun ⟨,31⟩ ⟨⟨⟨⟨⟨⟨f,37⟩ ⟨⟨x,39⟩,38⟩,36⟩ ⟨⟨y,41⟩,40⟩,35⟩,34⟩ = ⟨⟨⟨⟨x,45⟩,44⟩ + ⟨⟨(⟨⟨⟨⟨y,51⟩,50⟩ : ⟨⟨'a,53⟩,52⟩,49⟩,48⟩),47⟩,46⟩,43⟩,42⟩,33⟩,32⟩,30⟩ ⟨fun ⟨,55⟩ ⟨⟨⟨⟨⟨⟨f,61⟩ ⟨⟨x,63⟩,62⟩,60⟩ ⟨⟨y,65⟩,64⟩,59⟩,58⟩ = ⟨⟨⟨⟨x,69⟩,68⟩ + ⟨⟨(⟨⟨⟨⟨y,75⟩,74⟩ : ⟨⟨⟨,79⟩ ⟨int,78⟩,77⟩,76⟩,73⟩,72⟩),71⟩,70⟩,67⟩,66⟩,57⟩,56⟩,54⟩,/u1/pg/rahli/work/implementation/database/code336.sml⟩",
+"final"        : true,
+"name"         : "overloading"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [12] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..val ⟨..⟩ ⟨..⟨..T..⟩ = ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code312.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 6, "toLine": 3, "toColumn": 6, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 13, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 18, "assoc": []},
+"ident"        : [{"id": 0, "str": "e"},{"id": 1, "str": "C"},{"id": 2, "str": "T"},{"id": 3, "str": "x"}],
+"constraint"   : {"total": 21, "top": 1, "syntactic": 1},
+"labels"       : 18,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨exception ⟨⟨e,3⟩,2⟩,1⟩ ⟨val ⟨,5⟩ ⟨⟨⟨(⟨⟨⟨⟨T,12⟩.⟨C,13⟩,11⟩ ⟨x,14⟩,10⟩,9⟩),8⟩,7⟩ = ⟨⟨raise ⟨⟨e,18⟩,17⟩,16⟩,15⟩,6⟩,4⟩,/u1/pg/rahli/work/implementation/database/code312.sml⟩",
+"final"        : false,
+"name"         : "312"
+}

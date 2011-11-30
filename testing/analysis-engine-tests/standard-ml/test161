@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 7, "labelNumbers": [14, 18, 19, 20, 22, 23, 24] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 20, "tnerrTyname1": 3, "tnerrLabel2": 24, "tnerrTyname2": 5}},
+                               "time"        : ~1,
+                               "slice"       : "〚..fun 〚..〚..〚..〛..〚..c..〛..= 〚..c 1..c true..〛..〛..〛..〛",
+                               "assumptions" : [2],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 16, "toLine": 3, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 21, "toLine": 3, "toColumn": 21, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 24, "toLine": 3, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 26, "toLine": 3, "toColumn": 29, "color": "G", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 4, "slicing": 4, "html": 12},
+"tyvar"        : {"tyvar": 70, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "f"},{"id": 2, "str": "c"},{"id": 3, "str": "z"}],
+"constraint"   : {"total": 32, "top": 1, "syntactic": 0},
+"labels"       : 28,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{fn,2} {{(),5},4} {=>,3}{{let,7} fun {{{{f,12} {{c,14},13},11},10} {=,9} {{({{{c,19} {1,20},18},17},{{{c,23} {true,24},22},21}),16},15},8} in {{{f,27} {z,28},26},25} end,6};,1};",
+"final"        : true,
+"name"         : "161"
+}

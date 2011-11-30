@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [74] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : 2,
+                               "slice"       : "⟨..⟨..⟩ handle ⟨..⟨..e..⟩ => ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code470.sml", "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 26, "toLine": 4, "toColumn": 31, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 34, "toLine": 4, "toColumn": 34, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 39, "toLine": 4, "toColumn": 40, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 93, "assoc": [{"id": 1, "str": "x"},{"id": 2, "str": "'a"},{"id": 3, "str": "e"},{"id": 4, "str": "Int"},{"id": 5, "str": "+"},{"id": 6, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "x"},{"id": 2, "str": "'a"},{"id": 3, "str": "e"},{"id": 4, "str": "Int"},{"id": 5, "str": "+"},{"id": 6, "str": "true"}],
+"constraint"   : {"total": 96, "top": 96, "syntactic": 0},
+"labels"       : 82,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Exceptions"
+}

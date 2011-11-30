@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 33, "assoc": [{"id": 0, "str": "'a"},{"id": 1, "str": "'b'"}]},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "+"},{"id": 2, "str": "int"},{"id": 3, "str": "a"},{"id": 4, "str": "b"}],
+"constraint"   : {"total": 2, "top": 2, "syntactic": 0},
+"labels"       : 33,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{structure {{S,2} = {sig {val {{+,6} : {{{{{{'a,12},11} * {{'b',14},13},10},9} -> {{{,18} {int,17},16},15},8},7},5},4} end,3} : {struct fun {,20} {{{{+,25} {{({{a,29},28},{{b,31},30}),27},26},24},23} {=,22} {{1,33},32},21} end,19},1},/u1/pg/rahli/work/implementation/database/code265.sml}",
+"final"        : true,
+"name"         : "265"
+}

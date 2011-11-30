@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 13},
+"tyvar"        : {"tyvar": 67, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "Red"},{"id": 2, "str": "trans"},{"id": 3, "str": "x"},{"id": 4, "str": "f"},{"id": 5, "str": "u"},{"id": 6, "str": "o"}],
+"constraint"   : {"total": 57, "top": 1, "syntactic": 0},
+"labels"       : 41,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {{'a,4},3} {t,2} {=,1} {{Red,7},6} {of,5} {{'a,9},8} fun {{{{trans,14} {{({{{Red,19} {x,20},18},17}),16},15},13},12} {=,11} {{{Red,23} {x,24},22},21},10} fun {{{{f,29} {{u,31},30},28},27} {=,26} {{{({{{trans,38},37}{o,36}{{trans,40},39},35}),34} {u,41},33},32},25};",
+"final"        : true,
+"name"         : "128"
+}

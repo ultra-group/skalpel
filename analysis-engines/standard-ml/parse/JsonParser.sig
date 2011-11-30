@@ -52,5 +52,6 @@ sig
 		  final        : bool,
 		  name         : string} option ref
 
+    val debugStatements : int ref
     val parseTest : string -> error
 end

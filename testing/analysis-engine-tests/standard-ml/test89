@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 0, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 5},
+"tyvar"        : {"tyvar": 19, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "u"},{"id": 2, "str": "int"}],
+"constraint"   : {"total": 36, "top": 36, "syntactic": 0},
+"labels"       : 17,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "type {,3} {t,2} {{{{{,10} {int,9},8},7} {u,6},5},4}and{,13} {u,12} {{{,17} {int,16},15},14};",
+"final"        : true,
+"name"         : "89"
+}

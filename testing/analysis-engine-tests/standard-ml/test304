@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 9, "labelNumbers": [1, 2, 3, 7, 13, 15, 16, 17, 22] },
+                               "kind"        : {"errorKindName": "ErrorKind.Unmatched", "errorKindInfo": {"specerrLabel": 7, "specerrId": 1, "unmerr": [{ "label": 22, "id": 4 }], "unmerrLabel": 17}},
+                               "time"        : 2,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..val ⟨..v..⟩ : ⟨..⟩..⟩ end..⟩..structure ⟨..⟨..⟩ : s = struct ⟨..val ⟨..⟩ ⟨..⟨..w..⟩ = ⟨..⟩..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code304.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 15, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 32, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 34, "toLine": 2, "toColumn": 34, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 36, "toLine": 2, "toColumn": 36, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 42, "toLine": 2, "toColumn": 44, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 17, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 43, "toLine": 3, "toColumn": 45, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 47, "toLine": 3, "toColumn": 47, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 49, "toLine": 3, "toColumn": 49, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 53, "toLine": 3, "toColumn": 55, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 6},
+"tyvar"        : {"tyvar": 26, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "v"},{"id": 2, "str": "int"},{"id": 3, "str": "S"},{"id": 4, "str": "w"}],
+"constraint"   : {"total": 19, "top": 1, "syntactic": 0},
+"labels"       : 24,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨signature ⟨⟨s,2⟩ = ⟨sig ⟨val ⟨⟨⟨v,7⟩,6⟩ : ⟨⟨⟨,11⟩ ⟨int,10⟩,9⟩,8⟩,5⟩,4⟩ end,3⟩,1⟩ ⟨structure ⟨⟨S,14⟩ = ⟨⟨s,16⟩,15⟩ : ⟨struct ⟨val ⟨,19⟩ ⟨⟨⟨w,22⟩,21⟩ = ⟨⟨1,24⟩,23⟩,20⟩,18⟩ end,17⟩,13⟩,12⟩,/u1/pg/rahli/work/implementation/database/code304.sml⟩",
+"final"        : false,
+"name"         : "304"
+}

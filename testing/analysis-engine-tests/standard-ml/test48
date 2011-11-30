@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 11},
+"tyvar"        : {"tyvar": 88, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "g"},{"id": 2, "str": "f"}],
+"constraint"   : {"total": 79, "top": 79, "syntactic": 0},
+"labels"       : 30,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{let,2} val {{g,5},4} {=,3} {{fn,7} {_,9} {=>,8}{{(),11},10},6} val {{f,14},13} {=,12} {{fn,16} {_,18} {=>,17}{{g,20},19},15} in {{{{f,24} {({{{f,28} {1,29},27},26}),25},23} {2,30},22},21} end;,1};",
+"final"        : true,
+"name"         : "48"
+}

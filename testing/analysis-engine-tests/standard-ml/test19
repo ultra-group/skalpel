@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 41, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "g"},{"id": 2, "str": "+"},{"id": 3, "str": "u"}],
+"constraint"   : {"total": 38, "top": 1, "syntactic": 0},
+"labels"       : 28,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{let,2} val {,3} rec{{g,6},5} {=,4} {{fn,8} {_,10} {=>,9}{{{1,14},13}{+,12}{{u,16},15},11},7} in {{if,18} {{u,20},19} then {{{g,23} {(),24},22},21} else {{{g,27} {(),28},26},25},17} end;,1},/u1/pg/rahli/work/implementation/database/code19.sml}",
+"final"        : true,
+"name"         : "19"
+}

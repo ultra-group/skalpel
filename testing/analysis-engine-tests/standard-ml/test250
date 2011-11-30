@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 20, "labelNumbers": [2, 3, 4, 5, 23, 24, 25, 26, 28, 30, 31, 32, 33, 34, 36, 37, 38, 52, 53, 54] },
+                               "kind"        : {"errorKindName": "ErrorKind.ArityClash", "errorKindInfo": {"arrerrLabel1": 26, "arrerrId1": 0, "arrerrLabel2": 38, "arrerrId2": 1}},
+                               "time"        : 29,
+                               "slice"       : "⟨..signature ⟨..S = sig ⟨..type 〚〛 u..⟩ end..⟩..structure ⟨..⟨..⟩ : S = struct ⟨..datatype ⟨..〚⟨..⟩〛 t = ⟨..⟩..⟩..datatype u = datatype t..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code250.sml", "regionList": [{"nodeType": "leaf", "fromLine": 14, "fromColumn": 1, "toLine": 14, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 14, "fromColumn": 11, "toLine": 14, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 15, "fromColumn": 1, "toLine": 15, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 5, "toLine": 17, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 9, "toLine": 17, "toColumn": 9, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 17, "fromColumn": 10, "toLine": 17, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 18, "fromColumn": 1, "toLine": 18, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 20, "fromColumn": 1, "toLine": 20, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 20, "fromColumn": 15, "toLine": 20, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 21, "fromColumn": 1, "toLine": 21, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 22, "fromColumn": 1, "toLine": 22, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 22, "fromColumn": 10, "toLine": 22, "toColumn": 11, "color": "P", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 22, "fromColumn": 12, "toLine": 22, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 23, "fromColumn": 1, "toLine": 23, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 23, "fromColumn": 10, "toLine": 23, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 23, "fromColumn": 12, "toLine": 23, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 23, "fromColumn": 14, "toLine": 23, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 23, "fromColumn": 23, "toLine": 23, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 24, "fromColumn": 1, "toLine": 24, "toColumn": 3, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 79, "minimisation": 79, "slicing": 79, "html": 79},
+"tyvar"        : {"tyvar": 455, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T1"},{"id": 5, "str": "int"},{"id": 6, "str": "T2"},{"id": 7, "str": "u"},{"id": 8, "str": "st1"},{"id": 9, "str": "st2"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T1"},{"id": 5, "str": "int"},{"id": 6, "str": "T2"},{"id": 7, "str": "u"},{"id": 8, "str": "st1"},{"id": 9, "str": "st2"}],
+"constraint"   : {"total": 68, "top": 68, "syntactic": 0},
+"labels"       : 62,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Type name arity clash via structures and signatures"
+}

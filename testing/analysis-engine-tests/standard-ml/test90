@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 6, "labelNumbers": [12, 13, 14, 15, 16, 17] },
+                               "kind"        : {"errorKindName": "ErrorKind.ArityClash", "errorKindInfo": {"arrerrLabel1": 14, "arrerrId1": 1, "arrerrLabel2": 17, "arrerrId2": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..〘〘〙 u〙 u..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "node", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "B", "weight": 1, "regionList": [{"nodeType": "head", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 14, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 8},
+"tyvar"        : {"tyvar": 27, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "x"},{"id": 2, "str": "unit"},{"id": 3, "str": "u"}],
+"constraint"   : {"total": 35, "top": 1, "syntactic": 0},
+"labels"       : 17,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{x,4},3}{:,2}{{{{{,10} {unit,9},8},7} -> {{{{{,17} {u,16},15},14} {u,13},12},11},6},5};,1};",
+"final"        : true,
+"name"         : "90"
+}

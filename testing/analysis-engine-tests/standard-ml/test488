@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 35, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "t"},{"id": 4, "str": "u"},{"id": 5, "str": "f"},{"id": 6, "str": "unit"},{"id": 7, "str": "x"},{"id": 8, "str": "S"},{"id": 9, "str": "_structS"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "t"},{"id": 4, "str": "u"},{"id": 5, "str": "f"},{"id": 6, "str": "unit"},{"id": 7, "str": "x"},{"id": 8, "str": "S"},{"id": 9, "str": "_structS"}],
+"constraint"   : {"total": 43, "top": 43, "syntactic": 0},
+"labels"       : 64,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Nested signatures"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 2, "labelNumbers": [5, 7] },
+                               "kind"        : {"errorKindName": "ErrorKind.MultiOcc", "asmpOp": {"synerrList": [], "synerrInt": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..x..x..〛 = 〚..〛..〛..〛",
+                               "assumptions" : [0],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 6, "toLine": 1, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 9, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 5},
+"tyvar"        : {"tyvar": 26, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "+"}],
+"constraint"   : {"total": 26, "top": 25, "syntactic": 1},
+"labels"       : 17,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{({{x,5},4},{{x,7},6}),3},2} {=,1} {{({{{x,13},12}{+,11}{{1,15},14},10},{{x,17},16}),9},8};",
+"final"        : true,
+"name"         : "40"
+}

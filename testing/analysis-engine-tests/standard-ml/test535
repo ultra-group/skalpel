@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 5},
+"tyvar"        : {"tyvar": 87, "assoc": [{"id": 1, "str": "t"},{"id": 2, "str": "T1"},{"id": 3, "str": "T2"},{"id": 4, "str": "int"},{"id": 5, "str": "u"},{"id": 6, "str": "U1"},{"id": 7, "str": "U2"},{"id": 8, "str": "d"},{"id": 9, "str": "x"},{"id": 11, "str": "foo"},{"id": 12, "str": "c"},{"id": 13, "str": "Int"},{"id": 14, "str": "x1"},{"id": 15, "str": "x2"}]},
+"ident"        : [{"id": 1, "str": "t"},{"id": 2, "str": "T1"},{"id": 3, "str": "T2"},{"id": 4, "str": "int"},{"id": 5, "str": "u"},{"id": 6, "str": "U1"},{"id": 7, "str": "U2"},{"id": 8, "str": "d"},{"id": 9, "str": "x"},{"id": 11, "str": "foo"},{"id": 12, "str": "c"},{"id": 13, "str": "Int"},{"id": 14, "str": "x1"},{"id": 15, "str": "x2"}],
+"constraint"   : {"total": 113, "top": 113, "syntactic": 0},
+"labels"       : 95,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Typable program involving value polymorphism"
+}

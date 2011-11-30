@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 24, "labelNumbers": [10, 11, 12, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 46, 47, 48, 49, 50, 52, 53, 55, 56, 57] },
+                               "kind"        : {"errorKindName": "ErrorKind.Circularity"},
+                               "time"        : 25,
+                               "slice"       : "⟨..structure ⟨..S2 = struct ⟨..fun ⟨..⟩ ⟨..⟨..f g = g ⟨..⟩ ⟨..⟩..⟩..⟩..⟩ end..⟩;..fun ⟨..⟩ ⟨..⟨..f ⟨..⟩ = S2.f f..⟩..⟩..⟩",
+                               "assumptions" : [6],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code269.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 16, "toLine": 2, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 36, "toLine": 2, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 40, "toLine": 2, "toColumn": 41, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 42, "toLine": 2, "toColumn": 42, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 42, "toLine": 2, "toColumn": 42, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 43, "toLine": 2, "toColumn": 47, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 48, "toLine": 2, "toColumn": 49, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 50, "toLine": 2, "toColumn": 50, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 51, "toLine": 2, "toColumn": 52, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 54, "toLine": 2, "toColumn": 56, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 44, "toLine": 3, "toColumn": 46, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 48, "toLine": 3, "toColumn": 49, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 3, "fromColumn": 50, "toLine": 3, "toColumn": 50, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 51, "toLine": 3, "toColumn": 59, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 43, "minimisation": 43, "slicing": 43, "html": 43},
+"tyvar"        : {"tyvar": 558, "assoc": []},
+"ident"        : [{"id": 0, "str": "S1"},{"id": 1, "str": "x"},{"id": 2, "str": "true"},{"id": 3, "str": "S2"},{"id": 4, "str": "y"},{"id": 5, "str": "f"},{"id": 6, "str": "g"},{"id": 7, "str": "S3"}],
+"constraint"   : {"total": 65, "top": 1, "syntactic": 0},
+"labels"       : 57,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{unparsable,/u1/pg/rahli/work/tes-implementation}{structure {{S1,2} = {struct val {,4} {{x,7},6} {=,5} {{true,9},8} end,3},1} structure {{S2,11} = {struct val {,13} {{y,16},15} {=,14} {{{S1,19}.{x,20},18},17} fun {,21} {{{{f,26} {{g,28},27},25},24} {=,23} {{{{g,32} {(),33},31} {(),34},30},29},22} end,12},10} structure {{S3,36} = {struct val {,38} {_,40} {=,39} {{{S2,43}.{y,44},42},41} fun {,45} {{{{f,50} {_,51},49},48} {=,47} {{{{S2,55}.{f,56},54} {f,57},53},52},46} end,37},35},/u1/pg/rahli/work/implementation/database/code269.sml}",
+"final"        : true,
+"name"         : "circularity through structure"
+}

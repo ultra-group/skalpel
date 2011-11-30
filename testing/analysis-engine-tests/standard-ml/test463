@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 45, "labelNumbers": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68, 70, 71, 72, 73, 74, 75, 76] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 17, "tnerrTyname1": 19, "tnerrLabel2": 36, "tnerrTyname2": 1}},
+                               "time"        : 87,
+                               "slice"       : "⟨..datatype ⟨..〚'a〛 t = ⟨..U of 'a..⟩..⟩..datatype ⟨..⟨..⟩ t = ⟨..T of ⟨..⟩ t..⟩..⟩..val ⟨..⟩ rec ⟨..g = fn ⟨..⟨..⟩ => ⟨..⟩..⟩..⟩..val ⟨..⟩ rec ⟨..h = fn ⟨..U x => ⟨..T x..⟩..⟩..⟩..h (U g)..⟩",
+                               "assumptions" : [10],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code463.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 3, "toLine": 4, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 14, "toLine": 4, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 17, "toLine": 4, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 19, "toLine": 4, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 26, "toLine": 4, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 3, "toLine": 5, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 7, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 20, "toLine": 5, "toColumn": 21, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 27, "toLine": 6, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 31, "toLine": 6, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 35, "toLine": 6, "toColumn": 40, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 42, "toLine": 6, "toColumn": 47, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 49, "toLine": 6, "toColumn": 51, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 12, "toLine": 7, "toColumn": 18, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 149, "minimisation": 149, "slicing": 149, "html": 150},
+"tyvar"        : {"tyvar": 652, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "U"},{"id": 5, "str": "T"},{"id": 6, "str": "g"},{"id": 7, "str": "v"},{"id": 8, "str": "f"},{"id": 9, "str": "h"},{"id": 10, "str": "x"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "U"},{"id": 5, "str": "T"},{"id": 6, "str": "g"},{"id": 7, "str": "v"},{"id": 8, "str": "f"},{"id": 9, "str": "h"},{"id": 10, "str": "x"}],
+"constraint"   : {"total": 78, "top": 78, "syntactic": 0},
+"labels"       : 75,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Type constructor clash involving the arrow type constructor"
+}

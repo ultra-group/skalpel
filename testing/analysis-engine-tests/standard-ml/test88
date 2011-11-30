@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 6},
+"tyvar"        : {"tyvar": 22, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "x"}],
+"constraint"   : {"total": 21, "top": 1, "syntactic": 0},
+"labels"       : 17,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "fun {{{{f,5} {{x,7},6},4},3} {=,2} {{x,9},8} | {{{f,13} {{x,15},14},12},11} {=,10} {{x,17},16},1};",
+"final"        : false,
+"name"         : "88"
+}

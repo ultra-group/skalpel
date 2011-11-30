@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 21, "labelNumbers": [4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 27, 28, 29, 30, 31, 32] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 26, "tnerrTyname1": 3, "tnerrLabel2": 32, "tnerrTyname2": 2}},
+                               "time"        : 16,
+                               "slice"       : "⟨..functor ⟨..⟨..⟩ (S : sig ⟨..val f : 'a -> 'a..⟩ end) = ⟨..S.f () + ⟨..⟩..⟩..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code472.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 20, "toLine": 3, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 24, "toLine": 3, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 37, "toLine": 3, "toColumn": 40, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 42, "toLine": 3, "toColumn": 42, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 9, "toLine": 4, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 13, "toLine": 4, "toColumn": 14, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 15, "toLine": 4, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 16, "toLine": 4, "toColumn": 16, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 32, "minimisation": 32, "slicing": 32, "html": 32},
+"tyvar"        : {"tyvar": 59, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "+"},{"id": 6, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "+"},{"id": 6, "str": "Int"}],
+"constraint"   : {"total": 23, "top": 23, "syntactic": 0},
+"labels"       : 33,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Type constructor clash through the parameter of a functor"
+}

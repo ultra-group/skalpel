@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 9, "enumeration": 14, "minimisation": 14, "slicing": 14, "html": 14},
+"tyvar"        : {"tyvar": 39, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "t"},{"id": 4, "str": "u"},{"id": 5, "str": "f"},{"id": 6, "str": "unit"},{"id": 7, "str": "x"},{"id": 8, "str": "F"},{"id": 9, "str": "S"},{"id": 10, "str": "G"},{"id": 11, "str": "T"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "t"},{"id": 4, "str": "u"},{"id": 5, "str": "f"},{"id": 6, "str": "unit"},{"id": 7, "str": "x"},{"id": 8, "str": "F"},{"id": 9, "str": "S"},{"id": 10, "str": "G"},{"id": 11, "str": "T"}],
+"constraint"   : {"total": 49, "top": 49, "syntactic": 0},
+"labels"       : 89,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "492"
+}

@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 72, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "f"},{"id": 2, "str": "x"},{"id": 3, "str": "+"},{"id": 4, "str": "y"},{"id": 5, "str": "it"}],
+"constraint"   : {"total": 77, "top": 1, "syntactic": 0},
+"labels"       : 52,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {f,4};fun {,5} {{{{f,10} {{x,12},11},9},8} {=,7} {{{x,16},15}{+,14}{{2,18},17},13},6} val {,19} {{f,22},21} {=,20} {{fn,24} {{{{f,29},28} as {{({{x,33},32},{{y,35},34}),31},30},27},26} {=>,25}{{{{#,{1,41},40} {f,42},39},38}{+,37}{{1,44},43},36},23};{{{f,47} {({{1,50},49},{{2,52},51}),48},46};,45};",
+"final"        : true,
+"name"         : "fun declarations override the status of identifiers"
+}

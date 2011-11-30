@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 25, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "T"},{"id": 6, "str": "int"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "T"},{"id": 6, "str": "int"}],
+"constraint"   : {"total": 31, "top": 31, "syntactic": 0},
+"labels"       : 43,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Typable functor"
+}

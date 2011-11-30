@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [5, 6, 7, 8] },
+                               "kind"        : {"errorKindName": "ErrorKind.ValVarApp", "asmpOp": {"synerrList": [1], "synerrInt": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..T.X 〚..〛..〛 = 〚..〛..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 6, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 1, "fromColumn": 10, "toLine": 1, "toColumn": 10, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 13, "toLine": 1, "toColumn": 13, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 6},
+"tyvar"        : {"tyvar": 9, "assoc": []},
+"ident"        : [{"id": 0, "str": "X"},{"id": 1, "str": "T"}],
+"constraint"   : {"total": 13, "top": 1, "syntactic": 1},
+"labels"       : 11,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{({{{{T,7}.{X,8},6} {2,9},5},4}),3},2} {=,1} {{true,11},10};",
+"final"        : false,
+"name"         : "100"
+}

@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 48, "assoc": []},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "t"},{"id": 2, "str": "st1"},{"id": 3, "str": "int"},{"id": 4, "str": "st2"},{"id": 5, "str": "bool"},{"id": 6, "str": "st1'"},{"id": 7, "str": "st2'"},{"id": 8, "str": "it"}],
+"constraint"   : {"total": 49, "top": 1, "syntactic": 0},
+"labels"       : 75,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "signature {{S,2} = {sig {type {{,7} {t,6},5},4} end,3},1};structure {{st1,9} = {{S,11},10} :> {struct type {,15} {t,14} {{{,19} {int,18},17},16} end,12},8};structure {{st2,21} = {{S,23},22} :> {struct type {,27} {t,26} {{{,31} {bool,30},29},28} end,24},20};structure {{st1',33} = {{S,35},34} : {struct type {,39} {t,38} {{{,43} {int,42},41},40} end,36},32};structure {{st2',45} = {{S,47},46} : {struct type {,51} {t,50} {{{,55} {bool,54},53},52} end,48},44};{{{1,59},58}{:,57}{{{,65} {{st1,63}.{t,64},62},61},60};,56};{{{1,69},68}{:,67}{{{,75} {{st1',73}.{t,74},72},71},70};,66};",
+"final"        : false,
+"name"         : "type constructor clash with signatures sharing the same signature"
+}

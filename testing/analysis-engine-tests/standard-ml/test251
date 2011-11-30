@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 6, "assoc": []},
+"ident"        : [{"id": 0, "str": "S1"},{"id": 1, "str": "t"},{"id": 2, "str": "s1"},{"id": 3, "str": "T"},{"id": 4, "str": "S2"},{"id": 5, "str": "st1"},{"id": 6, "str": "s2"}],
+"constraint"   : {"total": 26, "top": 1, "syntactic": 0},
+"labels"       : 31,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{signature {{S1,2} = {sig {type {{,7} {t,6},5},4} end,3},1};structure {{s1,9} = {struct datatype {,13} {t,12} {=,11} {T,14} end,10},8};signature {{S2,16} = {sig {structure {{st1,20} : {{S1,22},21},19},18} end,17},15};structure {{s2,24} = {{S2,26},25} : {struct structure {{st1,29} = {{s1,31},30},28} end,27},23},/u1/pg/rahli/work/implementation/database/code251.sml}",
+"final"        : true,
+"name"         : "251"
+}

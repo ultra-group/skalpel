@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 15, "labelNumbers": [3, 4, 5, 6, 13, 21, 26, 33, 35, 39, 40, 41, 43, 44, 45] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 41, "tnerrTyname1": 6, "tnerrLabel2": 45, "tnerrTyname2": 3}},
+                               "time"        : 14,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..fun ⟨..⟩ ⟨..⟨..f..= ⟨..⟩..⟩..⟩..val ⟨..⟩ ⟨..⟨..f..⟩ = ⟨..⟩..⟩..⟩ end..⟩;..open ⟨..S..⟩..fn ⟨..⟨..f..⟩ => ⟨..f true..f 1..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code442.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 7, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 3, "toLine": 4, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 7, "toLine": 4, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 9, "toLine": 4, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 6, "toLine": 6, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 9, "toLine": 7, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 12, "toLine": 7, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 14, "toLine": 7, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 18, "toLine": 7, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 20, "toLine": 7, "toColumn": 23, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 26, "toLine": 7, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 28, "toLine": 7, "toColumn": 28, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 25, "minimisation": 25, "slicing": 25, "html": 25},
+"tyvar"        : {"tyvar": 59, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "true"},{"id": 4, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "true"},{"id": 4, "str": "Int"}],
+"constraint"   : {"total": 32, "top": 32, "syntactic": 0},
+"labels"       : 44,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "type constructor clash involving open"
+}

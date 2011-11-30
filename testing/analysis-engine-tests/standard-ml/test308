@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 2, "labelNumbers": [5, 8] },
+                               "kind"        : {"errorKindName": "ErrorKind.MultiOcc", "asmpOp": "NONE"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..T..T..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code308.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 14, "toLine": 1, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 18, "toLine": 1, "toColumn": 18, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 12, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "T"},{"id": 2, "str": "int"}],
+"constraint"   : {"total": 22, "top": 21, "syntactic": 1},
+"labels"       : 12,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨datatype ⟨⟨,4⟩ ⟨t,3⟩ = ⟨T,5⟩ | ⟨⟨⟨T,8⟩,7⟩ of ⟨⟨⟨,12⟩ ⟨int,11⟩,10⟩,9⟩,6⟩,2⟩,1⟩,/u1/pg/rahli/work/implementation/database/code308.sml⟩",
+"final"        : true,
+"name"         : "multi occurrence error in a datatype declaration"
+}

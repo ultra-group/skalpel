@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [2, 3, 4, 5, 8, 9, 10, 11, 12, 26, 28, 34, 35, 36] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 34, "tnerrTyname1": 3, "tnerrLabel2": 12, "tnerrTyname2": 6}},
+                               "time"        : 13,
+                               "slice"       : "⟨..structure ⟨..T = struct ⟨..val ⟨..⟩ ⟨..x = true..⟩..⟩ end..⟩;..open ⟨..T..⟩..x + ⟨..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code407.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 22, "toLine": 2, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 26, "toLine": 2, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 33, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 35, "toLine": 2, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 8, "toLine": 4, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 29, "minimisation": 29, "slicing": 29, "html": 29},
+"tyvar"        : {"tyvar": 114, "assoc": []},
+"ident"        : [{"id": 0, "str": "T"},{"id": 1, "str": "x"},{"id": 2, "str": "true"},{"id": 3, "str": "S"},{"id": 4, "str": "+"}],
+"constraint"   : {"total": 42, "top": 1, "syntactic": 0},
+"labels"       : 38,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "multi opening of structures"
+}

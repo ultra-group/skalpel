@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [31] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : 1,
+                               "slice"       : "⟨..map..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code487.sml", "regionList": [{"nodeType": "leaf", "fromLine": 9, "fromColumn": 11, "toLine": 9, "toColumn": 13, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 51, "assoc": [{"id": 1, "str": "c"},{"id": 2, "str": "String"},{"id": 3, "str": "x"},{"id": 4, "str": "m"},{"id": 5, "str": "f"},{"id": 6, "str": "map"},{"id": 7, "str": "+"},{"id": 8, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "c"},{"id": 2, "str": "String"},{"id": 3, "str": "x"},{"id": 4, "str": "m"},{"id": 5, "str": "f"},{"id": 6, "str": "map"},{"id": 7, "str": "+"},{"id": 8, "str": "Int"}],
+"constraint"   : {"total": 47, "top": 47, "syntactic": 0},
+"labels"       : 51,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Quasiquotations"
+}

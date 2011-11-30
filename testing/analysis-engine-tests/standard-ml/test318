@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 4, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 51, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "e"},{"id": 1, "str": "true"}],
+"constraint"   : {"total": 46, "top": 1, "syntactic": 0},
+"labels"       : 43,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨val ⟨,2⟩ ⟨⟨⟨e,5⟩,4⟩ = ⟨⟨fn ⟨⟨⟨(),10⟩,9⟩ => ⟨⟨let exception ⟨⟨⟨e,15⟩,14⟩ of ⟨⟨'a,17⟩,16⟩,13⟩ in ⟨⟨e,19⟩,18⟩ end,12⟩,11⟩,8⟩,7⟩,6⟩,3⟩,1⟩;⟨val ⟨,21⟩ ⟨⟨_,23⟩ = ⟨⟨raise ⟨⟨⟨⟨e,29⟩ ⟨(),30⟩,28⟩ ⟨1,31⟩,27⟩,26⟩,25⟩,24⟩,22⟩,20⟩;⟨val ⟨,33⟩ ⟨⟨_,35⟩ = ⟨⟨raise ⟨⟨⟨⟨e,41⟩ ⟨(),42⟩,40⟩ ⟨true,43⟩,39⟩,38⟩,37⟩,36⟩,34⟩,32⟩,/u1/pg/rahli/work/implementation/database/code318.sml⟩",
+"final"        : true,
+"name"         : "318"
+}

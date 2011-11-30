@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 26, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "f"}],
+"constraint"   : {"total": 28, "top": 1, "syntactic": 0},
+"labels"       : 21,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{datatype {,3} {t,2} {=,1} {f,4} fun {,5} {{{{f,10} {{f,12},11},9},8} {=,7} {{f,14},13},6} val {,15} {_,17} {=,16} {{{f,20} {1,21},19},18};,database/code80.sml}",
+"final"        : true,
+"name"         : "divergence between SML/NJ and HaMLet"
+}

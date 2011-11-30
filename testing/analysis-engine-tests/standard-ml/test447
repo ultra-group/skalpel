@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 10, "labelNumbers": [8, 21, 24, 26, 30, 31, 32, 34, 35, 36] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 32, "tnerrTyname1": 3, "tnerrLabel2": 36, "tnerrTyname2": 6}},
+                               "time"        : 8,
+                               "slice"       : "⟨..fun ⟨..⟩ ⟨..⟨..f..= ⟨..⟩..⟩..⟩..fn ⟨..⟨..f..⟩ => ⟨..fn ⟨..⟨..f..⟩ => ⟨..f 1..f true..⟩..⟩..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code447.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 5, "toLine": 2, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 10, "toLine": 2, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 9, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 17, "toLine": 3, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 20, "toLine": 3, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 22, "toLine": 3, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 26, "toLine": 3, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 28, "toLine": 3, "toColumn": 28, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 31, "toLine": 3, "toColumn": 32, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 33, "toLine": 3, "toColumn": 36, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 5, "enumeration": 21, "minimisation": 21, "slicing": 21, "html": 21},
+"tyvar"        : {"tyvar": 50, "assoc": [{"id": 1, "str": "f"},{"id": 2, "str": "Int"},{"id": 3, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "f"},{"id": 2, "str": "Int"},{"id": 3, "str": "true"}],
+"constraint"   : {"total": 32, "top": 32, "syntactic": 0},
+"labels"       : 35,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Functions have status value variables"
+}

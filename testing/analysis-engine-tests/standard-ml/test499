@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 7, "labelNumbers": [3, 4, 5, 6, 21, 22, 23] },
+                               "kind"        : {"errorKindName": "ErrorKind.Unmatched", "errorKindInfo": {"specerrLabel": 23, "specerrId": 3, "unmerr": [], "unmerrLabel": 6}},
+                               "time"        : 1,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..⟩ end..⟩;..open ⟨..S.T..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code499.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 21, "toLine": 3, "toColumn": 21, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 22, "toLine": 3, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 6, "toLine": 5, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 8, "toLine": 5, "toColumn": 8, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 6},
+"tyvar"        : {"tyvar": 15, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "T"},{"id": 4, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "T"},{"id": 4, "str": "Int"}],
+"constraint"   : {"total": 15, "top": 15, "syntactic": 0},
+"labels"       : 30,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Opening of an unmatched long structure"
+}

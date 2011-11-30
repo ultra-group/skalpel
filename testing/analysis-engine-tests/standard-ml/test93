@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [1, 4, 9, 10] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 1, "tnerrTyname1": 0, "tnerrLabel2": 9, "tnerrTyname2": 1}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 = 〚..C..〛..〛..val 〚..〚..C 〚..〛..〛 = 〚..〛..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 6, "toLine": 3, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 7, "toLine": 3, "toColumn": 7, "color": "G", "weight": 1},{"nodeType": "node", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 8, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 11, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 8},
+"tyvar"        : {"tyvar": 29, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "C"},{"id": 2, "str": "x"}],
+"constraint"   : {"total": 29, "top": 1, "syntactic": 0},
+"labels"       : 22,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {C,4} val {{({{{C,10} {x,11},9},8}),7},6} {=,5} {{2,13},12} fun {{{{C,18} {{(),20},19},17},16} {=,15} {{(),22},21},14};",
+"final"        : true,
+"name"         : "93"
+}

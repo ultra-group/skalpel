@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 49, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "t"},{"id": 3, "str": "int"},{"id": 4, "str": "bool"},{"id": 5, "str": "Int"},{"id": 6, "str": "S"},{"id": 7, "str": "="}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "t"},{"id": 3, "str": "int"},{"id": 4, "str": "bool"},{"id": 5, "str": "Int"},{"id": 6, "str": "S"},{"id": 7, "str": "="}],
+"constraint"   : {"total": 70, "top": 70, "syntactic": 0},
+"labels"       : 69,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Typable functor application"
+}

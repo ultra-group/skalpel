@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 20, "labelNumbers": [3, 4, 5, 6, 11, 12, 13, 14, 15, 16, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 39, "tnerrTyname1": 3, "tnerrLabel2": 45, "tnerrTyname2": 6}},
+                               "time"        : 12,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..val ⟨..⟩ ⟨..⟨..f..⟩ = (fn ⟨..⟩) ⟨..⟩..⟩..⟩ end..⟩;..S.f 1..S.f true..⟩",
+                               "assumptions" : [2],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code467.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 5, "toLine": 3, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 7, "toLine": 3, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 27, "toLine": 3, "toColumn": 28, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 3, "fromColumn": 29, "toLine": 3, "toColumn": 30, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 10, "toLine": 5, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 14, "toLine": 5, "toColumn": 14, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 17, "toLine": 5, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 21, "toLine": 5, "toColumn": 24, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 29, "minimisation": 29, "slicing": 29, "html": 29},
+"tyvar"        : {"tyvar": 56, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "x"},{"id": 4, "str": "y"},{"id": 5, "str": "Int"},{"id": 6, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "f"},{"id": 3, "str": "x"},{"id": 4, "str": "y"},{"id": 5, "str": "Int"},{"id": 6, "str": "true"}],
+"constraint"   : {"total": 32, "top": 32, "syntactic": 0},
+"labels"       : 44,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Value polymorphism restriction through a structure"
+}

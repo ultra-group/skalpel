@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [54] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "sorry, 'sharing' has not been fully implemented yet"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..⟨..⟩ sharing type ⟨..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code491.sml", "regionList": [{"nodeType": "leaf", "fromLine": 10, "fromColumn": 5, "toLine": 10, "toColumn": 11, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 13, "toLine": 10, "toColumn": 16, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 5},
+"tyvar"        : {"tyvar": 79, "assoc": [{"id": 1, "str": "X"},{"id": 2, "str": "U"},{"id": 3, "str": "t"},{"id": 4, "str": "'a"},{"id": 5, "str": "int"},{"id": 6, "str": "x"},{"id": 7, "str": "Int"},{"id": 8, "str": "V"},{"id": 9, "str": "f"},{"id": 10, "str": "s"},{"id": 11, "str": "unit"},{"id": 12, "str": "F"},{"id": 13, "str": "S"}]},
+"ident"        : [{"id": 1, "str": "X"},{"id": 2, "str": "U"},{"id": 3, "str": "t"},{"id": 4, "str": "'a"},{"id": 5, "str": "int"},{"id": 6, "str": "x"},{"id": 7, "str": "Int"},{"id": 8, "str": "V"},{"id": 9, "str": "f"},{"id": 10, "str": "s"},{"id": 11, "str": "unit"},{"id": 12, "str": "F"},{"id": 13, "str": "S"}],
+"constraint"   : {"total": 91, "top": 90, "syntactic": 1},
+"labels"       : 130,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Nested signatures and type sharing"
+}

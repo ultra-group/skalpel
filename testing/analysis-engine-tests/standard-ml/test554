@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 8, "labelNumbers": [4, 5, 6, 7, 8, 28, 29, 30] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 28, "tnerrTyname1": 3, "tnerrLabel2": 8, "tnerrTyname2": 6}},
+                               "time"        : 5,
+                               "slice"       : "⟨..val ⟨..⟩ ⟨..x = true..⟩..x + ⟨..⟩..⟩",
+                               "assumptions" : [1],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code554.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 5, "toLine": 3, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 9, "toLine": 3, "toColumn": 12, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 13, "minimisation": 13, "slicing": 13, "html": 13},
+"tyvar"        : {"tyvar": 41, "assoc": [{"id": 1, "str": "x"},{"id": 2, "str": "true"},{"id": 3, "str": "y"},{"id": 4, "str": "bool"},{"id": 5, "str": "z"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "x"},{"id": 2, "str": "true"},{"id": 3, "str": "y"},{"id": 4, "str": "bool"},{"id": 5, "str": "z"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"}],
+"constraint"   : {"total": 32, "top": 32, "syntactic": 0},
+"labels"       : 31,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Simple type constructor clash"
+}

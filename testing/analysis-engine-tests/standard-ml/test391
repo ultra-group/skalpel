@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 30, "assoc": [{"id": 0, "str": "'b"}]},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "x"},{"id": 2, "str": "f"},{"id": 3, "str": "p"}],
+"constraint"   : {"total": 39, "top": 1, "syntactic": 0},
+"labels"       : 33,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "explicit type variables"
+}

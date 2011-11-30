@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 20, "labelNumbers": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 32, 38, 39, 40] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 12, "tnerrTyname1": 7, "tnerrLabel2": 40, "tnerrTyname2": 3}},
+                               "time"        : 13,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..exception e of ⟨..⟩ string..⟩ end..⟩..structure ⟨..S :> s = ⟨..⟩..⟩;..open ⟨..S..⟩..e 1..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code495.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 29, "toLine": 2, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 34, "toLine": 2, "toColumn": 39, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 41, "toLine": 2, "toColumn": 43, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 6, "toLine": 4, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 32, "minimisation": 32, "slicing": 33, "html": 33},
+"tyvar"        : {"tyvar": 50, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "e"},{"id": 3, "str": "string"},{"id": 4, "str": "S"},{"id": 5, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "e"},{"id": 3, "str": "string"},{"id": 4, "str": "S"},{"id": 5, "str": "Int"}],
+"constraint"   : {"total": 30, "top": 30, "syntactic": 0},
+"labels"       : 39,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Exception specification"
+}

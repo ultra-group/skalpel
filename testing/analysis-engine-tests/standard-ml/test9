@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 59, "assoc": [{"id": 0, "str": "'a"},{"id": 1, "str": "'b"},{"id": 2, "str": "'c"},{"id": 3, "str": "'d"}]},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "T"},{"id": 2, "str": "C"},{"id": 3, "str": "int"},{"id": 4, "str": "D"},{"id": 5, "str": "u"},{"id": 6, "str": "E"}],
+"constraint"   : {"total": 58, "top": 1, "syntactic": 0},
+"labels"       : 40,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{let,2} datatype {({{'a,7},6}, {{'b,9},8}, {{'c,11},10}, {{'d,13},12}),5} {T,4} {=,3} {{C,16},15} {of,14} {{{{{,22} {int,21},20},19} * {{'c,24},23} * {{'c,26},25} * {{'d,28},27},18},17} | {D,29} and {,32} {u,31} {=,30} {E,33} in {{fn,35} {{D,38},37} {=>,36}{{1,40},39},34} end;,1},/u1/pg/rahli/work/implementation/database/code9.sml}",
+"final"        : true,
+"name"         : "9"
+}

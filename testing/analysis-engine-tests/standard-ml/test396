@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 13, "labelNumbers": [5, 6, 7, 8, 9, 10, 15, 22, 23, 24, 26, 27, 28] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 10, "tnerrTyname1": 6, "tnerrLabel2": 26, "tnerrTyname2": 3}},
+                               "time"        : 5,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..C of ⟨..⟩ bool..⟩..⟩..fun ⟨..⟩ ⟨..⟨..⟨..⟩..⟨..C x..⟩..= ⟨..x + ⟨..⟩..⟩..⟩..⟩..⟩",
+                               "assumptions" : [4],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code396.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 22, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 17, "toLine": 3, "toColumn": 17, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 14, "minimisation": 14, "slicing": 14, "html": 14},
+"tyvar"        : {"tyvar": 67, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "C"},{"id": 2, "str": "bool"},{"id": 3, "str": "f"},{"id": 4, "str": "x"},{"id": 5, "str": "+"}],
+"constraint"   : {"total": 48, "top": 1, "syntactic": 0},
+"labels"       : 30,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "396"
+}

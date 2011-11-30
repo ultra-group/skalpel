@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 20, "assoc": [{"id": 1, "str": "t"},{"id": 2, "str": "int"},{"id": 3, "str": "S"},{"id": 4, "str": "bool"},{"id": 5, "str": "u"},{"id": 6, "str": "X"}]},
+"ident"        : [{"id": 1, "str": "t"},{"id": 2, "str": "int"},{"id": 3, "str": "S"},{"id": 4, "str": "bool"},{"id": 5, "str": "u"},{"id": 6, "str": "X"}],
+"constraint"   : {"total": 54, "top": 54, "syntactic": 0},
+"labels"       : 50,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "type ... and ... syntactic forms in signature"
+}

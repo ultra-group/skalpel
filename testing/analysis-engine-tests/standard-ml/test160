@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 15, "labelNumbers": [2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 11, "tnerrTyname1": 0, "tnerrLabel2": 20, "tnerrTyname2": 3}},
+                               "time"        : 2,
+                               "slice"       : "⟨..structure ⟨..⟨..⟩ :> sig ⟨..val x : 'a..⟩ end = struct ⟨..val ⟨..⟩ ⟨..x = 1..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code160.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 20, "toLine": 2, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 24, "toLine": 2, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 28, "toLine": 2, "toColumn": 29, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 31, "toLine": 2, "toColumn": 42, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 44, "toLine": 2, "toColumn": 46, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 48, "toLine": 2, "toColumn": 51, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 52, "toLine": 2, "toColumn": 52, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 54, "toLine": 2, "toColumn": 56, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 4, "enumeration": 8, "minimisation": 8, "slicing": 8, "html": 9},
+"tyvar"        : {"tyvar": 49, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "x"}],
+"constraint"   : {"total": 2, "top": 2, "syntactic": 0},
+"labels"       : 20,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "too general signature"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [3] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "sorry, 'type realisations' have not been implemented yet"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..⟨..⟩ where type ⟨..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code275.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 34, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 36, "toLine": 2, "toColumn": 39, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 2, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "int"}],
+"constraint"   : {"total": 8, "top": 7, "syntactic": 1},
+"labels"       : 15,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨signature ⟨⟨s,2⟩ = ⟨⟨sig ⟨type ⟨⟨,8⟩ ⟨t,7⟩,6⟩,5⟩ end,4⟩ where type ⟨⟨,11⟩ ⟨t,10⟩ = ⟨⟨⟨,15⟩ ⟨int,14⟩,13⟩,12⟩,9⟩,3⟩,1⟩,/u1/pg/rahli/work/implementation/database/code275.sml⟩",
+"final"        : false,
+"name"         : "275"
+}

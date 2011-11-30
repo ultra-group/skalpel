@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 11, "labelNumbers": [3, 4, 6, 9, 10, 12, 15, 16, 17, 18, 19] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 4, "tnerrTyname1": 11, "tnerrLabel2": 10, "tnerrTyname2": 10}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 t = 〚..T..〛..〛..datatype 〚..〚..〛 u = 〚..U..〛..〛..val 〚..T = U..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 5, "toLine": 2, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 14, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 16, "toLine": 2, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 18, "toLine": 2, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 2, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 13, "toLine": 5, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 15, "toLine": 5, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 6, "toLine": 8, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 10, "toLine": 8, "toColumn": 14, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 11},
+"tyvar"        : {"tyvar": 30, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "t"},{"id": 2, "str": "T"},{"id": 3, "str": "u"},{"id": 4, "str": "U"}],
+"constraint"   : {"total": 43, "top": 43, "syntactic": 0},
+"labels"       : 21,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{let,2} datatype {,5} {t,4} {=,3} {T,6} in {{let,8} datatype {,11} {u,10} {=,9} {U,12} in {{let,14} val {{T,17},16} {=,15} {{U,19},18} in {{(),21},20} end,13} end,7} end;,1};",
+"final"        : true,
+"name"         : "33"
+}

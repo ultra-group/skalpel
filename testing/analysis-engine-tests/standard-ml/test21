@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 3, "labelNumbers": [7, 8, 9] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 7, "tnerrTyname1": 2, "tnerrLabel2": 9, "tnerrTyname2": 4}},
+                               "time"        : ~1,
+                               "slice"       : "〚..true + 〚..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 15, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 16, "toLine": 1, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 17, "toLine": 1, "toColumn": 17, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 7},
+"tyvar"        : {"tyvar": 16, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "+"}],
+"constraint"   : {"total": 18, "top": 18, "syntactic": 0},
+"labels"       : 11,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{fn,2} {{true,5},4} {=>,3}{{{true,9},8}{+,7}{{1,11},10},6};,1};",
+"final"        : true,
+"name"         : "21"
+}

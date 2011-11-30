@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 16, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "+"}],
+"constraint"   : {"total": 19, "top": 1, "syntactic": 0},
+"labels"       : 11,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{0w0,2};,1};val {,3} {_,5} {=,4} {{{0x1,9},8}{+,7}{{1,11},10},6},/u1/pg/rahli/work/implementation/database/code254.sml}",
+"final"        : true,
+"name"         : "254"
+}

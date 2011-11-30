@@ -37,6 +37,9 @@ structure PP = Ppp
 val webdemo = ref false
 val data_tmp = PP.data_tmp
 
+type error = JsonParser.error
+val error : error = Tester.error
+
 (* localise Tester functions *)
 val myfilein       = Tester.myfilein
 val myfilehtml     = Tester.myfilehtml
@@ -179,6 +182,11 @@ fun checktests tests      = Tester.checktests tests
 
 (* run tests in integer list tests with time restriction time *)
 fun runtests   tests timeLimit = Tester.runtests tests timeLimit
+
+(* remove this when test database is converted to json format *)
+
+fun convertErrors currentError newName = Tester.convertErrors currentError newName
+fun generateTests min max = Tester.generateTests min max
 
 (* pass false to get the range of tests (eg [1-565])
  * pass true to see which tests are typeable *)
@@ -451,7 +459,7 @@ fun smlTesStrArgs strArgs =
 	val basisoverloading = ref "1"
 
 	fun printHelp () =
-	    print ("usage: slicer [option ...] FILE \n\
+	    print ("usage: slicer [option ...] [FILE] \n\
 				    \    FILE file taken as input to be sliced\n\
 				    \    -l <file> place output in <file> in lisp format\n\
 				    \    -h <file> place output in <file> in HTML format\n\
@@ -461,10 +469,12 @@ fun smlTesStrArgs strArgs =
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
 				    \    -b <0 / 1 / 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
+				    \    -d <0 | 1 | 2> Set debug print statement depth (higher = more detail)\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
 				    \    -sol <solution> define solution to use (default 9)\n\
 				    \    -min <true/false> if true, shows non-minimal errors\n\
+				    \    --check-tests Run analysis-engine on tests in the current folder\n\
 				    \    --print-env <true/false> whether to print the environment\n\
 				    \    --output <true/false> enable developer mode\n\
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
@@ -505,6 +515,8 @@ fun smlTesStrArgs strArgs =
 	     then fileperl:=str
 	     else if option = "-b"
 	     then basop:=str
+	     else if option = "-d"
+	     then JsonParser.debugStatements := (Option.valOf(Int.fromString (str))) handle _ => raise EH.DeadBranch "Debug argument must be an integer"
 	     else if option = "-bo"
 	     then basisoverloading:=str
 	     else if option = "-t"

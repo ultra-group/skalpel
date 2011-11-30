@@ -58,6 +58,12 @@ type error = {errors       : oneerror list,
               final        : bool,
 	      name         : string} option ref
 
+(* the greater the depth, the more detail the print statemtns give *)
+val debugStatements : int ref = ref 0
+fun printDebug depth str = if (!debugStatements) >= depth
+			   then print ("JsonParser.sml: "^str^"\n")
+			   else ()
+
 fun parseTest testfile =
     let
 	(* accessor methods for the different constructors of JSON.value *)
@@ -91,14 +97,6 @@ fun parseTest testfile =
 	  | getStrArray  (JSON.ARRAY (h::t)) = (getString h::(getStrArray (JSON.ARRAY t)))
 	  | getStrArray      _               = raise EH.DeadBranch ("Format error with JSON test file (getStrArray got something other than an array)")
 
-	fun enumList valueList =
-	    let
-		fun enumListCount n [] = []
-		  | enumListCount n (h::t) = (n,h)::(enumListCount (n+1) t)
-	    in
-		enumListCount 1 valueList
-	    end
-
 	fun getNextObject (JSON.OBJECT([])) = raise EH.DeadBranch ("Format error with JSON test file (no next object)")
 	  | getNextObject (JSON.OBJECT(((id,value)::t))) = (id, value)
 	  | getNextObject _ = raise EH.DeadBranch ("Format error with JSON test file (getNextObject got something other than an object)")
@@ -113,6 +111,10 @@ fun parseTest testfile =
 		else findIdVal (JSON.OBJECT(List.tl object)) id
 	    end
 	  | findIdVal _ _ = raise EH.DeadBranch ("Format error with JSON test file (findIdVal got something other than an object)")
+
+	fun getTyvars    (JSON.ARRAY ([]))   = []
+	  | getTyvars    (JSON.ARRAY (h::t)) = ((getInt(findIdVal h "id"), getString(findIdVal h "str"))::(getTyvars (JSON.ARRAY t)))
+	  | getTyvars    _                   = raise EH.DeadBranch ("Format error with JSON test file (getTyvars got something other than an array)")
 
 	fun parseRegions (JSON.ARRAY []) = []
 	  | parseRegions (JSON.ARRAY(h::t)) =
@@ -159,7 +161,7 @@ fun parseTest testfile =
 		  | getTnerrList (JSON.ARRAY(h::t)) =
 		    let
 			val (label, rest)  = getObject h "label"
-			val (tyname, rest) = getObject h "tyname"
+			val (tyname, rest) = getObject rest "tyname"
 		    in
 			(getInt(label), getInt(tyname))::(getTnerrList (JSON.ARRAY(t)))
 		    end
@@ -169,7 +171,7 @@ fun parseTest testfile =
 		  | getRecErr (JSON.ARRAY (h::t)) =
 		    let
 			val (label, rest) = getObject h "label"
-			val (str, rest) = getObject h "string"
+			val (str, rest) = getObject rest "string"
 		    in
 			(getInt label, getString str)::(getRecErr (JSON.ARRAY t))
 		    end
@@ -180,7 +182,7 @@ fun parseTest testfile =
 		  | getUnmErr (JSON.ARRAY (h::t)) =
 		    let
 			val (label, rest) = getObject h "label"
-			val (id, rest) = getObject h "id"
+			val (id, rest) = getObject rest "id"
 		    in
 			(getInt label, getInt id)::(getUnmErr (JSON.ARRAY t))
 		    end
@@ -280,55 +282,55 @@ fun parseTest testfile =
 		    end
 		  | "ErrorKind.NonFlexWhere" =>
 		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
-			EK.NonFlexWhere( (getInt(findIdVal errInfo "iderr1Label1"), getInt(findIdVal errInfo "iderr1Id")),
-					 (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id2")) )
+			EK.NonFlexWhere( (getInt(findIdVal errInfo "iderr1Label"), getInt(findIdVal errInfo "iderr1Id")),
+					 (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id")) )
 		    end
 		  | "ErrorKind.IllFormedWhere" =>
 		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
-			EK.IllFormedWhere( (getInt(findIdVal errInfo "iderr1Label1"), getInt(findIdVal errInfo "iderr1Id")),
-					   (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id2")) )
+			EK.IllFormedWhere( (getInt(findIdVal errInfo "iderr1Label"), getInt(findIdVal errInfo "iderr1Id")),
+					   (getInt(findIdVal errInfo "iderr2Label"), getInt(findIdVal errInfo "iderr2Id")) )
 		    end
 		  | "ErrorKind.MultiOcc" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.MultiOcc (NONE)
-			else EK.MultiOcc (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.MultiOcc (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.ValVarApp" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.ValVarApp (NONE)
-			else EK.ValVarApp (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.ValVarApp (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.ExcIsVar" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.ExcIsVar (NONE)
-			else EK.ExcIsVar (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.ExcIsVar (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.ExcIsDat" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.ExcIsDat (NONE)
-			else EK.ExcIsDat (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.ExcIsDat (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.ConIsVar" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.ConIsVar (NONE)
-			else EK.ConIsVar (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.ConIsVar (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.DatIsExc" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.DatIsExc (NONE)
-			else EK.DatIsExc (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.DatIsExc (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.TyVarBind" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
 			then EK.TyVarBind (NONE)
-			else EK.TyVarBind (SOME (getIntArray(findIdVal rest "synerrList"), getInt(findIdVal rest "synerrInt")))
+			else EK.TyVarBind (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.Warning" => EK.Warning(getString(findIdVal rest "warningStr"))
 		  | "ErrorKind.Parsing" => EK.Parsing(getString(findIdVal rest "parsingStr"))
@@ -346,30 +348,49 @@ fun parseTest testfile =
 		  | _ => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind)")
 	    end
 
-	fun getErrors (JSON.ARRAY []) = []
-	  | getErrors (JSON.ARRAY(h::t)) = (
+	fun getErrors (JSON.ARRAY []) = (printDebug 1 "finished parsing errors object!"; [])
+	  | getErrors (JSON.ARRAY(h::t)) = (printDebug 2 "parsing errors object. Getting a new error...";
 		{identifier  = getInt(findIdVal h "identifier"),
 		 labels      = (getInt(findIdVal (findIdVal h "labels") "count"), getIntArray(findIdVal(findIdVal h "labels") "labelNumbers")),
                  assumptions = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")), (* first part of tuple always empty list? *)
                  kind        = parseKind (findIdVal h "kind"),
+	    (* jpirie: we want to do it this way but the SML/NJ JSON lexer is broken. To fix! *)
+                 (* slice       = (Option.valOf(String.fromString(getString(findIdVal h "slice"))) *)
+		 (* 		handle _ => raise EH.DeadBranch "Format error with JSON test file (slice malformed)"), *)
                  slice       = getString(findIdVal h "slice"),
                  time        = getIntInf(findIdVal h "time"),
 		 regions     = parseRegions (findIdVal h "regions")}::(getErrors (JSON.ARRAY(t))))
 	  | getErrors _ = raise EH.DeadBranch ("Format error with JSON test file (getErrors got something other than an array)")
 
 	val test = NJJP.parseFile testfile handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^testfile^"\n")
+	val _ = printDebug 1 ("checking top-level objects of json file...")
+	val _ = printDebug 2 ("getting 'errors' object...")
 	val (errorList, test) = getObject test "errors"
+	val _ = printDebug 2 ("getting 'time' object...")
 	val (timeObj, test) = getObject test "time"
+	val _ = printDebug 2 ("getting 'tyvar' object...")
 	val (tyvarObj, test) = getObject test "tyvar"
+	val _ = printDebug 2 ("getting 'ident' object...")
+	val (ident, test) = getObject test "ident"
+	val _ = printDebug 2 ("getting 'constraint' object...")
 	val (constraintObj, test) = getObject test "constraint"
+	val _ = printDebug 2 ("getting 'labels' object...")
 	val (labels, test) = getObject test "labels"
+	val _ = printDebug 2 ("getting 'minimisation' object...")
 	val (minimisation, test) = getObject test "minimisation"
+	val _ = printDebug 2 ("getting 'solution' object...")
 	val (solution, test) = getObject test "solution"
+	val _ = printDebug 2 ("getting 'basis' object...")
 	val (basis, test) = getObject test "basis"
+	val _ = printDebug 2 ("getting 'timelimit' object...")
 	val (timelimit, test) = getObject test "timelimit"
+	val _ = printDebug 2 ("getting 'labelling' object...")
 	val (labelling, test) = getObject test "labelling"
+	val _ = printDebug 2 ("getting final object...")
 	val (final, test) = getObject test "final"
+	val _ = printDebug 2 ("getting 'name' object...")
 	val (name, test) = getObject test "name"
+	val _ = printDebug 1 ("top level json objects correct!")
 
     in
 	ref (SOME {
@@ -380,8 +401,8 @@ fun parseTest testfile =
 			    slicing = getIntInf((findIdVal timeObj "slicing")),
 			    html = getIntInf((findIdVal timeObj "html"))},
 	     tyvar       = (getInt(findIdVal tyvarObj "tyvar"),
-			    enumList(getStrArray(findIdVal tyvarObj "assoc"))),
-	     ident       = enumList(getStrArray(findIdVal tyvarObj "assoc")),
+			    getTyvars(findIdVal tyvarObj "assoc")),
+	     ident       = getTyvars(ident),
 	     constraint = {total = getInt((findIdVal constraintObj "total")),
 			   top = getInt((findIdVal constraintObj "top")),
 			   syntactic = getInt((findIdVal constraintObj "syntactic"))},

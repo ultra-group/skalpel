@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 8},
+"tyvar"        : {"tyvar": 34, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "x"},{"id": 2, "str": "y"}],
+"constraint"   : {"total": 33, "top": 1, "syntactic": 0},
+"labels"       : 26,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "fun {{{{f,5} {{x,7},6},4},3} {=,2} {{let,9} val {{y,12},11} {=,10} {{{x,16},15}{:,14}{{'a,18},17},13} in {{(),20},19} end,8},1} val {_,22} {=,21} {{{f,25} {1,26},24},23};",
+"final"        : false,
+"name"         : "159"
+}

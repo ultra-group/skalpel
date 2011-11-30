@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 17, "labelNumbers": [26, 27, 28, 29, 30, 31, 32, 37, 38, 39, 40, 41, 42, 43, 50, 51, 52] },
+                               "kind"        : {"errorKindName": "ErrorKind.Overload", "errorKindInfo": {"iderrLabel": 0, "iderrId": 0, "tnerrLabel": 52, "tnerrTyname": 3, "tnerrList": [{ "label": 43, "tyname": 6}]}},
+                               "time"        : 15,
+                               "slice"       : "⟨..overload f : 'a -> ⟨..⟩ with 'a in (⟨..⟩ bool)..f 1..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code401.sml", "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 23, "toLine": 4, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 36, "toLine": 4, "toColumn": 39, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 40, "toLine": 4, "toColumn": 40, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 35, "minimisation": 35, "slicing": 35, "html": 35},
+"tyvar"        : {"tyvar": 139, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "f"},{"id": 2, "str": "x"},{"id": 3, "str": "+"},{"id": 4, "str": "int"},{"id": 5, "str": "bool"}],
+"constraint"   : {"total": 65, "top": 1, "syntactic": 0},
+"labels"       : 52,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "open hidden by an overloading"
+}

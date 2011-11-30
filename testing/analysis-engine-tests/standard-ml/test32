@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 11, "labelNumbers": [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 2, "tnerrTyname1": 10, "tnerrLabel2": 6, "tnerrTyname2": 11}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 t = 〚..T..〛..〛..datatype 〚..〚..〛 u = 〚..U..〛..〛..val 〚..T = U..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 10, "toLine": 1, "toColumn": 10, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 12, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 14, "toLine": 1, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 10, "toLine": 2, "toColumn": 10, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 5, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 9, "enumeration": 10, "minimisation": 10, "slicing": 10, "html": 13},
+"tyvar"        : {"tyvar": 22, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "T"},{"id": 2, "str": "u"},{"id": 3, "str": "U"}],
+"constraint"   : {"total": 36, "top": 36, "syntactic": 0},
+"labels"       : 13,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {T,4} datatype {,7} {u,6} {=,5} {U,8} val {{T,11},10} {=,9} {{U,13},12};",
+"final"        : true,
+"name"         : "32"
+}

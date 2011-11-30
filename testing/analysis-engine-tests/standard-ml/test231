@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 7, "labelNumbers": [2, 3, 4, 5, 6, 12, 13] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 6, "tnerrTyname1": 3, "tnerrLabel2": 12, "tnerrTyname2": 1}},
+                               "time"        : 0,
+                               "slice"       : "⟨..val ⟨..⟩ ⟨..f = 1..⟩..f ⟨..⟩..⟩",
+                               "assumptions" : [0],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 5, "toLine": 1, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 9, "toLine": 1, "toColumn": 9, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 9, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 10, "toLine": 2, "toColumn": 10, "color": "P", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 13, "color": "P", "weight": 1, "regionList": []}]}]}],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 43, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "x"}],
+"constraint"   : {"total": 15, "top": 1, "syntactic": 0},
+"labels"       : 14,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{val {,1} {{f,4},3} {=,2} {{1,6},5} val {,7} {{x,10},9} {=,8} {{{f,13} {nil,14},12},11};,database/code231.sml}",
+"final"        : true,
+"name"         : "231"
+}

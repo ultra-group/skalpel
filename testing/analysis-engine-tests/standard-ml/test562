@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 13, "labelNumbers": [4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 29] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 14, "tnerrTyname1": 3, "tnerrLabel2": 29, "tnerrTyname2": 6}},
+                               "time"        : 9,
+                               "slice"       : "⟨..functor ⟨..⟨..⟩ (⟨..val x : ⟨..⟩ int -> ⟨..⟩..⟩) = ⟨..x true..⟩..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code562.sml", "regionList": [{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 16, "toLine": 5, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 20, "toLine": 5, "toColumn": 22, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 23, "toLine": 5, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 30, "toLine": 5, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 32, "toLine": 5, "toColumn": 32, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 24, "toLine": 6, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 26, "toLine": 6, "toColumn": 29, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 25, "minimisation": 25, "slicing": 25, "html": 25},
+"tyvar"        : {"tyvar": 80, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "x"},{"id": 3, "str": "int"},{"id": 4, "str": "true"},{"id": 5, "str": "T"},{"id": 6, "str": "z"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "x"},{"id": 3, "str": "int"},{"id": 4, "str": "true"},{"id": 5, "str": "T"},{"id": 6, "str": "z"}],
+"constraint"   : {"total": 37, "top": 37, "syntactic": 0},
+"labels"       : 46,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Functor"
+}

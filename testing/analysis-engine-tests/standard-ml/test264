@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 14, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "y"}],
+"constraint"   : {"total": 15, "top": 1, "syntactic": 0},
+"labels"       : 16,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{val {{'a,2},1} {{x,5},4} {=,3} {{let,7} val {{'a,9},8} {{y,12},11} {=,10} {{1,14},13} in {{y,16},15} end,6},/u1/pg/rahli/work/implementation/database/code264.sml}",
+"final"        : false,
+"name"         : "264"
+}

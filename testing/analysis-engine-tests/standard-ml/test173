@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 4, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 10},
+"tyvar"        : {"tyvar": 85, "assoc": []},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "t"},{"id": 2, "str": "C"},{"id": 3, "str": "int"},{"id": 4, "str": "D"},{"id": 5, "str": "x"},{"id": 6, "str": "y"},{"id": 7, "str": "u"},{"id": 8, "str": "it"}],
+"constraint"   : {"total": 21, "top": 1, "syntactic": 0},
+"labels"       : 82,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "structure {{S,2} = {sig {datatype {{,7} {t,6} = {{{C,10},9} of {{{,14} {int,13},12},11},8} | {D,15},5},4};{val {{x,18} : {{{{{,24} {int,23},22},21} -> {{{,28} {t,27},26},25},20},19},17},16};{val {{y,31} : {{{{{,37} {int,36},35},34} -> {{{,41} {t,40},39},38},33},32},30},29} end,3} :> {struct datatype {,45} {t,44} {=,43} {{C,48},47} {of,46} {{{,52} {int,51},50},49} | {D,53} val {{x,56},55} {=,54} {{fn,58} {{u,61},60} {=>,59}{{{C,64} {u,65},63},62},57} val {{y,68},67} {=,66} {{C,70},69} end,42},1};{{{{S,75}.{D,76},74},73}{:,72}{{{,82} {{S,80}.{t,81},79},78},77};,71};",
+"final"        : true,
+"name"         : "173"
+}

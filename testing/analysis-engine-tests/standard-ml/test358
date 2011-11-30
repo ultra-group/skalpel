@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 33, "labelNumbers": [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 17, 18, 19, 20, 21, 22, 23, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 53, 54, 55] },
+                               "kind"        : {"errorKindName": "ErrorKind.Overload", "errorKindInfo": {"iderrLabel": 0, "iderrId": 0, "tnerrLabel": 55, "tnerrTyname": 5, "tnerrList": [{ "label": 9, "tyname": 3}, { "label": 14, "tyname": 6}, { "label": 38, "tyname": 2}]}},
+                               "time"        : 19,
+                               "slice"       : "⟨..overload Foo (⟨..⟩ int,⟨..⟩ bool)..overload f : 'a -> ⟨..⟩ with 'a in (in Foo,⟨..⟩ unit)..f 1.1..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code358.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 15, "toLine": 1, "toColumn": 17, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 18, "toLine": 1, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 20, "toLine": 1, "toColumn": 23, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 24, "toLine": 1, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 24, "toLine": 2, "toColumn": 44, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 45, "toLine": 2, "toColumn": 48, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 49, "toLine": 2, "toColumn": 49, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 9, "toLine": 6, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 11, "toLine": 6, "toColumn": 13, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 33, "minimisation": 33, "slicing": 33, "html": 33},
+"tyvar"        : {"tyvar": 166, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "Foo"},{"id": 1, "str": "int"},{"id": 2, "str": "bool"},{"id": 3, "str": "f"},{"id": 4, "str": "unit"}],
+"constraint"   : {"total": 79, "top": 1, "syntactic": 0},
+"labels"       : 55,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨overload ⟨⟨Foo,4⟩,3⟩ ⟨(⟨⟨⟨⟨,10⟩ ⟨int,9⟩,8⟩,7⟩,6⟩, ⟨⟨⟨⟨,15⟩ ⟨bool,14⟩,13⟩,12⟩,11⟩),5⟩,1⟩ ⟨⟨overload ⟨⟨f,19⟩,18⟩ : ⟨⟨⟨⟨'a,23⟩,22⟩ -> ⟨⟨⟨,27⟩ ⟨bool,26⟩,25⟩,24⟩,21⟩,20⟩ with ⟨⟨'a,29⟩,28⟩ in ⟨(⟨⟨⟨⟨Foo,34⟩,33⟩,32⟩,31⟩, ⟨⟨⟨⟨,39⟩ ⟨unit,38⟩,37⟩,36⟩,35⟩),30⟩,16⟩ ⟨val ⟨,41⟩ ⟨⟨_,43⟩ = ⟨⟨⟨f,46⟩ ⟨1,47⟩,45⟩,44⟩,42⟩,40⟩ ⟨val ⟨,49⟩ ⟨⟨_,51⟩ = ⟨⟨⟨f,54⟩ ⟨1.1,55⟩,53⟩,52⟩,50⟩,48⟩,/u1/pg/rahli/work/implementation/database/code358.sml⟩",
+"final"        : true,
+"name"         : "overloading class"
+}

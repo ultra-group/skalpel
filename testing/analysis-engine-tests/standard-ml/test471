@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [229] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : 11,
+                               "slice"       : "⟨..⟨..⟩ handle ⟨..⟨..e..⟩ => ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code471.sml", "regionList": [{"nodeType": "leaf", "fromLine": 27, "fromColumn": 30, "toLine": 27, "toColumn": 35, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 27, "fromColumn": 38, "toLine": 27, "toColumn": 38, "color": "Y", "weight": 1},{"nodeType": "leaf", "fromLine": 27, "fromColumn": 43, "toLine": 27, "toColumn": 44, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 15, "minimisation": 15, "slicing": 15, "html": 15},
+"tyvar"        : {"tyvar": 262, "assoc": [{"id": 1, "str": "it"},{"id": 2, "str": "x"},{"id": 3, "str": "e"},{"id": 4, "str": "'a"},{"id": 5, "str": "e'"},{"id": 6, "str": "Int"},{"id": 7, "str": "true"},{"id": 8, "str": "int"},{"id": 9, "str": "bool"}]},
+"ident"        : [{"id": 1, "str": "it"},{"id": 2, "str": "x"},{"id": 3, "str": "e"},{"id": 4, "str": "'a"},{"id": 5, "str": "e'"},{"id": 6, "str": "Int"},{"id": 7, "str": "true"},{"id": 8, "str": "int"},{"id": 9, "str": "bool"}],
+"constraint"   : {"total": 279, "top": 279, "syntactic": 0},
+"labels"       : 237,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Free exceptions"
+}

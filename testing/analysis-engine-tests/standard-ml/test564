@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 30, "labelNumbers": [4, 5, 6, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 40, 41, 42, 43, 44, 46, 47, 49, 50, 51, 58, 59, 60, 61, 62] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 51, "tnerrTyname1": 3, "tnerrLabel2": 62, "tnerrTyname2": 6}},
+                               "time"        : 42,
+                               "slice"       : "⟨..functor ⟨..F (⟨..type ⟨..⟩ t..⟩) :> sig ⟨..val f : ⟨..⟩ t -> ⟨..⟩..⟩ end = ⟨..⟩..⟩;..structure ⟨..S = F(⟨..type ⟨..⟨..⟩ t = ⟨..⟩ int..⟩..⟩)..⟩;..S.f true..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code564.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 9, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 20, "toLine": 3, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 27, "toLine": 3, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 31, "toLine": 3, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 42, "toLine": 3, "toColumn": 46, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 11, "toLine": 4, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 26, "toLine": 4, "toColumn": 28, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 29, "toLine": 4, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 13, "toLine": 5, "toColumn": 16, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 82, "minimisation": 82, "slicing": 82, "html": 82},
+"tyvar"        : {"tyvar": 440, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "t"},{"id": 3, "str": "f"},{"id": 4, "str": "x"},{"id": 5, "str": "S"},{"id": 6, "str": "int"},{"id": 7, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "t"},{"id": 3, "str": "f"},{"id": 4, "str": "x"},{"id": 5, "str": "S"},{"id": 6, "str": "int"},{"id": 7, "str": "true"}],
+"constraint"   : {"total": 51, "top": 51, "syntactic": 0},
+"labels"       : 61,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Simple type constructor clash involving a functor and its signature"
+}

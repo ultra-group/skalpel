@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 15, "labelNumbers": [2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20] },
+                               "kind"        : {"errorKindName": "ErrorKind.NotGenClash", "errorKindInfo": {"iderrLabel1": 11, "iderrId1": 31, "tnerrLabel2": 20, "tnerrTyname2": 3}},
+                               "time"        : 2,
+                               "slice"       : "⟨..structure ⟨..⟨..⟩ : sig ⟨..val x : 'a..⟩ end = struct ⟨..val ⟨..⟩ ⟨..x = 1..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code382.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 23, "toLine": 2, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 27, "toLine": 2, "toColumn": 28, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 16, "toLine": 3, "toColumn": 16, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 18, "toLine": 3, "toColumn": 20, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 6},
+"tyvar"        : {"tyvar": 49, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "x"}],
+"constraint"   : {"total": 2, "top": 2, "syntactic": 0},
+"labels"       : 20,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "structure's signature too general"
+}

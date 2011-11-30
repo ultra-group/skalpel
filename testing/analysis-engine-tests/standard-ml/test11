@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 4, "labelNumbers": [6, 7, 8, 17] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 6, "tnerrTyname1": 0, "tnerrLabel2": 17, "tnerrTyname2": 2}},
+                               "time"        : ~1,
+                               "slice"       : "〚..datatype 〚..〚..〛 = 〚..C of 〚..〛..〛..〛..fn 〚..〚..C..〛 => 〚..〛..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 5, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 16, "toLine": 1, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 18, "toLine": 1, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 20, "toLine": 1, "toColumn": 21, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 30, "toLine": 1, "toColumn": 31, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 33, "toLine": 1, "toColumn": 33, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 35, "toLine": 1, "toColumn": 36, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 6},
+"tyvar"        : {"tyvar": 31, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "T"},{"id": 2, "str": "C"},{"id": 3, "str": "int"}],
+"constraint"   : {"total": 50, "top": 50, "syntactic": 0},
+"labels"       : 19,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{let,2} datatype {,5} {T,4} {=,3} {{C,8},7} {of,6} {{{,12} {int,11},10},9} in {{fn,14} {{C,17},16} {=>,15}{{1,19},18},13} end;,1};",
+"final"        : true,
+"name"         : "11"
+}

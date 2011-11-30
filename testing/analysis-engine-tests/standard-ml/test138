@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 10, "labelNumbers": [4, 5, 6, 7, 9, 10, 11, 18, 19, 20] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 9, "tnerrTyname1": 3, "tnerrLabel2": 20, "tnerrTyname2": 5}},
+                               "time"        : ~1,
+                               "slice"       : "〚..fun 〚..〚..f x..= 〚..x + 〚..〛..〛..〛..〛..f true..〛",
+                               "assumptions" : [1],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 5, "toLine": 1, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 1, "fromColumn": 7, "toLine": 1, "toColumn": 7, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 7, "toLine": 1, "toColumn": 7, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 9, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 11, "toLine": 1, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 13, "toLine": 1, "toColumn": 13, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 10, "toLine": 2, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 15, "color": "G", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 10},
+"tyvar"        : {"tyvar": 54, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "x"},{"id": 2, "str": "+"},{"id": 3, "str": "ex"}],
+"constraint"   : {"total": 32, "top": 1, "syntactic": 0},
+"labels"       : 20,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "fun {{{{f,5} {{x,7},6},4},3} {=,2} {{{x,11},10}{+,9}{{1,13},12},8},1} val {{ex,16},15} {=,14} {{{f,19} {true,20},18},17};",
+"final"        : true,
+"name"         : "138"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [1] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "syntax error: replacing  AND with  SIGNATURE"},
+                               "time"        : ~1,
+                               "slice"       : "⟨unparsable⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code352.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 49, "toLine": 3, "toColumn": 51, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 4, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 0, "assoc": []},
+"ident"        : [],
+"constraint"   : {"total": 1, "top": 0, "syntactic": 1},
+"labels"       : 1,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨unparsable,1⟩,/u1/pg/rahli/work/implementation/database/code352.sml⟩",
+"final"        : false,
+"name"         : "352"
+}

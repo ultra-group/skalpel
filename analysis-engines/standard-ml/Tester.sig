@@ -108,7 +108,8 @@ signature TESTER = sig
     (* TO HANDLE THE DATABASE *)
 
     (* checktests will run the slicer on the code files available in the database directory *)
-    val checktests    : int list -> unit
+    val checktests     : int list -> unit
+
     val runtests      : int list -> LargeInt.int option -> unit
     val adderror      : string -> (* name of the file that contains the code to store in the database *)
 			int    -> (* identifier of the test *)
@@ -157,5 +158,9 @@ signature TESTER = sig
     val myfilehtml    : string
 
     val vinnie        : int    -> unit
+
+    (* remove this when test database is in json format *)
+    val convertErrors : JsonParser.error -> string -> unit
+    val generateTests  : int -> int -> unit
 
 end

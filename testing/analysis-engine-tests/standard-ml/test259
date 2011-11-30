@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [5] },
+                               "kind"        : {"errorKindName": "ErrorKind.RealInPat"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..fn ⟨..⟨..1.1..⟩ => ⟨..⟩..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code259.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 2, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 4, "toLine": 1, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 8, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 13, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"}],
+"constraint"   : {"total": 14, "top": 1, "syntactic": 1},
+"labels"       : 11,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{fn,2} {{1.1,5},4} {=>,3}{{1,7},6} | {_,9} {=>,8}{{0,11},10};,1},/u1/pg/rahli/work/implementation/database/code259.sml}",
+"final"        : true,
+"name"         : "reals cannot occur within patterns"
+}

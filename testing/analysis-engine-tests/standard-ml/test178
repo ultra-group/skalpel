@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 48, "assoc": []},
+"ident"        : [{"id": 0, "str": "SIG"},{"id": 1, "str": "t"},{"id": 2, "str": "x"},{"id": 3, "str": "STRUC1"},{"id": 4, "str": "int"},{"id": 5, "str": "STRUC2"},{"id": 6, "str": "bool"}],
+"constraint"   : {"total": 92, "top": 1, "syntactic": 0},
+"labels"       : 72,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "signature {{SIG,2} = {sig {type {{,7} {t,6},5},4};{val {{x,10} : {{{{{,16} {t,15},14},13} -> {{{,20} {t,19},18},17},12},11},9},8} end,3},1};structure {{STRUC1,22} = {struct type {,26} {t,25} {{{,30} {int,29},28},27} fun {,31} {{{{x,36} {{0,38},37},35},34} {=,33} {{0,40},39},32} end,23},21};structure {{STRUC2,42} = {struct type {,46} {t,45} {{{,50} {bool,49},48},47} fun {,51} {{{{x,56} {{true,58},57},55},54} {=,53} {{true,60},59},52} end,43},41};structure {{STRUC1,62} = {{SIG,64},63} : {{STRUC1,66},65},61};structure {{STRUC2,68} = {{SIG,70},69} : {{STRUC2,72},71},67};",
+"final"        : true,
+"name"         : "well-typed structures"
+}

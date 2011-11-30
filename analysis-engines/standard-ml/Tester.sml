@@ -440,6 +440,115 @@ fun errorsToJSON [] _ _ _ = ""
     end
 
 
+fun convertErrors currentError newName =
+    let
+
+	fun printOneJsonErr {identifier, labels, assumptions, kind, slice, time, regions} =
+	    let
+		fun getFst (a,b) = a
+		fun stringLabelList (a, [t]) = Int.toString t
+		| stringLabelList (a,(h::t)) =
+		    (Int.toString h)^", "^(stringLabelList (a, t))
+		| stringLabelList _ = ""
+
+		fun outputAssumptions [] = ""
+		  | outputAssumptions [(_,value)] = Int.toString value
+		  | outputAssumptions ((_,value)::t) = Int.toString value ^ ", " ^ (outputAssumptions t)
+
+		val ll = "\"labels\"      : " ^ "{\"count\": " ^ (Int.toString (getFst labels)) ^ ", " ^ "\"labelNumbers\": [" ^ stringLabelList labels ^ "] }"
+		val cd = "\"assumptions\" : [" ^ (outputAssumptions assumptions) ^ "]"
+		val ek = "\"kind\"        : " ^ EK.printJsonErrKind kind
+		val tm = "\"time\"        : " ^ LargeInt.toString time
+		val id = "\"identifier\"  : " ^ Int.toString identifier
+	    (* jpirie: we want to do it this way but the SML/NJ JSON lexer is broken. To fix! *)
+	    (* val sl = "\"slice\"       : " ^ "\"" ^ (String.toString slice) ^ "\"" *)
+		val sl = "\"slice\"       : " ^ "\"" ^ slice ^ "\""
+	    in (id, ll, ek, tm, cd, sl, "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs regions ^ "]")
+	    end
+
+	fun errorsToJSON2 [] = ""
+	  | errorsToJSON2 [x] =
+	    let val begsep = "                              "
+		val (id, ll, sa, sk, tm, sl, re) = printOneJsonErr x
+		val err   = "{"          ^ id ^ ",\n" ^
+			    begsep ^ " " ^ ll ^ ",\n" ^
+			    begsep ^ " " ^ sa ^ ",\n" ^
+			    begsep ^ " " ^ sk ^ ",\n" ^
+			    begsep ^ " " ^ sl ^ ",\n" ^
+			    begsep ^ " " ^ tm ^ ",\n" ^
+			    begsep ^ " " ^ re ^ "}"
+	    in err
+	    end
+	  | errorsToJSON2 (x :: xs) =
+	    let val begsep = "                  "
+		val (id, ll, sa, sk, tm, sl, re) = printOneJsonErr x
+		val err   = "{"          ^ id ^ ",\n" ^
+			    begsep ^ " " ^ ll ^ ",\n" ^
+			    begsep ^ " " ^ sa ^ ",\n" ^
+			    begsep ^ " " ^ sk ^ ",\n" ^
+			    begsep ^ " " ^ sl ^ ",\n" ^
+			    begsep ^ " " ^ tm ^ ",\n" ^
+			    begsep ^ " " ^ re ^ "}"
+	    in err ^ ",\n" ^ begsep ^ (errorsToJSON2 xs)
+	    end
+
+	fun getTime {analysis, enumeration, minimisation, slicing, html} =
+	    "{\"analysis\": "^(LargeInt.toString analysis)^", \"enumeration\": "^(LargeInt.toString enumeration)^", \"minimisation\": "^(LargeInt.toString minimisation)^
+	    ", \"slicing\": "^(LargeInt.toString slicing)^", \"html\": "^(LargeInt.toString html)^"}"
+
+	fun getConstraint {total, top, syntactic} =
+	    "{\"total\": "^(Int.toString total)^", \"top\": "^(Int.toString top)^", \"syntactic\": "^(Int.toString syntactic)^"}"
+
+	fun getTyvarNum  (a, _) = a
+	fun getTyvarVals (_, b) = b
+
+	fun getTyvar [] = ""
+	  | getTyvar [(b,c)] = "{\"id\": " ^ (Int.toString b) ^ ", \"str\": \"" ^ c ^ "\"}"
+	  | getTyvar ((b,c)::t) = "{\"id\": "^(Int.toString b)^", \"str\": \""^c^"\"},"^(getTyvar t)
+
+	fun convertSmlError (ref (SOME ({errors,
+					 time,
+					 tyvar,
+					 ident,
+					 constraint,
+					 labels,
+					 minimisation,
+					 solution,
+					 basis,
+					 timelimit,
+					 labelling,
+					 final,
+					 name})))
+			    newname =
+	    let
+		val outstr = TextIO.openOut newname
+	    in
+	    (TextIO.outputSubstr (outstr, (Substring.full ("{\n" ^
+	           "\"errors\"       : ["^ (errorsToJSON2 errors)^"],\n"^
+		   "\"time\"         : "^(getTime time)^",\n"^
+		   "\"tyvar\"        : {\"tyvar\": "^(Int.toString (getTyvarNum tyvar))^", \"assoc\": ["^(getTyvar (getTyvarVals tyvar))^"]},\n"^
+		   "\"ident\"        : ["^(getTyvar ident)^"],\n"^
+		   "\"constraint\"   : "^(getConstraint constraint)^",\n"^
+		   "\"labels\"       : "^(Int.toString labels)^",\n"^
+		   "\"minimisation\" : "^(Bool.toString minimisation)^",\n"^
+		   "\"solution\"     : "^(Int.toString solution)^",\n"^
+		   "\"basis\"        : "^(Int.toString basis)^",\n"^
+		   "\"timelimit\"    : "^(IntInf.toString timelimit)^",\n"^
+		   "\"labelling\"    : \""^labelling^"\",\n"^
+		   "\"final\"        : "^(Bool.toString final)^",\n"^
+		   "\"name\"         : \""^name^"\"\n}"))))
+	    end
+	  | convertSmlError (ref NONE) _ = raise EH.DeadBranch "convertSmlError received no error!"
+    in
+	convertSmlError currentError newName
+    end
+
+fun generateTests min max =
+    if min=max then ()
+    else ((* use ("../../testing/analysis-engine-tests/standard-ml/test"^(Int.toString min)^".sml"); *)
+	  (* convertErrors error ("test"^(Int.toString min)); *)
+	  (* generateTests (min+1) max *));
+
 fun debuggingSML errl
 		 (ast, m, ascid)
 		 bmin

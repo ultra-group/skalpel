@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 44, "assoc": [{"id": 1, "str": "e"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "u"},{"id": 5, "str": "list"},{"id": 6, "str": "E"}]},
+"ident"        : [{"id": 1, "str": "e"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "u"},{"id": 5, "str": "list"},{"id": 6, "str": "E"}],
+"constraint"   : {"total": 54, "top": 54, "syntactic": 0},
+"labels"       : 52,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Nested type names"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 3, "labelNumbers": [7, 10, 11] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 7, "tnerrTyname1": 3, "tnerrLabel2": 11, "tnerrTyname2": 6}},
+                               "time"        : 0,
+                               "slice"       : "⟨..⟨..⟩ + true..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code404.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 15, "toLine": 2, "toColumn": 15, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 16, "toLine": 2, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 17, "toLine": 2, "toColumn": 20, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 5},
+"tyvar"        : {"tyvar": 57, "assoc": []},
+"ident"        : [{"id": 0, "str": "stuff"},{"id": 1, "str": "+"},{"id": 2, "str": "true"},{"id": 3, "str": "sum"},{"id": 4, "str": "::"},{"id": 5, "str": "h"},{"id": 6, "str": "t"}],
+"constraint"   : {"total": 61, "top": 1, "syntactic": 0},
+"labels"       : 42,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "404"
+}

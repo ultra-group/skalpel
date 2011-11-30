@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [14, 15, 16, 17, 18, 19, 21, 22, 24, 25, 26, 43, 44, 45] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 26, "tnerrTyname1": 3, "tnerrLabel2": 45, "tnerrTyname2": 6}},
+                               "time"        : 5,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..C of ⟨..⟩ v..⟩..⟩ withtype ⟨..⟨..⟩ v = ⟨..⟩ int..⟩..C true..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code371.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 12, "toLine": 2, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 14, "toLine": 2, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 21, "toLine": 2, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 34, "toLine": 2, "toColumn": 36, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 10, "toLine": 6, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 12, "toLine": 6, "toColumn": 15, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 16, "minimisation": 16, "slicing": 18, "html": 18},
+"tyvar"        : {"tyvar": 154, "assoc": []},
+"ident"        : [{"id": 0, "str": "v"},{"id": 1, "str": "bool"},{"id": 2, "str": "t"},{"id": 3, "str": "C"},{"id": 4, "str": "int"},{"id": 5, "str": "x1"},{"id": 6, "str": "x2"},{"id": 7, "str": "true"}],
+"constraint"   : {"total": 63, "top": 1, "syntactic": 0},
+"labels"       : 45,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "withtype"
+}

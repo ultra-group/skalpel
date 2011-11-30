@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 19, "labelNumbers": [12, 13, 14, 15, 16, 17, 18, 20, 24, 25, 26, 28, 29, 30, 33, 34, 35, 36, 37] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 36, "tnerrTyname1": 7, "tnerrLabel2": 37, "tnerrTyname2": 5}},
+                               "time"        : ~1,
+                               "slice"       : "〚..fun 〚..〚..f x y..〚..c..〛..= 〚..c x..c y..〛..〛..〛..f nil true..〛",
+                               "assumptions" : [2, 3, 4],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 8, "toLine": 4, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 12, "toLine": 4, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 4, "fromColumn": 14, "toLine": 4, "toColumn": 14, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 14, "toLine": 4, "toColumn": 14, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 15, "toLine": 4, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 4, "fromColumn": 16, "toLine": 4, "toColumn": 16, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 16, "toLine": 4, "toColumn": 16, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 18, "toLine": 4, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 20, "toLine": 4, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 23, "toLine": 4, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 28, "toLine": 4, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 7, "toLine": 5, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 12, "toLine": 5, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 13, "toLine": 5, "toColumn": 16, "color": "G", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 13, "minimisation": 13, "slicing": 13, "html": 24},
+"tyvar"        : {"tyvar": 197, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "f"},{"id": 2, "str": "x"},{"id": 3, "str": "y"},{"id": 4, "str": "c"},{"id": 5, "str": "z"}],
+"constraint"   : {"total": 44, "top": 1, "syntactic": 0},
+"labels"       : 38,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{fn,2} {{(),5},4} {=>,3}{{let,7} fun {{{{{{f,14} {{x,16},15},13} {{y,18},17},12} {{c,20},19},11},10} {=,9} {{({{{c,25} {x,26},24},23},{{{c,29} {y,30},28},27}),22},21},8} in {{{{{f,35} {nil,36},34} {true,37},33} {z,38},32},31} end,6};,1};",
+"final"        : true,
+"name"         : "124"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 13, "labelNumbers": [3, 4, 5, 6, 9, 10, 11, 12, 13, 29, 35, 36, 37] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 35, "tnerrTyname1": 3, "tnerrLabel2": 13, "tnerrTyname2": 6}},
+                               "time"        : 9,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..val ⟨..⟩ ⟨..x = true..⟩..⟩ end..⟩;..open ⟨..S..⟩..x + ⟨..⟩..⟩",
+                               "assumptions" : [2],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code464.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 11, "toLine": 1, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 22, "toLine": 1, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 26, "toLine": 1, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 30, "toLine": 1, "toColumn": 33, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 35, "toLine": 1, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 11, "color": "B", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 24, "minimisation": 24, "slicing": 24, "html": 24},
+"tyvar"        : {"tyvar": 41, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "x"},{"id": 3, "str": "true"},{"id": 4, "str": "T"},{"id": 5, "str": "Int"},{"id": 6, "str": "+"},{"id": 7, "str": "-"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "x"},{"id": 3, "str": "true"},{"id": 4, "str": "T"},{"id": 5, "str": "Int"},{"id": 6, "str": "+"},{"id": 7, "str": "-"}],
+"constraint"   : {"total": 31, "top": 31, "syntactic": 0},
+"labels"       : 52,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Opening of a sequence of structures"
+}

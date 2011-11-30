@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 20, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "int"},{"id": 2, "str": "uu"}],
+"constraint"   : {"total": 35, "top": 1, "syntactic": 0},
+"labels"       : 21,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{unparsable,/u1/pg/rahli/work/tes-implementation}{type {,3} {t,2} {{{,7} {int,6},5},4};{datatype {uu,9} = datatype {t,10},8};val {,11} {_,13} {=,12} {{{1,17},16}{:,15}{{{,21} {uu,20},19},18},14},/u1/pg/rahli/work/implementation/database/code267.sml}",
+"final"        : false,
+"name"         : "267"
+}

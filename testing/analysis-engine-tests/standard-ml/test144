@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 4},
+"tyvar"        : {"tyvar": 22, "assoc": []},
+"ident"        : [{"id": 0, "str": "e"},{"id": 1, "str": "int"},{"id": 2, "str": "x"}],
+"constraint"   : {"total": 28, "top": 1, "syntactic": 0},
+"labels"       : 18,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "exception {{{e,3},2} of {{{,7} {int,6},5},4},1} val {{({{{e,13} {x,14},12},11}),10},9} {=,8} {{{e,17} {1,18},16},15};",
+"final"        : true,
+"name"         : "144"
+}

@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 9},
+"tyvar"        : {"tyvar": 52, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "f"},{"id": 2, "str": "int"},{"id": 3, "str": "x"}],
+"constraint"   : {"total": 61, "top": 1, "syntactic": 0},
+"labels"       : 43,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {{f,6},5} {of,4} {{{,10} {int,9},8},7} fun {{{{f,15} {{(),17},16},14},13} {=,12} {{let,19} val {{f,22},21} {=,20} {{fn,24} {{x,27},26} {=>,25}{{x,29},28},23} in {{{f,32} {1,33},31},30} end,18},11} val {{f,36},35} {=,34} {{fn,38} {{x,41},40} {=>,39}{{x,43},42},37};",
+"final"        : true,
+"name"         : "133"
+}

@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 6},
+"tyvar"        : {"tyvar": 38, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "T"},{"id": 2, "str": "it"},{"id": 3, "str": "x"},{"id": 4, "str": "u"}],
+"constraint"   : {"total": 47, "top": 1, "syntactic": 0},
+"labels"       : 24,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {{'a,4},3} {t,2} {=,1} {{T,7},6} {of,5} {{{{'a,12},11} {t,10},9},8};{{{T,15} {({{{x,20},19}{:,18}{{{,24} {u,23},22},21},17}),16},14};,13};",
+"final"        : false,
+"name"         : "150"
+}

@@ -43,6 +43,8 @@ is
   ../sets/sources.cm
   ../utils/sources.cm
   ../region/sources.cm
+  ../error/sources.cm
+  ../sets/sources.cm
 
   (* This forces the use of ml-lex instead of ml-ulex
      to prevent incorrect interpretation of the .lex file *)

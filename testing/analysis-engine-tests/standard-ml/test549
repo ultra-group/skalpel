@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 20, "labelNumbers": [4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 36, 37, 38, 39, 42, 43, 44, 45, 46] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 15, "tnerrTyname1": 3, "tnerrLabel2": 46, "tnerrTyname2": 6}},
+                               "time"        : 22,
+                               "slice"       : "⟨..functor ⟨..F (⟨..⟩ : sig ⟨..val x : ⟨..⟩ int..⟩ end) = ⟨..⟩..⟩;..F(struct ⟨..val ⟨..⟩ ⟨..x = true..⟩..⟩ end)..⟩",
+                               "assumptions" : [3],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code549.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 9, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 20, "toLine": 3, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 24, "toLine": 3, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 28, "toLine": 3, "toColumn": 30, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 32, "toLine": 3, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 37, "toLine": 3, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 15, "toLine": 4, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 24, "toLine": 4, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 28, "toLine": 4, "toColumn": 31, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 32, "toLine": 4, "toColumn": 35, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 37, "toLine": 4, "toColumn": 40, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 42, "minimisation": 42, "slicing": 42, "html": 42},
+"tyvar"        : {"tyvar": 88, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "x"},{"id": 4, "str": "int"},{"id": 5, "str": "y"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"},{"id": 8, "str": "T"},{"id": 9, "str": "true"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "S"},{"id": 3, "str": "x"},{"id": 4, "str": "int"},{"id": 5, "str": "y"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"},{"id": 8, "str": "T"},{"id": 9, "str": "true"}],
+"constraint"   : {"total": 29, "top": 29, "syntactic": 0},
+"labels"       : 45,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Functor"
+}

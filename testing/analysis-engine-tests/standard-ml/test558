@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 34, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "y"},{"id": 3, "str": "'a"},{"id": 4, "str": "x"},{"id": 5, "str": "bool"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "y"},{"id": 3, "str": "'a"},{"id": 4, "str": "x"},{"id": 5, "str": "bool"},{"id": 6, "str": "+"},{"id": 7, "str": "Int"}],
+"constraint"   : {"total": 35, "top": 35, "syntactic": 0},
+"labels"       : 39,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Unusable functor"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 13, "labelNumbers": [5, 6, 7, 8, 9, 10, 18, 19, 20, 21, 23, 24, 25] },
+                               "kind"        : {"errorKindName": "ErrorKind.IllFormedWhere", "errorKindInfo": {"iderr1Label": 10, "iderr1Id": 2, "iderr2Label": 20, "iderr2Id": 2}},
+                               "time"        : 10,
+                               "slice"       : "⟨..sig ⟨..datatype ⟨..⟩ t = ⟨..⟩..⟩ end where ⟨..type 〚⟨..⟩〛 t = ⟨..⟩ bool..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code513.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 15, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 31, "toLine": 2, "toColumn": 31, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 32, "toLine": 2, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 43, "toLine": 2, "toColumn": 51, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 53, "toLine": 2, "toColumn": 56, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 58, "toLine": 2, "toColumn": 59, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 60, "toLine": 2, "toColumn": 60, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 61, "toLine": 2, "toColumn": 61, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 62, "toLine": 2, "toColumn": 68, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 30, "minimisation": 30, "slicing": 30, "html": 30},
+"tyvar"        : {"tyvar": 116, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "C"},{"id": 5, "str": "bool"},{"id": 6, "str": "F"},{"id": 7, "str": "S"},{"id": 8, "str": "true"},{"id": 9, "str": "unit"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "C"},{"id": 5, "str": "bool"},{"id": 6, "str": "F"},{"id": 7, "str": "S"},{"id": 8, "str": "true"},{"id": 9, "str": "unit"}],
+"constraint"   : {"total": 47, "top": 47, "syntactic": 0},
+"labels"       : 56,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "Where clause and functor"
+}

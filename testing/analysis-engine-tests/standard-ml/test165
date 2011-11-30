@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 8, "labelNumbers": [2, 3, 4, 5, 6, 7, 10, 11] },
+                               "kind"        : {"errorKindName": "ErrorKind.LabTyClash", "errorKindInfo": {"laberr1": [{ "label": 4, "string": "f" }], "laberr2": [{ "label": 7, "string": "g" }, { "label": 11, "string": "h" }], "laberr3": [], "laberr4": []}},
+                               "time"        : 0,
+                               "slice"       : "⟨..#f {g=⟨..⟩,h=⟨..⟩}..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code165.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 2, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 3, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 4, "toLine": 3, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 7, "toLine": 3, "toColumn": 7, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 8, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 13, "toLine": 3, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 15, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 16, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 24, "toLine": 3, "toColumn": 24, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 2, "minimisation": 2, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 14, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "true"}],
+"constraint"   : {"total": 16, "top": 1, "syntactic": 0},
+"labels"       : 13,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨⟨#,⟨f,4⟩,3⟩ ⟨{⟨⟨g,7⟩ = ⟨⟨1,9⟩,8⟩,6⟩,⟨⟨h,11⟩ = ⟨⟨true,13⟩,12⟩,10⟩},5⟩,2⟩;,1⟩,/u1/pg/rahli/work/implementation/database/code165.sml⟩",
+"final"        : true,
+"name"         : "record clash"
+}

@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 43, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "X"},{"id": 3, "str": "v1"},{"id": 4, "str": "v2"},{"id": 5, "str": "f"},{"id": 6, "str": "bool"}],
+"constraint"   : {"total": 4, "top": 4, "syntactic": 0},
+"labels"       : 64,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨signature ⟨⟨s,2⟩ = ⟨⟨⟨⟨sig ⟨type ⟨⟨,10⟩ ⟨t,9⟩,8⟩,7⟩;⟨structure ⟨⟨X,13⟩ : ⟨⟨sig ⟨type ⟨⟨,19⟩ ⟨t,18⟩,17⟩,16⟩ end,15⟩,14⟩,12⟩,11⟩;⟨val ⟨⟨⟨v1,23⟩,22⟩ : ⟨⟨⟨,27⟩ ⟨t,26⟩,25⟩,24⟩,21⟩,20⟩;⟨val ⟨⟨⟨v2,31⟩,30⟩ : ⟨⟨⟨,35⟩ ⟨t,34⟩,33⟩,32⟩,29⟩,28⟩;⟨val ⟨⟨⟨f,39⟩,38⟩ : ⟨⟨⟨⟨⟨,45⟩ ⟨t,44⟩,43⟩,42⟩ -> ⟨⟨⟨⟨⟨,51⟩ ⟨t,50⟩,49⟩,48⟩ -> ⟨⟨⟨,55⟩ ⟨t,54⟩,53⟩,52⟩,47⟩,46⟩,41⟩,40⟩,37⟩,36⟩ end,6⟩,5⟩ where ⟨type ⟨,60⟩ ⟨⟨X,58⟩.⟨t,59⟩,57⟩ = ⟨⟨⟨,64⟩ ⟨bool,63⟩,62⟩,61⟩,56⟩,4⟩,3⟩,1⟩,/u1/pg/rahli/work/implementation/database/code354.sml⟩",
+"final"        : true,
+"name"         : "long where clause"
+}

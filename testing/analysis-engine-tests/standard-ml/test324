@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 6, "labelNumbers": [43, 44, 45, 52, 62, 63] },
+                               "kind"        : {"errorKindName": "ErrorKind.ExcIsDat", "asmpOp": "NONE"},
+                               "time"        : 2,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..datatype ⟨..⟨..⟩ = ⟨..e..⟩..⟩..⟩ end..⟩;..exception ⟨..⟨..⟩ = S.e..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code324.sml", "regionList": [{"nodeType": "leaf", "fromLine": 9, "fromColumn": 1, "toLine": 9, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 11, "toLine": 9, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 13, "toLine": 9, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 15, "toLine": 9, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 22, "toLine": 9, "toColumn": 29, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 33, "toLine": 9, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 35, "toLine": 9, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 47, "toLine": 9, "toColumn": 49, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 1, "toLine": 10, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 13, "toLine": 10, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 15, "toLine": 10, "toColumn": 17, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 10, "minimisation": 10, "slicing": 10, "html": 10},
+"tyvar"        : {"tyvar": 52, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "e"},{"id": 2, "str": "string"},{"id": 3, "str": "S"},{"id": 4, "str": "t"}],
+"constraint"   : {"total": 73, "top": 1, "syntactic": 0},
+"labels"       : 63,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨signature ⟨⟨s,2⟩ = ⟨sig ⟨exception ⟨⟨⟨e,7⟩,6⟩ of ⟨⟨⟨,11⟩ ⟨string,10⟩,9⟩,8⟩,5⟩,4⟩ end,3⟩,1⟩ ⟨structure ⟨⟨S,14⟩ = ⟨⟨s,16⟩,15⟩ : ⟨struct ⟨exception ⟨⟨⟨e,21⟩,20⟩ of ⟨⟨⟨,25⟩ ⟨string,24⟩,23⟩,22⟩,19⟩,18⟩ end,17⟩,13⟩,12⟩ ⟨val ⟨,27⟩ ⟨⟨_,29⟩ = ⟨⟨⟨⟨(),33⟩,32⟩ handle ⟨⟨⟨⟨⟨S,38⟩.⟨e,39⟩,37⟩ _,36⟩,35⟩ => ⟨⟨(),41⟩,40⟩,34⟩,31⟩,30⟩,28⟩,26⟩ ⟨structure ⟨⟨S,44⟩ = ⟨struct ⟨datatype ⟨⟨,49⟩ ⟨t,48⟩ = ⟨⟨⟨e,52⟩,51⟩ of ⟨⟨⟨,56⟩ ⟨string,55⟩,54⟩,53⟩,50⟩,47⟩,46⟩ end,45⟩,43⟩,42⟩ ⟨exception ⟨⟨⟨e,60⟩,59⟩ = ⟨⟨S,62⟩.⟨e,63⟩,61⟩,58⟩,57⟩,/u1/pg/rahli/work/implementation/database/code324.sml⟩",
+"final"        : true,
+"name"         : "324"
+}

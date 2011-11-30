@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 10, "labelNumbers": [32, 33, 34, 35, 36, 37, 38, 40, 41, 43] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 40, "tnerrTyname1": 1, "tnerrLabel2": 43, "tnerrTyname2": 2}},
+                               "time"        : 10,
+                               "slice"       : "⟨..(fn ⟨..f => ⟨..f ⟨..⟩..⟩..⟩) ()..⟩",
+                               "assumptions" : [0],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code428.sml", "regionList": [{"nodeType": "leaf", "fromLine": 5, "fromColumn": 9, "toLine": 5, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 13, "toLine": 5, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 18, "toLine": 5, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 19, "toLine": 5, "toColumn": 19, "color": "B", "weight": 1},{"nodeType": "node", "fromLine": 5, "fromColumn": 20, "toLine": 5, "toColumn": 21, "color": "B", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 22, "toLine": 5, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 24, "toLine": 5, "toColumn": 25, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 25, "minimisation": 25, "slicing": 25, "html": 29},
+"tyvar"        : {"tyvar": 80, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "S"}],
+"constraint"   : {"total": 45, "top": 1, "syntactic": 0},
+"labels"       : 43,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "428"
+}

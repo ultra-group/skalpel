@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 8, "labelNumbers": [6, 7, 8, 9, 10, 11, 12, 19] },
+                               "kind"        : {"errorKindName": "ErrorKind.ArityClash", "errorKindInfo": {"arrerrLabel1": 12, "arrerrId1": 2, "arrerrLabel2": 19, "arrerrId2": 3}},
+                               "time"        : 0,
+                               "slice"       : "⟨..(fn ⟨..(⟨..⟩,⟨..⟩) => ⟨..⟩..⟩) (⟨..⟩,⟨..⟩,⟨..⟩)..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 9, "toLine": 1, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 13, "toLine": 1, "toColumn": 13, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 15, "toLine": 1, "toColumn": 15, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 18, "toLine": 1, "toColumn": 18, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 19, "toLine": 1, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 24, "toLine": 1, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 26, "toLine": 1, "toColumn": 26, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 28, "toLine": 1, "toColumn": 28, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 31, "toLine": 1, "toColumn": 31, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 34, "toLine": 1, "toColumn": 34, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 40, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "y"}],
+"constraint"   : {"total": 26, "top": 1, "syntactic": 0},
+"labels"       : 25,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{val {,1} {{x,4},3} {=,2} {{{({{fn,9} {{({{x,14},13},{{y,16},15}),12},11} {=>,10}{{x,18},17},8}),7} {({{0,21},20},{{1,23},22},{{2,25},24}),19},6},5};,database/code232.sml}",
+"final"        : true,
+"name"         : "232"
+}

@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 31, "labelNumbers": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 33, 34, 35, 36, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 51, "tnerrTyname1": 6, "tnerrLabel2": 54, "tnerrTyname2": 3}},
+                               "time"        : 32,
+                               "slice"       : "⟨..functor ⟨..F (⟨..⟩) :> sig ⟨..val f : 'a -> 'a..⟩ end = ⟨..⟩..⟩;..structure ⟨..S = F(⟨..⟩)..⟩;..(S.f false) : ⟨..⟩ int..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code526.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 9, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 21, "toLine": 3, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 25, "toLine": 3, "toColumn": 36, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 38, "toLine": 3, "toColumn": 42, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 9, "toLine": 7, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 14, "toLine": 7, "toColumn": 18, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 19, "toLine": 7, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 23, "toLine": 7, "toColumn": 25, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 66, "minimisation": 66, "slicing": 66, "html": 66},
+"tyvar"        : {"tyvar": 366, "assoc": [{"id": 1, "str": "F"},{"id": 2, "str": "f"},{"id": 3, "str": "'a"},{"id": 4, "str": "x"},{"id": 5, "str": "S"},{"id": 6, "str": "false"},{"id": 7, "str": "int"}]},
+"ident"        : [{"id": 1, "str": "F"},{"id": 2, "str": "f"},{"id": 3, "str": "'a"},{"id": 4, "str": "x"},{"id": 5, "str": "S"},{"id": 6, "str": "false"},{"id": 7, "str": "int"}],
+"constraint"   : {"total": 42, "top": 42, "syntactic": 0},
+"labels"       : 54,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Untypable use of a functor application"
+}

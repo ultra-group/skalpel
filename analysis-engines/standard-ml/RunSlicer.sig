@@ -70,6 +70,11 @@ signature SLICER = sig
     (* use empty list to run the slicer on all the tests
      * provide a list of two integers to run the slicer on an specific interval *)
     val checktests         : int list -> unit
+
+    (* remove this when the test database is converted to json format *)
+    val convertErrors      : JsonParser.error -> string -> unit
+    val generateTests      : int -> int -> unit
+
     (* runs all the tests in the database using the given timelimit *)
     val runtests           : int list -> LargeInt.int option -> unit
     (* lists the tests in the database
@@ -126,6 +131,8 @@ signature SLICER = sig
 			      timeLim     : int}) -> OS.Process.status
 
     val smlTesStrArgs : string -> OS.Process.status
+
+    val error : JsonParser.error
 
     (*val smltes             : string -> OS.Process.status*)
 

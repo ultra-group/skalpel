@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 12},
+"tyvar"        : {"tyvar": 74, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "D"},{"id": 2, "str": "int"},{"id": 3, "str": "u"},{"id": 4, "str": "bool"},{"id": 5, "str": "v"},{"id": 6, "str": "C"},{"id": 7, "str": "T"},{"id": 8, "str": "x"}],
+"constraint"   : {"total": 116, "top": 1, "syntactic": 0},
+"labels"       : 63,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {,3} {t,2} {=,1} {{D,6},5} {of,4} {{{,10} {int,9},8},7} type {,13} {u,12} {{{{{,19} {t,18},17},16} * {{{,23} {int,22},21},20} * {{{,27} {bool,26},25},24},15},14} datatype {,30} {v,29} {=,28} {{C,33},32} {of,31} {{{{{,39} {u,38},37},36} * {{{,43} {v,42},41},40},35},34} | {T,44} val {{x,47},46} {=,45} {{{C,50} {({{({{{D,56} {2,57},55},54},{{1,59},58},{{true,61},60}),53},52},{{T,63},62}),51},49},48};",
+"final"        : true,
+"name"         : "110"
+}

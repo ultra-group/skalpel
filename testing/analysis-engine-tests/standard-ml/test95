@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 6, "labelNumbers": [9, 10, 11, 21, 22, 23] },
+                               "kind"        : {"errorKindName": "ErrorKind.ArityClash", "errorKindInfo": {"arrerrLabel1": 11, "arrerrId1": 1, "arrerrLabel2": 23, "arrerrId2": 0}},
+                               "time"        : ~1,
+                               "slice"       : "〚..〘〚..〛〙 t..〘〙 t..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "node", "fromLine": 2, "fromColumn": 22, "toLine": 2, "toColumn": 23, "color": "B", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 24, "toLine": 2, "toColumn": 25, "color": "R", "weight": 1},{"nodeType": "head", "fromLine": 3, "fromColumn": 22, "toLine": 3, "toColumn": 22, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 22, "toLine": 3, "toColumn": 22, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 11},
+"tyvar"        : {"tyvar": 31, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "u"},{"id": 1, "str": "C"},{"id": 2, "str": "t"},{"id": 3, "str": "v"},{"id": 4, "str": "D"}],
+"constraint"   : {"total": 42, "top": 1, "syntactic": 0},
+"labels"       : 23,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "datatype {{'a,4},3} {u,2} {=,1} {{C,7},6} {of,5} {{{{'a,12},11} {t,10},9},8} datatype {{'a,16},15} {v,14} {=,13} {{D,19},18} {of,17} {{{,23} {t,22},21},20};",
+"final"        : true,
+"name"         : "95"
+}

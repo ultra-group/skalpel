@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 21, "labelNumbers": [24, 25, 26, 27, 28, 29, 41, 42, 43, 44, 45, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 57, "tnerrTyname1": 5, "tnerrLabel2": 51, "tnerrTyname2": 3}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..f..〛 = (fn 〚..〛) 〚..〛..〛..val 〚..g = f..〛..1 :: g..true :: g..〛",
+                               "assumptions" : [2, 4],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 5, "toLine": 5, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 7, "toLine": 5, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 19, "toLine": 5, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 5, "fromColumn": 21, "toLine": 5, "toColumn": 22, "color": "R", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 13, "toLine": 6, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 17, "toLine": 6, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 27, "toLine": 6, "toColumn": 27, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 28, "toLine": 6, "toColumn": 32, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 35, "toLine": 6, "toColumn": 38, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 39, "toLine": 6, "toColumn": 43, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 5, "enumeration": 30, "minimisation": 30, "slicing": 30, "html": 34},
+"tyvar"        : {"tyvar": 426, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "y"},{"id": 2, "str": "f"},{"id": 3, "str": "h"},{"id": 4, "str": "g"}],
+"constraint"   : {"total": 115, "top": 1, "syntactic": 0},
+"labels"       : 84,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{x,3},2} {=,1} {{y,5},4} val {_,7} {=,6} {{({{{1,13},12}{::,11}{{x,15},14},10},{{{true,19},18}{::,17}{{x,21},20},16}),9},8} val {{f,24},23} {=,22} {{{({{fn,29} {{x,32},31} {=>,30}{{x,34},33},28}),27} {[],35},26},25} val {{h,38},37} {=,36} {{let,40} val {{g,43},42} {=,41} {{f,45},44} in {{({{{1,51},50}{::,49}{{g,53},52},48},{{{true,57},56}{::,55}{{g,59},58},54}),47},46} end,39} val {_,61} {=,60} {{fn,63} {{x,66},65} {=>,64}{{let,68} val {{f,71},70} {=,69} {{{({{fn,76} {{x,79},78} {=>,77}{{x,81},80},75}),74} {[],82},73},72} in {{f,84},83} end,67},62};",
+"final"        : true,
+"name"         : "180"
+}

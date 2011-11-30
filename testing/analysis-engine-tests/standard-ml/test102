@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 0, "labelNumbers": [] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "database/.test102.sml: 1.23-1.31: syntax error: replacing  STRUCTURE with  TYPE"},
+                               "time"        : ~1,
+                               "slice"       : "parsing problem",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 23, "toLine": 1, "toColumn": 31, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 0, "minimisation": 0, "slicing": 0, "html": 6},
+"tyvar"        : {"tyvar": 0, "assoc": []},
+"ident"        : [],
+"constraint"   : {"total": 0, "top": 0, "syntactic": 0},
+"labels"       : 0,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "parsing problem",
+"final"        : false,
+"name"         : "102"
+}

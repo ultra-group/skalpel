@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [1] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "/u1/pg/rahli/work/implementation/database/code256.sml: 1.1-1.6: SML reserved word 'nonfix' not supported"},
+                               "time"        : ~1,
+                               "slice"       : "unparsable",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code256.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 6, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 0, "minimisation": 0, "slicing": 0, "html": 0},
+"tyvar"        : {"tyvar": 0, "assoc": []},
+"ident"        : [],
+"constraint"   : {"total": 1, "top": 0, "syntactic": 1},
+"labels"       : 1,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{unparsable,/u1/pg/rahli/work/implementation/database/code256.sml}",
+"final"        : false,
+"name"         : "256"
+}

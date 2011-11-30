@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 34, "labelNumbers": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 36, "tnerrTyname1": 6, "tnerrLabel2": 44, "tnerrTyname2": 2}},
+                               "time"        : 36,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..datatype 〚'a〛 t = ⟨..C of 'a..⟩..⟩ end..⟩..structure ⟨..S : s = ⟨..⟩..⟩;..S.C true : 〚⟨..⟩ unit〛 S.t..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code506.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 2, "fromColumn": 28, "toLine": 2, "toColumn": 29, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 28, "toLine": 2, "toColumn": 29, "color": "R", "weight": 1}]},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 30, "toLine": 2, "toColumn": 33, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 35, "toLine": 2, "toColumn": 41, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 43, "toLine": 2, "toColumn": 45, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 11, "toLine": 3, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 9, "toLine": 4, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 13, "toLine": 4, "toColumn": 16, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 17, "toLine": 4, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "node", "fromLine": 4, "fromColumn": 20, "toLine": 4, "toColumn": 23, "color": "R", "weight": 1, "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 20, "toLine": 4, "toColumn": 23, "color": "P", "weight": 1}]},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 24, "toLine": 4, "toColumn": 27, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 62, "minimisation": 62, "slicing": 62, "html": 62},
+"tyvar"        : {"tyvar": 312, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "C"},{"id": 5, "str": "S"},{"id": 6, "str": "_S"},{"id": 7, "str": "true"},{"id": 8, "str": "unit"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "C"},{"id": 5, "str": "S"},{"id": 6, "str": "_S"},{"id": 7, "str": "true"},{"id": 8, "str": "unit"}],
+"constraint"   : {"total": 38, "top": 38, "syntactic": 0},
+"labels"       : 44,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Type constructor clash and translucent signature"
+}

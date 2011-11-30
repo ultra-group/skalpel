@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [3, 5, 8, 12, 27, 28, 35, 37, 41, 42, 43, 45, 46, 47] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 8, "tnerrTyname1": 0, "tnerrLabel2": 27, "tnerrTyname2": 1}},
+                               "time"        : 7,
+                               "slice"       : "⟨..fn ⟨..⟨..y..⟩ => ⟨..datatype ⟨..⟨..⟩ = ⟨..T2..⟩..⟩..y ⟨..⟩..fn ⟨..⟨..z..⟩ => ⟨..z y..z T2..⟩..⟩..⟩..⟩..⟩",
+                               "assumptions" : [1, 8],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code309.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 2, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 4, "toLine": 2, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 6, "toLine": 2, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 8, "toLine": 4, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 19, "toLine": 4, "toColumn": 19, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 26, "toLine": 4, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 19, "toLine": 5, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 20, "toLine": 5, "toColumn": 20, "color": "P", "weight": 1},{"nodeType": "node", "fromLine": 5, "fromColumn": 21, "toLine": 5, "toColumn": 21, "color": "P", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 16, "toLine": 6, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 19, "toLine": 6, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 21, "toLine": 6, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 25, "toLine": 6, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 30, "toLine": 6, "toColumn": 33, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 21, "minimisation": 21, "slicing": 21, "html": 21},
+"tyvar"        : {"tyvar": 109, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "y"},{"id": 2, "str": "t"},{"id": 3, "str": "T1"},{"id": 4, "str": "T2"},{"id": 5, "str": "T3"},{"id": 6, "str": "int"},{"id": 7, "str": "x"},{"id": 8, "str": "z"}],
+"constraint"   : {"total": 66, "top": 1, "syntactic": 0},
+"labels"       : 49,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨fn ⟨⟨⟨y,5⟩,4⟩ => ⟨⟨let datatype ⟨⟨,10⟩ ⟨t,9⟩ = ⟨T1,11⟩ | ⟨T2,12⟩ | ⟨⟨⟨T3,15⟩,14⟩ of ⟨⟨⟨,19⟩ ⟨int,18⟩,17⟩,16⟩,13⟩,8⟩ val ⟨,20⟩ ⟨⟨⟨⟨T3,24⟩ ⟨x,25⟩,23⟩,22⟩ = ⟨⟨⟨y,28⟩ ⟨1,29⟩,27⟩,26⟩,21⟩ val ⟨,30⟩ ⟨⟨_,32⟩ = ⟨⟨fn ⟨⟨⟨z,37⟩,36⟩ => ⟨⟨(⟨⟨⟨z,42⟩ ⟨y,43⟩,41⟩,40⟩,⟨⟨⟨z,46⟩ ⟨T2,47⟩,45⟩,44⟩),39⟩,38⟩,35⟩,34⟩,33⟩,31⟩ in ⟨⟨(),49⟩,48⟩ end,7⟩,6⟩,3⟩,2⟩;,1⟩,/u1/pg/rahli/work/implementation/database/code309.sml⟩",
+"final"        : true,
+"name"         : "309"
+}

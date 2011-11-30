@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 23, "labelNumbers": [3, 4, 5, 6, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 27, 32, 33, 36, 37, 38, 39, 40] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 20, "tnerrTyname1": 6, "tnerrLabel2": 40, "tnerrTyname2": 3}},
+                               "time"        : 22,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..functor ⟨..F (⟨..⟩ : sig ⟨..val x : ⟨..⟩ bool..⟩ end) = ⟨..⟩..⟩;..⟩ end..⟩;..open ⟨..S..⟩..F(⟨..val ⟨..⟩ ⟨..x = 1..⟩..⟩)..⟩",
+                               "assumptions" : [4],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code548.sml", "regionList": [{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 1, "toLine": 7, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 9, "toLine": 7, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 11, "toLine": 7, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 14, "toLine": 7, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 20, "toLine": 7, "toColumn": 22, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 24, "toLine": 7, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 28, "toLine": 7, "toColumn": 31, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 33, "toLine": 7, "toColumn": 36, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 38, "toLine": 7, "toColumn": 38, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 8, "fromColumn": 1, "toLine": 8, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 1, "toLine": 10, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 10, "fromColumn": 6, "toLine": 10, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 12, "fromColumn": 15, "toLine": 12, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 12, "fromColumn": 21, "toLine": 12, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 12, "fromColumn": 25, "toLine": 12, "toColumn": 25, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 12, "fromColumn": 26, "toLine": 12, "toColumn": 26, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 37, "minimisation": 37, "slicing": 37, "html": 37},
+"tyvar"        : {"tyvar": 69, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "F"},{"id": 3, "str": "X"},{"id": 4, "str": "x"},{"id": 5, "str": "bool"},{"id": 6, "str": "T"},{"id": 7, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "F"},{"id": 3, "str": "X"},{"id": 4, "str": "x"},{"id": 5, "str": "bool"},{"id": 6, "str": "T"},{"id": 7, "str": "Int"}],
+"constraint"   : {"total": 17, "top": 17, "syntactic": 0},
+"labels"       : 39,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Simple error involving a functor and open"
+}

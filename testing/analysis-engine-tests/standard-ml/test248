@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 4, "minimisation": 4, "slicing": 4, "html": 4},
+"tyvar"        : {"tyvar": 37, "assoc": []},
+"ident"        : [{"id": 0, "str": "S"},{"id": 1, "str": "t"},{"id": 2, "str": "u"},{"id": 3, "str": "T1"},{"id": 4, "str": "int"},{"id": 5, "str": "st1"},{"id": 6, "str": "T2"},{"id": 7, "str": "it"}],
+"constraint"   : {"total": 44, "top": 1, "syntactic": 0},
+"labels"       : 51,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{signature {{S,2} = {sig {type {{,7} {t,6},5},4};{type {{,11} {u,10},9},8};{val {{T1,14} : {{{{{,20} {int,19},18},17} -> {{{,24} {t,23},22},21},16},15},13},12} end,3},1};structure {{st1,26} = {{S,28},27} : {struct datatype {,32} {t,31} {=,30} {{T1,35},34} {of,33} {{{,39} {int,38},37},36} | {T2,40} type {,43} {u,42} {{{,47} {int,46},45},44} end,29},25};{{{st1,50}.{T1,51},49};,48},/u1/pg/rahli/work/implementation/database/code248.sml}",
+"final"        : true,
+"name"         : "248"
+}

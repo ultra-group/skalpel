@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 3, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 9},
+"tyvar"        : {"tyvar": 39, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "z"},{"id": 2, "str": "X"},{"id": 3, "str": "C1"},{"id": 4, "str": "C2"},{"id": 5, "str": "int"},{"id": 6, "str": "True"}],
+"constraint"   : {"total": 57, "top": 57, "syntactic": 0},
+"labels"       : 22,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{fn,2} {{z,5},4} {=>,3}{{let,7} datatype {,10} {X,9} {=,8} {C1,11} | {{C2,14},13} {of,12} {{{,18} {int,17},16},15} in {{{C2,21} {True,22},20},19} end,6};,1};",
+"final"        : true,
+"name"         : "12"
+}

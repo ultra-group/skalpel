@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 5, "enumeration": 6, "minimisation": 6, "slicing": 6, "html": 6},
+"tyvar"        : {"tyvar": 55, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "S1"},{"id": 3, "str": "int"},{"id": 4, "str": "S2"},{"id": 5, "str": "S3"},{"id": 6, "str": "a"},{"id": 7, "str": "b"},{"id": 8, "str": "x"}],
+"constraint"   : {"total": 77, "top": 1, "syntactic": 0},
+"labels"       : 87,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{signature {{s,2} = {sig {type {{,7} {t,6},5},4} end,3},1} structure {{S1,9} = {{s,11},10} :> {struct type {,15} {t,14} {{{,19} {int,18},17},16} end,12},8} structure {{S2,21} = {{s,23},22} : {struct type {,27} {t,26} {{{,33} {{S1,31}.{t,32},30},29},28} end,24},20} structure {{S3,35} = {{s,37},36} : {struct type {,41} {t,40} {{{,47} {{S1,45}.{t,46},44},43},42} end,38},34} type {,50} {a,49} {{{,56} {{S2,54}.{t,55},53},52},51} type {,59} {b,58} {{{,65} {{S3,63}.{t,64},62},61},60} val {,66} {_,68} {=,67} {{fn,70} {{{x,75},74}{:,73}{{{,79} {a,78},77},76},72} {=>,71}{{{x,83},82}{:,81}{{{,87} {b,86},85},84},80},69},/u1/pg/rahli/work/implementation/database/code258.sml}",
+"final"        : true,
+"name"         : "258"
+}

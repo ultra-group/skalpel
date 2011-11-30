@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [4] },
+                               "kind"        : {"errorKindName": "ErrorKind.FreeIdent"},
+                               "time"        : ~1,
+                               "slice"       : "⟨..SIG..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code242.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 17, "toLine": 2, "toColumn": 19, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 1, "minimisation": 1, "slicing": 2, "html": 2},
+"tyvar"        : {"tyvar": 14, "assoc": []},
+"ident"        : [{"id": 0, "str": "Str"},{"id": 1, "str": "SIG"},{"id": 2, "str": "t"},{"id": 3, "str": "bool"},{"id": 4, "str": "it"}],
+"constraint"   : {"total": 19, "top": 1, "syntactic": 1},
+"labels"       : 22,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{structure {{Str,2} = {{SIG,4},3} : {struct type {,8} {t,7} {{{,12} {bool,11},10},9} end,5},1};{{{33,16},15}{:,14}{{{,22} {{Str,20}.{t,21},19},18},17};,13},/u1/pg/rahli/work/implementation/database/code242.sml}",
+"final"        : true,
+"name"         : "242"
+}

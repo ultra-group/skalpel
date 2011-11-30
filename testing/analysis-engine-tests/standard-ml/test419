@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 25, "labelNumbers": [15, 16, 17, 18, 20, 21, 22, 23, 25, 26, 28, 29, 30, 33, 34, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 30, "tnerrTyname1": 3, "tnerrLabel2": 48, "tnerrTyname2": 6}},
+                               "time"        : 25,
+                               "slice"       : "⟨..structure ⟨..S = struct ⟨..structure ⟨..X = struct ⟨..type ⟨..⟨..⟩ v = ⟨..⟩ int..⟩..⟩ end..⟩;..⟩ end..⟩;..open ⟨..S..⟩..val ⟨..⟩ ⟨..⟨..⟩ : ⟨..⟩ X.v = true..⟩..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code419.sml", "regionList": [{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 11, "toLine": 4, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 22, "toLine": 4, "toColumn": 30, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 32, "toLine": 4, "toColumn": 41, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 43, "toLine": 4, "toColumn": 51, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 52, "toLine": 4, "toColumn": 54, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 56, "toLine": 4, "toColumn": 58, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 60, "toLine": 4, "toColumn": 62, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 4, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 6, "toLine": 5, "toColumn": 6, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 7, "toLine": 6, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 15, "toLine": 6, "toColumn": 18, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 18, "enumeration": 67, "minimisation": 67, "slicing": 67, "html": 67},
+"tyvar"        : {"tyvar": 32, "assoc": []},
+"ident"        : [{"id": 0, "str": "t"},{"id": 1, "str": "v"},{"id": 2, "str": "X"},{"id": 3, "str": "int"},{"id": 4, "str": "S"},{"id": 5, "str": "true"}],
+"constraint"   : {"total": 60, "top": 1, "syntactic": 0},
+"labels"       : 48,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "419"
+}

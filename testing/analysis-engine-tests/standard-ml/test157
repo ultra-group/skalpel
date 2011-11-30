@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 1, "enumeration": 2, "minimisation": 2, "slicing": 2, "html": 12},
+"tyvar"        : {"tyvar": 42, "assoc": [{"id": 0, "str": "'a"}]},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "y"}],
+"constraint"   : {"total": 41, "top": 1, "syntactic": 0},
+"labels"       : 34,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{x,3},2} {=,1} {{let,5} val {_,7} {=,6} {{(),9},8} in {{fn,11} {{{x,16},15}{:,14}{{'a,18},17},13} {=>,12}{{x,20},19},10} end,4} and {{y,23},22} {=,21} {{fn,25} {{{x,30},29}{:,28}{{'a,32},31},27} {=>,26}{{x,34},33},24};",
+"final"        : false,
+"name"         : "157"
+}

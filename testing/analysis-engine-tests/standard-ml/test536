@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 14, "labelNumbers": [49, 56, 58, 59, 69, 71, 72, 73, 85, 86, 87, 89, 90, 91] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 87, "tnerrTyname1": 3, "tnerrLabel2": 91, "tnerrTyname2": 6}},
+                               "time"        : 17,
+                               "slice"       : "⟨..fun ⟨..⟩ ⟨..⟨..⟨..⟩..⟨..d..⟩..= ⟨..val ⟨..⟩ ⟨..⟨..{x,⟨..⟩}..⟩ = {⟨..⟩,⟨..⟩=d ⟨..⟩}..⟩..x 1..x true..⟩..⟩..⟩..⟩",
+                               "assumptions" : [11, 12],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code536.sml", "regionList": [{"nodeType": "leaf", "fromLine": 6, "fromColumn": 1, "toLine": 6, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 11, "toLine": 6, "toColumn": 11, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 13, "toLine": 6, "toColumn": 13, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 9, "toLine": 7, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 13, "toLine": 7, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 18, "toLine": 7, "toColumn": 18, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 20, "toLine": 7, "toColumn": 20, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 21, "toLine": 7, "toColumn": 22, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 36, "toLine": 7, "toColumn": 36, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 37, "toLine": 7, "toColumn": 37, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 39, "toLine": 7, "toColumn": 39, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 40, "toLine": 7, "toColumn": 43, "color": "O", "weight": 1},{"nodeType": "node", "fromLine": 7, "fromColumn": 44, "toLine": 7, "toColumn": 44, "color": "O", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 45, "toLine": 7, "toColumn": 45, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 9, "toLine": 9, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 11, "toLine": 9, "toColumn": 11, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 14, "toLine": 9, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 9, "fromColumn": 16, "toLine": 9, "toColumn": 19, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 58, "minimisation": 58, "slicing": 58, "html": 58},
+"tyvar"        : {"tyvar": 231, "assoc": [{"id": 1, "str": "t"},{"id": 2, "str": "T1"},{"id": 3, "str": "T2"},{"id": 4, "str": "int"},{"id": 5, "str": "u"},{"id": 6, "str": "U1"},{"id": 7, "str": "U2"},{"id": 9, "str": "foo"},{"id": 10, "str": "c"},{"id": 11, "str": "d"},{"id": 12, "str": "x"},{"id": 13, "str": "y"},{"id": 14, "str": "Int"},{"id": 15, "str": "true"},{"id": 16, "str": "x1"},{"id": 17, "str": "x2"}]},
+"ident"        : [{"id": 1, "str": "t"},{"id": 2, "str": "T1"},{"id": 3, "str": "T2"},{"id": 4, "str": "int"},{"id": 5, "str": "u"},{"id": 6, "str": "U1"},{"id": 7, "str": "U2"},{"id": 9, "str": "foo"},{"id": 10, "str": "c"},{"id": 11, "str": "d"},{"id": 12, "str": "x"},{"id": 13, "str": "y"},{"id": 14, "str": "Int"},{"id": 15, "str": "true"},{"id": 16, "str": "x1"},{"id": 17, "str": "x2"}],
+"constraint"   : {"total": 136, "top": 136, "syntactic": 0},
+"labels"       : 112,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Untypable piece of code involving value polymorphism"
+}

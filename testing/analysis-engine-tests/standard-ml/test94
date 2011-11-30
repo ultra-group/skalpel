@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 12, "labelNumbers": [1, 2, 3, 6, 7, 12, 13, 14, 16, 17, 20, 21] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 14, "tnerrTyname1": 3, "tnerrLabel2": 21, "tnerrTyname2": 5}},
+                               "time"        : ~1,
+                               "slice"       : "〚..val 〚..〚..〛 : 〚..〛*〚..〛 int = (〚..〛,true)..〛..〛",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 7, "toLine": 2, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 13, "toLine": 2, "toColumn": 14, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 15, "toLine": 2, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 18, "toLine": 2, "toColumn": 21, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 23, "toLine": 2, "toColumn": 24, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 25, "toLine": 2, "toColumn": 28, "color": "G", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 29, "toLine": 2, "toColumn": 29, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 1, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 9},
+"tyvar"        : {"tyvar": 24, "assoc": []},
+"ident"        : [{"id": 0, "str": "x"},{"id": 1, "str": "int"}],
+"constraint"   : {"total": 37, "top": 1, "syntactic": 0},
+"labels"       : 21,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "val {{{x,5},4}{:,3}{{{{{,11} {int,10},9},8} * {{{,15} {int,14},13},12},7},6},2} {=,1} {{({{2,19},18},{{true,21},20}),17},16};",
+"final"        : true,
+"name"         : "94"
+}

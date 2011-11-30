@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 16, "labelNumbers": [16, 25, 34, 35, 36, 37, 46, 47, 48, 49, 50, 52, 53, 54, 55, 56] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 54, "tnerrTyname1": 6, "tnerrLabel2": 48, "tnerrTyname2": 3}},
+                               "time"        : 7,
+                               "slice"       : "⟨..val ⟨..⟩ ⟨..⟨..f..⟩ = ⟨..⟩..⟩..fun ⟨..⟩ ⟨..⟨..g..= ⟨..⟩..⟩..⟩..val ⟨..⟩ ⟨..⟨..f..⟩ = g ⟨..⟩..⟩..1 :: f..true :: f..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code380.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 5, "toLine": 3, "toColumn": 5, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 7, "toLine": 3, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 3, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 5, "toLine": 4, "toColumn": 5, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 10, "toLine": 4, "toColumn": 10, "color": "O", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 3, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 5, "toLine": 5, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 7, "toLine": 5, "toColumn": 7, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 8, "toLine": 5, "toColumn": 10, "color": "O", "weight": 1},{"nodeType": "node", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 12, "color": "O", "weight": 1, "regionList": []},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 10, "toLine": 6, "toColumn": 10, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 11, "toLine": 6, "toColumn": 15, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 18, "toLine": 6, "toColumn": 21, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 22, "toLine": 6, "toColumn": 26, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 3, "enumeration": 21, "minimisation": 22, "slicing": 22, "html": 22},
+"tyvar"        : {"tyvar": 177, "assoc": []},
+"ident"        : [{"id": 0, "str": "f"},{"id": 1, "str": "g"},{"id": 2, "str": "::"},{"id": 3, "str": "true"}],
+"constraint"   : {"total": 61, "top": 1, "syntactic": 0},
+"labels"       : 56,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "380"
+}

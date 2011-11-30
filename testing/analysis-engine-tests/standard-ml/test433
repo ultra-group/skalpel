@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 20, "labelNumbers": [1, 2, 3, 4, 6, 7, 9, 10, 11, 14, 16, 17, 18, 19, 20, 22, 23, 25, 26, 27] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 11, "tnerrTyname1": 6, "tnerrLabel2": 27, "tnerrTyname2": 3}},
+                               "time"        : 26,
+                               "slice"       : "⟨..signature ⟨..s = sig ⟨..type ⟨..⟩ t = ⟨..⟩ bool..⟩ end..⟩..structure ⟨..⟨..⟩ :> s = struct ⟨..type ⟨..⟨..⟩ t = ⟨..⟩ int..⟩..⟩ end..⟩;..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/tes-implementation/database/code433.sml", "regionList": [{"nodeType": "leaf", "fromLine": 2, "fromColumn": 1, "toLine": 2, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 11, "toLine": 2, "toColumn": 17, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 19, "toLine": 2, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 28, "toLine": 2, "toColumn": 31, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 2, "fromColumn": 33, "toLine": 2, "toColumn": 35, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 1, "toLine": 4, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 4, "fromColumn": 14, "toLine": 4, "toColumn": 26, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 1, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 10, "toLine": 5, "toColumn": 12, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 7, "fromColumn": 1, "toLine": 7, "toColumn": 3, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 50, "minimisation": 50, "slicing": 50, "html": 50},
+"tyvar"        : {"tyvar": 115, "assoc": []},
+"ident"        : [{"id": 0, "str": "s"},{"id": 1, "str": "t"},{"id": 2, "str": "bool"},{"id": 3, "str": "S1"},{"id": 4, "str": "int"},{"id": 5, "str": "f"},{"id": 6, "str": "x"},{"id": 7, "str": "+"}],
+"constraint"   : {"total": 22, "top": 1, "syntactic": 0},
+"labels"       : 50,
+"minimisation" : false,
+"solution"     : 8,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : false,
+"name"         : "433"
+}

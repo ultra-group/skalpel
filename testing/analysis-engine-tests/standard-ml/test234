@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 3, "labelNumbers": [3, 4, 5] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 4, "tnerrTyname1": 8, "tnerrLabel2": 5, "tnerrTyname2": 3}},
+                               "time"        : 0,
+                               "slice"       : "⟨..! 1..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 1, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 2, "toLine": 1, "toColumn": 2, "color": "P", "weight": 1}]}]}],
+"time"         : {"analysis": 0, "enumeration": 1, "minimisation": 1, "slicing": 1, "html": 1},
+"tyvar"        : {"tyvar": 12, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "!"}],
+"constraint"   : {"total": 8, "top": 1, "syntactic": 0},
+"labels"       : 5,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "{{{{!,4} {1,5},3};,1,2};,database/code234.sml}",
+"final"        : true,
+"name"         : "reference"
+}

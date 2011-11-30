@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 9, "minimisation": 9, "slicing": 9, "html": 9},
+"tyvar"        : {"tyvar": 121, "assoc": [{"id": 1, "str": "s1"},{"id": 2, "str": "key"},{"id": 3, "str": "s2"},{"id": 4, "str": "Key"},{"id": 5, "str": "map"},{"id": 6, "str": "'a"},{"id": 7, "str": "insert"},{"id": 8, "str": "F"},{"id": 9, "str": "K"},{"id": 10, "str": "unit"},{"id": 11, "str": "S"},{"id": 12, "str": "int"},{"id": 13, "str": "t"},{"id": 14, "str": "UPD"},{"id": 16, "str": "foo"},{"id": 17, "str": "lab"},{"id": 18, "str": "sets"}]},
+"ident"        : [{"id": 1, "str": "s1"},{"id": 2, "str": "key"},{"id": 3, "str": "s2"},{"id": 4, "str": "Key"},{"id": 5, "str": "map"},{"id": 6, "str": "'a"},{"id": 7, "str": "insert"},{"id": 8, "str": "F"},{"id": 9, "str": "K"},{"id": 10, "str": "unit"},{"id": 11, "str": "S"},{"id": 12, "str": "int"},{"id": 13, "str": "t"},{"id": 14, "str": "UPD"},{"id": 16, "str": "foo"},{"id": 17, "str": "lab"},{"id": 18, "str": "sets"}],
+"constraint"   : {"total": 145, "top": 145, "syntactic": 0},
+"labels"       : 168,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Functor, signature and where clause (typable)"
+}

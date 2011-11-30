@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 21, "assoc": [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "S"},{"id": 6, "str": "_structX"},{"id": 7, "str": "Int"}]},
+"ident"        : [{"id": 1, "str": "s"},{"id": 2, "str": "X"},{"id": 3, "str": "f"},{"id": 4, "str": "'a"},{"id": 5, "str": "S"},{"id": 6, "str": "_structX"},{"id": 7, "str": "Int"}],
+"constraint"   : {"total": 19, "top": 19, "syntactic": 0},
+"labels"       : 42,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Typable signature matching"
+}

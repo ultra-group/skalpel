@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 1, "labelNumbers": [1] },
+                               "kind"        : {"errorKindName": "ErrorKind.Parsing", "parsingStr": "syntax error: replacing  INFIX with  CONSLIST"},
+                               "time"        : ~1,
+                               "slice"       : "unparsable",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/implementation/database/code278.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 38, "toLine": 1, "toColumn": 42, "color": "Y", "weight": 1}]}]}],
+"time"         : {"analysis": 5, "enumeration": 5, "minimisation": 5, "slicing": 5, "html": 5},
+"tyvar"        : {"tyvar": 0, "assoc": []},
+"ident"        : [],
+"constraint"   : {"total": 1, "top": 0, "syntactic": 1},
+"labels"       : 1,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨unparsable,/u1/pg/rahli/work/implementation/database/code278.sml⟩",
+"final"        : false,
+"name"         : "278"
+}

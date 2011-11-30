@@ -1,0 +1,21 @@
+{
+"errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 18, "labelNumbers": [8, 9, 12, 13, 14, 15, 16, 17, 26, 27, 28, 29, 30, 31, 32, 48, 49, 50] },
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 8, "tnerrTyname1": 18, "tnerrLabel2": 32, "tnerrTyname2": 1}},
+                               "time"        : 23,
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ t = ⟨..T of ⟨..⟩ t..⟩..⟩..val ⟨..⟩ rec ⟨..g = fn ⟨..⟨..⟩ => ⟨..⟩..⟩..⟩..T g..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/rahli/work/steven/tes/implementation/database/code459.sml", "regionList": [{"nodeType": "leaf", "fromLine": 3, "fromColumn": 3, "toLine": 3, "toColumn": 10, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 14, "toLine": 3, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 17, "toLine": 3, "toColumn": 17, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 19, "toLine": 3, "toColumn": 23, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 26, "toLine": 3, "toColumn": 27, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 3, "toLine": 5, "toColumn": 5, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 7, "toLine": 5, "toColumn": 9, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 11, "toLine": 5, "toColumn": 16, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 5, "fromColumn": 20, "toLine": 5, "toColumn": 21, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 23, "toLine": 6, "toColumn": 25, "color": "R", "weight": 1}]}]}],
+"time"         : {"analysis": 2, "enumeration": 41, "minimisation": 41, "slicing": 41, "html": 41},
+"tyvar"        : {"tyvar": 145, "assoc": [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T"},{"id": 5, "str": "u"},{"id": 6, "str": "U"},{"id": 7, "str": "g"},{"id": 8, "str": "v"},{"id": 9, "str": "f"}]},
+"ident"        : [{"id": 1, "str": "S"},{"id": 2, "str": "t"},{"id": 3, "str": "'a"},{"id": 4, "str": "T"},{"id": 5, "str": "u"},{"id": 6, "str": "U"},{"id": 7, "str": "g"},{"id": 8, "str": "v"},{"id": 9, "str": "f"}],
+"constraint"   : {"total": 50, "top": 50, "syntactic": 0},
+"labels"       : 49,
+"minimisation" : false,
+"solution"     : 9,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "",
+"final"        : true,
+"name"         : "Type constructor clash involving the arrow type constructor"
+}
