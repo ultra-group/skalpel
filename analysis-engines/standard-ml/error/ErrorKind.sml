@@ -99,6 +99,9 @@ fun printLab lab = Int.toString lab
 
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+fun isArithOp x =
+    (x="+" orelse x="-" orelse x="*" orelse x="/")
+
 (* PRINTING FOR LISP *)
 
 fun printasmpop NONE = "-"
@@ -160,13 +163,19 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
      ^ " overloaded to the overloading class "
      ^ getSt id2 asc)
   | printErrKind (OverloadIdCst ((lid1, id1), ltns1, (lid2, id2, str), ltns2)) asc =
-    ("OIC",
-     "Value "
-     ^ getSt id1 asc
-     ^ " overloaded to a list of types not including any type of "
-     ^ str
-     ^ " itself overloaded to the overloading class "
-     ^ getSt id2 asc)
+    let
+	val value = getSt id1 asc
+	val ty = getSt id2 asc
+    in
+	(* if this is the case, a more accurate slice will be reported later, but give the user something fast *)
+	if isArithOp value andalso (ty = "Int" orelse ty = "Real")
+	then
+	    ("OIC", "Value " ^ value ^ " used on two different types.")
+	else
+	    ("OIC",
+	     "Value " ^ value ^ " overloaded to a list of types not including any type of " ^
+	     str ^ " itself overloaded to the overloading class " ^ ty)
+    end
   | printErrKind (ArityClash ((l1, n1), (l2, n2))) _ =
     ("ARI",
      "Arity clash between "

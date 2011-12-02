@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -51,6 +52,7 @@ structure VT  = VTimer
 structure EH  = ErrorHandler
 structure OM  = SplayMapFn(OrdKey)
 structure ERR = Error
+structure D   = Debug
 
 (* error shoud be called state or end_state ad S.state should be called context.
  * An error (end_state) is either a success or an error.  Our constraint solver
@@ -3478,6 +3480,7 @@ fun unif env filters user =
 		     end
 		else let val name1 = T.tntyToTyCon tn1
 			 val name2 = T.tntyToTyCon tn2
+			 val _     = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two type constructions"
 			 val ek    = EK.TyConsClash ((L.toInt l1, T.tynameToInt name1), (L.toInt l2, T.tynameToInt name2))
 			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
 		     (*
@@ -3497,12 +3500,18 @@ fun unif env filters user =
 		 in fsimplify (c1 :: c2 :: cs') l
 		 end
 	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
-	    if T.eqTyname tn1 tn2
-	    then fsimplify cs' l
-	    else let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))
-		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
-		 in handleSimplify err cs' l
-		 end
+	    (D.printDebug 2 D.UNIF "in fsimplify- constarint type is two of tnty.NC";
+	     if T.eqTyname tn1 tn2
+	     then (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^
+					  ").Labels- l1 = "^(Int.toString (L.toInt l1)) ^ " l2 = " ^(Int.toString (L.toInt l2)));
+		   fsimplify cs' l)
+	     else let val _   = D.printDebug 2 D.UNIF ("typenames of both tnty.NC constructors are not equal");
+		      val _   = D.printDebug 3 D.UNIF ("first tnty.NC  - label = "^(Int.toString (L.toInt l1))^", tyname = " ^ (Int.toString (T.tynameToInt tn1)))
+		      val _   = D.printDebug 3 D.UNIF ("second tnty.NC - label = "^(Int.toString (L.toInt l2))^", tyname = " ^ (Int.toString (T.tynameToInt tn2)))
+		      val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))
+		      val err = ERR.consPreError ERR.dummyId ls ids ek deps l
+		  in handleSimplify err cs' l
+		  end)
 	  | fsimplify ((E.CSTSEQ ((T.SC (rtl1, b1, l1), T.SC (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let val n1 = length rtl1
 		val n2 = length rtl2
@@ -3570,7 +3579,8 @@ fun unif env filters user =
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
-			else let val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.dummytyname ())), (L.toInt lab2, T.tynameToInt (T.dummytyname ())))
+			else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two implicit type variables"
+				 val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.dummytyname ())), (L.toInt lab2, T.tynameToInt (T.dummytyname ())))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 			     in handleSimplify err cs' l
 			     end
@@ -3579,12 +3589,14 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTTYP ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids)) :: cs') l =
 	    if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
-	    else let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.dummytyname ())))
+	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two explicit type variables"
+		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.dummytyname ())))
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
 		 end
 	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids)) :: cs') l =
-	    let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
+	    let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is an explicit tyvar and a type construction"
+		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
 	    end

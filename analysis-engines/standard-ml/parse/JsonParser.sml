@@ -27,6 +27,7 @@ struct
 structure NJJP = JSONParser
 structure EH = ErrorHandler
 structure EK = ErrorKind
+structure D  = Debug
 
 (* the type which we use to represent a singular error *)
 type oneerror = {labels       : int * int list,
@@ -57,12 +58,6 @@ type error = {errors       : oneerror list,
 	      labelling    : string,
               final        : bool,
 	      name         : string} option ref
-
-(* the greater the depth, the more detail the print statemtns give *)
-val debugStatements : int ref = ref 0
-fun printDebug depth str = if (!debugStatements) >= depth
-			   then print ("JsonParser.sml: "^str^"\n")
-			   else ()
 
 fun parseTest testfile =
     let
@@ -348,8 +343,8 @@ fun parseTest testfile =
 		  | _ => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind)")
 	    end
 
-	fun getErrors (JSON.ARRAY []) = (printDebug 1 "finished parsing errors object!"; [])
-	  | getErrors (JSON.ARRAY(h::t)) = (printDebug 2 "parsing errors object. Getting a new error...";
+	fun getErrors (JSON.ARRAY []) = (D.printDebug 1 D.JSON "finished parsing errors object!"; [])
+	  | getErrors (JSON.ARRAY(h::t)) = (D.printDebug 2 D.JSON "parsing errors object. Getting a new error...";
 		{identifier  = getInt(findIdVal h "identifier"),
 		 labels      = (getInt(findIdVal (findIdVal h "labels") "count"), getIntArray(findIdVal(findIdVal h "labels") "labelNumbers")),
                  assumptions = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")), (* first part of tuple always empty list? *)
@@ -363,34 +358,34 @@ fun parseTest testfile =
 	  | getErrors _ = raise EH.DeadBranch ("Format error with JSON test file (getErrors got something other than an array)")
 
 	val test = NJJP.parseFile testfile handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^testfile^"\n")
-	val _ = printDebug 1 ("checking top-level objects of json file...")
-	val _ = printDebug 2 ("getting 'errors' object...")
+	val _ = D.printDebug 1 D.JSON ("checking top-level objects of json file...")
+	val _ = D.printDebug 2 D.JSON ("getting 'errors' object...")
 	val (errorList, test) = getObject test "errors"
-	val _ = printDebug 2 ("getting 'time' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'time' object...")
 	val (timeObj, test) = getObject test "time"
-	val _ = printDebug 2 ("getting 'tyvar' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'tyvar' object...")
 	val (tyvarObj, test) = getObject test "tyvar"
-	val _ = printDebug 2 ("getting 'ident' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'ident' object...")
 	val (ident, test) = getObject test "ident"
-	val _ = printDebug 2 ("getting 'constraint' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'constraint' object...")
 	val (constraintObj, test) = getObject test "constraint"
-	val _ = printDebug 2 ("getting 'labels' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'labels' object...")
 	val (labels, test) = getObject test "labels"
-	val _ = printDebug 2 ("getting 'minimisation' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'minimisation' object...")
 	val (minimisation, test) = getObject test "minimisation"
-	val _ = printDebug 2 ("getting 'solution' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'solution' object...")
 	val (solution, test) = getObject test "solution"
-	val _ = printDebug 2 ("getting 'basis' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'basis' object...")
 	val (basis, test) = getObject test "basis"
-	val _ = printDebug 2 ("getting 'timelimit' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'timelimit' object...")
 	val (timelimit, test) = getObject test "timelimit"
-	val _ = printDebug 2 ("getting 'labelling' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'labelling' object...")
 	val (labelling, test) = getObject test "labelling"
-	val _ = printDebug 2 ("getting final object...")
+	val _ = D.printDebug 2 D.JSON ("getting final object...")
 	val (final, test) = getObject test "final"
-	val _ = printDebug 2 ("getting 'name' object...")
+	val _ = D.printDebug 2 D.JSON ("getting 'name' object...")
 	val (name, test) = getObject test "name"
-	val _ = printDebug 1 ("top level json objects correct!")
+	val _ = D.printDebug 1 D.JSON ("top level json objects correct!")
 
     in
 	ref (SOME {

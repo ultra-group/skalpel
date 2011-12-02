@@ -469,7 +469,7 @@ fun smlTesStrArgs strArgs =
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
 				    \    -b <0 / 1 / 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
-				    \    -d <0 | 1 | 2> Set debug print statement depth (higher = more detail)\n\
+				    \    -d <0 | 1 | 2 | 3> Set debug print statement depth (higher = more detail)\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
 				    \    -sol <solution> define solution to use (default 9)\n\
@@ -516,7 +516,8 @@ fun smlTesStrArgs strArgs =
 	     else if option = "-b"
 	     then basop:=str
 	     else if option = "-d"
-	     then JsonParser.debugStatements := (Option.valOf(Int.fromString (str))) handle _ => raise EH.DeadBranch "Debug argument must be an integer"
+	     then Debug.setAllDebug (Option.valOf(Int.fromString (str)))
+		  handle _ => raise EH.DeadBranch "Debug argument must be an integer"
 	     else if option = "-bo"
 	     then basisoverloading:=str
 	     else if option = "-t"

@@ -1,5 +1,5 @@
 (* Copyright 2010 Heriot-Watt University
- *
+ * Copyright 2011 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -41,8 +41,9 @@ structure S = IntCBTHCSet3*)
 
 (*structure S = IntListSet*)
 (*structure S = SplaySetFn (OrdKey)*)
-structure S = BinarySetFn (OrdKey)
+structure S  = BinarySetFn (OrdKey)
 structure EH = ErrorHandler
+structure D  = Debug
 
 (* val debugString = S.debugString *)
 
@@ -71,7 +72,13 @@ fun setNextLab n = nextlab := n
 fun getlab    () = !nextlab
 
 (* generates a new label *)
-fun freshlab  () = let val x = !nextlab in (nextlab := !nextlab + 1; x) end
+fun freshlab  () =
+    let
+	val _ = D.printDebug 3 D.LABEL "generating fresh label"
+	val x = !nextlab
+    in
+	(nextlab := !nextlab + 1; x)
+    end
 
 (* resets the next label back to the firstLab value (constant) *)
 fun resetNext () = setNextLab firstLab

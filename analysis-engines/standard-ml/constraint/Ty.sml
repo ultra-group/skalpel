@@ -1,5 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -39,6 +40,7 @@ structure CD = LongId
 structure EL = ExtLab
 structure EH = ErrorHandler
 structure S  = BinaryMapFn(OrdKey) (* Used for type variable sets *)
+structure D  = Debug
 
 (* new exception, raised if a non-option value is passed to getflex function *)
 exception unflex
@@ -392,20 +394,17 @@ and eqTy (V (tv1, _, _)) (V (tv2, _, _)) =
 (* Freshening *)
 
 (* increment a ref value given as a parameter *)
-fun freshAVar avar =
-    let val x = !avar
-    in (avar := !avar + 1; x)
-    end
+fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 
 (* increments the ref associated with the function name *)
-fun freshtyvar     () = freshAVar nexttyvar
-fun freshseqvar    () = freshAVar nextseqvar
-fun freshtynamevar () = freshAVar nexttynamevar
-fun freshlabvar    () = freshAVar nextlabvar
-fun freshrowvar    () = freshAVar nextrowvar
-fun freshtyfvar    () = freshAVar nexttyfvar
-fun freshtyname    () = freshAVar nexttyname
-fun freshidor      () = freshAVar nextidor
+fun freshtyvar     () = (D.printDebug 3 D.TY ("generating fresh AVar for tyvar ("^(Int.toString (!nexttyvar))^")");         freshAVar nexttyvar)
+fun freshseqvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for seqvar ("^(Int.toString (!nextseqvar))^")");       freshAVar nextseqvar)
+fun freshtynamevar () = (D.printDebug 3 D.TY ("generating fresh AVar for tynamevar ("^(Int.toString (!nexttynamevar))^")"); freshAVar nexttynamevar)
+fun freshlabvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labvar ("^(Int.toString (!nextlabvar))^")");       freshAVar nextlabvar)
+fun freshrowvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowvar ("^(Int.toString (!nextrowvar))^")");       freshAVar nextrowvar)
+fun freshtyfvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for tyfvar ("^(Int.toString (!nexttyfvar))^")");       freshAVar nexttyfvar)
+fun freshtyname    () = (D.printDebug 3 D.TY ("generating fresh AVar for name ("^(Int.toString (!nexttyname))^")");         freshAVar nexttyname)
+fun freshidor      () = (D.printDebug 3 D.TY ("generating fresh AVar for idor ("^(Int.toString (!nextidor))^")");           freshAVar nextidor)
 
 fun getTyNameString "unit"      = consrecord    ()
   | getTyNameString "int"       = consint       ()
