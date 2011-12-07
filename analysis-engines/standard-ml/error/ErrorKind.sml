@@ -60,6 +60,7 @@ datatype kind = Circularity
 	      | OverloadIdCst  of iderr  * tnerr list * idserr * tnerr list (* value iderr overloaded to tnerrlist used on idserr                      *)
               | ArityClash     of arrerr * arrerr
               | TyConsClash    of tnerr  * tnerr
+	      | EqTypeRequired of tnerr  * tnerr
 	      | NotGenClash    of iderr  * tnerr
 	      | TooGenSig      of iderr  * iderr * label list (* the identifier iderr(1st) is monomorphic because of the label list but its specification contains the variable iderr(2nd) *)
 	      | TyFunClash     of iderr  * tnerr
@@ -185,6 +186,12 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (TyConsClash ((l1, tn1), (l2, tn2))) asc =
     ("TYP",
      "Type constructor clash between "
+     ^ T.printtyname' (T.tynameFromInt tn1)
+     ^ " and "
+     ^ T.printtyname' (T.tynameFromInt tn2))
+  | printErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) asc =
+    ("ETR",
+     "Equality type required to compare "
      ^ T.printtyname' (T.tynameFromInt tn1)
      ^ " and "
      ^ T.printtyname' (T.tynameFromInt tn2))
@@ -355,6 +362,10 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
     "ErrorKind.TyConsClash("
     ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
+  | printSmlErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) =
+    "ErrorKind.EqTypeRequired("
+    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
   | printSmlErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "ErrorKind.NotGenClash("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
@@ -457,6 +468,10 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
     "{\"errorKindName\": \"ErrorKind.TyConsClash\", \"errorKindInfo\": {"
     ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
     ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
+  | printJsonErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) =
+    "{\"errorKindName\": \"ErrorKind.EqTypeRequired\", \"errorKindInfo\": {"
+    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
   | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.NotGenClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv
@@ -541,6 +556,7 @@ fun issem Circularity        = true
   | issem (MissConsStr    _) = true
   | issem (ArityClash     _) = true
   | issem (TyConsClash    _) = true
+  | issem (EqTypeRequired _) = true
   | issem (NotGenClash    _) = true
   | issem (TooGenSig      _) = true
   | issem (TyFunClash     _) = true

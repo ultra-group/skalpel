@@ -602,6 +602,8 @@ fun getCol' _ EK.Circularity                      = Red
     if x = l1 then Blue else if x = l2 then Purple else Red
   | getCol' x (EK.TyConsClash ((l1, _), (l2, _))) =
     if x = l1 then Blue else if x = l2 then Purple else Red
+  | getCol' x (EK.EqTypeRequired ((l1, _), (l2, _))) =
+    if x = l1 then Blue else if x = l2 then Purple else Red
   | getCol' x (EK.NotGenClash ((l1, _), (l2, _))) =
     if x = l1 then Blue else if x = l2 then Purple else Red
   | getCol' x (EK.TooGenSig ((l1, _), (l2, _), labs)) =

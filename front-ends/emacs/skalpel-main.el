@@ -376,7 +376,7 @@
 (defvar skalpel-current-highlighted-slice nil "Identifier of the slice currently highlighted")
 
 ;; Keep temporary files between every time slicer runs
-(defvar skalpel-keep-temporary-files-for-debugging nil
+(defvar skalpel-keep-temporary-files-for-debugging t
   "If non-nil, then temporary files used for communication between
 Emacs and Skalpel back end are not deleted.  This makes
 debugging easier.  In normal use, this variable should have the
@@ -555,15 +555,15 @@ value nil.")
 				   (skalpel-get-temporary-directory)))
 		     (output-file (expand-file-name (format "%s.el" cur-file) output-dir))
 		     (slicer-command
-		      (format "%s -b %d %s -f %s -l %s -t %d -min true -bo %d"
-			      (shell-quote-argument (expand-file-name skalpel-slicer-bin skalpel-bin-directory)) ;; arg0
-			      skalpel-basis-option ;; arg1
-			      (shell-quote-argument skalpel-basis-file) ;; arg2
-			      (shell-quote-argument skalpel-file-being-sliced) ;; arg3
-			      (shell-quote-argument output-file) ;; arg4
-			      skalpel-timelimit ;; arg5
-			      skalpel-show-basis
-			      )) ;; arg6
+		      (format "%s -b %d %s -l %s -t %d -min true -bo %d %s"
+		      	      (shell-quote-argument (expand-file-name skalpel-slicer-bin skalpel-bin-directory)) ;; arg0
+		      	      skalpel-basis-option ;; arg1
+		      	      (shell-quote-argument skalpel-basis-file) ;; arg2
+		      	      (shell-quote-argument output-file) ;; arg4
+		      	      skalpel-timelimit ;; arg5
+		      	      skalpel-show-basis
+		      	      (shell-quote-argument skalpel-file-being-sliced) ;; arg3
+		      	      )) ;; arg6
 
 		     (run-command
 		      (concat
@@ -583,7 +583,7 @@ value nil.")
 		     (debug-output-buffer "*skalpel-debugging-output*")
 		     (timer nil) ;; *** DEAD VARIABLE?
 		     )
-
+		(print (concat "Running this command: " run-command))
 		(skalpel-forget-all-slices) ;; remove error info loaded previously
 		;; *** Use make-directory instead!  Arrgh!
 		(shell-command (format "mkdir %s" output-dir)) ;; create temp dir

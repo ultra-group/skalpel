@@ -113,25 +113,26 @@ fun consflex l = SOME l
 fun isflex   f = Option.isSome f
 fun getflex  f = Option.valOf f handle Option => raise unflex
 
-fun dummytyname       () = 0
-fun consarrow         () = 1
-fun consrecord        () = 2
-fun consint           () = 3
-fun consword          () = 4
-fun consreal          () = 5
-fun consbool          () = 6
-fun consstring        () = 7
-fun conslist          () = 8
-fun consref           () = 9
-fun conschar          () = 10
-fun consexception     () = 11
-fun conssubstring     () = 12
-fun consarray         () = 13
-fun consvector        () = 14
-fun consoption        () = 15
-fun consorder         () = 16
-fun consfrag          () = 17
-fun constypenamestart () = 18
+(* integer constants representing types *)
+val DUMMYTYNAME        = 0
+val CONSARROW          = 1
+val CONSRECORD         = 2
+val CONSINT            = 3
+val CONSWORD           = 4
+val CONSREAL           = 5
+val CONSBOOL           = 6
+val CONSSTRING         = 7
+val CONSLIST           = 8
+val CONSREF            = 9
+val CONSCHAR           = 10
+val CONSEXCEPTION      = 11
+val CONSSUBSTRING      = 12
+val CONSARRAY          = 13
+val CONSVECTOR         = 14
+val CONSOPTION         = 15
+val CONSORDER          = 16
+val CONSFRAG           = 17
+val CONSTYPENAMESTART  = 18
 
 val nexttynamevar = ref 0
 val nexttyvar     = ref 0
@@ -140,7 +141,7 @@ val nextlabvar    = ref 0
 val nextrowvar    = ref 0
 val nexttyfvar    = ref 0
 val nextidor      = ref 0
-val nexttyname    = ref (constypenamestart ())
+val nexttyname    = ref (CONSTYPENAMESTART)
 
 (* sets the above ref values to a value n *)
 fun setnexts n =
@@ -151,7 +152,7 @@ fun setnexts n =
 	val _ = nextlabvar    := n
 	val _ = nexttyfvar    := n
 	val _ = nextidor      := n
-	val _ = nexttyname    := (constypenamestart ())
+	val _ = nexttyname    := (CONSTYPENAMESTART)
     in ()
     end
 
@@ -406,22 +407,22 @@ fun freshtyfvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for tyfvar 
 fun freshtyname    () = (D.printDebug 3 D.TY ("generating fresh AVar for name ("^(Int.toString (!nexttyname))^")");         freshAVar nexttyname)
 fun freshidor      () = (D.printDebug 3 D.TY ("generating fresh AVar for idor ("^(Int.toString (!nextidor))^")");           freshAVar nextidor)
 
-fun getTyNameString "unit"      = consrecord    ()
-  | getTyNameString "int"       = consint       ()
-  | getTyNameString "word"      = consword      ()
-  | getTyNameString "real"      = consreal      ()
-  | getTyNameString "bool"      = consbool      ()
-  | getTyNameString "string"    = consstring    ()
-  | getTyNameString "list"      = conslist      ()
-  | getTyNameString "ref"       = consref       ()
-  | getTyNameString "char"      = conschar      ()
-  | getTyNameString "exn"       = consexception ()
-  | getTyNameString "substring" = conssubstring ()
-  | getTyNameString "array"     = consarray     ()
-  | getTyNameString "vector"    = consvector    ()
-  | getTyNameString "option"    = consoption    ()
-  | getTyNameString "order"     = consorder     ()
-  | getTyNameString "frag"      = consfrag      ()
+fun getTyNameString "unit"      = CONSRECORD
+  | getTyNameString "int"       = CONSINT
+  | getTyNameString "word"      = CONSWORD
+  | getTyNameString "real"      = CONSREAL
+  | getTyNameString "bool"      = CONSBOOL
+  | getTyNameString "string"    = CONSSTRING
+  | getTyNameString "list"      = CONSLIST
+  | getTyNameString "ref"       = CONSREF
+  | getTyNameString "char"      = CONSCHAR
+  | getTyNameString "exn"       = CONSEXCEPTION
+  | getTyNameString "substring" = CONSSUBSTRING
+  | getTyNameString "array"     = CONSARRAY
+  | getTyNameString "vector"    = CONSVECTOR
+  | getTyNameString "option"    = CONSOPTION
+  | getTyNameString "order"     = CONSORDER
+  | getTyNameString "frag"      = CONSFRAG
   | getTyNameString _           = freshtyname   ()
 
 
@@ -493,29 +494,29 @@ fun constuple tvl lab =
 fun consTupleTy tyl lab =
     #1 (foldl (fn (x, (xs, n)) => ((RC (conslabty n lab, x, lab)) :: xs, n+1)) ([], 1) tyl)
 
-fun constyarrow' tv1 tv2 lab k = C (NC (consarrow     (), k, lab), SC (constuple [tv1, tv2] lab, noflex (), lab), lab)
-fun constyrecord'  tvl f lab k = C (NC (consrecord    (), k, lab), SC (map (fn x => RV x) tvl, f, lab), lab)
-fun constybool'          lab k = C (NC (consbool      (), k, lab), SC ([], noflex (), lab), lab)
-fun constyint'           lab k = C (NC (consint       (), k, lab), SC ([], noflex (), lab), lab)
-fun constyword'          lab k = C (NC (consword      (), k, lab), SC ([], noflex (), lab), lab)
-fun constyreal'          lab k = C (NC (consreal      (), k, lab), SC ([], noflex (), lab), lab)
-fun constychar'          lab k = C (NC (conschar      (), k, lab), SC ([], noflex (), lab), lab)
-fun constystring'        lab k = C (NC (consstring    (), k, lab), SC ([], noflex (), lab), lab)
-fun constyexception'     lab k = C (NC (consexception (), k, lab), SC ([], noflex (), lab), lab)
-fun constyunit'          lab k = C (NC (consrecord    (), k, lab), SC ([], noflex (), lab), lab)
-fun constylist'       tv lab k = C (NC (conslist      (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyref'        tv lab k = C (NC (consref       (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constytuple'     tvl lab k = C (NC (consrecord    (), k, lab), SC (constuple tvl lab, noflex (), lab), lab)
-fun constysubstring'     lab k = C (NC (conssubstring (), k, lab), SC ([], noflex (), lab), lab)
-fun constyarray'      tv lab k = C (NC (consarray     (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyvector'     tv lab k = C (NC (consvector    (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyoption'     tv lab k = C (NC (consoption    (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyorder'         lab k = C (NC (consorder     (), k, lab), SC ([], noflex (), lab), lab)
-fun constyfrag'       tv lab k = C (NC (consfrag      (), k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyarrow' tv1 tv2 lab k = C (NC (CONSARROW, k, lab), SC (constuple [tv1, tv2] lab, noflex (), lab), lab)
+fun constyrecord'  tvl f lab k = C (NC (CONSRECORD, k, lab), SC (map (fn x => RV x) tvl, f, lab), lab)
+fun constybool'          lab k = C (NC (CONSBOOL, k, lab), SC ([], noflex (), lab), lab)
+fun constyint'           lab k = C (NC (CONSINT, k, lab), SC ([], noflex (), lab), lab)
+fun constyword'          lab k = C (NC (CONSWORD, k, lab), SC ([], noflex (), lab), lab)
+fun constyreal'          lab k = C (NC (CONSREAL, k, lab), SC ([], noflex (), lab), lab)
+fun constychar'          lab k = C (NC (CONSCHAR, k, lab), SC ([], noflex (), lab), lab)
+fun constystring'        lab k = C (NC (CONSSTRING, k, lab), SC ([], noflex (), lab), lab)
+fun constyexception'     lab k = C (NC (CONSEXCEPTION, k, lab), SC ([], noflex (), lab), lab)
+fun constyunit'          lab k = C (NC (CONSRECORD, k, lab), SC ([], noflex (), lab), lab)
+fun constylist'       tv lab k = C (NC (CONSLIST, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyref'        tv lab k = C (NC (CONSREF, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constytuple'     tvl lab k = C (NC (CONSRECORD, k, lab), SC (constuple tvl lab, noflex (), lab), lab)
+fun constysubstring'     lab k = C (NC (CONSSUBSTRING, k, lab), SC ([], noflex (), lab), lab)
+fun constyarray'      tv lab k = C (NC (CONSARRAY, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyvector'     tv lab k = C (NC (CONSVECTOR, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyoption'     tv lab k = C (NC (CONSOPTION, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyorder'         lab k = C (NC (CONSORDER, k, lab), SC ([], noflex (), lab), lab)
+fun constyfrag'       tv lab k = C (NC (CONSFRAG, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
 fun constynewcons'       lab k = C (NC (freshtyname   (), k, lab), SC ([], noflex (), lab), lab) (* a new constant type *)
 
-fun consTyArrowTy ty1 ty2 lab k = C (NC (consarrow  (), k, lab), SC (consTupleTy [ty1, ty2] lab, noflex (), lab), lab)
-fun consTyTupleTy     tyl lab k = C (NC (consrecord (), k, lab), SC (consTupleTy tyl lab, noflex (), lab), lab)
+fun consTyArrowTy ty1 ty2 lab k = C (NC (CONSARROW, k, lab), SC (consTupleTy [ty1, ty2] lab, noflex (), lab), lab)
+fun consTyTupleTy     tyl lab k = C (NC (CONSRECORD, k, lab), SC (consTupleTy tyl lab, noflex (), lab), lab)
 
 fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OT
 fun constyrecord  tvl f lab = constyrecord'  tvl f lab OT
@@ -538,20 +539,20 @@ fun constyorder         lab = constyorder'         lab OT
 fun constyfrag       tv lab = constyfrag'       tv lab OT
 fun constynewcons       lab = constynewcons'       lab OT
 
-fun isBase' tn = tn < constypenamestart () andalso tn > dummytyname ()
-fun isBase  tn = tn = consarrow ()         orelse  tn = consrecord ()
-(*orelse (tn = consint ())*)
+fun isBase' tn = tn < CONSTYPENAMESTART andalso tn > DUMMYTYNAME
+fun isBase  tn = tn = CONSARROW         orelse  tn = CONSRECORD
+(*orelse (tn = CONSINT)*)
 
 fun isBaseTy (NV _)          = false
   | isBaseTy (NC (tn, _, _)) = isBase tn
   | isBaseTy (ND etn)        = isBaseTy (EL.getExtLabT etn)
 
 fun isArrowTy (NV _)          = false
-  | isArrowTy (NC (tn, _, _)) = tn = consarrow ()
+  | isArrowTy (NC (tn, _, _)) = tn = CONSARROW
   | isArrowTy (ND etn)        = isArrowTy (EL.getExtLabT etn)
 
 fun isExcTy (NV _)          = false
-  | isExcTy (NC (tn, _, _)) = tn = consexception ()
+  | isExcTy (NC (tn, _, _)) = tn = CONSEXCEPTION
   | isExcTy (ND etn)        = isExcTy (EL.getExtLabT etn)
 
 fun isDecTy (NC (_, DE _, _)) = true
@@ -652,7 +653,7 @@ fun getTyVarsTy ty =
 
 
 (* Returns the actual type constructor of a tnty *)
-fun tntyToTyCon (NV tnv)        = dummytyname () (* we could also return "tnv" but we don't care about the variable really *)
+fun tntyToTyCon (NV tnv)        = DUMMYTYNAME (* we could also return "tnv" but we don't care about the variable really *)
   | tntyToTyCon (NC (tn, _, _)) = tn
   | tntyToTyCon (ND etn)        = tntyToTyCon (EL.getExtLabT etn)
 
@@ -696,7 +697,7 @@ fun printtyname'   0   = "a new type name"
   | printtyname'   _   = "a user type" (* should be a raise DeadBranch *)
 
 fun printTyNameAssoc tyname assoc =
-    if tyname >= constypenamestart ()
+    if tyname >= CONSTYPENAMESTART
     then case I.lookupId (I.fromInt tyname) assoc of
 	     NONE => printtyname' tyname
 	   | SOME str => "a user type named " ^ str

@@ -2,25 +2,20 @@
  * Copyright 2010 Heriot-Watt University
  * Copyright 2011 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        21 May 2010
  *  o File name:   Unification.sml
@@ -3502,9 +3497,16 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    (D.printDebug 2 D.UNIF "in fsimplify- constarint type is two of tnty.NC";
 	     if T.eqTyname tn1 tn2
-	     then (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^
-					  ").Labels- l1 = "^(Int.toString (L.toInt l1)) ^ " l2 = " ^(Int.toString (L.toInt l2)));
-		   fsimplify cs' l)
+	     then
+		 (* we check if tn1 and tn2 are equality types. If they aren't then generate an error, otherwise it's typable *)
+		 if T.eqTyname tn1 T.CONSREAL then      (* this only works for the built-in basis. Need to extend to the basis file *)
+		     (* EK.EqTypeRequired (...) *)
+		     (* putting something in here to test with an example. We should generate a proper error for this *)
+		     handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l
+		 else
+		     (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^
+					     ").Labels- l1 = "^(Int.toString (L.toInt l1)) ^ " l2 = " ^(Int.toString (L.toInt l2)));
+		      fsimplify cs' l)
 	     else let val _   = D.printDebug 2 D.UNIF ("typenames of both tnty.NC constructors are not equal");
 		      val _   = D.printDebug 3 D.UNIF ("first tnty.NC  - label = "^(Int.toString (L.toInt l1))^", tyname = " ^ (Int.toString (T.tynameToInt tn1)))
 		      val _   = D.printDebug 3 D.UNIF ("second tnty.NC - label = "^(Int.toString (L.toInt l2))^", tyname = " ^ (Int.toString (T.tynameToInt tn2)))
@@ -3580,7 +3582,7 @@ fun unif env filters user =
 			if I.eqId id1 id2
 			then continue ()
 			else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two implicit type variables"
-				 val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.dummytyname ())), (L.toInt lab2, T.tynameToInt (T.dummytyname ())))
+				 val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt lab2, T.tynameToInt (T.DUMMYTYNAME)))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 			     in handleSimplify err cs' l
 			     end
@@ -3590,13 +3592,13 @@ fun unif env filters user =
 	    if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
 	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two explicit type variables"
-		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.dummytyname ())))
+		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.DUMMYTYNAME)))
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
 		 end
 	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids)) :: cs') l =
 	    let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is an explicit tyvar and a type construction"
-		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.dummytyname ())), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
+		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
 	    end
@@ -3974,7 +3976,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.OR (sq, _, poly, orKind, _)), ls, deps, ids)) :: cs') l =
 	    let fun getErr () =
-		    let val tnerr  = (L.toInt l1, T.tynameToInt (T.dummytyname ()))
+		    let val tnerr  = (L.toInt l1, T.tynameToInt (T.DUMMYTYNAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
 			val kind =
 			    case orKind of
