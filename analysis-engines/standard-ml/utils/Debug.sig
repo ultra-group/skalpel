@@ -27,7 +27,7 @@
 
 signature DEBUG = sig
 
-    datatype debugFiles = JSON | UNIF | LABEL | TY
+    datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM
 
     val debugUnif   : int ref
     val debugJson   : int ref

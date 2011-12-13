@@ -27,19 +27,21 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM
 
 (* the greater the depth, the more detail the print statements give *)
 val debugUnif  : int ref = ref 0
 val debugJson  : int ref = ref 0
 val debugLabel : int ref = ref 0
 val debugTy    : int ref = ref 0
+val debugGrm   : int ref = ref 0
 
 fun setAllDebug value =
     (debugUnif := value;
      debugJson := value;
      debugLabel:= value;
-     debugTy   := value)
+     debugTy   := value;
+     debugGrm  := value)
 
 fun printDebug depth JSON str =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ str ^ "\n") else ()
@@ -49,6 +51,9 @@ fun printDebug depth JSON str =
     if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ str ^ "\n") else ()
   | printDebug depth TY str =
     if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Ty.sml: " ^ str ^ "\n") else ()
+  | printDebug depth MLGRM str =
+    if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Ml.grm: " ^ str ^ "\n") else ()
+
 
 (* separator definitions *)
 val sep1  = "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-"

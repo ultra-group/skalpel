@@ -57,7 +57,7 @@ signature TY = sig
 		    | LC  of labcons * Label.label
 		    | LD  of labty ExtLab.extLab
     datatype tnty   = NV  of tynamevar
-		    | NC  of tyname * kcons * Label.label (* tnKind is used to know if the constructor comes from a declaration (arrow type: datatype constructor with argument).  It is only used for the arrow type isn't it? *)
+		    | NC  of tyname * kcons * Label.label (* kcons is used to know if the constructor comes from a declaration (arrow type: datatype constructor with argument).  It is only used for the arrow type isn't it? *)
 		    | ND  of tnty ExtLab.extLab
     datatype rowty  = RV  of rowvar
 		    | RC  of labty * ty * Label.label

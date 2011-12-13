@@ -1,6 +1,7 @@
 (* Copyright 2002 Heriot-Watt University
  * Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -37,6 +38,7 @@ structure D  = Debug
 structure F  = Infix
 structure PD = ParseDefs
 structure EH = ErrorHandler
+structure D  = Debug
 
 type associd = I.assoc
 type pack  = L.label * associd
@@ -964,14 +966,14 @@ longtyconeqseq :
 	let val (x1, masc) = longtycon1 nasc
 	    val (x2, pasc) = longtycon2 masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (([x1, x2], [reg]), pasc)
+	in (D.printDebug 3 D.MLGRM "detected pattern: longtycon EQUALOP longtycon"; (([x1, x2], [reg]), pasc))
 	end)
 | longtycon EQUALOP longtyconeqseq
     (fn nasc =>
 	let val (x, masc) = longtycon nasc
 	    val ((xs, rs), pasc) = longtyconeqseq masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in ((x :: xs, reg :: rs), pasc)
+	in (D.printDebug 3 D.MLGRM "detected pattern: longtycon EQUALOP longtyconeqseq"; ((x :: xs, reg :: rs), pasc))
 	end)
 
 longtyconeq :
@@ -987,14 +989,14 @@ longstrideqseq :
 	let val (x1, masc) = longstrid1 nasc
 	    val (x2, pasc) = longstrid1 masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (([x1, x2], [reg]), pasc)
+	in (D.printDebug 3 D.MLGRM "detected pattern: longstrid EQUALOP longstrid"; (([x1, x2], [reg]), pasc))
 	end)
 | longstrid EQUALOP longstrideqseq
     (fn nasc =>
 	let val (x, masc) = longstrid nasc
 	    val ((xs, rs), pasc) = longstrideqseq masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in ((x :: xs, reg :: rs), pasc)
+	in (D.printDebug 3 D.MLGRM "detected pattern: longstrid EQUALOP longstrideqseq"; ((x :: xs, reg :: rs), pasc))
 	end)
 
 longstrideq :
@@ -1992,7 +1994,7 @@ valbindcore :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlp = getRegion labpatright EQUALOPleft
-	in (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc'))
+	in (D.printDebug 3 D.MLGRM "detected pattern: labpat EQUALOP labexp"; (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc')))
 	end)
 
 valbindcorelist :
@@ -2363,7 +2365,7 @@ exbind :
 	    val (sid, (p, asc')) = longid masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rli = getRegion labidright EQUALOPleft
-	in (A.ExBindEq (id rli, sid, reg, n, p), (p, asc'))
+	in (D.printDebug 3 D.MLGRM "detected pattern: labid EQUALOP longid"; (A.ExBindEq (id rli, sid, reg, n, p), (p, asc')))
 	end)
 | OP labid EQUALOP longid
     (fn (n, asc) =>
@@ -3016,7 +3018,7 @@ exp :
 	    val rle1 = (getRegion IFright labexp1left) @ (getRegion labexp1right THENleft)
 	    val rle2 = (getRegion THENright labexp2left) @ (getRegion labexp2right ELSEleft)
 	    val rle3 = getRegion ELSEright labexp3left
-	in (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3))
+	in (D.printDebug 3 D.MLGRM "detected pattern: IF labexp THEN labexp ELSE labexp"; (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3)))
 	end)
 | WHILE labexp DO labexp
     (fn (n, asc) =>
