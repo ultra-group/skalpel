@@ -52,6 +52,7 @@ type tynamevar = int
 type labvar    = int
 type rowvar    = int
 type tyfvar    = int
+type eqType    = bool
 
 type tyname     = int
 type labcons    = string
@@ -90,9 +91,6 @@ datatype rowty = RV  of rowvar
 	       | TD  of ty EL.extLab
 
 datatype names = TYNAME of tyname | DUMTYNAME of tyname | MAYTYNAME | NOTTYNAME
-
-
-
 
 (* List of builtin type names.
  * When analysing the basis file, the first occurrence of such a type name
@@ -434,7 +432,7 @@ fun consTyNameVar lab = C (NV (freshtynamevar ()),
 			   lab)
 
 (* constructs an implicit type variable *)
-fun consV   tv  = V (tv, NONE, POLY)
+fun consV   tv = V (tv, NONE, POLY)
 
 (* constructs a sequence variable *)
 fun consSV  sv  = SV sv

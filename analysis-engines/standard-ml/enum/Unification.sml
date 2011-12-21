@@ -3099,7 +3099,7 @@ fun unif env filters user =
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
-			ENUM => print ("[TES: analysing " ^ file ^ "]\n")
+			ENUM => print ("[Skalpel: analysing " ^ file ^ "]\n")
 		      | _    => ()
 		val env1 = solveenv env bmon
 		val b    = E.isEmptyEnv env1
@@ -3504,8 +3504,7 @@ fun unif env filters user =
 		     (* putting something in here to test with an example. We should generate a proper error for this *)
 		     handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l
 		 else
-		     (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^
-					     ").Labels- l1 = "^(Int.toString (L.toInt l1)) ^ " l2 = " ^(Int.toString (L.toInt l2)));
+		     (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
 		      fsimplify cs' l)
 	     else let val _   = D.printDebug 2 D.UNIF ("typenames of both tnty.NC constructors are not equal");
 		      val _   = D.printDebug 3 D.UNIF ("first tnty.NC  - label = "^(Int.toString (L.toInt l1))^", tyname = " ^ (Int.toString (T.tynameToInt tn1)))

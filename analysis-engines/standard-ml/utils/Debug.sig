@@ -2,7 +2,6 @@
  * Copyright 2010 Heriot-Watt University
  * Copyright 2011 Heriot-Watt University
  *
- *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Debug.sig
@@ -27,10 +26,12 @@
 
 signature DEBUG = sig
 
-    datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM
-
-    val debugUnif   : int ref
-    val debugJson   : int ref
+    datatype debugFiles = JSON  (* JsonParser.sml *)
+			| UNIF  (* Unification.sml *)
+			| LABEL (* Label.sml *)
+			| TY    (* Ty.sml *)
+			| MLGRM (* ML.grm *)
+			| AZE   (* Analyze.sml *)
 
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit

@@ -244,7 +244,7 @@ fun printErrors errors =
 
 (* prints out the error it found, and how long it took to find the error *)
 fun printFound counter errors time =
-    print ("[TES:" ^
+    print ("[Skalpel:" ^
 	   " found counter=" ^ Int.toString counter ^
 	   " time="          ^ Int.toString time    ^
 	   " errors="        ^ printErrors  errors  ^ "]\n")

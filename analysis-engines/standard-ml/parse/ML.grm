@@ -544,6 +544,7 @@ smltes :
     (fn (n, nasc) =>
 	let val reg1 = R.consReg STTYPEleft STTYPEright
 	    val reg2 = R.consReg STENDleft STENDright
+	    val _    = D.printDebug 3 D.MLGRM "pattern detected: STTYPE ID STEND"
 	in (A.SmlTesType (ID, [reg1, reg2], n), (n, nasc))
 	end)
 
@@ -697,6 +698,7 @@ sigbindone :
 	    val (se, (p, asc')) = labsigexp masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val re  = getRegion EQUALOPright labsigexpleft
+	    val _ = D.printDebug 3 D.MLGRM "pattern detected: sigid EQUALOP labsigexp"
 	in (A.SigBindOne (id, se re, reg, n, p), (p, asc'))
 	end)
 
@@ -822,6 +824,7 @@ strbindone :
 	    val (se, (p, asc')) = labstrexp masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val re   = getRegion EQUALOPright labstrexpleft
+	    val _ = D.printDebug 3 D.MLGRM "pattern detected: strid EQUALOP labstrexp"
 	in (A.StrBindOne (sid, se re, reg, n, p), (p, asc'))
 	end)
 
@@ -833,6 +836,7 @@ ltreadescone :
 	    val rt   = getRegion EQUALOPright labtypeleft
 	    val reg1 = R.consReg TYPEleft TYPEright
 	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	    val _    = D.printDebug 3 D.MLGRM "pattern detected: TYPE ldatname EQUALOP labtype"
 	in (A.LTReaDOne (dn, ty rt, [reg1, reg2], n, p), (p, pasc))
 	end)
 
@@ -966,14 +970,14 @@ longtyconeqseq :
 	let val (x1, masc) = longtycon1 nasc
 	    val (x2, pasc) = longtycon2 masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (D.printDebug 3 D.MLGRM "detected pattern: longtycon EQUALOP longtycon"; (([x1, x2], [reg]), pasc))
+	in (D.printDebug 3 D.MLGRM "pattern detected: longtycon EQUALOP longtycon"; (([x1, x2], [reg]), pasc))
 	end)
 | longtycon EQUALOP longtyconeqseq
     (fn nasc =>
 	let val (x, masc) = longtycon nasc
 	    val ((xs, rs), pasc) = longtyconeqseq masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (D.printDebug 3 D.MLGRM "detected pattern: longtycon EQUALOP longtyconeqseq"; ((x :: xs, reg :: rs), pasc))
+	in (D.printDebug 3 D.MLGRM "pattern detected: longtycon EQUALOP longtyconeqseq"; ((x :: xs, reg :: rs), pasc))
 	end)
 
 longtyconeq :
@@ -989,14 +993,14 @@ longstrideqseq :
 	let val (x1, masc) = longstrid1 nasc
 	    val (x2, pasc) = longstrid1 masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (D.printDebug 3 D.MLGRM "detected pattern: longstrid EQUALOP longstrid"; (([x1, x2], [reg]), pasc))
+	in (D.printDebug 3 D.MLGRM "pattern detected: longstrid EQUALOP longstrid"; (([x1, x2], [reg]), pasc))
 	end)
 | longstrid EQUALOP longstrideqseq
     (fn nasc =>
 	let val (x, masc) = longstrid nasc
 	    val ((xs, rs), pasc) = longstrideqseq masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
-	in (D.printDebug 3 D.MLGRM "detected pattern: longstrid EQUALOP longstrideqseq"; ((x :: xs, reg :: rs), pasc))
+	in (D.printDebug 3 D.MLGRM "pattern detected: longstrid EQUALOP longstrideqseq"; ((x :: xs, reg :: rs), pasc))
 	end)
 
 longstrideq :
@@ -1113,12 +1117,14 @@ specone :
     (fn (n, asc) =>
 	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
 	    val reg = R.consReg TYPEleft TYPEright
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: TYPE typdesc"
 	in (A.SpecTyp (td, reg, n, m), (m, asc'))
 	end)
 | EQTYPE typdesc
     (fn (n, asc) =>
 	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
 	    val reg = R.consReg EQTYPEleft EQTYPEright
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: EQTYPE typdesc"
 	in (A.SpecEqT (td, reg, n, m), (m, asc'))
 	end)
 | EXCEPTION excdesc
@@ -1131,6 +1137,7 @@ specone :
     (fn (n, asc) =>
 	let val (td, (m, asc')) = tdrdesc (L.nextLabel n, asc)
 	    val reg = R.consReg TYPEleft TYPEright
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: TYPE tdrdesc"
 	in (A.SpecTdr (td, reg, n, m), (m, asc'))
 	end)
 | DATATYPE datdesc
@@ -1213,6 +1220,7 @@ datdescone :
 	    val (cd, (q, qasc)) = condesc (p, pasc)
 	    val reg1 = getRegion tyvarseqright tyconleft
 	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tyvarseq tycon EQUALOP condesc"
 	in (A.DatDescOne (A.DatName (tvs, tn, reg1, p), cd, reg2, n, q), (q, qasc))
 	end)
 | tycon EQUALOP condesc
@@ -1222,6 +1230,7 @@ datdescone :
 	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
 	    val (cd, (q, qasc)) = condesc (L.nextLabel p, pasc)
 	    val reg = R.consReg EQUALOPleft EQUALOPright
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tycon EQUALOP condesc"
 	in (A.DatDescOne (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), cd, reg, n, q), (q, qasc))
 	end)
 
@@ -1323,6 +1332,7 @@ tdrdescone :
 	    val (ty, (p, asc')) = labtype masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rr = getRegion EQUALOPright labtypeleft
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected (tdrdescone): datname EQUALOP labtype"
 	in (A.TdrDescOne (dn, ty rr, reg, n, p), (p, asc'))
 	end)
 
@@ -1476,8 +1486,11 @@ identop :
 	end)
 | EQUALOP
     (fn (n, nasc) =>
-	let val (id, m, masc) = createId "=" EQUALOPleft EQUALOPright n nasc
-	in(id, (m, masc))
+	let
+	    val (id, m, masc) = createId "=" EQUALOPleft EQUALOPright n nasc
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected (identop): EQUALOP"
+	in
+	    (id, (m, masc))
 	end)
 
 labid :
@@ -1665,8 +1678,11 @@ tylab :
 	end)
 | EQUALOP
     (fn (n, asc) =>
-	let val reg = R.consReg EQUALOPleft EQUALOPright
-	in (A.TyLab ("=", reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	let
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected (tylab): EQUALOP"
+	in
+	    (A.TyLab ("=", reg, n, L.nextLabel n), (L.nextLabel n, asc))
 	end)
 
 typevar :
@@ -1674,6 +1690,7 @@ typevar :
     (fn (n, nasc) =>
 	let val reg = R.consReg TYPEVARleft TYPEVARright
 	    val (t, masc) = gettypevar TYPEVAR nasc
+	    val _         = D.printDebug 3 D.MLGRM "pattern detected: TYPEVAR"
 	in (A.TypeVar (TYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
 
@@ -1994,7 +2011,7 @@ valbindcore :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlp = getRegion labpatright EQUALOPleft
-	in (D.printDebug 3 D.MLGRM "detected pattern: labpat EQUALOP labexp"; (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc')))
+	in (D.printDebug 3 D.MLGRM "pattern detected: labpat EQUALOP labexp"; (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc')))
 	end)
 
 valbindcorelist :
@@ -2072,6 +2089,7 @@ datbind :
 	    val (cbs, (q, qasc)) = conbindseq (p, pasc)
 	    val reg1 = getRegion tyvarseqright tyconleft
 	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tyvarseq tycon EQUALOP conbindseq"
 	in (A.DatBind (A.DatName (tvs, tn, reg1, p), cbs, reg2, n, q), (q, qasc))
 	end)
 | tycon EQUALOP conbindseq
@@ -2081,6 +2099,7 @@ datbind :
 	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
 	    val (cbs, (q, qasc)) = conbindseq (L.nextLabel p, pasc)
 	    val reg = R.consReg EQUALOPleft EQUALOPright
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tycon EQUALOP conbindseq"
 	in (A.DatBind (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), cbs, reg, n, q), (q, qasc))
 	end)
 
@@ -2254,6 +2273,7 @@ fmvalbindcore :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlm = getRegion fmatchtyright EQUALOPleft
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: fmatchty EQUALOP labexp"
 	in (A.FValBindCore (lfm rlm, e rle, reg, n, p), (p, asc'))
 	end)
 
@@ -2306,6 +2326,7 @@ typbind :
 	    val (ty, (p, asc')) = labtype masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rr  = getRegion EQUALOPright labtypeleft
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected (typbind): datname EQUALOP labtype"
 	in (A.TypBind (dn, ty rr, reg, n, p), (p, asc'))
 	end)
 
@@ -2365,7 +2386,7 @@ exbind :
 	    val (sid, (p, asc')) = longid masc
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rli = getRegion labidright EQUALOPleft
-	in (D.printDebug 3 D.MLGRM "detected pattern: labid EQUALOP longid"; (A.ExBindEq (id rli, sid, reg, n, p), (p, asc')))
+	in (D.printDebug 3 D.MLGRM "pattern detected: labid EQUALOP longid"; (A.ExBindEq (id rli, sid, reg, n, p), (p, asc')))
 	end)
 | OP labid EQUALOP longid
     (fn (n, asc) =>
@@ -2516,6 +2537,7 @@ dec' :
     (fn nasc =>
 	let val (tbs, (m, masc)) = typbindseq nasc
 	    val reg = R.consReg TYPEleft TYPEright
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: TYPE typbindseq"
 	in (A.DecType (tbs, reg, m), (m, masc))
 	end)
 | EXCEPTION exbindseq
@@ -2684,6 +2706,7 @@ oneexprow :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlt = getRegion tylabright EQUALOPleft
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tylab EQUALOP labexp"
 	in (fn rl => A.ExpRow (l, e rle, reg, rl @ rlt, n, p), (p, asc'))
 	end)
 
@@ -2847,7 +2870,8 @@ appexp :
 | INID
     ([F.O (INID, R.consReg INIDleft INIDright)])
 | EQUALOP
-    ([F.O ("=", R.consReg EQUALOPleft EQUALOPright)])
+    (D.printDebug 3 D.MLGRM "pattern detected (appexp): EQUALOP";
+    ([F.O ("=", R.consReg EQUALOPleft EQUALOPright)]))
 | STAR
     ([F.O ("*", R.consReg STARleft STARright)])
 | longid'
@@ -2859,7 +2883,8 @@ appexp :
 | INID appexp
     ((F.O (INID, R.consReg INIDleft INIDright)) :: appexp)
 | EQUALOP appexp
-    ((F.O ("=", R.consReg EQUALOPleft EQUALOPright)) :: appexp)
+    (D.printDebug 3 D.MLGRM "pattern detected: EQUALOP appexp";
+    ((F.O ("=", R.consReg EQUALOPleft EQUALOPright)) :: appexp))
 | STAR appexp
     ((F.O ("*", R.consReg STARleft STARright)) :: appexp)
 | longid' appexp
@@ -3018,7 +3043,8 @@ exp :
 	    val rle1 = (getRegion IFright labexp1left) @ (getRegion labexp1right THENleft)
 	    val rle2 = (getRegion THENright labexp2left) @ (getRegion labexp2right ELSEleft)
 	    val rle3 = getRegion ELSEright labexp3left
-	in (D.printDebug 3 D.MLGRM "detected pattern: IF labexp THEN labexp ELSE labexp"; (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3)))
+	    val _ = D.printDebug 3 D.MLGRM "pattern detected: IF labexp THEN labexp ELSE labexp. Returning A.ExpIte.";
+	in (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3))
 	end)
 | WHILE labexp DO labexp
     (fn (n, asc) =>
@@ -3161,6 +3187,7 @@ onepatrow :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rlp = getRegion EQUALOPright labpatleft
 	    val rlt = getRegion tylabright EQUALOPleft
+	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tylab EQUALOP labpat"
 	in (A.PatRow (l, pa rlp, reg, rlt, n, p), (p, asc'))
 	end)
 | identty

@@ -1,23 +1,19 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -1763,11 +1759,13 @@ fun genAccIi x lab cds = ACCSIG (genAccGen x lab cds)
 fun genAccIf x lab cds = ACCFUN (genAccGen x lab cds)
 
 
+(* x1 and x2 here are eg T.NC (tn1, b1,l1) and T.NC(tn2,b2,l2) *)
 fun genCstEmGen x1 x2 lab = EL.initExtLab (x1, x2) lab
+
 
 fun genCstTyEm x1 x2 lab = CSTTYP (genCstEmGen x1 x2 lab)
 fun genCstTfEm x1 x2 lab = CSTTYF (genCstEmGen x1 x2 lab)
-fun genCstTnEm x1 x2 lab = CSTTYN (genCstEmGen x1 x2 lab)
+fun genCstTnEm x1 x2 lab = CSTTYN (genCstEmGen x1 x2 lab) (* change here for eqtypes? genCstEmGen takes and returns now 4-tuple?*)
 fun genCstSqEm x1 x2 lab = CSTSEQ (genCstEmGen x1 x2 lab)
 fun genCstRtEm x1 x2 lab = CSTROW (genCstEmGen x1 x2 lab)
 fun genCstLtEm x1 x2 lab = CSTLAB (genCstEmGen x1 x2 lab)

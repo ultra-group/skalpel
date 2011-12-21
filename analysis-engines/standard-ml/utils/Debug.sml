@@ -2,7 +2,6 @@
  * Copyright 2010 Heriot-Watt University
  * Copyright 2011 Heriot-Watt University
  *
- *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,32 +26,36 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE
 
 (* the greater the depth, the more detail the print statements give *)
 val debugUnif  : int ref = ref 0
 val debugJson  : int ref = ref 0
 val debugLabel : int ref = ref 0
 val debugTy    : int ref = ref 0
-val debugGrm   : int ref = ref 0
+val debugGrm   : int ref = ref 3
+val debugAze   : int ref = ref 3
 
 fun setAllDebug value =
     (debugUnif := value;
      debugJson := value;
      debugLabel:= value;
      debugTy   := value;
-     debugGrm  := value)
+     debugGrm  := value;
+     debugAze  := value)
 
 fun printDebug depth JSON str =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ str ^ "\n") else ()
   | printDebug depth UNIF str =
     if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Unification.sml: " ^ str ^ "\n") else ()
   | printDebug depth LABEL str =
-    if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ str ^ "\n") else ()
+    if (!debugLabel >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ str ^ "\n") else ()
   | printDebug depth TY str =
-    if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Ty.sml: " ^ str ^ "\n") else ()
+    if (!debugTy >= depth) then print ("("^(Int.toString depth)^") Ty.sml: " ^ str ^ "\n") else ()
   | printDebug depth MLGRM str =
-    if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Ml.grm: " ^ str ^ "\n") else ()
+    if (!debugGrm >= depth) then print ("("^(Int.toString depth)^") Ml.grm: " ^ str ^ "\n") else ()
+  | printDebug depth AZE str =
+    if (!debugAze >= depth) then print ("("^(Int.toString depth)^") Analyze.sml: " ^ str ^ "\n") else ()
 
 
 (* separator definitions *)

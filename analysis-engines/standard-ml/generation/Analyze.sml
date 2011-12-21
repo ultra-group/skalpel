@@ -1,23 +1,19 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -27,7 +23,6 @@
  *      It defines the structure Analyze that has the signature
  *      ANALYZE itself is defined in Analyze.sig
  *)
-
 
 structure Analyze :> ANALYZE = struct
 
@@ -45,17 +40,7 @@ structure OP = Op
 structure CL = ClassId
 structure CD = LongId
 structure EH = ErrorHandler
-(*structure X  = Expans*)
-(*structure P  = Poly*)
-(*structure F  = Fresh2*)
-(*structure VT = VTimer*)
-(*structure SO = Solution*)
-
-(*structure S = StateMap
-structure U = Unif(S)
-structure B = Build(S)*)
-
-(*exception lkupex*)
+structure D  = Debug
 
 (* TODO: true if we want to have recursive types.  This is for the future *)
 val rectype = false
@@ -3175,6 +3160,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv, cst, css) = f_exp exp
 		   val tv' = T.freshtyvar ()
 		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.LabExp (tv= "^Int.toString(T.tyvarToInt tv)^")")
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labexp (A.LabExpDots pl) =
@@ -3232,6 +3218,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
 	   and f_atexp (A.AtExpId id) =
 	       let val (tv, _, _, cst) = f_longidexp id
+		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpId (tv= "^Int.toString(T.tyvarToInt tv)^")")
 	       in (tv, cst, E.emcss)
 	       end
 	     | f_atexp (A.AtExpScon sc) = f_scon sc
@@ -3425,15 +3412,27 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpIte (labexp1, labexp2, labexp3, _, lab, _)) =
-	       let val tv = T.freshtyvar ()
+	       let
+		   (* get the type variables, constraint on types and E.ocss *)
 		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val (tv3, cst3, css3) = f_labexp labexp3
+
+		   (* constrain the condition of the if statement to be of type bool*)
 		   val c1  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab
+
+		   (* generate a fresh type variable and constrain the true/false branches
+		    * of the if statemnt to be of the same type *)
+		   val tv = T.freshtyvar ()
 		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
 		   val c3  = E.genCstTyEm (T.consV tv) (T.consV tv3) lab
+
 		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2, cst3])
 		   val css = E.uenvcss [css1, css2, css3]
+
+		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.ExpIte (tv1= "^Int.toString(T.tyvarToInt tv1) ^
+			     " tv2 = "^Int.toString(T.tyvarToInt tv2)^" tv3 = "^Int.toString(T.tyvarToInt tv3)^")")
+
 	       in (tv, cst, css)
 	       end
 	     | f_exp (A.ExpWhile (labexp1, labexp2, _, _, lab, _)) =
@@ -4280,6 +4279,7 @@ fun generateConstraints' prog pack nenv =
 		   val c3  = E.CSTLET (E.ENVSEQ (E.projTyvs tyvs, E.ENVCST cst2))
 		   val cst = E.conscsts (lab, [c1, c2]) (E.conscst (L.dummyLab, c3) cst1)
 		   val css = E.uenvcss [css1, css2]
+		   val _   = D.printDebug 3 D.AZE "generating constraints for A.TypBind"
                in (typs, cst, css)
                end
 	     | f_typbind (A.TypBindDots pl) =
