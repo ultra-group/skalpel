@@ -33,8 +33,8 @@ val debugUnif  : int ref = ref 0
 val debugJson  : int ref = ref 0
 val debugLabel : int ref = ref 0
 val debugTy    : int ref = ref 0
-val debugGrm   : int ref = ref 3
-val debugAze   : int ref = ref 3
+val debugGrm   : int ref = ref 0
+val debugAze   : int ref = ref 0
 
 fun setAllDebug value =
     (debugUnif := value;

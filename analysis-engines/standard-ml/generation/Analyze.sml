@@ -2724,11 +2724,11 @@ fun generateConstraints' prog pack nenv =
 	       then let val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
-			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constyint lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constyint lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconWord (s, v, _, lab, _)) =
@@ -2736,11 +2736,11 @@ fun generateConstraints' prog pack nenv =
 	       then let val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
-			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constyword lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constyword lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconReal (s, v, _, lab, _)) =
@@ -2748,11 +2748,11 @@ fun generateConstraints' prog pack nenv =
 	       then let val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
-			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constyreal lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constyreal lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconString (s, v, _, lab, _)) =
@@ -2760,11 +2760,11 @@ fun generateConstraints' prog pack nenv =
 	       then let val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
-			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constystring lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constystring lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconChar (s, v, _, lab, _)) =
@@ -2772,11 +2772,11 @@ fun generateConstraints' prog pack nenv =
 	       then let val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
-			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constychar lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constychar lab) lab false
 			val bs = (Char.fromString
 				      (String.translate (fn #"\\" => "\\\\" | x => Char.toString x)
 							(String.substring (s, 2, (String.size s) - 3))))
@@ -2825,7 +2825,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labid (A.LabId (ident, _, lab, _)) =
 	       let val (tv, vids, cst, css) = f_identpat ident
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', vids, E.conscst (lab, c) cst, css)
 	       end
 	     | f_labid (A.LabIdDots pl) =
@@ -3011,7 +3011,7 @@ fun generateConstraints' prog pack nenv =
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constybool lab) lab
+			val c  = E.genCstTyEm (T.consV tv) (T.constybool lab) lab false
 		    in (tv, E.emvar, E.singcst (lab, c), E.singcss (reboundCs lab s))
 		    end
 	     | f_pconpat (A.PconRef (s, v, reg, lab, nxt)) =
@@ -3019,7 +3019,7 @@ fun generateConstraints' prog pack nenv =
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv  = T.freshtyvar ()
 			val tv' = T.freshtyvar ()
-			val c   = E.genCstTyEm (T.consV tv) (T.consTyArrowTy (T.consV tv') (T.constyref tv' lab) lab T.OT) lab
+			val c   = E.genCstTyEm (T.consV tv) (T.consTyArrowTy (T.consV tv') (T.constyref tv' lab) lab T.OT) lab false
 		    in (tv, E.emvar, E.singcst (lab, c), E.singcss (reboundCs lab s))
 		    end
 	     | f_pconpat (A.PconNil (s, v, reg, lab, nxt)) =
@@ -3027,7 +3027,7 @@ fun generateConstraints' prog pack nenv =
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv  = T.freshtyvar ()
 			val tv' = T.freshtyvar ()
-			val c   = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab
+			val c   = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab false
 		    in (tv, E.emvar, E.singcst (lab, c), E.singcss (reboundCs lab s)) end
 	     | f_pconpat A.PconDots = (T.freshtyvar (), E.emvar, E.emcst, E.emcss)
 
@@ -3038,7 +3038,7 @@ fun generateConstraints' prog pack nenv =
 	       else let val tv1  = T.freshtyvar ()
 			val tv2  = T.freshtyvar ()
 			val vids = E.singenv (id, [E.consBindPoly id (T.consV tv2) (CL.consVAL ()) lab])
-			val c    = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+			val c    = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		    in (tv1, vids, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_identpat (A.IdentPcon pc) = f_pconpat pc
@@ -3157,10 +3157,11 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
 	   and f_labexp (A.LabExp (exp, _, _, lab, _)) =
-	       let val (tv, cst, css) = f_exp exp
+	       let
+		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.LabExp")
+		   val (tv, cst, css) = f_exp exp
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
-		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.LabExp (tv= "^Int.toString(T.tyvarToInt tv)^")")
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labexp (A.LabExpDots pl) =
@@ -3199,14 +3200,14 @@ fun generateConstraints' prog pack nenv =
 		   val cst = E.uenvcst csts
 		   val css = E.uenvcss csss
 		   val tv  = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, E.conscst (lab, c) (E.uenvcst [cst, cst2]), E.uenvcss [css, css2])
 	       end
 	     | f_seqexp (A.SeqExpSl (parts, labexp, _, lab, _)) =
 	       let val env1 = f_partlist parts
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val tv = T.freshtyvar ()
-		   val c  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, E.conscsts (lab, [E.CSTLET env1, c]) cst2, css2)
 	       end
 	     | f_seqexp (A.SeqExpDots pl) =
@@ -3217,8 +3218,9 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
 	   and f_atexp (A.AtExpId id) =
-	       let val (tv, _, _, cst) = f_longidexp id
-		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpId (tv= "^Int.toString(T.tyvarToInt tv)^")")
+	       let
+		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.AtExpId")
+		   val (tv, _, _, cst) = f_longidexp id
 	       in (tv, cst, E.emcss)
 	       end
 	     | f_atexp (A.AtExpScon sc) = f_scon sc
@@ -3227,7 +3229,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tvl, csts, csss) = unzipThree (map f_labexp expl)
 		   val cst = E.uenvcst csts
 		   val css = E.uenvcss csss
-		   val c   = E.genCstTyEm (T.consV tv) (T.constytuple tvl lab) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.constytuple tvl lab) lab false
                in (tv, E.conscst (lab, c) cst, css)
                end
 	     | f_atexp (A.AtExpRecord (exprows, _, _, lab, _)) =
@@ -3237,7 +3239,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab false
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_atexp (A.AtExpSlRec (exprows, _, lab, _)) =
@@ -3248,7 +3250,7 @@ fun generateConstraints' prog pack nenv =
 		   val css  = E.uenvcss csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   (* We condiser that as a widlcard because it is incomplete: *)
-		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab false
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_atexp (A.AtExpLet (decs, labexp, _, lab, _)) =
@@ -3256,7 +3258,7 @@ fun generateConstraints' prog pack nenv =
 		   val (env1, css1) = f_decs decs
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val env = E.envsToSeq [env1, E.ENVCST cst2]
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, E.conscst (L.dummyLab, E.CSTLET env) (E.singcst (lab, c)), E.uenvcss [css1, css2])
 	       end
 	     | f_atexp (A.AtExpDLet (decs, seqexp, _, lab, _)) =
@@ -3264,13 +3266,13 @@ fun generateConstraints' prog pack nenv =
 		   val (env1, css1) = f_decs decs
 		   val (tv2, cst2, css2) = f_seqexp seqexp
 		   val env = E.envsToSeq [env1, E.ENVCST cst2]
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, E.conscst (L.dummyLab, E.CSTLET env) (E.singcst (lab, c)), E.uenvcss [css1, css2])
 	       end
 	     | f_atexp (A.AtExpParen (labexp, _, _, lab, _)) =
 	       let val (tv, cst, css) = f_labexp labexp
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_atexp (A.AtExpList (labexps, _, lab, _)) =
@@ -3279,8 +3281,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tvs, csts, csss) = unzipThree (map f_labexp labexps)
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
-		   val cs'  = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab) tvs
-		   val c    = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab
+		   val cs'  = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab false) tvs
+		   val c    = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab false
 	       in (tv, E.conscsts (lab, c :: cs') cst, css)
 	       end
 	     | f_atexp (A.AtExpProj (tylab, _, _, lab, _)) =
@@ -3289,14 +3291,14 @@ fun generateConstraints' prog pack nenv =
 		   val tv' = T.freshtyvar ()
 		   val rv  = T.freshrowvar ()
 		   val ty  = (T.constyrecord [rv] (T.consflex lab) lab)
-		   val c1  = E.genCstTyEm (T.consV tv) (T.consTyArrowTy ty (T.consV tv') lab T.OT) lab
+		   val c1  = E.genCstTyEm (T.consV tv) (T.consTyArrowTy ty (T.consV tv') lab T.OT) lab false
 		   val c2  = E.genCstRtEm (T.RV rv) (T.RC (T.LV lv, T.consV tv', lab)) lab
 	       in (tv, E.conscsts (lab, [c1, c2]) cst, E.emcss)
 	       end
 	     | f_atexp (A.AtExpSeq (seqseq, _, lab, _)) =
 	       let val (tv, cst, css) = f_seqexp seqseq
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_atexp (A.AtExpQuote (quotes, _, lab, _)) =
@@ -3305,8 +3307,8 @@ fun generateConstraints' prog pack nenv =
 		   val tv' = T.freshtyvar ()
 		   val cst = E.uenvcst csts
 		   val css = E.uenvcss csss
-		   val cs' = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab) tvs
-		   val c   = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab
+		   val cs' = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab false) tvs
+		   val c   = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab false
 	       in (tv, E.conscsts (lab, c :: cs') cst, css)
 	       end
 	     | f_atexp (A.AtExpDots pl) =
@@ -3326,13 +3328,13 @@ fun generateConstraints' prog pack nenv =
 	   and f_quote (A.Quote (_, _, lab, _)) =
 	       let val tv1 = T.freshtyvar ()
 		   val tv2 = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv1) (T.constyfrag tv2 lab) lab
+		   val c   = E.genCstTyEm (T.consV tv1) (T.constyfrag tv2 lab) lab false
 	       in (tv1, E.singcst (lab, c), E.emcss)
 	       end
 	     | f_quote (A.Antiquote(exp, _, lab, _)) =
 	       let val (tv, cst, css) = f_exp exp
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.constyfrag tv lab) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.constyfrag tv lab) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_quote (A.QuoteDots pl) =
@@ -3342,125 +3344,149 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
-	   and f_exp (A.ExpAtExp atexp) = f_atexp atexp
+	   and f_exp (A.ExpAtExp atexp) =
+	       (D.printDebug 2 D.AZE "generating constraints for A.ExpAtExp";
+		f_atexp atexp)
 	     | f_exp (A.ExpFn (match, _, lab, _)) =
-	       let val (tvs, cst, css) = f_match match
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpAtExp"
+		   val (tvs, cst, css) = f_match match
 		   val tv = T.freshtyvar ()
-		   val cs = map (fn x => E.genCstTyEm (T.consV tv) (T.consV x) lab) tvs
+		   val cs = map (fn x => E.genCstTyEm (T.consV tv) (T.consV x) lab false) tvs
 	       in (tv, E.conscsts (lab, cs) cst, css)
 	       end
 	     | f_exp (A.ExpApp (exp, atexp, _, _, _, lab, _)) =
-	       let val (tv1, cst1, css1) = f_exp exp
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpApp"
+		   val (tv1, cst1, css1) = f_exp exp
 		   val (tv2, cst2, css2) = f_atexp atexp
 		   val tv  = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv1) (T.constyarrow tv2 tv lab) lab
+		   val c   = E.genCstTyEm (T.consV tv1) (T.constyarrow tv2 tv lab) lab false
 	       in (tv, E.conscst (lab, c) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpCase (labexp, match, _, _, lab, _)) =
-	       let val tv  = T.freshtyvar ()
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpCase"
+		   val tv  = T.freshtyvar ()
 		   val tv' = T.freshtyvar ()
 		   val (tv1, cst1, css1) = f_labexp labexp
 		   val (tvs, cst2, css2) = f_match match
-		   val cs  = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab) tvs
-		   val c   = E.genCstTyEm (T.consV tv') (T.constyarrow tv1 tv lab) lab
+		   val cs  = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab false) tvs
+		   val c   = E.genCstTyEm (T.consV tv') (T.constyarrow tv1 tv lab) lab false
 	       in (tv, E.conscsts (lab, c :: cs) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpConsList (id, labexp1, labexp2, reg, lab, nxt)) =
 	       if benv
 	       then f_exp (A.ExpOp ("::", id, labexp1, labexp2, reg, lab, nxt))
-	       else let val (tv1, cst1, css1) = f_labexp labexp1
+	       else let
+			val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpConsList"
+			val (tv1, cst1, css1) = f_labexp labexp1
 			val (tv2, cst2, css2) = f_labexp labexp2
 			val tv = T.freshtyvar ()
-			val c1 = E.genCstTyEm (T.consV tv)  (T.constylist tv1 lab) lab
-			val c2 = E.genCstTyEm (T.consV tv2) (T.constylist tv1 lab) lab
+			val c1 = E.genCstTyEm (T.consV tv)  (T.constylist tv1 lab) lab false
+			val c2 = E.genCstTyEm (T.consV tv2) (T.constylist tv1 lab) lab false
 		    in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 		    end
 	     | f_exp (A.ExpOp (st, id, labexp1, labexp2, _, lab, _)) =
-	       let val (tv1, cst1, css1) = f_labexp labexp1
+	       let
+		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpOp (st = \"" ^ st ^ "\")")
+		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
+		   val _ = D.printDebug 3 D.AZE ("ExpOp type variables are tv1 = "^(Int.toString(T.tyvarToInt(tv1)))^", tv2 = "^(Int.toString(T.tyvarToInt(tv2))))
 		   val ty  = T.newV ()
 		   val ti  = T.constytuple [tv1, tv2] lab
 		   val tvo = T.freshtyvar ()
-		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
+		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab true
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 	       in (tvo, E.conscsts (lab, [c, E.CSTACC a]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpOr (labexp1, labexp2, _, lab, _)) =
-	       let val (tv1, cst1, css1) = f_labexp labexp1
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpOr"
+		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val tvo = T.freshtyvar ()
-		   val c1  = E.genCstTyEm (T.consV tvo) (T.constybool lab) lab
-		   val c2  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab
-		   val c3  = E.genCstTyEm (T.consV tv2) (T.constybool lab) lab
+		   val c1  = E.genCstTyEm (T.consV tvo) (T.constybool lab) lab false
+		   val c2  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab false
+		   val c3  = E.genCstTyEm (T.consV tv2) (T.constybool lab) lab false
 	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpAnd (labexp1, labexp2, _, lab, _)) =
-	       let val (tv1, cst1, css1) = f_labexp labexp1
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpAnd"
+		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val tvo = T.freshtyvar ()
-		   val c1  = E.genCstTyEm (T.consV tvo) (T.constybool lab) lab
-		   val c2  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab
-		   val c3  = E.genCstTyEm (T.consV tv2) (T.constybool lab) lab
+		   val c1  = E.genCstTyEm (T.consV tvo) (T.constybool lab) lab false
+		   val c2  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab false
+		   val c3  = E.genCstTyEm (T.consV tv2) (T.constybool lab) lab false
 	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpTyped (labexp, labtyp, _, lab, _)) =
-	       let val tv = T.freshtyvar ()
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpTyped"
+		   val tv = T.freshtyvar ()
 		   val (tv1, cst1, css1) = f_labexp labexp
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1 = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2 = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1 = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2 = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpIte (labexp1, labexp2, labexp3, _, lab, _)) =
 	       let
+		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.ExpIte")
 		   (* get the type variables, constraint on types and E.ocss *)
 		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val (tv3, cst3, css3) = f_labexp labexp3
 
 		   (* constrain the condition of the if statement to be of type bool*)
-		   val c1  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab
+		   val c1  = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab false
 
 		   (* generate a fresh type variable and constrain the true/false branches
 		    * of the if statemnt to be of the same type *)
 		   val tv = T.freshtyvar ()
-		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
-		   val c3  = E.genCstTyEm (T.consV tv) (T.consV tv3) lab
+		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
+		   val c3  = E.genCstTyEm (T.consV tv) (T.consV tv3) lab false
 
 		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2, cst3])
 		   val css = E.uenvcss [css1, css2, css3]
-
-		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.ExpIte (tv1= "^Int.toString(T.tyvarToInt tv1) ^
-			     " tv2 = "^Int.toString(T.tyvarToInt tv2)^" tv3 = "^Int.toString(T.tyvarToInt tv3)^")")
-
 	       in (tv, cst, css)
 	       end
 	     | f_exp (A.ExpWhile (labexp1, labexp2, _, _, lab, _)) =
-	       let val tv = T.freshtyvar ()
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpWhile"
+		   val tv = T.freshtyvar ()
 		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
-		   val c1 = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab
-		   val c2 = E.genCstTyEm (T.consV tv) (T.constytuple [] lab) lab
+		   val c1 = E.genCstTyEm (T.consV tv1) (T.constybool lab) lab false
+		   val c2 = E.genCstTyEm (T.consV tv) (T.constytuple [] lab) lab false
 	       in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpRaise (labexp, _, lab, _)) =
-	       let val (tv, cst, css) = f_labexp labexp
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpRaise"
+		   val (tv, cst, css) = f_labexp labexp
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv) (T.constyexception lab) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.constyexception lab) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_exp (A.ExpHandle (labexp, match, _, lab, _)) =
-	       let val (tv1, cst1, css1) = f_labexp labexp
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpHandle"
+		   val (tv1, cst1, css1) = f_labexp labexp
 		   val (tvs, cst2, css2) = f_match match
 		   val ty  = T.newV ()
 		   val tv  = T.freshtyvar ()
-		   val cs  = map (fn x => E.genCstTyEm ty (T.consV x) lab) tvs
-		   val c1  = E.genCstTyEm ty (T.consTyArrowTy (T.constyexception lab) (T.consV tv1) lab T.OT) lab
-		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
+		   val cs  = map (fn x => E.genCstTyEm ty (T.consV x) lab false) tvs
+		   val c1  = E.genCstTyEm ty (T.consTyArrowTy (T.constyexception lab) (T.consV tv1) lab T.OT) lab false
+		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
 	       in (tv, E.conscsts (lab, c1 :: c2 :: cs) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_exp (A.ExpDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let
+		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpDots"
+		   val tv  = T.freshtyvar ()
 		   val env = f_partlist pl
 	       in (tv, E.singcst (L.dummyLab, E.CSTLET env), E.emcss)
 	       end
@@ -3483,7 +3509,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv1, vids, cst1, css1) = f_labpat labpat
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val env = E.ENVSEQ (E.ENVSEQ (E.ENVCST cst1, E.projVids (E.toMonoVids vids (L.singleton lab))), E.ENVCST cst2)
-		   val c   = E.genCstTyEm (T.consV tv) (T.constyarrow tv1 tv2 lab) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.constyarrow tv1 tv2 lab) lab false
 		   val cst = E.conscst (L.dummyLab, E.CSTLET env) (E.singcst (lab, c))
 		   val css = E.uenvcss [clearRebound css1, css2]
 	       in (tv, cst, css)
@@ -3521,7 +3547,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labtype (A.LabType (typ, _, lab, _)) =
 	       let val (tv, cst, css) = f_type typ
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labtype (A.LabTypeDots pl) =
@@ -3553,7 +3579,7 @@ fun generateConstraints' prog pack nenv =
                let val (tv1, cst1, css1) = f_labtype labtyp1
 		   val (tv2, cst2, css2) = f_labtype labtyp2
 		   val tv = T.freshtyvar ()
-		   val c  = E.genCstTyEm (T.consV tv) (T.constyarrow tv1 tv2 lab) lab
+		   val c  = E.genCstTyEm (T.consV tv) (T.constyarrow tv1 tv2 lab) lab false
                in (tv, E.conscst (lab, c) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
                end
 	     | f_type (A.TypeTuple (labtyps, _, lab, _)) =
@@ -3561,7 +3587,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv  = T.freshtyvar ()
 		   val cst = E.uenvcst csts
 		   val css = E.uenvcss csss
-		   val c   = E.genCstTyEm (T.consV tv) (T.constytuple tvs lab) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.constytuple tvs lab) lab false
                in (tv, E.conscst (lab, c) cst, css)
                end
 	     | f_type (A.TypeRecord (tyrows, _, _, lab, _)) =
@@ -3571,7 +3597,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab false
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_type (A.TypeSlRec (tyrows, _, lab, _)) =
@@ -3581,7 +3607,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab false
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_type (A.TypeTyCon (typseq, longtycon, _, lab, _)) =
@@ -3591,14 +3617,14 @@ fun generateConstraints' prog pack nenv =
 		   val tv' = T.freshtyvar ()
 		   val sv' = T.freshseqvar ()
 		   val c1  = E.genCstTfEm (T.TFV tfv) (T.TFC (T.SV sv', T.consV tv', lab)) lab
-		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv') lab
+		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv') lab false
 		   val c3  = E.genCstSqEm (T.SV sv) (T.SV sv') lab
                in (tv, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), css1)
                end
 	     | f_type (A.TypeParen (labtyp, _, _, lab, _)) =
                let val (tv, cst, css) = f_labtype labtyp
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
                in (tv', E.conscst (lab, c) cst, css)
                end
 	     | f_type (A.TypeDots pl) =
@@ -3653,7 +3679,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labpat (A.LabPat (pat, _, _, lab, _)) =
 	       let val (tv, vids, cst, css) = f_pat pat
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', vids, E.conscst (lab, c) cst, css)
 	       end
 	     | f_labpat (A.LabPatDots pl) =
@@ -3668,8 +3694,8 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
 		   val tv = T.freshtyvar ()
-		   val c1 = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2 = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1 = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2 = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 	       in (tv, vids, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end
 	     | f_identty (A.IdentTyDots pl) =
@@ -3682,7 +3708,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labidty (A.LabIdTy (identty, _, lab, _)) =
 	       let val (tv, vids, cst, css) = f_identty identty
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', vids, E.conscst (lab, c) cst, css)
 	       end
 	     | f_labidty (A.LabIdTyDots pl) =
@@ -3719,8 +3745,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, vids2, cst2, css2) = f_labpat labpat
 		   val tv   = T.freshtyvar ()
 		   val rv   = T.freshrowvar ()
-		   val c1   = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1   = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 		   val labs = L.cons lab (A.getlabelsLabIdTy labidty)
 		   val llop = A.getlabstLabIdTy labidty
 		   val cst  = case llop of
@@ -3758,7 +3784,7 @@ fun generateConstraints' prog pack nenv =
 		   val vids = E.uenv    vidss
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
-		   val c    = E.genCstTyEm (T.consV tv) (T.constytuple tvs lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constytuple tvs lab) lab false
                in (tv, vids, E.conscst (lab, c) cst, css)
                end
 	     | f_atpat (A.AtPatRecord (patrows, _, _, lab, _)) =
@@ -3774,13 +3800,13 @@ fun generateConstraints' prog pack nenv =
 				  []  => T.noflex ()
 				| [x] => T.consflex x
 				| _   => raise EH.DeadBranch "Only one flex per record"
-		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rvs' flex lab) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.constyrecord rvs' flex lab) lab false
                in (tv, vids, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_atpat (A.AtPatParen (labpat, _, _, lab, _)) =
                let val (tv, vids, cst, css) = f_labpat labpat
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
                in (tv', vids, E.conscst (lab, c) cst, css)
                end
 	     | f_atpat (A.AtPatList (labpats, _, lab, _)) =
@@ -3790,8 +3816,8 @@ fun generateConstraints' prog pack nenv =
 		   val vids = E.uenv vidss
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
-		   val cs   = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab) tvs
-		   val c    = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab
+		   val cs   = map (fn x => E.genCstTyEm (T.consV tv') (T.consV x) lab false) tvs
+		   val c    = E.genCstTyEm (T.consV tv) (T.constylist tv' lab) lab false
 	       in (tv, vids, E.conscsts (lab, c :: cs) cst, css)
                end
 	     | f_atpat (A.AtPatOr (labpats, _, lab, _)) =
@@ -3800,7 +3826,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
 		   val tv   = T.freshtyvar ()
-		   val cs   = map (fn x => E.genCstTyEm (T.consV tv) (T.consV x) lab) tvs
+		   val cs   = map (fn x => E.genCstTyEm (T.consV tv) (T.consV x) lab false) tvs
 	       in (tv, vids, E.conscsts (lab, cs) cst, css)
                end
 	     | f_atpat (A.AtPatDots pl) =
@@ -3815,7 +3841,7 @@ fun generateConstraints' prog pack nenv =
                let val (tv1, vids1, cst1, css1) = f_atpat atpat
 		   val (tv2, lab', cl, cst2) = f_longidexp longid
 		   val tv  = T.freshtyvar ()
-		   val c1  = E.genCstTyEm (T.consV tv2) (T.constyarrow' tv1 tv lab T.PA) lab
+		   val c1  = E.genCstTyEm (T.consV tv2) (T.constyarrow' tv1 tv lab T.PA) lab false
 		   val c2  = E.genCstClEm cl (CL.consCO1 ()) lab
 		   val cst = if A.isLongIdent longid
 			     then E.singcst (lab', E.genCstClEm cl (CL.consCON ()) lab')
@@ -3828,8 +3854,8 @@ fun generateConstraints' prog pack nenv =
 	       else let val (tv1, vids1, cst1, css1) = f_labpat labpat1
 			val (tv2, vids2, cst2, css2) = f_labpat labpat2
 			val tv  = T.freshtyvar ()
-			val c1  = E.genCstTyEm (T.consV tv) (T.constylist tv1 lab) lab
-			val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+			val c1  = E.genCstTyEm (T.consV tv) (T.constylist tv1 lab) lab false
+			val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 			val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
 			val css = E.uenvcss [css1, css2]
 		    in (tv, E.uenv [vids1, vids2], cst, css)
@@ -3840,7 +3866,7 @@ fun generateConstraints' prog pack nenv =
 		   val ty  = T.newV ()
 		   val ti  = T.constytuple [tv1, tv2] lab
 		   val tvo = T.freshtyvar ()
-		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
+		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab false
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (v, lab)) ty (CL.consDA1 ()) lab) lab
 		   val cst = E.conscsts (lab, [c, E.CSTACC a]) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
@@ -3850,8 +3876,8 @@ fun generateConstraints' prog pack nenv =
 	       let val tv = T.freshtyvar ()
 		   val (tv1, vids, cst1, css1) = f_labpat labpat
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 		   val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (tv, vids, cst, css)
@@ -3861,8 +3887,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, vids2, cst2, css2) = f_labpat labpat
 		   (*val clv  = CL.newCl ()*)
 		   val tv   = T.freshtyvar ()
-		   val c1   = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1   = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2   = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 		   (*val c3   = E.genCstClEm clv (CL.consPAT ()) lab*)
 		   val labs = L.cons lab (A.getlabelsLabIdTy labidty)
 		   val cst  = E.conscsts (lab, [c1, c2(*, c3*)]) (E.uenvcst [cst1, cst2])
@@ -3889,7 +3915,7 @@ fun generateConstraints' prog pack nenv =
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
 		   val tv   = T.freshtyvar ()
-		   val c1   = E.genCstTyEm (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab
+		   val c1   = E.genCstTyEm (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab false
 		   val c2   = E.genCstClEm clv2 (CL.consDA1 ()) lab
 		   val c3   = E.genCstClEm clv1 clv2 lab1
 		   val c4   = E.genCstClEm clv1 (CL.consDAT ()) lab2
@@ -3942,7 +3968,7 @@ fun generateConstraints' prog pack nenv =
 	       let val tv1  = T.freshtyvar ()
 		   val tv2  = T.freshtyvar ()
 		   val tyvs = E.singenv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
-		   val c    = E.genCstTyEm (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab
+		   val c    = E.genCstTyEm (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab false
 	       in (tv2, tyvs, E.singcst (lab, c))
 	       end
 	     | f_typevarbind A.TypeVarDots = (T.freshtyvar (), E.emtv, E.emcst)
@@ -3951,7 +3977,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labtypevarbind (A.LabTyVar (tyvar, _, lab, _)) =
 	       let val (tv, tyvs, cst) = f_typevarbind tyvar
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab false
 	       in (tv', tyvs, E.conscst (lab, c) cst)
 	       end
 	     | f_labtypevarbind (A.LabTyVarDots tyvars) =
@@ -4028,12 +4054,12 @@ fun generateConstraints' prog pack nenv =
 		   (* (2010-06-10)We do that so that for datatypes, the end points will not be
 		    * the equal signs but the datatype names, in the case of constructor clashes.*)
 		   val c1   = E.genCstSqEm (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
-		   val c2'  = E.genCstTyEm (T.consV tv) (T.consTyNameVar lab) lab
+		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab' false
+		   val c2'  = E.genCstTyEm (T.consV tv) (T.consTyNameVar lab) lab false
 		   (*(2010-06-21)c2' is similar to c2 but weaker.  It just constrains tv to be of the
 		    * form T.C.*)
 		   val c3   = E.CSTLET (E.ENVSEQ (E.projTyvs tyvs, E.ENVCST cst1))
-		   val cs   = map (fn x => E.genCstTyEm (T.consV x) (T.consV tv) lab) tvs
+		   val cs   = map (fn x => E.genCstTyEm (T.consV x) (T.consV tv) lab false) tvs
 		   val cst  = E.conscsts (lab, [c1, c2']) (E.conscst (lab', c2) cst2)
 		   val cst' = E.conscsts (lab, cs) (E.singcst (L.dummyLab, c3))
 		   val css3 = checkTyVarInc (A.gettyvarDatName datname) (A.getlabDatName datname) (A.gettyvarConbindseq conbindseq)
@@ -4066,7 +4092,7 @@ fun generateConstraints' prog pack nenv =
                let val (tv1, vids, cst1, css1) = f_labpat labpat
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val vids' = E.closeVids vids (V.nonexpLabExp labexp)
-		   val c     = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c     = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val cst   = E.conscst (lab, c) (cst2)
 		   val css   = E.uenvcss [clearRebound css1, css2]
 	       in (vids', cst1, cst, css)
@@ -4114,7 +4140,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labatpat (A.LabAtPat (atpat, _, lab, _)) =
 	       let val (tv, vids, cst, css) = f_atpat atpat
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab false
 	       in (tv', vids, E.conscst (lab, c) cst, css)
 	       end
 	     | f_labatpat (A.LabAtPatDots pl) =
@@ -4132,7 +4158,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
 		   val tv  = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv1) (T.constyarrow tv2 tv lab) lab
+		   val c   = E.genCstTyEm (T.consV tv1) (T.constyarrow tv2 tv lab) lab false
 		   val cst = E.conscst (lab, c) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, clearRebound css2]
 	       in (tv, vids, E.uenv [vids1, vids2], cst, css)
@@ -4159,7 +4185,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labfmatch (A.LabFMatch (fmatch, _, lab, _)) =
 	       let val (tv, vids, vids', cst, css) = f_fmatch fmatch
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.consV tv') lab false
 	       in (tv', vids, vids', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labfmatch (A.LabFMatchSl (fmatch, _)) =
@@ -4178,8 +4204,8 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids1, vids1', cst1, css1) = f_labfmatch fmatch
 		   val (tv2, cst2, css2) = f_labtype labtyp
 		   val tv  = T.freshtyvar ()
-		   val c1  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab
-		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab
+		   val c1  = E.genCstTyEm (T.consV tv) (T.consV tv1) lab false
+		   val c2  = E.genCstTyEm (T.consV tv) (T.consV tv2) lab false
 		   val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (tv, vids1, vids1', cst, css)
@@ -4194,7 +4220,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids, vids', cst1, css1) = f_fmatchty fmatch
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val labs = L.singleton lab
-		   val c1   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c1   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val env  = E.ENVSEQ (E.ENVCST cst1, E.projVids (E.toMonoVids vids' L.empty))
 		   val c2   = E.CSTLET (E.ENVSEQ (env, E.ENVCST cst2))
 		   val cst  = E.conscst (lab, c1) (E.singcst (L.dummyLab, c2))
@@ -4272,14 +4298,15 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
 	   and f_typbind (A.TypBind (datname, labtyp, _, lab, _)) =
-	       let val (_, _, tv1, sv1, sv1', typs, tyvs, cst1, css1) = f_datname datname
+	       let
+		   val _   = D.printDebug 2 D.AZE "generating constraints for A.TypBind"
+		   val (_, _, tv1, sv1, sv1', typs, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1  = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c1  = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val c2  = E.genCstSqEm (T.SV sv1) (T.SV sv1') lab
 		   val c3  = E.CSTLET (E.ENVSEQ (E.projTyvs tyvs, E.ENVCST cst2))
 		   val cst = E.conscsts (lab, [c1, c2]) (E.conscst (L.dummyLab, c3) cst1)
 		   val css = E.uenvcss [css1, css2]
-		   val _   = D.printDebug 3 D.AZE "generating constraints for A.TypBind"
                in (typs, cst, css)
                end
 	     | f_typbind (A.TypBindDots pl) =
@@ -4304,7 +4331,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_exbind (A.ExBind (ident, lab, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val c = E.genCstTyEm (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab
+		   val c = E.genCstTyEm (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab false
                in (E.toEX0Vids cons (L.singleton lab), E.conscst (lab, c) cst, css)
 	       end
 	     | f_exbind (A.ExBindOf (labid, labtyp, _, lab, _)) =
@@ -4314,7 +4341,7 @@ fun generateConstraints' prog pack nenv =
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
 		   val ty   = T.constyexception' lab (T.DE I.dummyId)
-		   val c1   = E.genCstTyEm (T.consV tv2) (T.consTyArrowTy (T.consV tv1) ty lab (T.DE I.dummyId)) lab
+		   val c1   = E.genCstTyEm (T.consV tv2) (T.consTyArrowTy (T.consV tv1) ty lab (T.DE I.dummyId)) lab false
 		   val c2   = E.genCstClEm clv2 (CL.consEX1 ()) lab
 		   val c3   = E.genCstClEm clv1 clv2 lab1
 		   val c4   = E.genCstClEm clv1 (CL.consEXC ()) lab2
@@ -4333,7 +4360,7 @@ fun generateConstraints' prog pack nenv =
                let val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, _, cl, cst2) = f_longidexp longid
 		   val clv  = CL.newCl ()
-		   val c1   = E.genCstTyEm (T.consV tv2) (T.consV tv1) lab
+		   val c1   = E.genCstTyEm (T.consV tv2) (T.consV tv1) lab false
 		   val c2   = E.genCstClEm cl clv lab
 		   val c3   = E.genCstClEm cl (CL.consEXC ()) lab
 		   (* NOTE: the class could be a EX0 or a EX1 - a EXC *)
@@ -4442,13 +4469,13 @@ fun generateConstraints' prog pack nenv =
 	       let val (sv, cst) = f_labclass labclass
 		   val tv  = T.freshtyvar ()
 		   val lid = Option.getOpt (A.getlabidLabclass labclass, (I.dummyId, L.dummyLab))
-		   val c   = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.VAL lid, lab)) lab
+		   val c   = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.VAL lid, lab)) lab false
 	       in (tv, E.conscst (lab, c) cst, E.emcss)
 	       end
 	     | f_tyclass (A.TyClassTy (typ, lab, _)) =
 	       let val (tv, cst, css) = f_type typ
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_tyclass (A.TyClassDots pl) =
@@ -4461,7 +4488,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labtyclass (A.LabTyClass (tyclass, _, lab, _)) =
 	       let val (tv, cst, css) = f_tyclass tyclass
 		   val tv' = T.freshtyvar ()
-		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labtyclass (A.LabTyClassDots pl) =
@@ -4499,7 +4526,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_typevarval (A.TypeVar (_, n, _, lab, _)) =
 	       let val tv   = T.freshtyvar ()
 		   val tyvs = E.singenv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
-		   val c    = E.genCstTyEm (T.consV tv) (T.E (n, T.freshtyvar (), lab)) lab
+		   val c    = E.genCstTyEm (T.consV tv) (T.E (n, T.freshtyvar (), lab)) lab false
 	       in (tyvs, E.singcst (lab, c))
 	       end
 	     | f_typevarval A.TypeVarDots = (E.emtv, E.emcst)
@@ -4684,8 +4711,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tv3, tyvs, cst3) = f_labtypevarbind labtyvar
 		   val (sv4, cst4, css4) = f_tyclassseq tyclassseq
 		   val lid  = Option.getOpt (A.getlabidLabId labid, (I.dummyId, L.dummyLab))
-		   val c1   = E.genCstTyEm (T.consV tv3) (T.OR (T.SV sv4, T.freshidor (), T.POLY, T.VAL lid, lab)) lab
-		   val c2   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c1   = E.genCstTyEm (T.consV tv3) (T.OR (T.SV sv4, T.freshidor (), T.POLY, T.VAL lid, lab)) lab false
+		   val c2   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val cst  = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst3, cst4])
 		   val css  = E.uenvcss [css1, css2, css4]
 		   val env1 = E.ENVSEQ (E.ENVCST cst2, E.projVids (E.toRECVids vids (L.singleton lab)))
@@ -4729,7 +4756,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_valdescone (A.ValDescOne (labid, labtyp, _, lab, _)) =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c   = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val cst = E.conscst (lab, c) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (E.toRECVids vids (L.singleton lab), cst, css)
@@ -4760,7 +4787,7 @@ fun generateConstraints' prog pack nenv =
 		   val lab' = Option.getOpt (Option.map (fn (_, lab) => lab) v, lab)
 		   val tn   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
 		   val c1   = E.genCstSqEm (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
+		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab' false
 		   val tnop = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.TYP, name = tn}) v
 	       in (tnop, typs, E.conscst (lab, c1) (E.conscst (lab', c2) cst), css)
 	       end
@@ -4787,7 +4814,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_tdrdescone (A.TdrDescOne (datname, labtyp, _, lab, _)) =
 	       let val (s, v, tv1, sv1, sv2, typs, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1  = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab
+		   val c1  = E.genCstTyEm (T.consV tv1) (T.consV tv2) lab false
 		   val c2  = E.genCstSqEm (T.SV sv1) (T.SV sv2) lab
 		   val c3  = E.CSTLET (E.ENVSEQ (E.projTyvs tyvs, E.ENVCST cst2))
 		   val env = E.ENVDEP (EL.initExtLab (E.projTyps typs) lab)
@@ -4829,14 +4856,14 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.emcst, E.emcss) *)
 	   and f_excdescone (A.ExcDescOne (ident, lab, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val c = E.genCstTyEm (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab
+		   val c = E.genCstTyEm (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab false
 	       in (E.toEX0Vids cons (L.singleton lab), E.conscst (lab, c) cst, css)
 	       end
 	     | f_excdescone (A.ExcDescOf (labid, labtyp, _, lab, _)) =
 	       let val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
 		   val ty  = T.constyexception' lab (T.DE I.dummyId)
-		   val c   = E.genCstTyEm (T.consV tv1) (T.consTyArrowTy (T.consV tv2) ty lab (T.DE I.dummyId)) lab
+		   val c   = E.genCstTyEm (T.consV tv1) (T.consTyArrowTy (T.consV tv2) ty lab (T.DE I.dummyId)) lab false
 		   val cst = E.conscst (lab, c) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (E.toEX1Vids cons (L.singleton lab), cst, css)
@@ -4871,7 +4898,7 @@ fun generateConstraints' prog pack nenv =
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
 		   val tv   = T.freshtyvar ()
-		   val c1   = E.genCstTyEm (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab
+		   val c1   = E.genCstTyEm (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab false
 		   val c2   = E.genCstClEm clv2 (CL.consDA1 ()) lab
 		   val c3   = E.genCstClEm clv1 clv2 lab1
 		   val c4   = E.genCstClEm clv1 (CL.consDAT ()) lab2
@@ -4957,9 +4984,9 @@ fun generateConstraints' prog pack nenv =
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
 		   val c1   = E.genCstSqEm (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
+		   val c2   = E.genCstTyEm (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab' false
 		   val c3   = E.CSTLET (E.ENVSEQ (E.projTyvs tyvs, E.ENVCST cst2))
-		   val cs   = map (fn x => E.genCstTyEm (T.consV x) (T.consV tv) lab) tvs
+		   val cs   = map (fn x => E.genCstTyEm (T.consV x) (T.consV tv) lab false) tvs
 		   val cst  = E.conscst (lab, c1) (E.conscst (lab', c2) cst1)
 		   val cst' = E.conscsts (lab, cs) (E.singcst (L.dummyLab, c3))
 		   val tnop = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.DAT, name = tn}) v
@@ -5056,7 +5083,7 @@ fun generateConstraints' prog pack nenv =
 	       let val tv1  = T.freshtyvar ()
 		   val tv2  = T.freshtyvar ()
 		   val tyvs = E.singenv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
-		   val c    = E.genCstTyEm (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab
+		   val c    = E.genCstTyEm (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab false
 	       in (tyvs, E.singcst (lab, c))
 	       end
 	     | f_typevarspec A.TypeVarDots = (E.emtv, E.emcst)
@@ -5889,7 +5916,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv, cst1, css) = f_exp exp
 		   val (tyvs, cst2) = f_typevarvallist (A.gettyvarExp exp)
 		   val tv'  = T.freshtyvar ()
-		   val c    = E.genCstTyEm (T.consV tv') (T.consV tv) lab
+		   val c    = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 		   val cst  = E.conscst (lab, c) cst1
 		   val vids = E.singenv (v, [E.consBindPoly v (T.consV tv') (CL.consVAL ()) lab])
 		   val env1 = E.ENVSEQ (E.ENVCST cst, E.projVids (E.closeVids vids (V.nonexpExp exp)))
@@ -5973,21 +6000,21 @@ fun generateConstraints' prog pack nenv =
 		fun bindOne (id, "true") =
 		    let val ty1  = T.newV ()
 			val ty2  = T.constybool' L.dummyLab T.BB
-			val c    = E.genCstTyEm ty1 ty2 L.dummyLab
+			val c    = E.genCstTyEm ty1 ty2 L.dummyLab false
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
 		  | bindOne (id, "false") =
 		    let val ty1  = T.newV ()
 			val ty2  = T.constybool' L.dummyLab T.BB
-			val c    = E.genCstTyEm ty1 ty2 L.dummyLab
+			val c    = E.genCstTyEm ty1 ty2 L.dummyLab false
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
 		  | bindOne (id, "nil") =
 		    let val ty1  = T.newV ()
 			val ty2  = T.constylist' (T.freshtyvar ()) L.dummyLab T.BB
-			val c    = E.genCstTyEm ty1 ty2 L.dummyLab
+			val c    = E.genCstTyEm ty1 ty2 L.dummyLab false
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
@@ -5995,7 +6022,7 @@ fun generateConstraints' prog pack nenv =
 		    let val tv   = T.freshtyvar ()
 			val ty1  = T.newV ()
 			val ty2  = T.consTyArrowTy (T.consV tv) (T.constyref' tv L.dummyLab T.BB) L.dummyLab T.BB
-			val c    = E.genCstTyEm ty1 ty2 L.dummyLab
+			val c    = E.genCstTyEm ty1 ty2 L.dummyLab false
 			val bind = E.consBindPoly id ty1 class1 L.dummyLab
 		    in (bind, c)
 		    end
@@ -6030,9 +6057,6 @@ fun fullConsGen progs ascid nenv =
 	val pack2   = ([], false)
 	val envcss1 = generateConstraints' progs pack1 nenv
 	val envcss2 = buildin envcss1 ascid benv
-	(*val _ = D.printdebug2 (E.printBasis (#1 envcs1) "")
-	val _ = D.printdebug2 (E.printBasis (#1 envcs2) "")*)
-	(*val envcs3 = treatFreeIds envcs2*)
     in envcss2
     end
 

@@ -176,7 +176,7 @@ fun comparevidsenv idenv1 idenv2 filters ls deps ids =
 			 let val tvl1 = map (fn x => E.getBindT x) (E.plusproj idenv1 id)
 			     val tvl2 = map (fn x => E.getBindT x) (E.plusproj idenv2 id)
 			     val pairs = getpairs tvl1 tvl2
-			 in (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids) pairs) @ cs
+			 in (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids false) pairs) @ cs
 			 end)
 		     []
 		     dom
@@ -214,7 +214,7 @@ fun compareenv env1 env2 filters ls deps ids =
     end
 
 fun decorateCst' (E.CSTSEQ x) labs stts deps = E.CSTSEQ (EL.updExtLab x labs stts deps)
-  | decorateCst' (E.CSTTYP x) labs stts deps = E.CSTTYP (EL.updExtLab x labs stts deps)
+  | decorateCst' (E.CSTTYP x) labs stts deps = E.CSTTYP (EL.updExtLabEq x labs stts deps) (* should we set false here for eqtyes *)
   | decorateCst' (E.CSTTYF x) labs stts deps = E.CSTTYF (EL.updExtLab x labs stts deps)
   | decorateCst' c labs stts deps = (print (E.printEnv (E.ENVCST (E.singcst (L.dummyLab, c))) "");
 				     raise EH.DeadBranch "")
@@ -1287,7 +1287,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 			       val cs'  = map (fn ty1 => ((*D.printdebug2 (T.printty ty1 ^ "\n" ^
 									 T.printty ty2 ^ "\n" ^
 									 L.toString labs);*)
-							  E.genCstTyAll ty1 (getTy2 ()) labs stts deps))
+							  E.genCstTyAll ty1 (getTy2 ()) labs stts deps false))
 					      tys1
 			   in cs' @ cs
 			   end) [] es
@@ -1380,10 +1380,6 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 	   end
 	 | _ => ([], [])
     end
-
-
-
-
 
 (* NOTE: if filterLid lid filter = SOME (lid', true) then lid = lid' *)
 fun filterLid (lid as I.ID (id, lab)) filters =
@@ -1717,7 +1713,7 @@ fun genTyFunTy (x as T.V _) _ _ = ([], x)
 		   let val (cs, s) = genTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
-		       val c2 = E.genCstTyAll v ty' labs stts deps
+		       val c2 = E.genCstTyAll v ty' labs stts deps false
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
 		   end
@@ -1887,7 +1883,7 @@ fun applyTyFunTy (x as (T.V _)) _ _ = ([], x)
 		   let val (cs, s) = applyTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
-		       val c2 = E.genCstTyAll v ty' labs stts deps
+		       val c2 = E.genCstTyAll v ty' labs stts deps false
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
 		   end
@@ -3241,7 +3237,7 @@ fun unif env filters user =
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
-			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
+			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0 false
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   (*val _     = D.printdebug2 (S.printState state)*)
 			   (*val _     = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab l ^ "\n" ^ T.printty sem ^ "\n" ^ T.printty bind ^ "\n" ^ T.printty bind2)*)
@@ -3268,7 +3264,7 @@ fun unif env filters user =
 			   * 'too general in signature' errors.  This needs to be fixed.
 			   * Constraint solving shouldn't depend on the order in constraints. *)
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
-			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
+			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0 false
 		      in fsimplify [c] l
 		      end
 		    | _ => ())
@@ -3429,15 +3425,15 @@ fun unif env filters user =
 	and fsimplify [] l = ()
 	  (**)
 	  | fsimplify ((E.CSTTYF ((T.TFD (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYF ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.TD  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((T.ND  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.TD  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYN ((T.ND  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
 	  | fsimplify ((E.CSTSEQ ((T.SD  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTSEQ ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.CSTROW ((T.RD  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTROW ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.CSTLAB ((T.LD  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTLAB ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  (**)
 	  | fsimplify ((E.CSTTYF ((tf1, T.TFD (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYF ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((ty1, T.TD  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((tn1, T.ND  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((ty1, T.TD  (ty2, labs1, stts1, deps1)), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYN ((tn1, T.ND  (tn2, labs1, stts1, deps1)), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
 	  | fsimplify ((E.CSTSEQ ((sq1, T.SD  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTSEQ ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.CSTROW ((rt1, T.RD  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTROW ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.CSTLAB ((lt1, T.LD  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTLAB ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
@@ -3445,7 +3441,9 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTENV ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.CSTENV ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  | fsimplify ((E.CSTENV ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.CSTENV ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
-	  | fsimplify ((E.CSTTYP ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYP ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two type constructions";
+	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 	       orelse
 	       (T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3475,7 +3473,6 @@ fun unif env filters user =
 		     end
 		else let val name1 = T.tntyToTyCon tn1
 			 val name2 = T.tntyToTyCon tn2
-			 val _     = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two type constructions"
 			 val ek    = EK.TyConsClash ((L.toInt l1, T.tynameToInt name1), (L.toInt l2, T.tynameToInt name2))
 			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
 		     (*
@@ -3489,20 +3486,24 @@ fun unif env filters user =
 		     (*val _ = D.printdebug2 (S.printState state)*)
 		     in handleSimplify err cs' l
 		     end
-	    else let val c1 = E.genCstTnAll tn1 tn2 ls deps ids
-		     val c2 = E.genCstSqAll sq1 sq2 ls deps ids
-		 (*val _ = D.printdebug2 (T.printseqty sq1 ^ "\n" ^ T.printseqty sq2)*)
-		 in fsimplify (c1 :: c2 :: cs') l
-		 end
-	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
+	    else
+		let
+		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids eqTypeCheck
+		    val c2 = E.genCstSqAll sq1 sq2 ls deps ids
+		 in
+		    fsimplify (c1 :: c2 :: cs') l
+		 end)
+	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (D.printDebug 2 D.UNIF "in fsimplify- constarint type is two of tnty.NC";
+	     D.printDebug 3 D.UNIF("            - tnty.NC typenames are tn1 = "^(Int.toString(T.tynameToInt tn1))^" tn2 = "^(Int.toString(T.tynameToInt tn2)));
 	     if T.eqTyname tn1 tn2
 	     then
 		 (* we check if tn1 and tn2 are equality types. If they aren't then generate an error, otherwise it's typable *)
-		 if T.eqTyname tn1 T.CONSREAL then      (* this only works for the built-in basis. Need to extend to the basis file *)
+		 if eqTypeCheck then      (* this only works for the built-in basis. Need to extend to the basis file *)
 		     (* EK.EqTypeRequired (...) *)
 		     (* putting something in here to test with an example. We should generate a proper error for this *)
-		     handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l
+		     (print("**************************** EQ TYPE ERROR *******************************\n");
+		     handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l)
 		 else
 		     (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
 		      fsimplify cs' l)
@@ -3534,8 +3535,7 @@ fun unif env filters user =
 			val rtl1' = map (fn row => T.RD (row, ls, deps, ids)) rtl1
 			val rtl2' = map (fn row => T.RD (row, ls, deps, ids)) rtl2
 			val sr = ((rtl1', b1, []), (rtl2', b2, []))
-			val (cs'', err) = S.updateRecOne state sr
-		    (*val _ = print ((E.printlcs cs'') ^ "\n")*)
+			val (cs'', err) = S.updateRecOne state  sr
 		    (* don't we get unwanted occurrences of srec by doing that? *)
 		    in case err of
 			   [] => fsimplify (cs'' @ cs') l
@@ -3555,8 +3555,11 @@ fun unif env filters user =
 		    in handleSimplify err cs' l
 		    end
 	    end
-	  | fsimplify ((E.CSTTYP ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids)) :: cs') l =
-	    let fun continue () =
+	  | fsimplify ((E.CSTTYP ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	     let
+		 val _     = D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two implicit type variables";
+		 val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+		 fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
 			let val t = T.V (tv2, if Option.isSome b2 then b2 else b1, p2)
@@ -3569,14 +3572,14 @@ fun unif env filters user =
 		      | SOME ty =>
 			let val bop = if Option.isSome b2 then b2 else b1
 			    val t   = T.V (tv2, bop, p2)
-			    val c   = E.genCstTyAll ty t ls deps ids
+			    val c   = E.genCstTyAll ty t ls deps ids false
 			in fsimplify (c :: cs') l
 	    		end
 	    (*val _ = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 	    in if T.eqTyvar tv1 tv2
 	       then fsimplify cs' l
 	       else case (b1, b2) of
-			(SOME _, NONE) => fsimplify ((E.CSTTYP ((T.V (tv2, b2, p2), T.V (tv1, b1, p1)), ls, deps, ids)) :: cs') l
+			(SOME _, NONE) => fsimplify ((E.CSTTYP ((T.V (tv2, b2, p2), T.V (tv1, b1, p1)), ls, deps, ids, eqTypeCheck)) :: cs') l
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
@@ -3587,21 +3590,24 @@ fun unif env filters user =
 			     end
 		      | _ => continue ()
 	    end
-	  | fsimplify ((E.CSTTYP ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYP ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two explicit type variables";
+	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	    if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
 	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two explicit type variables"
 		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.DUMMYTYNAME)))
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
-		 end
-	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids)) :: cs') l =
+		 end)
+	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is an explicit tyvar and a type construction"
+		val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
 	    end
-	  | fsimplify ((E.CSTTYN ((T.NV tnv1, T.NV tnv2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYN ((T.NV tnv1, T.NV tnv2), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    if T.eqTynamevar tnv1 tnv2
 	    then fsimplify cs' l
 	    else (case S.getValStateTn state tnv1 of
@@ -3612,7 +3618,7 @@ fun unif env filters user =
                       in fsimplify cs' l
                       end
 		    | SOME tn =>
-                      let val c = E.genCstTnAll tn (T.NV tnv2) ls deps ids
+                      let val c = E.genCstTnAll tn (T.NV tnv2) ls deps ids false
                       in fsimplify (c :: cs') l
                       end)
 	  | fsimplify ((E.CSTSEQ ((T.SV sqv1, sq2 as (T.SV sqv2)), ls, deps, ids)) :: cs') l =
@@ -3787,8 +3793,10 @@ fun unif env filters user =
 		 | _ => fsimplify cs' l
 	    end
 	  | fsimplify ((E.CSTIF _) :: cs') l = raise EH.TODO*)
-	  | fsimplify ((E.CSTTYP ((tyv as T.V (tv, b, p), ty), ls, deps, ids)) :: cs') l =
-	    let (*val _ = D.printdebug2 (T.printty tyv ^ "\n" ^ T.printty ty ^ "\n" ^ S.printState state)*)
+	  | fsimplify ((E.CSTTYP ((tyv as T.V (tv, b, p), ty), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	    let
+		val _   = D.printDebug 2 D.UNIF ("in fsimplify- constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
+		val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
@@ -3823,17 +3831,17 @@ fun unif env filters user =
 		   in fsimplify cs' l
 		   end
 		 | SOME ty' =>
-		   let val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
+		   let val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids false
 		   in fsimplify (c :: cs') l
 		   end
 	    end
-	  | fsimplify ((E.CSTTYN ((T.NV tnv1, tnty2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYN ((T.NV tnv1, tnty2), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (case S.getValStateTn state tnv1 of
 		 NONE =>
 		 let val _ = S.updateStateTn state tnv1 (T.ND (tnty2, ls, deps, ids))
 		 in fsimplify cs' l end
 	       | SOME tnty =>
-		 let val c = E.genCstTnAll tnty tnty2 ls deps ids
+		 let val c = E.genCstTnAll tnty tnty2 ls deps ids false
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((E.CSTSEQ ((T.SV sqv1, sq2), ls, deps, ids)) :: cs') l =
@@ -3892,23 +3900,26 @@ fun unif env filters user =
 		      | _  => raise EH.DeadBranch ""
 		 end
                | SOME lt' => raise EH.DeadBranch "")
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFV tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFV tfv, seqty, lab), t2), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
-                 let val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids
+                 let val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids false
                  in fsimplify (c :: cs') l
                  end)
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
-	    let val labs = L.cons lab1 (L.cons lab2 ls)
+	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	    let
+		val _     = D.printDebug 2 D.UNIF "in fsimplify - constarint type is a type scheme instantiation"
+		val _     = D.printDebug 3 D.UNIF ("            - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+		val labs = L.cons lab1 (L.cons lab2 ls)
 		(*val _ = D.printdebug2 (T.printty ty1)*)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
-		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
+		val c2 = E.genCstTyAll ty1 ty2 labs deps ids false
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFD (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.CSTTYP ((T.A (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((tc as (T.C (tnty, sq, lab1)), to as T.OR (sq', idor, poly, orKind, lab2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFD (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps, eqTypeCheck)) :: cs') l =
+	    fsimplify ((E.CSTTYP ((T.A (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((tc as (T.C (tnty, sq, lab1)), to as T.OR (sq', idor, poly, orKind, lab2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let fun checkTn tnty labs stts deps seq =
 		    case tnty of
@@ -3942,7 +3953,7 @@ fun unif env filters user =
 			     | (((t, path) :: _), true, _) =>
 			       let val _ = S.updateStateOr state idor ([path], labs, stts, deps)
 				   (*val _ = D.printdebug2 (O.toString ls ^ " " ^ T.printty t ^ " " ^ O.printelt lab2)*)
-				   val c = E.genCstTyAll tc t labs stts deps
+				   val c = E.genCstTyAll tc t labs stts deps false
 			       in fsimplify (c :: cs') l end
 			     | _ => raise EH.DeadBranch ""
 			end
@@ -3962,7 +3973,7 @@ fun unif env filters user =
 			let val labs0 = L.union ls ls'
 			    val stts0 = L.union deps deps'
 			    val deps0 = CD.union ids ids'
-			    val c = E.genCstTyAll tc t labs0 stts0 deps0
+			    val c = E.genCstTyAll tc t labs0 stts0 deps0 false
 			(*val _ = D.printdebug2 (O.toString ls ^ "\n" ^ O.toString ls')*)
 			in fsimplify (c :: cs') l
 			end)
@@ -3973,7 +3984,7 @@ fun unif env filters user =
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
 		   end
 	    end
-	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.OR (sq, _, poly, orKind, _)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.OR (sq, _, poly, orKind, _)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    let fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.tynameToInt (T.DUMMYTYNAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
@@ -3996,7 +4007,7 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTLAB _) :: cs') l = raise EH.DeadBranch ""
 	  | fsimplify ((E.CSTTYP ((ty1 as T.OR (sq1, i1, poly1, orKind1, lab1),
 				   ty2 as T.OR (sq2, i2, poly2, orKind2, lab2)),
-				  ls, deps, ids)) :: cs') l =
+				  ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    let fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
@@ -4081,20 +4092,21 @@ fun unif env filters user =
 						  (L.unions [ls,   ls1,   ls2])
 						  (L.unions [deps, deps1, deps2])
 						  (CD.unions [ids,  ids1,  ids2])
+				    false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (SOME ([path1], labs1, stts1, deps1), NONE) =>
 		   (case gotoInOrSq path1 sq1 of
 			SOME t1 =>
-			let val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1)
+			let val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1) false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (NONE, SOME ([path2], labs2, stts2, deps2)) =>
 		   (case gotoInOrSq path2 sq2 of
 			SOME t2 =>
-			let val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2)
+			let val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2) false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -4517,7 +4529,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((E.CSTTYF ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
-		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
+		val c2 = E.genCstTyAll ty1    ty2    labs stts deps false
 	    (*val _ = D.printdebug2 (S.printState state)*)
 	    (*val _ = D.printdebug2 (L.toString labs)*)
 	    in fsimplify (c1 :: c2 :: cs') l
@@ -4774,27 +4786,27 @@ fun unif env filters user =
 	    else fsimplify cs' l
 	  (**)
 	  | fsimplify ((E.CSTACC acc) :: cs') l = (solveacc acc l; fsimplify cs' l)
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.C   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.E   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.A   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.OR  _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
+	  | fsimplify ((E.CSTTYP ((T.GEN _, T.C   _), _, _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.CSTTYP ((T.GEN _, T.E   _), _, _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.CSTTYP ((T.GEN _, T.A   _), _, _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.CSTTYP ((T.GEN _, T.OR  _), _, _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.CSTTYP ((T.GEN _, T.GEN _), _, _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
 	  (*(2010-06-23)We keep unifying but we should really chain the GENs.*)
 	  (* otherwise we swap the types of the evaluated constraint *)
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.C   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.E   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.OR  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.GEN x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.GEN x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.C   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.C   y, T.OR  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.OR  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.C   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.E   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.OR  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.C   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.E   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.OR  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.C   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((T.NC  x, T.NV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTTYN ((T.NV  y, T.NC  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.C   x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.E   x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.OR  x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.GEN x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.GEN x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.OR  x, T.C   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.C   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.OR  x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.C   x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.E   x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.OR  x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.C   x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.E   x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.OR  x, T.E   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYP ((T.C   x, T.E   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
+	  | fsimplify ((E.CSTTYN ((T.NC  x, T.NV  y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((T.NV  y, T.NC  x), ls, deps, ids, eqTypeCheck)) :: cs') l
 	  | fsimplify ((E.CSTSEQ ((T.SC  x, T.SV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTSEQ ((T.SV  y, T.SC  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTENV ((E.ENVVAR y, E.ENVSEQ x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.CSTENV ((E.ENVCON x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTENV ((E.ENVVAR y, E.ENVCON x), ls, deps, ids)) :: cs') l

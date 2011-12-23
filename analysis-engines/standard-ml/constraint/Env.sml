@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        21 May 2010
  *  o File name:   Env.sml
@@ -152,8 +152,8 @@ datatype env        = ENVCON of {vids : varenv,
 		    | ACCSIG of env         accid EL.extLab
 		    | ACCFUN of (env * env) accid EL.extLab
 
-     and ocst 	    = CSTTYP of (T.ty     * T.ty)     EL.extLab
-		    | CSTTYN of (T.tnty   * T.tnty)   EL.extLab
+     and ocst 	    = CSTTYP of (T.ty     * T.ty)     EL.extLabEq
+		    | CSTTYN of (T.tnty   * T.tnty)   EL.extLabEq
 		    | CSTSEQ of (T.seqty  * T.seqty)  EL.extLab
 		    | CSTROW of (T.rowty  * T.rowty)  EL.extLab
 		    | CSTLAB of (T.labty  * T.labty)  EL.extLab
@@ -423,11 +423,11 @@ and printAcc (ACCVAR x) ind ascid =
   | printAcc (ACCFUN x) ind ascid =
     "ACCFUN(" ^ EL.printExtLab x (fn x => printAccId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
 and printocst (CSTTYP x) _ ascid =
-    "  TYP(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
+    "  TYP(" ^ EL.printExtLabEq x (fn x => printPair x T.printty') ascid ^ ")"
   | printocst (CSTTYF x) _ ascid =
     "  TYF(" ^ EL.printExtLab x (fn x => printPair x T.printtyf') ascid ^ ")"
   | printocst (CSTTYN x) _ ascid =
-    "  NAM(" ^ EL.printExtLab x (fn x => printPair x T.printtnty') ascid ^ ")"
+    "  NAM(" ^ EL.printExtLabEq x (fn x => printPair x T.printtnty') ascid ^ ")"
   | printocst (CSTSEQ x) _ ascid =
     "  SEQ(" ^ EL.printExtLab x (fn x => printPair x T.printseqty') ascid ^ ")"
   | printocst (CSTROW x) _ ascid =
@@ -1716,10 +1716,11 @@ and getbindings env = getlabsenv env
 
 
 fun genCstAllGen x1 x2 labs sts cds = EL.consExtLab (x1, x2) labs sts cds
+fun genCstAllGenEq x1 x2 labs sts cds eqTypeCheck = EL.consExtLabEq (x1, x2) labs sts cds eqTypeCheck
 
-fun genCstTyAll x1 x2 labs sts cds = CSTTYP (genCstAllGen x1 x2 labs sts cds)
+fun genCstTyAll x1 x2 labs sts cds eqTypeCheck = CSTTYP (genCstAllGenEq x1 x2 labs sts cds eqTypeCheck)
 fun genCstTfAll x1 x2 labs sts cds = CSTTYF (genCstAllGen x1 x2 labs sts cds)
-fun genCstTnAll x1 x2 labs sts cds = CSTTYN (genCstAllGen x1 x2 labs sts cds)
+fun genCstTnAll x1 x2 labs sts cds eqTypeCheck = CSTTYN (genCstAllGenEq x1 x2 labs sts cds eqTypeCheck)
 fun genCstSqAll x1 x2 labs sts cds = CSTSEQ (genCstAllGen x1 x2 labs sts cds)
 fun genCstRtAll x1 x2 labs sts cds = CSTROW (genCstAllGen x1 x2 labs sts cds)
 fun genCstLtAll x1 x2 labs sts cds = CSTLAB (genCstAllGen x1 x2 labs sts cds)
@@ -1738,10 +1739,11 @@ fun genAccIfAll x labs sts cds = ACCFUN (genAccAllGen x labs sts cds)
 
 
 fun genCstGen x1 x2 lab cds = EL.consExtLab (x1, x2) (L.singleton lab) L.empty cds
+fun genCstGenEq x1 x2 lab cds eqTypeCheck = EL.consExtLabEq (x1, x2) (L.singleton lab) L.empty cds eqTypeCheck
 
-fun genCstTy x1 x2 lab cds = CSTTYP (genCstGen x1 x2 lab cds)
+fun genCstTy x1 x2 lab cds eqTypeCheck = CSTTYP (genCstGenEq x1 x2 lab cds eqTypeCheck)
 fun genCstTf x1 x2 lab cds = CSTTYF (genCstGen x1 x2 lab cds)
-fun genCstTn x1 x2 lab cds = CSTTYN (genCstGen x1 x2 lab cds)
+fun genCstTn x1 x2 lab cds eqTypeCheck = CSTTYN (genCstGenEq x1 x2 lab cds eqTypeCheck)
 fun genCstSq x1 x2 lab cds = CSTSEQ (genCstGen x1 x2 lab cds)
 fun genCstRt x1 x2 lab cds = CSTROW (genCstGen x1 x2 lab cds)
 fun genCstLt x1 x2 lab cds = CSTLAB (genCstGen x1 x2 lab cds)
@@ -1761,11 +1763,12 @@ fun genAccIf x lab cds = ACCFUN (genAccGen x lab cds)
 
 (* x1 and x2 here are eg T.NC (tn1, b1,l1) and T.NC(tn2,b2,l2) *)
 fun genCstEmGen x1 x2 lab = EL.initExtLab (x1, x2) lab
+fun genCstEmGenEq x1 x2 lab eqTypeCheck = EL.initExtLabEq (x1, x2) lab eqTypeCheck
 
-
-fun genCstTyEm x1 x2 lab = CSTTYP (genCstEmGen x1 x2 lab)
+fun genCstTyEm x1 x2 lab eqTypeCheck = ((*print ("*** CSTTYP generating. eqTypeCheck="^(Bool.toString(eqTypeCheck)));*)
+					      CSTTYP (genCstEmGenEq x1 x2 lab eqTypeCheck))
 fun genCstTfEm x1 x2 lab = CSTTYF (genCstEmGen x1 x2 lab)
-fun genCstTnEm x1 x2 lab = CSTTYN (genCstEmGen x1 x2 lab) (* change here for eqtypes? genCstEmGen takes and returns now 4-tuple?*)
+fun genCstTnEm x1 x2 lab eqTypeCheck = CSTTYN (genCstEmGenEq x1 x2 lab eqTypeCheck) (* change here for eqtypes? genCstEmGen takes and returns now 4-tuple?*)
 fun genCstSqEm x1 x2 lab = CSTSEQ (genCstEmGen x1 x2 lab)
 fun genCstRtEm x1 x2 lab = CSTROW (genCstEmGen x1 x2 lab)
 fun genCstLtEm x1 x2 lab = CSTLAB (genCstEmGen x1 x2 lab)
@@ -1838,7 +1841,7 @@ fun allEqualVids vids =
 		    foldr (fn (bind, cst) =>
 			      let val ty' = getBindT bind
 				  val lab = getBindL bind
-				  val c   = genCstTyEm ty ty' lab
+				  val c   = genCstTyEm ty ty' lab false
 			      in conscst (lab, c) cst
 			      end)
 			  cst

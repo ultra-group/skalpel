@@ -1,6 +1,6 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
- *
+ * Copyright 2011 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -202,7 +202,7 @@ fun getOpType ascid =
 		val (tl, tr, to) = getTyBinaryOp str lab
 		val ty  = T.newV ()
 		val ti  = T.consTyTupleTy [tl, tr] lab T.BB
-		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab
+		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab false
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
 		val bd  = E.consBindPoly id ty cl lab
@@ -212,7 +212,7 @@ fun getOpType ascid =
 	    let val lab = L.builtinLab
 		val (ti, to) = getTyUnaryOp str lab
 		val ty  = T.newV ()
-		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab
+		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab false
 		val bd  = E.consBindPoly id ty (CL.consREC ()) lab
 	    in (bd, c)
 	    end

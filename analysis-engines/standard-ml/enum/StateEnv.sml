@@ -1,23 +1,19 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -1157,7 +1153,7 @@ fun ziprec [] rtl2 = ([], [], rtl2, [], [])
     (case ziprecRC rt rtl2 of
 	 SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs, stts, deps, rtl2') =>
 	 let val (cs, rtl3, rtl4, llc1, llc2) = ziprec rtl1 rtl2'
-	     val c = E.genCstTyAll ty1 ty2 labs stts deps
+	     val c = E.genCstTyAll ty1 ty2 labs stts deps false
 	     val rcty1 = ((lab1, lc1), labs, stts, deps)
 	     val rcty2 = ((lab2, lc2), labs, stts, deps)
 	 in (c :: cs, rtl3, rtl4, rcty1 :: llc1, rcty2 :: llc2)
@@ -1262,7 +1258,7 @@ fun updateRec state =
     end
 
 fun updateRecOne state strc =
-    let val sr1 = updateRecordRt state strc
+    let	val sr1 = updateRecordRt state strc
 	val sr2 = updateRecordLt state sr1
 	(*val _ = D.printdebug2 (printState state)*)
 	val (sr3, cs, err) = ftestrecord sr2

@@ -1,25 +1,21 @@
 (* Copyright 2009 Heriot-Watt University
  * Copyright 2010 Heriot-Watt University
+ * Copyright 2011 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Env.sig
@@ -170,8 +166,8 @@ signature ENV = sig
 			| ACCSIG of env         accid ExtLab.extLab (* signatures               *)
 			| ACCFUN of (env * env) accid ExtLab.extLab (* functors              *)
 
-	 and ocst       = CSTTYP of (Ty.ty    * Ty.ty)    ExtLab.extLab
-			| CSTTYN of (Ty.tnty  * Ty.tnty)  ExtLab.extLab
+	 and ocst       = CSTTYP of (Ty.ty    * Ty.ty)    ExtLab.extLabEq
+			| CSTTYN of (Ty.tnty  * Ty.tnty)  ExtLab.extLabEq
 			| CSTSEQ of (Ty.seqty * Ty.seqty) ExtLab.extLab
 			| CSTROW of (Ty.rowty * Ty.rowty) ExtLab.extLab
 			| CSTLAB of (Ty.labty * Ty.labty) ExtLab.extLab
@@ -539,9 +535,9 @@ signature ENV = sig
 
     val genIdCst     : Id.lid -> ClassId.class -> Label.label -> accid*)
 
-    val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> ocst
+    val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> bool -> ocst
     val genCstTfAll  : Ty.tyfun  -> Ty.tyfun -> Label.labels -> Label.labels -> LongId.set -> ocst
-    val genCstTnAll  : Ty.tnty   -> Ty.tnty  -> Label.labels -> Label.labels -> LongId.set -> ocst
+    val genCstTnAll  : Ty.tnty   -> Ty.tnty  -> Label.labels -> Label.labels -> LongId.set -> bool -> ocst
     val genCstSqAll  : Ty.seqty  -> Ty.seqty -> Label.labels -> Label.labels -> LongId.set -> ocst
     val genCstRtAll  : Ty.rowty  -> Ty.rowty -> Label.labels -> Label.labels -> LongId.set -> ocst
     val genCstLtAll  : Ty.labty  -> Ty.labty -> Label.labels -> Label.labels -> LongId.set -> ocst
@@ -556,9 +552,9 @@ signature ENV = sig
     val genAccIiAll  : env      accid -> Label.labels -> Label.labels -> LongId.set -> acc
     val genAccIfAll  : funsem   accid -> Label.labels -> Label.labels -> LongId.set -> acc
 
-    val genCstTy     : Ty.ty     -> Ty.ty    -> Label.label -> LongId.set -> ocst
+    val genCstTy     : Ty.ty     -> Ty.ty    -> Label.label -> LongId.set -> bool -> ocst
     val genCstTf     : Ty.tyfun  -> Ty.tyfun -> Label.label -> LongId.set -> ocst
-    val genCstTn     : Ty.tnty   -> Ty.tnty  -> Label.label -> LongId.set -> ocst
+    val genCstTn     : Ty.tnty   -> Ty.tnty  -> Label.label -> LongId.set -> bool -> ocst
     val genCstSq     : Ty.seqty  -> Ty.seqty -> Label.label -> LongId.set -> ocst
     val genCstRt     : Ty.rowty  -> Ty.rowty -> Label.label -> LongId.set -> ocst
     val genCstLt     : Ty.labty  -> Ty.labty -> Label.label -> LongId.set -> ocst
@@ -573,9 +569,9 @@ signature ENV = sig
     val genAccIi     : env      accid -> Label.label -> LongId.set -> acc
     val genAccIf     : funsem   accid -> Label.label -> LongId.set -> acc
 
-    val genCstTyEm   : Ty.ty    -> Ty.ty    -> Label.label -> ocst
+    val genCstTyEm   : Ty.ty    -> Ty.ty    -> Label.label -> bool -> ocst
     val genCstTfEm   : Ty.tyfun -> Ty.tyfun -> Label.label -> ocst
-    val genCstTnEm   : Ty.tnty  -> Ty.tnty  -> Label.label -> ocst
+    val genCstTnEm   : Ty.tnty  -> Ty.tnty  -> Label.label -> bool -> ocst
     val genCstSqEm   : Ty.seqty -> Ty.seqty -> Label.label -> ocst
     val genCstRtEm   : Ty.rowty -> Ty.rowty -> Label.label -> ocst
     val genCstLtEm   : Ty.labty -> Ty.labty -> Label.label -> ocst
