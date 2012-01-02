@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Copyright 2009, 2010 Steven Shiells
-;; Copyright 2009, 2010, 2011 Heriot-Watt University
+;; Copyright 2009, 2010, 2011, 2012 Heriot-Watt University
 ;; Copyright 2010 John Pirie
 ;; Copyright 2011 Scott Fotheringham
 ;;
@@ -340,8 +340,8 @@
 (defvar skalpel-slice-data nil)
 
 (if (eq system-type 'windows-nt)
-    (defvar skalpel-slicer-bin "skalpel-bin.exe")
-    (defvar skalpel-slicer-bin "skalpel-bin")
+    (defvar skalpel-slicer-bin "skalpel.exe")
+    (defvar skalpel-slicer-bin "skalpel")
     )
 
 ;; Size of a tabulation

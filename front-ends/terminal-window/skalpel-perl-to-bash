@@ -6,7 +6,7 @@
 ## Copyright 2010 Vincent Rahli
 ## Copyright 2009, 2010 Steven Shiells
 ##
-## skalpel is free software: you can redistribute it and/or modify
+## Skalpel is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
@@ -17,7 +17,7 @@
 ## GNU General Public License for more details.
 ##
 ## You should have received a copy of the GNU General Public License
-## along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+## along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ## Authors: Steven Shiells, Vincent Rahli
 ## Date: November 2009
@@ -29,7 +29,6 @@
 ###############################################################
 ###############################################################
 
-use strict;
 use warnings;
 use Switch;
 use File::Basename;
@@ -388,6 +387,7 @@ sub treatFile {
     ## Store the processed error in the appropriate bash file
     open (FILE, ">", $filesh) || die ("Could not open " . $filesh);
     print FILE $sterrors;    close FILE;
+    chmod 0755, $filesh;
 }
 
 ##########################################################
@@ -425,11 +425,13 @@ sub treatFiles {
 	print FILE "#! /bin/bash\n";
  	print FILE "echo -e \"". $stand . $title . "No error was found\"" . $endCol . "\n";
  	close FILE;
+	chmod 0755, $noerrorfile;
      }
 
     my $fileFinished = $rootfile . "-finished.sh";
     open (FILE, ">", $fileFinished) || die ("Could not open " . $fileFinished);
     close FILE;
+    chmod 0755, $fileFinished;
 }
 ## Run the treat files function
 treatFiles ($filein, $filepl);

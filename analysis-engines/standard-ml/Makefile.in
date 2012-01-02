@@ -1,6 +1,5 @@
 ######################################################################
-# Copyright 2009 Heriot-Watt University
-# Copyright 2010 Heriot-Watt University
+# Copyright 2009 2010 2011 2012 Heriot-Watt University
 #
 #
 # This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -96,7 +95,7 @@ ml-binary:
 	# copies the executable into the bin directory in the implementation directory
 	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/slicer-smlnj
 	# makes a copy of the slicer-smlnj binary called slicer
-	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel-bin
+	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel
 	# copies the executable to the shared directory (makes a dated backup)
 	mv ${TMPDIR}/slicer ${SHAREDIR}/slicer-$(date)
 
@@ -200,7 +199,7 @@ smlnj-bin: ${SOURCESDIR}/bin/slicer-smlnj
 
 mlton-bin-gen: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
-	mlton -output bin/skalpel-bin sources.mlb
+	mlton -output bin/skalpel sources.mlb
 
 # We need mlton-base here ohterwise the ML-mlton-grm.sml and such
 # might not exists and make is going to complain when checking

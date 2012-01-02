@@ -28,6 +28,7 @@ structure Slicer : SLICER = struct
 (* shorten the names of structures for use in the code *)
 structure ER = Error
 structure EH = ErrorHandler
+structure D  = Debug
 structure PP = Ppp
 
 (* flag set if we are building the web demo binary *)
@@ -43,6 +44,7 @@ val myfilehtml     = Tester.myfilehtml
 val myfilebas      = Tester.myfilebas
 
 (* datatype for determining whether the user wishes slices displayed in a terminal *)
+(* INTERACTIVE is not used yet. It perhaps should be added, so the user can cycle through slices *)
 datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
@@ -218,7 +220,10 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 	     then
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
-		     val childProcess = Unix.execute("../../front-ends/terminal-window/skalpel-perl-to-bash", [filesin, "slice-display-scripts"])
+		     val _ = D.printDebug 1 D.RUN "executing shell scripts for terminal slice display..."
+		     val execAll = OS.Process.system( ("../../front-ends/terminal-window/skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
+						       "; for FILE in "^ffile^"*.sh; do ./$FILE; done;") )  handle OS.SysErr (str, opt) => raise Fail str
+		     val _ = D.printDebug 1 D.RUN "finished executing shell scripts for terminal slice display."
 		 in
 		     ()
 		 end
@@ -290,7 +295,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val bfhtml = getBoolFile filehtml ".html"
 	val bfxml  = getBoolFile filexml  ".xml"
 	val bfsml  = getBoolFile filesml  ".sml"
-	val bfjson = getBoolFile filejson ""
+	val bfjson = (if filejson = "" then false else true, filejson)
 	val bflisp = getBoolFile filelisp ".el"
 	val bfperl = getBoolFile fileperl ".pl"
 
@@ -342,7 +347,6 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
     if dev
     then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
     else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
-	 handle _ => (print "the slicer failed for some unknown reason\n"; ())
 
 (* called by the emacs interface; sets no tab and uses the solution from sol in
  * utils/Solution.sml *)
@@ -467,6 +471,7 @@ fun smlTesStrArgs strArgs =
 	val bcs      = ref ""
 	val search   = ref ""
 	val runtests = ref false
+	val filesNeeded = ref true
 	val basisoverloading = ref "1"
 
 	fun printHelp () =
@@ -479,7 +484,8 @@ fun smlTesStrArgs strArgs =
 				    \    -x <file> place output in <file> in XML format\n\
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
-				    \    -b <0 / 1 / 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
+				    \    -e <0 | 1> toggles display of slices in terminal (0=no, 1=yes)\n\
+				    \    -b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
 				    \    -d <0 | 1 | 2 | 3> Set debug print statement depth (higher = more detail)\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
@@ -487,6 +493,7 @@ fun smlTesStrArgs strArgs =
 				    \    -min <true/false> if true, shows non-minimal errors\n\
 				    \    --check-tests Run analysis-engine on tests in the current folder\n\
 				    \    --print-env <true/false> whether to print the environment\n\
+				    \    --show-legend Shows the legend for notation and colour of slice display in the terminal\n\
 				    \    --output <true/false> enable developer mode\n\
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
 				    \    --help Show this help text");
@@ -499,7 +506,9 @@ fun smlTesStrArgs strArgs =
 	    if option = "--help" then
 		printHelp ()
 	    else if option = "--check-tests" then
-		(runtests := true; checktests [])
+		(runtests := true; filesNeeded := false; checktests [])
+	    else if option = "--show-legend"
+	    then (filesNeeded:=false; OS.Process.system("../../front-ends/terminal-window/skalpel-legend"); ())
 	    else
 		filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
@@ -509,6 +518,10 @@ fun smlTesStrArgs strArgs =
 	    (filebas:=file; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
 	    (filebas:=file; basop:="2"; parse tail)
+	  | parse ("-e"::"0"::tail) =
+	    (terminalSlices := NO_DISPLAY; parse tail)
+	  | parse ("-e"::"1"::tail) =
+	    (terminalSlices := NON_INTERACTIVE; parse tail)
 	  | parse (option::str::tail)=
 	     ((if option = "-f"
 	     then filein:=str
@@ -556,7 +569,7 @@ fun smlTesStrArgs strArgs =
 	    (parse split;
 
 	     (* check that the user specified an input file *)
-	     if (!filein = "" andalso !runtests = false)
+	     if (!filein = "" andalso !filesNeeded = true)
 	     then (print ("Error: No input file specified.");
 		   raise Fail("No input file specified"))
 	     else

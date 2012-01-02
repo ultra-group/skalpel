@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +24,7 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN
 
 (* the greater the depth, the more detail the print statements give *)
 val debugUnif  : int ref = ref 0
@@ -35,6 +33,7 @@ val debugLabel : int ref = ref 0
 val debugTy    : int ref = ref 0
 val debugGrm   : int ref = ref 0
 val debugAze   : int ref = ref 0
+val debugRun   : int ref = ref 0
 
 fun setAllDebug value =
     (debugUnif := value;
@@ -42,7 +41,8 @@ fun setAllDebug value =
      debugLabel:= value;
      debugTy   := value;
      debugGrm  := value;
-     debugAze  := value)
+     debugAze  := value;
+     debugRun  := value)
 
 fun printDebug depth JSON str =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ str ^ "\n") else ()
@@ -56,6 +56,8 @@ fun printDebug depth JSON str =
     if (!debugGrm >= depth) then print ("("^(Int.toString depth)^") Ml.grm: " ^ str ^ "\n") else ()
   | printDebug depth AZE str =
     if (!debugAze >= depth) then print ("("^(Int.toString depth)^") Analyze.sml: " ^ str ^ "\n") else ()
+  | printDebug depth RUN str =
+    if (!debugRun >= depth) then print ("("^(Int.toString depth)^") RunSlicer.sml: " ^ str ^ "\n") else ()
 
 
 (* separator definitions *)

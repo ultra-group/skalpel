@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +30,7 @@ signature DEBUG = sig
 			| TY    (* Ty.sml *)
 			| MLGRM (* ML.grm *)
 			| AZE   (* Analyze.sml *)
+			| RUN   (* RunSlicer.sml *)
 
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit
