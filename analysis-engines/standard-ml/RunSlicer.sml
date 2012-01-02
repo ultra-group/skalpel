@@ -48,6 +48,9 @@ val myfilebas      = Tester.myfilebas
 datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
+(* do not change the below line! We change it using sed in the makefile and insert the git hash *)
+val SKALPEL_VERSION = "4293a38f7603f428e1cb26272bf47583dd23106c"
+
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
 
@@ -484,7 +487,8 @@ fun smlTesStrArgs strArgs =
 				    \    -x <file> place output in <file> in XML format\n\
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
-				    \    -e <0 | 1> toggles display of slices in terminal (0=no, 1=yes)\n\
+				    \    -x <true/false> suppress exception handling (dev mode)\n\
+				    \    -e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)\n\
 				    \    -b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
 				    \    -d <0 | 1 | 2 | 3> Set debug print statement depth (higher = more detail)\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
@@ -494,7 +498,6 @@ fun smlTesStrArgs strArgs =
 				    \    --check-tests Run analysis-engine on tests in the current folder\n\
 				    \    --print-env <true/false> whether to print the environment\n\
 				    \    --show-legend Shows the legend for notation and colour of slice display in the terminal\n\
-				    \    --output <true/false> enable developer mode\n\
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
 				    \    --help Show this help text");
 
@@ -505,8 +508,10 @@ fun smlTesStrArgs strArgs =
  	  | parse [option] =
 	    if option = "--help" then
 		printHelp ()
-	    else if option = "--check-tests" then
-		(runtests := true; filesNeeded := false; checktests [])
+	    else if option = "--check-tests"
+	    then (runtests := true; filesNeeded := false; checktests [])
+	    else if option = "-v"
+	    then (filesNeeded := false; print ("Version: "^SKALPEL_VERSION))
 	    else if option = "--show-legend"
 	    then (filesNeeded:=false; OS.Process.system("../../front-ends/terminal-window/skalpel-legend"); ())
 	    else
@@ -537,6 +542,8 @@ fun smlTesStrArgs strArgs =
 	     then filelisp:=str
 	     else if option = "-p"
 	     then fileperl:=str
+	     else if option = "-x"
+	     then dev:=str
 	     else if option = "-b"
 	     then basop:=str
 	     else if option = "-d"
@@ -552,8 +559,6 @@ fun smlTesStrArgs strArgs =
 	     then sol:=str
 	     else if option = "-min"
 	     then min:=str
-	     else if option = "--output"
-	     then dev:=str
 	     else if option = "--print-env"
 	     then bcs:=str
 	     else if option = "--search-space"
