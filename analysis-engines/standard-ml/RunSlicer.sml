@@ -1,7 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
- *
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +41,10 @@ val error : error = Tester.error
 val myfilein       = Tester.myfilein
 val myfilehtml     = Tester.myfilehtml
 val myfilebas      = Tester.myfilebas
+
+(* datatype for determining whether the user wishes slices displayed in a terminal *)
+datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
+val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -204,7 +205,7 @@ fun getBoolFile file suff =
 (* if suff is a suffix of ffile, then an output file will be created from the
  * file name, concatenated with '-', the counter, and the suffix, which
  * contains the result of fdebug applied to str *)
-fun genOutputFile (bfile, ffile) suff counter fdebug str =
+fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
     if bfile
     then let val file  = ffile  ^ "-" ^ Int.toString counter ^ suff
 	     val file' = file ^ ".tmp"
@@ -212,7 +213,17 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str =
 	     val _     = TextIO.output (stout, fdebug str)
 	     val _     = TextIO.closeOut stout
 	     val _     = OS.FileSys.rename {old = file', new = file}
-	 in () end
+	 in
+	     if (!terminalSlices) <> NO_DISPLAY andalso suff=".pl"
+	     then
+		 (* this will probably not work on the windows operating system- need to check this! *)
+		 let
+		     val childProcess = Unix.execute("../../front-ends/terminal-window/skalpel-perl-to-bash", [filesin, "slice-display-scripts"])
+		 in
+		     ()
+		 end
+	     else ()
+	 end
     else ()
 
 (* generates the -finished file after the -counter files (see genOutputFile)
@@ -251,7 +262,7 @@ fun printFound counter errors time =
 
 (* calls the necessary functions to write the *.html, *.xml, *.sml etc
  * to the system *)
-fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading
+fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading filesin
 	   errs parse bmin times cs initlab name st counter time =
     let val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading Tester.removeBasisSlice
 	val dbgxml   = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
@@ -261,11 +272,11 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisove
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _ = if bhtml then dbghtml' st else ()
-	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st
-	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st
-	val _ = genOutputFile bfjson  ""    counter dbgjson st
-	val _ = genOutputFile bflisp ".el"  counter dbglisp st
-	val _ = genOutputFile bfperl ".pl"  counter dbgperl st
+	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st filesin
+	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st filesin
+	val _ = genOutputFile bfjson  ""    counter dbgjson st filesin
+	val _ = genOutputFile bflisp ".el"  counter dbglisp st filesin
+	val _ = genOutputFile bfperl ".pl"  counter dbgperl st filesin
 	val _ = printFound counter errs time
     in ()
     end
@@ -284,7 +295,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val bfperl = getBoolFile fileperl ".pl"
 
 	(* write the files to the system *)
-	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading
+	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading (List.hd filesin)
 
 	(* get various information from Tester, such as solution number *)
 	val tmpsol = Tester.getsol ()
