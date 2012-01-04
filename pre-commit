@@ -3,7 +3,7 @@
 ###############################################################
 ###############################################################
 ##
-## Copyright 2011 Heriot-Watt University
+## Copyright 2011 2012 Heriot-Watt University
 ##
 ## This file is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 ################################################################
 
 gitConfigName=`git config user.name`
+errorFlag=false
 
 if [ "$gitConfigName" = "John Pirie" ]
 then
@@ -43,6 +44,11 @@ do
     if [ "$output" = "" ]
     then
 	echo "File \"$FILE\" does not have a copyright statement matching \"$grepCommand\""
-	exit 1
+	errorFlag=true
     fi
 done
+
+if [ "$errorFlag" = true ]
+then
+    exit 1
+fi

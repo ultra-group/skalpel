@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3444,6 +3442,7 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTTYP ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two type constructions";
 	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+	     D.printDebug 3 D.UNIF ("             - label information is l1="^(Int.toString(L.toInt l1))^", l2="^(Int.toString(L.toInt l2)));
 	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 	       orelse
 	       (T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3488,25 +3487,19 @@ fun unif env filters user =
 		     end
 	    else
 		let
+		    val _  = D.printDebug 3 D.UNIF "             - generating CSTTYN by calling genCstTnAll"
 		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids eqTypeCheck
 		    val c2 = E.genCstSqAll sq1 sq2 ls deps ids
 		 in
 		    fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
-	    (D.printDebug 2 D.UNIF "in fsimplify- constarint type is two of tnty.NC";
-	     D.printDebug 3 D.UNIF("            - tnty.NC typenames are tn1 = "^(Int.toString(T.tynameToInt tn1))^" tn2 = "^(Int.toString(T.tynameToInt tn2)));
+	    (D.printDebug 2 D.UNIF "in fsimplify - constarint type is two of tnty.NC";
+	     D.printDebug 3 D.UNIF("             - tnty.NC typenames are tn1 = "^(Int.toString(T.tynameToInt tn1))^" tn2 = "^(Int.toString(T.tynameToInt tn2)));
+	     D.printDebug 3 D.UNIF("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	     if T.eqTyname tn1 tn2
-	     then
-		 (* we check if tn1 and tn2 are equality types. If they aren't then generate an error, otherwise it's typable *)
-		 if eqTypeCheck then      (* this only works for the built-in basis. Need to extend to the basis file *)
-		     (* EK.EqTypeRequired (...) *)
-		     (* putting something in here to test with an example. We should generate a proper error for this *)
-		     (print("**************************** EQ TYPE ERROR *******************************\n");
-		     handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l)
-		 else
-		     (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
-		      fsimplify cs' l)
+	     then (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
+		   fsimplify cs' l)
 	     else let val _   = D.printDebug 2 D.UNIF ("typenames of both tnty.NC constructors are not equal");
 		      val _   = D.printDebug 3 D.UNIF ("first tnty.NC  - label = "^(Int.toString (L.toInt l1))^", tyname = " ^ (Int.toString (T.tynameToInt tn1)))
 		      val _   = D.printDebug 3 D.UNIF ("second tnty.NC - label = "^(Int.toString (L.toInt l2))^", tyname = " ^ (Int.toString (T.tynameToInt tn2)))
@@ -3583,7 +3576,7 @@ fun unif env filters user =
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
-			else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two implicit type variables"
+			else let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is two implicit type variables"
 				 val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt lab2, T.tynameToInt (T.DUMMYTYNAME)))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 			     in handleSimplify err cs' l
@@ -3595,13 +3588,13 @@ fun unif env filters user =
 	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	    if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
-	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is two explicit type variables"
+	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is two explicit type variables"
 		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.DUMMYTYNAME)))
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
 		 end)
 	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
-	    let val _   = D.printDebug 2 D.UNIF "in fsimplify- constarint type is an explicit tyvar and a type construction"
+	    let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is an explicit tyvar and a type construction"
 		val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
@@ -3795,8 +3788,14 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTIF _) :: cs') l = raise EH.TODO*)
 	  | fsimplify ((E.CSTTYP ((tyv as T.V (tv, b, p), ty), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    let
-		val _   = D.printDebug 2 D.UNIF ("in fsimplify- constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
-		val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+		val _ = if eqTypeCheck
+			then (print("**************************** EQ TYPE ERROR *******************************\n");
+			      (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
+			      handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
+			      ())
+			else ()
+		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
+		val _   = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
@@ -3808,7 +3807,6 @@ fun unif env filters user =
 			    val fek = if isSigVsStrTyp () then EK.TyFunClash else EK.NotGenClash
 			    val ek  = fek ((L.toInt l1, T.tyvarToInt tv), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 			    val err = ERR.consPreError ERR.dummyId ls ids ek deps l
-			(*val _ = D.printdebug2 (T.printty tyv)*)
 			(* We should raise another error here:
 			 * something like, signature too general. *)
 			in handleSimplify err cs' l

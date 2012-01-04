@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +42,8 @@ structure D  = Debug
 
 (* TODO: true if we want to have recursive types.  This is for the future *)
 val rectype = false
+
+val huntForEqType : bool ref = ref false
 
 (* Name of the open structure in the basis.  We should get rid of that! *)
 (*val basisopen = "Basis"*)
@@ -2721,61 +2721,74 @@ fun generateConstraints' prog pack nenv =
 
 	   and f_scon (A.SconInt (s, v, _, lab, _)) =
 	       if benv (* We bind the integer to the "Int" overloading class *)
-	       then let val sv = T.freshseqvar ()
+	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+		        val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
 			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
-	       else let val tv = T.freshtyvar ()
+	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val tv = T.freshtyvar ()
 			val c  = E.genCstTyEm (T.consV tv) (T.constyint lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconWord (s, v, _, lab, _)) =
                if benv (* We bind the word to the "Word" overloading class *)
-	       then let val sv = T.freshseqvar ()
+	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
 			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
-	       else let val tv = T.freshtyvar ()
+	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val tv = T.freshtyvar ()
 			val c  = E.genCstTyEm (T.consV tv) (T.constyword lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconReal (s, v, _, lab, _)) =
                if benv (* We bind the real to the "Real" overloading class *)
-	       then let val sv = T.freshseqvar ()
+	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconReal. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
 			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
-	       else let val tv = T.freshtyvar ()
-			val c  = E.genCstTyEm (T.consV tv) (T.constyreal lab) lab false
+	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconReal. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val tv = T.freshtyvar ()
+			val c  = E.genCstTyEm (T.consV tv) (T.constyreal lab) lab
+				 (if (!huntForEqType) = true then
+				      (huntForEqType := false; true)
+				  else false)
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconString (s, v, _, lab, _)) =
                if benv (* We bind the string to the "String" overloading class *)
-	       then let val sv = T.freshseqvar ()
+	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
 			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
-	       else let val tv = T.freshtyvar ()
+	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val tv = T.freshtyvar ()
 			val c  = E.genCstTyEm (T.consV tv) (T.constystring lab) lab false
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconChar (s, v, _, lab, _)) =
                if benv (* We bind the char to the "Char" overloading class *)
-	       then let val sv = T.freshseqvar ()
+	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val sv = T.freshseqvar ()
 			val tv = T.freshtyvar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SV sv) (CL.consOC ()) lab) lab
 			val c  = E.genCstTyEm (T.consV tv) (T.OR (T.SV sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab false
 		    in (tv, E.singcsts (lab, [E.CSTACC a, c]), E.emcss)
 		    end
-	       else let val tv = T.freshtyvar ()
+	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+			val tv = T.freshtyvar ()
 			val c  = E.genCstTyEm (T.consV tv) (T.constychar lab) lab false
 			val bs = (Char.fromString
 				      (String.translate (fn #"\\" => "\\\\" | x => Char.toString x)
@@ -2790,7 +2803,7 @@ fun generateConstraints' prog pack nenv =
 					     else E.singcss (charSizeCs lab)
 		    in (tv, E.singcst (lab, c), css)
 		    end
-	     | f_scon A.SconDots = (T.freshtyvar (), E.emcst, E.emcss)
+	     | f_scon A.SconDots = (D.printDebug 3 D.AZE ("generating constraints for A.SconDots"); (T.freshtyvar (), E.emcst, E.emcss))
 
 	   (*(* f_pcon, f_ident and f_longid have an extra Boolean parameter.
 	    * This parameter is true if the id is inside an expression and false otherwise. *)
@@ -3158,7 +3171,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
 	   and f_labexp (A.LabExp (exp, _, _, lab, _)) =
 	       let
-		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.LabExp")
+		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.LabExp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, cst, css) = f_exp exp
 		   val tv' = T.freshtyvar ()
 		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
@@ -3219,13 +3232,14 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
 	   and f_atexp (A.AtExpId id) =
 	       let
-		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.AtExpId")
+		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpId")
 		   val (tv, _, _, cst) = f_longidexp id
 	       in (tv, cst, E.emcss)
 	       end
-	     | f_atexp (A.AtExpScon sc) = f_scon sc
+	     | f_atexp (A.AtExpScon sc) = (D.printDebug 3 D.AZE ("generating constraints for A.AtExpScon"); f_scon sc)
 	     | f_atexp (A.AtExpTuple (expl, _, lab, _)) =
-               let val tv = T.freshtyvar ()
+               let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpTuple (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv = T.freshtyvar ()
 		   val (tvl, csts, csss) = unzipThree (map f_labexp expl)
 		   val cst = E.uenvcst csts
 		   val css = E.uenvcss csss
@@ -3233,7 +3247,8 @@ fun generateConstraints' prog pack nenv =
                in (tv, E.conscst (lab, c) cst, css)
                end
 	     | f_atexp (A.AtExpRecord (exprows, _, _, lab, _)) =
-               let val tv = T.freshtyvar ()
+               let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpRecord (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv = T.freshtyvar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val cst  = E.uenvcst csts
@@ -3243,7 +3258,8 @@ fun generateConstraints' prog pack nenv =
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_atexp (A.AtExpSlRec (exprows, _, lab, _)) =
-               let val tv  = T.freshtyvar ()
+               let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpSlRec (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv  = T.freshtyvar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val cst  = E.uenvcst csts
@@ -3254,7 +3270,8 @@ fun generateConstraints' prog pack nenv =
                in (tv, E.conscst (lab, c) cst, E.uenvcss [css, css'])
                end
 	     | f_atexp (A.AtExpLet (decs, labexp, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpLet (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv   = T.freshtyvar ()
 		   val (env1, css1) = f_decs decs
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val env = E.envsToSeq [env1, E.ENVCST cst2]
@@ -3262,7 +3279,8 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscst (L.dummyLab, E.CSTLET env) (E.singcst (lab, c)), E.uenvcss [css1, css2])
 	       end
 	     | f_atexp (A.AtExpDLet (decs, seqexp, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpDLet (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv   = T.freshtyvar ()
 		   val (env1, css1) = f_decs decs
 		   val (tv2, cst2, css2) = f_seqexp seqexp
 		   val env = E.envsToSeq [env1, E.ENVCST cst2]
@@ -3270,13 +3288,15 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscst (L.dummyLab, E.CSTLET env) (E.singcst (lab, c)), E.uenvcss [css1, css2])
 	       end
 	     | f_atexp (A.AtExpParen (labexp, _, _, lab, _)) =
-	       let val (tv, cst, css) = f_labexp labexp
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpParen (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val (tv, cst, css) = f_labexp labexp
 		   val tv' = T.freshtyvar ()
 		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_atexp (A.AtExpList (labexps, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpList (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val tv   = T.freshtyvar ()
 		   val tv'  = T.freshtyvar ()
 		   val (tvs, csts, csss) = unzipThree (map f_labexp labexps)
 		   val cst  = E.uenvcst csts
@@ -3286,7 +3306,8 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscsts (lab, c :: cs') cst, css)
 	       end
 	     | f_atexp (A.AtExpProj (tylab, _, _, lab, _)) =
-	       let val (lv, _, cst) = f_tylab tylab
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpProj (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val (lv, _, cst) = f_tylab tylab
 		   val tv  = T.freshtyvar ()
 		   val tv' = T.freshtyvar ()
 		   val rv  = T.freshrowvar ()
@@ -3296,13 +3317,15 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscsts (lab, [c1, c2]) cst, E.emcss)
 	       end
 	     | f_atexp (A.AtExpSeq (seqseq, _, lab, _)) =
-	       let val (tv, cst, css) = f_seqexp seqseq
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpSeq (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val (tv, cst, css) = f_seqexp seqseq
 		   val tv' = T.freshtyvar ()
 		   val c   = E.genCstTyEm (T.consV tv') (T.consV tv) lab false
 	       in (tv', E.conscst (lab, c) cst, css)
 	       end
 	     | f_atexp (A.AtExpQuote (quotes, _, lab, _)) =
-	       let val (tvs, csts, csss) = unzipThree (map f_quote quotes)
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpQuote (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val (tvs, csts, csss) = unzipThree (map f_quote quotes)
 		   val tv  = T.freshtyvar ()
 		   val tv' = T.freshtyvar ()
 		   val cst = E.uenvcst csts
@@ -3312,7 +3335,8 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.conscsts (lab, c :: cs') cst, css)
 	       end
 	     | f_atexp (A.AtExpDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpDots")
+		   val tv  = T.freshtyvar ()
 		   val env = f_partlist pl
 	       in (tv, E.singcst (L.dummyLab, E.CSTLET env), E.emcss)
 	       end
@@ -3349,7 +3373,7 @@ fun generateConstraints' prog pack nenv =
 		f_atexp atexp)
 	     | f_exp (A.ExpFn (match, _, lab, _)) =
 	       let
-		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpAtExp"
+		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpFn (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tvs, cst, css) = f_match match
 		   val tv = T.freshtyvar ()
 		   val cs = map (fn x => E.genCstTyEm (T.consV tv) (T.consV x) lab false) tvs
@@ -3357,7 +3381,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpApp (exp, atexp, _, _, _, lab, _)) =
 	       let
-		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpApp"
+		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv1, cst1, css1) = f_exp exp
 		   val (tv2, cst2, css2) = f_atexp atexp
 		   val tv  = T.freshtyvar ()
@@ -3390,13 +3414,14 @@ fun generateConstraints' prog pack nenv =
 	     | f_exp (A.ExpOp (st, id, labexp1, labexp2, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpOp (st = \"" ^ st ^ "\")")
+		   val _ = (huntForEqType := true)
 		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val _ = D.printDebug 3 D.AZE ("ExpOp type variables are tv1 = "^(Int.toString(T.tyvarToInt(tv1)))^", tv2 = "^(Int.toString(T.tyvarToInt(tv2))))
 		   val ty  = T.newV ()
 		   val ti  = T.constytuple [tv1, tv2] lab
 		   val tvo = T.freshtyvar ()
-		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab true
+		   val c   = E.genCstTyEm ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab false
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 	       in (tvo, E.conscsts (lab, [c, E.CSTACC a]) (E.uenvcst [cst1, cst2]), E.uenvcss [css1, css2])
 	       end

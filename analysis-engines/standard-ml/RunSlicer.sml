@@ -49,7 +49,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "4293a38f7603f428e1cb26272bf47583dd23106c"
+val SKALPEL_VERSION = "94d966258f239edb2aa136194ff39169c6571ce9"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -224,7 +224,7 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
 		     val _ = D.printDebug 1 D.RUN "executing shell scripts for terminal slice display..."
-		     val execAll = OS.Process.system( ("../../front-ends/terminal-window/skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
+		     val execAll = OS.Process.system( ("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
 						       "; for FILE in "^ffile^"*.sh; do ./$FILE; done;") )  handle OS.SysErr (str, opt) => raise Fail str
 		     val _ = D.printDebug 1 D.RUN "finished executing shell scripts for terminal slice display."
 		 in

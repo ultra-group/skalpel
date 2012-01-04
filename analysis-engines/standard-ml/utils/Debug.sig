@@ -31,6 +31,7 @@ signature DEBUG = sig
 			| MLGRM (* ML.grm *)
 			| AZE   (* Analyze.sml *)
 			| RUN   (* RunSlicer.sml *)
+			| ENV   (* Env.sml *)
 
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit
