@@ -961,16 +961,32 @@ value nil.")
     )
   )
 
+(eval (read "(print 1)"))
+
 (defun skalpel-format-slice-info (slice assumptions kind)
   "Formats the details of the error for displaying to the user"
 
   ;; insert program slice info the *skalpel-slice-info* buffer
   (set-buffer "*skalpel-slice-info*")
-  (insert (concat "Error: " (car (cdr kind)) "\n\n"))
-  (skalpel-print-ek-desc kind)
-  (insert "Slice:\n")
-  (insert slice)
-  (insert "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+  (let ((p1 (point)))
+    (insert (concat "Error (click to toggle associated info): " (car (cdr kind)) "\n\n"))
+
+    (let ((p2 (point)))
+
+      (add-text-properties p1 p2 '(mouse-face highlight help-echo "mouse-2: toggle show of slice information"))
+
+      (skalpel-print-ek-desc kind)
+      (insert "Slice:\n")
+      (insert slice)
+      (insert "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+
+      ;; code to bind mouse-1 to show/hide the information associated with each error
+      ;; we need to use eval here because we care about p1, p2 and (point) *now*, not at click time
+      (eval (read (concat "(let ((map (make-sparse-keymap)))(set-buffer \"*skalpel-slice-info*\") (define-key map [mouse-1] (function (lambda () (interactive) (progn "
+			  " (put-text-property " (number-to-string p2) " " (number-to-string (point)) " 'invisible (if (invisible-p " (number-to-string p2) ") nil t) )))))"
+			  " (put-text-property " (number-to-string p1) " " (number-to-string p2) " 'keymap map))")))
+    )
+  )
 
   ;; Report the appropriate mesage for the number of context dependencies in the error
   ;; 0 context dependencies

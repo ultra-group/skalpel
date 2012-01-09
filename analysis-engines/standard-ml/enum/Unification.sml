@@ -26,6 +26,7 @@
 functor Unif (S : STATE) : UNIF = struct
 
 structure S   = S
+structure Set  = BinarySetFn (OrdKey)
 structure P   = Poly
 structure D   = Debug
 structure O   = OrdSet
@@ -174,7 +175,8 @@ fun comparevidsenv idenv1 idenv2 filters ls deps ids =
 			 let val tvl1 = map (fn x => E.getBindT x) (E.plusproj idenv1 id)
 			     val tvl2 = map (fn x => E.getBindT x) (E.plusproj idenv2 id)
 			     val pairs = getpairs tvl1 tvl2
-			 in (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids false) pairs) @ cs
+			 in (D.printDebug 3 D.UNIF "in comparevidsenv - calling genCstTyAll";
+			     (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids false) pairs) @ cs)
 			 end)
 		     []
 		     dom
@@ -1282,6 +1284,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 			       val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
 			       val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
 			       fun getTy2 () = if bfun then ty2 else freshty ty2 (SOME O.empty) (F.finitState ()) false
+			       val _ = D.printDebug 3 D.UNIF "in compone - calling genCstTyAll";
 			       val cs'  = map (fn ty1 => ((*D.printdebug2 (T.printty ty1 ^ "\n" ^
 									 T.printty ty2 ^ "\n" ^
 									 L.toString labs);*)
@@ -1711,6 +1714,7 @@ fun genTyFunTy (x as T.V _) _ _ = ([], x)
 		   let val (cs, s) = genTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
+		       val _ = D.printDebug 3 D.UNIF "in genTyFunTy - calling genCstTyAll";
 		       val c2 = E.genCstTyAll v ty' labs stts deps false
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
@@ -1881,6 +1885,7 @@ fun applyTyFunTy (x as (T.V _)) _ _ = ([], x)
 		   let val (cs, s) = applyTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
+		       val _  = D.printDebug 3 D.UNIF "in applyTyFunTy - calling genCstTyAll";
 		       val c2 = E.genCstTyAll v ty' labs stts deps false
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
@@ -2624,7 +2629,7 @@ fun unif env filters user =
 			  in SOME (P.EXPANS (X.Expdep (lid, labs')))
 			  end
 		     else raise EH.DeadBranch "wrong kind of identifier"
-		   | (NONE, SOME _, true)  => SOME x   (* we went down some structure but couldn't find all of lid             *)
+		   | (NONE, SOME _, true)  => SOME x (* we went down some structure but couldn't find all of lid             *)
 		   | (NONE, NONE,   true)  => NONE   (* we went down some structure but even start looking for lid           *)
 		   | (NONE, SOME _, false) => SOME x (* we didn't start going down some structure and didn't find all of lid - can this ever happen? *)
 		   | (NONE, NONE,   false) => SOME x (* we didn't start going down some structure and didn't find lid at all *)
@@ -3235,6 +3240,7 @@ fun unif env filters user =
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
+			       val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0 false
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   (*val _     = D.printdebug2 (S.printState state)*)
@@ -3262,6 +3268,7 @@ fun unif env filters user =
 			   * 'too general in signature' errors.  This needs to be fixed.
 			   * Constraint solving shouldn't depend on the order in constraints. *)
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
+			  val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
 			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0 false
 		      in fsimplify [c] l
 		      end
@@ -3442,7 +3449,8 @@ fun unif env filters user =
 	  | fsimplify ((E.CSTTYP ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two type constructions";
 	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
-	     D.printDebug 3 D.UNIF ("             - label information is l1="^(Int.toString(L.toInt l1))^", l2="^(Int.toString(L.toInt l2)));
+	     D.printDebug 3 D.UNIF ("             - label information for constructions is l1="^(Int.toString(L.toInt l1))^", l2="^(Int.toString(L.toInt l2)));
+	     D.printDebug 3 D.UNIF ("             - label information (ls) is "^(L.toString(ls)));
 	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 	       orelse
 	       (T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3550,8 +3558,9 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.CSTTYP ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	     let
-		 val _     = D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two implicit type variables";
+		 val _     = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is two implicit type variables (tv1="^Int.toString(T.tyvarToInt tv1)^", tv2="^Int.toString(T.tyvarToInt tv2)^")");
 		 val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+		 val _     = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls))
 		 fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
@@ -3565,6 +3574,7 @@ fun unif env filters user =
 		      | SOME ty =>
 			let val bop = if Option.isSome b2 then b2 else b1
 			    val t   = T.V (tv2, bop, p2)
+			    val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
 			    val c   = E.genCstTyAll ty t ls deps ids false
 			in fsimplify (c :: cs') l
 	    		end
@@ -3628,174 +3638,25 @@ fun unif env filters user =
                       let val c = E.genCstSqAll sq (T.SV sqv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  (*| fsimplify ((E.CSTIT ((ty, {id, class, lab}), ls, deps, ids)) :: cs') l =
-	   let val xs = if CL.classIsVID class
-			then S.getValStateIdVa state id false
-			else if CL.classIsTYCON class
-			then S.getValStateIdTy state id false
-			else (print (CL.toString class ^ " " ^ O.printelt lab);
-			      raise EH.DeadBranch "wrong kind of identifier")
-	       val labsid = I.getLabs id
-	       (*val _ = D.printdebug2 (I.printLid id)*)
-	       (*val _ = D.printdebug2 (S.printState state)*)
-	       fun genUnboundCs () =
-		   ((*D.printdebug2 ("[unbound]");*)
-		    if FI.testtodos filters labsid
-		    then if CL.classIsTYP class
-			 (* arity clashes for unbound type constructors *)
-			 then S.updateStateTc state id (E.CCL (class, lab, id, false), L.union labsid ls, deps, ids)
-			 else if CL.classIsCON class andalso FI.testtodos filters (CL.getClassCON class)
-			 then S.updateStateAp state id (E.CCL (class, lab, id, false), L.union labsid ls, deps, ids)
-			 else []
-		    else [])
-	   in case xs of
-		  (SOME ({id = i, scope, bind, lab = l', poly, class = cl}, labs', sts', cds'), _) =>
-		  (* There might have some labs' which do not satisfy FI.testtodo filters *)
-		  if FI.testtodos filters labsid
-		  then let val ls = L.union ls labsid
-			   val bcomp = CL.compatible cl class
-			   val btest = FI.testtodo filters l'
-			   val (cs1, labs0, deps0, asmp0) =
-			       if bcomp
-				  andalso not (CL.classIsAVI cl)
-				  andalso btest (*(2010-02-22)We can't just skip this test because of the type constructors*)
-			       then let val bind' = T.labelBuiltin bind lab
-					val domge = S.getDomGe state
-					val (ty', _, asmp1, deps1, ll1) = BI.freshTyPoly poly bind' domge E.DEC true
-					(*val _ = D.printdebug2 (S.printState state)*)
-					(*val _ = D.printdebug2 (I.printId i ^ "\n" ^ O.toString labs' ^ "\n" ^ T.printty bind' ^ "\n" ^ T.printty ty')*)
-					val labs0 = L.unions [ll1,   ls,   labs']
-					val deps0 = L.unions [deps1, deps, sts']
-					val asmp0 = CD.unions [asmp1, ids,  cds']
-					val c     = E.genCstTyAll ty ty' labs0 deps0 asmp0
-				    in (c :: cs', labs0, deps0, asmp0)
-				    end
-			       else if btest andalso not (CL.classIsAVI cl)
-			       then (cs', L.union ls labs', L.union deps sts', CD.union ids cds')
-			       else (cs', ls, deps, ids)
-			   val cs2 = Option.getOpt (Option.map (fn cv => ((*D.printdebug2 (O.toString labs0 ^ " " ^ T.printty bind ^ " " ^ CL.toString cl ^ " " ^ CL.toString class ^ " " ^ O.printelt l');*)
-									  [E.genCstClAll (E.VCL cv) (E.CCL (class, lab, id, false)) labs0 deps0 asmp0]))
-							       (CL.getClassVar cl), [])
-		       in fsimplify (cs2 @ cs1) l
-		       end
-		  else fsimplify cs' l
-		(* Below the meanind of the record is slightly different,
-		 * it means that (id,lab) is missing from the env bind (which is a ENVCON).
-		 * If env is a ENVVAR then we might want to have it equal to a INJ. *)
-		| (_, SOME ({id = i, scope, bind, lab, poly, class = cl}, labs', sts', cds')) =>
-		  ((*D.printdebug2 ("[error]");*)
-		   if FI.testtodo filters lab
-		      andalso
-		      FI.testtodos filters labs' (*(2010-03-03)We just want to check the ones in O.inter labsid labs'*)
-		   then if E.completeEnv bind
-			then let val ek = EK.Unmatched ((lab, I.toInt i),
-							E.getLabsIdsEnv bind 2,
-							E.getLabEnv bind)
-				 val labs0 = L.union ls labs'
-				 val deps0 = L.union deps sts'
-				 val asmp0 = CD.union ids cds'
-			     in handleSimplify (ERR.consPreError ERR.dummyId labs0 asmp0 ek deps0 l) cs' l
-			     end
-			else (case E.getEnvVar bind of
-				  SOME ev =>
-				  let fun flid lid =
-					  let val env   = E.generateINJ lid ty class
-					      val labs0 = L.union ls labs'
-					      val deps0 = L.union deps sts'
-					      val asmp0 = CD.union ids cds'
-					  (*val _ = D.printdebug2 ("[incomplete structure]")*)
-					  in [E.genCstEvAll (E.consEnvVar ev) env labs0 deps0 asmp0] end
-				      (*val _ = D.printdebug2 ("[incomplete structure]")*)
-				      val cs2 = Option.getOpt (Option.map flid (I.getSubLid id i lab), [])
-				  in fsimplify (cs2 @ cs') l
-				  end
-				| _ => fsimplify cs' l)
-		   else fsimplify cs' l)
-		| _ => fsimplify ((genUnboundCs ()) @ cs') l
-	   end
-	  | fsimplify ((E.CSTIO ((sq, {id, class, lab}), ls, deps, ids)) :: cs') l =
-	    let val xs = if CL.classIsOC class
-			 then S.getValStateIdOc state id true
-			 else raise EH.DeadBranch "wrong kind of identifier"
-		val labsid = I.getLabs id
-	    in case xs of
-		   (SOME ({id, scope, bind, lab, poly, class}, labs', sts', cds'), _) =>
-		   if FI.testtodo filters lab
-		      andalso
-		      FI.testtodos filters labsid
-		   then let val ls = O.cons lab (L.union ls labsid)
-			    val labs0 = L.union ls labs'
-			    val deps0 = L.union deps sts'
-			    val asmp0 = CD.union ids cds'
-			    val c     = E.genCstSqAll sq bind labs0 deps0 asmp0
-			in fsimplify (c :: cs') l
-			end
-		   else fsimplify cs' l
-		 | (_, SOME ({id, scope, bind, lab, poly, class}, labs', sts', cds')) =>
-		   if E.completeEnv bind
-		      andalso
-		      FI.testtodo filters lab
-		      andalso
-		      FI.testtodos filters labs' (*(2010-03-03)See similar note for CSTIT*)
-		   then let val ek = EK.Unmatched ((lab, I.toInt id),
-						   E.getLabsIdsEnv bind 3,
-						   E.getLabEnv bind)
-			    val labs0 = L.union ls labs'
-			    val deps0 = L.union deps sts'
-			    val asmp0 = CD.union ids cds'
-			in handleSimplify (ERR.consPreError ERR.dummyId labs0 asmp0 ek deps0 l) cs' l
-			end
-		   else fsimplify cs' l
-		 | _ => fsimplify cs' l
-	    end
-	  | fsimplify ((E.CSTIS ((env, {id, class, lab}), ls, deps, ids)) :: cs') l =
-	    let val xs = if CL.classIsSTR class
-			 then S.getValStateIdSt state id true
-			 else if CL.classIsSIG class
-			 then S.getValStateIdSi state id true
-			 else raise EH.DeadBranch "wrong kind of identifier"
-		val labsid = I.getLabs id
-	    in case xs of
-		   (SOME ({id, scope, bind, lab, poly, class}, labs', sts', cds'), _) =>
-		   if FI.testtodo filters lab
-		      andalso
-		      FI.testtodos filters labsid
-		   then let val ls = O.cons lab (L.union ls labsid)
-			    val labs0 = L.union ls labs'
-			    val deps0 = L.union deps sts'
-			    val asmp0 = CD.union ids cds'
-			    val c     = E.genCstEvAll env bind labs0 deps0 asmp0
-			in fsimplify (c :: cs') l
-			end
-		   else fsimplify cs' l
-		 | (_, SOME ({id, scope, bind, lab, poly, class}, labs', sts', cds')) =>
-		   if E.completeEnv bind
-		      andalso
-		      FI.testtodo filters lab
-		      andalso
-		      FI.testtodos filters labs' (*(2010-03-03)See similar note for CSTIT*)
-		   then let val ek = EK.Unmatched ((lab, I.toInt id),
-						   E.getLabsIdsEnv bind 4,
-						   E.getLabEnv bind)
-			    val labs0 = L.union ls labs'
-			    val deps0 = L.union deps sts'
-			    val asmp0 = CD.union ids cds'
-			in handleSimplify (ERR.consPreError ERR.dummyId labs0 asmp0 ek deps0 l) cs' l
-			end
-		   else fsimplify cs' l
-		 | _ => fsimplify cs' l
-	    end
-	  | fsimplify ((E.CSTIF _) :: cs') l = raise EH.TODO*)
 	  | fsimplify ((E.CSTTYP ((tyv as T.V (tv, b, p), ty), ls, deps, ids, eqTypeCheck)) :: cs') l =
 	    let
+		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
 		val _ = if eqTypeCheck
 			then (print("**************************** EQ TYPE ERROR *******************************\n");
 			      (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
 			      handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
 			      ())
-			else ()
-		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
+			else if (List.exists (fn x=>((T.tyvarToInt x)=(T.tyvarToInt tv))) (!T.eqTypeTyVars))
+			then (D.printDebug 2 D.UNIF "             - tyvar must be an equality type. Checking labels...";
+			      if (L.disjoint ls (!L.eqTypeLabels))
+			      then D.printDebug 3 D.UNIF ("No equality type error. eqTypeLabels are "^L.toString (!L.eqTypeLabels))
+			      else (print("**************************** EQ TYPE ERROR *******************************\n");
+				    (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
+				    handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
+				    ()))
+		        else ()
 		val _   = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
+		val _   = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls));
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
@@ -3829,7 +3690,8 @@ fun unif env filters user =
 		   in fsimplify cs' l
 		   end
 		 | SOME ty' =>
-		   let val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids false
+		   let val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
+		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids false
 		   in fsimplify (c :: cs') l
 		   end
 	    end
@@ -3902,7 +3764,8 @@ fun unif env filters user =
 	    (case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
-                 let val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids false
+                 let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
+		     val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids false
                  in fsimplify (c :: cs') l
                  end)
 	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids, eqTypeCheck)) :: cs') l =
@@ -3912,6 +3775,7 @@ fun unif env filters user =
 		val labs = L.cons lab1 (L.cons lab2 ls)
 		(*val _ = D.printdebug2 (T.printty ty1)*)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
+		val _  = D.printDebug 3 D.UNIF    "             - calling genCstTyAll";
 		val c2 = E.genCstTyAll ty1 ty2 labs deps ids false
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
@@ -3950,7 +3814,7 @@ fun unif env filters user =
 			     | ([], true, _) => fsimplify cs' l
 			     | (((t, path) :: _), true, _) =>
 			       let val _ = S.updateStateOr state idor ([path], labs, stts, deps)
-				   (*val _ = D.printdebug2 (O.toString ls ^ " " ^ T.printty t ^ " " ^ O.printelt lab2)*)
+				   val _  = D.printDebug 3 D.UNIF "in checkTn - calling genCstTyAll";
 				   val c = E.genCstTyAll tc t labs stts deps false
 			       in fsimplify (c :: cs') l end
 			     | _ => raise EH.DeadBranch ""
@@ -3971,8 +3835,8 @@ fun unif env filters user =
 			let val labs0 = L.union ls ls'
 			    val stts0 = L.union deps deps'
 			    val deps0 = CD.union ids ids'
+			    val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
 			    val c = E.genCstTyAll tc t labs0 stts0 deps0 false
-			(*val _ = D.printdebug2 (O.toString ls ^ "\n" ^ O.toString ls')*)
 			in fsimplify (c :: cs') l
 			end)
 		 | SOME (paths, ls', deps', ids') =>
@@ -4084,7 +3948,7 @@ fun unif env filters user =
 		   (case (gotoInOrSq path1 sq1, gotoInOrSq path2 sq2) of
 			(SOME t1, SOME t2) =>
 			let (* (2010-02-05) This is never happening, is it? *)
-			    (*val _ = D.printdebug2 (" OR ")*)
+			    val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
 			    val c = E.genCstTyAll t1
 						  t2
 						  (L.unions [ls,   ls1,   ls2])
@@ -4097,14 +3961,16 @@ fun unif env filters user =
 		 | (SOME ([path1], labs1, stts1, deps1), NONE) =>
 		   (case gotoInOrSq path1 sq1 of
 			SOME t1 =>
-			let val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1) false
+			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
+			    val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1) false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (NONE, SOME ([path2], labs2, stts2, deps2)) =>
 		   (case gotoInOrSq path2 sq2 of
 			SOME t2 =>
-			let val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2) false
+			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
+			    val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2) false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -4184,141 +4050,6 @@ fun unif env filters user =
 			  val c = E.genCstEvAll env (E.ENVVAR (ev2, lab2)) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  (* TODO: do something for next rules *)
-	  (* we don't want these to happen *)
-	  (*| fsimplify ((E.CSTENV ((E.INJSTR stc,  E.INJVID lid),  ls, deps, ids)) :: cs') l = ((*raise EH.DeadBranch "[INJSTR/INJVID]";*) fsimplify cs' l)
-	  | fsimplify ((E.CSTENV ((E.INJSTR stc,  E.INJTYP lid),  ls, deps, ids)) :: cs') l = ((*raise EH.DeadBranch "[INJSTR/INJTYP]";*) fsimplify cs' l)
-	  | fsimplify ((E.CSTENV ((E.INJVID lid1, E.INJTYP lid2), ls, deps, ids)) :: cs') l = ((*raise EH.DeadBranch "[INJVID/INJTYP]";*) fsimplify cs' l)
-	  | fsimplify ((E.CSTENV ((E.INJVID lid1, E.INJVID lid2), ls, deps, ids)) :: cs') l = ((*raise EH.DeadBranch "[INJVID/INJVID]";*) fsimplify cs' l)
-	  (* it is not EH.DeadBranch "" anymore, because it can happen when labels are thrown out *)
-	  (* this arises since Open *)
-	  (* It should be the same for the other ones *)
-	  (* we could then check if there is a false and otherwise raise a EH.DeadBranch "" *)
-	  (*(D.printdebug2 (S.printState state); raise EH.DeadBranch "")*)
-	  | fsimplify ((E.CSTENV ((E.INJTYP lid1, E.INJTYP lid2), ls, deps, ids)) :: cs') l =(* ((*raise EH.DeadBranch "[INJTYP/INJTYP]";*) fsimplify cs' l)*)
-	    let val id1 = E.getBindI lid1
-		val id2 = E.getBindI lid2
-	    in if I.eqId id1 id2 andalso SO.isAtLeast SO.SOL8
-	       then let val cl1  = E.getBindC lid1
-			val cl2  = E.getBindC lid2
-			val lab1 = E.getBindL lid1
-			val lab2 = E.getBindL lid2
-			val ecl1 = E.CCL (cl1, lab1, I.idToLid id1 lab1, false)
-			val ecl2 = E.CCL (cl2, lab2, I.idToLid id2 lab2, false)
-			val c    = E.genCstClAll ecl1 ecl2 ls deps ids
-		    in fsimplify (c :: cs') l
-		    end
-	       else fsimplify cs' l
-	    end
-	  | fsimplify ((E.CSTENV ((E.INJSTR stc1, E.INJSTR stc2), ls, deps, ids)) :: cs') l = ((*raise EH.DeadBranch "[INJSTR/INJSTR]";*) fsimplify cs' l)
-	  | fsimplify ((E.CSTENV ((E.INJSTR eenv, env as E.ENVCON _), ls, deps, ids)) :: cs') l =
-	    let val id  = E.getBindI eenv
-		val e   = E.getBindT eenv
-		val lab = E.getBindL eenv
-	    in if I.isin id (E.dom (E.getStrs env)) orelse not (E.completeEnv env (*ls*))
-	       then fsimplify ((map (fn exv => E.genCstEvAll e (E.getBindT exv) ls deps ids)
-				    (E.plusproj (E.getStrs env) id)) @ cs') l
-	       else handleSimplify (ERR.consPreError ERR.dummyId
-						     ls
-						     ids
-						     (EK.Unmatched ((lab, I.toInt id),
-								    E.getLabsIdsEnv env 5,
-								    E.getLabEnv env))
-						     deps
-						     l)
-				   cs'
-				   l
-	    end
-	  | fsimplify ((E.CSTENV ((E.INJVID ({id, scope, bind, class, lab, poly}, _, _, _),
-				   env as E.ENVCON _), ls, deps, ids)) :: cs') l =
-	    if not (I.isin id (E.dom (E.getVids env))) andalso
-	       not (I.isin id (E.dom (E.getVars env))) andalso (* What's in X?  The ones with 'v' status *)
-	       not (I.isin id (E.dom (E.getCons env))) andalso
-	       E.completeEnv env (*ls*)
-	    then handleSimplify (ERR.consPreError ERR.dummyId
-						  ls
-						  ids
-						  (EK.Unmatched ((lab, I.toInt id),
-								 E.getLabsIdsEnv env 7,
-								 E.getLabEnv env))
-						  deps
-						  l)
-				cs'
-				l
-	    else let val lids = E.getLabsIdsEnv env 6
-		     val labs = FI.filtertodos filters (O.ord (#1 (ListPair.unzip lids)))
-		     (*val _ = D.printdebug2 (O.toString ls ^ "\n" ^ E.printEnv env "")*)
-		     val ls   = L.union labs ls
-		     fun linkAll () =
-			 let val semty = E.plusproj (E.uenv [E.getVids env, E.getVars env, E.getCons env]) id
-			     val (tvl, labs, asmp, domge) = BI.recomputeMonoTyVarInAll state O.empty true
-			     fun linkOne etv =
-				 let val ty1 = E.getBindT etv
-				     (* we have to rebuild ty1 because the value in the structure has
-				      * a monomorphic type and it has been instantiated previously.
-				      * (See testcase 372.) *)
-				     val (ty0, labs, st, cds) = B.buildty' ty1 state false
-				     val ty2 = B.freshty' ty0 (SOME domge)
-				 in E.genCstTyAll bind
-						  ty2
-						  (L.union ls labs)
-						  (L.union deps st)
-						  (CD.union ids cds)
-				 end
-			     val cs = map (fn etv => linkOne etv) semty
-			     val _  = BI.recomputeMonoTyVarOut state tvl labs asmp
-			 in cs
-			 end
-		 in if CL.classIsREC class
-		    then raise EH.DeadBranch "" (* because it is not used for now *)
-		    else if CL.classIsVAL class orelse CL.classIsPAT class
-		    then fsimplify ((linkAll ()) @ cs') l
-		    else if CL.classIsCON class
-		    then (* It cannot be a variable in G, neither an exception in C (* Yes it can be an exception! C means Constructor, it does not mean datatype constructor *)*)
-			(* It's a bit more complicated than that because if the structure is defined without
-			 * signature then the variable can be anything and so we would have a context dependency
-			 * ?? Is that the difference between X and G up there??
-			 * If it's not, it should be. *)
-			if I.isin id (E.dom (E.getVars env))
-			then handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.ConIsVar NONE) deps l) cs' l
-			else (*if O.isin id (E.dom (E.getEXCenv (E.getCons env'))) andalso comp (* if it's an exception it should be an error *)
-			       then handleSimplify (ls, deps, ids, l, EK.DatIsExc NONE) cs' l
-			       else*) fsimplify ((linkAll ()) @ cs') l
-		    else if CL.classIsEXC class
-		    then let val labs = P.getLabsPoly poly
-			 in if I.isin id (E.dom (E.getVars env))
-			       andalso FI.testtodos filters labs (*(2010-03-04)We actually need that for SOL6*)
-			    then handleSimplify (ERR.consPreError ERR.dummyId (L.union labs ls) ids (EK.ExcIsVar NONE) deps l) cs' l
-			    else if I.isin id (E.dom (E.getCONenv (E.getCons env))) (* if it's a datatype constructor it should be an error *)
-				    andalso FI.testtodos filters labs (*(2010-03-04)We actually need that for SOL6*)
-			    then handleSimplify (ERR.consPreError ERR.dummyId (L.union labs ls) ids (EK.ExcIsDat NONE) deps l) cs' l
-			    else fsimplify ((linkAll ()) @ cs') l
-			 end
-		    else raise EH.DeadBranch "wrong identifier class"
-		 end
-	  | fsimplify ((E.CSTENV ((E.INJTYP ({id, scope, bind, class, lab, poly}, _, _, _),
-				   env as E.ENVCON _), ls, deps, ids)) :: cs') l =
-	    if I.isin id (E.dom (E.getTyps env)) orelse
-	       not (E.completeEnv env (*ls*))
-	    then let val semty = E.plusproj (E.getTyps env) id
-		     fun link etv =
-			 let val ty1 = E.getBindT etv
-			     val ty2 = B.freshty' ty1 (SOME (S.getDomGe state))
-			 in E.genCstTyAll bind ty2 ls deps ids
-			 end
-		     val cs''  = map link semty
-		 in fsimplify (cs'' @ cs') l
-		 end
-	    else handleSimplify (ERR.consPreError ERR.dummyId
-						  ls
-						  ids
-						  (EK.Unmatched ((lab, I.toInt id),
-								 E.getLabsIdsEnv env 8,
-								 E.getLabEnv env))
-						  deps
-						  l)
-				cs'
-				l*)
 	  | fsimplify ((E.CSTENV ((E.ENVVAR (ev, lab), env), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateEv state ev of
 		 NONE =>
@@ -4527,6 +4258,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((E.CSTTYF ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
+		val _  = D.printDebug 3 D.UNIF "in fsimplify (CSTTYF constructor) - calling genCstTyAll";
 		val c2 = E.genCstTyAll ty1    ty2    labs stts deps false
 	    (*val _ = D.printdebug2 (S.printState state)*)
 	    (*val _ = D.printdebug2 (L.toString labs)*)

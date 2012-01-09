@@ -1,19 +1,11 @@
-(* Copyright 2002 Heriot-Watt University
- * Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2002 2009 2010 2011 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -2011,7 +2003,7 @@ valbindcore :
 	    val reg = R.consReg EQUALOPleft EQUALOPright
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlp = getRegion labpatright EQUALOPleft
-	in (D.printDebug 3 D.MLGRM "pattern detected: labpat EQUALOP labexp"; (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc')))
+	in (D.printDebug 3 D.MLGRM "pattern detected: labpat EQUALOP labexp. Returning A.ValBindCore"; (A.ValBindCore (pt rlp, xp rle, reg, n, p), (p, asc')))
 	end)
 
 valbindcorelist :

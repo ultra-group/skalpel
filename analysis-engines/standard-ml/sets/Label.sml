@@ -1,24 +1,19 @@
-(* Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2010 2011 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        22 June 2010
  *  o File name:   Label.sml
@@ -90,6 +85,8 @@ val isEmpty   = S.isEmpty
 val length    = S.numItems
 val singleton = S.singleton
 val toList    = S.listItems
+
+val eqTypeLabels = ref S.empty
 
 (* returns an integer from a value of type Label.label *)
 fun toInt   lab = lab
@@ -279,6 +276,8 @@ fun eq lab1 (lab2 : label) = (lab1 = lab2)
 fun min lab1 lab2 = Int.min (lab1, lab2)
 
 val empty = let val map : map = S.empty in {from = map, to = map, size = 0} end
+
+val eqTypeLabels = ref empty
 
 fun singleton lab =
     let val map = S.insert (S.empty, lab, lab)

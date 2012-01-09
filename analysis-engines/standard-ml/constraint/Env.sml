@@ -1709,7 +1709,6 @@ and getbindings env = getlabsenv env
 
 (*fun genIdCst lid cl l = {id = lid, class = cl, lab = l}*)
 
-
 (* ====== Generation of type constraints ====== *)
 
 

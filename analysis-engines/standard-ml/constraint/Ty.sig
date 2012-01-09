@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +39,11 @@ signature TY = sig
     type extv       = Id.idl option
     (* extv stands for EXplicit Type Variable *)
     type exttyvar   = tyvar ExtLab.extLab
+
+    (* to hold type variables which are constrained to be equality types *)
+    (* maybe we should be using CSTxxx for this....*)
+    val eqTypeTyVars : tyvar list ref
+
     (*type assoc      = (tyvar * string) list*)
     datatype poly   = POLY | MONO (* polymorphic or monomorphic type variable *)
     datatype kcons  = DE of Id.id (* constructor from a DEclaration   *)
