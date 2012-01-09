@@ -30,6 +30,7 @@ signature DEBUG = sig
 			| TY    (* Ty.sml *)
 			| MLGRM (* ML.grm *)
 			| AZE   (* Analyze.sml *)
+			| TEST   (* Tester.sml *)
 			| RUN   (* RunSlicer.sml *)
 			| ENV   (* Env.sml *)
 

@@ -1,0 +1,21 @@
+{
+              "errors"       : [{"identifier"  : 0,
+                               "labels"      : {"count": 3, "labelNumbers": [8,11,12]},
+                               "kind"        : {"errorKindName": "ErrorKind.TyConsClash", "errorKindInfo": {"tnerrLabel1": 8, "tnerrTyname1": 3, "tnerrLabel2": 12, "tnerrTyname2": 7}},
+                               "time"        : 0,
+                               "slice"       : "⟨..⟨..⟩ + \"\"..⟩",
+                               "assumptions" : [],
+                               "regions"     : [{"fileName": "/u1/pg/jp95/repos/skalpel/testing/analysis-engine-tests/standard-ml/code505.sml", "regionList": [{"nodeType": "leaf", "fromLine": 6, "fromColumn": 11, "toLine": 6, "toColumn": 11, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 12, "toLine": 6, "toColumn": 12, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 6, "fromColumn": 13, "toLine": 6, "toColumn": 14, "color": "P", "weight": 1}]}]}],
+              "time"         : {"analysis": 0, "enumeration": 0, "minimisation": 0, "slicing": 0, "html": 0},
+              "tyvar"        : {"tyvar": 14, "assoc": [{"id": 0, "str": "it"},{"id": 1, "str": "x"},{"id": 2, "str": "+"}, {"id": 3, "str": "String"}]},
+	      "ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "x"},{"id": 2, "str": "+"}, {"id": 3, "str": "String"}],
+              "constraint"   : {"total" : 13, "top" : 13, "syntactic" : 0},
+              "labels"       : 11,
+              "minimisation" : false,
+              "solution"     : 9,
+              "basis"        : 1,
+              "timelimit"    : 5000,
+              "labelling"    : "",
+              "final"        : true,
+              "name"         : "dummy"
+              }

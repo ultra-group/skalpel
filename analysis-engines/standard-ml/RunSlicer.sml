@@ -511,7 +511,7 @@ fun smlTesStrArgs strArgs =
 	    else if option = "--check-tests"
 	    then (runtests := true; filesNeeded := false; checktests [])
 	    else if option = "-v"
-	    then (filesNeeded := false; print ("Version: "^SKALPEL_VERSION))
+	    then (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
 	    else if option = "--show-legend"
 	    then (filesNeeded:=false; OS.Process.system("../../front-ends/terminal-window/skalpel-legend"); ())
 	    else

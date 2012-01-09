@@ -1,7 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
- *
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1268,13 +1265,13 @@ fun compareErrors2 [] [] (true,  id) = ()
   | compareErrors2 [] [] (false, id) = raise CtxtDepTest (Int.toString id)
   | compareErrors2 [] _  (true,  id) = raise BetterTest
   | compareErrors2 [] _  (false, id) = raise CtxtDepTest (Int.toString id)
-  | compareErrors2 ((id, slice, cds, regs) :: xs) ys bid =
+  | compareErrors2 ((id, slice, cds, regs) :: xs) ys bid = (D.printDebug 1 D.TEST ("cannot find slice: "^slice);
     case removeSlice slice ys of
 	(SOME (id', slice', cds', regs'), ys') =>
 	if compareCDS cds cds'
 	then compareErrors2 xs ys' bid
 	else compareErrors2 xs ys' (false, id)
-      | (NONE, _)  => raise MissingTest (Int.toString id) (* means new algo is less efficient or at least one error is different *)
+      | (NONE, _)  => raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 
 fun compareErrors1 xs ys =
     let val xs1 = map (fn (i, x, y, z) => (i, String.translate transParen x, y, z)) xs
@@ -1401,6 +1398,9 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
+		  AN.huntForEqType := false;
+		  L.eqTypeLabels := L.empty;
+		  T.eqTypeTyVars := [];
 		  error := !(JP.parseTest (getfileerr nb));
 		  (let val errs1  = getErrors   ()
 		       val bfinal = getFinal    ()

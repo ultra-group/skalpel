@@ -24,7 +24,7 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST
 
 (* the greater the depth, the more detail the print statements give *)
 val debugUnif  : int ref = ref 0
@@ -35,6 +35,7 @@ val debugGrm   : int ref = ref 0
 val debugAze   : int ref = ref 0
 val debugRun   : int ref = ref 0
 val debugEnv   : int ref = ref 0
+val debugTest  : int ref = ref 0
 
 fun setAllDebug value =
     (debugUnif := value;
@@ -44,6 +45,7 @@ fun setAllDebug value =
      debugGrm  := value;
      debugAze  := value;
      debugEnv  := value;
+     debugTest  := value;
      debugRun  := value)
 
 fun printDebug depth JSON str =
@@ -62,6 +64,8 @@ fun printDebug depth JSON str =
     if (!debugRun >= depth) then print ("("^(Int.toString depth)^") RunSlicer.sml: " ^ str ^ "\n") else ()
   | printDebug depth ENV str =
     if (!debugEnv >= depth) then print ("("^(Int.toString depth)^") Env.sml: " ^ str ^ "\n") else ()
+  | printDebug depth TEST str =
+    if (!debugTest >= depth) then print ("("^(Int.toString depth)^") Tester.sml: " ^ str ^ "\n") else ()
 
 
 (* separator definitions *)

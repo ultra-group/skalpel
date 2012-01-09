@@ -3402,12 +3402,11 @@ fun generateConstraints' prog pack nenv =
 	     | f_exp (A.ExpOp (st, id, labexp1, labexp2, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpOp (st = \"" ^ st ^ "\", lab="^Int.toString(L.toInt lab)^")")
-
 		   val _ = D.printDebug 3 D.AZE  ("**********  ExpOp left hand side...  **********")
-		   val _ = (huntForEqType := true)
+		   val _ = if st="=" then (huntForEqType := true) else ()
 		   val (tv1, cst1, css1) = f_labexp labexp1
 		   val _ = D.printDebug 3 D.AZE  ("**********  ExpOp right hand side... **********")
-		   val _ = if not (!huntForEqType) then (huntForEqType := true) else ()
+		   val _ = if st="=" then (huntForEqType := true) else ()
 		   val (tv2, cst2, css2) = f_labexp labexp2
 		   val _ = D.printDebug 3 D.AZE ("ExpOp type variables are tv1 = "^(Int.toString(T.tyvarToInt(tv1)))^", tv2 = "^(Int.toString(T.tyvarToInt(tv2))))
 		   val ty  = T.newV ()
