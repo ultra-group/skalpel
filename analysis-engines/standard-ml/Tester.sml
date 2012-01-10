@@ -110,7 +110,7 @@ val sep        = "    "
 val emacstab   = "        "
 
 (* val testFolder = "../../../../tes/implementation/database" *)
-val testFolder = "../../../testing/analysis-engine-tests/standard-ml"
+val testFolder = ref "../../../testing/analysis-engine-tests/standard-ml"
 val mytempfile = "/tmp/smltes-tmp"
 val myfilebas  = "../../../lib/basis.sml"
 val myfilein   = "test-prog.sml"
@@ -151,9 +151,9 @@ fun getTabSize () = R.getTabSize ()
 fun setTabSize ts = R.setTabSize ts
 
 (* functions to grab code and correct output from the test database *)
-fun getfileerr  nb = testFolder ^ "/test"   ^ Int.toString nb
-fun getfilecode nb = testFolder ^ "/code"   ^ Int.toString nb ^ ".sml"
-fun getfilehtml nb = testFolder ^ "/output" ^ Int.toString nb ^ ".html"
+fun getfileerr  nb = (!testFolder) ^ "/test"   ^ Int.toString nb
+fun getfilecode nb = (!testFolder) ^ "/code"   ^ Int.toString nb ^ ".sml"
+fun getfilehtml nb = (!testFolder) ^ "/output" ^ Int.toString nb ^ ".html"
 
 fun resetAll _ =
     (T.resetnexts   ();
@@ -1083,7 +1083,7 @@ fun mverror nb1 nb2 bforce =
 fun getTests _ =
     let fun stripnb file = String.substring (file, 4, (String.size file) - 4)
 	    handle Subscript => raise EH.DeadBranch ""
-	val dir = OS.FileSys.openDir testFolder
+	val dir = OS.FileSys.openDir (!testFolder)
 	val b   = ref true
 	val l   = ref (IntListSet.empty)
 	val _   = while !b do case OS.FileSys.readDir dir of

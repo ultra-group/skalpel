@@ -49,7 +49,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "14cd213c9b66da64249994912d924460163a352e"
+val SKALPEL_VERSION = "9d42bdf9a60d72a4728c6f919bcb431f6219d648"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -488,6 +488,7 @@ fun smlTesStrArgs strArgs =
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
 				    \    -x <true/false> suppress exception handling (dev mode)\n\
+				    \    -c <directory> Run analysis-engine on tests in <directory>\n\
 				    \    -e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)\n\
 				    \    -b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
 				    \    -d <0 | 1 | 2 | 3> Set debug print statement depth (higher = more detail)\n\
@@ -495,7 +496,6 @@ fun smlTesStrArgs strArgs =
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
 				    \    -sol <solution> define solution to use (default 9)\n\
 				    \    -min <true/false> if true, shows non-minimal errors\n\
-				    \    --check-tests Run analysis-engine on tests in the current folder\n\
 				    \    --print-env <true/false> whether to print the environment\n\
 				    \    --show-legend Shows the legend for notation and colour of slice display in the terminal\n\
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
@@ -508,8 +508,6 @@ fun smlTesStrArgs strArgs =
  	  | parse [option] =
 	    if option = "--help" then
 		printHelp ()
-	    else if option = "--check-tests"
-	    then (runtests := true; filesNeeded := false; checktests [])
 	    else if option = "-v"
 	    then (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
 	    else if option = "--show-legend"
@@ -546,6 +544,8 @@ fun smlTesStrArgs strArgs =
 	     then dev:=str
 	     else if option = "-b"
 	     then basop:=str
+	     else if option = "-c"
+	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; checktests [])
 	     else if option = "-d"
 	     then Debug.setAllDebug (Option.valOf(Int.fromString (str)))
 		  handle _ => raise EH.DeadBranch "Debug argument must be an integer"
