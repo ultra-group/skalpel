@@ -1,0 +1,15 @@
+{
+"errors"       : [],
+"time"         : {"analysis": 2, "enumeration": 3, "minimisation": 3, "slicing": 3, "html": 3},
+"tyvar"        : {"tyvar": 80, "assoc": []},
+"ident"        : [{"id": 0, "str": "it"},{"id": 1, "str": "X"},{"id": 2, "str": "^"}],
+"constraint"   : {"total": 82, "top": 1, "syntactic": 0},
+"labels"       : 38,
+"minimisation" : false,
+"solution"     : 6,
+"basis"        : 1,
+"timelimit"    : 5000,
+"labelling"    : "⟨⟨⟨let val ⟨,3⟩ ⟨⟨⟨X,6⟩,5⟩ = ⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨\"X \\\"val X = X;\\\" \",22⟩,21⟩ ^ ⟨⟨\"X \",24⟩,23⟩,20⟩,19⟩ ^ ⟨⟨\"X \",26⟩,25⟩,18⟩,17⟩ ^ ⟨⟨\"X\",28⟩,27⟩,16⟩,15⟩ ^ ⟨⟨\" X \",30⟩,29⟩,14⟩,13⟩ ^ ⟨⟨\"X \",32⟩,31⟩,12⟩,11⟩ ^ ⟨⟨\" X \",34⟩,33⟩,10⟩,9⟩ ^ ⟨⟨\"      X \\\"val X ;\\\"X \",36⟩,35⟩,8⟩,7⟩,4⟩ in ⟨⟨X,38⟩,37⟩ end,2⟩;,1⟩,/u1/pg/rahli/work/implementation/database/code289.sml⟩",
+"final"        : true,
+"name"         : "289"
+}

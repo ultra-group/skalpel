@@ -1,4 +1,4 @@
-(* Copyright 2011 Heriot-Watt University
+(* Copyright 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -344,17 +344,33 @@ fun parseTest testfile =
 	    end
 
 	fun getErrors (JSON.ARRAY []) = (D.printDebug 1 D.JSON "finished parsing errors object!"; [])
-	  | getErrors (JSON.ARRAY(h::t)) = (D.printDebug 2 D.JSON "parsing errors object. Getting a new error...";
-		{identifier  = getInt(findIdVal h "identifier"),
-		 labels      = (getInt(findIdVal (findIdVal h "labels") "count"), getIntArray(findIdVal(findIdVal h "labels") "labelNumbers")),
-                 assumptions = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")), (* first part of tuple always empty list? *)
-                 kind        = parseKind (findIdVal h "kind"),
-	    (* jpirie: we want to do it this way but the SML/NJ JSON lexer is broken. To fix! *)
-                 (* slice       = (Option.valOf(String.fromString(getString(findIdVal h "slice"))) *)
-		 (* 		handle _ => raise EH.DeadBranch "Format error with JSON test file (slice malformed)"), *)
-                 slice       = getString(findIdVal h "slice"),
-                 time        = getIntInf(findIdVal h "time"),
-		 regions     = parseRegions (findIdVal h "regions")}::(getErrors (JSON.ARRAY(t))))
+	  | getErrors (JSON.ARRAY(h::t)) =
+	    let
+		val _   = D.printDebug 2 D.JSON "parsing errors object. Getting a new error..."
+		val _   = D.printDebug 3 D.JSON "getting the identifier..."
+		val id  = getInt(findIdVal h "identifier")
+		val _   = D.printDebug 3 D.JSON "getting the labels..."
+		val lab = (getInt(findIdVal (findIdVal h "labels") "count"), getIntArray(findIdVal(findIdVal h "labels") "labelNumbers"))
+		val _   = D.printDebug 3 D.JSON "getting the assumptions..."
+		val assump = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")) (* first part of tuple always empty list? *)
+		val _   = D.printDebug 3 D.JSON "getting the kind..."
+		val k   = parseKind (findIdVal h "kind")
+		val _   = D.printDebug 3 D.JSON "getting the slice..."
+		val sl  = getString(findIdVal h "slice")
+		val _   = D.printDebug 3 D.JSON "getting the time..."
+		val tm  = getIntInf(findIdVal h "time")
+		val _   = D.printDebug 3 D.JSON "getting the regions..."
+		val r   = parseRegions (findIdVal h "regions")
+		val _   = D.printDebug 3 D.JSON "done with this error"
+	    in
+		{identifier  = id,
+		 labels      = lab,
+                 assumptions = assump,
+                 kind        = k,
+                 slice       = sl,
+                 time        = tm,
+		 regions     = r}::(getErrors (JSON.ARRAY(t)))
+	    end
 	  | getErrors _ = raise EH.DeadBranch ("Format error with JSON test file (getErrors got something other than an array)")
 
 	val test = NJJP.parseFile testfile handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^testfile^"\n")
@@ -386,29 +402,46 @@ fun parseTest testfile =
 	val _ = D.printDebug 2 D.JSON ("getting 'name' object...")
 	val (name, test) = getObject test "name"
 	val _ = D.printDebug 1 D.JSON ("top level json objects correct!")
-
+	val _ = D.printDebug 1 D.JSON ("parsing lower level objects...")
+	val _ = D.printDebug 2 D.JSON ("getting all errors...")
+	val errs = getErrors errorList
+	val _ = D.printDebug 2 D.JSON ("skipping time, will get that at the end...")
+	val _ = D.printDebug 2 D.JSON ("getting tyvar...")
+	val tv = (getInt(findIdVal tyvarObj "tyvar"), getTyvars(findIdVal tyvarObj "assoc"))
+	val _ = D.printDebug 2 D.JSON ("getting ident...")
+	val idnt = getTyvars(ident)
+	val _ = D.printDebug 2 D.JSON ("getting constraint...")
+	val cst = {total = getInt((findIdVal constraintObj "total")),
+		   top = getInt((findIdVal constraintObj "top")),
+		   syntactic = getInt((findIdVal constraintObj "syntactic"))}
+	val _ = D.printDebug 2 D.JSON ("getting labels...")
+	val lab = getInt(labels)
+	val _ = D.printDebug 2 D.JSON ("getting minimisation...")
+	val min = getBool(minimisation)
+	val _ = D.printDebug 2 D.JSON ("getting solution...")
+	val sol = getInt(solution)
+	val _ = D.printDebug 2 D.JSON ("getting basis...")
+	val bas = getInt(basis)
+	val _ = D.printDebug 2 D.JSON ("getting timelimit...")
+	val tm = getIntInf(timelimit)
+	val _ = D.printDebug 2 D.JSON ("getting labelling...")
+	val lbing = getString(labelling)
+	val _ = D.printDebug 2 D.JSON ("getting final...")
+	val fin = getBool(final)
+	val _ = D.printDebug 2 D.JSON ("getting name...")
+	val nm = getString(name)
+	val _ = D.printDebug 2 D.JSON ("got everything, new getting time...")
     in
 	ref (SOME {
-	     errors = (getErrors errorList),
-	     time        = {analysis = getIntInf((findIdVal timeObj "analysis")),
-			    enumeration = getIntInf((findIdVal timeObj "enumeration")),
-			    minimisation = getIntInf((findIdVal timeObj "minimisation")),
-			    slicing = getIntInf((findIdVal timeObj "slicing")),
-			    html = getIntInf((findIdVal timeObj "html"))},
-	     tyvar       = (getInt(findIdVal tyvarObj "tyvar"),
-			    getTyvars(findIdVal tyvarObj "assoc")),
-	     ident       = getTyvars(ident),
-	     constraint = {total = getInt((findIdVal constraintObj "total")),
-			   top = getInt((findIdVal constraintObj "top")),
-			   syntactic = getInt((findIdVal constraintObj "syntactic"))},
-	     labels = getInt(labels),
-	     minimisation = getBool(minimisation),
-	     solution = getInt(solution),
-	     basis = getInt(basis),
-	     timelimit = getIntInf(timelimit),
-	     labelling = getString(labelling),
-	     final = getBool(final),
-	     name = getString(name)
+	     errors = errs,
+	     time = {analysis = getIntInf((findIdVal timeObj "analysis")),
+		     enumeration = getIntInf((findIdVal timeObj "enumeration")),
+		     minimisation = getIntInf((findIdVal timeObj "minimisation")),
+		     slicing = getIntInf((findIdVal timeObj "slicing")),
+		     html = getIntInf((findIdVal timeObj "html"))},
+	     tyvar = tv, ident = idnt, constraint = cst, labels = lab,
+	     minimisation = min, solution =sol , basis = bas, timelimit = tm, labelling = lbing,
+	     final = fin, name = nm
 	    })
     end
 end
