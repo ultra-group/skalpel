@@ -1402,7 +1402,9 @@ fun checktests listtests =
 		  L.eqTypeLabels := L.empty;
 		  T.eqTypeTyVars := [];
 		  error := !(JP.parseTest (getfileerr nb));
-		  (let val errs1  = getErrors   ()
+		  (let
+
+		       val errs1  = getErrors   ()
 		       val bfinal = getFinal    ()
 		       val tenum1 = getTimeEnum ()
 		       val tcg1   = getTimeCg   ()

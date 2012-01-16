@@ -3642,7 +3642,7 @@ fun unif env filters user =
 	    let
 		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
 		val _ = if eqTypeCheck
-			then (print("**************************** EQ TYPE ERROR *******************************\n");
+			then (D.printDebug 1 D.UNIF "* equality type error detected *";
 			      (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
 			      handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
 			      ())
@@ -3650,7 +3650,7 @@ fun unif env filters user =
 			then (D.printDebug 2 D.UNIF "             - tyvar must be an equality type. Checking labels...";
 			      if (L.disjoint ls (!L.eqTypeLabels))
 			      then D.printDebug 3 D.UNIF ("No equality type error. eqTypeLabels are "^L.toString (!L.eqTypeLabels))
-			      else (print("**************************** EQ TYPE ERROR *******************************\n");
+			      else (D.printDebug 1 D.UNIF "* equality type error detected *";
 				    (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
 				    handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
 				    ()))

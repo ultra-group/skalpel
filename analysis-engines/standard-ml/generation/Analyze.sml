@@ -4818,7 +4818,8 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, E.emcst, E.emcss) *)
 	   and f_typdesc (A.TypDesc (typdescs, _, _)) =
-	       let val (tnss, typss, csts, csss) = unzipFour (map f_typdescone typdescs)
+	       let val _ = D.printDebug 2 D.AZE "generating constraints for A.TypDesc"
+		   val (tnss, typss, csts, csss) = unzipFour (map f_typdescone typdescs)
 		   val typs = E.uenv typss
 		   val cst  = E.uenvcst csts
 		   val css  = E.uenvcss csss
@@ -5150,7 +5151,8 @@ fun generateConstraints' prog pack nenv =
 	       in (env', css)
 	       end
 	     | f_specone (A.SpecEqT (typdesc, _, lab, _)) =
-	       let val (tns, typs, cst, css) = f_typdesc typdesc
+	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqT (lab = "^Int.toString(L.toInt lab)^")")
+		   val (tns, typs, cst, css) = f_typdesc typdesc
 		   val env  = E.ENVSEQ (E.ENVCST cst, E.updateITns tns (E.projTyps typs))
 		   val css  = if getBasis ()
 			      then css
