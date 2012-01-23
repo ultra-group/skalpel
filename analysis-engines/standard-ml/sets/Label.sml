@@ -86,7 +86,8 @@ val length    = S.numItems
 val singleton = S.singleton
 val toList    = S.listItems
 
-val eqTypeLabels = ref S.empty
+val eqTypeWordLabels = ref S.empty
+val eqTypeLabels     = ref S.empty
 
 (* returns an integer from a value of type Label.label *)
 fun toInt   lab = lab
@@ -278,6 +279,7 @@ fun min lab1 lab2 = Int.min (lab1, lab2)
 val empty = let val map : map = S.empty in {from = map, to = map, size = 0} end
 
 val eqTypeLabels = ref empty
+val eqTypeWordLabels = ref empty
 
 fun singleton lab =
     let val map = S.insert (S.empty, lab, lab)

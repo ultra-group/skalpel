@@ -2719,7 +2719,7 @@ fun generateConstraints' prog pack nenv =
 		    in (tv, E.singcst (lab, c), E.emcss)
 		    end
 	     | f_scon (A.SconReal (s, v, _, lab, _)) =
-               if benv (* We bind the real to the "Real"n overloading class *)
+               if benv (* We bind the real to the "Real" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val _   = (L.eqTypeLabels := L.cons lab (!L.eqTypeLabels))
 			val _   = D.printDebug 3 D.AZE "added label to L.eqTypeLabels"
@@ -5152,6 +5152,8 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone (A.SpecEqT (typdesc, _, lab, _)) =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqT (lab = "^Int.toString(L.toInt lab)^")")
+		   val _   = (L.eqTypeWordLabels := L.cons lab (!L.eqTypeWordLabels))
+		   val _   = D.printDebug 3 D.AZE "added label to L.eqTypeWordLabels"
 		   val (tns, typs, cst, css) = f_typdesc typdesc
 		   val env  = E.ENVSEQ (E.ENVCST cst, E.updateITns tns (E.projTyps typs))
 		   val css  = if getBasis ()
@@ -5187,7 +5189,12 @@ fun generateConstraints' prog pack nenv =
 	       in (env', css)
 	       end
 	     | f_specone (A.SpecDat (datdesc, _, lab, _)) =
-	       let val (tns, typs, conss, cst1, cst2, css) = f_datdesc datdesc
+	       let
+		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
+		   val _   = (L.eqTypeWordLabels := L.cons lab (!L.eqTypeWordLabels))
+		   val _   = D.printDebug 3 D.AZE "added label to L.eqTypeWordLabels"
+
+		   val (tns, typs, conss, cst1, cst2, css) = f_datdesc datdesc
 		   val envs = map (fn (cons, SOME idl) => E.ENVDAT (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env1 = E.ENVSEQ (E.ENVCST cst2, E.envsToSeq envs)

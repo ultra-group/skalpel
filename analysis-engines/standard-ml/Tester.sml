@@ -1400,6 +1400,7 @@ fun checktests listtests =
 		  (* run the test *)
 		  AN.huntForEqType := false;
 		  L.eqTypeLabels := L.empty;
+		  L.eqTypeWordLabels := L.empty;
 		  T.eqTypeTyVars := [];
 		  error := !(JP.parseTest (getfileerr nb));
 		  (let
