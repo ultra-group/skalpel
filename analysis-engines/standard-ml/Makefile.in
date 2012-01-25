@@ -220,7 +220,7 @@ mlton-profile: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 	#mlton -profile alloc -profile-branch true -profile-stack true -profile-val true sources.mlb
 	mlton -verbose 3 -profile ${MLTONPROFOP} -profile-branch true -profile-stack true -profile-val true sources.mlb
-	./sources ../lib/basis.sml test-prog.sml out.html "" "" "" "" 2 60000
+	./sources -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
 	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-$(date)
 
 smlnj-profile:
