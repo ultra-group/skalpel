@@ -172,7 +172,8 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | INID    of string
 | LONGID  of string
 | NUM     of string
-| TYPEVAR of string
+| TYPEVAR   of string
+| EQTYPEVAR of string
 | INT     of string
 | WORD    of string
 | REAL    of string
@@ -1686,6 +1687,14 @@ typevar :
 	    val (t, masc) = gettypevar TYPEVAR nasc
 	    val _         = D.printDebug 3 D.MLGRM "pattern detected: TYPEVAR"
 	in (A.TypeVar (TYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	end)
+
+| EQTYPEVAR
+    (fn (n, nasc) =>
+	let val reg = R.consReg EQTYPEVARleft EQTYPEVARright
+	    val (t, masc) = gettypevar EQTYPEVAR nasc
+	    val _         = D.printDebug 3 D.MLGRM "pattern detected: EQTYPEVAR"
+	in (A.EqTypeVar (EQTYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
 
 labtyvar :

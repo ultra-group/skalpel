@@ -49,7 +49,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "facdae7fa546509b5799b2c1cef8f0fc2c4dc5df"
+val SKALPEL_VERSION = "540ed403b4bc66649370aa875b3c5fb5a17c7c59"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -475,6 +475,7 @@ fun smlTesStrArgs strArgs =
 	val search   = ref ""
 	val runtests = ref false
 	val filesNeeded = ref true
+	val outputFilesNeeded = ref true
 	val basisoverloading = ref "1"
 
 	fun printHelp () =
@@ -547,8 +548,9 @@ fun smlTesStrArgs strArgs =
 	     else if option = "-c"
 	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; checktests [])
 	     else if option = "-d"
-	     then Debug.setAllDebug (Option.valOf(Int.fromString (str)))
-		  handle _ => raise EH.DeadBranch "Debug argument must be an integer"
+	     then (Debug.setAllDebug (Option.valOf(Int.fromString (str)))
+		   handle _ => raise EH.DeadBranch "Debug argument must be an integer";
+		   outputFilesNeeded := false)
 	     else if option = "-bo"
 	     then basisoverloading:=str
 	     else if option = "-t"
@@ -581,9 +583,9 @@ fun smlTesStrArgs strArgs =
 		 if (!filein = "")
 		 then OS.Process.success (* the user was checking tests *)
 		 else (
-		     (* check that the user specified an output file *)
+		     (* check that the user specified an output file, or they are in debug mode *)
 		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl)^(!filejson) = ""
-			 andalso !runtests = false)
+			 andalso !runtests = false andalso !outputFilesNeeded = true)
 		     then (print ("Error: No output files specified.");
 			   raise Fail("No output files specified"))
 		     else ();
