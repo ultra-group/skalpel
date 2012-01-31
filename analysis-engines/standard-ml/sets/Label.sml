@@ -86,9 +86,6 @@ val length    = S.numItems
 val singleton = S.singleton
 val toList    = S.listItems
 
-val eqTypeWordLabels = ref S.empty
-val eqTypeLabels     = ref S.empty
-
 (* returns an integer from a value of type Label.label *)
 fun toInt   lab = lab
 

@@ -1,23 +1,21 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
  * Heriot-Watt University, Edinburgh.
  *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -202,7 +200,7 @@ fun getOpType ascid =
 		val (tl, tr, to) = getTyBinaryOp str lab
 		val ty  = T.newV ()
 		val ti  = T.consTyTupleTy [tl, tr] lab T.BB
-		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab false
+		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BB) lab
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
 		val bd  = E.consBindPoly id ty cl lab
@@ -212,7 +210,7 @@ fun getOpType ascid =
 	    let val lab = L.builtinLab
 		val (ti, to) = getTyUnaryOp str lab
 		val ty  = T.newV ()
-		val c   = E.genCstTyEm ty (T.consTyArrowTy ti to lab T.BB) lab false
+		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BB) lab
 		val bd  = E.consBindPoly id ty (CL.consREC ()) lab
 	    in (bd, c)
 	    end

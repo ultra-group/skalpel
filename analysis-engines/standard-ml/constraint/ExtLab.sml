@@ -1,5 +1,4 @@
-(* Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2010 2011 2012 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -41,12 +40,6 @@ fun printExtLab (term, labs, stats, cdeps) f ascid =
     "," ^ L.toString        stats       ^
     "," ^ CD.toStringListSt cdeps ascid ^ ")"
 
-fun printExtLabEq (term, labs, stats, cdeps, eqTypeCheck) f ascid =
-    "(" ^ f term                        ^
-    "," ^ L.toString        labs        ^
-    "," ^ L.toString        stats       ^
-    "," ^ CD.toStringListSt cdeps ascid ^ ")"
-
 fun printExtLab' (x, labs, st, deps) f =
     "(" ^ f x              ^
     "," ^ L.toString  labs ^
@@ -64,9 +57,7 @@ fun getExtLabD (_, _, _, x) = x (* D for context dependency               *)
 (* extLab constructors *)
 
 fun consExtLab x labs stats cdeps = (x, labs, stats, cdeps)
-fun consExtLabEq x labs stats cdeps eqTypeCheck = (x, labs, stats, cdeps, eqTypeCheck)
 fun initExtLab x lab = consExtLab x (L.singleton lab) L.empty CD.empty
-fun initExtLabEq x lab eqTypeCheck = consExtLabEq x (L.singleton lab) L.empty CD.empty eqTypeCheck
 fun setExtLab x labs stats cdeps = consExtLab (getExtLabT x) labs stats cdeps
 
 
@@ -85,21 +76,9 @@ fun unionExtLab (x1, labs1, stats1, cdeps1)
      L.union  stats1 stats2,
      CD.union cdeps1 cdeps2)
 
-fun unionExtLabEq (x1, labs1, stats1, cdeps1, eqTypeCheck)
-		(x2, labs2, stats2, cdeps2, eqTypeCheck2)
-		funion =
-    (funion (x1, x2),
-     L.union  labs1  labs2,
-     L.union  stats1 stats2,
-     CD.union cdeps1 cdeps2,
-     eqTypeCheck andalso eqTypeCheck2)
-
 (* Updating of annotation of an extLab *)
 fun updExtLab elab labs2 stats2 cdeps2 =
     unionExtLab elab ((), labs2, stats2, cdeps2) (fn (x, _) => x)
-
-fun updExtLabEq elab labs2 stats2 cdeps2 =
-    unionExtLabEq elab ((), labs2, stats2, cdeps2, false) (fn (x, _) => x)
 
 fun updExtLabL (x, labs, stts, deps) labs' = (x, L.union labs labs', stts, deps)
 fun updExtLabE (x, labs, stts, deps) stts' = (x, labs, L.union stts stts', deps)

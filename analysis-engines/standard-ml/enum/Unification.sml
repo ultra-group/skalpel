@@ -136,27 +136,6 @@ and decomptyrowlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyrow x ll d
 
 (* -------------- *)
 
-(*fun bindsVal' (csenv1, csenv2, _, _, _, _, _, _) =
-    not (List.null csenv1) orelse not (List.null csenv2)*)
-
-(*fun bindsVal env =
-    case SO.getSol () of
-	SO.SOL8 => not (E.isEmptyValEnv env) (*bindsVal' env*)
-      | _ => true
-
-fun pushEnvToState env state =
-    case SO.getSol () of
-	SO.SOL8 => S.pushEnvToState env state
-      | _       => ()
-
-fun remEnvFromState env state =
-    case SO.getSol () of
-	SO.SOL8 => S.remEnvFromState env state
-      | _       => ()
-
-(*fun getBackBinder xs id =
-    List.find (fn x => I.eqId (C.getBindI x) id) xs*)*)
-
 fun getpairs l1 l2 =
     foldr (fn (x, pairs) => foldr (fn (y, pairs) => (x, y) :: pairs) pairs l2) [] l1
 
@@ -176,7 +155,7 @@ fun comparevidsenv idenv1 idenv2 filters ls deps ids =
 			     val tvl2 = map (fn x => E.getBindT x) (E.plusproj idenv2 id)
 			     val pairs = getpairs tvl1 tvl2
 			 in (D.printDebug 3 D.UNIF "in comparevidsenv - calling genCstTyAll";
-			     (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids false) pairs) @ cs)
+			     (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids) pairs) @ cs)
 			 end)
 		     []
 		     dom
@@ -213,10 +192,10 @@ fun compareenv env1 env2 filters ls deps ids =
     in cs1 @ cs2 @ cs3
     end
 
-fun decorateCst' (E.CSTSEQ x) labs stts deps = E.CSTSEQ (EL.updExtLab x labs stts deps)
-  | decorateCst' (E.CSTTYP x) labs stts deps = E.CSTTYP (EL.updExtLabEq x labs stts deps) (* should we set false here for eqtyes *)
-  | decorateCst' (E.CSTTYF x) labs stts deps = E.CSTTYF (EL.updExtLab x labs stts deps)
-  | decorateCst' c labs stts deps = (print (E.printEnv (E.ENVCST (E.singcst (L.dummyLab, c))) "");
+fun decorateCst' (E.SEQUENCE_CONSTRAINT x) labs stts deps = E.SEQUENCE_CONSTRAINT (EL.updExtLab x labs stts deps)
+  | decorateCst' (E.TYPE_CONSTRAINT x) labs stts deps = E.TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
+  | decorateCst' (E.FUNCTION_TYPE_CONSTRAINT x) labs stts deps = E.FUNCTION_TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
+  | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singcst (L.dummyLab, c))) "");
 				     raise EH.DeadBranch "")
 
 fun decorateCst xs labs stts deps =
@@ -285,8 +264,6 @@ fun collapseTf (T.TFD (T.TFD (tf, labs1, stts1, deps1), labs2, stts2, deps2)) la
 	  CD.union deps1 deps2)
   | collapseTf tf labs stts deps = T.TFD (tf, labs, stts, deps)
 
-
-
 (* This is used for or types *)
 
 fun gatherAllTnTy (T.C (tn, _, _)) = gatherAllTnTn tn
@@ -323,14 +300,6 @@ and gatherAllTnTn (T.NC (tn, _, l)) =
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
   | gatherAllTnTn (T.NV _) = ([], L.empty, L.empty, CD.empty)
-
-(*fun gatherTnTy tn (T.C (T.NC (tn', _, l), _, _)) = if tn = tn' then [] else [(l, tn')]
-  | gatherTnTy tn (T.Or (sq, _, _)) = gatherTnSq tn sq
-  | gatherTnTy _ _ = []
-and gatherTnSq _ (T.SV _) = []
-  | gatherTnSq tn (T.SC (rtl, _, _)) = List.concat (map (fn x => gatherTnRt tn x) rtl)
-and gatherTnRt _ (T.RV _) = []
-  | gatherTnRt tn (T.RC (_, ty, _)) = gatherTnTy tn ty*)
 
 fun isAllTy (T.OR (sq, _, _, _, _)) = isAllSq sq
   | isAllTy (T.C (tn, _, _)) = isAllTn tn
@@ -513,29 +482,6 @@ fun selectPaths paths seq =
 	NONE => T.SV (T.freshseqvar ())
       | SOME seq => seq
 
-
-(*fun sameSeqs (T.SV _) seq2 = (NONE, NONE, true)
-  | sameSeqs seq1 (T.SV _) = (NONE, NONE, true)
-  | sameSeqs (T.SD eseq1) seq2 = sameSeqs (EL.getExtLabT eseq1) seq2
-  | sameSeqs seq1 (T.SD eseq2) = sameSeqs seq1 (EL.getExtLabT eseq2)
-  | sameSeqs (T.SC (rows1, _, _)) (T.SC (rows2, _, _)) =
-    if sameRowsList rows1 rows2
-    then (SOME [], SOME [], true)
-    else (NONE, NONE, false)
-
-and sameRows (T.RV _) row2 = (NONE, NONE, true)
-  | sameRows row1 (T.RV _) = (NONE, NONE, true)
-  | sameRows (T.RD erow1) row2 = sameRows (EL.getExtLabT erow1) row2
-  | sameRows row1 (T.RD erow2) = sameRows row1 (EL.getExtLabT erow2)
-  | sameRows (T.RC (_, ty1, _)) (T.TC (_, ty2, _)) =
-
-and sameTys (T.V _) ty2 = (NONE, NONE, true)
-  | sameTys ty1 (T.V _) = (NONE, NONE, true)
-  | sameTys (T.TD ety1) ty2 = sameTys (EL.getExtLabT ety1) ty2
-  | sameTys ty1 (T.TD ety2) = sameTys ty1 (EL.getExtLabT ety2)
-  | sameTys ()*)
-
-
 fun isFullOrSeq (T.SV _) = false
   | isFullOrSeq (T.SD eseq) = isFullOrSeq (EL.getExtLabT eseq)
   | isFullOrSeq (T.SC (rows, _, _)) =
@@ -629,69 +575,6 @@ and tryToMatchOrsRt path (T.RC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
 
 fun tryToMatchOrs sq1 sq2 = tryToMatchOrsSq [] sq1 sq2
 
-
-
-(* Old matching of or/seq structures *)
-
-(*fun tryToMatchOrsSq path (T.SV _) sq2 = (NONE, NONE, true)
-  | tryToMatchOrsSq path (T.SC (rtl, _, _)) sq2 =
-    let val (typath1, typath2, found, _) =
-	    foldl (fn (rt, (typath1, typath2, found, c)) =>
-		      if found
-		      then if Option.isSome typath1
-			      andalso Option.isSome typath2
-			      andalso Option.valOf (Option.map (T.isTyC o #1) typath1)
-			      andalso Option.valOf (Option.map (T.isTyC o #1) typath2)
-			   then (typath1, typath2, found, c+1)
-			   else case tryToMatchOrsRt (path @ [c]) rt sq2 of
-				    (_, _, false) => (typath1, typath2, found, c+1)
-				  | (typath1', typath2', true) =>
-				    ((*if Option.isSome typath1 then typath1 else*) typath1',
-				     (*if Option.isSome typath2 then typath2 else*) typath2',
-				     true,
-				     c+1)
-		      else let val (typath1', typath2', found') = tryToMatchOrsRt (path @ [c]) rt sq2
-			   in (typath1', typath2', found', c+1)
-			   end)
-		  (NONE, NONE, false, 0)
-		  rtl
-    in (typath1, typath2, found)
-    end
-  | tryToMatchOrsSq path (T.SD eseq) sq2 =
-    tryToMatchOrsSq path (EL.getExtLabT eseq) sq2
-
-and tryToMatchOrsTy path (t as (T.C (tn, _, _))) sq =
-    (case tryToMatchOrsTn path tn sq of
-	 (SOME x, b) => (SOME (t, path), SOME x, b)
-       | (NONE, b) => (NONE, NONE, b))
-(*    (case findInOrSq tn [] sq of
-	 (SOME (t', path'), true, _, _, _) => (SOME (t, path), SOME (t', path'), true)  (* We found a match         *)
-       | (SOME x, false, _, _, _)          => raise EH.DeadBranch ""                    (* Shouldn't happen         *)
-       | (NONE, true, _, _, _)             => (NONE, NONE, true)                        (* Something isn't complete *)
-       | (NONE, false, _, _, _)            => (NONE, NONE, false))                      (* No match                 *)*)
-  | tryToMatchOrsTy path (T.OR (sq, _, _, _, _)) sq2 = tryToMatchOrsSq path sq sq2
-  | tryToMatchOrsTy path (t as T.V _) sq2 = (SOME (t, path), NONE, true)
-  | tryToMatchOrsTy path (T.TD ety) sq2 =
-    tryToMatchOrsTy path (EL.getExtLabT ety) sq2
-  | tryToMatchOrsTy _ _ _ = (NONE, NONE, true) (* Something isn't complete *)
-
-and tryToMatchOrsTn path (T.NC (name, _, _)) sq =
-    (case findInOrSq name [] sq of
-	 (SOME (t', path'), true, _) => (SOME (t', path'), true)  (* We found a match         *)
-       | (SOME x, false, _)          => raise EH.DeadBranch ""    (* Shouldn't happen         *)
-       | (NONE, true, _)             => (NONE, true)              (* Something isn't complete *)
-       | (NONE, false, _)            => (NONE, false))            (* No match                 *)
-  | tryToMatchOrsTn path (T.ND etn) sq = tryToMatchOrsTn path (EL.getExtLabT etn) sq
-  | tryToMatchOrsTn path (T.NV _) sq = (NONE, true)
-
-and tryToMatchOrsRt path (T.RC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
-  | tryToMatchOrsRt _ (T.RV _) _ = (NONE, NONE, true)
-  | tryToMatchOrsRt path (T.RD erow) sq2 =
-    tryToMatchOrsRt path (EL.getExtLabT erow) sq2
-
-fun tryToMatchOrs sq1 sq2 = tryToMatchOrsSq [] sq1 sq2*)
-
-
 (* ------ Type freshning ------ *)
 
 fun freshlabty (T.LV lv) state = T.LV (F.freshLabVar lv state)
@@ -719,7 +602,7 @@ and freshty (T.V (tv, b, p))       tvl state bstr =
 	else T.V (F.freshTyVar tv state, if bstr then NONE else b, p)
       | (_, T.MONO) => T.V (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
   | freshty (T.E   (id, tv,   l))  tvl state bstr =
-    (*(2010-06-14)bstr is false when we refresh an environment when dealing with CSTSIG*)
+    (*(2010-06-14)bstr is false when we refresh an environment when dealing with SIGNATURE_CONSTRAINT*)
     if bstr then T.E (id, tv, l) else T.V (F.freshTyVar tv state, SOME (id, l), T.POLY)
   | freshty (T.C  (tn, sq,   l))    tvl state bstr = T.C   (freshtyname tn     state,      freshseqty sq tvl state bstr, l)
   | freshty (T.A  (tf, sq,   l))    tvl state bstr = T.A   (freshtyfun  tf tvl state bstr, freshseqty sq tvl state bstr, l)
@@ -779,22 +662,22 @@ fun freshenv (E.ENVVAR (ev, lab)) tvl state _ = E.ENVVAR (F.freshEnvVar ev state
 	val info = E.getInfo env
     in E.consEnvC vids typs tyvs strs sigs funs ovcs info
     end
-  | freshenv (E.ENVSEQ (env1, env2)) tvl state bstr =
-    E.ENVSEQ (freshenv env1 tvl state bstr, freshenv env2 tvl state bstr)
+  | freshenv (E.SEQUENCE_ENV (env1, env2)) tvl state bstr =
+    E.SEQUENCE_ENV (freshenv env1 tvl state bstr, freshenv env2 tvl state bstr)
   | freshenv (E.ENVDEP (env, labs, stts, deps)) tvl state bstr =
     let val env' = freshenv env tvl state bstr
     in E.ENVDEP (env', labs, stts, deps)
     end
-  | freshenv (E.ENVTOP)   tvl state bstr = E.ENVTOP
+  | freshenv (E.TOP_LEVEL_ENV)   tvl state bstr = E.TOP_LEVEL_ENV
   | freshenv (E.ENVPOL _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVLOC _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVWHR _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVSHA _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
-  | freshenv (E.ENVSIG _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
-  | freshenv (E.ENVDAT _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.SIGNATURE_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.DATATYPE_CONSTRUCTOR_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVOPN _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
-  | freshenv (E.ENVFUN _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
-  | freshenv (E.ENVCST _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.FUNCTOR_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.CONSTRAINT_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVPTY _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVFIL _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
 and freshextenv extenv tvl state bstr = freshextgen extenv tvl state bstr freshenv
@@ -1007,10 +890,10 @@ fun buildEnv (E.ENVVAR (ev, lab)) state fresh bstr =
 	  * We also need to gather these. *)
 	 in env'
 	 end)
-  | buildEnv (E.ENVSEQ (env1, env2)) state fresh bstr =
+  | buildEnv (E.SEQUENCE_ENV (env1, env2)) state fresh bstr =
     let val env1 = buildEnv env1 state fresh bstr
 	val env2 = buildEnv env2 state fresh bstr
-    in E.ENVSEQ (env1, env2)
+    in E.SEQUENCE_ENV (env1, env2)
     end
   | buildEnv (env as E.ENVCON _) state fresh bstr =
     E.consEnvC (buildIdEnv (E.getVids env) state fresh freshty     buildTy'    bstr)
@@ -1120,56 +1003,6 @@ fun getExplicitTyVars vids tyvs state =
 			NONE
 			vids
     end
-
-
-
-
-(*fun checkOneDatConsInDatCons _ [] = false
-  | checkOneDatConsInDatCons (x as (id, _, _, _, _)) ((id', _, _, _, _) :: xs) =
-    I.eqId id id' orelse checkOneDatConsInDatCons x xs
-
-fun checkDatConsInDatCons cons1 cons2 labs deps asmp l ek =
-    foldr (fn (x as (id, lab, _, _, _), _) => (*(2010-04-21)Shouldn't we check the other lab here?*)
-	      if not (O.isin lab labs) orelse checkOneDatConsInDatCons x cons2
-	      then ()
-	      else let val fst = (lab, I.toInt id)
-		       val snd = map (fn (id, l, _, _, _) => (l, I.toInt id)) cons2
-		       val err = ek (fst, snd)
-		   in raise misscons (ERR.consPreError ERR.dummyId labs asmp err deps l)
-		   end)
-	  ()
-	  cons1
-
-fun checkDatSigStruc es etv labs deps asmp l id =
-    let val lab1  = E.getBindL etv
-	val cl1   = E.getBindC etv
-	val cons1 = CL.getClassDATconsC cl1
-    in if O.isin lab1 labs (* do we need that? *)
-	  andalso not (CL.isClassDATem cl1) (* etv (in the signature) is for a datatype and not a type function *)
-       then app (fn e =>
-		    let val lab2  = E.getBindL e
-			val cl2   = E.getBindC e
-			val cons2 = CL.getClassDATconsC cl2
-		    in if O.isin lab2 labs
-		       then if CL.isClassDATem cl2 (* e is for a type function (in the structure) *)
-			    then raise dattyp (ERR.consPreError ERR.dummyId
-								labs
-								asmp
-								(EK.DatTypClash (I.toInt id, lab1, lab2))
-								deps
-								l)
-			    else (if O.subseteq (CL.getClassDATlabs cl2) labs
-				  then checkDatConsInDatCons cons1 cons2 labs deps asmp l EK.MissConsStr
-				  else ();
-				  if O.subseteq (CL.getClassDATlabs cl1) labs
-				  then checkDatConsInDatCons cons2 cons1 labs deps asmp l EK.MissConsSig
-				  else ())
-		       else ()
-		    end)
-		  es
-       else ()
-    end*)
-
 
 fun getGenTyvars (T.V (tv, SOME idl, p)) = [idl]
   | getGenTyvars (T.V _) = []
@@ -1288,7 +1121,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 			       val cs'  = map (fn ty1 => ((*D.printdebug2 (T.printty ty1 ^ "\n" ^
 									 T.printty ty2 ^ "\n" ^
 									 L.toString labs);*)
-							  E.genCstTyAll ty1 (getTy2 ()) labs stts deps false))
+							  E.genCstTyAll ty1 (getTy2 ()) labs stts deps))
 					      tys1
 			   in cs' @ cs
 			   end) [] es
@@ -1362,7 +1195,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 		val csT = compGen (E.getTyps env1) compT env2
 		val csS = compGen (E.getStrs env1) compS env2
 		val (csSV, csST) = ListPair.unzip csS
-		(*val _ = D.printdebug2 (E.printEnv (E.ENVCST (E.singcsts (L.dummyLab, List.concat csST))) "")*)
+		(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, List.concat csST))) "")*)
 	    in (List.concat (csG @ csSV), List.concat (csT @ csST))
 	    end
     in case (env1, env2) of (* env1/env2 : signature/structure *)
@@ -1426,14 +1259,6 @@ fun decorateTyFun tfn labs stts deps =
 
 fun newTyFun () = T.TFC (T.newSV (), T.newV (), L.dummyLab)
 
-(*fun insertInTyFun tyfun name (exttf as (tf, labs, stts, deps)) =
-    let val tn = T.tynameToInt name
-    in case OM.find (tyfun, tn) of
-	   NONE => OM.insert (tyfun, tn, exttf)
-	 | SOME (tf', labs', stts', deps') =>
-	   OM.insert (tyfun, tn, (tf, L.union labs labs', L.union stts stts', CD.union deps deps'))
-    end*)
-
 fun insertInTyFun tyfun name tf =
     let val tn = T.tynameToInt name
     (*What about when we already have a tn entry in tyfun because of
@@ -1452,7 +1277,7 @@ fun getAllTyFunEnv (env as E.ENVCON _) =
 	val (tfnDs2, tfnTs2) = getAllTyFunStrEnv (E.getStrs env)
     in (mergeTyFun tfnDs1 tfnDs2, mergeTyFun tfnTs1 tfnTs2)
     end
-  | getAllTyFunEnv (E.ENVSEQ (env1, env2)) =
+  | getAllTyFunEnv (E.SEQUENCE_ENV (env1, env2)) =
     let val (tfnDs1, tfnTs1) = getAllTyFunEnv env1
 	val (tfnDs2, tfnTs2) = getAllTyFunEnv env2
     in (mergeTyFun tfnDs1 tfnDs2, mergeTyFun tfnTs1 tfnTs2)
@@ -1462,16 +1287,16 @@ fun getAllTyFunEnv (env as E.ENVCON _) =
     in (decorateTyFun tfnDs labs stts deps, decorateTyFun tfnTs labs stts deps)
     end
   | getAllTyFunEnv (E.ENVVAR _) = (OM.empty, OM.empty)
-  | getAllTyFunEnv (E.ENVTOP)   = (OM.empty, OM.empty)
+  | getAllTyFunEnv (E.TOP_LEVEL_ENV)   = (OM.empty, OM.empty)
   | getAllTyFunEnv (E.ENVOPN _) = raise EH.DeadBranch "This should have been built by now"
-  | getAllTyFunEnv (E.ENVFUN _) = raise EH.DeadBranch "This should have been built by now"
-  | getAllTyFunEnv (E.ENVCST _) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTyFunEnv (E.FUNCTOR_ENV _) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTyFunEnv (E.CONSTRAINT_ENV _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVPOL _) = raise EH.DeadBranch "This should have been built by now"
-  | getAllTyFunEnv (E.ENVDAT _) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTyFunEnv (E.DATATYPE_CONSTRUCTOR_ENV _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVLOC _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVWHR _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVSHA _) = raise EH.DeadBranch "This should have been built by now"
-  | getAllTyFunEnv (E.ENVSIG _) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTyFunEnv (E.SIGNATURE_ENV _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVPTY _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTyFunEnv (E.ENVFIL _) = raise EH.DeadBranch "This should have been built by now"
 
@@ -1529,22 +1354,22 @@ fun getTyFunEnv (env1 as E.ENVCON _) (env2 as E.ENVCON _) labs stts deps =
 		(L.union stts stts')
 		(CD.union deps deps')
   | getTyFunEnv (env as E.ENVCON _) _ _ _ _ = getAllTyFunEnv env
-  | getTyFunEnv (E.ENVSEQ (env0, env1)) env2 labs stts deps =
+  | getTyFunEnv (E.SEQUENCE_ENV (env0, env1)) env2 labs stts deps =
     let val (tfnDs1, tfnTs1) = getTyFunEnv env0 env2 labs stts deps
 	val (tfnDs2, tfnTs2) = getTyFunEnv env1 env2 labs stts deps
     in (mergeTyFun tfnDs1 tfnDs2, mergeTyFun tfnTs1 tfnTs2)
     end
   | getTyFunEnv (E.ENVVAR _) _ _ _ _ = (OM.empty, OM.empty)
-  | getTyFunEnv (E.ENVTOP)   _ _ _ _ = (OM.empty, OM.empty)
+  | getTyFunEnv (E.TOP_LEVEL_ENV)   _ _ _ _ = (OM.empty, OM.empty)
   | getTyFunEnv (E.ENVOPN _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnv (E.ENVFUN _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnv (E.ENVCST _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnv (E.FUNCTOR_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnv (E.CONSTRAINT_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVPOL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnv (E.ENVDAT _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnv (E.DATATYPE_CONSTRUCTOR_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVLOC _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVWHR _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVSHA _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnv (E.ENVSIG _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnv (E.SIGNATURE_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnv (E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
@@ -1647,22 +1472,22 @@ fun getTyFunEnvSha (env1 as E.ENVCON _) (env2 as E.ENVCON _) =
 	val tfn2 = OM.map (fn _ => NONE) tfn1
     in (NONE, tfn2)
     end
-  | getTyFunEnvSha (E.ENVSEQ (env0, env1)) env2 =
+  | getTyFunEnvSha (E.SEQUENCE_ENV (env0, env1)) env2 =
     let val (utf1, tfn1) = getTyFunEnvSha env0 env2
 	val (utf2, tfn2) = getTyFunEnvSha env1 env2
     in (mergeUTyFunSha utf1 utf2, mergeTyFunSha tfn1 tfn2)
     end
   | getTyFunEnvSha (E.ENVVAR _) _ = (NONE, OM.empty)
-  | getTyFunEnvSha (E.ENVTOP)   _ = (NONE, OM.empty)
+  | getTyFunEnvSha (E.TOP_LEVEL_ENV)   _ = (NONE, OM.empty)
   | getTyFunEnvSha (E.ENVOPN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnvSha (E.ENVFUN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnvSha (E.ENVCST _) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnvSha (E.FUNCTOR_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnvSha (E.CONSTRAINT_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVPOL _) _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnvSha (E.ENVDAT _) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnvSha (E.DATATYPE_CONSTRUCTOR_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVLOC _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVWHR _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVSHA _) _ = raise EH.DeadBranch "This should have been built by now"
-  | getTyFunEnvSha (E.ENVSIG _) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTyFunEnvSha (E.SIGNATURE_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTyFunEnvSha (E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
 
@@ -1715,7 +1540,7 @@ fun genTyFunTy (x as T.V _) _ _ = ([], x)
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
 		       val _ = D.printDebug 3 D.UNIF "in genTyFunTy - calling genCstTyAll";
-		       val c2 = E.genCstTyAll v ty' labs stts deps false
+		       val c2 = E.genCstTyAll v ty' labs stts deps
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
 		   end
@@ -1828,26 +1653,26 @@ fun genTyFunEnv (env as E.ENVCON _) state tfun dom b =
 	val cs             = csVids @ csTyps @ csOvcs @ csStrs @ csSigs
     in (cs, E.consEnvC vids typs tyvs strs sigs funs ovcs info)
     end
-  | genTyFunEnv (x as E.ENVSEQ (env1, env2)) state tfun dom b =
+  | genTyFunEnv (x as E.SEQUENCE_ENV (env1, env2)) state tfun dom b =
     let val (cs1, env1') = genTyFunEnv env1 state tfun dom b
 	val (cs2, env2') = genTyFunEnv env2 state tfun dom b
-    in (cs1 @ cs2, E.ENVSEQ (env1', env2'))
+    in (cs1 @ cs2, E.SEQUENCE_ENV (env1', env2'))
     end
   | genTyFunEnv (x as E.ENVDEP (env, labs, stts, deps)) state tfun dom b =
     let val (cs, env') = genTyFunEnv env state tfun dom b
     in (decorateCst cs labs stts deps, E.ENVDEP (env', labs, stts, deps))
     end
   | genTyFunEnv (x as E.ENVVAR _) _ _ _ _ = ([], x)
-  | genTyFunEnv (x as E.ENVTOP)   _ _ _ _ = ([], x)
+  | genTyFunEnv (x as E.TOP_LEVEL_ENV)   _ _ _ _ = ([], x)
   | genTyFunEnv (x as E.ENVOPN _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | genTyFunEnv (x as E.ENVFUN _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | genTyFunEnv (x as E.ENVCST _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTyFunEnv (x as E.FUNCTOR_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTyFunEnv (x as E.CONSTRAINT_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVPOL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | genTyFunEnv (x as E.ENVDAT _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTyFunEnv (x as E.DATATYPE_CONSTRUCTOR_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVLOC _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVWHR _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVSHA _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
-  | genTyFunEnv (x as E.ENVSIG _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTyFunEnv (x as E.SIGNATURE_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTyFunEnv (x as E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
@@ -1886,7 +1711,7 @@ fun applyTyFunTy (x as (T.V _)) _ _ = ([], x)
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
 		       val _  = D.printDebug 3 D.UNIF "in applyTyFunTy - calling genCstTyAll";
-		       val c2 = E.genCstTyAll v ty' labs stts deps false
+		       val c2 = E.genCstTyAll v ty' labs stts deps
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
 		   end
@@ -1995,26 +1820,26 @@ fun applyTyFunEnv (env as E.ENVCON _) tfun =
     (*TODO: rename the type names in the info part using tfun.*)
     in (cs, E.consEnvC vids typs tyvs strs sigs funs ovcs info)
     end
-  | applyTyFunEnv (x as E.ENVSEQ (env1, env2)) tfun =
+  | applyTyFunEnv (x as E.SEQUENCE_ENV (env1, env2)) tfun =
     let val (cs1, env1') = applyTyFunEnv env1 tfun
 	val (cs2, env2') = applyTyFunEnv env2 tfun
-    in (cs1 @ cs2, E.ENVSEQ (env1', env2'))
+    in (cs1 @ cs2, E.SEQUENCE_ENV (env1', env2'))
     end
   | applyTyFunEnv (x as E.ENVDEP (env, labs, stts, deps)) tfun =
     let val (cs, env') = applyTyFunEnv env tfun
     in (decorateCst cs labs stts deps, E.ENVDEP (env', labs, stts, deps))
     end
   | applyTyFunEnv (x as E.ENVVAR _) _ = ([], x)
-  | applyTyFunEnv (x as E.ENVTOP)   _ = ([], x)
+  | applyTyFunEnv (x as E.TOP_LEVEL_ENV)   _ = ([], x)
   | applyTyFunEnv (x as E.ENVOPN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | applyTyFunEnv (x as E.ENVFUN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | applyTyFunEnv (x as E.ENVCST _) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTyFunEnv (x as E.FUNCTOR_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTyFunEnv (x as E.CONSTRAINT_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVPOL _) _ = raise EH.DeadBranch "This should have been built by now"
-  | applyTyFunEnv (x as E.ENVDAT _) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTyFunEnv (x as E.DATATYPE_CONSTRUCTOR_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVLOC _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVWHR _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVSHA _) _ = raise EH.DeadBranch "This should have been built by now"
-  | applyTyFunEnv (x as E.ENVSIG _) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTyFunEnv (x as E.SIGNATURE_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTyFunEnv (x as E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
 
@@ -2144,7 +1969,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	 in matchWhereEnv (E.getBindT bind) longtyp state
 	 end
        | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving")
-  | matchWhereEnv (envsig as E.ENVSEQ (env1, env2)) longtyp state =
+  | matchWhereEnv (envsig as E.SEQUENCE_ENV (env1, env2)) longtyp state =
     (let val (tmap, found) = matchWhereEnv env2 longtyp state
      (* If found then it means that we found the matching.
       * Otherwise, either we raised an error because we couldn't find any matching
@@ -2165,147 +1990,18 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
     in matchWhereEnv env (SOME (longtyp, labs0, stts0, deps0)) state
     end
   | matchWhereEnv (E.ENVVAR _) _ _ = (OM.empty, false)
-  | matchWhereEnv (E.ENVTOP)   _ _ = (OM.empty, true)
+  | matchWhereEnv (E.TOP_LEVEL_ENV)   _ _ = (OM.empty, true)
   | matchWhereEnv (E.ENVOPN _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVFUN _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVCST _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.FUNCTOR_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.CONSTRAINT_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVPOL _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVDAT _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.DATATYPE_CONSTRUCTOR_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVLOC _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVWHR _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVSHA _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVSIG _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.SIGNATURE_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
-
-(*(* I'm doing that the wrong way, we should first check envwhere and in case it is incomplete
- * the we should deal with all the dummy cases. *)
-fun matchWhereEnv (envsig as E.ENVCON _) (envwhere as E.ENVCON _) =
-    let val tnmap = E.getTyNames (E.getTyps envsig)
-	val (tmapDat1, tmapTyp1) =
-	    foldr (fn (E.TYNAME ({id, kind, name}, labs, stts, deps), (tmapDat, tmapTyp)) =>
-		      (* name is a type name defined by id. *)
-		      (* The labs, stts, and deps might be used to report errors. *)
-		      (case E.plusproj (E.getTyps envwhere) id of
-			   [] => if E.getICmp envwhere
-				 (* If the 'where clause' is complete and it has no matching for id
-				  * then it means that the type name is not renamed. *)
-				 then (tmapDat, tmapTyp)
-				 (* Otherwise, the 'where clause' might contain a matching for the id
-				  * which is currently fitered out.
-				  * If the type name is for a datatype then we want to keep a
-				  * datatype-like type for the binding. *)
-				 (* WARNING: we need to remove the type name in the info part of the envsig. *)
-				 else (case kind of
-					   E.DAT => (insertInTyFun tmapDat name (newTyFun ()), tmapTyp)
-					 | E.TYP => (tmapDat, insertInTyFun tmapTyp name (newTyFun ())))
-			 | [bind] => (* We found a matching in the where clause so the type name will
-				      * have to be renamed.
-				      * (1) We also need to check that if name is in the context then
-				      * we have an error because of the 't \not\in T of B' condition
-				      * for where clauses (rigid type).
-				      * (2) We also need to check that if kind is a DAT then
-				      * the bind is a type name, because of the well-formedness
-				      * condition for where clauses. *)
-			   (* TODO: check (1) and (2) and raise errors if necessary. *)
-			   (* WARNING: we need to update the type name in the info part of the envsig. *)
-			   (case E.getBindT bind of
-				(tf as T.TFC _, _, _) =>
-				let val labs = EL.getExtLabL bind
-				    val stts = EL.getExtLabE bind
-				    val deps = EL.getExtLabD bind
-				in (tmapDat, insertInTyFun tmapTyp name (tf, labs, stts, deps))
-				end
-			      | _ => (tmapDat, insertInTyFun tmapTyp name (newTyFun ())))
-			 | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving")
-		    | (E.DUMTYNAME {id, kind, name}, (tmapDat, tmapTyp)) =>
-		      (* name could potentially be a type name defined by id. *)
-		      (case E.plusproj (E.getTyps envwhere) id of
-			   [] => if E.getICmp envwhere
-				 (* If the 'where clause' is complete and it has no matching for id
-				  * then it means that the type name is not renamed. *)
-				 then (tmapDat, tmapTyp)
-				 (* Otherwise, the 'where clause' might contain a matching for the id
-				  * which is currently fitered out.
-				  * If the type name is for a datatype then we want to keep a
-				  * datatype-like type for the binding. *)
-				 (* WARNING: we need to remove the type name in the info part of the envsig. *)
-				 else (case kind of
-					   E.DAT => (insertInTyFun tmapDat name (newTyFun ()), tmapTyp)
-					 | E.TYP => (tmapDat, insertInTyFun tmapTyp name (newTyFun ())))
-			 | [bind] => (* We found a matching in the where clause but we don't know if it has
-				      * to rename name because we don't know if name is declared in the
-				      * signature (not enough info), but it might, so we are going to replace
-				      * the name by a dummy type function.
-				      * If the name were not a name declared for id then it would mean that
-				      * the E(longtycon) = (t, VE) would be violated, because we wouldn't
-				      * have a t. *)
-			   (* WARNING: we need to remove the type name in the info part of the envsig. *)
-			   (tmapDat, insertInTyFun tmapTyp name (newTyFun ()))
-			 | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving")
-		    | (E.MAYTYNAME, (tmapDat, tmapTyp)) => (tmapDat, tmapTyp) (* Remove this constructor! Useless! *)
-		    (* We don't have enough info to do anything. *)
-		    (* WARNING: if a name was associated to id in the info part of the envsig we should remove it (impossible case?). *)
-		    | (E.NOTTYNAME (id, labs, stts, deps), (tmapDat, tmapTyp)) =>
-		      (* the id definitely doesn't define a type name, so if the id is in the where clause
-		       * then it is violating the condition: E(longtycon) = (t, VE) because we don't have
-		       * a t here. *)
-		      (case E.plusproj (E.getTyps envwhere) id of
-			   [] => (tmapDat, tmapTyp)
-			 | [bind] => (* We found a matching in the where clause so it means that we have
-				      * an error (non-flexible type). *)
-			   (*TODO: raise the error *)
-			   (tmapDat, tmapTyp)
-			 | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving"))
-		  (OM.empty, OM.empty)
-		  tnmap
-	val (tmapDat2, tmapTyp2) = matchWhereStrEnv (E.getStrs envsig) (E.getStrs envwhere)
-    in (mergeTyFun tmapDat1 tmapDat2, mergeTyFun tmapTyp1 tmapTyp2)
-    end
-  | matchWhereEnv (env as E.ENVCON _) _ = getAllTyFunEnv env
-  | matchWhereEnv (E.ENVSEQ (env0, env1)) env2 =
-    let val (tfnDs1, tfnTs1) = matchWhereEnv env0 env2
-	val (tfnDs2, tfnTs2) = matchWhereEnv env1 env2
-    in (mergeTyFun tfnDs1 tfnDs2, mergeTyFun tfnTs1 tfnTs2)
-    end
-  | matchWhereEnv (E.ENVVAR _) _ = (OM.empty, OM.empty)
-  | matchWhereEnv (E.ENVTOP)   _ = (OM.empty, OM.empty)
-  | matchWhereEnv (E.ENVOPN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVDEP _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVFUN _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVCST _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVPOL _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVDAT _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVLOC _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVWHR _) _ = raise EH.DeadBranch "This should have been built by now"
-  | matchWhereEnv (E.ENVSHA _) _ = raise EH.DeadBranch "This should have been built by now"
-
-and matchWhereExtEnv extenv extenv' =
-    let val labs = EL.getExtLabL extenv'
-	val stts = EL.getExtLabE extenv'
-	val deps = EL.getExtLabD extenv'
-	val (tmapDat, tmapTyp)  = matchWhereEnv (E.getBindT extenv) (E.getBindT extenv')
-    in (decorateTyFun tmapDat labs stts deps, decorateTyFun tmapTyp labs stts deps)
-    end
-
-and matchWhereStrEnv strenv strenv' =
-    E.foldrienv
-	(fn (id, semty, (tmapDat, tmapTyp)) =>
-	    foldr (fn (extenv, tfns) =>
-		      foldr (fn (extenv', (tmapDat, tmapTyp)) =>
-				let val (tmapDat', tmapTyp') = matchWhereExtEnv extenv extenv'
-				in (mergeTyFun tmapDat tmapDat', mergeTyFun tmapTyp tmapTyp')
-				end)
-			    (tmapDat, tmapTyp)
-			    (E.plusproj strenv' id))
-		  (tmapDat, tmapTyp)
-		  semty)
-	(OM.empty, OM.empty)
-	strenv*)
-
-
-
-
 
 (* Environment renamening *)
 
@@ -2396,23 +2092,23 @@ and renameenv (env as E.ENVCON _) state ren =
 	val info  = E.consInfo (E.getILab env) (E.getICmp env) tns (E.getIFct env)
     in E.consEnvC vids typs tyvs strs sigs funs ovcs info
     end
-  | renameenv (E.ENVSEQ (env1, env2)) state ren =
-    E.ENVSEQ (renameenv env1 state ren, renameenv env2 state ren)
+  | renameenv (E.SEQUENCE_ENV (env1, env2)) state ren =
+    E.SEQUENCE_ENV (renameenv env1 state ren, renameenv env2 state ren)
   | renameenv (E.ENVDEP (env, labs, stts, deps)) state ren =
     let val env' = renameenv env state ren
     in E.ENVDEP (env', labs, stts, deps)
     end
   | renameenv (x as E.ENVVAR _) _ _ = x
-  | renameenv (x as E.ENVTOP)   _ _ = x
+  | renameenv (x as E.TOP_LEVEL_ENV)   _ _ = x
   | renameenv (E.ENVLOC _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVWHR _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVSHA _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | renameenv (E.ENVSIG _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.SIGNATURE_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVPOL _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | renameenv (E.ENVDAT _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.DATATYPE_CONSTRUCTOR_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVOPN _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | renameenv (E.ENVFUN _) _ _ = raise EH.DeadBranch "This should have been built by now"
-  | renameenv (E.ENVCST _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.FUNCTOR_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.CONSTRAINT_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
 and renameextstr extstr state ren = renameextgen extstr state ren renameenv
@@ -2650,7 +2346,7 @@ fun unif env filters user =
 	      | (mono :: _) => P.MONO [mono]
 
 
-	(* ====== PARTIAL ENVIRONMENT SOLVER ====== *)
+	(* ====== PARTIAL ENV SOLVER ====== *)
 
 	fun preSolveEnv (E.ENVVAR (ev, lab)) =
 	    (case S.getValStateEv state ev of
@@ -2660,10 +2356,10 @@ fun unif env filters user =
 	    let val env' = preSolveEnv env
 	    in E.pushExtEnv env' labs stts deps
 	    end
-	  | preSolveEnv (E.ENVSEQ (env1, env2)) =
+	  | preSolveEnv (E.SEQUENCE_ENV (env1, env2)) =
 	    let val env1' = preSolveEnv env1
 		val env2' = preSolveEnv env2
-	    in E.ENVSEQ (env1', env2')
+	    in E.SEQUENCE_ENV (env1', env2')
 	    end
 	  | preSolveEnv env = env
 
@@ -2707,7 +2403,7 @@ fun unif env filters user =
 		val lid = I.idToLid id lab
 		fun generateAcc () =
 		    let val a = E.genAccIvAll (E.consAccId lid (E.getBindT bind) cl lab) labs stts deps
-		    in BINDNOT (E.singcst (lab, E.CSTACC a))
+		    in BINDNOT (E.singcst (lab, E.ACCESSOR_CONSTRAINT a))
 		    end
 	    in case S.getValStateIdVa state lid false of
 		   (SOME (({id, bind = _, lab = _, poly, class}, labs', stts', deps'), _), _, _) =>
@@ -2854,24 +2550,6 @@ fun unif env filters user =
 	       | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind)))
 	(*(EL.mapExtLab (E.resetExtLab bind) C.resetPoly)*)
 
-	(*fun solvegenenv genenv fbuild bmon =
-	      E.foldrienv
-		  (fn (id, sem, (genenv, comp)) =>
-		      let val (sem', b) =
-			      foldr (fn (bind, (sem, b)) =>
-					case fbuild bind of
-					    NONE => (sem, false)
-					  | SOME (bind', b') =>
-					    (bind' :: sem, b andalso b'))
-				    ([], true)
-				    sem
-		      in if List.null sem'
-			 then (genenv, false)
-			 else (E.addenv (id, sem') genenv, b andalso comp)
-		      end)
-		  (E.emgen, true)
-		  genenv*)
-
 	fun genMultiError (SOME bind1) bind2 =
 	    let val cl1 = E.getBindC bind1
 		val cl2 = E.getBindC bind2
@@ -2932,7 +2610,7 @@ fun unif env filters user =
 	fun solvefunenv funs bmon = solvegenenv' funs solveextfun bmon
 
 
-	(* ====== ENVIRONMENT SOLVER ====== *)
+	(* ====== ENV SOLVER ====== *)
 
 	fun solveenv (E.ENVVAR (ev, lab)) bmon =
 	    (case S.getValStateEv state ev of
@@ -2961,7 +2639,7 @@ fun unif env filters user =
 	     in env'
 	     end
 	     handle errorfound err => handleSolveEnv err env)
-	  | solveenv (E.ENVSEQ (env1, env2)) bmon =
+	  | solveenv (E.SEQUENCE_ENV (env1, env2)) bmon =
 	    let val env1' = solveenv env1 bmon
 		val b     = E.isEmptyEnv env1'
 		val tvs   = S.pushEnvToState b env1' state
@@ -2975,8 +2653,8 @@ fun unif env filters user =
 		 FI.OUT  => E.emenv
 	       | FI.BIND => E.newEnvVar L.dummyLab
 	       | FI.IN   => E.pushExtEnv (solveenv env bmon) labs stts deps)
-	  | solveenv (E.ENVFUN cst) bmon = E.ENVFUN cst
-	  | solveenv (E.ENVCST cst) bmon = (run cst; E.emenv)
+	  | solveenv (E.FUNCTOR_ENV cst) bmon = E.FUNCTOR_ENV cst
+	  | solveenv (E.CONSTRAINT_ENV cst) bmon = (run cst; E.emenv)
 	  | solveenv (E.ENVPOL (tyvenv, env)) bmon =
 	    let val env1  = solveenv (E.projTyvs tyvenv) bmon
 		val b     = E.isEmptyEnv env1
@@ -3013,7 +2691,7 @@ fun unif env filters user =
 		  | checkTyVars _ _ _ _ = raise EH.DeadBranch ""
 	    in checkTyVars env' L.empty L.empty CD.empty
 	    end
-	  | solveenv (E.ENVDAT (idlab, env)) bmon =
+	  | solveenv (E.DATATYPE_CONSTRUCTOR_ENV (idlab, env)) bmon =
 	    let val env' = solveenv env bmon
 		val _    = S.updateDatCons state idlab env'
 	    in env'
@@ -3075,7 +2753,7 @@ fun unif env filters user =
 	     in env1
 	     end
 	     handle errorfound err => handleSolveEnv err envsha)
-	  | solveenv (envsig as E.ENVSIG (e1, e2, kind)) bmon =
+	  | solveenv (envsig as E.SIGNATURE_ENV (e1, e2, kind)) bmon =
 	    (let val env0 = buildFEnv e1 state false
 		 val env2 = buildFEnv e2 state true
 		 val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")
@@ -3093,7 +2771,7 @@ fun unif env filters user =
 		  | E.TRA => justBuildEnv env1 state true
 	     end
 	     handle errorfound err => handleSolveEnv err envsig)
-	  | solveenv E.ENVTOP bmon = raise EH.TODO
+	  | solveenv E.TOP_LEVEL_ENV bmon = raise EH.TODO
 	  | solveenv (E.ENVPTY st) bmon = raise EH.TODO
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
@@ -3241,7 +2919,7 @@ fun unif env filters user =
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
-			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0 false
+			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   (*val _     = D.printdebug2 (S.printState state)*)
 			   (*val _     = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab l ^ "\n" ^ T.printty sem ^ "\n" ^ T.printty bind ^ "\n" ^ T.printty bind2)*)
@@ -3269,7 +2947,7 @@ fun unif env filters user =
 			   * Constraint solving shouldn't depend on the order in constraints. *)
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 			  val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
-			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0 false
+			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
 		      in fsimplify [c] l
 		      end
 		    | _ => ())
@@ -3429,26 +3107,25 @@ fun unif env filters user =
 
 	and fsimplify [] l = ()
 	  (**)
-	  | fsimplify ((E.CSTTYF ((T.TFD (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYF ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.TD  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((T.ND  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTSEQ ((T.SD  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTSEQ ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTROW ((T.RD  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTROW ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTLAB ((T.LD  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTLAB ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TFD (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TD  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.ND  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SD  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.RD  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LD  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  (**)
-	  | fsimplify ((E.CSTTYF ((tf1, T.TFD (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTTYF ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((ty1, T.TD  (ty2, labs1, stts1, deps1)), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((tn1, T.ND  (tn2, labs1, stts1, deps1)), labs, stts, deps, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTSEQ ((sq1, T.SD  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTSEQ ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTROW ((rt1, T.RD  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTROW ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.CSTLAB ((lt1, T.LD  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.CSTLAB ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TFD (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TD  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.ND  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, T.SD  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((rt1, T.RD  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LD  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  (**)
-	  | fsimplify ((E.CSTENV ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.CSTENV ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
-	  | fsimplify ((E.CSTENV ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.CSTENV ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
-	  | fsimplify ((E.CSTTYP ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids)) :: cs') l =
 	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two type constructions";
-	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	     D.printDebug 3 D.UNIF ("             - label information for constructions is l1="^(Int.toString(L.toInt l1))^", l2="^(Int.toString(L.toInt l2)));
 	     D.printDebug 3 D.UNIF ("             - label information (ls) is "^(L.toString(ls)));
 	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
@@ -3495,16 +3172,15 @@ fun unif env filters user =
 		     end
 	    else
 		let
-		    val _  = D.printDebug 3 D.UNIF "             - generating CSTTYN by calling genCstTnAll"
-		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids eqTypeCheck
+		    val _  = D.printDebug 3 D.UNIF "             - generating TYPENAME_CONSTRAINT by calling genCstTnAll"
+		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids
 		    val c2 = E.genCstSqAll sq1 sq2 ls deps ids
 		 in
 		    fsimplify (c1 :: c2 :: cs') l
 		 end)
-	  | fsimplify ((E.CSTTYN ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    (D.printDebug 2 D.UNIF "in fsimplify - constarint type is two of tnty.NC";
 	     D.printDebug 3 D.UNIF("             - tnty.NC typenames are tn1 = "^(Int.toString(T.tynameToInt tn1))^" tn2 = "^(Int.toString(T.tynameToInt tn2)));
-	     D.printDebug 3 D.UNIF("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	     if T.eqTyname tn1 tn2
 	     then (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
 		   fsimplify cs' l)
@@ -3515,7 +3191,7 @@ fun unif env filters user =
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		  in handleSimplify err cs' l
 		  end)
-	  | fsimplify ((E.CSTSEQ ((T.SC (rtl1, b1, l1), T.SC (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC (rtl1, b1, l1), T.SC (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let val n1 = length rtl1
 		val n2 = length rtl2
 	    (*val _  = D.printdebug2 ("-("  ^ (O.printelt l1)   ^
@@ -3556,10 +3232,9 @@ fun unif env filters user =
 		    in handleSimplify err cs' l
 		    end
 	    end
-	  | fsimplify ((E.CSTTYP ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids)) :: cs') l =
 	     let
 		 val _     = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is two implicit type variables (tv1="^Int.toString(T.tyvarToInt tv1)^", tv2="^Int.toString(T.tyvarToInt tv2)^")");
-		 val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		 val _     = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls))
 		 fun continue () =
 		    case S.getValStateTv state tv1 of
@@ -3575,14 +3250,14 @@ fun unif env filters user =
 			let val bop = if Option.isSome b2 then b2 else b1
 			    val t   = T.V (tv2, bop, p2)
 			    val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
-			    val c   = E.genCstTyAll ty t ls deps ids false
+			    val c   = E.genCstTyAll ty t ls deps ids
 			in fsimplify (c :: cs') l
 	    		end
 	    (*val _ = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 	    in if T.eqTyvar tv1 tv2
 	       then fsimplify cs' l
 	       else case (b1, b2) of
-			(SOME _, NONE) => fsimplify ((E.CSTTYP ((T.V (tv2, b2, p2), T.V (tv1, b1, p1)), ls, deps, ids, eqTypeCheck)) :: cs') l
+			(SOME _, NONE) => fsimplify ((E.TYPE_CONSTRAINT ((T.V (tv2, b2, p2), T.V (tv1, b1, p1)), ls, deps, ids)) :: cs') l
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
@@ -3593,9 +3268,8 @@ fun unif env filters user =
 			     end
 		      | _ => continue ()
 	    end
-	  | fsimplify ((E.CSTTYP ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids)) :: cs') l =
 	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two explicit type variables";
-	     D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 	    if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
 	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is two explicit type variables"
@@ -3603,14 +3277,13 @@ fun unif env filters user =
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
 		 end)
-	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids)) :: cs') l =
 	    let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is an explicit tyvar and a type construction"
-		val _     = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
 	    end
-	  | fsimplify ((E.CSTTYN ((T.NV tnv1, T.NV tnv2), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NV tnv1, T.NV tnv2), ls, deps, ids)) :: cs') l =
 	    if T.eqTynamevar tnv1 tnv2
 	    then fsimplify cs' l
 	    else (case S.getValStateTn state tnv1 of
@@ -3621,10 +3294,10 @@ fun unif env filters user =
                       in fsimplify cs' l
                       end
 		    | SOME tn =>
-                      let val c = E.genCstTnAll tn (T.NV tnv2) ls deps ids false
+                      let val c = E.genCstTnAll tn (T.NV tnv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.CSTSEQ ((T.SV sqv1, sq2 as (T.SV sqv2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV sqv1, sq2 as (T.SV sqv2)), ls, deps, ids)) :: cs') l =
 	    if T.eqSeqvar sqv1 sqv2
 	    then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
@@ -3638,24 +3311,9 @@ fun unif env filters user =
                       let val c = E.genCstSqAll sq (T.SV sqv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.CSTTYP ((tyv as T.V (tv, b, p), ty), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.V (tv, b, p), ty), ls, deps, ids)) :: cs') l =
 	    let
 		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
-		val _ = if eqTypeCheck
-			then (D.printDebug 1 D.UNIF "* equality type error detected (eqTypeCheck)*";
-			      (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
-			      handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((5, (T.tyvarToInt tv)), (7, (T.tyvarToInt tv)))) deps l) cs' l;
-			      ())
-			else if (List.exists (fn x=>((T.tyvarToInt x)=(T.tyvarToInt tv))) (!T.eqTypeTyVars))
-			then (D.printDebug 2 D.UNIF "             - tyvar must be an equality type. Checking labels...";
-			      if (not (L.disjoint ls (!L.eqTypeWordLabels)))
-			      then D.printDebug 3 D.UNIF ("No equality type error. ls are "^(L.toString ls)^", eqTypeWordLabels are "^L.toString (!L.eqTypeWordLabels))
-			      else (D.printDebug 1 D.UNIF ("* equality type error detected *. ls are "^(L.toString ls)^", eqTypeWordLabels are "^L.toString (!L.eqTypeWordLabels));
-				    (* handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))) deps l) cs' l; *)
-				    handleSimplify (ERR.consPreError ERR.dummyId ls ids (EK.EqTypeRequired ((L.toInt l, (T.tyvarToInt tv)), (L.toInt l, (T.tyvarToInt tv)))) deps l) cs' l;
-				    ()))
-		        else ()
-		val _   = D.printDebug 3 D.UNIF ("             - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		val _   = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls));
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
@@ -3691,20 +3349,20 @@ fun unif env filters user =
 		   end
 		 | SOME ty' =>
 		   let val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
-		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids false
+		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
 		   in fsimplify (c :: cs') l
 		   end
 	    end
-	  | fsimplify ((E.CSTTYN ((T.NV tnv1, tnty2), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NV tnv1, tnty2), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateTn state tnv1 of
 		 NONE =>
 		 let val _ = S.updateStateTn state tnv1 (T.ND (tnty2, ls, deps, ids))
 		 in fsimplify cs' l end
 	       | SOME tnty =>
-		 let val c = E.genCstTnAll tnty tnty2 ls deps ids false
+		 let val c = E.genCstTnAll tnty tnty2 ls deps ids
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.CSTSEQ ((T.SV sqv1, sq2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV sqv1, sq2), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -3717,7 +3375,7 @@ fun unif env filters user =
 		 let val c = E.genCstSqAll sq sq2 ls deps ids
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.CSTROW ((T.RV rv, rt as T.RC _), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.RV rv, rt as T.RC _), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateRt state rv of
 		 NONE =>
 		 let val (rho, n) = decomptyrow rt ls deps ids
@@ -3741,7 +3399,7 @@ fun unif env filters user =
                | SOME rt' => raise EH.DeadBranch "")
 	  (* we update and store *)
 	  (* if it's 2 variables we raise deadbranch, same if it's 2 cons *)
-	  | fsimplify ((E.CSTLAB ((T.LV lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LV lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateLt state lv of
 		 NONE =>
 		 let val _ = S.updateStateLt state lv (T.LD (lt, ls, deps, ids))
@@ -3760,28 +3418,27 @@ fun unif env filters user =
 		      | _  => raise EH.DeadBranch ""
 		 end
                | SOME lt' => raise EH.DeadBranch "")
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFV tfv, seqty, lab), t2), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.A (T.TFV tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
                  let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-		     val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids false
+		     val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids
                  in fsimplify (c :: cs') l
                  end)
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
 		val _     = D.printDebug 2 D.UNIF "in fsimplify - constarint type is a type scheme instantiation"
-		val _     = D.printDebug 3 D.UNIF ("            - eqTypeCheck is set to "^Bool.toString(eqTypeCheck));
 		val labs = L.cons lab1 (L.cons lab2 ls)
 		(*val _ = D.printdebug2 (T.printty ty1)*)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
 		val _  = D.printDebug 3 D.UNIF    "             - calling genCstTyAll";
-		val c2 = E.genCstTyAll ty1 ty2 labs deps ids false
+		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
-	  | fsimplify ((E.CSTTYP ((t1 as T.A (T.TFD (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps, eqTypeCheck)) :: cs') l =
-	    fsimplify ((E.CSTTYP ((T.A (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((tc as (T.C (tnty, sq, lab1)), to as T.OR (sq', idor, poly, orKind, lab2)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.A (T.TFD (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
+	    fsimplify ((E.TYPE_CONSTRAINT ((T.A (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.C (tnty, sq, lab1)), to as T.OR (sq', idor, poly, orKind, lab2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let fun checkTn tnty labs stts deps seq =
 		    case tnty of
@@ -3815,7 +3472,7 @@ fun unif env filters user =
 			     | (((t, path) :: _), true, _) =>
 			       let val _ = S.updateStateOr state idor ([path], labs, stts, deps)
 				   val _  = D.printDebug 3 D.UNIF "in checkTn - calling genCstTyAll";
-				   val c = E.genCstTyAll tc t labs stts deps false
+				   val c = E.genCstTyAll tc t labs stts deps
 			       in fsimplify (c :: cs') l end
 			     | _ => raise EH.DeadBranch ""
 			end
@@ -3836,7 +3493,7 @@ fun unif env filters user =
 			    val stts0 = L.union deps deps'
 			    val deps0 = CD.union ids ids'
 			    val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-			    val c = E.genCstTyAll tc t labs0 stts0 deps0 false
+			    val c = E.genCstTyAll tc t labs0 stts0 deps0
 			in fsimplify (c :: cs') l
 			end)
 		 | SOME (paths, ls', deps', ids') =>
@@ -3846,7 +3503,7 @@ fun unif env filters user =
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
 		   end
 	    end
-	  | fsimplify ((E.CSTTYP ((T.E (n, tv, l1), T.OR (sq, _, poly, orKind, _)), ls, deps, ids, eqTypeCheck)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E (n, tv, l1), T.OR (sq, _, poly, orKind, _)), ls, deps, ids)) :: cs') l =
 	    let fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.tynameToInt (T.DUMMYTYNAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
@@ -3865,11 +3522,11 @@ fun unif env filters user =
 		    end
 	       else fsimplify cs' l
 	    end
-	  | fsimplify ((E.CSTROW _) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTLAB _) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTTYP ((ty1 as T.OR (sq1, i1, poly1, orKind1, lab1),
+	  | fsimplify ((E.ROW_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.LABEL_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.OR (sq1, i1, poly1, orKind1, lab1),
 				   ty2 as T.OR (sq2, i2, poly2, orKind2, lab2)),
-				  ls, deps, ids, eqTypeCheck)) :: cs') l =
+				  ls, deps, ids)) :: cs') l =
 	    let fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
@@ -3913,14 +3570,6 @@ fun unif env filters user =
 			   | _ => fsimplify cs' l)
 		      | ((typaths1, f1), (typaths2, f2), true) =>
 			let fun upd id typaths = S.updateStateOr state id (map (fn (_, y) => y) typaths, ls, deps, ids)
-			    (*val _ = D.printdebug2 (Bool.toString f1 ^ " " ^
-						   Bool.toString f2 ^ " " ^
-						   Int.toString (List.length typaths1) ^ " " ^
-						   Int.toString (List.length typaths2) ^ "\n" ^
-						   T.printty ty1 ^ "\n" ^
-						   T.printty ty2 ^ "\n" ^
-						   T.printseqty seq1 ^ "\n" ^
-						   T.printseqty seq2)*)
 			    val _ = if f2  (* f2 means that we've found a concrete match of seq1 in seq2 *)
 				       andalso isFullOr seq2 (* means that no row of seq2 is a var *)
 				       andalso (not (T.isPoly poly1))
@@ -3954,7 +3603,6 @@ fun unif env filters user =
 						  (L.unions [ls,   ls1,   ls2])
 						  (L.unions [deps, deps1, deps2])
 						  (CD.unions [ids,  ids1,  ids2])
-				    false
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -3962,7 +3610,7 @@ fun unif env filters user =
 		   (case gotoInOrSq path1 sq1 of
 			SOME t1 =>
 			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-			    val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1) false
+			    val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -3970,7 +3618,7 @@ fun unif env filters user =
 		   (case gotoInOrSq path2 sq2 of
 			SOME t2 =>
 			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-			    val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2) false
+			    val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -4000,45 +3648,9 @@ fun unif env filters user =
 		    * We've got to check that with 'match'. *)
 		   match sq1 sq2 ls deps ids
 	    end
-	  (*| fsimplify ((E.CSTGEN (env, cst1, cst2)) :: cs') l =
-	   (let val _ = run cst1
-		(*val csbind = cleanMultiCsBind (flattenEnv env) state filters l*)
-		val (env1, errop) = BI.cleanMultiCsBind env state filters l
-		val (tvl, labs, cds, domge) = BI.recomputeMonoTyVarInAll state O.empty (bindsVal env1)
-		val env2 = #1 (B.solveenv env1 state filters false)
-		val (cs'', tvlFn, tvlVa, env3) = BI.setBind env2 state filters domge l
-		(*val _ = D.printdebug2 (E.printEnv env1 "" ^ "\n" ^ E.printEnv env2 "" ^ "\n" ^ E.printEnv env3 "")*)
-		val _ = pushEnvToState env3 state
-		val _ = BI.recomputeMonoTyVarOut state tvl labs cds
-		val _ = BI.updateMonoTyVarIn state (tvlFn @ tvlVa)
-		(* Do we still need all the state at this point? *)
-		val _ = (fsimplify cs'' l; run cst2)
-		val _ = BI.updateMonoTyVarOut state tvlFn
-		val _ = remEnvFromState env3 state
-	    in case errop of
-		   SOME err => handleSimplify err cs' l
-		 | NONE     => fsimplify cs' l
-	    (* If we want to be able to remove cs'' then we have to duplicate the inpoints
-	     * when generating the CSTGEN constraint.  See test44. *)
-	    end handle unmatched err => handleSimplify err cs' l)
-	  | fsimplify ((E.CSTVAL (tvsbind1, tvsbind2, tvl, cst)) :: cs') l =
-	    let fun trans xs =
- 		    List.mapPartial (fn (tv, l') =>
-					if FI.testtodo filters l'
-					then SOME (tv, O.singleton l')
-					else NONE) xs
-		val tvsbind = trans (tvsbind1 @ tvsbind2)
-		val _ = app (fn (tv, ls) => S.updateStateGe state tv ([], ls, O.empty, CD.empty)) tvsbind
-		val _ = run cst
-		val _ = app (fn (tv, ls) => S.deleteStateGe state tv ([], ls, O.empty, CD.empty)) tvsbind
-		val (cs'', errop) = BI.compval tvsbind tvl state filters l
-	    in case errop of
-		   NONE => fsimplify (cs'' @ cs') l
-		 | SOME err => handleSimplify err cs' l
-	    end*)
 	  (* TODO: check that *)
-	  | fsimplify ((E.CSTENV ((E.ENVVAR (ev1, lab1), env2 as E.ENVVAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    if E.eqEnvvar ev1 ev2
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR (ev1, lab1), env2 as E.ENVVAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
+	    if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
 		      NONE =>
@@ -4050,7 +3662,7 @@ fun unif env filters user =
 			  val c = E.genCstEvAll env (E.ENVVAR (ev2, lab2)) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.CSTENV ((E.ENVVAR (ev, lab), env), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR (ev, lab), env), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -4061,192 +3673,34 @@ fun unif env filters user =
 		 let val cs''  = E.genCstEvAll env' env ls deps ids
 		 in fsimplify (cs'' :: cs') l
 		 end)
-	  | fsimplify ((E.CSTENV ((env1 as E.ENVCON _, env2 as E.ENVCON _), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ENV_CONSTRAINT ((env1 as E.ENVCON _, env2 as E.ENVCON _), ls, deps, ids)) :: cs') l =
 	    let val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
 	    end
-	  (*| fsimplify ((E.CSTEGN ((ev0, ev1, ev2, ev3, lab, b), cst)) :: cs') l =
-	   let (* 0: signature, 2: structure, 1: translucent, 3: opaque *)
-	       val _ = run cst
-	       (*val _ = D.printdebug2 ("--\n" ^ E.printEnv env1 "" ^ "\n" ^ E.printEnv env2 "" ^ "\n")*)
-	       (*val _ = D.printdebug2 ("--\n" ^ S.printState state ^ "\n")*)
-	       (*val _ = D.printdebug2 ("--" ^ O.toString ll1 ^ " -- " ^ O.toString ll2 ^ "\n")*)
-	       (*val _ = D.printdebug2 (O.printelt lab)*)
-	       val btest = FI.testtodo filters lab
-	       val (csV, csT, errop) =
-		   if btest
-		   (*orelse
-		    (not b andalso not btest)*)
-		   (* if not b and not (FI.testtodo filters lab) then we still need to
-		    * do the rest with tns at NONE.
-		    * That's the btest below. *)
-		   then let val ((env0, labs0, deps1, asmp1),
-				 (env2, labs2, deps2, asmp2)) =
-				(B.solveenv (E.ENVVAR ev0) state filters true,
-				 B.solveenv (E.ENVVAR ev2) state filters true)
-			    (* First we build the environments associated to the structure and signature,
-			     * then we refresh the environment associated to the signature.
-			     * The (SOME O.empty) is to specify that we refresh all the internal and
-			     * explicit type variables. *)
-			    (*val _    = D.printdebug2 (E.printEnv env2 "")*)
-			    val env0 = B.freshenv' env0 (SOME O.empty) false
-			    (*(2010-03-03)We only refresh env2 to refresh the explicit type variables.
-			     * We then could have a faster function that does less work! *)
-			    val env2 = B.freshenv' env2 (SOME O.empty) true
-			    (*val _    = D.printdebug2 (E.printEnv env0 "")*)
-			    (* tfun are the type functions of the structure/realisation specified
-			     * by the signature. *)
-			    val tfun  = B.getTyFunEnv env0 env2
-			    val (cs0, env1) = B.genTyFunEnv' env0 tfun
-			    val labs1 = O.cons lab labs0
-			    val ls'   = L.union labs1 labs2 (* lab is in labs1 *)
-			    val deps' = L.union deps1 deps2
-			    val ids'  = CD.union asmp1 asmp2
-			    val cs1   = case ev1 of
-					    NONE => []
-					  | SOME ev =>
-					    S.updateStateEv state ev (env1, labs1, deps1, asmp1)
-			    val cs3   = case ev3 of
-					    NONE => []
-					  | SOME ev =>
-					    let val env3 = B.freshenv' (B.renameenv' env0) (SOME O.empty) false
-					    in S.updateStateEv state ev (env3, labs1, deps1, asmp1)
-					    end
-			    (*val _ = D.printdebug2 (S.printState state  ^ "\n---" ^
-						     Int.toString ev1    ^   "---" ^
-						     Int.toString ev2    ^   "---" ^
-						     E.printEnv env1 ""  ^ "\n")*)
-			    (* NOTE: IF env2 IS A VARIABLE HERE THEN WE CAN TAKE env1 AS THE NON
-			     * GENERALISED ENVIRONMENT.  No we can't do that because it will happen
-			     * during enumeration (when removing labels) and it might cause type
-			     * errors to occur for typable programs.
-			     * We might however tag ev2 when dealing with a dummy structure in
-			     * the basis. *)
-			    (*val _ = D.printdebug2 (E.printEnv env1  "" ^ "\n" ^
-						     E.printEnv env2  "" ^ "\n" ^
-						     E.printEnv env2' "")*)
-			    (*(2010-03-03)The second constraint set if for datatypes and type functions.*)
-			    val (cs2, cs2') = genenv env1 env2 ls' deps' ids' lab filters b
-			in ((decorateCst cs0 ls' deps' ids') @ cs1 @ cs2 @ cs3, cs2', NONE)
-			end
-			handle unmatched err => ([], [], SOME err)
-			     | unbwhere  err => ([], [], SOME err)
-			     | misscons  err => ([], [], SOME err)
-			     | dattyp    err => ([], [], SOME err)
-		   else ([], [], NONE)
-	   in case errop of
-		  NONE =>
-		  let val _ = sigVsStrON ()
-		      val _ = fsimplify csV l
-		      val _ = sigVsStrTypON ()
-		      val _ = fsimplify csT l
-		      val _ = sigVsStrTypOFF ()
-		      val _ = sigVsStrOFF ()
-		  in fsimplify cs' l
-		  end
-		| SOME err => handleSimplify err cs' l
-	   end*)
-	  (*| fsimplify ((E.CSTCLS ((E.VCL _, E.VCL _), ls, deps, ids)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((E.VCL cv, class), ls, deps, ids)) :: cs') l =
-	    (case S.getValStateCl state cv of
-		 NONE =>
-		 let val cs'' = S.updateStateCl state cv (class, ls, deps, ids)
-		 (*val _ = D.printdebug2 ("[update]")*)
-		 in fsimplify (cs'' @ cs') l
-		 end
-               | SOME (class', ls', deps', ids') =>
-		 let val labs1 = L.union ls ls'
-		     val deps1 = L.union deps deps'
-		     val asmp1 = CD.union ids ids'
-		     val c     = E.genCstClAll class' class labs1 deps1 asmp1
-		 (*val _ = D.printdebug2 (E.printClass class' ^ " " ^ E.printClass class)*)
-		 in fsimplify (c :: cs') l
-		 end)
-	  | fsimplify ((E.CSTCL ((E.CCL (cl1, lab1, id1, true), E.CCL (cl2, lab2, id2, false)), ls, deps, ids)) :: cs') l =
-	    if (CL.classIsCON cl2 orelse CL.classIsEXC cl2)
-	       andalso
-	       (CL.classIsVAL cl1 orelse CL.classIsREC cl1)
-	    then let val lsrec = if CL.classIsREC cl1
-				 then CL.getClassRECst cl1
-				 else O.empty
-		 in if CL.classIsCON cl2
-		    then if CL.classIsREC cl1 andalso I.isLong id2
-			 then handleSimplify (ERR.consPreError ERR.dummyId (O.cons lab1 (L.union lsrec ls)) ids (EK.ConIsVar NONE) deps l) cs' l
-			 else let val ls1 = CL.getClassCON cl2
-			      (*val _ = D.printdebug2 ("foo")*)
-			      in if FI.testtodos filters ls1
-				 then handleSimplify (ERR.consPreError ERR.dummyId (O.cons lab1 (L.union lsrec (L.union ls1 ls))) CD.empty (EK.ValVarApp NONE) deps l) cs' l
-				 (*(2010-02-18)lsrec should be empty above*)
-				 else fsimplify cs' l
-			      end
-		    else let val ls1 = CL.getClassEXC cl2
-			 in if FI.testtodos filters ls1
-			    then handleSimplify (ERR.consPreError ERR.dummyId (O.cons lab1 (L.union lsrec (L.union ls1 ls))) ids (EK.ExcIsVar NONE) deps l) cs' l
-			    else fsimplify cs' l
-			 end
-		 end
-	    else if CL.classIsEXC cl2 andalso CL.classIsCON cl1
-	    then let val ls0 = CL.getClassEXC cl2
-		 in if FI.testtodos filters ls0
-		    then handleSimplify (ERR.consPreError ERR.dummyId (L.union ls0 ls) ids (EK.ExcIsDat NONE) deps l) cs' l
-		    else fsimplify cs' l
-		 end
-	    else if CL.classIsTYP cl2 andalso CL.classIsTYCON cl1
-	    then let val c = E.genCstSqAll (T.SV (CL.getTYP cl2))
-					   (T.SV (CL.getTYCONseq cl1))
-					   ls deps ids
-		 in fsimplify (c :: cs') l end
-	    else fsimplify cs' l
-	  | fsimplify ((E.CSTCL ((E.CCL (cl1, lab1, id1, false), E.CCL (cl2, lab2, id2, false)), ls, deps, ids)) :: cs') l =
-	    if CL.classIsTYP cl1 andalso CL.classIsTYP cl2
-	    then let val c = E.genCstSqAll (T.SV (CL.getTYP cl1))
-					   (T.SV (CL.getTYP cl2))
-					   ls deps ids
-		 in fsimplify (c :: cs') l end
-	    else if CL.classIsCON cl1
-		    andalso CL.isClassVar cl2 (*(2010-03-09)means that the second class is not for a binder but comes from a pattern*)
-		    andalso (CL.classIsVAL cl2 orelse CL.classIsREC cl2)
-	    then let val ls' = CL.getClassCON cl1 (*(2010-02-22)in Build.sml we should filter the CON and EXC classes as well so that we wouldn't have to test that!*)
-		 (*val _ = D.printdebug2 ("foo " ^ I.printLid id2 ^ " " ^ CL.toString cl2 ^ " " ^ CL.toString cl1 ^ " " ^ O.printelt lab2 ^ " " ^ O.printelt lab1)*)
-		 in if FI.testtodos filters ls'
-		    then handleSimplify (ERR.consPreError ERR.dummyId (O.cons lab2 (L.union ls' ls)) CD.empty (EK.ValVarApp NONE) deps l) cs' l
-		    else fsimplify cs' l
-		 end
-	    else if CL.classIsCON cl2
-		    andalso CL.isClassVar cl1
-		    andalso (CL.classIsVAL cl1 orelse CL.classIsREC cl1)
-	    then let val ls' = CL.getClassCON cl2
-		 (*val _ = D.printdebug2 ("bar")*)
-		 in if FI.testtodos filters ls'
-		    then handleSimplify (ERR.consPreError ERR.dummyId (O.cons lab1 (L.union ls' ls)) CD.empty (EK.ValVarApp NONE) deps l) cs' l
-		    else fsimplify cs' l
-		 end
-	    else fsimplify cs' l
-	  | fsimplify ((E.CSTCL _) :: cs') l = raise EH.DeadBranch ""*)
 	  (*(2010-04-16)TODO:*)
-	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVSEQ y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVCST y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.CSTENV ((E.ENVOPN x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVOPN x, E.ENVSEQ y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVOPN x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVOPN x, E.ENVCST y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.CSTENV ((E.ENVCST x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCST x, E.ENVSEQ y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCST x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCST x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCST x, E.ENVCST y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.CSTENV ((E.ENVCON x, E.ENVSEQ y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCON x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTENV ((E.ENVCON x, E.ENVCST y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.CSTTYF ((T.TFV tfv, tyfun), labs, stts, deps)) :: cs') l =
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TFV tfv, tyfun), labs, stts, deps)) :: cs') l =
 	    (case S.getValStateTf state tfv of
 		 NONE =>
 		 let val _ = S.updateStateTf state tfv (collapseTf tyfun labs stts deps)
@@ -4256,17 +3710,17 @@ fun unif env filters user =
 		 let val c     = E.genCstTfAll tyfun' tyfun labs stts deps
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.CSTTYF ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
-		val _  = D.printDebug 3 D.UNIF "in fsimplify (CSTTYF constructor) - calling genCstTyAll";
-		val c2 = E.genCstTyAll ty1    ty2    labs stts deps false
+		val _  = D.printDebug 3 D.UNIF "in fsimplify (FUNCTION_TYPE_CONSTRAINT constructor) - calling genCstTyAll";
+		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
 	    (*val _ = D.printdebug2 (S.printState state)*)
 	    (*val _ = D.printdebug2 (L.toString labs)*)
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
-	  | fsimplify ((E.CSTTYF ((tyfun1, tyfun2 as T.TFV tfv), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.CSTTYF ((tyfun2, tyfun1), labs, stts, deps)) :: cs') l
-	  | fsimplify ((E.CSTCLS ((CL.CLVAR clvar, cl), labs, stts, deps)) :: cs') l =
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tyfun1, tyfun2 as T.TFV tfv), labs, stts, deps)) :: cs') l =
+	    fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tyfun2, tyfun1), labs, stts, deps)) :: cs') l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR clvar, cl), labs, stts, deps)) :: cs') l =
 	    (case S.getValStateCl state clvar of
 		 NONE =>
 		 let val _ = S.updateStateCl state clvar (cl, labs, stts, deps)
@@ -4278,9 +3732,9 @@ fun unif env filters user =
 		     val c     = E.genCstClAll cl' cl labs0 stts0 deps0
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.CSTCLS ((x, CL.CLVAR cv), ls, deps, ids)) :: cs') l =
-	    fsimplify ((E.CSTCLS ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTCLS ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((x, CL.CLVAR cv), ls, deps, ids)) :: cs') l =
+	    fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
 	    let fun genError kind =
 		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts l
 		    in handleSimplify err cs' l
@@ -4369,33 +3823,33 @@ fun unif env filters user =
 		 | (CL.EX0, CL.EX1) => genError (EK.ConsArgNApp (0, 0))
 		 | _ => fsimplify cs' l
 	    end
-	  | fsimplify ((E.CSTCLS ((CL.TYCON, CL.TYCON), _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.TYVAR, CL.TYVAR), _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.STR,   CL.STR),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.SIG,   CL.SIG),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.FUNC,  CL.FUNC),  _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.OC,    CL.OC),    _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((CL.ANY, _),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((_, CL.ANY),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.CSTCLS ((_, CL.TYCON), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.TYCON, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((_, CL.TYVAR), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.TYVAR, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((_, CL.STR),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.STR, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((_, CL.SIG),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.SIG, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((_, CL.FUNC),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.FUNC, _),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((_, CL.OC),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.CSTCLS ((CL.OC, _),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, CL.TYCON), _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, CL.TYVAR), _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR,   CL.STR),   _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG,   CL.SIG),   _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC,  CL.FUNC),  _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC,    CL.OC),    _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.ANY, _),   _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.ANY),   _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYCON), _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYVAR), _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.STR),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.SIG),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.FUNC),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC, _),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.OC),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC, _),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
 	  (**)
-	  | fsimplify ((E.CSTLET env) :: cs') l =
+	  | fsimplify ((E.LET_CONSTRAINT env) :: cs') l =
 	    let val _ = solveenv env false
 	    in fsimplify cs' l
 	    end
 	  (**)
-	  | fsimplify ((E.CSTSIG (ev0, ev1, ev2, ev3, lab)) :: cs') l =
+	  | fsimplify ((E.SIGNATURE_CONSTRAINT (ev0, ev1, ev2, ev3, lab)) :: cs') l =
 	    (* 0: signature, 2: structure, 1: translucent, 3: opaque *)
 	    let val btest = FI.testtodo filters lab
 	    (*val _ = D.printdebug2 (S.printState state)*)
@@ -4423,7 +3877,7 @@ fun unif env filters user =
 			 * If env2 is incomplete then we don't need to turn the datatypes
 			 * into dummy types, just the type functions. *)
 			(* NOTE: IF env2 IS A VARIABLE HERE THEN WE CAN TAKE env1 AS THE NON
-			 * GENERALISED ENVIRONMENT.  No we can't do that because it will happen
+			 * GENERALISED ENV.  No we can't do that because it will happen
 			 * during enumeration (when removing labels) and it might cause type
 			 * errors to occur for typable programs.
 			 * We might however tag ev2 when dealing with a dummy structure in
@@ -4431,8 +3885,8 @@ fun unif env filters user =
 			(*(2010-03-03)The second constraint set if for datatypes and type functions.*)
 			(*val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")*)
 			val (cs1, cs2) = matchSigStr env1 env2 lab filters L.empty L.empty CD.empty true err
-			(*val _ = D.printdebug2 (E.printEnv (E.ENVCST (E.singcsts (L.dummyLab, cs1))) "")*)
-			(*val _ = D.printdebug2 (E.printEnv (E.ENVCST (E.singcsts (L.dummyLab, cs2))) "")*)
+			(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, cs1))) "")*)
+			(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, cs2))) "")*)
 			val _ = sigVsStrON ()
 			val _ = fsimplify ((decorateCst cs0 (L.singleton lab) L.empty CD.empty) @ cs1) l
 			val _ = sigVsStrTypON ()
@@ -4460,7 +3914,7 @@ fun unif env filters user =
 	       else fsimplify cs' l
 	    end
 	  (**)
-	  | fsimplify ((E.CSTFUN (ev1, ev2, ev3, ev4, lab)) :: cs') l =
+	  | fsimplify ((E.FUNCTOR_CONSTRAINT (ev1, ev2, ev3, ev4, lab)) :: cs') l =
 	    (* functor: ev1 -> ev2, argument : ev3, result ev4 *)
 	    if FI.testtodo filters lab
 	    then let val env1 = buildFEnv (E.consEnvVar ev1 lab) state false
@@ -4484,7 +3938,7 @@ fun unif env filters user =
 		 end
 		 handle errorfound err => handleSimplify err cs' l
 	    else fsimplify cs' l
-	  | fsimplify ((E.CSTSHA (ev0, ev1, ev2, lab)) :: cs') l =
+	  | fsimplify ((E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in environment as I've done for WHR. *)
 	    (* 0: signature, 1: returned, 2: sharing *)
 	    if FI.testtodo filters lab
@@ -4515,32 +3969,32 @@ fun unif env filters user =
 		 handle errorfound err => handleSimplify err cs' l
 	    else fsimplify cs' l
 	  (**)
-	  | fsimplify ((E.CSTACC acc) :: cs') l = (solveacc acc l; fsimplify cs' l)
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.C   _), _, _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.E   _), _, _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.A   _), _, _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.OR  _), _, _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.CSTTYP ((T.GEN _, T.GEN _), _, _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
+	  | fsimplify ((E.ACCESSOR_CONSTRAINT acc) :: cs') l = (solveacc acc l; fsimplify cs' l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.C   _), _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.E   _), _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.A   _), _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.OR  _), _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
 	  (*(2010-06-23)We keep unifying but we should really chain the GENs.*)
 	  (* otherwise we swap the types of the evaluated constraint *)
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.GEN x, T.V   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.V   y, T.GEN x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.C   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.C   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.A   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.A   y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.E   x, T.GEN y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.GEN y, T.E   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.OR  x, T.E   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.OR  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYP ((T.C   x, T.E   y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYP ((T.E   y, T.C   x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTTYN ((T.NC  x, T.NV  y), ls, deps, ids, eqTypeCheck)) :: cs') l = fsimplify ((E.CSTTYN ((T.NV  y, T.NC  x), ls, deps, ids, eqTypeCheck)) :: cs') l
-	  | fsimplify ((E.CSTSEQ ((T.SC  x, T.SV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTSEQ ((T.SV  y, T.SC  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTENV ((E.ENVSEQ x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTENV ((E.ENVVAR y, E.ENVSEQ x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTENV ((E.ENVCON x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.CSTENV ((E.ENVVAR y, E.ENVCON x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.CSTENV _) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C   x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.V   y, T.C   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E   x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.V   y, T.E   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.V   y, T.OR  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN x, T.V   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.V   y, T.GEN x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.C   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.C   y, T.OR  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.A   y, T.OR  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C   x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.A   y, T.C   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E   x, T.A   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.A   y, T.E   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.OR  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.C   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.E   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.E   y, T.OR  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C   x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.E   y, T.C   x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.NV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((T.NV  y, T.NC  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC  x, T.SV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV  y, T.SC  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.SEQUENCE_ENV x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.ENVCON x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO
 
 	and handleSimplify err xs l =
 	    if bcontinue
@@ -4551,7 +4005,6 @@ fun unif env filters user =
 	    let val ret = fsimplify cs l
 	    in ret
 	    end
-
 
 	(* hack: in run I fold right because then all the context will
          * be treated before the CSTGEN and CSTVAL.  We can then
@@ -4585,7 +4038,7 @@ fun unif env filters user =
 	val timer = VT.startTimer ()
 	val _ = sigVsStrOFF ()
 	val _ = sigVsStrTypOFF ()
-	val ret = run (E.singcst (L.dummyLab, E.CSTLET env))
+	val ret = run (E.singcst (L.dummyLab, E.LET_CONSTRAINT env))
 	    handle errorex err =>
 		   ((*D.printdebug2 (L.toString (ERR.getL err));*)
 		    if L.isin L.builtinLab (ERR.getL err)
@@ -4599,20 +4052,5 @@ fun unif env filters user =
 
     in ret
     end
-(*val unifstate' = fn cs        =>
-		 fn projlab   =>
-		 fn filter    =>
-		 fn state     =>
-		 fn state'    =>
-		 fn bcontinue =>
-		    MLton.Profile.withData
-			(MLton.Profile.Data.malloc (),
-		      fn () => unifstate' cs filters state state' bcontinue)*)
-
-(*fun unifstate cs filters state =
-    unifstate' cs filters state NONE false
-
-fun unif cs filters =
-    unifstate' cs filters (S.initState ()) NONE false*)
 
 end

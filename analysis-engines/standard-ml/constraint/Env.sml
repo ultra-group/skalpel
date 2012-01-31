@@ -40,8 +40,6 @@ structure OME = SplayMapFn (OrdId)  (* map for Environments *)
 structure OMC = SplayMapFn (OrdKey) (* map for Constraints, should be OrdLab *)
 structure OMO = Fifo (*SplayMapFn (OrdLid) (* map for Open environments *)*)
 
-
-
 (* ====== TYPES/DATATYPES ====== *)
 
 (* ------ MAPPINGS ------ *)
@@ -127,20 +125,20 @@ datatype env        = ENVCON of {vids : varenv,
 				 ovcs : ovcenv,
 				 info : infoEnv}
 		    | ENVVAR of envvar * L.label
-		    | ENVSEQ of env * env
+		    | SEQUENCE_ENV of env * env
 		    | ENVLOC of env * env
 		    | ENVWHR of env * longtyp
 		    | ENVSHA of env * env
-		    | ENVSIG of env * env * matchKind
+		    | SIGNATURE_ENV of env * env * matchKind
 		    | ENVPOL of tyvenv * env
-		    | ENVDAT of I.idl  * env
+		    | DATATYPE_CONSTRUCTOR_ENV of I.idl  * env
 		    | ENVOPN of opnenv
 		    | ENVDEP of env EL.extLab
-		    | ENVFUN of cst
-		    | ENVCST of cst
+		    | FUNCTOR_ENV of cst
+		    | CONSTRAINT_ENV of cst
 		    | ENVPTY of string
 		    | ENVFIL of string * env * (unit -> env)
-		    | ENVTOP
+		    | TOP_LEVEL_ENV
 
      and acc        = ACCVAR of T.ty        accid EL.extLab
 		    | ACCETV of T.tyvar     accid EL.extLab
@@ -150,19 +148,19 @@ datatype env        = ENVCON of {vids : varenv,
 		    | ACCSIG of env         accid EL.extLab
 		    | ACCFUN of (env * env) accid EL.extLab
 
-     and ocst 	    = CSTTYP of (T.ty     * T.ty)     EL.extLabEq
-		    | CSTTYN of (T.tnty   * T.tnty)   EL.extLabEq
-		    | CSTSEQ of (T.seqty  * T.seqty)  EL.extLab
-		    | CSTROW of (T.rowty  * T.rowty)  EL.extLab
-		    | CSTLAB of (T.labty  * T.labty)  EL.extLab
-		    | CSTENV of (env      * env)      EL.extLab
-		    | CSTCLS of (CL.class * CL.class) EL.extLab
-		    | CSTTYF of (T.tyfun  * T.tyfun)  EL.extLab
-		    | CSTACC of acc
-		    | CSTLET of env
-		    | CSTSIG of evsbind
-		    | CSTFUN of evfbind
-		    | CSTSHA of shabind
+     and ocst 	    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
+		    | TYPENAME_CONSTRAINT of (T.tnty   * T.tnty)   EL.extLab
+		    | SEQUENCE_CONSTRAINT of (T.seqty  * T.seqty)  EL.extLab
+		    | ROW_CONSTRAINT of (T.rowty  * T.rowty)  EL.extLab
+		    | LABEL_CONSTRAINT of (T.labty  * T.labty)  EL.extLab
+		    | ENV_CONSTRAINT of (env      * env)      EL.extLab
+		    | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
+		    | FUNCTION_TYPE_CONSTRAINT of (T.tyfun  * T.tyfun)  EL.extLab
+		    | ACCESSOR_CONSTRAINT of acc
+		    | LET_CONSTRAINT of env
+		    | SIGNATURE_CONSTRAINT of evsbind
+		    | FUNCTOR_CONSTRAINT of evfbind
+		    | SHARING_CONSTRAINT of shabind
      and cst        = OCST of ocst list cmap
 
 type extstr = env bind
@@ -212,31 +210,10 @@ fun printEnvVar v = "e" ^ Int.toString v
 
 fun printEnvVarList xs = printlistgen xs printEnvVar
 
-
-(*fun printStatus V = "V"
-  | printStatus D = "D"
-  | printStatus C = "C"
-  | printStatus I = "I"
-  | printStatus E = "E"
-
-fun printIdLab (ID (id, lab, st)) ascid =
-    "ID(" ^ I.printId   id  ^
-    ","   ^ L.printelt  lab ^
-    ","   ^ printStatus st  ^ ")"
-  | printIdLab (LA lab) _ =
-    "LA(" ^ L.printelt lab ^ ")"*)
-
 fun printOp NONE _ = "-"
   | printOp (SOME x) f = f x
 
-(*fun printDepsOp     x = printOp x L.toString
-fun printStatusOp   x = printOp x L.printelt*)
 fun printEvOp       x = printOp x printEnvVar
-(*fun printConsEvOp   x = printOp x (fn x => C.printBind' x (fn _ => "()") printEnvVar)
-(*fun printClStrEnvOp x = printOp x CL.printStrEnv*)
-
-fun printAsmpOp  x ascid = printOp x (fn x => I.printLidSt x ascid)
-fun printIdLabOp x ascid = printOp x (fn x => printIdLab   x ascid)*)
 
 fun printTnKind DAT = "DAT"
   | printTnKind TYP = "TYP"
@@ -266,28 +243,6 @@ and printVarEnv xs ind = printGenEnv xs ind printExtVarList
 and printTypEnv xs ind = printGenEnv xs ind printExtTypList
 and printOvcEnv xs ind = printGenEnv xs ind printExtSeqList
 
-(*fun printexplexptv xs =
-    printlistgen
-	xs
-	(fn (x, nexp) => "(" ^ T.printtyvar x ^ "," ^ X.printnonexp nexp ^ ")")
-
-fun printTvsBind xs =
-    printlistgen
-	xs
-	(fn (x, lab) =>	"(" ^ T.printtyvar x ^ "," ^ L.printelt lab ^ ")")
-
-fun printAccid {id, class, lab} =
-    "(" ^ I.printLid  id    ^
-    "," ^ CL.toString class ^
-    "," ^ L.printelt  lab   ^ ")"
-
-fun printClass (VCL cv) = "VCL(" ^ CL.printClassVar cv ^ ")"
-  | printClass (CCL (cl, lab, lid, b)) =
-    "CCL(" ^ CL.toString   cl  ^
-    ","    ^ L.printelt    lab ^
-    ","    ^ I.printLid    lid ^
-    ","    ^ Bool.toString b   ^ ")"*)
-
 fun printOpnKind OST = "OST"
   | printOpnKind DRE = "DRE"
   | printOpnKind ISI = "ISI"
@@ -303,17 +258,6 @@ fun printOpnEnv xs ind =
 	    ("", "")
 	    xs)
 
-(*fun printOpnEnv' xs assoc =
-    "[" ^ (#1 (OMO.foldl
-		   (fn ((i, l, k, e), (y, z)) =>
-		       (y ^ z ^
-			"(" ^ I.printLid'    i assoc ^
-			"," ^ L.printelt     l       ^
-			"," ^ printOpnKind   k       ^ ")",
-			","))
-		   ("", "")
-		   xs)) ^ "]"*)
-
 fun printTnmap xs =
     printlistgen xs (fn {id, lab, kind, name} =>
 			"(" ^ I.printId     id   ^
@@ -321,19 +265,11 @@ fun printTnmap xs =
 			"," ^ printTnKind   kind ^
 			"," ^ T.printtyname name ^ ")")
 
-(*fun printBindK LET = "LET"
-  | printBindK DEC = "DEC"
-  | printBindK FN  = "FN"*)
-
 fun printNfoEnv {lab, cmp, tns, fct} =
     "(" ^ L.printLab    lab ^
     "," ^ Bool.toString cmp ^
     "," ^ printTnmap    tns ^
     "," ^ Bool.toString fct ^ ")"
-
-
-(*fun printcsbsgen csenv assoc f1 f2 =
-    printlistgen csenv (fn x => C.printBind x f1 f2 assoc)*)
 
 fun printEvsBind (ev1, ev2, ev3, ev4, lab) =
     "(" ^ printEnvVar ev1 ^
@@ -386,22 +322,22 @@ and printEnv (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) ind =
   | printEnv (ENVVAR (ev, lab))  _   = "ENVVAR(" ^ printEnvVar ev ^ "," ^ L.printLab lab ^ ")"
   | printEnv (ENVOPN opnenv)     ind = "ENVOPN(" ^ printOpnEnv opnenv ind ^ ")"
   | printEnv (ENVDEP extenv)     ind = "ENVDEP(" ^ EL.printExtLab' extenv (fn env => printEnv env ind) ^ ")"
-  | printEnv (ENVFUN cst) ind = "ENVCST(" ^ printcst' cst ind I.emAssoc ^ ")"
-  | printEnv (ENVCST cst) ind = "ENVCST(" ^ printcst' cst ind I.emAssoc ^ ")"
-  | printEnv (ENVSEQ (env1, env2)) ind =
-    "ENVSEQ(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
+  | printEnv (FUNCTOR_ENV cst) ind = "CONSTRAINT_ENV(" ^ printcst' cst ind I.emAssoc ^ ")"
+  | printEnv (CONSTRAINT_ENV cst) ind = "CONSTRAINT_ENV(" ^ printcst' cst ind I.emAssoc ^ ")"
+  | printEnv (SEQUENCE_ENV (env1, env2)) ind =
+    "SEQUENCE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
   | printEnv (ENVLOC (env1, env2)) ind =
     "ENVLOC(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
   | printEnv (ENVWHR (env, longtyp)) ind =
     "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTyp longtyp ind ^ ")"
   | printEnv (ENVSHA (env1, env2)) ind =
     "ENVSHA(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
-  | printEnv (ENVSIG (env1, env2, kind)) ind =
-    "ENVSIG(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")"
+  | printEnv (SIGNATURE_ENV (env1, env2, kind)) ind =
+    "SIGNATURE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")"
   | printEnv (ENVPOL (tyvenv, env)) ind =
     "ENVPOL(" ^ printTyvEnv tyvenv ind ^ ",\n" ^ ind ^ printEnv env ind ^ ")"
-  | printEnv (ENVDAT (idl, env)) ind =
-    "ENVDAT(" ^ I.printIdL idl ^ "," ^ printEnv env ind ^ ")"
+  | printEnv (DATATYPE_CONSTRUCTOR_ENV (idl, env)) ind =
+    "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL idl ^ "," ^ printEnv env ind ^ ")"
   | printEnv (ENVPTY st) ind = "ENVPTY(" ^ st ^ ")"
   | printEnv (ENVFIL (st, env, stream)) ind =
     "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
@@ -420,27 +356,27 @@ and printAcc (ACCVAR x) ind ascid =
     "ACCSIG(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
   | printAcc (ACCFUN x) ind ascid =
     "ACCFUN(" ^ EL.printExtLab x (fn x => printAccId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
-and printocst (CSTTYP x) _ ascid =
-    "  TYP(" ^ EL.printExtLabEq x (fn x => printPair x T.printty') ascid ^ ")"
-  | printocst (CSTTYF x) _ ascid =
+and printocst (TYPE_CONSTRAINT x) _ ascid =
+    "  TYP(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
+  | printocst (FUNCTION_TYPE_CONSTRAINT x) _ ascid =
     "  TYF(" ^ EL.printExtLab x (fn x => printPair x T.printtyf') ascid ^ ")"
-  | printocst (CSTTYN x) _ ascid =
-    "  NAM(" ^ EL.printExtLabEq x (fn x => printPair x T.printtnty') ascid ^ ")"
-  | printocst (CSTSEQ x) _ ascid =
+  | printocst (TYPENAME_CONSTRAINT x) _ ascid =
+    "  NAM(" ^ EL.printExtLab x (fn x => printPair x T.printtnty') ascid ^ ")"
+  | printocst (SEQUENCE_CONSTRAINT x) _ ascid =
     "  SEQ(" ^ EL.printExtLab x (fn x => printPair x T.printseqty') ascid ^ ")"
-  | printocst (CSTROW x) _ ascid =
+  | printocst (ROW_CONSTRAINT x) _ ascid =
     "  REC(" ^ EL.printExtLab x (fn x => printPair x T.printrowty') ascid ^ ")"
-  | printocst (CSTLAB x) _ ascid =
+  | printocst (LABEL_CONSTRAINT x) _ ascid =
     "  LAB(" ^ EL.printExtLab x (fn x => printPair x T.printlabty) ascid ^ ")"
-  | printocst (CSTENV x) ind ascid =
+  | printocst (ENV_CONSTRAINT x) ind ascid =
     "  ENV(" ^ EL.printExtLab x (fn x => printPair x (fn x => printEnv x (ind ^ tab))) ascid ^ ")"
-  | printocst (CSTCLS x) ind ascid =
+  | printocst (IDENTIFIER_CLASS_CONSTRAINT x) ind ascid =
     "  CLS(" ^ EL.printExtLab x (fn x => printPair x CL.toString) ascid  ^ ")"
-  | printocst (CSTSIG evsbind) ind ascid = "  SIG(" ^ printEvsBind evsbind ^ ")"
-  | printocst (CSTFUN evfbind) ind ascid = "  FUN(" ^ printEvfBind evfbind ^ ")"
-  | printocst (CSTSHA shabind) ind ascid = "  SHA(" ^ printShaBind shabind ^ ")"
-  | printocst (CSTLET env)     ind ascid = "  LET(" ^ printEnv env (ind ^ "      ") ^ ")"
-  | printocst (CSTACC acc)     ind ascid = "  ACC(" ^ printAcc acc ind ascid ^ ")"
+  | printocst (SIGNATURE_CONSTRAINT evsbind) ind ascid = "  SIG(" ^ printEvsBind evsbind ^ ")"
+  | printocst (FUNCTOR_CONSTRAINT evfbind) ind ascid = "  FUN(" ^ printEvfBind evfbind ^ ")"
+  | printocst (SHARING_CONSTRAINT shabind) ind ascid = "  SHA(" ^ printShaBind shabind ^ ")"
+  | printocst (LET_CONSTRAINT env)     ind ascid = "  LET(" ^ printEnv env (ind ^ "      ") ^ ")"
+  | printocst (ACCESSOR_CONSTRAINT acc)     ind ascid = "  ACC(" ^ printAcc acc ind ascid ^ ")"
 and printocstlist []        ind1 ind2 ind3 ascid = ""
   | printocstlist [x]       ind1 ind2 ind3 ascid = ind2 ^ printocst x ind1 ascid
   | printocstlist (x :: xs) ind1 ind2 ind3 ascid = ind2 ^ printocst x ind1 ascid ^
@@ -456,145 +392,11 @@ and printcst' (OCST cst) ind ascid =
 	    ^ y) "" cst
 and printcst cst ascid = printcst' cst "" ascid
 
-(*(*fun printIdOp NONE _ = "-"
-  | printIdOp (SOME id) ascid = L.printLabst id ascid*)
-
-(*fun printIdStOp NONE _ = "-"
-  | printIdStOp (SOME (id, st)) ascid = "(" ^ L.printLabst id ascid ^ "," ^ printStatus st ^ ")"*)
-
-fun printtvop tvop = Option.getOpt (Option.map T.printtyvar tvop, "-")
-
-fun printcsstyl ll _ = "<" ^ L.toString ll ^ ">"
-
-fun printcsstys (ll, s) _ = "<" ^ L.toString ll ^ "," ^ s ^ ">"
-
-fun printcsstyz (ll, eo) ascid = "<" ^ L.toString ll         ^
-				 "," ^ printIdLabOp eo ascid ^
-				 ">"
-
-(*fun printcsstya (ll, eo) ascid = "<" ^ L.toString ll        ^
-				 "," ^ printIdStOp eo ascid ^
-				 ">"*)
-
-fun printcsstyt (ll, eo, (tv, l)) ascid = "<" ^ L.toString ll        ^
-					  "," ^ printAsmpOp eo ascid ^
-					  "," ^ "(" ^ T.printtyvar tv ^ "," ^ L.printLab l ^ ")" ^
-					  ">"
-
-fun printocss (CSM cssty) ascid = "MUL: " ^ printcsstyz cssty ascid (* MUL stands for MULti-occurrence                      *)
-  | printocss (CSC cssty) ascid = "APP: " ^ printcsstyz cssty ascid (* APP stands for APPlied variable                      *)
-  | printocss (CSSEXC cssty) ascid = "EXV: " ^ printcsstyz cssty ascid (* EXV stands for EXception as Variable                 *)
-  | printocss (CSJ cssty) ascid = "EXD: " ^ printcsstyl cssty ascid (* EXD stands for EXception as Data. cons.              *)
-  | printocss (CSI cssty) ascid = "INC: " ^ printcsstyl cssty ascid (* INC stands for INClusion                             *)
-  | printocss (CSA cssty) ascid = "ANA: " ^ printcsstyl cssty ascid (* ANA stands Applied and Not Applied value             *)
-  | printocss (CSF cssty) ascid = "FUN: " ^ printcsstyl cssty ascid (* FUN stands for FUN                                   *)
-  | printocss (CSN cssty) ascid = "ARG: " ^ printcsstyl cssty ascid (* ARG stands for ARGument                              *)
-  | printocss (CSV cssty) ascid = "FTV: " ^ printcsstyl cssty ascid (* FTV stands for Free Type Variable                    *)
-  | printocss (CSP cssty) ascid = "ASP: " ^ printcsstyl cssty ascid (* ASP stands for AS in a Pattern                       *)
-  | printocss (CSR cssty) ascid = "FNE: " ^ printcsstyl cssty ascid (* FNE stands for FN Expression                         *)
-  | printocss (CSE cssty) ascid = "REA: " ^ printcsstyl cssty ascid (* REA stands for REAl                                  *)
-  | printocss (CSD cssty) ascid = "IDE: " ^ printcsstyl cssty ascid (* IDE stands for free IDEntifier                       *)
-  | printocss (CSW cssty) ascid = "PAR: " ^ printcsstys cssty ascid (* PAR stands for PARsing                               *)
-  (*| printocss (CSB cssty) ascid = "BIN: " ^ printcsstyt cssty ascid (* BIN stands for BINding                               *)*)
-
-fun printcss css ascid = foldr (fn (x, y) => (printocss x ascid) ^ "\n" ^  y) "" css
-
-fun printcs (css, cst) ascid = printcss css ascid ^ printcst cst ascid
-
-
-
-(*(* print the constraints into a 'dot' input *)
-(* to finish *)
-
-
-fun toDotOcst (CSTTYP (ty1, ty2, cds)) n ascid =
-    T.printty' ty1 ^ " -- " ^ T.printty' ty2 ^
-    " [ label=\"(TYP," ^ Int.toString n ^ "," ^
-    CD.toStringListSt cds ascid ^ ")\" ];"
-  | toDotOcst (CSTTYN (tnty1, tnty2, cds)) n ascid =
-    T.printtnty' tnty1 ^ " -- " ^ T.printtnty' tnty2
-    ^ "[ label=\"(NAM," ^ Int.toString n ^ "," ^
-    CD.toStringListSt cds ascid ^ ")\" ];"
-  | toDotOcst (CSTSEQ (seqty1, seqty2, cds)) n ascid =
-    T.printseqty' seqty1 ^ " -- " ^ T.printseqty' seqty2 ^
-    " [ label=\"(SEQ," ^ Int.toString n ^ "," ^
-    CD.toStringListSt cds ascid ^ ")\" ];"
-  | toDotOcst (CSTROW (rt1, rt2, cds)) n ascid =
-    T.printrowty' rt1 ^ " -- " ^ T.printrowty' rt2 ^
-    " [ label=\"REC," ^ Int.toString n ^ "," ^
-    CD.toStringListSt cds ascid ^ ")\" ];"
-  | toDotOcst (CSTLAB (lt1, lt2, cds)) n ascid =
-    T.printlabty lt1 ^ " -- " ^ T.printlabty lt2 ^
-    " [ label=\"LAB," ^ Int.toString n ^ "," ^
-    CD.toStringListSt cds ascid ^ ")\" ];"
-  | toDotOcst (CSTENV (ce1, ce2)) n ascid =
-    "  ENV: "
-    ^ "<" ^ printEnv ce1 ""
-    ^ "," ^ printEnv ce2 ""
-    ^ ">"
-  | toDotOcst (CSTEGN (evsbind, cst)) n ascid =
-    "  EGN: "
-    ^ "<"  ^ printEvsBind evsbind
-    ^ "\n" ^ toDotCst' cst ascid
-    ^ ">"
-  | toDotOcst (CSTGEN (csbind, cst1, cst2)) n ascid =
-    "  GEN: "
-    ^ "<"  ^ printcsbind csbind ascid
-    ^ "\n" ^ toDotCst' cst1 ascid
-    ^ "\n" ^ toDotCst' cst2 ascid
-    ^ ">"
-  | toDotOcst (CSTVAL (tvsbind1, tvsbind2, tvl, cst)) n ascid =
-    "  VAL: "
-    ^ "<"   ^ printTvsBind tvsbind1
-    ^ ","   ^ printTvsBind tvsbind2
-    ^ ","   ^ printexplexptv tvl
-    ^ ",\n" ^ toDotCst' cst ascid
-    ^ ">"
-and toDotOcstList []        _ _     = ""
-  | toDotOcstList [x]       n ascid = toDotOcst x n ascid
-  | toDotOcstList (x :: xs) n ascid = toDotOcst x n ascid ^
-				      "\n" ^
-				      toDotOcstList xs n ascid
-and toDotCst' cst ascid =
-    foldricst
-	(fn (n, ocst, y) =>
-	    Int.toString n
-	    ^ ":"
-	    ^ toDotOcstList ocst n ascid
-	    ^ "\n"
-	    ^ y) "" cst
-and toDotCst cst ascid = toDotCst' cst ascid*)
-
-
-
-(* Accessors to a accid *)
-
-fun getAccidI (x : accid) = #id    x
-fun getAccidC (x : accid) = #class x
-fun getAccidL (x : accid) = #lab   x*)
-
-
-
 (* Bindings constructors *)
 
 fun consBind     id bind class lab poly = EL.initExtLab (C.consBind     id bind class lab poly) lab
 fun consBindPoly id bind class lab      = EL.initExtLab (C.consBindPoly id bind class lab)      lab
 fun consBindMono id bind class lab      = EL.initExtLab (C.consBindMono id bind class lab)      lab
-
-(*fun consextty    id ty   class lab poly = consBindSc   id ty           class lab poly*)
-(*fun consextty'   id ty   class lab      = consBindPoly id ty           class lab*)
-(*fun consexttyvar id tv   class lab      = consBindPoly id (T.consV tv) class lab*)
-(*fun consexttv    id tv   class lab poly = consBindSc   id tv           class lab poly*)
-(*fun consextseqty id sq         lab      = consBindPoly id sq  (CL.consOC ()) lab*)
-(*fun consexv      id env  class lab      = consBindPoly id env          class lab*)
-(*fun consexvar    id ev   class lab      = consBindPoly id (ENVVAR ev)    class lab*)
-
-(*fun gettys xs =
-    map (fn x => EL.mapExtLab x (fn {id, scope, bind = T.V (tv, _, _), class, lab, poly} =>
-				 C.consBindSc id tv class lab poly
-			       | _ => raise EH.DeadBranch ""))
-	xs*)
-
 
 fun consAccId lid sem class lab = {lid = lid, sem = sem, class = class, lab = lab}
 
@@ -607,18 +409,18 @@ fun getBindC x = C.getBindC (EL.getExtLabT x)
 fun getBindL x = C.getBindL (EL.getExtLabT x)
 fun getBindP x = C.getBindP (EL.getExtLabT x)
 
-val nextenvvar     = ref 0
-fun setnext     n  = nextenvvar := n
-fun getenvvar   () = !nextenvvar
-fun freshenvvar () = let val x = !nextenvvar in nextenvvar := x + 1; x end
-fun resetEnvVar () = setnext 0
+val nextEnvVar     = ref 0
+fun setNextEnvVar     n  = nextEnvVar := n
+fun getEnvVar   () = !nextEnvVar
+fun freshEnvVar () = let val x = !nextEnvVar in nextEnvVar := x + 1; x end
+fun resetEnvVar () = setNextEnvVar 0
 
-fun envvarToInt envvar = envvar
+fun envVarToInt envvar = envvar
 
-fun eqEnvvar ev1 ev2 = (ev1 = (ev2 : envvar))
+fun eqEnvVar ev1 ev2 = (ev1 = (ev2 : envvar))
 
 fun consEnvVar ev lab = ENVVAR (ev, lab)
-fun newEnvVar  lab    = consEnvVar (freshenvvar ()) lab
+fun newEnvVar  lab    = consEnvVar (freshEnvVar ()) lab
 
 fun envToEnvvar (ENVVAR ev) = ev
   | envToEnvvar _ = raise EH.DeadBranch "the environment should be a variable"
@@ -676,7 +478,7 @@ fun getICmp (ENVCON x) = #cmp (#info x)
 fun getIFct (ENVCON x) = #fct (#info x)
   | getIFct _          = raise EH.DeadBranch ""
 fun getITns (ENVCON x)        = #tns (#info x)
-  | getITns (ENVSEQ (e1, e2)) = (getITns e1) @ (getITns e2)
+  | getITns (SEQUENCE_ENV (e1, e2)) = (getITns e1) @ (getITns e2)
   | getITns (ENVVAR _)        = []
   | getITns env               = (print (printEnv env ""); raise EH.DeadBranch "")
 
@@ -710,7 +512,7 @@ fun updateOvcs ovcs (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs = _, info}
   | updateOvcs _ _ = raise EH.DeadBranch ""
 fun updateILab lab (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
     consEnvC vids typs tyvs strs sigs funs ovcs (updateInfoLab lab info)
-  | updateILab lab (ENVSEQ (env1, env2)) = ENVSEQ (updateILab lab env1, updateILab lab env2)
+  | updateILab lab (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateILab lab env1, updateILab lab env2)
   | updateILab lab (ENVLOC (env1, env2)) = ENVLOC (env1, updateILab lab env2)
   | updateILab _ env = env
 fun updateICmp cmp (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
@@ -721,7 +523,7 @@ fun updateITns tns (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
   | updateITns _ _ = raise EH.DeadBranch ""
 fun updateIFct fct (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
     consEnvC vids typs tyvs strs sigs funs ovcs (updateInfoFct fct info)
-  | updateIFct fct (ENVSEQ (env1, env2)) = ENVSEQ (updateIFct fct env1, updateIFct fct env2)
+  | updateIFct fct (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateIFct fct env1, updateIFct fct env2)
   | updateIFct fct (ENVLOC (env1, env2)) = ENVLOC (env1, updateIFct fct env2)
   | updateIFct _ env = env
 
@@ -743,12 +545,6 @@ fun isEmptyTyvEnv tyvenv = isEmptyIdEnv tyvenv
 fun isEmptyStrEnv strenv = isEmptyIdEnv strenv
 fun isEmptyOpnEnv opnenv = OMO.isEmpty opnenv
 
-(*fun isEmptyValEnv (env as ENVCON _) =
-    isEmptyIdEnv (getVids env) andalso
-    isEmptyIdEnv (getVars env) andalso
-    isEmptyIdEnv (getCons env)
-  | isEmptyValEnv _ = false*)
-
 (* tests whether an environment is empty *)
 fun isEmptyEnv (env as ENVCON _) =
     isEmptyIdEnv (getVids env) andalso
@@ -759,10 +555,8 @@ fun isEmptyEnv (env as ENVCON _) =
     isEmptyIdEnv (getFuns env) andalso
     isEmptyIdEnv (getOvcs env)
   | isEmptyEnv (ENVDEP extenv) = isEmptyEnv (EL.getExtLabT extenv)
-  | isEmptyEnv (ENVSEQ (env1, env2)) = isEmptyEnv env1 andalso isEmptyEnv env2
+  | isEmptyEnv (SEQUENCE_ENV (env1, env2)) = isEmptyEnv env1 andalso isEmptyEnv env2
   | isEmptyEnv env = false
-
-(*fun emEnvListAnd envl = foldr (fn (x, y) => isEmptyEnv x andalso y) true envl*)
 
 fun addenv  (v, semty) env = OME.insert (env,       v, semty)
 fun singenv (v, semty)     = OME.insert (OME.empty, v, semty)
@@ -798,45 +592,6 @@ fun doms envl = foldr (fn (x, y) => I.union (dom x) y) I.empty envl
 
 fun plusproj env id = case findenv id env of NONE => [] | SOME x => x
 
-(*fun updGenEnvLabs genenv labs stats cdeps =
-    mapenv (fn binds => map (fn x => EL.updExtLab x labs stats cdeps) binds) genenv
-
-(* Updating of the annotations of an environment.
- * Only used in Build.sml. *)
-fun updEnvLabs (env as ENVCON _) labs stats cdeps =
-    let val vids = updGenEnvLabs (getVids env) labs stats cdeps
-	val vars = updGenEnvLabs (getVars env) labs stats cdeps
-	val cons = updGenEnvLabs (getCons env) labs stats cdeps
-	val typs = updGenEnvLabs (getTyps env) labs stats cdeps
-	val tyvs = getTyvs env
-	val strs = updGenEnvLabs (getStrs env) labs stats cdeps
-	val sigs = updGenEnvLabs (getSigs env) labs stats cdeps
-	val funs = getFuns env
-	val ovcs = updGenEnvLabs (getOvcs env) labs stats cdeps
-    in consEnvC vids vars cons typs tyvs strs sigs funs ovcs (getInfo env)
-    end
-  | updEnvLabs (env as ENVVAR _) _ _ _ = env
-  | updEnvLabs (env as ENVSEQ _) _ _ _ = env
-  | updEnvLabs (env as ENVOPN _) _ _ _ = env
-  | updEnvLabs (env as ENVCST _) _ _ _ = env
-  | updEnvLabs (INJSTR x) labs stats cdeps = INJSTR (EL.updExtLab x labs stats cdeps)
-  | updEnvLabs (INJTYP x) labs stats cdeps = INJTYP (EL.updExtLab x labs stats cdeps)
-  | updEnvLabs (INJVID x) labs stats cdeps = INJVID (EL.updExtLab x labs stats cdeps)
-
-
-(*(**)
-fun isInVidsEnv (env as ENVCON _) id = I.isin id (dom (getVids env))
-  | isInVidsEnv _ _ = raise EH.DeadBranch ""
-fun isInVarsEnv (env as ENVCON _) id = I.isin id (dom (getVars env))
-  | isInVarsEnv _ _ = raise EH.DeadBranch ""
-fun isInConsEnv (env as ENVCON _) id = I.isin id (dom (getCons env))
-  | isInConsEnv _ _ = raise EH.DeadBranch ""
-fun isInTypsEnv (env as ENVCON _) id = I.isin id (dom (getTyps env))
-  | isInTypsEnv _ _ = raise EH.DeadBranch ""
-fun isInStrsEnv (env as ENVCON _) id = I.isin id (dom (getStrs env))
-  | isInStrsEnv _ _ = raise EH.DeadBranch ""*)*)
-
-
 fun bindToEnv binds =
     List.foldr (fn (x, genenv) => uenv [singenv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emgen binds
 
@@ -850,7 +605,7 @@ fun envsToSeq [] = emenv
   | envsToSeq (env :: envs) =
     if isEmptyEnv env
     then envsToSeq envs
-    else ENVSEQ (env, envsToSeq envs)
+    else SEQUENCE_ENV (env, envsToSeq envs)
 
 val foldlOEnv = OMO.foldl
 fun appOEnv fapp env = OMO.app fapp env
@@ -860,24 +615,6 @@ fun uOEnv envl =
     foldl (fn (env1, env2) => OMO.foldl (fn (x, env) => addOEnv x env) env2 env1)
 	  emopn
 	  envl
-(*fun domOEnvO env = OMO.foldl (fn ((lid, _, OST), set) => L.add (L.buildKey lid) set
-			       | (_, set) => set) L.empty env
-fun domOEnvR env = OMO.foldl (fn ((lid, _, DRE), set) => L.add (L.buildKey lid) set
-			       | (_, set) => set) L.empty env
-fun domOEnvI env = OMO.foldl (fn ((lid, _, ISI), set) => L.add (L.buildKey lid) set
-			       | (_, set) => set) L.empty env
-
-fun extractExtTy idenv =
-    case (OME.listItemsi idenv) of
-	[(v, [extty])] => SOME (v, extty)
-      | _ => NONE
-
-(* Union of environmnent *)
-fun uenvEnvBindK DEC DEC = DEC
-  | uenvEnvBindK LET LET = LET
-  | uenvEnvBindK FN  FN  = FN
-  | uenvEnvBindK bkd1 bkd2 = (print (printBindK bkd1 ^ " " ^ printBindK bkd2);
-			      raise EH.DeadBranch "")*)
 
 fun uenvEnvInfo {lab = lab1, cmp = cmp1, tns = tns1, fct = fct1}
 		{lab = lab2, cmp = cmp2, tns = tns2, fct = fct2} =
@@ -903,275 +640,16 @@ fun uenvEnvC (ENVCON {vids = vids1, typs = typs1, tyvs = tyvs1, strs = strs1,
     then y
     else if isEmptyEnv y
     then x
-    else ENVSEQ (x, y)
-  (*| uenvEnvC _ _ = raise EH.DeadBranch "trying to union non mapping environments"*)
-
-(*fun flatUEnv [] = []
-  | flatUEnv ((ENVSEQ (env1, env2)) :: xs) = flatUEnv (env1 :: env2 :: xs)
-  | flatUEnv (x :: xs) = x :: (flatUEnv xs)*)
+    else SEQUENCE_ENV (x, y)
 
 fun uenvEnv [] = emenv
-  | uenvEnv ((ENVSEQ (env1, env2)) :: xs) = uenvEnv (env1 :: env2 :: xs)
+  | uenvEnv ((SEQUENCE_ENV (env1, env2)) :: xs) = uenvEnv (env1 :: env2 :: xs)
   | uenvEnv [x] = x
   | uenvEnv (x :: xs) = uenvEnvC x (uenvEnv xs)
-  (*| uenvEnv (_ :: xs) = raise EH.DeadBranch "trying to union non mapping environments"*)
-
-
-(*(* Extracts the identifiers of a structure/signature. *)
-(* TODO: add something for opened structures (and functors?). *)
-
-fun tyEnvToTyIds tyenv =
-    OME.foldri
-	(fn (id, semty, map) =>
-	    foldl (fn ((bind, _, _, _), map) =>
-		      let val cl = C.getBindC bind
-		      in if CL.classIsDAT cl
-			 then CL.consMap id (CL.getClassDATcons cl) map
-			 else CL.consMap id (CL.CONS []) map
-		      end)
-		  map
-		  semty)
-	CL.emMap
-	tyenv
-
-(*fun strEnvToStrIds strenv =
-    OME.foldri
-	(fn (id, semty, map) =>
-	    foldl (fn (eenv, map) =>
-		      CL.consMap id (CL.getClassSTR (getBindC eenv)) map)
-		  map
-		  semty)
-	CL.emMap
-	strenv
-
-fun sigEnvToStrIds sigenv =
-    OME.foldri
-	(fn (id, semty, map) =>
-	    foldl (fn (eenv, map) =>
-		      CL.consMap id (CL.getClassSIG (getBindC eenv)) map)
-		  map
-		  semty)
-	CL.emMap
-	sigenv*)
-
-(*fun envToStrIds (env as ENVCON _) =
-    let val va = dom            (getVids env)
-	val re = dom            (getVars env)
-	val co = dom            (getCons env)
-	val ty = tyEnvToTyIds   (getTyps env)
-	val st = strEnvToStrIds (getStrs env)
-	val si = sigEnvToStrIds (getSigs env)
-	val oc = dom            (getOvcs env)
-	val os = L.empty
-	val dr = L.empty
-	val is = L.empty
-	val strenv = CL.consStrEnv re co va ty st si oc os dr is
-    in CL.ENV strenv
-    end
-  | envToStrIds (ENVOPN opnenv) =
-    CL.ENV (CL.consStrEnv I.empty
-			  I.empty
-			  I.empty
-			  CL.emMap
-			  CL.emMap
-			  CL.emMap
-			  I.empty
-			  (domOEnvO opnenv)
-			  L.empty
-			  L.empty)
-  | envToStrIds (ENVSEQ (env1, env2)) =
-    let val str1 = envToStrIds env1
-	val str2 = envToStrIds env2
-    in case (str1, str2) of
-	   (CL.ENV strenv1, CL.ENV strenv2) => CL.ENV (CL.unionStrEnv strenv1 strenv2)
-	 | _ => CL.UNB
-    end
-  (*(2010-04-20)WTF is that?????
-   * We should have strenv's as sequences as well and the best would be to get rid of them.*)
-  | envToStrIds _ = CL.UNB*)
-
-
-(* transformation of environment *)
-
-fun toPATsemty semty = map (fn x => EL.mapExtLab x (fn x => C.toPAT x)) semty
-fun toRECsemty semty = map (fn x => EL.mapExtLab x (fn x => C.toREC x)) semty
-fun toCONsemty semty = map (fn x => EL.mapExtLab x (fn x => C.toCON x)) semty
-fun toEXCsemty semty = map (fn x => EL.mapExtLab x (fn x => C.toEXC x)) semty
-fun toDATsemty semty = map (fn x => EL.mapExtLab x (fn x => C.toDAT x)) semty
-
-fun toPAT idenv = OME.map (fn semty => toPATsemty semty) idenv
-fun toREC idenv = OME.map (fn semty => toRECsemty semty) idenv
-fun toCON idenv = OME.map (fn semty => toCONsemty semty) idenv
-fun toEXC idenv = OME.map (fn semty => toEXCsemty semty) idenv
-fun toDAT idenv = OME.map (fn semty => toDATsemty semty) idenv
-
-fun toPATlabSemty semty labs = map (fn x => EL.mapExtLab x (fn x => C.toPATlabs x labs)) semty
-fun toPATlab      idenv labs = OME.map (fn semty => toPATlabSemty semty labs) idenv
-
-fun toVALlabSemty semty ll = map (fn x => EL.mapExtLab x (fn x => C.toVALlabs x ll)) semty
-fun toVALlab idenv ll = OME.map (fn semty => toVALlabSemty semty ll) idenv
-
-fun toCONlabSemty semty l = map (fn x => EL.mapExtLab x (fn x => C.toCONlab x l)) semty
-fun toCONlab idenv l = OME.map (fn semty => toCONlabSemty semty l) idenv
-
-fun toEXClabSemty semty l = map (fn x => EL.mapExtLab x (fn x => C.toEXClab x l)) semty
-fun toEXClab idenv l = OME.map (fn semty => toEXClabSemty semty l) idenv
-
-
-fun getDATconsSemtyC semty lab = map (fn (x, _, _, _) =>
-					 (C.getBindI x,
-					  C.getBindL x,
-					  lab,
-					  C.getBindT x,
-					  CL.getClassVID (C.getBindC x)))
-				 semty
-fun getDATconsC idenv lab = OME.foldr (fn (semty, cons) => (getDATconsSemtyC semty lab) @ cons) [] idenv
-
-(*fun getDATconsSemtyT semty = foldr (fn (x, y) => let val cl = C.getBindC x
-						 in if CL.classIsDAT cl
-						    then (CL.getClassDATconsC cl) @ y
-						    else y
-						 end) [] semty
-fun getDATconsT idenv = OME.foldr (fn (semty, cons) => (getDATconsSemtyT semty) @ cons) [] idenv*)
-
-fun toDATconsSemty semty xs = map (fn x => EL.mapExtLab x (fn x => C.toDATcons x xs)) semty
-fun toDATconsC idT idC lab =
-    let val cons = CL.genConsC (getDATconsC idC lab)
-    in OME.map (fn semty => toDATconsSemty semty cons) idT
-    end
-(*fun toDATconsT idT idT' =
-    let val cons = getDATconsT idT'
-    in OME.map (fn semty => toDATconsSemty semty cons) idT
-    end*)
-fun toDATconsI idT lid lab = (*(2010-04-21)The label is not used.*)
-    let val cons = CL.genConsI lid
-    in OME.map (fn semty => toDATconsSemty semty cons) idT
-    end
-
-
-fun toREClabsSemty semty labs = map (fn x => EL.mapExtLab x (fn x => C.toREClabs x labs)) semty
-fun toRECenv idenv1 idenv2 =
-    OME.mapi
-	(fn (id, semty) =>
-	    toREClabsSemty semty (C.getlabExtChkRec (stripExtLab (plusproj idenv2 id))))
-	idenv1
-
-(*fun toSTRstrSemty semty str = map (fn x => EL.mapExtLab x (fn x => (C.toSTRstr x str))) semty
-fun toSTRstr strenv str = (OME.map (fn semty => toSTRstrSemty semty str) strenv)
-
-fun toSIGstrSemty semty str = map (fn x => EL.mapExtLab x (fn x => (C.toSIGstr x str))) semty
-fun toSIGstr sigenv str = OME.map (fn semty => toSIGstrSemty semty str) sigenv*)
-
-fun getVAL semty = List.mapPartial (fn x => if C.isVAL (EL.getExtLabT x) then SOME x else NONE) semty
-fun getPAT semty = List.mapPartial (fn x => if C.isPAT (EL.getExtLabT x) then SOME x else NONE) semty
-fun getCON semty = List.mapPartial (fn x => if C.isCON (EL.getExtLabT x) then SOME x else NONE) semty
-fun getREC semty = List.mapPartial (fn x => if C.isREC (EL.getExtLabT x) then SOME x else NONE) semty
-fun getDAT semty = List.mapPartial (fn x => if C.isDAT (EL.getExtLabT x) then SOME x else NONE) semty
-fun getEXC semty = List.mapPartial (fn x => if C.isEXC (EL.getExtLabT x) then SOME x else NONE) semty
-
-fun getVALenv idenv = OME.mapPartial (fn y => case getVAL y of [] => NONE | z => SOME z) idenv
-fun getPATenv idenv = OME.mapPartial (fn y => case getPAT y of [] => NONE | z => SOME z) idenv
-fun getRECenv idenv = OME.mapPartial (fn y => case getREC y of [] => NONE | z => SOME z) idenv
-fun getCONenv idenv = OME.mapPartial (fn y => case getCON y of [] => NONE | z => SOME z) idenv
-fun getEXCenv idenv = OME.mapPartial (fn y => case getEXC y of [] => NONE | z => SOME z) idenv
-fun getDATenv idenv = OME.mapPartial (fn y => case getDAT y of [] => NONE | z => SOME z) idenv
-
-fun getPATb semty =
-    List.mapPartial (fn x => if (L.isEmpty o C.getPATval o EL.getExtLabT) x then NONE else SOME x)
-		    semty
-
-(* get the part of an environment which correspond to identifiers in pattern constrained to be
-   value variables because of "as" *)
-fun getPATbenv idenv = OME.mapPartial (fn y => case getPATb y of [] => NONE | z => SOME z) idenv
-
-fun toCloseSemty  semty clos = map (fn x => EL.mapExtLab x (fn x => C.setVALclose x clos)) semty
-fun toCloseVarenv idenv clos = OME.map (fn semty => toCloseSemty semty clos) idenv
-fun toClose       env   clos = updateVids (toCloseVarenv (getVids env) clos) env*)
-
 
 fun closeVids vids clos =
     mapenv (fn sem => map (fn x => EL.mapExtLab x (fn x => C.closeBind x clos)) sem)
 	   vids
-
-
-(*(* UDPATING OF STATUS OF IDS *)
-
-(* ids is a identifier set of constructors *)
-fun restrConstrExtty {id, scope, bind, class, lab, poly} ids =
-    C.consBindSc id
-		 bind
-		 class
-		 lab
-		 (P.restrictPoly poly ids)
-
-(* restrConstr restricts the poly fields in the idenv using the set
- * which is an identifier set of constructors. *)
-fun restrConstr idenv ids =
-    mapenv (fn semty => map (fn x => EL.mapExtLab x (fn x => restrConstrExtty x ids)) semty)
-	   idenv
-
-fun restrValueExpans (X.Expexp labs) _ = X.Expexp labs
-  | restrValueExpans (X.Expdep (lid as I.ID (id, l), evop, labs, sts)) idenv =
-    if I.isin id (dom idenv) andalso L.isEmpty sts
-    then X.Expdep (lid, evop, labs, C.getlabExtChkRec (stripExtLab (plusproj idenv id)))
-    else X.Expdep (lid, evop, labs, sts)
-  | restrValueExpans (X.Expdep x) _ = X.Expdep x
-(* We can't do anything if it is a long context dependency. *)
-
-fun restrValueMono (P.EXPANS expans) idenv = P.EXPANS (restrValueExpans expans idenv)
-  | restrValueMono (x as P.MONBIN _) _ = x
-
-fun restrValuePoly P.POLY      _     = P.POLY
-  | restrValuePoly (P.MONO xs) idenv = P.MONO (map (fn x => restrValueMono x idenv) xs)
-
-fun restrValueNonexp X.Nonexp      _     = X.Nonexp
-  | restrValueNonexp (X.Expans xs) idenv = X.Expans (map (fn x => restrValueExpans x idenv) xs)
-
-(*(* idenv is an environment of value variables *)
-fun restrValueExtty {id, scope, bind, class, lab, poly} idenv =
-    consextty id
-	      bind
-	      class
-	      lab
-	      (restrValuePoly poly idenv)*)
-
-(* THIS IS WHERE WE HAVE TO DO SOMETHING ELSE
- * (2010-04-06)? *)
-fun restrValueBind {id, scope, bind, poly, lab, class} idenv =
-    let val ls = C.getlabExtChkRec (stripExtLab (plusproj idenv id))
-	val cl = if CL.classIsVAL class andalso not (L.isEmpty ls)
-		 then CL.classToREClabs class lab ls
-		 else class
-    in C.consBind id
-		  scope
-		  bind
-		  cl
-		  lab
-		  (restrValuePoly poly idenv)
-    end
-
-fun restrValueBindList xs idenv = map (fn x => EL.mapExtLab x (fn x => restrValueBind x idenv)) xs
-
-(* idenv is an environment of value variables *)
-fun restrValue xs idenv = mapenv (fn semty => restrValueBindList semty idenv) xs
-
-fun updateStatus idenv domC idenvX = restrValue (restrConstr idenv domC) idenvX
-
-(* recompute the new idG4 and idX4 from env2 depending on the statuses in env1 *)
-fun updateEnvStatus env1 env2 =
-    let val domC3 = dom (getCons env1)
-	val domX3 = dom (getVars env1)
-	val idG4' = updateStatus
-			(outenv (getVids env2) (I.union domX3 domC3))
-			domC3
-			(getVars env1)
-	val idXt  = toRECenv (inenv (getVids env2) domX3) (getVars env1)
-	val idX4' = updateStatus
-			(uenv [getVars env2, idXt])
-			domC3
-			(getVars env1)
-    in (idG4', idX4')
-    end*)
 
 fun plusEnv (env1 as ENVCON _) (env2 as ENVCON _) =
     let val vids = plusenv (getVids env1) (getVids env2)
@@ -1185,17 +663,14 @@ fun plusEnv (env1 as ENVCON _) (env2 as ENVCON _) =
 	val env = consEnvC vids typs tyvs strs sigs funs ovcs info
     in env
     end
-  | plusEnv (ENVSEQ (env1, env2)) env3 = ENVSEQ (env1, plusEnv env2 env3)
-  | plusEnv env1 (ENVSEQ (env2, env3)) = ENVSEQ (plusEnv env1 env2, env3)
+  | plusEnv (SEQUENCE_ENV (env1, env2)) env3 = SEQUENCE_ENV (env1, plusEnv env2 env3)
+  | plusEnv env1 (SEQUENCE_ENV (env2, env3)) = SEQUENCE_ENV (plusEnv env1 env2, env3)
   | plusEnv env1 env2 =
     if isEmptyEnv env1
     then env2
     else if isEmptyEnv env2
     then env1
-    else ENVSEQ (env1, env2)
-
-
-(*fun dumPush x labs stts deps = x*)
+    else SEQUENCE_ENV (env1, env2)
 
 fun pushExtIdEnv idenv labs stts deps(* f*) =
     mapenv (fn sem => map (fn bind => EL.updExtLab bind(* (EL.mapExtLab bind (fn bind => C.mapBind bind (fn x => f x labs stts deps)))*)
@@ -1217,120 +692,53 @@ fun pushExtEnv (env as ENVCON _) labs stts deps =
 	     val ovcs = pushExtIdEnv (getOvcs env) labs stts deps(* dumPush*)
 	 in consEnvC vids typs tyvs strs sigs funs ovcs (getInfo env)
 	 end
-  | pushExtEnv (ENVSEQ (env1, env2)) labs stts deps =
-    ENVSEQ (pushExtEnv env1 labs stts deps, pushExtEnv env2 labs stts deps)
+  | pushExtEnv (SEQUENCE_ENV (env1, env2)) labs stts deps =
+    SEQUENCE_ENV (pushExtEnv env1 labs stts deps, pushExtEnv env2 labs stts deps)
   (*(2010-06-09)NOTE: we shouldn't need to push onto env1 because this environment
    * should be useless. *)
   | pushExtEnv (ENVDEP (env, labs0, stts0, deps0)) labs stts deps =
     pushExtEnv env (L.union labs0 labs) (L.union stts0 stts) (CD.union deps0 deps)
   | pushExtEnv env labs stts deps = ENVDEP (env, labs, stts, deps)
 
-(*and pushExtFunEnv (env1, env2) labs stts deps =
-    (pushExtEnv env1 labs stts deps,
-     pushExtEnv env2 labs stts deps)*)
-
-
-(*
-fun extractExtEnv strenv = case (OME.listItemsi strenv) of
-			       [(v, [STV extenv])] => SOME (v, extenv)
-			     |  _                  => NONE
-*)
-
-
-
-(* constraints *)
-
-
-(*fun conscsss css cst = (css, cst)*)
-(*fun getcsSyn (css, _) = css*)
-(*fun getcsSem (_, cst) = cst*)
-
 val emcss = []
 val emcst = OCST OMC.empty
 
-(*val emcs  = (emcss, emcst)*)
-
-(*fun getcsSemi cs i = case OMC.find (getcsSem cs, i) of NONE => [] | SOME x => x*)
 fun getcstSemi cst i = case OMC.find (cst, i) of NONE => [] | SOME x => x
-
-(*fun replacecsSyn css cs = conscsss css (getcsSem cs)
-fun replacecsSem cst cs = conscsss (getcsSyn cs) cst
-fun updatecsSyn css cs = conscsss css (getcsSem cs)
-fun updatecsSem cst cs = conscsss (getcsSyn cs) cst
-fun updatecstSem (v, cl) (OCST cst) = OCST (OMC.insert (cst, v, cl))
-
-fun projcsSyn css = (css, emcst)
-fun projcsSem cst = (emcss, cst)*)
 
 fun conscss c css = c :: css
 fun conscst (v, c) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
 fun conscsss cl css = cl @ css
 fun conscsts (v, cs) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, cs @ (getcstSemi cst (L.toInt v))))
 
-(*fun conscsSyn c cs = replacecsSyn (conscssSyn c (getcsSyn cs)) cs
-fun conscsSem (v, c) cs = replacecsSem (conscstSem (v, c) (getcsSem cs)) cs
-fun conscsSyns cl cs = replacecsSyn (conscssSyns cl (getcsSyn cs)) cs
-fun conscsSems (v, cl) cs = replacecsSem (conscstSems (v, cl) (getcsSem cs)) cs*)
-
 fun singcss  c  = [c]
 fun singcsss cs = cs
 fun singcst  (v, c)  = conscst  (v, c)  emcst
 fun singcsts (v, cs) = conscsts (v, cs) emcst
-
-(*fun singcsSyn c = projcsSyn (singcssSyn c)
-fun singcsSem (v, c) = projcsSem (singcstSem (v, c))
-fun singcsSyns cl = projcsSyn (singcssSyns cl)
-fun singcsSems (v, cl) = projcsSem (singcstSems (v, cl))*)
 
 fun uenv2css css1 css2 = css1 @ css2
 fun uenvcss xs = foldr (fn (x, y) => uenv2css x y) emcss xs
 fun uenv2cst (OCST cst1) (OCST cst2) = OCST (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
 fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emcst xs
 
-(*fun uenvcs cs1 cs2 = (uenvcsSyn (getcsSyn cs1) (getcsSyn cs2), uenv2cst (getcsSem cs1) (getcsSem cs2))
-fun uenvcss xs = foldr (fn (x, y) => uenvcs x y) emcs xs*)
-
-(*fun concatcsSyn css cs = replacecsSyn (uenv2css css (getcsSyn cs)) cs
-fun concatcsSem cst cs = replacecsSem (uenv2cst cst (getcsSem cs)) cs*)
-
 fun foldlicst ffold init (OCST cst) = OMC.foldli ffold init cst
 fun foldricst ffold init (OCST cst) = OMC.foldri ffold init cst
 fun mapicst   ffold      (OCST cst) = OCST (OMC.mapi ffold cst)
 
-(*fun getnbcst' cst = foldlicst
-			(fn (_, x, y) =>
-			    (foldr
-				 (fn (CSTGEN (_, cst1, cst2), z) =>
-				     (getnbcst' cst1) + (getnbcst' cst2) + z + 1
-				   | (CSTVAL (_, _, _, cst), z) =>
-				     (getnbcst' cst) + z + 1
-				   (*| (CSTBIND (_, cst1, cst2), z) =>
-				     (getnbcst' cst1) + (getnbcst' cst2) + z + 1*)
-				   | (_, z) => z + 1)
-				 0
-				 x) + y)
-			0
-			cst
-and getnbcst    cs = getnbcst' (getcsSem cs)
-fun getnbcsttop cs = foldlicst (fn (_, x, y) => (List.length x) + y) 0 (getcsSem cs)
-fun getnbcss    cs = List.length (getcsSyn cs)
-fun getnbcs     cs = (getnbcss cs) + (getnbcst cs)*)
-
 fun getnbcst' cst =
     foldlicst (fn (_, cs, nb) =>
-		  foldl (fn (CSTTYP _, nb) => 1 + nb
-			  | (CSTTYN _, nb) => 1 + nb
-			  | (CSTSEQ _, nb) => 1 + nb
-			  | (CSTROW _, nb) => 1 + nb
-			  | (CSTLAB _, nb) => 1 + nb
-			  | (CSTCLS _, nb) => 1 + nb
-			  | (CSTTYF _, nb) => 1 + nb
-			  | (CSTACC _, nb) => 1 + nb
-			  | (CSTSIG _, nb) => 1 + nb
-			  | (CSTFUN _, nb) => 1 + nb
-			  | (CSTSHA _, nb) => 1 + nb
-			  | (CSTENV ((env1, env2), _, _, _), nb) => (getnbcstenv env1) + (getnbcstenv env2) + nb
-			  | (CSTLET env, nb) => (getnbcstenv env) + nb)
+		  foldl (fn (TYPE_CONSTRAINT _, nb) => 1 + nb
+			  | (TYPENAME_CONSTRAINT _, nb) => 1 + nb
+			  | (SEQUENCE_CONSTRAINT _, nb) => 1 + nb
+			  | (ROW_CONSTRAINT _, nb) => 1 + nb
+			  | (LABEL_CONSTRAINT _, nb) => 1 + nb
+			  | (IDENTIFIER_CLASS_CONSTRAINT _, nb) => 1 + nb
+			  | (FUNCTION_TYPE_CONSTRAINT _, nb) => 1 + nb
+			  | (ACCESSOR_CONSTRAINT _, nb) => 1 + nb
+			  | (SIGNATURE_CONSTRAINT _, nb) => 1 + nb
+			  | (FUNCTOR_CONSTRAINT _, nb) => 1 + nb
+			  | (SHARING_CONSTRAINT _, nb) => 1 + nb
+			  | (ENV_CONSTRAINT ((env1, env2), _, _, _), nb) => (getnbcstenv env1) + (getnbcstenv env2) + nb
+			  | (LET_CONSTRAINT env, nb) => (getnbcstenv env) + nb)
 			nb
 			cs)
 	      0
@@ -1338,17 +746,17 @@ fun getnbcst' cst =
 
 and getnbcstenv (ENVCON _) = 0
   | getnbcstenv (ENVVAR _) = 0
-  | getnbcstenv (ENVSEQ (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
+  | getnbcstenv (SEQUENCE_ENV (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVLOC (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVSHA (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
-  | getnbcstenv (ENVSIG (env1, env2, _)) = (getnbcstenv env1) + (getnbcstenv env2)
+  | getnbcstenv (SIGNATURE_ENV (env1, env2, _)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVWHR (env, _)) = getnbcstenv env
   | getnbcstenv (ENVPOL (_, env)) = getnbcstenv env
-  | getnbcstenv (ENVDAT (_, env)) = getnbcstenv env
+  | getnbcstenv (DATATYPE_CONSTRUCTOR_ENV (_, env)) = getnbcstenv env
   | getnbcstenv (ENVOPN _) = 0
   | getnbcstenv (ENVDEP eenv) = getnbcstenv (EL.getExtLabT eenv)
-  | getnbcstenv (ENVFUN cst)  = getnbcst' cst
-  | getnbcstenv (ENVCST cst)  = getnbcst' cst
+  | getnbcstenv (FUNCTOR_ENV cst)  = getnbcst' cst
+  | getnbcstenv (CONSTRAINT_ENV cst)  = getnbcst' cst
   | getnbcstenv (ENVPTY _) = 0
   | getnbcstenv (ENVFIL (file, env, strm)) = (getnbcstenv env) + (getnbcstenv (strm ()))
   | getnbcstenv ENVTOP = 0
@@ -1362,284 +770,6 @@ fun getnbcss' css = List.length css
 fun getnbcss (envc, css) = getnbcss' css
 
 fun getnbcs (env, css) = (getnbcstenv env) + (getnbcss' css)
-
-(*fun csenvdom xs = foldr (fn ((csb, _, _, _), y) => I.add (C.getBindI csb) y) I.empty xs
-
-(*fun isEmptyCsBind (csenv1, csenv2, tcsenv, strcsenv, sigcsenv, clenv, opnbind, bk) =
-    List.null csenv1   andalso
-    List.null csenv2   andalso
-    List.null tcsenv   andalso
-    List.null strcsenv andalso
-    List.null sigcsenv andalso
-    List.null clenv    andalso
-    isEmptyOpnEnv opnbind*)
-
-(*fun isEmptyCsBind csbind = isEmptyEnv csbind*)
-
-(*fun consIdToBind {id, scope, bind, class, lab, poly} xs = C.consBind id xs bind class lab poly
-fun extenvToBind consid xs = consIdToBind consid xs*)
-
-fun nestcsOneSem v ocstl (cst as (OCST mcst)) =
-    case OMC.find (mcst, v) of
-	NONE =>
-	foldricst
-	    (fn (k, ocstl', (cst', false)) =>
-		let
-		    val (ocstl'', b) =
-			foldr
-			    (fn (CSTGEN (x, cst1, cst2), (ocstl'', false)) =>
-				let
-				    val (cst1', b) = nestcsOneSem v ocstl cst1
-				    val (cst2', b) = if b
-						     then (cst2, b)
-						     else nestcsOneSem v ocstl cst2
-				(*val _ = Debug.printdebug2 ("-" ^ (Bool.toString b) ^ "\n")*)
-				in ((CSTGEN (x, cst1', cst2')) :: ocstl'', b)
-				end
-			      | (CSTVAL (x, y, z, cst), (ocstl'', false)) =>
-				let
-				    val (cst', b) = nestcsOneSem v ocstl cst
-				in ((CSTVAL (x, y, z, cst')) :: ocstl'', b)
-				end
-			      | (CSTEGN (x, cst), (ocstl'', false)) =>
-				let
-				    val (cst', b) = nestcsOneSem v ocstl cst
-				in ((CSTEGN (x, cst')) :: ocstl'', b)
-				end
-			      (*| (CSTBIND (x, cst1, cst2), (ocstl'', false)) =>
-				let
-				    val (cst1', b) = nestcsOneSem v ocstl cst1
-				    val (cst2', b) = if b
-						     then (cst2, b)
-						     else nestcsOneSem v ocstl cst2
-				in ((CSTBIND (x, cst1', cst2')) :: ocstl'', b)
-				end*)
-			      | (x, (ocstl'', b)) => (x :: ocstl'', b))
-			    ([], false)
-			    ocstl'
-		in (conscstSems (k, ocstl'') cst', b)
-		end
-	      | (k, ocstl', (cst', true)) =>
-		(conscstSems (k, ocstl') cst', true))
-	    (emcst, false)
-	    cst
-      | _ => (conscstSems (v, ocstl) cst, true)
-
-fun nestcstSem cst cst' =
-    foldricst (fn (k, ocstl, cst'') => #1 (nestcsOneSem k ocstl cst'')) cst' cst
-
-fun nestcsSem cst (css', cst') = (css', nestcstSem cst cst')
-
-
-(* extracts the constraints associated to a label*)
-
-
-fun getConsLab (cst as (OCST mcst)) lab =
-    case OMC.find (mcst, lab) of
-	NONE =>
-	foldricst
-	    (fn (_, ocstl, xs) =>
-		if List.null xs
-		then foldr
-			 (fn (CSTGEN (_, cst1, cst2), xs) =>
-			     if List.null xs
-			     then
-				 let
-				     val xs = getConsLab cst1 lab
-				 in if List.null xs
-				    then getConsLab cst2 lab
-				    else xs
-				 end
-			     else xs
-			   | (CSTVAL (_, _, _, cst), xs) =>
-			     if List.null xs
-			     then getConsLab cst lab
-			     else xs
-			   | (CSTEGN (_, cst), xs) =>
-			     if List.null xs
-			     then getConsLab cst lab
-			     else xs
-			   (*| (CSTBIND (_, cst1, cst2), xs) =>
-			     if List.null xs
-			     then
-				 let
-				     val xs = getConsLab cst1 lab
-				 in if List.null xs
-				    then getConsLab cst2 lab
-				    else xs
-				 end
-			     else xs*)
-			   | (_, xs) => xs)
-			 []
-			 ocstl
-		else xs)
-	    []
-	    cst
-      | (SOME xs) => xs
-
-
-(* returns the environment variable associated to the signature of a resulting structure *)
-
-
-(*fun getSigOfStr cst ev =
-    foldricst
-	(fn (_, ocstl, evop) =>
-	    if Option.isSome evop
-	    then evop
-	    else foldr
-		     (fn (CSTGEN (_, cst1, cst2), evop) =>
-			 if Option.isSome evop
-			 then evop
-			 else
-			     let
-				 val evop = getSigOfStr cst1 ev
-			     in if Option.isSome evop
-				then evop
-				else getSigOfStr cst2 ev
-			     end
-		       | (CSTVAL (_, _, _, cst), evop) =>
-			 if Option.isSome evop
-			 then evop
-			 else getSigOfStr cst ev
-		       | (CSTEGN ((ev1, _, _, evop1, _), cst), evop) =>
-			 if Option.isSome evop
-			 then evop
-			 else (case evop1 of
-			      NONE => getSigOfStr cst ev
-			    | SOME ev2 => if ev = ev2
-					  then SOME ev1
-					  else getSigOfStr cst ev)
-		       | (_, evop) => evop)
-		     NONE
-		     ocstl)
-	NONE
-	cst
-*)
-
-fun getSigOfStr cst ev =
-    foldricst
-	(fn (k, ocstl, (cst, evop)) =>
-	    if Option.isSome evop
-	    then (conscstSems (k, ocstl) cst, evop)
-	    else
-		let
-		    val (ocstl, evop) =
-			foldr
-			    (fn (x as (CSTGEN (y, cst1, cst2)), (ocstl, evop)) =>
-				if Option.isSome evop
-				then (x :: ocstl, evop)
-				else
-				    let
-					val (cst, evop) = getSigOfStr cst1 ev
-				    in if Option.isSome evop
-				       then ((CSTGEN (y, cst, cst2)) :: ocstl, evop)
-				       else
-					   let
-					       val (cst', evop) = getSigOfStr cst2 ev
-					   in ((CSTGEN (y, cst, cst')) :: ocstl, evop)
-					   end
-				    end
-			      | (x as (CSTVAL (u, v, w, cst)), (ocstl, evop)) =>
-				if Option.isSome evop
-				then (x :: ocstl, evop)
-				else
-				    let
-					val (cst, evop) = getSigOfStr cst ev
-				    in ((CSTVAL (u, v, w, cst)) :: ocstl, evop)
-				    end
-			      | (x as (CSTEGN (y as (ev1, _, _, evop2, _, _), cst)), (ocstl, evop)) =>
-				if Option.isSome evop
-				then (x :: ocstl, evop)
-				else (case evop2 of
-					  NONE =>
-					  let
-					      val (cst, evop) = getSigOfStr cst ev
-					  in ((CSTEGN (y, cst)) :: ocstl, evop)
-					  end
-					| SOME ev' =>
-					  if ev = ev' (* then we remove the constraint and save it for later *)
-					  then (ocstl, SOME (ev1, cst))
-					  else
-					      let
-						  val (cst, evop) = getSigOfStr cst ev
-					      in ((CSTEGN (y, cst)) :: ocstl, evop)
-					      end)
-			      (*| (x as (CSTBIND (y, cst1, cst2)), (ocstl, evop)) =>
-				if Option.isSome evop
-				then (x :: ocstl, evop)
-				else
-				    let
-					val (cst, evop) = getSigOfStr cst1 ev
-				    in if Option.isSome evop
-				       then ((CSTBIND (y, cst, cst2)) :: ocstl, evop)
-				       else
-					   let
-					       val (cst', evop) = getSigOfStr cst2 ev
-					   in ((CSTBIND (y, cst, cst')) :: ocstl, evop)
-					   end
-				    end*)
-			      | (_, u) => u)
-			    ([], NONE)
-			    ocstl
-		in (conscstSems (k, ocstl) cst, evop)
-		end)
-	(emcst, NONE)
-	cst
-
-
-(* returns the environment constrained to be equal to the environment variable *)
-
-
-(* It will run forever if there is a circularity problem. *)
-fun getEnvEqVar cst ev =
-    foldricst
-	(fn (_, ocstl, envop) =>
-	    if Option.isSome envop
-	    then envop
-	    else foldr (fn (CSTGEN (_, cst1, cst2), envop) =>
-			   if Option.isSome envop
-			   then envop
-			   else let val envop = getEnvEqVar cst1 ev
-				in if Option.isSome envop
-				   then envop
-				   else getEnvEqVar cst2 ev
-				end
-			 | (CSTVAL (_, _, _, cst), envop) =>
-			   if Option.isSome envop
-			   then envop
-			   else getEnvEqVar cst ev
-			 | (CSTEGN (_, cst), envop) =>
-			   if Option.isSome envop
-			   then envop
-			   else getEnvEqVar cst ev
-			 | (CSTENV ((ENVVAR ev', env as (ENVCON _)), _, _, _), envop) =>
-			   if Option.isSome envop
-			   then envop
-			   else if ev = ev'
-			   then SOME env
-			   else envop
-			 | (CSTENV ((ENVVAR ev', ENVVAR ev''), _, _, _), envop) =>
-			   if Option.isSome envop
-			   then envop
-			   else if ev = ev'
-			   then getEnvEqVar cst ev''
-			   else envop
-			 (*| (CSTBIND (_, cst1, cst2), envop) =>
-			  if Option.isSome envop
-			  then envop
-			  else
-			      let
-				  val envop = getEnvEqVar cst1 ev
-			      in if Option.isSome envop
-				 then envop
-				 else getEnvEqVar cst2 ev
-			      end*)
-			 | (_, envop) => envop)
-		       NONE
-		       ocstl)
-	NONE
-	cst*)
-
 
 (* we get the labels at the csbindings *)
 
@@ -1666,34 +796,34 @@ fun getlabsenv (env as ENVCON _) =
 	(*(2010-04-06)Functors and type variables ?*)
     in ([L.unions [labsVids, labsTyps, labsTyvs, labsStrs, labsSigs, labsFuns, labsOvcs]], L.empty)
     end
-  | getlabsenv (ENVSEQ (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
+  | getlabsenv (SEQUENCE_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVLOC (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVSHA (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
-  | getlabsenv (ENVSIG (env1, env2, _)) = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
+  | getlabsenv (SIGNATURE_ENV (env1, env2, _)) = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVWHR (env, _))        = getlabsenv env (*Don't we want to get the label of the longtyp?*)
   | getlabsenv (ENVPOL (tyvenv, env))   = combineLabsEnv ([getlabsidenv tyvenv], L.empty) (getlabsenv env)
-  | getlabsenv (ENVDAT (idl, env))      = getlabsenv env
+  | getlabsenv (DATATYPE_CONSTRUCTOR_ENV (idl, env))      = getlabsenv env
   | getlabsenv (ENVOPN opnenv)          = ([getlabopnenv opnenv], L.empty)
   | getlabsenv (ENVDEP eenv)            = getlabsenv (EL.getExtLabT eenv)
-  | getlabsenv (ENVFUN cst)             = getlabscst cst
-  | getlabsenv (ENVCST cst)             = getlabscst cst
+  | getlabsenv (FUNCTOR_ENV cst)             = getlabscst cst
+  | getlabsenv (CONSTRAINT_ENV cst)             = getlabscst cst
   | getlabsenv (ENVVAR _)               = ([], L.empty)
   | getlabsenv (ENVPTY _)               = ([], L.empty)
   | getlabsenv (ENVFIL (f, env, strm))  = combineLabsEnv (getlabsenv env) (getlabsenv (strm ()))
   | getlabsenv ENVTOP                   = ([], L.empty)
-and getlabcsbindocst (CSTTYP _)   = ([], L.empty)
-  | getlabcsbindocst (CSTTYF _)   = ([], L.empty)
-  | getlabcsbindocst (CSTTYN _)   = ([], L.empty)
-  | getlabcsbindocst (CSTSEQ _)   = ([], L.empty)
-  | getlabcsbindocst (CSTROW _)   = ([], L.empty)
-  | getlabcsbindocst (CSTLAB _)   = ([], L.empty)
-  | getlabcsbindocst (CSTENV _)   = ([], L.empty)
-  | getlabcsbindocst (CSTCLS _)   = ([], L.empty)
-  | getlabcsbindocst (CSTACC _)   = ([], L.empty)
-  | getlabcsbindocst (CSTLET env) = getlabsenv env
-  | getlabcsbindocst (CSTSIG _)   = ([], L.empty)
-  | getlabcsbindocst (CSTFUN _)   = ([], L.empty)
-  | getlabcsbindocst (CSTSHA _)   = ([], L.empty)
+and getlabcsbindocst (TYPE_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (FUNCTION_TYPE_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (TYPENAME_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (SEQUENCE_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (ROW_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (LABEL_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (ENV_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (IDENTIFIER_CLASS_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (ACCESSOR_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (LET_CONSTRAINT env) = getlabsenv env
+  | getlabcsbindocst (SIGNATURE_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (FUNCTOR_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (SHARING_CONSTRAINT _)   = ([], L.empty)
 and getlabscst cst =
     foldricst
 	(fn (_, ocstl, labsenv) =>
@@ -1704,28 +834,19 @@ and getlabscst cst =
 	cst
 and getbindings env = getlabsenv env
 
-
-(**)
-
-(*fun genIdCst lid cl l = {id = lid, class = cl, lab = l}*)
-
 (* ====== Generation of type constraints ====== *)
 
 
 fun genCstAllGen x1 x2 labs sts cds = EL.consExtLab (x1, x2) labs sts cds
-fun genCstAllGenEq x1 x2 labs sts cds eqTypeCheck = EL.consExtLabEq (x1, x2) labs sts cds eqTypeCheck
-
-fun genCstTyAll x1 x2 labs sts cds eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTyAll - constructing CSTTYP with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-						  CSTTYP (genCstAllGenEq x1 x2 labs sts cds eqTypeCheck))
-fun genCstTfAll x1 x2 labs sts cds = CSTTYF (genCstAllGen x1 x2 labs sts cds)
-fun genCstTnAll x1 x2 labs sts cds eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTnAll - constructing CSTTYN with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-						  D.printDebug 3 D.ENV ("               - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
-						  CSTTYN (genCstAllGenEq x1 x2 labs sts cds eqTypeCheck))
-fun genCstSqAll x1 x2 labs sts cds = CSTSEQ (genCstAllGen x1 x2 labs sts cds)
-fun genCstRtAll x1 x2 labs sts cds = CSTROW (genCstAllGen x1 x2 labs sts cds)
-fun genCstLtAll x1 x2 labs sts cds = CSTLAB (genCstAllGen x1 x2 labs sts cds)
-fun genCstEvAll x1 x2 labs sts cds = CSTENV (genCstAllGen x1 x2 labs sts cds)
-fun genCstClAll x1 x2 labs sts cds = CSTCLS (genCstAllGen x1 x2 labs sts cds)
+fun genCstTyAll x1 x2 labs sts cds = TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstTfAll x1 x2 labs sts cds = FUNCTION_TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstTnAll x1 x2 labs sts cds = (D.printDebug 3 D.ENV ("in genCstTnAll - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
+						  TYPENAME_CONSTRAINT (genCstAllGen x1 x2 labs sts cds))
+fun genCstSqAll x1 x2 labs sts cds = SEQUENCE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstRtAll x1 x2 labs sts cds = ROW_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstLtAll x1 x2 labs sts cds = LABEL_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstEvAll x1 x2 labs sts cds = ENV_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstClAll x1 x2 labs sts cds = IDENTIFIER_CLASS_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 
 fun genAccAllGen x labs sts cds = EL.consExtLab x labs sts cds
 
@@ -1739,19 +860,16 @@ fun genAccIfAll x labs sts cds = ACCFUN (genAccAllGen x labs sts cds)
 
 
 fun genCstGen x1 x2 lab cds = EL.consExtLab (x1, x2) (L.singleton lab) L.empty cds
-fun genCstGenEq x1 x2 lab cds eqTypeCheck = EL.consExtLabEq (x1, x2) (L.singleton lab) L.empty cds eqTypeCheck
 
-fun genCstTy x1 x2 lab cds eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTy - constructing CSTTYP with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-					  CSTTYP (genCstGenEq x1 x2 lab cds eqTypeCheck))
-fun genCstTf x1 x2 lab cds = CSTTYF (genCstGen x1 x2 lab cds)
-fun genCstTn x1 x2 lab cds eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTn - constructing CSTTYN with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-					  D.printDebug 3 D.ENV ("               - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
-					  CSTTYN (genCstGenEq x1 x2 lab cds eqTypeCheck))
-fun genCstSq x1 x2 lab cds = CSTSEQ (genCstGen x1 x2 lab cds)
-fun genCstRt x1 x2 lab cds = CSTROW (genCstGen x1 x2 lab cds)
-fun genCstLt x1 x2 lab cds = CSTLAB (genCstGen x1 x2 lab cds)
-fun genCstEv x1 x2 lab cds = CSTENV (genCstGen x1 x2 lab cds)
-fun genCstCl x1 x2 lab cds = CSTCLS (genCstGen x1 x2 lab cds)
+fun genCstTy x1 x2 lab cds = TYPE_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstTf x1 x2 lab cds = FUNCTION_TYPE_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstTn x1 x2 lab cds = (D.printDebug 3 D.ENV ("in genCstTn - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
+					  TYPENAME_CONSTRAINT (genCstGen x1 x2 lab cds))
+fun genCstSq x1 x2 lab cds = SEQUENCE_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstRt x1 x2 lab cds = ROW_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstLt x1 x2 lab cds = LABEL_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstEv x1 x2 lab cds = ENV_CONSTRAINT (genCstGen x1 x2 lab cds)
+fun genCstCl x1 x2 lab cds = IDENTIFIER_CLASS_CONSTRAINT (genCstGen x1 x2 lab cds)
 
 fun genAccGen x lab cds = EL.consExtLab x (L.singleton lab) L.empty cds
 
@@ -1764,20 +882,14 @@ fun genAccIi x lab cds = ACCSIG (genAccGen x lab cds)
 fun genAccIf x lab cds = ACCFUN (genAccGen x lab cds)
 
 
-(* x1 and x2 here are eg T.NC (tn1, b1,l1) and T.NC(tn2,b2,l2) *)
-fun genCstEmGen x1 x2 lab = EL.initExtLab (x1, x2) lab
-fun genCstEmGenEq x1 x2 lab eqTypeCheck = EL.initExtLabEq (x1, x2) lab eqTypeCheck
-
-fun genCstTyEm x1 x2 lab eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTyEm - constructing CSTTYP with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-					CSTTYP (genCstEmGenEq x1 x2 lab eqTypeCheck))
-fun genCstTfEm x1 x2 lab = CSTTYF (genCstEmGen x1 x2 lab)
-fun genCstTnEm x1 x2 lab eqTypeCheck = (D.printDebug 3 D.ENV ("in genCstTnEm - constructing CSTTYN with eqTypeCheck="^(Bool.toString(eqTypeCheck)));
-					CSTTYN (genCstEmGenEq x1 x2 lab eqTypeCheck)) (* change here for eqtypes? genCstEmGen takes and returns now 4-tuple?*)
-fun genCstSqEm x1 x2 lab = CSTSEQ (genCstEmGen x1 x2 lab)
-fun genCstRtEm x1 x2 lab = CSTROW (genCstEmGen x1 x2 lab)
-fun genCstLtEm x1 x2 lab = CSTLAB (genCstEmGen x1 x2 lab)
-fun genCstEvEm x1 x2 lab = CSTENV (genCstEmGen x1 x2 lab)
-fun genCstClEm x1 x2 lab = CSTCLS (genCstEmGen x1 x2 lab)
+fun initTypeConstraint x1 x2 lab = (TYPE_CONSTRAINT (EL.initExtLab (x1, x2) lab))
+fun initFunctionTypeConstraint x1 x2 lab = FUNCTION_TYPE_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initTypenameConstraint x1 x2 lab = TYPENAME_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initSequenceConstraint x1 x2 lab = SEQUENCE_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initRowConstraint x1 x2 lab = ROW_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initLabelConstraint x1 x2 lab = LABEL_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initEnvConstraint x1 x2 lab = ENV_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initClassConstraint x1 x2 lab = IDENTIFIER_CLASS_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 
 fun genAccEmGen x lab = EL.initExtLab x lab
 
@@ -1845,7 +957,7 @@ fun allEqualVids vids =
 		    foldr (fn (bind, cst) =>
 			      let val ty' = getBindT bind
 				  val lab = getBindL bind
-				  val c   = genCstTyEm ty ty' lab false
+				  val c   = initTypeConstraint ty ty' lab
 			      in conscst (lab, c) cst
 			      end)
 			  cst
@@ -1854,138 +966,19 @@ fun allEqualVids vids =
 		vids
     end
 
-
-
-(*(*(* flatten an environment *)
-
-
-fun flattenIdEnv idenv =
-    foldrienv
-	(fn (id, (semty, opn), (idenv, cst)) =>
-	    let
-		val (semty, cst) =
-		    foldr
-			(fn ({ty, chk, asmp, lab}, (semty, cst)) =>
-			    let
-				val tv = T.freshtyvar ()
-				val c  = CSTTYP (T.V tv, ty, L.empty)
-			    in ((T.consextty (T.V tv) chk asmp lab) :: semty,
-				conscstSem (lab, c) cst)
-			    end)
-			([], cst)
-			semty
-	    in (addenv (id, (semty, opn)) idenv, cst)
-	    end)
-	(emid, emcst)
-	idenv
-
-fun flattenStrEnv (ENVSEQ strenv) =
-    foldrienv
-	(fn (id, (semty, opn), (ENVSEQ strenv, cst)) =>
-	    let
-		val (semty, cst) =
-		    foldr
-			(fn (EENV (env, lab), (semty, cst)) =>
-			    let
-				val ev = freshenvvar ()
-				val c  = CSTENV (ENVVAR ev, env)
-			    in ((consexv (ENVVAR ev) lab) :: semty,
-				conscstSem (lab, c) cst)
-			    end)
-			([], cst)
-			semty
-	    in (ENVSEQ (addenv (id, (semty, opn)) strenv), cst)
-	    end)
-	(emstr, emcst)
-	strenv
-
-fun flattenEnv (ENVCON ((idG, idX, idC, idT, idV, idS, idO, idD), l, n)) =
-    let
-	val (idG', csG) = flattenIdEnv  idG
-	val (idX', csX) = flattenIdEnv  idX
-	val (idC', csC) = flattenIdEnv  idC
-	val (idT', csT) = flattenIdEnv  idT
-	val (idS', csS) = flattenStrEnv idS
-    in (ENVCON ((idG', idX', idC', idT', idV, idS', idO), l, n),
-	uenvcsSems [csG, csX, csC, csT, csS])
-    end
-  | flattenEnv (x as (ENVVAR _)) = (x, emcst)
-  | flattenEnv (x as (INJSTR _)) = (x, emcst)
-  | flattenEnv (x as (INJVID _)) = (x, emcst)
-  | flattenEnv (x as (INJTYP _)) = (x, emcst)*)
-
-
-(* Do we have to go inside INJSTR and INJVID as well? *)
-(* We either return the environment in which we might find the last id
- * (with true -> NONE as the rest of the long id)
- * or we return the environment in whih we can't go down because
- * either it it a variable or because the id we're looking for is not in. *)
-fun followPath' (I.ID (id, l)) x = (x, id, l, NONE)
-  | followPath' (I.LID ((id, l), lid, lab)) (env as ENVCON _, labs, stts, deps) =
-    let	val semty = plusproj (getStrs env) id
-	val etvop = List.find (fn x => true (*(getextenvL x) = lab*)) semty
-    in case etvop of
-	   NONE =>
-	   (*(2010-01-27)We shouldn't have lab here.*)
-	   (*(2010-02-24)If we failed to find the id in the structure then
-	    * there is an unmatched error that we want to report, so we return
-	    * the environment in which we failed to find id and its label,
-	    * the rest of the identifier that we failed to look up and the
-	    * structure of the environment.*)
-	   ((env, L.cons l (L.cons lab labs), stts, deps), id, l, SOME lid)
-	 | SOME (x as (bind, labs', stts', deps')) =>
-	   followPath' lid
-		       (C.getBindT bind,
-			L.cons l (L.cons lab (L.concat labs labs')),
-			L.concat stts stts',
-			CD.union deps deps')
-    end
-  | followPath' (I.LID ((id, l), lid, _)) x =
-    (*(2010-02-24)If the env is not a constructor then we return the
-     * env, the id that we failed to look up, the rest of the lid that
-     * we haven't search yet and the supposed structure of the env.*)
-    (x, id, l, SOME lid)
-
-fun followPath lid env = followPath' lid (env, L.empty, L.empty, CD.empty)
-
-fun followPathStr lid env = (* env has to be a ENVCON *)
-    case followPath lid env of
-	((env as ENVCON _, _, _, _), id, _, NONE) =>
-	let val semty = plusproj (getStrs env) id
-	    val etvop = List.find (fn _ => true) semty
-	in case etvop of
-	       NONE => NONE
-	     | SOME ({id, scope, bind, class, lab, poly}, _, _, _) =>
-	       SOME (consBindSc id bind class lab poly)
-	end
-      | ((ENVCON _, _, _, _), _, _, SOME _) => NONE (*(2010-02-24)lid is not a path of env*)
-      | _ => NONE(*(*(2010-02-24)lid might actually be a path of env, but we've got to check*)
-	(case CL.followPathStr lid (envToStrIds env) of
-	     NONE => NONE
-	   | SOME (str, id, lab) => SOME (consBindPoly id
-						       (newEnvVar ())
-						       (CL.classToSTRstr (CL.consSTR ()) str)
-						       lab))*)
-      (* The binding we generate is with an environment variable because then
-       * in Build.sml, in buildopnsem, we can build all the environment.
-       * If we can't find the identifier then we don't report any error
-       * because it should have been reported when dealing with the
-       * opening before. *)*)
-
-
 (* Generates an environment from a long identifier and a type function *)
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshtyfvar ()
-	val c    = genCstTfEm (T.consTFV tfv) tyfun lab
+	val c    = initFunctionTypeConstraint (T.consTFV tfv) tyfun lab
 	val typs = singenv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
     in (singcst (lab, c), projTyps typs)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
     let val (cst, env1) = genLongEnv lid tyfun
-	val ev1  = freshenvvar ()
-	val ev2  = freshenvvar ()
-	val c1   = genCstEvEm (consEnvVar ev1 lab1) env1 lab1
-	val c2   = genCstEvEm (consEnvVar ev2 lab2) (consEnvVar ev1 lab2) lab2
+	val ev1  = freshEnvVar ()
+	val ev2  = freshEnvVar ()
+	val c1   = initEnvConstraint (consEnvVar ev1 lab1) env1 lab1
+	val c2   = initEnvConstraint (consEnvVar ev2 lab2) (consEnvVar ev1 lab2) lab2
 	val strs = singenv (id, [consBindPoly id (consEnvVar ev2 lab1) (CL.consSTR ()) lab1])
     in (conscst (lab2, c2) (conscst (lab1, c1) cst), projStrs strs)
     end
@@ -1993,7 +986,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 
 (* Checks whether the environment is composed by at least an environment variable. *)
 fun hasEnvVar (ENVVAR _)            = true
-  | hasEnvVar (ENVSEQ (env1, env2)) = hasEnvVar env2 orelse hasEnvVar env1
+  | hasEnvVar (SEQUENCE_ENV (env1, env2)) = hasEnvVar env2 orelse hasEnvVar env1
   | hasEnvVar (ENVDEP extenv)       = hasEnvVar (EL.getExtLabT extenv)
   | hasEnvVar _                     = false
 
@@ -2001,7 +994,7 @@ fun hasEnvVar (ENVVAR _)            = true
 (* Checks the second element in infoEnv (complete environment). *)
 (* Should we check the label as well? *)
 fun completeEnv (env as ENVCON _)     = getICmp env
-  | completeEnv (ENVSEQ (env1, env2)) = completeEnv env2 andalso completeEnv env1
+  | completeEnv (SEQUENCE_ENV (env1, env2)) = completeEnv env2 andalso completeEnv env1
   | completeEnv (ENVDEP extenv)       = completeEnv (EL.getExtLabT extenv)
   | completeEnv  _                    = false
 
@@ -2140,43 +1133,43 @@ fun filterLongTyp (longtyp as ({lid, sem, class, lab}, _, _, _)) labs =
     else NONE
 
 fun toIncomplete (env as ENVCON _)               = updateICmp false env
-  | toIncomplete (env as ENVSEQ (env1, env2))    = ENVSEQ (toIncomplete env1, toIncomplete env2)
+  | toIncomplete (env as SEQUENCE_ENV (env1, env2))    = SEQUENCE_ENV (toIncomplete env1, toIncomplete env2)
   | toIncomplete (env as ENVVAR _)               = env
-  | toIncomplete (env as ENVLOC (env1, env2))    = ENVSEQ (env1, toIncomplete env2)
+  | toIncomplete (env as ENVLOC (env1, env2))    = SEQUENCE_ENV (env1, toIncomplete env2)
   | toIncomplete (env as ENVWHR (env1, longtyp)) = ENVWHR (toIncomplete env1, longtyp)
   | toIncomplete (env as ENVSHA (env1, env2))    = ENVSHA (toIncomplete env1, env2)
-  | toIncomplete (env as ENVSIG (env1, env2, l)) = ENVSIG (toIncomplete env1, env2, l)
+  | toIncomplete (env as SIGNATURE_ENV (env1, env2, l)) = SIGNATURE_ENV (toIncomplete env1, env2, l)
   | toIncomplete (env as ENVPOL (tyvenv, env1))  = ENVPOL (tyvenv, toIncomplete env1)
-  | toIncomplete (env as ENVDAT (idl, env1))     = ENVDAT (idl, toIncomplete env1)
+  | toIncomplete (env as DATATYPE_CONSTRUCTOR_ENV (idl, env1))     = DATATYPE_CONSTRUCTOR_ENV (idl, toIncomplete env1)
   | toIncomplete (env as ENVOPN _)               = env
   | toIncomplete (env as ENVDEP eenv)            = ENVDEP (EL.mapExtLab eenv toIncomplete)
-  | toIncomplete (env as ENVFUN _)               = env
-  | toIncomplete (env as ENVCST _)               = env
+  | toIncomplete (env as FUNCTOR_ENV _)               = env
+  | toIncomplete (env as CONSTRAINT_ENV _)               = env
   | toIncomplete (env as ENVPTY _)               = env
   | toIncomplete (env as ENVFIL (f, e, strm))    = ENVFIL (f, toIncomplete e, fn () => toIncomplete (strm ()))
   | toIncomplete (env as ENVTOP)                 = env
 
-fun filterOcst (ocst as CSTTYP _) labs = SOME ocst
-  | filterOcst (ocst as CSTTYN _) labs = SOME ocst
-  | filterOcst (ocst as CSTSEQ _) labs = SOME ocst
-  | filterOcst (ocst as CSTROW _) labs = SOME ocst
-  | filterOcst (ocst as CSTLAB _) labs = SOME ocst
-  | filterOcst (ocst as CSTENV ((env1, env2), labs0, stts0, deps0)) labs =
+fun filterOcst (ocst as TYPE_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as TYPENAME_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as SEQUENCE_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as ROW_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as LABEL_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as ENV_CONSTRAINT ((env1, env2), labs0, stts0, deps0)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
-	 (SOME env1', SOME env2') => SOME (CSTENV ((env1', env2'), labs0, stts0, deps0))
-       | (SOME env1', NONE)       => SOME (CSTENV ((env1', emenv), labs0, stts0, deps0))
-       | (NONE,       SOME env2') => SOME (CSTENV ((emenv, env2'), labs0, stts0, deps0))
+	 (SOME env1', SOME env2') => SOME (ENV_CONSTRAINT ((env1', env2'), labs0, stts0, deps0))
+       | (SOME env1', NONE)       => SOME (ENV_CONSTRAINT ((env1', emenv), labs0, stts0, deps0))
+       | (NONE,       SOME env2') => SOME (ENV_CONSTRAINT ((emenv, env2'), labs0, stts0, deps0))
        | (NONE,       NONE)       => NONE)
-  | filterOcst (ocst as CSTCLS _) labs = SOME ocst
-  | filterOcst (ocst as CSTTYF _) labs = SOME ocst
-  | filterOcst (ocst as CSTACC _) labs = SOME ocst
-  | filterOcst (ocst as CSTLET env) labs =
+  | filterOcst (ocst as IDENTIFIER_CLASS_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as FUNCTION_TYPE_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as ACCESSOR_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as LET_CONSTRAINT env) labs =
     (case filterEnv env labs of
-	 SOME env' => SOME (CSTLET env')
+	 SOME env' => SOME (LET_CONSTRAINT env')
        | NONE      => NONE)
-  | filterOcst (ocst as CSTSIG _) labs = SOME ocst
-  | filterOcst (ocst as CSTFUN _) labs = SOME ocst
-  | filterOcst (ocst as CSTSHA _) labs = SOME ocst
+  | filterOcst (ocst as SIGNATURE_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as FUNCTOR_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (ocst as SHARING_CONSTRAINT _) labs = SOME ocst
 
 and filterCst (OCST ocst) labs =
     OCST (OMC.mapPartiali (fn (key, cs) =>
@@ -2200,19 +1193,12 @@ and filterEnv (env as ENVCON _) labs =
 		   cmpOvcs andalso getICmp env
 	val info = consInfo (getILab env) cmp (getITns env) (getIFct env)
 	val env' = consEnvC vids typs tyvs strs sigs funs ovcs info
-    in (*if isEmptyEnv env'
-       then NONE
-       else*) SOME env'
+    in SOME env'
     end
   | filterEnv (env as ENVVAR _) labs = SOME env
-  | filterEnv (env as ENVSEQ (env1, env2)) labs =
+  | filterEnv (env as SEQUENCE_ENV (env1, env2)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
-	 (SOME env1', SOME env2') =>
-	 (*if isEmptyEnv env1'
-	 then SOME (toIncomplete env2')
-	 else if isEmptyEnv env2'
-	 then SOME (toIncomplete env1')
-	 else*) SOME (ENVSEQ (env1', env2'))
+	 (SOME env1', SOME env2') => SOME (SEQUENCE_ENV (env1', env2'))
        | (SOME env1', NONE)       => SOME env1'
        | (NONE,       SOME env2') => SOME env2'
        | (NONE,       NONE)       => NONE)
@@ -2234,11 +1220,11 @@ and filterEnv (env as ENVCON _) labs =
        | (SOME env1', NONE)       => SOME env1'
        | (NONE,       SOME env2') => SOME (ENVSHA (updateICmp false emenv, env2'))
        | (NONE,       NONE)       => NONE)
-  | filterEnv (env as ENVSIG (env1, env2, kind)) labs =
+  | filterEnv (env as SIGNATURE_ENV (env1, env2, kind)) labs =
     (case (filterEnv env1 labs , filterEnv env2 labs) of
-	 (SOME env1', SOME env2') => SOME (ENVSIG (env1', env2', kind))
-       | (SOME env1', NONE)       => SOME (ENVSIG (env1', updateICmp false emenv, kind))
-       | (NONE,       SOME env2') => SOME (ENVSIG (updateICmp false emenv, env2', kind))
+	 (SOME env1', SOME env2') => SOME (SIGNATURE_ENV (env1', env2', kind))
+       | (SOME env1', NONE)       => SOME (SIGNATURE_ENV (env1', updateICmp false emenv, kind))
+       | (NONE,       SOME env2') => SOME (SIGNATURE_ENV (updateICmp false emenv, env2', kind))
        | (NONE,       NONE)       => NONE)
   | filterEnv (env as ENVPOL (tyvenv, env1)) labs =
     (case (filterIdEnv tyvenv labs , filterEnv env1 labs) of
@@ -2247,11 +1233,11 @@ and filterEnv (env as ENVCON _) labs =
 	 if isEmptyIdEnv tyvenv'
 	 then NONE
 	 else SOME (ENVPOL (tyvenv', updateICmp false emenv)))
-  | filterEnv (env as ENVDAT (idl as (id, lab), env1)) labs =
+  | filterEnv (env as DATATYPE_CONSTRUCTOR_ENV (idl as (id, lab), env1)) labs =
     (case filterEnv env1 labs of
-	 SOME env1' => SOME (ENVDAT (idl, env1'))
+	 SOME env1' => SOME (DATATYPE_CONSTRUCTOR_ENV (idl, env1'))
        | NONE       => if testlab lab labs
-		       then SOME (ENVDAT (idl, updateICmp false emenv))
+		       then SOME (DATATYPE_CONSTRUCTOR_ENV (idl, updateICmp false emenv))
 		       else NONE)
   | filterEnv (env as ENVOPN opnenv) labs =
     (case filterOpnEnv opnenv labs of
@@ -2263,16 +1249,16 @@ and filterEnv (env as ENVCON _) labs =
 	     SOME env1' => SOME (ENVDEP (env1', labs1, stts1, deps1))
 	   | NONE       => NONE
     else NONE
-  | filterEnv (env as ENVFUN cst) labs =
+  | filterEnv (env as FUNCTOR_ENV cst) labs =
     (case filterCst cst labs of
 	 OCST ocsts => if OMC.numItems ocsts = 0
 		       then NONE
-		       else SOME (ENVFUN (OCST ocsts)))
-  | filterEnv (env as ENVCST cst) labs =
+		       else SOME (FUNCTOR_ENV (OCST ocsts)))
+  | filterEnv (env as CONSTRAINT_ENV cst) labs =
     (case filterCst cst labs of
 	 OCST ocsts => if OMC.numItems ocsts = 0
 		       then NONE
-		       else SOME (ENVCST (OCST ocsts)))
+		       else SOME (CONSTRAINT_ENV (OCST ocsts)))
   | filterEnv (env as ENVPTY _) _ = SOME env
   | filterEnv (env as ENVFIL (file, e, strm)) labs =
     (case (filterEnv e labs, filterEnv (strm ()) labs) of
@@ -2284,85 +1270,5 @@ and filterEnv (env as ENVCON _) labs =
 
 
 val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateICmp false emenv | SOME env' => env'
-
-
-(*fun getAllTns (env as ENVCON _) =
-    foldrenv (fn (sem, tns) => foldr (fn (bind, tns) => (getAllTns (getBindT bind)) @ tns) tns sem)
-	     (getITns env)
-	     (getStrs env)
-  | getAllTns (ENVSEQ (env1, env2)) = (getAllTns env1) @ (getAllTns env2)
-  | getAllTns (ENVVAR _) = []
-  | getAllTns _ = raise EH.DeadBranch ""*)
-
-
-(*(* Returns the variable contained in the ENVVAR if the environment is a ENVVAR. *)
-fun getEnvVar (ENVVAR ev) = SOME ev
-  | getEnvVar _         = NONE
-
-
-(* Generates INJVID/INJTYP constraints from an Id.lid and an envvar *)
-
-(*fun generateINJ (I.ID (id, lab)) ty class ev labs deps asmp =
-    let val finj = if CL.classIsVID class
-		   then INJVID
-		   else if CL.classIsTYCON class
-		   then INJTYP
-		   else raise EH.DeadBranch "wrong kind of identifier"
-	val c = genCstEvAll (ENVVAR ev)
-			    (finj (C.consConsId' id ty class lab))
-			    labs
-			    deps
-			    asmp
-    in [c] end
-  | generateINJ (I.LID ((id, lab), lid, _)) ty class ev labs deps asmp =
-    let val ev' = freshenvvar ()
-	val env = generateINJ lid ty class ev' labs deps asmp
-	val c   = genCstEvAll (ENVVAR ev)
-			      (INJSTR (EENV (C.consConsId' id (ENVVAR ev') (CL.consSTR ()) lab)))
-			      labs
-			      deps
-			      asmp
-    in c :: cs end*)
-
-fun generateINJ' (I.ID (id, lab)) sem class finj =
-    finj (consBindPoly id sem class lab)
-  | generateINJ' (I.LID ((id, lab), lid, _)) sem class finj =
-    let val env = generateINJ' lid sem class finj
-    in INJSTR (consBindPoly id env (CL.consSTR ()) lab)
-    end
-
-fun generateINJ lid sem class =
-    let val finj = if CL.classIsVID class
-		   then INJVID
-		   else if CL.classIsTYCON class
-		   then INJTYP
-		   else raise EH.DeadBranch "wrong kind of identifier"
-    in generateINJ' lid sem class finj
-    end
-
-(* replace all the labels of the top level constraints by the dummy label *)
-
-fun dummysCst cst =
-    foldricst
-	(fn (_, ocst, cst) => conscstSems (L.dummylab, ocst) cst)
-	emcst
-	cst
-
-fun dummysCs (css, cst) = (css, dummysCst cst)
-
-
-(* transforms a T.chkty into a status *)
-
-fun vidToStatus (CL.VAL _) = I
-  | vidToStatus (CL.PAT _) = I
-  | vidToStatus (CL.CON _) = D
-  | vidToStatus (CL.REC _) = V
-  | vidToStatus (CL.EXC _) = E
-  | vidToStatus _ = raise EH.DeadBranch ""
-
-fun chkToStatus (CL.VID vid, _) = vidToStatus vid
-  | chkToStatus _               = raise EH.DeadBranch "not a identifier status"*)
-
-
 
 end

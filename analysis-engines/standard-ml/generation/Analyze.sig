@@ -30,8 +30,6 @@ signature ANALYZE = sig
      * 2 if we want to use the basis.sml environment *)
     val generateConstraints : AstSML.progs -> int -> Env.envcss
 
-    val huntForEqType : bool ref
-
     (* The first argument should be the output of analyze.  Program
      * identifiers are represented by integers in the output of
      * analyze, so the second argument is a mapping from the original

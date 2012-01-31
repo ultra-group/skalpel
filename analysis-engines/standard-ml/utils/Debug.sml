@@ -48,6 +48,7 @@ fun setAllDebug value =
      debugTest  := value;
      debugRun  := value)
 
+(* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ str ^ "\n") else ()
   | printDebug depth UNIF str =
@@ -66,6 +67,27 @@ fun printDebug depth JSON str =
     if (!debugEnv >= depth) then print ("("^(Int.toString depth)^") Env.sml: " ^ str ^ "\n") else ()
   | printDebug depth TEST str =
     if (!debugTest >= depth) then print ("("^(Int.toString depth)^") Tester.sml: " ^ str ^ "\n") else ()
+
+(* the same as print debug but executes the function instead of displaying a string *)
+(* this is so that we don't have to compute toString functions when we don't have to *)
+fun printDebugFunc depth JSON func =
+    if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth UNIF func =
+    if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Unification.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth LABEL func =
+    if (!debugLabel >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth TY func =
+    if (!debugTy >= depth) then print ("("^(Int.toString depth)^") Ty.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth MLGRM func =
+    if (!debugGrm >= depth) then print ("("^(Int.toString depth)^") Ml.grm: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth AZE func =
+    if (!debugAze >= depth) then print ("("^(Int.toString depth)^") Analyze.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth RUN func =
+    if (!debugRun >= depth) then print ("("^(Int.toString depth)^") RunSlicer.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth ENV func =
+    if (!debugEnv >= depth) then print ("("^(Int.toString depth)^") Env.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth TEST func =
+    if (!debugTest >= depth) then print ("("^(Int.toString depth)^") Tester.sml: " ^ (func ()) ^ "\n") else ()
 
 
 (* separator definitions *)

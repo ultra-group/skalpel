@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- *
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -76,7 +74,7 @@ fun freshTyNameVar x (state : state) = freshvargen x (#tn state) T.freshtynameva
 fun freshSeqVar    x (state : state) = freshvargen x (#sq state) T.freshseqvar    T.seqvarToInt
 fun freshRowVar    x (state : state) = freshvargen x (#rt state) T.freshrowvar    T.rowvarToInt
 fun freshLabVar    x (state : state) = freshvargen x (#lt state) T.freshlabvar    T.labvarToInt
-fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshenvvar    E.envvarToInt
+fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshEnvVar    E.envVarToInt
 fun freshIdOr      x (state : state) = freshvargen x (#or state) T.freshidor      T.idorToInt
 
 end

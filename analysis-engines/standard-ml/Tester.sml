@@ -1398,10 +1398,6 @@ fun checktests listtests =
 	    then raise EH.DeadBranch ""
 	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
 		  (* run the test *)
-		  AN.huntForEqType := false;
-		  L.eqTypeLabels := L.empty;
-		  L.eqTypeWordLabels := L.empty;
-		  T.eqTypeTyVars := [];
 		  error := !(JP.parseTest (getfileerr nb));
 		  (let
 

@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -304,7 +302,7 @@ fun getValStateTn state x = getValOneState (getStateTn state) (T.tynamevarToInt 
 fun getValStateSq state x = getValOneState (getStateSq state) (T.seqvarToInt    x)
 fun getValStateRt state x = getValOneState (getStateRt state) (T.rowvarToInt    x)
 fun getValStateLt state x = getValOneState (getStateLt state) (T.labvarToInt    x)
-fun getValStateEv state x = getValOneState (getStateEv state) (E.envvarToInt    x)
+fun getValStateEv state x = getValOneState (getStateEv state) (E.envVarToInt    x)
 fun getValStateCl state x = getValOneState (getStateCl state) (CL.classvarToInt x)
 fun getValStateOr state x = getValOneState (getStateOr state) (T.idorToInt      x)
 
@@ -440,7 +438,7 @@ fun updateStateTn state key value = updateOneState (getStateTn state) (T.tynamev
 fun updateStateSq state key value = updateOneState (getStateSq state) (T.seqvarToInt    key) value
 fun updateStateRt state key value = updateOneState (getStateRt state) (T.rowvarToInt    key) value
 fun updateStateLt state key value = updateOneState (getStateLt state) (T.labvarToInt    key) value
-fun updateStateEv state key value = updateOneState (getStateEv state) (E.envvarToInt    key) value
+fun updateStateEv state key value = updateOneState (getStateEv state) (E.envVarToInt    key) value
 fun updateStateOr state key value = updateOneState (getStateOr state) (T.idorToInt      key) value
 fun updateStateCl state key value = updateOneState (getStateCl state) (CL.classvarToInt key) value
 fun updateStateGe state key value =
@@ -545,7 +543,7 @@ fun updateStateFr state lid =
 fun isAName tyname state =
     NA.member (!(getStateNa state), (tyname, L.empty, L.empty, CD.empty))
 
-(* ACCESS TO THE ENVIRONMENT *)
+(* ACCESS TO THE ENV *)
 
 (*fun getValOneEnv onestate x = E.plusproj onestate x*)
 
@@ -578,7 +576,7 @@ fun getValStateId (env as E.ENVCON _) (I.ID (id, lab)) _ fenv labs stts deps =
 	  * and so we need to update the str to some SOME something.*)
 	 in (sem', str, true)
 	 end)
-  | getValStateId (E.ENVSEQ (env1, env2)) lid state fenv labs stts deps =
+  | getValStateId (E.SEQUENCE_ENV (env1, env2)) lid state fenv labs stts deps =
     (case getValStateId env2 lid state fenv labs stts deps of
 	 (NONE, y, false) => if E.hasEnvVar env2
 			     then ((*D.printdebug2 (E.printEnv env2 "");*) (NONE, y, false))
@@ -1153,7 +1151,7 @@ fun ziprec [] rtl2 = ([], [], rtl2, [], [])
     (case ziprecRC rt rtl2 of
 	 SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs, stts, deps, rtl2') =>
 	 let val (cs, rtl3, rtl4, llc1, llc2) = ziprec rtl1 rtl2'
-	     val c = E.genCstTyAll ty1 ty2 labs stts deps false
+	     val c = E.genCstTyAll ty1 ty2 labs stts deps
 	     val rcty1 = ((lab1, lc1), labs, stts, deps)
 	     val rcty2 = ((lab2, lc2), labs, stts, deps)
 	 in (c :: cs, rtl3, rtl4, rcty1 :: llc1, rcty2 :: llc2)
@@ -1278,7 +1276,7 @@ fun updateRecOne state strc =
     end
 
 
-(* PUSHING AN ENVIRONMENT ONTO A STATE *)
+(* PUSHING AN ENV ONTO A STATE *)
 
 fun getAllTns (env as E.ENVCON _) state =
     E.foldrienv (fn (_, sem, tns) => foldr (fn (bind, tns) => (getAllTns (E.getBindT bind) state) @ tns)
@@ -1286,7 +1284,7 @@ fun getAllTns (env as E.ENVCON _) state =
 					   sem)
 		(E.getITns env)
 		(E.getStrs env)
-  | getAllTns (E.ENVSEQ (env1, env2)) state = (getAllTns env1 state) @ (getAllTns env2 state)
+  | getAllTns (E.SEQUENCE_ENV (env1, env2)) state = (getAllTns env1 state) @ (getAllTns env2 state)
   | getAllTns (E.ENVVAR (ev, lab)) state =
     (case getValStateEv state ev of (* We need that because we don't fully build up structures as we should! *)
 	 NONE => []
@@ -1343,7 +1341,7 @@ fun getMonoTyVars (env as E.ENVCON _) state =
 		   (getMonoTyVarsStrEnv strs state)
 		   vids
     end
-  | getMonoTyVars (E.ENVSEQ (env1, env2)) state =
+  | getMonoTyVars (E.SEQUENCE_ENV (env1, env2)) state =
     let val monos = getMonoTyVars env2 state
     in if E.isEnvV env2
        then monos
@@ -1388,12 +1386,12 @@ fun pushEnvToState bempty env state =
 	     val statena = getStateNa state
 	     val _       = statena := NA.addList (!statena, tns)
 	     val stateid = getStateId state
-	     val _       = stateid := E.ENVSEQ (!stateid, env)
+	     val _       = stateid := E.SEQUENCE_ENV (!stateid, env)
 	 in (tyvars, tns)
 	 end
 
 
-(* REMOVING AN ENVIRONMENT FROM A STATE *)
+(* REMOVING AN ENV FROM A STATE *)
 
 (* when removing an environment from a state we also have to remove its type names. *)
 fun remEnvFromState bempty (tyvars, tns) state =
@@ -1405,12 +1403,12 @@ fun remEnvFromState bempty (tyvars, tns) state =
 	     val _       = app (fn tn => statena := NA.delete (!statena, tn) handle LibBase.NotFound => ()) tns
 	     val stateid = getStateId state
 	 in case !stateid of
-		E.ENVSEQ (env1, env2) => stateid := env1
+		E.SEQUENCE_ENV (env1, env2) => stateid := env1
 	      | _ => raise EH.DeadBranch "It appears that the unification environment is not a sequence"
 	 end
 
 
-(* CHECKS IF THE ENVIRONMENT IN THE STATE HIDS WITH ENVIRONMENT VARIABLES *)
+(* CHECKS IF THE ENV IN THE STATE HIDS WITH ENV VARIABLES *)
 
 fun hasEnvVar state = E.hasEnvVar (!(getStateId state))
 

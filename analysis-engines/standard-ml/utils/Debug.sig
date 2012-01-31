@@ -37,7 +37,8 @@ signature DEBUG = sig
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit
 
-    val printDebug   : int -> debugFiles -> string -> unit
+    val printDebug       : int -> debugFiles -> string -> unit
+    val printDebugFunc   : int -> debugFiles -> (unit -> string) -> unit
 
     val printdebug1 : string -> unit (* Does not print  *)
     val printdebug2 : string -> unit (* fancy printing  *)

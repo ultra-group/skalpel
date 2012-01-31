@@ -367,8 +367,8 @@ stUseFile    = ([^\*\ \n\t]*(\*[^\)])?)*;
 <INITIAL,STDEC> {wordDec}    => (tokenWithString T.WORD      yytext arg);
 <INITIAL,STDEC> {wordHex}    => (tokenWithString T.WORD      yytext arg);
 <INITIAL,STDEC> {real}       => (tokenWithString T.REAL      yytext arg);
-<INITIAL,STDEC> {tyvar}      => (tokenWithString T.TYPEVAR   yytext arg);
 <INITIAL,STDEC> {eqtyvar}    => (tokenWithString T.EQTYPEVAR yytext arg);
+<INITIAL,STDEC> {tyvar}      => (tokenWithString T.TYPEVAR   yytext arg);
 <INITIAL,STDEC> {ident}      => (if L.getQuotation ()
 				 then if containQuote yytext
   				      then REJECT ()

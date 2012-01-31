@@ -27,9 +27,6 @@ signature LABEL = sig
     type label   (* a label (program point) *)
     type labels
 
-    val eqTypeLabels     : labels ref
-    val eqTypeWordLabels : labels ref
-
     (* label (integer) constants *)
     val dummyLab   : label
     val builtinLab : label
