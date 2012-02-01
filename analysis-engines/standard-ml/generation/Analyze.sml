@@ -389,7 +389,7 @@ fun generateConstraints' prog pack nenv =
 	       then (E.freshEnvVar (), E.emstr, E.emcst, E.emcss)
 	       else let val ev1  = E.freshEnvVar ()
 			val ev2  = E.freshEnvVar ()
-			val strs = E.singenv (v, [E.consBindPoly v (E.consEnvVar ev2 lab) (CL.consSTR ()) lab])
+			val strs = E.singenv (v, [E.consBindPoly v (E.consENVVAR ev2 lab) (CL.consSTR ()) lab])
 			val c    = E.initEnvConstraint (E.ENVVAR (ev1, lab)) (E.ENVVAR (ev2, lab)) lab
 		    in (ev1, strs, E.singcst (lab, c), E.emcss)
 		    end
@@ -403,8 +403,8 @@ fun generateConstraints' prog pack nenv =
 	       else let val lid  = I.idToLid v lab
 			val ev1  = E.freshEnvVar ()
 			val ev2  = E.freshEnvVar ()
-			val env1 = E.consEnvVar ev1 lab
-			val env2 = E.consEnvVar ev2 lab
+			val env1 = E.consENVVAR ev1 lab
+			val env2 = E.consENVVAR ev2 lab
 			val a    = E.genAccIfEm (E.consAccId lid (env1, env2) (CL.consFUNC ()) lab) lab
 		    in (ev1, ev2, E.singcst (lab, E.ACCESSOR_CONSTRAINT a))
 		    end
@@ -418,8 +418,8 @@ fun generateConstraints' prog pack nenv =
 			val ev2  = E.freshEnvVar ()
 			val ev1' = E.freshEnvVar ()
 			val ev2' = E.freshEnvVar ()
-			val env1 = E.consEnvVar ev1' lab
-			val env2 = E.consEnvVar ev2' lab
+			val env1 = E.consENVVAR ev1' lab
+			val env2 = E.consENVVAR ev2' lab
 			val funs = E.singenv (v, [E.consBindPoly v (env1, env2) (CL.consFUNC ()) lab])
 			val c1   = E.initEnvConstraint (E.ENVVAR (ev1, lab)) (E.ENVVAR (ev1', lab)) lab
 			val c2   = E.initEnvConstraint (E.ENVVAR (ev2, lab)) (E.ENVVAR (ev2', lab)) lab
@@ -434,7 +434,7 @@ fun generateConstraints' prog pack nenv =
 	       then (E.freshEnvVar (), E.emcst)
 	       else let val lid = I.idToLid v lab
 			val ev  = E.freshEnvVar ()
-			val a   = E.genAccIiEm (E.consAccId lid (E.consEnvVar ev lab) (CL.consSIG ()) lab) lab
+			val a   = E.genAccIiEm (E.consAccId lid (E.consENVVAR ev lab) (CL.consSIG ()) lab) lab
 		    in (ev, E.singcst (lab, E.ACCESSOR_CONSTRAINT a))
 		    end
 	     | f_sigid A.SigIdDots = (E.freshEnvVar (), E.emcst)
@@ -445,8 +445,8 @@ fun generateConstraints' prog pack nenv =
 	       then (E.freshEnvVar (), E.emsig, E.emcst)
 	       else let val ev1  = E.freshEnvVar ()
 			val ev2  = E.freshEnvVar ()
-			val sigs = E.singenv (v, [E.consBindPoly v (E.consEnvVar ev2 lab) (CL.consSIG ()) lab])
-			val c    = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev2 lab) lab
+			val sigs = E.singenv (v, [E.consBindPoly v (E.consENVVAR ev2 lab) (CL.consSIG ()) lab])
+			val c    = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
 		    in (ev1, sigs, E.singcst (lab, c))
 		    end
 	     | f_sigidbind A.SigIdDots = (E.freshEnvVar (), E.emsig, E.emcst)
@@ -522,7 +522,7 @@ fun generateConstraints' prog pack nenv =
 		   let val lab = I.getLabId lid
 		       (* NOTE: We want all the labels from lid *)
 		       val ev  = E.freshEnvVar ()
-		       val a   = E.genAccIsEm (E.consAccId lid (E.consEnvVar ev lab) (CL.consSTR ()) lab) lab
+		       val a   = E.genAccIsEm (E.consAccId lid (E.consENVVAR ev lab) (CL.consSTR ()) lab) lab
 		   in (ev, E.singcst (lab, E.ACCESSOR_CONSTRAINT a))
 		   end
 
@@ -1965,9 +1965,9 @@ fun generateConstraints' prog pack nenv =
 	       let val (env1, css1) = f_decs decs1
 		   val (env2, css2) = f_decs decs2
 		   val ev   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar ev L.dummyLab) env1 L.dummyLab
+		   val c    = E.initEnvConstraint (E.consENVVAR ev L.dummyLab) env1 L.dummyLab
 		   val env3 = E.CONSTRAINT_ENV (E.singcst (L.dummyLab, c))
-		   val env4 = E.ENVDEP (EL.initExtLab (E.consEnvVar ev lab) lab)
+		   val env4 = E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab)
 		   val env5 = E.SEQUENCE_ENV (env3, E.ENVLOC (env4, env2))
 	       in (env5 (*E.ENVLOC (env1, env2)*), E.uenvcss [css1, css2])
 	       end
@@ -2295,7 +2295,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_strdescone (A.StrDescOne (strid, labsigexp, _, lab, _)) =
 	       let val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
-		   val c   = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev2 lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
 		   val cst = E.conscst (lab, c) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (strs, cst, css)
@@ -2325,8 +2325,8 @@ fun generateConstraints' prog pack nenv =
 		   val env1 = E.ENVPOL (tyvs, E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projVids vids))
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, env1)
 		   val ev   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar ev lab) env2 lab
-		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consEnvVar ev lab) lab))
+		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env2 lab
+		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
 	       in (env3, css)
 	       end
 	     | f_speconesmltes spec = f_specone spec
@@ -2394,10 +2394,10 @@ fun generateConstraints' prog pack nenv =
 		   val env3 = E.ENVPOL (E.emtv, E.ENVLOC (E.ENVDEP (EL.initExtLab env1 lab), env2))
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env3 L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env3 L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val cst  = E.conscst (L.dummyLab, c1) (E.singcst (lab, c2))
-		   val env4 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab))
+		   val env4 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab))
 	       (*(2010-06-17)Don't we want to use ENVPOL on vids?
 		* The problem is that when we check a signature against a structure
 		* then we want the explicit type variables to be explicit to check
@@ -2409,8 +2409,8 @@ fun generateConstraints' prog pack nenv =
 	       let val (tns, typs, cst, css) = f_typdesc typdesc
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateITns tns (E.projTyps typs))
 		   val ev   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar ev lab) env lab
-		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consEnvVar ev lab) lab))
+		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env lab
+		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
 	       in (env', css)
 	       end
 	     | f_specone (A.SpecEqT (typdesc, _, lab, _)) =
@@ -2421,18 +2421,18 @@ fun generateConstraints' prog pack nenv =
 			      then css
 			      else E.conscss (sorryCsS lab "eqtype") css
 		   val envVar   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar envVar lab) env lab
-		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consEnvVar envVar lab) lab))
+		   val c    = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
+		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
 	       in (env', css)
 	       end
 	     | f_specone (A.SpecTdr (tdrdesc, _, lab, _)) =
 	       let val (env, css) = f_tdrdesc tdrdesc
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (L.dummyLab, c1) (E.singcst (lab, c2)))
-		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab))
+		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab))
 	       (* We can't have an ENVDEP here because we can have an error in
 		* the type part that does not need the spec to exist.
 		* It is the same for all the specs because of the type parts. *)
@@ -2443,10 +2443,10 @@ fun generateConstraints' prog pack nenv =
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.projVids cons) lab))
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val cst' = E.conscst (L.dummyLab, c1) (E.singcst (lab, c2))
-		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst', E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab))
+		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst', E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab))
 	       in (env', css)
 	       end
 	     | f_specone (A.SpecDat (datdesc, _, lab, _)) =
@@ -2461,10 +2461,10 @@ fun generateConstraints' prog pack nenv =
 		   val env3 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.ENVDEP (EL.initExtLab env2 lab)), env1)
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env3 L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env3 L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val cst  = E.conscst (L.dummyLab, c1) (E.singcst (lab, c2))
-		   val env4 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab))
+		   val env4 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab))
 	       in (env4, css)
 	       end
 	     | f_specone (A.SpecStr (strdesc, _, lab, _)) =
@@ -2472,10 +2472,10 @@ fun generateConstraints' prog pack nenv =
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.projStrs strs) lab))
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (L.dummyLab, c1) (E.singcst (lab, c2)))
-		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab))
+		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab))
 		   (*val _ = D.printdebug2 (L.printLab lab)*)
 		   (*val _ = D.printdebug2 (E.printEnv env "")*)
 	       in (env2, css)
@@ -2483,9 +2483,9 @@ fun generateConstraints' prog pack nenv =
 	     | f_specone (A.SpecInc (labsigexp, _, lab, _)) =
 	       let val (ev, cst, css) = f_labsigexp labsigexp
 		   val ev'  = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c    = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (lab, c) cst)
-		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consEnvVar ev' lab) lab))
+		   val env2 = E.SEQUENCE_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENVVAR ev' lab) lab))
 		   val css' = if getBasis ()
 			      then E.emcss
 			      else E.singcss (sorryCsS lab "include")
@@ -2508,8 +2508,8 @@ fun generateConstraints' prog pack nenv =
 		   val env1 = case v of SOME idl => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVOPN opn) | NONE => E.ENVOPN opn
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.SEQUENCE_ENV (E.projTyps typs, env1))
 		   val ev   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consEnvVar ev lab) env2 lab
-		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consEnvVar ev lab) lab))
+		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env2 lab
+		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
 	       in (env3, E.emcss)
 	       end
 	     | f_specone (A.SpecSha (spec, longtyconeq, _, lab, _)) =
@@ -2519,12 +2519,12 @@ fun generateConstraints' prog pack nenv =
 		   val ev   = E.freshEnvVar ()
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 lab) env1 lab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) env2 lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 lab) env1 lab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) env2 lab
 		   val c3   = E.SHARING_CONSTRAINT (ev1, ev, ev2, lab)
 		   (*val c3   = E.SIGNATURE_CONSTRAINT (ev1, SOME ev, ev2, NONE, lab, E.WHR)*)
 		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcsts (lab, [c1, c2])), E.CONSTRAINT_ENV (E.singcst (lab, c3)))
-		   val env4 = E.SEQUENCE_ENV (env3, E.consEnvVar ev lab)
+		   val env4 = E.SEQUENCE_ENV (env3, E.consENVVAR ev lab)
 		   val css' = if getBasis ()
 			      then E.emcss
 			      else E.singcss (poorlyCs lab "sharing")
@@ -2629,7 +2629,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_strbindone (A.StrBindOne (strid, labstrexp, _, lab, _)) =
 	       let val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labstrexp labstrexp
-		   val c   = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev2 lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
 		   val cst = E.conscst (lab, c) (E.uenvcst [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (strs, cst, css)
@@ -2664,10 +2664,10 @@ fun generateConstraints' prog pack nenv =
 		   val (env2, css2) = f_strdec strdec2
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env1 L.dummyLab
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env1 L.dummyLab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 		   val env3 = E.CONSTRAINT_ENV (E.conscst (L.dummyLab, c1) (E.singcst (lab, c2)))
-		   val env4 = E.ENVDEP (EL.initExtLab (E.consEnvVar ev2 lab) lab)
+		   val env4 = E.ENVDEP (EL.initExtLab (E.consENVVAR ev2 lab) lab)
 		   val env5 = E.SEQUENCE_ENV (env3, E.ENVLOC (env4, env2))
 	       in (env5 (*E.ENVLOC (env1, env2)*), E.uenvcss [css1, css2])
 	       end
@@ -2681,7 +2681,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labstrexp (A.LabStrExp (strexp, _, _, lab, _)) =
 	       let val (ev, cst, css) = f_strexp strexp
 		   val ev' = E.freshEnvVar ()
-		   val c   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 	       in (ev', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labstrexp (A.LabStrExpDots pl) =
@@ -2696,14 +2696,14 @@ fun generateConstraints' prog pack nenv =
 		   val env = E.updateILab lab env
 		   val ev1 = E.freshEnvVar ()
 		   val ev2 = E.freshEnvVar ()
-		   val c1  = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev2 lab) lab
-		   val c2  = E.initEnvConstraint (E.consEnvVar ev2 L.dummyLab) env L.dummyLab
+		   val c1  = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
+		   val c2  = E.initEnvConstraint (E.consENVVAR ev2 L.dummyLab) env L.dummyLab
 	       in (ev1, E.conscst (lab, c1) (E.singcst (L.dummyLab, c2)), css)
 	       end
 	     | f_strexp (A.StrExpId (longstrid, lab, _)) =
 	       let val (ev, cst) = f_longstrid longstrid
 		   val ev' = E.freshEnvVar ()
-		   val c   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 	       in (ev', E.conscst (lab, c) cst, E.emcss)
 	       end
 	     | f_strexp (A.StrExpOp (labstrexp, labsigexp, _, lab, _)) =
@@ -2739,7 +2739,7 @@ fun generateConstraints' prog pack nenv =
 		   val (env, css) = f_strdec strdec
 		   val ev   = E.freshEnvVar ()
 		   val ev'  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev' lab) env lab
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev' lab) env lab
 		   val c2   = E.FUNCTOR_CONSTRAINT (ev1, ev2, ev', ev, lab)
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.CONSTRAINT_ENV (E.singcst (lab, c2)))
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, env1)
@@ -2749,7 +2749,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (env1, css1) = f_strdec strdec
 		   val (ev, cst2, css2) = f_labstrexp labstrexp
 		   val ev' = E.freshEnvVar ()
-		   val c   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 		   val env = E.SEQUENCE_ENV (env1, E.CONSTRAINT_ENV cst2)
 		   val cst = E.conscst (L.dummyLab, E.LET_CONSTRAINT env) (E.singcst (lab, c))
 		   val css = E.uenvcss [css1, css2]
@@ -2827,7 +2827,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_labsigexp (A.LabSigExp (sigexp, _, _, lab, _)) =
 	       let val (ev, cst, css) = f_sigexp sigexp
 		   val ev' = E.freshEnvVar ()
-		   val c   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 	       in (ev', E.conscst (lab, c) cst, css)
 	       end
 	     | f_labsigexp (A.LabSigExpDots pl) =
@@ -2842,7 +2842,7 @@ fun generateConstraints' prog pack nenv =
 		   val env = E.updateILab lab env
 		   val ev1 = E.freshEnvVar ()
 		   val ev2 = E.freshEnvVar ()
-		   val c1  = E.initEnvConstraint (E.consEnvVar ev1 L.dummyLab) env L.dummyLab
+		   val c1  = E.initEnvConstraint (E.consENVVAR ev1 L.dummyLab) env L.dummyLab
 		   (*(2010-07-03)c1 is really slowing down the code, so I had to put
 		    * all these ENVDEP in the specs.
 		    * Can we do that in the decs as well, as we have the same kind of
@@ -2855,13 +2855,13 @@ fun generateConstraints' prog pack nenv =
 		    * Well, we can also have unmatched errors involving only the
 		    * type parts of the specification, so we need to be able to go
 		    * through the specifications' constraints.  *)
-		   val c2  = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev1 lab) lab
+		   val c2  = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev1 lab) lab
 	       in (ev2, E.conscst (L.dummyLab, c1) (E.singcst (lab, c2)), css)
 	       end
 	     | f_sigexp (A.SigExpId (sigid, lab, _)) =
 	       let val (ev, cst) = f_sigid sigid
 		   val ev' = E.freshEnvVar ()
-		   val c   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev lab) lab
+		   val c   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev lab) lab
 	       in (ev', E.conscst (lab, c) cst, E.emcss)
 	       end
 	     (*| f_sigexp (A.SigExpRea (labsigexp, rea, _, lab, _)) =
@@ -2872,7 +2872,7 @@ fun generateConstraints' prog pack nenv =
 		   val (env2, cst2, css2) = f_ltreadesc rea
 		   val ev  = E.freshEnvVar ()
 		   val ev' = E.freshEnvVar ()
-		   val c1  = E.initEnvConstraint (E.consEnvVar ev lab) (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, env2)) lab
+		   val c1  = E.initEnvConstraint (E.consENVVAR ev lab) (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, env2)) lab
 		   val c2  = E.SIGNATURE_CONSTRAINT (ev1, SOME ev', ev, NONE, lab, E.WHR)
 		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.conscst (lab, c1) cst1), E.CONSTRAINT_ENV (E.singcst (lab, c2)))
 	       in (ev', E.singcst (L.dummyLab, E.LET_CONSTRAINT env), E.uenvcss [css1, css2])
@@ -2884,10 +2884,10 @@ fun generateConstraints' prog pack nenv =
 		   val ev'  = E.freshEnvVar ()
 		   val cst  = E.uenvcst [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev' lab) (E.consEnvVar ev1 lab) lab
-		   val env1 = foldl (fn (rea, env) => E.ENVWHR (env, rea)) (E.consEnvVar ev' lab) reas
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev1 lab) lab
+		   val env1 = foldl (fn (rea, env) => E.ENVWHR (env, rea)) (E.consENVVAR ev' lab) reas
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.conscst (lab, c1) cst), env1)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev lab) env2 lab
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev lab) env2 lab
 	       in (ev, E.singcst (lab, c2), css)
 	       end
 	     | f_sigexp (A.SigExpDots pl) =
@@ -2900,7 +2900,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_sigbindone (A.SigBindOne (sigid, labsigexp, _, lab, _)) =
 	       let val (ev1, sigs, cst1) = f_sigidbind sigid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
-		   val c = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev2 lab) lab
+		   val c = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
 	       in (sigs, E.conscst (lab, c) (E.uenvcst [cst1, cst2]), css2)
 	       end
 	     | f_sigbindone (A.SigBindOneDots pl) =
@@ -2927,9 +2927,9 @@ fun generateConstraints' prog pack nenv =
 		   val (ev2, strs, cst2, css2) = f_strid strid
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp
 		   val (ev4, cst4, css4) = f_labstrexp labstrexp
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev3 lab) lab (* strid has signature labsigexp            *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the strid as parameter *)
-		   val c3   = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev4 lab) lab (* the functor returns the labstrexp        *)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev3 lab) lab (* strid has signature labsigexp            *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
+		   val c3   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev4 lab) lab (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (lab, c1) (E.uenvcst [cst2, cst3]))
 		   val env2 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (env1, env0), E.CONSTRAINT_ENV cst4)
@@ -2943,8 +2943,8 @@ fun generateConstraints' prog pack nenv =
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp1
 		   val (ev4, cst4, css4) = f_labsigexp labsigexp2
 		   val (ev5, cst5, css5) = f_labstrexp labstrexp
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev3 lab) lab (* strid has signature labsigexp            *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the strid as parameter *)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev3 lab) lab (* strid has signature labsigexp            *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev4, NONE, ev5, SOME ev1, lab)                       (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (lab, c1) (E.uenvcst [cst2, cst3]))
@@ -2961,8 +2961,8 @@ fun generateConstraints' prog pack nenv =
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp1
 		   val (ev4, cst4, css4) = f_labsigexp labsigexp2
 		   val (ev5, cst5, css5) = f_labstrexp labstrexp
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) (E.consEnvVar ev3 lab) lab (* strid has signature labsigexp            *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the strid as parameter *)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) (E.consENVVAR ev3 lab) lab (* strid has signature labsigexp            *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev4, SOME ev1, ev5, NONE, lab)                       (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
 		   val env1 = E.CONSTRAINT_ENV (E.conscst (lab, c1) (E.uenvcst [cst2, cst3]))
@@ -2979,10 +2979,10 @@ fun generateConstraints' prog pack nenv =
 		   val (ev3, cst3, css3) = f_labstrexp labstrexp
 		   val ev2  = E.freshEnvVar ()
 		   val env' = E.updateIFct true env (* We mark the environment as being the parameter of a functor *)
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) env' lab                   (* bind the specs to ev2                   *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the spec as parameter *)
-		   val c3   = E.initEnvConstraint (E.consEnvVar ev1 lab) (E.consEnvVar ev3 lab) lab (* the functor returns the labstrexp       *)
-		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consEnvVar ev2 lab)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) env' lab                   (* bind the specs to ev2                   *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the spec as parameter *)
+		   val c3   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev3 lab) lab (* the functor returns the labstrexp       *)
+		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consENVVAR ev2 lab)
 		   val env2 = E.SEQUENCE_ENV (env1, E.CONSTRAINT_ENV cst3)
 		   val cst  = E.conscst (L.dummyLab, E.LET_CONSTRAINT env2) (E.conscsts (lab, [c2, c3]) cst1)
 		   val css  = E.uenvcss [css2, css3]
@@ -2995,10 +2995,10 @@ fun generateConstraints' prog pack nenv =
 		   val (ev4, cst4, css4) = f_labstrexp labstrexp
 		   val ev2  = E.freshEnvVar ()
 		   val env' = E.updateIFct true env (* We mark the environment as being the parameter of a functor *)
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) env' lab                   (* bind the specs to ev2                   *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the spec as parameter *)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) env' lab                   (* bind the specs to ev2                   *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the spec as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev3, NONE, ev4, SOME ev1, lab)                       (* the functor returns the labstrexp       *)
-		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consEnvVar ev2 lab)
+		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consENVVAR ev2 lab)
 		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst3, cst4])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (env2, env3)
@@ -3013,10 +3013,10 @@ fun generateConstraints' prog pack nenv =
 		   val (ev4, cst4, css4) = f_labstrexp labstrexp
 		   val ev2  = E.freshEnvVar ()
 		   val env' = E.updateIFct true env (* We mark the environment as being the parameter of a functor *)
-		   val c1   = E.initEnvConstraint (E.consEnvVar ev2 lab) env' lab                   (* bind the specs to ev2                   *)
-		   val c2   = E.initEnvConstraint (E.consEnvVar ev0 lab) (E.consEnvVar ev2 lab) lab (* the functor takes the spec as parameter *)
+		   val c1   = E.initEnvConstraint (E.consENVVAR ev2 lab) env' lab                   (* bind the specs to ev2                   *)
+		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the spec as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev3, SOME ev1, ev4, NONE, lab)                       (* the functor returns the labstrexp       *)
-		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consEnvVar ev2 lab)
+		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singcst (lab, c1)), E.consENVVAR ev2 lab)
 		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst3, cst4])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (env2, env3)

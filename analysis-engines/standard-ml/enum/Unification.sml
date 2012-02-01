@@ -3853,13 +3853,13 @@ fun unif env filters user =
 	    (* 0: signature, 2: structure, 1: translucent, 3: opaque *)
 	    let val btest = FI.testtodo filters lab
 	    (*val _ = D.printdebug2 (S.printState state)*)
-	    (*val _ = D.printdebug2 (E.printEnv (E.consEnvVar ev0 lab) "")*)
+	    (*val _ = D.printdebug2 (E.printEnv (E.consENVVAR ev0 lab) "")*)
 	    in if btest
-	       then let val env0 = buildFEnv (E.consEnvVar ev0 lab) state false
+	       then let val env0 = buildFEnv (E.consENVVAR ev0 lab) state false
 			(*(2010-06-15)Why do we need to refresh the signature/structure?
 			 * Because we don't have proper type schemes and type functions? *)
-			val env2 = buildFEnv (E.consEnvVar ev2 lab) state true
-			(*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consEnvVar ev0 lab) "" ^ "\n" ^ E.printEnv (E.consEnvVar ev2 lab) "")*)
+			val env2 = buildFEnv (E.consENVVAR ev2 lab) state true
+			(*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consENVVAR ev0 lab) "" ^ "\n" ^ E.printEnv (E.consENVVAR ev2 lab) "")*)
 			(*val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")*)
 			(*(2010-06-22)We might need to decorate all the constraint generated in here
 			 * with labs, stts and deps.*)
@@ -3905,7 +3905,7 @@ fun unif env filters user =
 				    NONE => ()
 				  | SOME ev =>
 				    let val env3 = freshenv' (renameenv' env0 state) (SOME O.empty) false
-				    (*val _ = D.printdebug2 (E.printEnv (E.consEnvVar ev lab) "" ^ "\n" ^ E.printEnv env3 "")*)
+				    (*val _ = D.printdebug2 (E.printEnv (E.consENVVAR ev lab) "" ^ "\n" ^ E.printEnv env3 "")*)
 				    in S.updateStateEv state ev (E.pushExtEnv env3 (L.singleton lab) L.empty CD.empty)
 				    end
 		    in fsimplify cs' l
@@ -3917,9 +3917,9 @@ fun unif env filters user =
 	  | fsimplify ((E.FUNCTOR_CONSTRAINT (ev1, ev2, ev3, ev4, lab)) :: cs') l =
 	    (* functor: ev1 -> ev2, argument : ev3, result ev4 *)
 	    if FI.testtodo filters lab
-	    then let val env1 = buildFEnv (E.consEnvVar ev1 lab) state false
-		     val env2 = buildFEnv (E.consEnvVar ev2 lab) state true
-		     val env3 = buildFEnv (E.consEnvVar ev3 lab) state true
+	    then let val env1 = buildFEnv (E.consENVVAR ev1 lab) state false
+		     val env2 = buildFEnv (E.consENVVAR ev2 lab) state true
+		     val env3 = buildFEnv (E.consENVVAR ev3 lab) state true
 		     val (tfnD, tfnT) = getTyFunEnv env1 env3 L.empty L.empty CD.empty
 		     val tfun = mergeTyFun tfnD tfnT
 		     val (cs0, env1') = genTyFunEnv' env1 state tfun true
@@ -3942,8 +3942,8 @@ fun unif env filters user =
 	    (* I need to transform this constraint in environment as I've done for WHR. *)
 	    (* 0: signature, 1: returned, 2: sharing *)
 	    if FI.testtodo filters lab
-	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consEnvVar ev0 lab) state false
-		     val env2 = buildFEnv (*justBuildEnv*) (E.consEnvVar ev2 lab) state false
+	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consENVVAR ev0 lab) state false
+		     val env2 = buildFEnv (*justBuildEnv*) (E.consENVVAR ev2 lab) state false
 		     (* We don't need to refresh these two *)
 		     val (utf, tfun) = getTyFunEnvSha env0 env2
 		     val tfun = case utf of
@@ -3957,7 +3957,7 @@ fun unif env filters user =
 							  (CD.union deps deps'))
 					   tfun
 		     val (cs0, env1) = genTyFunEnv' env0 state tfun false
-		     (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consEnvVar ev0 lab) "" ^ "\n" ^ E.printEnv env0 "")*)
+		     (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consENVVAR ev0 lab) "" ^ "\n" ^ E.printEnv env0 "")*)
 		     (* Do we need this switch here? *)
 		     val _ = sigVsStrON ()
 		     val _ = fsimplify (decorateCst cs0 (L.singleton lab) L.empty CD.empty) l

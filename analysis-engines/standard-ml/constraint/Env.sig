@@ -244,7 +244,7 @@ signature ENV = sig
     val eqEnvVar     : envvar -> envvar -> bool
 
     val newEnvVar    : Label.label -> env
-    val consEnvVar   : envvar -> Label.label -> env
+    val consENVVAR   : envvar -> Label.label -> env
 
     val consEnvC     : varenv  ->
 		       typenv  ->
@@ -326,64 +326,12 @@ signature ENV = sig
 
     val getTyNames   : typenv -> names list
 
-    (*val toPAT        : varenv -> varenv
-    val toREC        : varenv -> varenv
-    val toCON        : varenv -> varenv
-    val toEXC        : varenv -> varenv
-    val toPATlab     : varenv -> Label.labels -> varenv
-    val toVALlab     : varenv -> Label.labels -> varenv
-    val toCONlab     : varenv -> Label.label  -> varenv
-    val toEXClab     : varenv -> Label.label  -> varenv
-    val toRECenv     : varenv -> varenv        -> varenv
-
-    val toDAT        : typenv -> typenv
-    val toDATconsC   : typenv -> typenv -> Label.label -> typenv
-    val toDATconsI   : typenv -> Id.lid -> Label.label -> typenv
-
-    (*val toSTRstr     : strenv -> ClassId.str -> strenv
-    val toSIGstr     : sigenv -> ClassId.str -> sigenv*)
-
-    val getPATenv    : varenv -> varenv
-    val getCONenv    : varenv -> varenv
-    val getEXCenv    : varenv -> varenv
-    val getVALenv    : varenv -> varenv
-
-    val getDATenv    : typenv -> typenv
-
-    val getPATbenv   : varenv -> varenv
-
-    val toClose       : env    -> Expans.nonexp -> env
-    val toCloseVarenv : varenv -> Expans.nonexp -> varenv
-
-    (* restrValue restricts the poly field in the first idenv using the
-     * second idenv which is an environment for value variables. *)
-    val restrValue         : ('a, 'b) genv -> ('a, 'b) genv -> ('a, 'b) genv
-    val restrValueBindList : ('a, 'b) bind list -> ('c, 'd) genv -> ('a, 'b) bind list
-    val updateEnvStatus    : env -> env -> varenv * varenv*)
     val plusEnv            : env -> env -> env
 
     val pushExtEnv         : env -> Label.labels -> Label.labels -> LongId.set -> env
 
     val isEmptyIdEnv       : 'a emap  -> bool
     val isEmptyEnv         : env      -> bool
-    (*val isEmptyValEnv : env      -> bool
-    val isEmptyOpnEnv : opnenv   -> bool
-    val emEnvListAnd  : env list -> bool (* true if all the env are empty *)
-
-    (* followPath is used in StateMap.sml and Build.sml.
-     * The bool is true if it went all the way through lid.
-     * followPathStr is used in Build.sml. *)
-    val followPath    : Id.lid -> env ->
-			env extLab    *
-			Id.id         *
-			Label.label  *
-			Id.lid option
-    val followPathStr : Id.lid -> env -> extenv option
-
-    (* Generates an INJ environment from and Id.lid *)
-    val generateINJ'  : Id.lid -> 'a -> ClassId.class -> (('b, 'a) bind -> env) -> env
-    val generateINJ   : Id.lid -> Ty.ty -> ClassId.class -> env*)
-
 
     (* Generates an environment from a long identifier and a type function *)
     val genLongEnv    : Id.lid -> Ty.tyfun -> cst * env

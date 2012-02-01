@@ -419,8 +419,8 @@ fun envVarToInt envvar = envvar
 
 fun eqEnvVar ev1 ev2 = (ev1 = (ev2 : envvar))
 
-fun consEnvVar ev lab = ENVVAR (ev, lab)
-fun newEnvVar  lab    = consEnvVar (freshEnvVar ()) lab
+fun consENVVAR ev lab = ENVVAR (ev, lab)
+fun newEnvVar  lab    = consENVVAR (freshEnvVar ()) lab
 
 fun envToEnvvar (ENVVAR ev) = ev
   | envToEnvvar _ = raise EH.DeadBranch "the environment should be a variable"
@@ -977,9 +977,9 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
     let val (cst, env1) = genLongEnv lid tyfun
 	val ev1  = freshEnvVar ()
 	val ev2  = freshEnvVar ()
-	val c1   = initEnvConstraint (consEnvVar ev1 lab1) env1 lab1
-	val c2   = initEnvConstraint (consEnvVar ev2 lab2) (consEnvVar ev1 lab2) lab2
-	val strs = singenv (id, [consBindPoly id (consEnvVar ev2 lab1) (CL.consSTR ()) lab1])
+	val c1   = initEnvConstraint (consENVVAR ev1 lab1) env1 lab1
+	val c2   = initEnvConstraint (consENVVAR ev2 lab2) (consENVVAR ev1 lab2) lab2
+	val strs = singenv (id, [consBindPoly id (consENVVAR ev2 lab1) (CL.consSTR ()) lab1])
     in (conscst (lab2, c2) (conscst (lab1, c1) cst), projStrs strs)
     end
 
