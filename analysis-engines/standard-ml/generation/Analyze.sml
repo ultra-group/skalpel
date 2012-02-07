@@ -2008,7 +2008,7 @@ fun generateConstraints' prog pack nenv =
 		   val css2 = if 0 <= i andalso i <= 9
 			      then E.emcss
 			      else E.singcss (fixityCs lab)
-	       in (E.emenv, E.uenvcss [css1, css2])
+	       in (E.emptyEnvironment, E.uenvcss [css1, css2])
 	       end
 	     | f_dec (A.DecInfixr (i, identseq, _, lab, _)) =
 	       let val css1 = if getBasis ()
@@ -2017,13 +2017,13 @@ fun generateConstraints' prog pack nenv =
 		   val css2 = if 0 <= i andalso i <= 9
 			      then E.emcss
 			      else E.singcss (fixityCs lab)
-	       in (E.emenv, E.uenvcss [css1, css2])
+	       in (E.emptyEnvironment, E.uenvcss [css1, css2])
 	       end
 	     | f_dec (A.DecNonfix (identseq, _, lab, _)) =
 	       let val css = if getBasis ()
 			     then E.emcss
 			     else E.singcss (notFullyCs lab "nonfix")
-	       in (E.emenv, css)
+	       in (E.emptyEnvironment, css)
 	       end
 	     | f_dec (A.DecOverload (labid, labtyp, labtyvar, tyclassseq, _, lab, _)) =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
@@ -2052,7 +2052,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env, E.emcss)
 	       end
 
-	   and f_declist []    = (E.emenv, E.emcss)
+	   and f_declist []    = (E.emptyEnvironment, E.emcss)
 	     | f_declist [dec] = f_dec dec
 	     | f_declist (dec :: decs) =
 	       let val (env1, css1) = f_dec dec
@@ -2069,7 +2069,7 @@ fun generateConstraints' prog pack nenv =
 	   (*and f_decslet (A.Decs (ds, _)) = map (fn x => f_dec x) ds
 	     | f_decslet (A.DecsDots pl)  =
 	       let val (env, _, cs) = f_partlist pl
-	       in [(env, E.emenv, cs)]
+	       in [(env, E.emptyEnvironment, cs)]
 	       end*)
 
 	   (* RETURNS: (Env.varenv, E.emptyConstraint, E.emcss) *)
@@ -2149,7 +2149,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Env.env, E.emcss) *)
-	   and f_tdrdesclist []                    = (E.emenv, E.emcss)
+	   and f_tdrdesclist []                    = (E.emptyEnvironment, E.emcss)
 	     | f_tdrdesclist [tdrdesc]             =
 	       let val (env, cst, css) = f_tdrdescone tdrdesc
 	       in (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, env), css)
@@ -2332,7 +2332,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_speconesmltes spec = f_specone spec
 
 	   (* RETURNS: (Env.env, Env.css) *)
-	   and f_speconesmlteslist []        = (E.emenv, E.emcss)
+	   and f_speconesmlteslist []        = (E.emptyEnvironment, E.emcss)
 	     | f_speconesmlteslist [x]       = f_speconesmltes x
 	     | f_speconesmlteslist (x :: xs) =
 	       let val (env1, css1) = f_speconesmltes x
@@ -2418,7 +2418,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tns, typs, cst, css) = f_typdesc typdesc
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateITns tns (E.projTyps typs))
 		   val envVar   = E.freshEnvVar ()
-		   val c    = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
+		   val c = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
 	       in (env', css)
 	       end
@@ -2492,7 +2492,7 @@ fun generateConstraints' prog pack nenv =
 	       let val css = if getBasis ()
 			     then E.emcss
 			     else E.singcss (sorryCsS lab "include")
-	       in (E.emenv, css)
+	       in (E.emptyEnvironment, css)
 	       end
 	     | f_specone (A.SpecRep (tycon, longtycon, _, lab, _)) =
 	       let val (s, v, tv, sv, typs, cst1) = f_tyconbind tycon
@@ -2555,7 +2555,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Env.env, Env.css) *)
-	   and f_speconelist []        = (E.emenv, E.emcss)
+	   and f_speconelist []        = (E.emptyEnvironment, E.emcss)
 	     | f_speconelist [x]       = f_specone x
 	     | f_speconelist (x :: xs) =
 	       let val (env1, css1) = f_specone x
@@ -2645,7 +2645,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Env.env, Env.css) *)
-	   and f_strdeconelist [] = (E.emenv, E.emcss)
+	   and f_strdeconelist [] = (E.emptyEnvironment, E.emcss)
 	     | f_strdeconelist [strdec] = f_strdecone strdec
 	     | f_strdeconelist (strdec :: strdecs) =
 	       let val (env1, css1) = f_strdecone strdec
@@ -2761,7 +2761,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyfvar, Env.env, Env.cst) *)
 	   and f_longtyconbind longtycon =
 	       case A.longtyconToLid longtycon of
-		   NONE => (T.freshtyfvar (), E.emenv, E.emptyConstraint)
+		   NONE => (T.freshtyfvar (), E.emptyEnvironment, E.emptyConstraint)
 		 | SOME lid =>
 		   let val lab = I.getLabId lid
 		       val tfv = T.freshtyfvar ()
@@ -3069,10 +3069,10 @@ fun generateConstraints' prog pack nenv =
 	     | f_smltes (A.SmlTesSpec (spec, _, _))    = f_specsmltes spec
 	     (*(2010-06-17)The SMLTES spec is different because we need to directly close value specs
 	      * and not wait to match them against structures. *)
-	     | f_smltes (A.SmlTesUse  (af, _, _)) = (E.emenv, f_afile af)
-	     | f_smltes (A.SmlTesSBas (af, _, _)) = (E.emenv, f_afile af)
-	     | f_smltes (A.SmlTesCBas _)  = (E.emenv, E.emcss)
-	     | f_smltes (A.SmlTesQuote _) = (E.emenv, E.emcss)
+	     | f_smltes (A.SmlTesUse  (af, _, _)) = (E.emptyEnvironment, f_afile af)
+	     | f_smltes (A.SmlTesSBas (af, _, _)) = (E.emptyEnvironment, f_afile af)
+	     | f_smltes (A.SmlTesCBas _)  = (E.emptyEnvironment, E.emcss)
+	     | f_smltes (A.SmlTesQuote _) = (E.emptyEnvironment, E.emcss)
 	     | f_smltes (A.SmlTesType (id, _, _)) = (E.ENVPTY id, E.emcss)
 	     | f_smltes (A.SmlTesDots pl) =
 	       let val env = f_partlist pl
@@ -3096,7 +3096,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (E.env, Env.css) *)
-	   and f_topdeconelist [] = (E.emenv, E.emcss)
+	   and f_topdeconelist [] = (E.emptyEnvironment, E.emcss)
 	     | f_topdeconelist [x] = f_topdecone x
 	     | f_topdeconelist (x :: xs) =
 	       let val (env1, css1) = f_topdecone x
@@ -3129,14 +3129,14 @@ fun generateConstraints' prog pack nenv =
 	       (* Here we generate an environmnet variable because the file is not parsable
 		* and it might generate binding errors. *)
 	       (E.newEnvVar lab, E.singcss (E.CSSPARS (L.singleton lab, s)))
-	     | f_progone (A.ProgOneFile (af, _)) = (E.emenv, f_afile af)
+	     | f_progone (A.ProgOneFile (af, _)) = (E.emptyEnvironment, f_afile af)
 	     | f_progone (A.ProgOneDots pl) =
 	       let val env = f_partlist pl
 	       in (env, E.emcss)
 	       end
 
 	   (* RETURNS: (E.env, Env.css) *)
-	   and f_progonelist []  =  (E.emenv, E.emcss)
+	   and f_progonelist []  =  (E.emptyEnvironment, E.emcss)
 	     | f_progonelist [x] = f_progone x
 	     | f_progonelist (x :: xs) =
 	       let val (env1, css1) = f_progone x
@@ -3156,19 +3156,19 @@ fun generateConstraints' prog pack nenv =
 	       E.ENVFIL (file, env1, fn () => env2)
 
 	   (* RETURNS: (E.env, Env.css) *)
-	   and f_proglist [] = (E.emenv, E.emcss)
+	   and f_proglist [] = (E.emptyEnvironment, E.emcss)
 	     | f_proglist [(x, file, false, _)] =
 	       let val (env, css) = f_prog x
-	       in (f_progfile file env E.emenv, css)
+	       in (f_progfile file env E.emptyEnvironment, css)
 	       end
 	     | f_proglist [(x, file, true, _)] =
 	       if benv
 	       then let val _ = setBasis true
 			val (env, css) = f_prog x
 			val _ = setBasis false
-		    in (f_progfile file env E.emenv, css)
+		    in (f_progfile file env E.emptyEnvironment, css)
 		    end
-	       else (E.emenv, E.emcss)
+	       else (E.emptyEnvironment, E.emcss)
 	     | f_proglist ((x, file, false, _) :: xs) =
 	       let val (env1, css1) = f_prog x
 		   val (env2, css2) = f_proglist xs

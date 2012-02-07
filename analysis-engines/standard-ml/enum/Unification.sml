@@ -648,7 +648,7 @@ fun freshtypenv idenv tvl state bstr =
     E.mapenv (fn semty => map (fn x => freshexttypfun x tvl state bstr) semty) idenv
 
 fun freshenv (E.ENVVAR (ev, lab)) tvl state _ = E.ENVVAR (F.freshEnvVar ev state, lab)
-  | freshenv (env as E.ENVCON _) tvl state bstr =
+  | freshenv (env as E.ENVIRONMENT_CONSTRUCTOR _) tvl state bstr =
     let val vids = freshvarenv (E.getVids env) tvl state bstr
 	val typs = freshtypenv (E.getTyps env) tvl state false (*bstr*)
 	(*(2010-03-03)We want false for typs because the types
@@ -660,7 +660,7 @@ fun freshenv (E.ENVVAR (ev, lab)) tvl state _ = E.ENVVAR (F.freshEnvVar ev state
 	val funs = E.getFuns env
 	val ovcs = freshocsenv (E.getOvcs env) tvl state bstr
 	val info = E.getInfo env
-    in E.consEnvC vids typs tyvs strs sigs funs ovcs info
+    in E.consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
     end
   | freshenv (E.SEQUENCE_ENV (env1, env2)) tvl state bstr =
     E.SEQUENCE_ENV (freshenv env1 tvl state bstr, freshenv env2 tvl state bstr)
@@ -895,8 +895,8 @@ fun buildEnv (E.ENVVAR (ev, lab)) state fresh bstr =
 	val env2 = buildEnv env2 state fresh bstr
     in E.SEQUENCE_ENV (env1, env2)
     end
-  | buildEnv (env as E.ENVCON _) state fresh bstr =
-    E.consEnvC (buildIdEnv (E.getVids env) state fresh freshty     buildTy'    bstr)
+  | buildEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) state fresh bstr =
+    E.consEnvironmentConstructor (buildIdEnv (E.getVids env) state fresh freshty     buildTy'    bstr)
 	       (buildIdEnv (E.getTyps env) state fresh freshTypSem buildTypSem false)
 	       (buildIdEnv (E.getTyvs env) state fresh freshtyvar  buildTyVar  bstr)
 	       (buildIdEnv (E.getStrs env) state fresh freshEnv    buildEnv'   bstr)
@@ -1057,7 +1057,7 @@ fun idInIdEnv idenv lab id =
 	not (CL.classIsANY (E.getBindC bind))
       | _ => false
 
-fun idInEnv (env as E.ENVCON _) lab id =
+fun idInEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) lab id =
     let val lab = L.fromInt lab
 	val id  = I.fromInt id
     in idInIdEnv (E.getVids env) lab id orelse
@@ -1199,7 +1199,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 	    in (List.concat (csG @ csSV), List.concat (csT @ csST))
 	    end
     in case (env1, env2) of (* env1/env2 : signature/structure *)
-	   (E.ENVCON _, E.ENVCON _) => linkstr env1 env2
+	   (E.ENVIRONMENT_CONSTRUCTOR _, E.ENVIRONMENT_CONSTRUCTOR _) => linkstr env1 env2
 	 | (E.ENVDEP (env1, labs', stts', deps'), env2) =>
 	   let val labs0 = L.union  labs labs'
 	       val stts0 = L.union  stts stts'
@@ -1266,7 +1266,7 @@ fun insertInTyFun tyfun name tf =
     in OM.insert (tyfun, tn, tf)
     end
 
-fun getAllTyFunEnv (env as E.ENVCON _) =
+fun getAllTyFunEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) =
     let val (tfnDs1, tfnTs1) =
 	    foldr (fn ({id, lab, kind, name}, (tfnDs, tfnTs)) =>
 		      case kind of
@@ -1312,7 +1312,7 @@ and getAllTyFunStrEnv strenv =
 	(OM.empty, OM.empty)
 	strenv
 
-fun getTyFunEnv (env1 as E.ENVCON _) (env2 as E.ENVCON _) labs stts deps =
+fun getTyFunEnv (env1 as E.ENVIRONMENT_CONSTRUCTOR _) (env2 as E.ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
     let val (tfnDs1, tfnTs1) =
 	    foldr (fn ({id, lab, kind, name}, (tfnDs, tfnTs)) =>
 		      case E.plusproj (E.getTyps env2) id of
@@ -1353,7 +1353,7 @@ fun getTyFunEnv (env1 as E.ENVCON _) (env2 as E.ENVCON _) labs stts deps =
 		(L.union labs labs')
 		(L.union stts stts')
 		(CD.union deps deps')
-  | getTyFunEnv (env as E.ENVCON _) _ _ _ _ = getAllTyFunEnv env
+  | getTyFunEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) _ _ _ _ = getAllTyFunEnv env
   | getTyFunEnv (E.SEQUENCE_ENV (env0, env1)) env2 labs stts deps =
     let val (tfnDs1, tfnTs1) = getTyFunEnv env0 env2 labs stts deps
 	val (tfnDs2, tfnTs2) = getTyFunEnv env1 env2 labs stts deps
@@ -1424,7 +1424,7 @@ fun mergeUTyFunSha (SOME utf1) (SOME utf2) = SOME (EL.unionExtLab utf1 utf2 (fn 
   | mergeUTyFunSha NONE        (SOME utf)  = SOME utf
   | mergeUTyFunSha NONE        NONE        = NONE
 
-fun getTyFunEnvSha (env1 as E.ENVCON _) (env2 as E.ENVCON _) =
+fun getTyFunEnvSha (env1 as E.ENVIRONMENT_CONSTRUCTOR _) (env2 as E.ENVIRONMENT_CONSTRUCTOR _) =
     let val (utfT, tfnT) =
 	    foldr (fn ({id, lab, kind, name}, (utf, tfns)) =>
 		      case E.plusproj (E.getTyps env2) id of
@@ -1466,7 +1466,7 @@ fun getTyFunEnvSha (env1 as E.ENVCON _) (env2 as E.ENVCON _) =
     in (decorateUTyFunSha utf labs stts deps,
 	decorateTyFunSha  tfn labs stts deps)
     end
-  | getTyFunEnvSha (env as E.ENVCON _) _ =
+  | getTyFunEnvSha (env as E.ENVIRONMENT_CONSTRUCTOR _) _ =
     let val (tfnD, tfnT) = getAllTyFunEnv env
 	val tfn1 = mergeTyFun tfnD tfnT
 	val tfn2 = OM.map (fn _ => NONE) tfn1
@@ -1624,7 +1624,7 @@ fun genTyFunGenEnv genenv state tfun dom b genfun =
 	genenv
 
 (* This is actually used for matchings structure/signature and for sharing *)
-fun genTyFunEnv (env as E.ENVCON _) state tfun dom b =
+fun genTyFunEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) state tfun dom b =
     let val tns =
 	    if b
 	    (*then List.filter (fn {id, kind, name} => not (O.isin (T.tynameToInt name) dom)) (E.getITns env)*)
@@ -1651,7 +1651,7 @@ fun genTyFunEnv (env as E.ENVCON _) state tfun dom b =
 	val (csOvcs, ovcs) = genTyFunGenEnv (E.getOvcs env) state tfun dom b genTyFunExtSeqTy
 	val info           = E.consInfo (E.getILab env) (E.getICmp env) tns (E.getIFct env)
 	val cs             = csVids @ csTyps @ csOvcs @ csStrs @ csSigs
-    in (cs, E.consEnvC vids typs tyvs strs sigs funs ovcs info)
+    in (cs, E.consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info)
     end
   | genTyFunEnv (x as E.SEQUENCE_ENV (env1, env2)) state tfun dom b =
     let val (cs1, env1') = genTyFunEnv env1 state tfun dom b
@@ -1792,7 +1792,7 @@ fun applyTyFunGenEnv genenv tfun genfun =
 	([], E.emgen)
 	genenv
 
-fun applyTyFunEnv (env as E.ENVCON _) tfun =
+fun applyTyFunEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) tfun =
     let val (csVids, vids) = applyTyFunGenEnv (E.getVids env) tfun applyTyFunExtTy
 	val (csTyps, typs) = applyTyFunGenEnv (E.getTyps env) tfun applyTyFunExtFunTy
 	val tyvs           = E.getTyvs env
@@ -1818,7 +1818,7 @@ fun applyTyFunEnv (env as E.ENVCON _) tfun =
 			    (E.getITns env)
 	val info           = E.consInfo (E.getILab env) (E.getICmp env) tns (E.getIFct env)
     (*TODO: rename the type names in the info part using tfun.*)
-    in (cs, E.consEnvC vids typs tyvs strs sigs funs ovcs info)
+    in (cs, E.consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info)
     end
   | applyTyFunEnv (x as E.SEQUENCE_ENV (env1, env2)) tfun =
     let val (cs1, env1') = applyTyFunEnv env1 tfun
@@ -1861,7 +1861,7 @@ and applyTyFunExtFun extfun tfun =
 (* Matching signature/where clause *)
 
 fun matchWhereEnv envsig NONE state = (OM.empty, true)
-  | matchWhereEnv (envsig as E.ENVCON _) (SOME ({lid = I.ID (idTc, labTc), sem, class, lab}, labs, stts, deps)) state =
+  | matchWhereEnv (envsig as E.ENVIRONMENT_CONSTRUCTOR _) (SOME ({lid = I.ID (idTc, labTc), sem, class, lab}, labs, stts, deps)) state =
     let val tmap = OM.empty
     in case E.plusproj (E.getTyps envsig) idTc of
 	   [] => (* There is no machting in the signature *)
@@ -1948,7 +1948,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	   end
 	 | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving"
     end
-  | matchWhereEnv (envsig as E.ENVCON _) (SOME ({lid = I.LID ((id, lab1), lid, lab2), sem, class, lab}, labs, stts, deps)) state =
+  | matchWhereEnv (envsig as E.ENVIRONMENT_CONSTRUCTOR _) (SOME ({lid = I.LID ((id, lab1), lid, lab2), sem, class, lab}, labs, stts, deps)) state =
     (case E.plusproj (E.getStrs envsig) id of
 	 [] => (* There is no machting in the signature *)
 	 if E.getICmp envsig
@@ -2073,7 +2073,7 @@ fun renameexttypfun x state ren =
 fun renametypenv typenv state ren =
     E.mapenv (fn semty => map (fn x => renameexttypfun x state ren) semty) typenv
 
-and renameenv (env as E.ENVCON _) state ren =
+and renameenv (env as E.ENVIRONMENT_CONSTRUCTOR _) state ren =
     let (*val state = ref (!state) (*(2010-06-14)Why a new reference?*)*)
 	val tns   = map (fn {id, lab, kind, name} =>
 			    ((*D.printdebug2 (S.printState state ^ "\n\n" ^ T.printtyname name);*)
@@ -2090,7 +2090,7 @@ and renameenv (env as E.ENVCON _) state ren =
 	val typs  = renametypenv (E.getTyps env) state ren
 	val tyvs  = E.getTyvs env
 	val info  = E.consInfo (E.getILab env) (E.getICmp env) tns (E.getIFct env)
-    in E.consEnvC vids typs tyvs strs sigs funs ovcs info
+    in E.consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
     end
   | renameenv (E.SEQUENCE_ENV (env1, env2)) state ren =
     E.SEQUENCE_ENV (renameenv env1 state ren, renameenv env2 state ren)
@@ -2621,7 +2621,7 @@ fun unif env filters user =
 		 in env'
 		 end)
 	  (* Here we don't need to re-solve env, preSolveEnv is enough *)
-	  | solveenv (env as E.ENVCON _) bmon =
+	  | solveenv (env as E.ENVIRONMENT_CONSTRUCTOR _) bmon =
 	    (let val (vids, compVids, cst) = solvevarenv (E.getVids env) bmon
 		 val (typs, compTyps, _)   = solvetypenv (E.getTyps env) bmon
 		 val (tyvs, compTyvs, _)   = solvetyvenv (E.getTyvs env) bmon
@@ -2634,7 +2634,7 @@ fun unif env filters user =
 			     compOvcs andalso E.getICmp env
 		 val nfo   = E.consInfo (E.getILab env) cmp (E.getITns env) (E.getIFct env)
 		 val _     = run cst
-		 val env'  = E.consEnvC vids typs tyvs strs sigs funs ovcs nfo
+		 val env'  = E.consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs nfo
 	     (*val _     = D.printdebug2 (E.printEnv env' "")*)
 	     in env'
 	     end
@@ -2650,18 +2650,18 @@ fun unif env filters user =
 	  | solveenv (E.ENVOPN opnenv) bmon = solveopnenv opnenv bmon
 	  | solveenv (E.ENVDEP (env, labs, stts, deps)) bmon =
 	    (case FI.getStateLabs filters labs of
-		 FI.OUT  => E.emenv
+		 FI.OUT  => E.emptyEnvironment
 	       | FI.BIND => E.newEnvVar L.dummyLab
 	       | FI.IN   => E.pushExtEnv (solveenv env bmon) labs stts deps)
 	  | solveenv (E.FUNCTOR_ENV cst) bmon = E.FUNCTOR_ENV cst
-	  | solveenv (E.CONSTRAINT_ENV cst) bmon = (run cst; E.emenv)
+	  | solveenv (E.CONSTRAINT_ENV cst) bmon = (run cst; E.emptyEnvironment)
 	  | solveenv (E.ENVPOL (tyvenv, env)) bmon =
 	    let val env1  = solveenv (E.projTyvs tyvenv) bmon
 		val b     = E.isEmptyEnv env1
 		val tvs   = S.pushEnvToState b env1 state
 		val env'  = solveenv env bmon
 		val _     = S.remEnvFromState b tvs state
-		fun checkTyVars (env as E.ENVCON _) labs stts deps =
+		fun checkTyVars (env as E.ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
 		    (* NOTE: Should only contain Vids's so we only deal with them. *)
 		    let val dom  = E.dom (E.getTyvs env1)
 			val vids = buildVarEnv (E.toPolyVids (E.getVids env)) state dom bmon
@@ -2781,7 +2781,7 @@ fun unif env filters user =
 		val env1 = solveenv env bmon
 		val b    = E.isEmptyEnv env1
 		val tvs  = S.pushEnvToState b env1 state
-		val env2 = (*E.emenv*) solveenv (strm ()) bmon
+		val env2 = (*E.emptyEnvironment*) solveenv (strm ()) bmon
 		val _    = S.remEnvFromState b tvs state
 	    in E.plusEnv env1 env2
 	    end
@@ -2880,7 +2880,7 @@ fun unif env filters user =
 			      | FI.IN   => let val env' = solveopnsem opnsem bmon
 					   in E.plusEnv env env'
 					   end)
-			E.emenv
+			E.emptyEnvironment
 			opnenv
 
 
@@ -3673,32 +3673,32 @@ fun unif env filters user =
 		 let val cs''  = E.genCstEvAll env' env ls deps ids
 		 in fsimplify (cs'' :: cs') l
 		 end)
-	  | fsimplify ((E.ENV_CONSTRAINT ((env1 as E.ENVCON _, env2 as E.ENVCON _), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ENV_CONSTRAINT ((env1 as E.ENVIRONMENT_CONSTRUCTOR _, env2 as E.ENVIRONMENT_CONSTRUCTOR _), ls, deps, ids)) :: cs') l =
 	    let val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
 	    end
 	  (*(2010-04-16)TODO:*)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVIRONMENT_CONSTRUCTOR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVIRONMENT_CONSTRUCTOR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVCON y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVIRONMENT_CONSTRUCTOR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVVAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVIRONMENT_CONSTRUCTOR x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVIRONMENT_CONSTRUCTOR x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVIRONMENT_CONSTRUCTOR x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TFV tfv, tyfun), labs, stts, deps)) :: cs') l =
 	    (case S.getValStateTf state tfv of
@@ -3993,7 +3993,7 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.NV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((T.NV  y, T.NC  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC  x, T.SV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV  y, T.SC  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.SEQUENCE_ENV x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVCON x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.ENVCON x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVIRONMENT_CONSTRUCTOR x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.ENVIRONMENT_CONSTRUCTOR x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO
 
 	and handleSimplify err xs l =

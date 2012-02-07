@@ -58,7 +58,7 @@ type stTn = T.tnty
 type stSq = T.seqty
 type stRt = T.rowty
 type stLt = T.labty
-type stEv = E.env
+type stEv = E.environment
 type stRc = (rcty * rcty)
 type stGe = T.exttyvar
 type stAr = T.seqty
@@ -96,7 +96,7 @@ type stateor = stOr onestatemp
 type statege = stGe onestatege
 
 (* part of the state for the environment *)
-type stateid = Env.env ref
+type stateid = Env.environment ref
 
 (* This is for the arity of type constructors *)
 type statear = stAr onestatear
@@ -556,11 +556,11 @@ fun isAName tyname state =
 fun updateFoundVal NONE _ = NONE
   | updateFoundVal (SOME (bind, b1)) b2 = SOME (bind, b1 orelse b2)
 
-fun getValStateId (env as E.ENVCON _) (I.ID (id, lab)) _ fenv labs stts deps =
+fun getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.ID (id, lab)) _ fenv labs stts deps =
     (case List.find (fn x => true) (E.plusproj (fenv env) id) of
 	 SOME ext => (SOME (EL.updExtLab ext labs stts deps, E.getIFct env), NONE, true)
        | _        => (NONE, SOME ((id, lab), (env, labs, stts, deps)), false))
-  | getValStateId (env as E.ENVCON _) (I.LID ((id, lab1), lid, lab2)) state fenv labs stts deps =
+  | getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.LID ((id, lab1), lid, lab2)) state fenv labs stts deps =
     (case List.find (fn x => true) (E.plusproj (E.getStrs env) id) of
 	 NONE => (NONE, (SOME ((id, lab1), (env, labs, stts, deps))), false)
        | SOME (bind, labs', stts', deps') =>
@@ -830,7 +830,7 @@ fun deleteStateGe state key value =
 
 
 
-fun updateDatCons state (id, lab) (env as E.ENVCON _) =
+fun updateDatCons state (id, lab) (env as E.ENVIRONMENT_CONSTRUCTOR _) =
     (case getValStateIdTy state (I.idToLid id lab) true of
 	 (SOME (({id, bind = (bind, tnKind, cons), lab = l, poly, class}, labs, stts, deps), _), _, _) =>
 	 if L.eq lab l
@@ -841,7 +841,7 @@ fun updateDatCons state (id, lab) (env as E.ENVCON _) =
 
 fun isEmpty state = MS.numItems (!(getStateTv state)) = 0
 
-fun initStateId () = ref E.emenv
+fun initStateId () = ref E.emptyEnvironment
 
 fun initStateSe () =
     let val atv = ref MS.empty
@@ -1278,7 +1278,7 @@ fun updateRecOne state strc =
 
 (* PUSHING AN ENV ONTO A STATE *)
 
-fun getAllTns (env as E.ENVCON _) state =
+fun getAllTns (env as E.ENVIRONMENT_CONSTRUCTOR _) state =
     E.foldrienv (fn (_, sem, tns) => foldr (fn (bind, tns) => (getAllTns (E.getBindT bind) state) @ tns)
 					   tns
 					   sem)
@@ -1306,7 +1306,7 @@ val emMonos = MS.empty
 
 val emMonos = []*)
 
-fun getMonoTyVars (env as E.ENVCON _) state =
+fun getMonoTyVars (env as E.ENVIRONMENT_CONSTRUCTOR _) state =
     let val vids = E.getVids env
 	val strs = E.getStrs env
 	(*val _ = D.printdebug2 (E.printEnv env "")*)

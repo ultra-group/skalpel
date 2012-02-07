@@ -37,7 +37,7 @@ signature STATE = sig
     type stSq = Ty.seqty
     type stRt = Ty.rowty
     type stLt = Ty.labty
-    type stEv = Env.env
+    type stEv = Env.environment
     type stRc = (rcty * rcty) (* this is for records *)
     type stGe = Ty.exttyvar
     type stAr = Ty.seqty
@@ -72,13 +72,13 @@ signature STATE = sig
     (* The second returned value is for incomplete structures.
      * The third  returned value is true if we successfully went down the lid.
      * In the first option, the bool is true if the binding comes from the parameter of a functor. *)
-    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extvar * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.exttyv * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.exttyp * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
-    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.idl * Env.env ExtLab.extLab) option * bool
+    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extvar * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.exttyv * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.exttyp * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
 
     (* get the 'fr' and 'op' parts of the state. *)
     val getValStateFree    : state -> (Id.idl * bool) list
@@ -103,7 +103,7 @@ signature STATE = sig
     (* for free _opened_ identifiers *)
     val updateStateFo      : state -> Id.idl -> unit
 
-    val updateDatCons      : state -> Id.idl -> Env.env -> unit
+    val updateDatCons      : state -> Id.idl -> Env.environment -> unit
 
     val updateRecOne       : state ->
 			     stRc  ->
@@ -138,7 +138,7 @@ signature STATE = sig
     val isAName            : Ty.tyname -> state -> bool
 
     (* PUSH AN ENVIRONMENT ONTO A STATE *)
-    val pushEnvToState     : bool -> Env.env -> state -> (Ty.tyvar list * stNa list)
+    val pushEnvToState     : bool -> Env.environment -> state -> (Ty.tyvar list * stNa list)
 
     (* REMOVE AN ENVIRONMENT FROM A STATE *)
     val remEnvFromState    : bool -> (Ty.tyvar list * stNa list) -> state -> unit
