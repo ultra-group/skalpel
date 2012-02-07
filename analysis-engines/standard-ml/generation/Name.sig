@@ -1,5 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -31,6 +30,6 @@
 signature NAME = sig
 
     (* binds top level names *)
-    val getTyName : Id.assoc -> Env.typenv * Env.cst
+    val getTyName : Id.assoc -> Env.typenv * Env.constraints
 
 end

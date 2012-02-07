@@ -1,6 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- *
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
  * a Type Error Slicer for Standard ML written by the ULTRA Group of
@@ -109,14 +107,14 @@ signature STATE = sig
 
     val updateRecOne       : state ->
 			     stRc  ->
-			     Env.ocst list *
+			     Env.oneConstraint list *
 			     (ErrorKind.recerr ExtLab.extLab) list
     val updateRec          : state ->
-			     Env.ocst list *
+			     Env.oneConstraint list *
 			     (ErrorKind.recerr ExtLab.extLab) list
 
-    (*val updateStateTc      : state -> Id.lid -> stUb -> Env.ocst list
-     val updateStateAp      : state -> Id.lid -> stUb -> Env.ocst list*)
+    (*val updateStateTc      : state -> Id.lid -> stUb -> Env.oneConstraint list
+     val updateStateAp      : state -> Id.lid -> stUb -> Env.oneConstraint list*)
 
     (* eraseStateGe is similar to deleteStateGe but it completely removes
      * the entry for a type variable (int) when deleteStateGe only removes

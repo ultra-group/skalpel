@@ -68,11 +68,11 @@ datatype cocc  = CT of T.tyvar  * T.ty
                | CR of T.rowvar * T.rowty
 
 (* THESE bind forms are used to solve binders.   *)
-datatype 'a sbind = BINDOUT              (* the binding has been discarded                    *)
-		  | BINDNOT of E.cst     (* the binding is not a binding                      *)
-		  | BINDIN  of 'a E.bind (* we kept the binding                               *)
-		  | BINDPOL of 'a E.bind (* we kept the binding but weakened the poly field   *)
-		  | BINDDUM of 'a E.bind (* the binding has been transformed into a dummy one *)
+datatype 'a sbind = BINDOUT                  (* the binding has been discarded                    *)
+		  | BINDNOT of E.constraints (* the binding is not a binding                      *)
+		  | BINDIN  of 'a E.bind     (* we kept the binding                               *)
+		  | BINDPOL of 'a E.bind     (* we kept the binding but weakened the poly field   *)
+		  | BINDDUM of 'a E.bind     (* the binding has been transformed into a dummy one *)
 
 datatype user = MIN of ERR.error
 	      | ENUM
@@ -195,7 +195,7 @@ fun compareenv env1 env2 filters ls deps ids =
 fun decorateCst' (E.SEQUENCE_CONSTRAINT x) labs stts deps = E.SEQUENCE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.TYPE_CONSTRAINT x) labs stts deps = E.TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.FUNCTION_TYPE_CONSTRAINT x) labs stts deps = E.FUNCTION_TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
-  | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singcst (L.dummyLab, c))) "");
+  | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singleConstraint (L.dummyLab, c))) "");
 				     raise EH.DeadBranch "")
 
 fun decorateCst xs labs stts deps =
@@ -2402,8 +2402,8 @@ fun unif env filters user =
 		val lab = E.getBindL bind
 		val lid = I.idToLid id lab
 		fun generateAcc () =
-		    let val a = E.genAccIvAll (E.consAccId lid (E.getBindT bind) cl lab) labs stts deps
-		    in BINDNOT (E.singcst (lab, E.ACCESSOR_CONSTRAINT a))
+		    let val a = E.genValueIDAccessor (E.consAccId lid (E.getBindT bind) cl lab) labs stts deps
+		    in BINDNOT (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 		    end
 	    in case S.getValStateIdVa state lid false of
 		   (SOME (({id, bind = _, lab = _, poly, class}, labs', stts', deps'), _), _, _) =>
@@ -2462,15 +2462,15 @@ fun unif env filters user =
 		   | CL.VID CL.PAT => BINDDUM bind
 		   | CL.VID CL.REC => BINDDUM bind
 		   | CL.VID CL.VRC => BINDDUM bind
-		   | CL.VID CL.CO0 => BINDNOT E.emcst
-		   | CL.VID CL.CO1 => BINDNOT E.emcst
-		   | CL.VID CL.CON => BINDNOT E.emcst
-		   | CL.VID CL.DA0 => BINDNOT E.emcst
-		   | CL.VID CL.DA1 => BINDNOT E.emcst
-		   | CL.VID CL.DAT => BINDNOT E.emcst
-		   | CL.VID CL.EX0 => BINDNOT E.emcst
-		   | CL.VID CL.EX1 => BINDNOT E.emcst
-		   | CL.VID CL.EXC => BINDNOT E.emcst
+		   | CL.VID CL.CO0 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.CO1 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.CON => BINDNOT E.emptyConstraint
+		   | CL.VID CL.DA0 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.DA1 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.DAT => BINDNOT E.emptyConstraint
+		   | CL.VID CL.EX0 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.EX1 => BINDNOT E.emptyConstraint
+		   | CL.VID CL.EXC => BINDNOT E.emptyConstraint
 		   | CL.ANY        => BINDDUM bind
 		   | CL.CLVAR _    => BINDDUM bind
 		   | class => (print (CL.toString class); raise EH.DeadBranch "identifier in environment has an unexpected status"))
@@ -2525,8 +2525,8 @@ fun unif env filters user =
 				    val lab = E.getBindL bind
 				    val lid = I.idToLid id lab
 				in case S.getValStateIdTv state lid false of
-				       (SOME (({id, bind = (_, true),  lab = _, poly, class}, _, _, _), _), _, _) => BINDNOT E.emcst
-				     | (SOME (({id, bind = (_, false), lab = _, poly, class}, _, _, _), _), _, _) => BINDNOT E.emcst
+				       (SOME (({id, bind = (_, true),  lab = _, poly, class}, _, _, _), _), _, _) => BINDNOT E.emptyConstraint
+				     | (SOME (({id, bind = (_, false), lab = _, poly, class}, _, _, _), _), _, _) => BINDNOT E.emptyConstraint
 				     | _ => BINDIN bind
 				end)
 	      | FI.OUT  => BINDOUT
@@ -2595,7 +2595,7 @@ fun unif env filters user =
 			   NONE => (genenv, comp', cst')
 			 | SOME bind => (E.addenv (id, [bind]) genenv, comp', cst')
 		    end)
-		(E.emgen, true, E.emcst)
+		(E.emgen, true, E.emptyConstraint)
 		genenv
 
 
@@ -2886,7 +2886,7 @@ fun unif env filters user =
 
 	(* ====== ACCESSOR SOLVER ====== *)
 
-	and solveacc (E.ACCVAR ({lid, sem, class, lab}, labs, stts, deps)) l =
+	and solveacc (E.VALUEID_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2932,7 +2932,7 @@ fun unif env filters user =
 		      handleFreeIdent lid false
 		    | _ => ())
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCETV ({lid, sem, class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.EXPLICIT_TYPEVAR_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2952,7 +2952,7 @@ fun unif env filters user =
 		      end
 		    | _ => ())
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCTYP ({lid, sem, class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3003,7 +3003,7 @@ fun unif env filters user =
 			   in fsimplify [c] l
 			   end)
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCOVC ({lid, sem, class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.OVERLOADING_CLASSES_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3023,7 +3023,7 @@ fun unif env filters user =
 		      handleFreeIdent lid false
 		    | _ => ())
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCSTR ({lid, sem, class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.STRUCTURE_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3041,7 +3041,7 @@ fun unif env filters user =
 		      handleFreeIdent lid false
 		    | _ => ())
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCSIG ({lid, sem, class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.SIGNATURE_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3059,7 +3059,7 @@ fun unif env filters user =
 		      handleFreeIdent lid false
 		    | _ => ())
 	       | SOME (lid', false) => ())
-	  | solveacc (E.ACCFUN ({lid, sem = (env1, env2), class, lab}, labs, stts, deps)) l =
+	  | solveacc (E.FUNCTOR_ACCESSOR ({lid, sem = (env1, env2), class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -4038,7 +4038,7 @@ fun unif env filters user =
 	val timer = VT.startTimer ()
 	val _ = sigVsStrOFF ()
 	val _ = sigVsStrTypOFF ()
-	val ret = run (E.singcst (L.dummyLab, E.LET_CONSTRAINT env))
+	val ret = run (E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
 	    handle errorex err =>
 		   ((*D.printdebug2 (L.toString (ERR.getL err));*)
 		    if L.isin L.builtinLab (ERR.getL err)

@@ -134,34 +134,34 @@ datatype env        = ENVCON of {vids : varenv,
 		    | DATATYPE_CONSTRUCTOR_ENV of I.idl  * env
 		    | ENVOPN of opnenv
 		    | ENVDEP of env EL.extLab
-		    | FUNCTOR_ENV of cst
-		    | CONSTRAINT_ENV of cst
+		    | FUNCTOR_ENV of constraints
+		    | CONSTRAINT_ENV of constraints
 		    | ENVPTY of string
 		    | ENVFIL of string * env * (unit -> env)
 		    | TOP_LEVEL_ENV
 
-     and acc        = ACCVAR of T.ty        accid EL.extLab
-		    | ACCETV of T.tyvar     accid EL.extLab
-		    | ACCTYP of T.tyfun     accid EL.extLab
-		    | ACCOVC of T.seqty     accid EL.extLab
-		    | ACCSTR of env         accid EL.extLab
-		    | ACCSIG of env         accid EL.extLab
-		    | ACCFUN of (env * env) accid EL.extLab
+     and accessor        = VALUEID_ACCESSOR of T.ty        accid EL.extLab
+		         | EXPLICIT_TYPEVAR_ACCESSOR of T.tyvar     accid EL.extLab
+		         | TYPE_CONSTRUCTOR_ACCESSOR of T.tyfun     accid EL.extLab
+		         | OVERLOADING_CLASSES_ACCESSOR of T.seqty     accid EL.extLab
+		         | STRUCTURE_ACCESSOR of env         accid EL.extLab
+			 | SIGNATURE_ACCESSOR of env         accid EL.extLab
+			 | FUNCTOR_ACCESSOR of (env * env) accid EL.extLab
 
-     and ocst 	    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
-		    | TYPENAME_CONSTRAINT of (T.tnty   * T.tnty)   EL.extLab
-		    | SEQUENCE_CONSTRAINT of (T.seqty  * T.seqty)  EL.extLab
-		    | ROW_CONSTRAINT of (T.rowty  * T.rowty)  EL.extLab
-		    | LABEL_CONSTRAINT of (T.labty  * T.labty)  EL.extLab
-		    | ENV_CONSTRAINT of (env      * env)      EL.extLab
-		    | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
-		    | FUNCTION_TYPE_CONSTRAINT of (T.tyfun  * T.tyfun)  EL.extLab
-		    | ACCESSOR_CONSTRAINT of acc
-		    | LET_CONSTRAINT of env
-		    | SIGNATURE_CONSTRAINT of evsbind
-		    | FUNCTOR_CONSTRAINT of evfbind
-		    | SHARING_CONSTRAINT of shabind
-     and cst        = OCST of ocst list cmap
+     and oneConstraint    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
+		          | TYPENAME_CONSTRAINT of (T.tnty   * T.tnty)   EL.extLab
+		          | SEQUENCE_CONSTRAINT of (T.seqty  * T.seqty)  EL.extLab
+		          | ROW_CONSTRAINT of (T.rowty  * T.rowty)  EL.extLab
+		          | LABEL_CONSTRAINT of (T.labty  * T.labty)  EL.extLab
+			  | ENV_CONSTRAINT of (env      * env)      EL.extLab
+			  | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
+			  | FUNCTION_TYPE_CONSTRAINT of (T.tyfun  * T.tyfun)  EL.extLab
+			  | ACCESSOR_CONSTRAINT of accessor
+			  | LET_CONSTRAINT of env
+			  | SIGNATURE_CONSTRAINT of evsbind
+			  | FUNCTOR_CONSTRAINT of evfbind
+			  | SHARING_CONSTRAINT of shabind
+     and constraints      = OCST of oneConstraint list cmap
 
 type extstr = env bind
 type strenv = env genv
@@ -342,20 +342,20 @@ and printEnv (ENVCON {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) ind =
   | printEnv (ENVFIL (st, env, stream)) ind =
     "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
   | printEnv ENVTOP ind = "ENVTOP"
-and printAcc (ACCVAR x) ind ascid =
-    "ACCVAR(" ^ EL.printExtLab x (fn x => printAccId x T.printty' ind ascid) ascid ^ ")"
-  | printAcc (ACCETV x) ind ascid =
-    "ACCETV(" ^ EL.printExtLab x (fn x => printAccId x T.printtyvar ind ascid) ascid ^ ")"
-  | printAcc (ACCTYP x) ind ascid =
-    "ACCTYP(" ^ EL.printExtLab x (fn x => printAccId x T.printtyf' ind ascid) ascid ^ ")"
-  | printAcc (ACCOVC x) ind ascid =
-    "ACCOVC(" ^ EL.printExtLab x (fn x => printAccId x T.printseqty' ind ascid) ascid ^ ")"
-  | printAcc (ACCSTR x) ind ascid =
-    "ACCSTR(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
-  | printAcc (ACCSIG x) ind ascid =
-    "ACCSIG(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
-  | printAcc (ACCFUN x) ind ascid =
-    "ACCFUN(" ^ EL.printExtLab x (fn x => printAccId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
+and printAcc (VALUEID_ACCESSOR x) ind ascid =
+    "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printty' ind ascid) ascid ^ ")"
+  | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid =
+    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyvar ind ascid) ascid ^ ")"
+  | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid =
+    "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyf' ind ascid) ascid ^ ")"
+  | printAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid =
+    "OVERLOADING_CLASSES_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printseqty' ind ascid) ascid ^ ")"
+  | printAcc (STRUCTURE_ACCESSOR x) ind ascid =
+    "STRUCTURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
+  | printAcc (SIGNATURE_ACCESSOR x) ind ascid =
+    "SIGNATURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
+  | printAcc (FUNCTOR_ACCESSOR x) ind ascid =
+    "FUNCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
 and printocst (TYPE_CONSTRAINT x) _ ascid =
     "  TYP(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
   | printocst (FUNCTION_TYPE_CONSTRAINT x) _ ascid =
@@ -384,10 +384,10 @@ and printocstlist []        ind1 ind2 ind3 ascid = ""
 						   printocstlist xs ind1 (ind1 ^ ind3) ind3 ascid
 and printcst' (OCST cst) ind ascid =
     OMC.foldri
-	(fn (n, ocst, y) =>
+	(fn (n, oneConstraint, y) =>
 	    ind ^ Int.toString n
 	    ^ ":"
-	    ^ printocstlist ocst ind "" (" " ^ (String.translate (fn _ => " ") (Int.toString n))) ascid
+	    ^ printocstlist oneConstraint ind "" (" " ^ (String.translate (fn _ => " ") (Int.toString n))) ascid
 	    ^ "\n"
 	    ^ y) "" cst
 and printcst cst ascid = printcst' cst "" ascid
@@ -701,24 +701,23 @@ fun pushExtEnv (env as ENVCON _) labs stts deps =
   | pushExtEnv env labs stts deps = ENVDEP (env, labs, stts, deps)
 
 val emcss = []
-val emcst = OCST OMC.empty
+val emptyConstraint = OCST OMC.empty
 
 fun getcstSemi cst i = case OMC.find (cst, i) of NONE => [] | SOME x => x
 
-fun conscss c css = c :: css
-fun conscst (v, c) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
+fun consConstraint (v, c) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
 fun conscsss cl css = cl @ css
 fun conscsts (v, cs) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, cs @ (getcstSemi cst (L.toInt v))))
 
 fun singcss  c  = [c]
 fun singcsss cs = cs
-fun singcst  (v, c)  = conscst  (v, c)  emcst
-fun singcsts (v, cs) = conscsts (v, cs) emcst
+fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
+fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
 fun uenv2css css1 css2 = css1 @ css2
 fun uenvcss xs = foldr (fn (x, y) => uenv2css x y) emcss xs
 fun uenv2cst (OCST cst1) (OCST cst2) = OCST (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
-fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emcst xs
+fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emptyConstraint xs
 
 fun foldlicst ffold init (OCST cst) = OMC.foldli ffold init cst
 fun foldricst ffold init (OCST cst) = OMC.foldri ffold init cst
@@ -827,7 +826,7 @@ and getlabcsbindocst (TYPE_CONSTRAINT _)   = ([], L.empty)
 and getlabscst cst =
     foldricst
 	(fn (_, ocstl, labsenv) =>
-	    foldr (fn (ocst, labsenv) => combineLabsEnv (getlabcsbindocst ocst) labsenv)
+	    foldr (fn (oneConstraint, labsenv) => combineLabsEnv (getlabcsbindocst oneConstraint) labsenv)
 		  labsenv
 		  ocstl)
 	([], L.empty)
@@ -835,7 +834,6 @@ and getlabscst cst =
 and getbindings env = getlabsenv env
 
 (* ====== Generation of type constraints ====== *)
-
 
 fun genCstAllGen x1 x2 labs sts cds = EL.consExtLab (x1, x2) labs sts cds
 fun genCstTyAll x1 x2 labs sts cds = TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
@@ -848,39 +846,7 @@ fun genCstLtAll x1 x2 labs sts cds = LABEL_CONSTRAINT (genCstAllGen x1 x2 labs s
 fun genCstEvAll x1 x2 labs sts cds = ENV_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstClAll x1 x2 labs sts cds = IDENTIFIER_CLASS_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 
-fun genAccAllGen x labs sts cds = EL.consExtLab x labs sts cds
-
-fun genAccIvAll x labs sts cds = ACCVAR (genAccAllGen x labs sts cds)
-fun genAccIeAll x labs sts cds = ACCETV (genAccAllGen x labs sts cds)
-fun genAccItAll x labs sts cds = ACCTYP (genAccAllGen x labs sts cds)
-fun genAccIoAll x labs sts cds = ACCOVC (genAccAllGen x labs sts cds)
-fun genAccIsAll x labs sts cds = ACCSTR (genAccAllGen x labs sts cds)
-fun genAccIiAll x labs sts cds = ACCSIG (genAccAllGen x labs sts cds)
-fun genAccIfAll x labs sts cds = ACCFUN (genAccAllGen x labs sts cds)
-
-
-fun genCstGen x1 x2 lab cds = EL.consExtLab (x1, x2) (L.singleton lab) L.empty cds
-
-fun genCstTy x1 x2 lab cds = TYPE_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstTf x1 x2 lab cds = FUNCTION_TYPE_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstTn x1 x2 lab cds = (D.printDebug 3 D.ENV ("in genCstTn - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
-					  TYPENAME_CONSTRAINT (genCstGen x1 x2 lab cds))
-fun genCstSq x1 x2 lab cds = SEQUENCE_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstRt x1 x2 lab cds = ROW_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstLt x1 x2 lab cds = LABEL_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstEv x1 x2 lab cds = ENV_CONSTRAINT (genCstGen x1 x2 lab cds)
-fun genCstCl x1 x2 lab cds = IDENTIFIER_CLASS_CONSTRAINT (genCstGen x1 x2 lab cds)
-
-fun genAccGen x lab cds = EL.consExtLab x (L.singleton lab) L.empty cds
-
-fun genAccIv x lab cds = ACCVAR (genAccGen x lab cds)
-fun genAccIe x lab cds = ACCETV (genAccGen x lab cds)
-fun genAccIt x lab cds = ACCTYP (genAccGen x lab cds)
-fun genAccIo x lab cds = ACCOVC (genAccGen x lab cds)
-fun genAccIs x lab cds = ACCSTR (genAccGen x lab cds)
-fun genAccIi x lab cds = ACCSIG (genAccGen x lab cds)
-fun genAccIf x lab cds = ACCFUN (genAccGen x lab cds)
-
+fun genValueIDAccessor x labs sts cds = VALUEID_ACCESSOR (EL.consExtLab x labs sts cds)
 
 fun initTypeConstraint x1 x2 lab = (TYPE_CONSTRAINT (EL.initExtLab (x1, x2) lab))
 fun initFunctionTypeConstraint x1 x2 lab = FUNCTION_TYPE_CONSTRAINT (EL.initExtLab (x1, x2) lab)
@@ -891,16 +857,13 @@ fun initLabelConstraint x1 x2 lab = LABEL_CONSTRAINT (EL.initExtLab (x1, x2) lab
 fun initEnvConstraint x1 x2 lab = ENV_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initClassConstraint x1 x2 lab = IDENTIFIER_CLASS_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 
-fun genAccEmGen x lab = EL.initExtLab x lab
-
-fun genAccIvEm x lab = ACCVAR (genAccEmGen x lab)
-fun genAccIeEm x lab = ACCETV (genAccEmGen x lab)
-fun genAccItEm x lab = ACCTYP (genAccEmGen x lab)
-fun genAccIoEm x lab = ACCOVC (genAccEmGen x lab)
-fun genAccIsEm x lab = ACCSTR (genAccEmGen x lab)
-fun genAccIiEm x lab = ACCSIG (genAccEmGen x lab)
-fun genAccIfEm x lab = ACCFUN (genAccEmGen x lab)
-
+fun genAccIvEm x lab = VALUEID_ACCESSOR (EL.initExtLab x lab)
+fun genAccIeEm x lab = EXPLICIT_TYPEVAR_ACCESSOR (EL.initExtLab x lab)
+fun genAccItEm x lab = TYPE_CONSTRUCTOR_ACCESSOR (EL.initExtLab x lab)
+fun genAccIoEm x lab = OVERLOADING_CLASSES_ACCESSOR (EL.initExtLab x lab)
+fun genAccIsEm x lab = STRUCTURE_ACCESSOR (EL.initExtLab x lab)
+fun genAccIiEm x lab = SIGNATURE_ACCESSOR (EL.initExtLab x lab)
+fun genAccIfEm x lab = FUNCTOR_ACCESSOR (EL.initExtLab x lab)
 
 fun isMonoBind bind = P.isMono (getBindP bind)
 
@@ -958,11 +921,11 @@ fun allEqualVids vids =
 			      let val ty' = getBindT bind
 				  val lab = getBindL bind
 				  val c   = initTypeConstraint ty ty' lab
-			      in conscst (lab, c) cst
+			      in consConstraint (lab, c) cst
 			      end)
 			  cst
 			  sems)
-		emcst
+		emptyConstraint
 		vids
     end
 
@@ -971,7 +934,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshtyfvar ()
 	val c    = initFunctionTypeConstraint (T.consTFV tfv) tyfun lab
 	val typs = singenv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
-    in (singcst (lab, c), projTyps typs)
+    in (singleConstraint (lab, c), projTyps typs)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
     let val (cst, env1) = genLongEnv lid tyfun
@@ -980,7 +943,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 	val c1   = initEnvConstraint (consENVVAR ev1 lab1) env1 lab1
 	val c2   = initEnvConstraint (consENVVAR ev2 lab2) (consENVVAR ev1 lab2) lab2
 	val strs = singenv (id, [consBindPoly id (consENVVAR ev2 lab1) (CL.consSTR ()) lab1])
-    in (conscst (lab2, c2) (conscst (lab1, c1) cst), projStrs strs)
+    in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStrs strs)
     end
 
 
@@ -1149,36 +1112,36 @@ fun toIncomplete (env as ENVCON _)               = updateICmp false env
   | toIncomplete (env as ENVFIL (f, e, strm))    = ENVFIL (f, toIncomplete e, fn () => toIncomplete (strm ()))
   | toIncomplete (env as ENVTOP)                 = env
 
-fun filterOcst (ocst as TYPE_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as TYPENAME_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as SEQUENCE_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as ROW_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as LABEL_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as ENV_CONSTRAINT ((env1, env2), labs0, stts0, deps0)) labs =
+fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as TYPENAME_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as SEQUENCE_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as ROW_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as LABEL_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as ENV_CONSTRAINT ((env1, env2), labs0, stts0, deps0)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (ENV_CONSTRAINT ((env1', env2'), labs0, stts0, deps0))
        | (SOME env1', NONE)       => SOME (ENV_CONSTRAINT ((env1', emenv), labs0, stts0, deps0))
        | (NONE,       SOME env2') => SOME (ENV_CONSTRAINT ((emenv, env2'), labs0, stts0, deps0))
        | (NONE,       NONE)       => NONE)
-  | filterOcst (ocst as IDENTIFIER_CLASS_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as FUNCTION_TYPE_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as ACCESSOR_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as LET_CONSTRAINT env) labs =
+  | filterOcst (oneConstraint as IDENTIFIER_CLASS_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as FUNCTION_TYPE_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as ACCESSOR_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as LET_CONSTRAINT env) labs =
     (case filterEnv env labs of
 	 SOME env' => SOME (LET_CONSTRAINT env')
        | NONE      => NONE)
-  | filterOcst (ocst as SIGNATURE_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as FUNCTOR_CONSTRAINT _) labs = SOME ocst
-  | filterOcst (ocst as SHARING_CONSTRAINT _) labs = SOME ocst
+  | filterOcst (oneConstraint as SIGNATURE_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as FUNCTOR_CONSTRAINT _) labs = SOME oneConstraint
+  | filterOcst (oneConstraint as SHARING_CONSTRAINT _) labs = SOME oneConstraint
 
-and filterCst (OCST ocst) labs =
+and filterCst (OCST oneConstraint) labs =
     OCST (OMC.mapPartiali (fn (key, cs) =>
 			      if testlab (L.fromInt key) labs
-			      then case List.mapPartial (fn ocst => filterOcst ocst labs) cs of
+			      then case List.mapPartial (fn oneConstraint => filterOcst oneConstraint labs) cs of
 				       []  => NONE
 				     | cs' => SOME cs'
 			      else NONE)
-			  ocst)
+			  oneConstraint)
 
 and filterEnv (env as ENVCON _) labs =
     let val (vids, cmpVids) = filterIdEnv (getVids env) labs
