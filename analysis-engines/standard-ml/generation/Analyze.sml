@@ -87,7 +87,7 @@ fun buildin (env, css) ascid true =
     let val (typs, cst1) = NA.getTyName ascid
 	val (vids, cst2) = OP.getOpType ascid
 	val cst  = E.uenvcst [cst1, cst2]
-	val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (E.emtv, E.updateTyps typs (E.projVids vids)))
+	val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (E.emtv, E.updateTypenames typs (E.projVids vids)))
     in if E.isEmptyIdEnv vids andalso E.isEmptyIdEnv typs
        then (env, css)
        else (E.SEQUENCE_ENV (env', env), css)
@@ -1918,7 +1918,7 @@ fun generateConstraints' prog pack nenv =
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.envsToSeq envs)
-		   val env2 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projTyps typs), env1)
+		   val env2 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.consEnvironmentTypenames typs), env1)
 	       in (env2, css)
 	       end
 	     | f_dec (A.DecDatWith (datbind, typbind, _, lab, _)) =
@@ -1928,8 +1928,8 @@ fun generateConstraints' prog pack nenv =
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1', E.envsToSeq envs)
-		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projTyps typs1)
-		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.projTyps typs2)
+		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.consEnvironmentTypenames typs1)
+		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.consEnvironmentTypenames typs2)
 		   val env4 = E.SEQUENCE_ENV (env2, E.SEQUENCE_ENV (env3, env1))
 	       in (env4, css)
 	       end
@@ -1942,12 +1942,12 @@ fun generateConstraints' prog pack nenv =
 				 NONE => E.emopn
 			       | SOME lid => E.singOEnv (lid, lab, E.DRE)
 		   val env1 = case v of SOME idl => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVOPN opn) | NONE => E.ENVOPN opn
-		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.SEQUENCE_ENV (E.projTyps typs, env1))
+		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.SEQUENCE_ENV (E.consEnvironmentTypenames typs, env1))
 	       in (env2, E.emcss)
 	       end
 	     | f_dec (A.DecType (typbindseq, _, _)) =
 	       let val (typs, cst, css) = f_typbindseq typbindseq
-	       in (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.projTyps typs), css)
+	       in (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.consEnvironmentTypenames typs), css)
 	       end
 	     | f_dec (A.DecEx (exbindseq, _, _)) =
 	       let val (cons, cst, css) = f_exbindseq exbindseq
@@ -1978,7 +1978,7 @@ fun generateConstraints' prog pack nenv =
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1', E.envsToSeq envs)
 		   val env4 = E.ENVLOC (env3, env2)
-		   val env5 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projTyps typs1), env4)
+		   val env5 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.consEnvironmentTypenames typs1), env4)
 		   val css0 = if getBasis ()
 			      then E.emcss
 			      else E.singcss (notFullyCs lab "abstype")
@@ -1992,8 +1992,8 @@ fun generateConstraints' prog pack nenv =
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env4 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1', E.envsToSeq envs)
-		   val env5 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1,  E.projTyps typs1)
-		   val env6 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2,  E.projTyps typs2)
+		   val env5 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1,  E.consEnvironmentTypenames typs1)
+		   val env6 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2,  E.consEnvironmentTypenames typs2)
 		   val env7 = E.SEQUENCE_ENV (env5, E.SEQUENCE_ENV (env6, E.ENVLOC (env4, env3)))
 		   val css0 = if getBasis ()
 			      then E.emcss
@@ -2138,7 +2138,7 @@ fun generateConstraints' prog pack nenv =
 		   val c1  = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
 		   val c2  = E.initSequenceConstraint (T.SV sv1) (T.SV sv2) lab
 		   val c3  = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2))
-		   val env = E.ENVDEP (EL.initExtLab (E.projTyps typs) lab)
+		   val env = E.ENVDEP (EL.initExtLab (E.consEnvironmentTypenames typs) lab)
 		   val cst = E.conscsts (lab, [c1, c2]) (E.consConstraint(L.dummyLab, c3) cst1)
 		   val css = E.uenvcss [css1, css2]
 	       in (env, cst, css)
@@ -2407,7 +2407,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone (A.SpecTyp (typdesc, _, lab, _)) =
 	       let val (tns, typs, cst, css) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateITns tns (E.projTyps typs))
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
@@ -2416,7 +2416,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_specone (A.SpecEqT (typdesc, _, lab, _)) =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqT (lab = "^Int.toString(L.toInt lab)^")")
 		   val (tns, typs, cst, css) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateITns tns (E.projTyps typs))
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
 		   val envVar   = E.freshEnvVar ()
 		   val c = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
@@ -2454,7 +2454,7 @@ fun generateConstraints' prog pack nenv =
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.envsToSeq envs)
-		   val env2 = E.updateITns tns (E.projTyps typs)
+		   val env2 = E.updateInfoTypenames tns (E.consEnvironmentTypenames typs)
 		   val env3 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.ENVDEP (EL.initExtLab env2 lab)), env1)
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
@@ -2503,7 +2503,7 @@ fun generateConstraints' prog pack nenv =
 				 NONE => E.emopn
 			       | SOME lid => E.singOEnv (lid, lab, E.DRE)
 		   val env1 = case v of SOME idl => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVOPN opn) | NONE => E.ENVOPN opn
-		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.SEQUENCE_ENV (E.projTyps typs, env1))
+		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.SEQUENCE_ENV (E.consEnvironmentTypenames typs, env1))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env2 lab
 		   val env3 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))

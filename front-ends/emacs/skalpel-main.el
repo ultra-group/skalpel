@@ -332,6 +332,9 @@
 ;; set to true if the user wants to hide basis information during overloading errors
 (defvar skalpel-show-basis nil "Variable to flag when the user wishes to show basis information during overloading errors ")
 
+;; a function from from slide id to the point markers associated with that slice id (for removing old slices)
+(defvar skalpel-slice-info-slices "function from slice id to pair of point locations")
+
 ;;(defvar skalpel-slices-processed-mark)
 ;;
 ;;(put 'skalpel-slices-processed-mark 'permanent-local t)
@@ -968,6 +971,7 @@ value nil.")
 
   ;; insert program slice info the *skalpel-slice-info* buffer
   (with-current-buffer "*skalpel-slice-info*"
+   (end-of-buffer)
     (let ((p1 (point)))
       (insert (concat "Error (click to toggle associated info): " (car (cdr kind)) "\n\n"))
 
@@ -991,7 +995,9 @@ value nil.")
 	       (put-text-property ,p2 ,(point)
 				  'invisible
 				  (not (invisible-p ,p2)))))
-	  (put-text-property p1 p2 'keymap map)))))
+	  (put-text-property p1 p2 'keymap map))
+
+	(setq skalpel-slice-info-slices (cons (cons id (cons p1 (point))) skalpel-slice-info-slices)))))
 
   ;; Report the appropriate mesage for the number of context dependencies in the error
   ;; 0 context dependencies
@@ -1542,8 +1548,20 @@ SYMBOL KEY VALUE)."
     (skalpel-tidy-slices)))
 
 (defun skalpel-forget-slice-by-id (id)
-  "Removes the slice with id 'id'. Used to remove slices when they are no longer needed
-     i.e. when Skalpel merges 2 or more slices"
+ "Removes the slice with id 'id'. Used to remove slices when they are no longer needed
+ i.e. when Skalpel merges 2 or more slices"
+
+  ;; remove the slice from the list of slice information in *skalpel-slice-info* buffer 
+  (defvar looplist)
+  (setq looplist skalpel-slice-info-slices)
+  
+  (with-current-buffer "*skalpel-slice-info*"
+  (catch 'break (while (not (equal looplist nil))
+  (if (equal (car (car looplist)) id)
+      (progn (print "found it, hiding text!") (put-text-property (car (cdr (car looplist))) (cdr (cdr (car looplist))) 'invisible t) (throw 'break nil))
+      (print (car (car looplist)))
+      (setq looplist (cdr looplist))))))
+
   ;; Set pointer to be an exact copy of skalpel-overlays
   (let ((pointer skalpel-overlays))
     ;; Set skalpel-overlays to be nil

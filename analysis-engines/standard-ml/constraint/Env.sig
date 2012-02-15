@@ -127,7 +127,7 @@ signature ENV = sig
     (* ------ ENVIRONMENTS ------ *)
     datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
 				     (* value identifiers *)
-				     typs : typenv,
+				     typenames : typenv,
 				     (* type names *)
 				     tyvs : tyvenv,
 				     (* explicit type variables - not used anymore *)
@@ -295,7 +295,7 @@ signature ENV = sig
     val getIFct      : environment -> bool
 
     val projVids     : varenv -> environment
-    val projTyps     : typenv -> environment
+    val consEnvironmentTypenames : typenv -> environment
     val projTyvs     : tyvenv -> environment
     val projStrs     : strenv -> environment
     val projSigs     : sigenv -> environment
@@ -304,13 +304,13 @@ signature ENV = sig
     val projOvcs     : ovcenv  -> environment
 
     val updateVids   : varenv -> environment -> environment
-    val updateTyps   : typenv -> environment -> environment
+    val updateTypenames : typenv -> environment -> environment
     val updateTyvs   : tyvenv -> environment -> environment
     val updateStrs   : strenv -> environment -> environment
     val updateOvcs   : ovcenv  -> environment -> environment
     val updateILab   : Label.label -> environment -> environment
     val updateICmp   : bool   -> environment -> environment
-    val updateITns   : tnmap  -> environment -> environment
+    val updateInfoTypenames : tnmap  -> environment -> environment
     val updateIFct   : bool   -> environment -> environment
 
     val getTyNames   : typenv -> names list

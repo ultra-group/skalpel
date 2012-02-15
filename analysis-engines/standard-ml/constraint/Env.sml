@@ -117,7 +117,7 @@ datatype matchKind  = OPA (* Opaque      *)
 
 (* ------ ENVIRONMENT ------ *)
 datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
-				 typs : typenv,
+				 typenames : typenv,
 				 tyvs : tyvenv,
 				 strs : environment genv,
 				 sigs : environment genv,
@@ -311,9 +311,9 @@ and printFunSemList xs     = printlistgen xs (fn (x, y) => "(" ^ printExtEnv x ^
 and printSigEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printStrEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printFunEnv     xs ind = printGenEnv xs ind printFunSemList
-and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) ind =
+and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) ind =
     "\n" ^ ind ^ "{vids:" ^ printVarEnv vids ind ^
-    "\n" ^ ind ^ " typs:" ^ printTypEnv typs ind ^
+    "\n" ^ ind ^ " typenames:" ^ printTypEnv typenames ind ^
     "\n" ^ ind ^ " tyvs:" ^ printTyvEnv tyvs ind ^
     "\n" ^ ind ^ " strs:" ^ printStrEnv strs ind ^
     "\n" ^ ind ^ " sigs:" ^ printSigEnv sigs ind ^
@@ -425,9 +425,9 @@ fun newEnvVar  lab    = consENVVAR (freshEnvVar ()) lab
 fun envToEnvvar (ENVVAR ev) = ev
   | envToEnvvar _ = raise EH.DeadBranch "the environment should be a variable"
 
-fun consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info =
+fun consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info =
     ENVIRONMENT_CONSTRUCTOR {vids = vids,
-	    typs = typs,
+	    typenames = typenames,
 	    tyvs = tyvs,
 	    strs = strs,
 	    sigs = sigs,
@@ -457,7 +457,7 @@ val emptyEnvironment = consEnvironmentConstructor emvar emtyp emtv emstr emsig e
 
 fun getVids (ENVIRONMENT_CONSTRUCTOR x) = #vids x
   | getVids _          = raise EH.DeadBranch ""
-fun getTyps (ENVIRONMENT_CONSTRUCTOR x) = #typs x
+fun getTyps (ENVIRONMENT_CONSTRUCTOR x) = #typenames x
   | getTyps _          = raise EH.DeadBranch ""
 fun getTyvs (ENVIRONMENT_CONSTRUCTOR x) = #tyvs x
   | getTyvs _          = raise EH.DeadBranch ""
@@ -489,46 +489,49 @@ fun updateInfoTns tns {lab, cmp, tns = _, fct} = consInfo lab cmp tns fct
 fun updateInfoFct fct {lab, cmp, tns, fct = _} = consInfo lab cmp tns fct
 
 (* modifier methods to update values of constructors of the datatype env *)
-fun updateVids vids (ENVIRONMENT_CONSTRUCTOR {vids = _, typs, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateVids vids (ENVIRONMENT_CONSTRUCTOR {vids = _, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateVids _ _ = raise EH.DeadBranch ""
-fun updateTyps typs (ENVIRONMENT_CONSTRUCTOR {vids, typs = _, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
-  | updateTyps _ _ = raise EH.DeadBranch ""
-fun updateTyvs tyvs (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs = _, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateTypenames typenames (ENVIRONMENT_CONSTRUCTOR {vids, typenames = _, tyvs, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
+  | updateTypenames _ _ = raise EH.DeadBranch ""
+fun updateTyvs tyvs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs = _, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateTyvs _ _ = raise EH.DeadBranch ""
-fun updateStrs strs (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs = _, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateStrs strs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs = _, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateStrs _ _ = raise EH.DeadBranch ""
-fun updateSigs sigs (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs = _, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateSigs sigs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs = _, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateSigs _ _ = raise EH.DeadBranch ""
-fun updateFuns funs (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs = _, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateFuns funs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs = _, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateFuns _ _ = raise EH.DeadBranch ""
-fun updateOvcs ovcs (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs = _, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+fun updateOvcs ovcs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs = _, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
   | updateOvcs _ _ = raise EH.DeadBranch ""
-fun updateILab lab (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs (updateInfoLab lab info)
+fun updateILab lab (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoLab lab info)
   | updateILab lab (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateILab lab env1, updateILab lab env2)
   | updateILab lab (ENVLOC (env1, env2)) = ENVLOC (env1, updateILab lab env2)
   | updateILab _ env = env
-fun updateICmp cmp (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs (updateInfoCmp cmp info)
+fun updateICmp cmp (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoCmp cmp info)
   | updateICmp _ _ = raise EH.DeadBranch ""
-fun updateITns tns (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs (updateInfoTns tns info)
-  | updateITns _ _ = raise EH.DeadBranch ""
-fun updateIFct fct (ENVIRONMENT_CONSTRUCTOR {vids, typs, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs (updateInfoFct fct info)
+fun updateInfoTypenames tns (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info as {lab, cmp, tns = _, fct}}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (consInfo lab cmp tns fct)
+  | updateInfoTypenames _ _ = raise EH.DeadBranch ""
+fun updateIFct fct (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
+    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoFct fct info)
   | updateIFct fct (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateIFct fct env1, updateIFct fct env2)
   | updateIFct fct (ENVLOC (env1, env2)) = ENVLOC (env1, updateIFct fct env2)
   | updateIFct _ env = env
 
 fun projVids idG = updateVids idG emptyEnvironment
-fun projTyps idT = updateTyps idT emptyEnvironment
+
+(* constructs an empty environment with typenames *)
+fun consEnvironmentTypenames idT = updateTypenames idT emptyEnvironment
+
 fun projTyvs idV = updateTyvs idV emptyEnvironment
 fun projStrs idS = updateStrs idS emptyEnvironment
 fun projSigs idS = updateSigs idS emptyEnvironment
@@ -623,9 +626,9 @@ fun uenvEnvInfo {lab = lab1, cmp = cmp1, tns = tns1, fct = fct1}
 	     (tns1 @ tns2)
 	     (fct1 orelse fct2) (* is the argument of a functor if at least one is *)
 
-fun uenvEnvC (ENVIRONMENT_CONSTRUCTOR {vids = vids1, typs = typs1, tyvs = tyvs1, strs = strs1,
+fun uenvEnvC (ENVIRONMENT_CONSTRUCTOR {vids = vids1, typenames = typs1, tyvs = tyvs1, strs = strs1,
 		      sigs = sigs1, funs = funs1, ovcs = ovcs1, info = info1})
-	     (ENVIRONMENT_CONSTRUCTOR {vids = vids2, typs = typs2, tyvs = tyvs2, strs = strs2,
+	     (ENVIRONMENT_CONSTRUCTOR {vids = vids2, typenames = typs2, tyvs = tyvs2, strs = strs2,
 		      sigs = sigs2, funs = funs2, ovcs = ovcs2, info = info2}) =
     consEnvironmentConstructor (uenv [vids1, vids2])
 	     (uenv [typs1, typs2])
@@ -653,14 +656,14 @@ fun closeVids vids clos =
 
 fun plusEnv (env1 as ENVIRONMENT_CONSTRUCTOR _) (env2 as ENVIRONMENT_CONSTRUCTOR _) =
     let val vids = plusenv (getVids env1) (getVids env2)
-	val typs = plusenv (getTyps env1) (getTyps env2)
+	val typenames = plusenv (getTyps env1) (getTyps env2)
 	val tyvs = plusenv (getTyvs env1) (getTyvs env2)
 	val strs = plusenv (getStrs env1) (getStrs env2)
 	val sigs = plusenv (getSigs env1) (getSigs env2)
 	val funs = plusenv (getFuns env1) (getFuns env2)
 	val ovcs = plusenv (getOvcs env1) (getOvcs env2)
 	val info = uenvEnvInfo (getInfo env1) (getInfo env2)
-	val env = consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+	val env = consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
     in env
     end
   | plusEnv (SEQUENCE_ENV (env1, env2)) env3 = SEQUENCE_ENV (env1, plusEnv env2 env3)
@@ -684,13 +687,13 @@ fun pushExtEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
     if isEmptyEnv env
     then ENVDEP (env, labs, stts, deps)
     else let val vids = pushExtIdEnv (getVids env) labs stts deps(* dumPush*)
-	     val typs = pushExtIdEnv (getTyps env) labs stts deps(* dumPush*)
+	     val typenames = pushExtIdEnv (getTyps env) labs stts deps(* dumPush*)
 	     val tyvs = pushExtIdEnv (getTyvs env) labs stts deps(* dumPush*)
 	     val strs = pushExtIdEnv (getStrs env) labs stts deps(* pushExtEnv*)
 	     val sigs = pushExtIdEnv (getSigs env) labs stts deps(* pushExtEnv*)
 	     val funs = pushExtIdEnv (getFuns env) labs stts deps(* pushExtFunEnv*)
 	     val ovcs = pushExtIdEnv (getOvcs env) labs stts deps(* dumPush*)
-	 in consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs (getInfo env)
+	 in consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (getInfo env)
 	 end
   | pushExtEnv (SEQUENCE_ENV (env1, env2)) labs stts deps =
     SEQUENCE_ENV (pushExtEnv env1 labs stts deps, pushExtEnv env2 labs stts deps)
@@ -714,8 +717,7 @@ fun singcsss cs = cs
 fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
 fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
-fun uenv2css css1 css2 = css1 @ css2
-fun uenvcss xs = foldr (fn (x, y) => uenv2css x y) emcss xs
+fun uenvcss xs = foldr (fn (x, y) => x@y) emcss xs
 fun uenv2cst (OCST cst1) (OCST cst2) = OCST (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
 fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emptyConstraint xs
 
@@ -908,10 +910,10 @@ fun toCLSVids vids cls labs =
 	   vids
 
 (* We have DAT here because this is only used for datatypes and datatype descriptions. *)
-fun toTYCONTyps typs cons b labs =
+fun toTYCONTyps typenames cons b labs =
     let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DAT, ref (cons, b)))
     in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)
-	      typs
+	      typenames
     end
 
 fun allEqualVids vids =
@@ -933,8 +935,8 @@ fun allEqualVids vids =
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshtyfvar ()
 	val c    = initFunctionTypeConstraint (T.consTFV tfv) tyfun lab
-	val typs = singenv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
-    in (singleConstraint (lab, c), projTyps typs)
+	val typenames = singenv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
+    in (singleConstraint (lab, c), consEnvironmentTypenames typenames)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
     let val (cst, env1) = genLongEnv lid tyfun
@@ -1016,7 +1018,7 @@ fun getLabEnv (env as ENVIRONMENT_CONSTRUCTOR _) = getILab env
 
 
 (* Extract the type names defined in a type constructor environment *)
-fun getTyNames typs =
+fun getTyNames typenames =
     foldrienv (fn (id, sem, tnmap) =>
 		  List.foldr (fn (bind, tnmap) =>
 				 let val (tf, tnKind, _) = getBindT bind
@@ -1048,7 +1050,7 @@ fun getTyNames typs =
 			     tnmap
 			     sem)
 	      []
-	      typs
+	      typenames
 
 
 
@@ -1145,7 +1147,7 @@ and filterCst (OCST oneConstraint) labs =
 
 and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
     let val (vids, cmpVids) = filterIdEnv (getVids env) labs
-	val (typs, cmpTyps) = filterIdEnv (getTyps env) labs
+	val (typenames, cmpTyps) = filterIdEnv (getTyps env) labs
 	val (tyvs, cmpTyvs) = filterIdEnv (getTyvs env) labs
 	val (strs, cmpStrs) = filterIdEnv (getStrs env) labs
 	val (sigs, cmpSigs) = filterIdEnv (getSigs env) labs
@@ -1155,7 +1157,7 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
 		   cmpStrs andalso cmpSigs andalso cmpFuns andalso
 		   cmpOvcs andalso getICmp env
 	val info = consInfo (getILab env) cmp (getITns env) (getIFct env)
-	val env' = consEnvironmentConstructor vids typs tyvs strs sigs funs ovcs info
+	val env' = consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
     in SOME env'
     end
   | filterEnv (env as ENVVAR _) labs = SOME env
