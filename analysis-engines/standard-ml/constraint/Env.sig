@@ -187,7 +187,7 @@ signature ENV = sig
           * - 1st cst: pattern, 2nd cst: expression
 	  * - we would have to have the same for constructors, types and structures
           * - what about tvenv? *)
-	 and constraints        = OCST of oneConstraint list cmap
+	 and constraints        = CONSTRAINTS of oneConstraint list cmap
     (* constraints maps integers (program point labels) to lists (conceptually sets) of oneConstraint's *)
     (*(2010-04-14)Conceptually, (INJI extty) seems to be an environment of the form:
      * ENVS (ENVV ev, ENVC x), where extty is declared in x and ev is fresh.*)
@@ -206,10 +206,7 @@ signature ENV = sig
     type funenv = funsem genv
 
     datatype ocss       = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
-			(*| CSG of csstya (* for long non-applied identifiers in patterns that should be constructors (because long) but are variables *)*)
-			| CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
-			(* CSCs should only be reported when the context dependency set is empty.
-			 * And something similar for CSMs generated for constructors in patterns. *)
+                        | CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
 			| CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
 			| CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
 			| CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)

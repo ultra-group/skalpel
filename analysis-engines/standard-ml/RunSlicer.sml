@@ -49,7 +49,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "67134891313ba7c4c98c282517e69c0200772cc9"
+val SKALPEL_VERSION = "b8b182ea778960a15b813f725622cdadd70768a3"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -73,8 +73,8 @@ fun finishedLispMessage2 msg =
 fun finishedPerlM x = "$sml-tes-finished-message=\"" ^ x ^ "\""
 fun finishedPerlMessage1 msg =
     case msg of
-	"" => finishedPerlM "slicer worked OK, sorry no debugging message"
-      | _  => finishedPerlM ("slicer worked OK, " ^ msg)
+	"" => finishedPerlM "slicer worked OK, sorry no debugging message" |
+	_  => finishedPerlM ("slicer worked OK, " ^ msg)
 fun finishedPerlMessage2 msg =
     case msg of
 	"" => finishedPerlM "slicer encountered an internal bug, sorry no debugging message"

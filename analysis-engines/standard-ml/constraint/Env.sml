@@ -161,7 +161,7 @@ datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
 			  | SIGNATURE_CONSTRAINT of evsbind
 			  | FUNCTOR_CONSTRAINT of evfbind
 			  | SHARING_CONSTRAINT of shabind
-     and constraints      = OCST of oneConstraint list cmap
+     and constraints      = CONSTRAINTS of oneConstraint list cmap
 
 type extstr = environment bind
 type strenv = environment genv
@@ -382,7 +382,7 @@ and printocstlist []        ind1 ind2 ind3 ascid = ""
   | printocstlist (x :: xs) ind1 ind2 ind3 ascid = ind2 ^ printocst x ind1 ascid ^
 						   "\n" ^
 						   printocstlist xs ind1 (ind1 ^ ind3) ind3 ascid
-and printcst' (OCST cst) ind ascid =
+and printcst' (CONSTRAINTS cst) ind ascid =
     OMC.foldri
 	(fn (n, oneConstraint, y) =>
 	    ind ^ Int.toString n
@@ -704,13 +704,13 @@ fun pushExtEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
   | pushExtEnv env labs stts deps = ENVDEP (env, labs, stts, deps)
 
 val emcss = []
-val emptyConstraint = OCST OMC.empty
+val emptyConstraint = CONSTRAINTS OMC.empty
 
 fun getcstSemi cst i = case OMC.find (cst, i) of NONE => [] | SOME x => x
 
-fun consConstraint (v, c) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
+fun consConstraint (v, c) (CONSTRAINTS cst) = CONSTRAINTS (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
 fun conscsss cl css = cl @ css
-fun conscsts (v, cs) (OCST cst) = OCST (OMC.insert (cst, L.toInt v, cs @ (getcstSemi cst (L.toInt v))))
+fun conscsts (v, cs) (CONSTRAINTS cst) = CONSTRAINTS (OMC.insert (cst, L.toInt v, cs @ (getcstSemi cst (L.toInt v))))
 
 fun singcss  c  = [c]
 fun singcsss cs = cs
@@ -718,12 +718,12 @@ fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
 fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
 fun uenvcss xs = foldr (fn (x, y) => x@y) emcss xs
-fun uenv2cst (OCST cst1) (OCST cst2) = OCST (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
+fun uenv2cst (CONSTRAINTS cst1) (CONSTRAINTS cst2) = CONSTRAINTS (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
 fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emptyConstraint xs
 
-fun foldlicst ffold init (OCST cst) = OMC.foldli ffold init cst
-fun foldricst ffold init (OCST cst) = OMC.foldri ffold init cst
-fun mapicst   ffold      (OCST cst) = OCST (OMC.mapi ffold cst)
+fun foldlicst ffold init (CONSTRAINTS cst) = OMC.foldli ffold init cst
+fun foldricst ffold init (CONSTRAINTS cst) = OMC.foldri ffold init cst
+fun mapicst   ffold      (CONSTRAINTS cst) = CONSTRAINTS (OMC.mapi ffold cst)
 
 fun getnbcst' cst =
     foldlicst (fn (_, cs, nb) =>
@@ -1136,8 +1136,8 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as FUNCTOR_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as SHARING_CONSTRAINT _) labs = SOME oneConstraint
 
-and filterCst (OCST oneConstraint) labs =
-    OCST (OMC.mapPartiali (fn (key, cs) =>
+and filterCst (CONSTRAINTS oneConstraint) labs =
+    CONSTRAINTS (OMC.mapPartiali (fn (key, cs) =>
 			      if testlab (L.fromInt key) labs
 			      then case List.mapPartial (fn oneConstraint => filterOcst oneConstraint labs) cs of
 				       []  => NONE
@@ -1216,14 +1216,14 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
     else NONE
   | filterEnv (env as FUNCTOR_ENV cst) labs =
     (case filterCst cst labs of
-	 OCST ocsts => if OMC.numItems ocsts = 0
+	 CONSTRAINTS ocsts => if OMC.numItems ocsts = 0
 		       then NONE
-		       else SOME (FUNCTOR_ENV (OCST ocsts)))
+		       else SOME (FUNCTOR_ENV (CONSTRAINTS ocsts)))
   | filterEnv (env as CONSTRAINT_ENV cst) labs =
     (case filterCst cst labs of
-	 OCST ocsts => if OMC.numItems ocsts = 0
+	 CONSTRAINTS ocsts => if OMC.numItems ocsts = 0
 		       then NONE
-		       else SOME (CONSTRAINT_ENV (OCST ocsts)))
+		       else SOME (CONSTRAINT_ENV (CONSTRAINTS ocsts)))
   | filterEnv (env as ENVPTY _) _ = SOME env
   | filterEnv (env as ENVFIL (file, e, strm)) labs =
     (case (filterEnv e labs, filterEnv (strm ()) labs) of
