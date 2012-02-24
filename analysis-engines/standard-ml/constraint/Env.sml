@@ -34,7 +34,7 @@ structure C   = ConsId
 structure D   = Debug
 structure CL  = ClassId
 structure CD  = LongId
-structure EL  = ExtLab
+structure EL  = ExtLab  (* WTF is the "Ext" for ?*)
 structure EH  = ErrorHandler
 structure OME = SplayMapFn (OrdId)  (* map for Environments *)
 structure OMC = SplayMapFn (OrdKey) (* map for Constraints, should be OrdLab *)
@@ -173,25 +173,24 @@ type funsem = environment * environment
 type extfun = funsem bind
 type funenv = funsem genv
 
-datatype ocss       = CSSMULT of L.labels
-		    | CSSCVAR of L.labels
-		    | CSSEVAR of L.labels
-		    | CSSECON of L.labels
-		    | CSSINCL of L.labels
-		    | CSSAPPL of L.labels
-		    | CSSFNAM of L.labels
-		    | CSSFARG of L.labels
-		    | CSSTYVA of L.labels
-		    | CSSLEFT of L.labels
-		    | CSSFREC of L.labels
-		    | CSSREAL of L.labels
-		    | CSSFREE of L.labels
-		    | CSSWARN of L.labels * string
-		    | CSSPARS of L.labels * string
-		    (*| CSB of csstyt*)
-type css            = ocss list
+datatype oneContextSensitiveSyntaxError = CSSMULT of L.labels
+                                        | CSSCVAR of L.labels
+					| CSSEVAR of L.labels
+					| CSSECON of L.labels
+					| CSSINCL of L.labels
+					| CSSAPPL of L.labels
+					| CSSFNAM of L.labels
+					| CSSFARG of L.labels
+					| CSSTYVA of L.labels
+					| CSSLEFT of L.labels
+					| CSSFREC of L.labels
+					| CSSREAL of L.labels
+					| CSSFREE of L.labels
+					| CSSWARN of L.labels * string
+	                                | CSSPARS of L.labels * string
+type contextSensitiveSyntaxError = oneContextSensitiveSyntaxError list
 
-type envcss = environment * css
+type envcss = environment * contextSensitiveSyntaxError
 
 
 (* ====== FUNCTIONS ====== *)
@@ -260,7 +259,7 @@ fun printOpnEnv xs ind =
 
 fun printTnmap xs =
     printlistgen xs (fn {id, lab, kind, name} =>
-			"(" ^ I.printId     id   ^
+		        "(" ^ I.printId     id   ^
 			"," ^ L.printLab    lab  ^
 			"," ^ printTnKind   kind ^
 			"," ^ T.printtyname name ^ ")")

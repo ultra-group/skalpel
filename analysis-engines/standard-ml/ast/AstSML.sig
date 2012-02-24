@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -208,10 +202,10 @@ signature ASTSML = sig
       | LongStrIdEqDots of part list
 
     and specone =
-	SpecVal         of valdesc   * Reg.region * Label.label * next
-      | SpecTyp         of typdesc   * Reg.region * Label.label * next
-      | SpecEqT         of typdesc   * Reg.region * Label.label * next
-      | SpecExc         of excdesc   * Reg.region * Label.label * next
+	SpecValue       of valdesc   * Reg.region * Label.label * next
+      | SpecType        of typdesc   * Reg.region * Label.label * next
+      | SpecEqtype      of typdesc   * Reg.region * Label.label * next
+      | SpecException   of excdesc   * Reg.region * Label.label * next
       | SpecTdr         of tdrdesc   * Reg.region * Label.label * next (* the derived forms for types *)
       | SpecDat         of datdesc   * Reg.region * Label.label * next
       | SpecStr         of strdesc   * Reg.region * Label.label * next

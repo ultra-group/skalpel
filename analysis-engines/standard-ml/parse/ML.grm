@@ -1104,27 +1104,27 @@ specone :
     (fn (n, asc) =>
 	let val (vd, (m, asc')) = valdesc (L.nextLabel n, asc)
 	    val reg = R.consReg VALleft VALright
-	in (A.SpecVal (vd, reg, n, m), (m, asc'))
+	in (A.SpecValue (vd, reg, n, m), (m, asc'))
 	end)
 | TYPE typdesc
     (fn (n, asc) =>
 	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
 	    val reg = R.consReg TYPEleft TYPEright
 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: TYPE typdesc"
-	in (A.SpecTyp (td, reg, n, m), (m, asc'))
+	in (A.SpecType (td, reg, n, m), (m, asc'))
 	end)
 | EQTYPE typdesc
     (fn (n, asc) =>
 	let val (td, (m, asc')) = typdesc (L.nextLabel n, asc)
 	    val reg = R.consReg EQTYPEleft EQTYPEright
 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: EQTYPE typdesc"
-	in (A.SpecEqT (td, reg, n, m), (m, asc'))
+	in (A.SpecEqtype (td, reg, n, m), (m, asc'))
 	end)
 | EXCEPTION excdesc
     (fn (n, asc) =>
 	let val (ed, (m, asc')) = excdesc (L.nextLabel n, asc)
 	    val reg = R.consReg EXCEPTIONleft EXCEPTIONright
-	in (A.SpecExc (ed, reg, n, m), (m, asc'))
+	in (A.SpecException (ed, reg, n, m), (m, asc'))
 	end)
 | TYPE tdrdesc
     (fn (n, asc) =>

@@ -2319,7 +2319,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (E.env, E.emcss) *)
-	   and f_speconesmltes (A.SpecVal (valdesc, _, lab, _)) =
+	   and f_speconesmltes (A.SpecValue (valdesc, _, lab, _)) =
 	       let val (vids, cst1, css) = f_valdesc valdesc
 		   val (tyvs, cst2) = f_typevarvallist (A.gettyvarValDesc valdesc)
 		   val env1 = E.ENVPOL (tyvs, E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projVids vids))
@@ -2355,7 +2355,6 @@ fun generateConstraints' prog pack nenv =
 	       in (env, E.emcss)
 	       end
 
-	   (* this is for type variables inside signatures? *)
 	   (* RETURNS: (Ty.tvenv, Env.cst) *)
 	   and f_typevarspec (A.TypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebug 2 D.AZE ("in f_typevarspec - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
@@ -2379,10 +2378,9 @@ fun generateConstraints' prog pack nenv =
 	       in (E.uenv [tyvs1, tyvs2], E.uenvcst [cst1, cst2])
 	       end
 
-	   (*** all the f_spec* function names are perhaps for signatures ? ***)
-	   (* RETURNS: (E.env, E.emcss) *)
-	   and f_specone (A.SpecVal (valdesc, _, lab, _)) =
-	       let val _   = D.printDebugFunc 2 D.AZE (fn _ => ("in f_specone - generating constraints for A.SpecVal (lab = "^Int.toString(L.toInt(lab))^")"))
+           (* value definitions inside a signature *)
+	   and f_specone (A.SpecValue (valdesc, _, lab, _)) =
+	       let val _   = D.printDebugFunc 2 D.AZE (fn _ => ("in f_specone - generating constraints for A.SpecValue (lab = "^Int.toString(L.toInt(lab))^")"))
 		   val (vids, cst1, css) = f_valdesc valdesc
 		   (*(2010-06-23)Before we were using f_typevarvallist which generates binders
 		    * of explicit type variables, now we use binders of implicit type variables
@@ -2405,18 +2403,22 @@ fun generateConstraints' prog pack nenv =
 	       (* NOTE: we have to bind the explicit type variables. *)
 	       in (env4, css)
 	       end
-	     | f_specone (A.SpecTyp (typdesc, _, lab, _)) =
-	       let val (tns, typs, cst, css) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+
+             (* type declarations inside a signature *)
+	     | f_specone (A.SpecType (typdesc, _, lab, _)) =
+	       let val (tns, typs, constraints, css) = f_typdesc typdesc
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
 	       in (env', css)
 	       end
-	     | f_specone (A.SpecEqT (typdesc, _, lab, _)) =
+
+             (* equality types declarations inside a signature *)
+	     | f_specone (A.SpecEqtype (typdesc, _, lab, _)) =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqT (lab = "^Int.toString(L.toInt lab)^")")
-		   val (tns, typs, cst, css) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+		   val (tns, typs, constraints, css) = f_typdesc typdesc
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
 		   val envVar   = E.freshEnvVar ()
 		   val c = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
@@ -2435,7 +2437,9 @@ fun generateConstraints' prog pack nenv =
 		* It is the same for all the specs because of the type parts. *)
 	       in (env2, css)
 	       end
-	     | f_specone (A.SpecExc (exdesc, _, lab, _)) =
+
+             (* exception declaration inside a signature *)
+	     | f_specone (A.SpecException (exdesc, _, lab, _)) =
 	       let val (cons, cst, css) = f_excdesc exdesc
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.projVids cons) lab))
 		   val ev1  = E.freshEnvVar ()

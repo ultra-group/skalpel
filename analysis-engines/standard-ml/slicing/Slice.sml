@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -669,25 +663,25 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printSpecOne (A.SpecVal (vd, r, _, _))           ind =
+	and printSpecOne (A.SpecValue (vd, r, _, _))           ind =
 	    let val (l, k, c, x) = printValDesc vd ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
 	    in (getLine [r], k', getCol [r], "val " ^ sep ^ x)
 	    end
-	  | printSpecOne (A.SpecTyp (td, r, _, _))           ind =
+	  | printSpecOne (A.SpecType (td, r, _, _))           ind =
 	    let val (l, k, c, x) = printTypDesc td ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
 	    in (getLine [r], k', getCol [r], "type " ^ sep ^ x)
 	    end
-	  | printSpecOne (A.SpecEqT (td, r, _, _))           ind =
+	  | printSpecOne (A.SpecEqtype (td, r, _, _))           ind =
 	    let val (l, k, c, x) = printTypDesc td ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
 	    in (getLine [r], k', getCol [r], "eqtype " ^ sep ^ x)
 	    end
-	  | printSpecOne (A.SpecExc (ed, r, _, _))           ind =
+	  | printSpecOne (A.SpecException (ed, r, _, _))           ind =
 	    let val (l, k, c, x) = printExcDesc ed ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
@@ -5334,31 +5328,31 @@ fun slice prog labels =
 		  then A.SpecOneDots []
 		  else sl_specone x ll
 
-	      and sl_specone (A.SpecVal (vd, r, l, n)) ll =
+	      and sl_specone (A.SpecValue (vd, r, l, n)) ll =
 		  if isin l ll
-		  then A.SpecVal (sl_sl_valdesc vd (L.delete l ll), r, l, n)
+		  then A.SpecValue (sl_sl_valdesc vd (L.delete l ll), r, l, n)
 		  else (case sl_valdesc vd ll of
 			    A.ValDescDots pl => A.SpecOneDots pl
-			  | svd => A.SpecVal (svd, r, l, n))
-		| sl_specone (A.SpecTyp (td, r, l, n)) ll =
+			  | svd => A.SpecValue (svd, r, l, n))
+		| sl_specone (A.SpecType (td, r, l, n)) ll =
 		  if isin l ll
-		  then A.SpecTyp (sl_sl_typdesc td (L.delete l ll), r, l, n)
+		  then A.SpecType (sl_sl_typdesc td (L.delete l ll), r, l, n)
 		  else (case sl_typdesc td ll of
 			    A.TypDescDots pl => A.SpecOneDots pl
-			  | std => A.SpecTyp (std, r, l, n))
-		| sl_specone (A.SpecEqT (td, r, l, n)) ll =
+			  | std => A.SpecType (std, r, l, n))
+		| sl_specone (A.SpecEqtype (td, r, l, n)) ll =
 		  ((*Debug.printdebug2 ("(2)" ^ L.toString ll ^ " " ^ L.printelt l);*)
 		   if isin l ll
-		   then A.SpecEqT (sl_sl_typdesc td (L.delete l ll), r, l, n)
+		   then A.SpecEqtype (sl_sl_typdesc td (L.delete l ll), r, l, n)
 		   else (case sl_typdesc td ll of
 			     A.TypDescDots pl => A.SpecOneDots pl
-			   | std => A.SpecEqT (std, r, l, n)))
-		| sl_specone (A.SpecExc (ed, r, l, n)) ll =
+			   | std => A.SpecEqtype (std, r, l, n)))
+		| sl_specone (A.SpecException (ed, r, l, n)) ll =
 		  if isin l ll
-		  then A.SpecExc (sl_sl_excdesc ed (L.delete l ll), r, l, n)
+		  then A.SpecException (sl_sl_excdesc ed (L.delete l ll), r, l, n)
 		  else (case sl_excdesc ed ll of
 			    A.ExcDescDots pl => A.SpecOneDots pl
-			  | sed => A.SpecExc (sed, r, l, n))
+			  | sed => A.SpecException (sed, r, l, n))
 		| sl_specone (A.SpecTdr (td, r, l, n)) ll =
 		  if isin l ll
 		  then A.SpecTdr (sl_sl_tdrdesc td (L.delete l ll), r, l, n)

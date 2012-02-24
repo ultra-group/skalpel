@@ -1,22 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpe is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -197,10 +192,10 @@ and sigidseq =
   | SigIdSeqDots    of part list
 
 and specone =
-    SpecVal         of valdesc   * R.region * L.label * next
-  | SpecTyp         of typdesc   * R.region * L.label * next
-  | SpecEqT         of typdesc   * R.region * L.label * next
-  | SpecExc         of excdesc   * R.region * L.label * next
+    SpecValue       of valdesc   * R.region * L.label * next
+  | SpecType        of typdesc   * R.region * L.label * next
+  | SpecEqtype      of typdesc   * R.region * L.label * next
+  | SpecException   of excdesc   * R.region * L.label * next
   | SpecTdr         of tdrdesc   * R.region * L.label * next
   | SpecDat         of datdesc   * R.region * L.label * next
   | SpecStr         of strdesc   * R.region * L.label * next
@@ -886,13 +881,13 @@ and printAstSigIdSeqList []        = ""
 and printAstSigIdSeq (SigIdSeq (xs, _)) = printAstSigIdSeqList xs
   | printAstSigIdSeq (SigIdSeqDots pl)  = printAstPartList pl
 
-and printAstSpecOne (SpecVal (vd, _, l, _))  =
+and printAstSpecOne (SpecValue (vd, _, l, _))  =
     ldots () ^ "val " ^ printAstValDesc vd ^ rfdots l
-  | printAstSpecOne (SpecTyp (td, _, l, _))  =
+  | printAstSpecOne (SpecType (td, _, l, _))  =
     ldots () ^ "type " ^ printAstTypDesc td ^ rfdots l
-  | printAstSpecOne (SpecEqT (td, _, l, _))  =
+  | printAstSpecOne (SpecEqtype (td, _, l, _))  =
     ldots () ^ "eqtype " ^ printAstTypDesc td ^ rfdots l
-  | printAstSpecOne (SpecExc (ed, _, l, _))  =
+  | printAstSpecOne (SpecException (ed, _, l, _))  =
     ldots () ^ "exception " ^ printAstExcDesc ed ^ rfdots l
   | printAstSpecOne (SpecTdr (td, _, l, _))  =
     ldots () ^ "type " ^ printAstTdrDesc td ^ rfdots l
@@ -2027,10 +2022,10 @@ and gettyvarDatDescOne (DatDescOne (dn, cd, _, _, _)) = (gettyvarDatName dn) @ (
 and gettyvarDatDesc (DatDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarDatDescOne x) @ y) [] xs
   | gettyvarDatDesc (DatDescDots pl)     = []
 
-and gettyvarSpecOne (SpecVal (vd, _, _, _)) = []
-  | gettyvarSpecOne (SpecTyp (tp, _, _, _)) = gettyvarTypDesc tp
-  | gettyvarSpecOne (SpecEqT (tp, _, _, _)) = gettyvarTypDesc tp
-  | gettyvarSpecOne (SpecExc (ex, _, _, _)) = gettyvarExcDesc ex
+and gettyvarSpecOne (SpecValue (vd, _, _, _)) = []
+  | gettyvarSpecOne (SpecType (tp, _, _, _)) = gettyvarTypDesc tp
+  | gettyvarSpecOne (SpecEqtype (tp, _, _, _)) = gettyvarTypDesc tp
+  | gettyvarSpecOne (SpecException (ex, _, _, _)) = gettyvarExcDesc ex
   | gettyvarSpecOne (SpecTdr (tp, _, _, _)) = gettyvarTdrDesc tp
   | gettyvarSpecOne (SpecDat (dd, _, _, _)) = gettyvarDatDesc dd
   | gettyvarSpecOne (SpecStr (sd, _, _, _)) = [] (* What should be here? *)
@@ -2604,10 +2599,10 @@ and getStrExpNext (StrExpBasic (_, _, _, n))         = SOME n
   | getStrExpNext (StrExpLocal (_, _, _, _, n))      = SOME n
   | getStrExpNext (StrExpDots pl)                    = getPartListNext pl
 
-and getSpecOneNext (SpecVal (_, _, _, n))            = SOME n
-  | getSpecOneNext (SpecTyp (_, _, _, n))            = SOME n
-  | getSpecOneNext (SpecEqT (_, _, _, n))            = SOME n
-  | getSpecOneNext (SpecExc (_, _, _, n))            = SOME n
+and getSpecOneNext (SpecValue (_, _, _, n))            = SOME n
+  | getSpecOneNext (SpecType (_, _, _, n))            = SOME n
+  | getSpecOneNext (SpecEqtype (_, _, _, n))            = SOME n
+  | getSpecOneNext (SpecException (_, _, _, n))            = SOME n
   | getSpecOneNext (SpecTdr (_, _, _, n))            = SOME n
   | getSpecOneNext (SpecDat (_, _, _, n))            = SOME n
   | getSpecOneNext (SpecStr (_, _, _, n))            = SOME n
@@ -2971,10 +2966,10 @@ and getSigExpFirst (SigExpBasic (_, _, l, _))         = SOME l
   | getSigExpFirst (SigExpRea (_, _, _, l, _))        = SOME l
   | getSigExpFirst (SigExpDots pl)                    = getPartListFirst pl
 
-and getSpecOneFirst (SpecVal (_, _, l, _))            = SOME l
-  | getSpecOneFirst (SpecTyp (_, _, l, _))            = SOME l
-  | getSpecOneFirst (SpecEqT (_, _, l, _))            = SOME l
-  | getSpecOneFirst (SpecExc (_, _, l, _))            = SOME l
+and getSpecOneFirst (SpecValue (_, _, l, _))          = SOME l
+  | getSpecOneFirst (SpecType (_, _, l, _))           = SOME l
+  | getSpecOneFirst (SpecEqtype (_, _, l, _))         = SOME l
+  | getSpecOneFirst (SpecException (_, _, l, _))      = SOME l
   | getSpecOneFirst (SpecTdr (_, _, l, _))            = SOME l
   | getSpecOneFirst (SpecDat (_, _, l, _))            = SOME l
   | getSpecOneFirst (SpecStr (_, _, l, _))            = SOME l

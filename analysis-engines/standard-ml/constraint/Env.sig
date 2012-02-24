@@ -205,24 +205,25 @@ signature ENV = sig
     type extfun = funsem bind
     type funenv = funsem genv
 
-    datatype ocss       = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
-                        | CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
-			| CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
-			| CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
-			| CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)
-			| CSSAPPL of Label.labels (* for applied and not applied value in pattern            *)
-			| CSSFNAM of Label.labels (* for different function names                            *)
-			| CSSFARG of Label.labels (* a function with different number of arguments           *)
-			| CSSTYVA of Label.labels (* free type variable at top-level                         *)
-			| CSSLEFT of Label.labels (* ident to left of as in pattern must be a variable       *)
-			| CSSFREC of Label.labels (* expressions within rec value bindings must be functions *)
-			| CSSREAL of Label.labels (* reals cannot occur within patterns                      *)
-			| CSSFREE of Label.labels (* free identifier                                         *)
-			| CSSWARN of Label.labels * string (* for a warning *)
-			| CSSPARS of Label.labels * string (* for a parsing problem *)
-    type css            = ocss list
+    (* "CSS" means "Context-Sensitive Syntax error"? *)
+    datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
+					    | CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
+					    | CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
+					    | CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
+					    | CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)
+					    | CSSAPPL of Label.labels (* for applied and not applied value in pattern            *)
+					    | CSSFNAM of Label.labels (* for different function names                            *)
+					    | CSSFARG of Label.labels (* a function with different number of arguments           *)
+					    | CSSTYVA of Label.labels (* free type variable at top-level                         *)
+					    | CSSLEFT of Label.labels (* ident to left of as in pattern must be a variable       *)
+					    | CSSFREC of Label.labels (* expressions within rec value bindings must be functions *)
+					    | CSSREAL of Label.labels (* reals cannot occur within patterns                      *)
+					    | CSSFREE of Label.labels (* free identifier                                         *)
+					    | CSSWARN of Label.labels * string (* for a warning *)
+					    | CSSPARS of Label.labels * string (* for a parsing problem *)
+    type contextSensitiveSyntaxError       = oneContextSensitiveSyntaxError list
 
-    type envcss = environment * css
+    type envcss = environment * contextSensitiveSyntaxError
 
 
     (* ====== FUNCTIONS ====== *)
@@ -410,15 +411,15 @@ signature ENV = sig
     val foldlOEnv    : ((opnsem * 'b) -> 'b) -> 'b -> opnenv -> 'b
 
     (* ------ FUNCTIONS FOR CONSTRAINTS ------*)
-    val emcss            : css
+    val emcss            : contextSensitiveSyntaxError
     val emptyConstraint  : constraints
     val consConstraint   : (Label.label * oneConstraint) -> constraints -> constraints
     val conscsts         : (Label.label * oneConstraint list) -> constraints -> constraints
     val singleConstraint : (Label.label * oneConstraint) -> constraints
-    val singcss          : ocss -> css
-    val singcsss         : ocss list -> css
+    val singcss          : oneContextSensitiveSyntaxError -> contextSensitiveSyntaxError
+    val singcsss         : oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val singcsts         : (Label.label * oneConstraint list) -> constraints
-    val uenvcss          : css list -> css
+    val uenvcss          : contextSensitiveSyntaxError list -> contextSensitiveSyntaxError 
     val uenvcst          : constraints list -> constraints
     val getnbcs          : envcss -> int
     val getnbcss         : envcss -> int
