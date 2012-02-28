@@ -72,16 +72,16 @@ signature STATE = sig
     (* The second returned value is for incomplete structures.
      * The third  returned value is true if we successfully went down the lid.
      * In the first option, the bool is true if the binding comes from the parameter of a functor. *)
-    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extvar * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.exttyv * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.exttyp * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.idl * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extvar * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.exttyv * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.exttyp * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
 
     (* get the 'fr' and 'op' parts of the state. *)
-    val getValStateFree    : state -> (Id.idl * bool) list
+    val getValStateFree    : state -> (Id.labelledId * bool) list
 
 
     (*val getValStateApFirst : state -> Id.lid -> stUb option*)
@@ -99,11 +99,11 @@ signature STATE = sig
     val updateStateGe      : state -> Ty.tyvar         -> stGe -> unit
 
     (* for free identifiers *)
-    val updateStateFr      : state -> Id.idl -> unit
+    val updateStateFr      : state -> Id.labelledId -> unit
     (* for free _opened_ identifiers *)
-    val updateStateFo      : state -> Id.idl -> unit
+    val updateStateFo      : state -> Id.labelledId -> unit
 
-    val updateDatCons      : state -> Id.idl -> Env.environment -> unit
+    val updateDatCons      : state -> Id.labelledId -> Env.environment -> unit
 
     val updateRecOne       : state ->
 			     stRc  ->

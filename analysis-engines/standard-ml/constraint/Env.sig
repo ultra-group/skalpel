@@ -38,8 +38,8 @@ signature ENV = sig
     type 'a bind        = 'a ConsId.bind ExtLab.extLab
 
     (* ------ GENERIC ENVIRONMENT ------ *)
-    type 'a genv        = 'a bind list emap
-    (*(2010-04-08)We should use genv for all our similar environments*)
+    type 'a genericEnvironment        = 'a bind list emap
+    (*(2010-04-08)We should use genericEnvironment for all our similar environments*)
 
     (* ------ OPENENV ------ *)
     datatype opnkind    = OST (* opened structure     *)
@@ -52,22 +52,22 @@ signature ENV = sig
 
     (* ------ VARENV ------ *)
     type extvar         = Ty.ty bind
-    type varenv         = Ty.ty genv
+    type varenv         = Ty.ty genericEnvironment
 
     (* ------ KIND OF A TYPE DECLARATION *)
     datatype tnKind     = DAT | TYP
 
     (* ------ TYPENV ------ *)
     type exttyp         = (Ty.tyfun * tnKind * (varenv * bool) ref) bind (*(2010-06-10)The Boolean is to indicate if the varenv is complete or not.*)
-    type typenv         = (Ty.tyfun * tnKind * (varenv * bool) ref) genv
+    type typenv         = (Ty.tyfun * tnKind * (varenv * bool) ref) genericEnvironment
 
     (* ------ OVERLADINGENV ------ *)
     type extovc         = Ty.seqty bind
-    type ovcenv         = Ty.seqty genv
+    type ovcenv         = Ty.seqty genericEnvironment
 
     (* ------ TYVARENV ------ *)
     type exttyv         = (Ty.tyvar * bool) bind (*(2010-06-14)The Boolean is true for an explicit type variable and false for an implicit one.*)
-    type tyvenv         = (Ty.tyvar * bool) genv
+    type tyvenv         = (Ty.tyvar * bool) genericEnvironment
 
     (* ------ INFORMATION ON ENVIRONMENTS ------ *)
     type tname          = {id : Id.id, lab : Label.label, kind : tnKind, name : Ty.tyname}
@@ -131,23 +131,23 @@ signature ENV = sig
 				     (* type names *)
 				     tyvs : tyvenv,
 				     (* explicit type variables - not used anymore *)
-				     strs : environment genv,
+				     strs : environment genericEnvironment,
 				     (* structures - this is strenv *)
-				     sigs : environment genv,
+				     sigs : environment genericEnvironment,
 				     (* signatures - this is sigenv *)
-				     funs : (environment * environment) genv,
+				     funs : (environment * environment) genericEnvironment,
 				     (* functors this is a funenv *)
 				     ovcs : ovcenv,
 				     (* overloading classes *)
 				     info : infoEnv}
 			| ENVVAR of envvar * Label.label
 			| SEQUENCE_ENV of environment * environment
-			| ENVLOC of environment * environment
+			| LOCAL_ENV of environment * environment
 			| ENVSHA of environment * environment     (*(2010-07-07)We want something like: Ty.tyfun accid extLab list, instead of the second environment.*)
 			| SIGNATURE_ENV of environment * environment * matchKind
 			| ENVWHR of environment * longtyp
 			| ENVPOL of tyvenv * environment  (* the first environment is the explicit type variables and the second the value bindings *)
-			| DATATYPE_CONSTRUCTOR_ENV of Id.idl * environment  (* (2010-06-10)This is to associate constructors to a datatype *)
+			| DATATYPE_CONSTRUCTOR_ENV of Id.labelledId * environment  (* (2010-06-10)This is to associate constructors to a datatype *)
 			| ENVOPN of opnenv
 			| ENVDEP of environment ExtLab.extLab (* we want to move from ENVOPN to ENVDEP *)
 			| FUNCTOR_ENV of constraints (*(2010-06-22)This environment is only solved when dealing with CSTFUN.*)
@@ -195,15 +195,15 @@ signature ENV = sig
      * does not complain, MLton does.*)
 
     type extstr = environment bind
-    type strenv = environment genv
+    type strenv = environment genericEnvironment
 
     type extsig = environment bind
-    type sigenv = environment genv
+    type sigenv = environment genericEnvironment
 
     (* functor has type environment1 -> environment2 *)
     type funsem = environment * environment
     type extfun = funsem bind
-    type funenv = funsem genv
+    type funenv = funsem genericEnvironment
 
     (* "CSS" means "Context-Sensitive Syntax error"? *)
     datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
@@ -362,15 +362,15 @@ signature ENV = sig
     val addenv       : (Id.id * 'a) -> 'a emap -> 'a emap
     val singenv      : (Id.id * 'a) -> 'a emap
     (*val findenv      : Id.id -> 'a emap -> 'a option*)
-    val plusproj     : 'a genv -> Id.id -> 'a bind list
+    val plusproj     : 'a genericEnvironment -> Id.id -> 'a bind list
     (*val appenv       : ('a -> unit) -> 'a emap -> unit
     val appienv      : ((Id.id * 'a) -> unit) -> 'a emap -> unit*)
     val mapenv       : ('a -> 'a) -> 'a emap -> 'a emap
-    val uenv         : 'a genv list -> 'a genv
+    val uenv         : 'a genericEnvironment list -> 'a genericEnvironment
     (*val remenv       : Id.id -> 'a emap -> 'a emap
     val inenv        : 'a emap -> Id.set -> 'a emap
     val outenv       : 'a emap -> Id.set -> 'a emap*)
-    val plusenv      : 'a genv -> 'a genv -> 'a genv
+    val plusenv      : 'a genericEnvironment -> 'a genericEnvironment -> 'a genericEnvironment
     (*val foldrenv     : (('a * 'b) -> 'b) -> 'b -> 'a emap -> 'b
     val foldlenv     : (('a * 'b) -> 'b) -> 'b -> 'a emap -> 'b*)
     val foldrienv    : ((Id.id * 'a * 'b) -> 'b) -> 'b -> 'a emap -> 'b
@@ -396,8 +396,8 @@ signature ENV = sig
 
     val allEqualVids : varenv -> constraints
 
-    val bindToEnv    : 'a bind list -> 'a genv
-    val envToBind    : 'a genv      -> 'a bind list
+    val bindToEnv    : 'a bind list -> 'a genericEnvironment
+    val envToBind    : 'a genericEnvironment      -> 'a bind list
 
     (* Union of environment *)
     val uenvEnv      : environment list -> environment
@@ -411,7 +411,7 @@ signature ENV = sig
     val foldlOEnv    : ((opnsem * 'b) -> 'b) -> 'b -> opnenv -> 'b
 
     (* ------ FUNCTIONS FOR CONSTRAINTS ------*)
-    val emcss            : contextSensitiveSyntaxError
+    val emptyContextSensitiveSyntaxError            : contextSensitiveSyntaxError
     val emptyConstraint  : constraints
     val consConstraint   : (Label.label * oneConstraint) -> constraints -> constraints
     val conscsts         : (Label.label * oneConstraint list) -> constraints -> constraints

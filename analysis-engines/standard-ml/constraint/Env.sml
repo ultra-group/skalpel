@@ -50,11 +50,17 @@ type 'a omap        = 'a OMO.fifo
 (* ------ VARIABLES ------ *)
 type envvar         = int
 
-(* ------ BINDERS ------ *)
+(* this is for what kind of bind indentifier we are binding. We have the:
+ * - binding (the actual thing being bound, C.bind)
+ * - class part of C.bind (the class which we're binding it in)
+ * - label part of C.bind (everything is labelled)
+ * - poly  part of C.bind (some polymorphic information?) *)
 type 'a bind  = 'a C.bind EL.extLab
 
-(* ------ GENERIC ENVIRONMENT ------ *)
-type 'a genv  = 'a bind list emap
+(* genericEnvironment
+ * stores binders of structures and signatures and such
+ * it is suspected that this was created as a speed optimisation *)
+type 'a genericEnvironment  = 'a bind list emap
 
 (* ------ OPENENV ------ *)
 datatype opnkind    = OST | DRE | ISI
@@ -63,22 +69,22 @@ type opnenv         = opnsem omap
 
 (* ------ VARENV ------ *)
 type extvar         = T.ty bind
-type varenv         = T.ty genv (* Tyty (ConsId.bind ExtLab.extLab list) OME.mp *)
+type varenv         = T.ty genericEnvironment (* Tyty (ConsId.bind ExtLab.extLab list) OME.mp *)
 
 (* ------ KIND OF A TYPE DECLARATION *)
 datatype tnKind     = DAT | TYP
 
 (* ------ TYPENV ------ *)
 type exttyp         = (T.tyfun * tnKind * (varenv * bool) ref) bind
-type typenv         = (T.tyfun * tnKind * (varenv * bool) ref) genv
+type typenv         = (T.tyfun * tnKind * (varenv * bool) ref) genericEnvironment
 
 (* ------ OVERLOADINGENV ------ *)
 type extovc         = T.seqty bind
-type ovcenv         = T.seqty genv
+type ovcenv         = T.seqty genericEnvironment
 
 (* ------ TYVARENV ------ *)
 type exttyv         = (T.tyvar * bool) bind
-type tyvenv         = (T.tyvar * bool) genv
+type tyvenv         = (T.tyvar * bool) genericEnvironment
 
 (* ------ INFORMATION ON ENVIRONMENT ------ *)
 type tname          = {id : I.id, lab : L.label, kind : tnKind, name : T.tyname}
@@ -115,26 +121,45 @@ type class = CL.class
 datatype matchKind  = OPA (* Opaque      *)
 		    | TRA (* Translucent *)
 
-(* ------ ENVIRONMENT ------ *)
-datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
-				 typenames : typenv,
-				 tyvs : tyvenv,
-				 strs : environment genv,
-				 sigs : environment genv,
-				 funs : (environment * environment) genv,
-				 ovcs : ovcenv,
-				 info : infoEnv}
+(* the environment datatype *)
+datatype environment = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
+			 typenames : typenv,
+			 tyvs : tyvenv,
+			 strs : environment genericEnvironment,
+			 sigs : environment genericEnvironment,
+			 funs : (environment * environment) genericEnvironment,
+			 ovcs : ovcenv,
+			 info : infoEnv}
 		    | ENVVAR of envvar * L.label
+
+                    (* SEQUENCE_ENV represents sequence environments
+                     * e := ... | e2; e1
+                     * we use sequences as a sort of logical AND *)
 		    | SEQUENCE_ENV of environment * environment
-		    | ENVLOC of environment * environment
+
+                    (* LOCAL_ENV represents local environments
+                     * e := ... | loc e1 in e2
+                     * This builds an environment e2 which depends on e1 and only exports e2's binders,
+                     * so only e2's binders can be accessed from outside the local environment. This is
+                     * different from the environments of the form e1;e2 as this builds a new environment
+                     * from e1 and e2 and exports both e1's binders not shadowed by e2 and e2's binders *)
+		    | LOCAL_ENV of environment * environment
+
 		    | ENVWHR of environment * longtyp
 		    | ENVSHA of environment * environment
+
+                    (* SIGNATURE_ENV represents signature environments
+                     * in the paper this would be e := ... | e1;e2| ens(e) | subty *)
 		    | SIGNATURE_ENV of environment * environment * matchKind
 		    | ENVPOL of tyvenv * environment
-		    | DATATYPE_CONSTRUCTOR_ENV of I.idl  * environment
+		    | DATATYPE_CONSTRUCTOR_ENV of I.labelledId  * environment
 		    | ENVOPN of opnenv
 		    | ENVDEP of environment EL.extLab
 		    | FUNCTOR_ENV of constraints
+
+                    (* CONSTRAINT_ENV is probably for constraint/environment
+                     * think this is c ::= μ1=μ2 | e1=e2 | τ1=τ2 
+                     * these act as both a constraint and an environment *)
 		    | CONSTRAINT_ENV of constraints
 		    | ENVPTY of string
 		    | ENVFIL of string * environment * (unit -> environment)
@@ -164,15 +189,18 @@ datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
      and constraints      = CONSTRAINTS of oneConstraint list cmap
 
 type extstr = environment bind
-type strenv = environment genv
+type strenv = environment genericEnvironment
 
 type extsig = environment bind
-type sigenv = environment genv
+type sigenv = environment genericEnvironment
 
 type funsem = environment * environment
 type extfun = funsem bind
-type funenv = funsem genv
+type funenv = funsem genericEnvironment
 
+(* oneContextSensitiveSyntaxError
+ * these used to be in the environment but they got moved out
+ * they are now separate because the usualyl get passed through *)
 datatype oneContextSensitiveSyntaxError = CSSMULT of L.labels
                                         | CSSCVAR of L.labels
 					| CSSEVAR of L.labels
@@ -325,8 +353,8 @@ and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, 
   | printEnv (CONSTRAINT_ENV cst) ind = "CONSTRAINT_ENV(" ^ printcst' cst ind I.emAssoc ^ ")"
   | printEnv (SEQUENCE_ENV (env1, env2)) ind =
     "SEQUENCE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
-  | printEnv (ENVLOC (env1, env2)) ind =
-    "ENVLOC(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
+  | printEnv (LOCAL_ENV (env1, env2)) ind =
+    "LOCAL_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
   | printEnv (ENVWHR (env, longtyp)) ind =
     "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTyp longtyp ind ^ ")"
   | printEnv (ENVSHA (env1, env2)) ind =
@@ -335,8 +363,8 @@ and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, 
     "SIGNATURE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")"
   | printEnv (ENVPOL (tyvenv, env)) ind =
     "ENVPOL(" ^ printTyvEnv tyvenv ind ^ ",\n" ^ ind ^ printEnv env ind ^ ")"
-  | printEnv (DATATYPE_CONSTRUCTOR_ENV (idl, env)) ind =
-    "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL idl ^ "," ^ printEnv env ind ^ ")"
+  | printEnv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env)) ind =
+    "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL labelledId ^ "," ^ printEnv env ind ^ ")"
   | printEnv (ENVPTY st) ind = "ENVPTY(" ^ st ^ ")"
   | printEnv (ENVFIL (st, env, stream)) ind =
     "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
@@ -512,7 +540,7 @@ fun updateOvcs ovcs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs,
 fun updateILab lab (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
     consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoLab lab info)
   | updateILab lab (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateILab lab env1, updateILab lab env2)
-  | updateILab lab (ENVLOC (env1, env2)) = ENVLOC (env1, updateILab lab env2)
+  | updateILab lab (LOCAL_ENV (env1, env2)) = LOCAL_ENV (env1, updateILab lab env2)
   | updateILab _ env = env
 fun updateICmp cmp (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
     consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoCmp cmp info)
@@ -523,7 +551,7 @@ fun updateInfoTypenames tns (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, str
 fun updateIFct fct (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
     consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoFct fct info)
   | updateIFct fct (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateIFct fct env1, updateIFct fct env2)
-  | updateIFct fct (ENVLOC (env1, env2)) = ENVLOC (env1, updateIFct fct env2)
+  | updateIFct fct (LOCAL_ENV (env1, env2)) = LOCAL_ENV (env1, updateIFct fct env2)
   | updateIFct _ env = env
 
 fun projVids idG = updateVids idG emptyEnvironment
@@ -702,7 +730,7 @@ fun pushExtEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
     pushExtEnv env (L.union labs0 labs) (L.union stts0 stts) (CD.union deps0 deps)
   | pushExtEnv env labs stts deps = ENVDEP (env, labs, stts, deps)
 
-val emcss = []
+val emptyContextSensitiveSyntaxError = []
 val emptyConstraint = CONSTRAINTS OMC.empty
 
 fun getcstSemi cst i = case OMC.find (cst, i) of NONE => [] | SOME x => x
@@ -716,7 +744,7 @@ fun singcsss cs = cs
 fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
 fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
-fun uenvcss xs = foldr (fn (x, y) => x@y) emcss xs
+fun uenvcss xs = foldr (fn (x, y) => x@y) emptyContextSensitiveSyntaxError xs
 fun uenv2cst (CONSTRAINTS cst1) (CONSTRAINTS cst2) = CONSTRAINTS (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
 fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emptyConstraint xs
 
@@ -747,7 +775,7 @@ fun getnbcst' cst =
 and getnbcstenv (ENVIRONMENT_CONSTRUCTOR _) = 0
   | getnbcstenv (ENVVAR _) = 0
   | getnbcstenv (SEQUENCE_ENV (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
-  | getnbcstenv (ENVLOC (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
+  | getnbcstenv (LOCAL_ENV (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVSHA (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (SIGNATURE_ENV (env1, env2, _)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVWHR (env, _)) = getnbcstenv env
@@ -797,12 +825,12 @@ fun getlabsenv (env as ENVIRONMENT_CONSTRUCTOR _) =
     in ([L.unions [labsVids, labsTyps, labsTyvs, labsStrs, labsSigs, labsFuns, labsOvcs]], L.empty)
     end
   | getlabsenv (SEQUENCE_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
-  | getlabsenv (ENVLOC (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
+  | getlabsenv (LOCAL_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVSHA (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (SIGNATURE_ENV (env1, env2, _)) = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVWHR (env, _))        = getlabsenv env (*Don't we want to get the label of the longtyp?*)
   | getlabsenv (ENVPOL (tyvenv, env))   = combineLabsEnv ([getlabsidenv tyvenv], L.empty) (getlabsenv env)
-  | getlabsenv (DATATYPE_CONSTRUCTOR_ENV (idl, env))      = getlabsenv env
+  | getlabsenv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env))      = getlabsenv env
   | getlabsenv (ENVOPN opnenv)          = ([getlabopnenv opnenv], L.empty)
   | getlabsenv (ENVDEP eenv)            = getlabsenv (EL.getExtLabT eenv)
   | getlabsenv (FUNCTOR_ENV cst)             = getlabscst cst
@@ -1099,12 +1127,12 @@ fun filterLongTyp (longtyp as ({lid, sem, class, lab}, _, _, _)) labs =
 fun toIncomplete (env as ENVIRONMENT_CONSTRUCTOR _)               = updateICmp false env
   | toIncomplete (env as SEQUENCE_ENV (env1, env2))    = SEQUENCE_ENV (toIncomplete env1, toIncomplete env2)
   | toIncomplete (env as ENVVAR _)               = env
-  | toIncomplete (env as ENVLOC (env1, env2))    = SEQUENCE_ENV (env1, toIncomplete env2)
+  | toIncomplete (env as LOCAL_ENV (env1, env2))    = SEQUENCE_ENV (env1, toIncomplete env2)
   | toIncomplete (env as ENVWHR (env1, longtyp)) = ENVWHR (toIncomplete env1, longtyp)
   | toIncomplete (env as ENVSHA (env1, env2))    = ENVSHA (toIncomplete env1, env2)
   | toIncomplete (env as SIGNATURE_ENV (env1, env2, l)) = SIGNATURE_ENV (toIncomplete env1, env2, l)
   | toIncomplete (env as ENVPOL (tyvenv, env1))  = ENVPOL (tyvenv, toIncomplete env1)
-  | toIncomplete (env as DATATYPE_CONSTRUCTOR_ENV (idl, env1))     = DATATYPE_CONSTRUCTOR_ENV (idl, toIncomplete env1)
+  | toIncomplete (env as DATATYPE_CONSTRUCTOR_ENV (labelledId, env1))     = DATATYPE_CONSTRUCTOR_ENV (labelledId, toIncomplete env1)
   | toIncomplete (env as ENVOPN _)               = env
   | toIncomplete (env as ENVDEP eenv)            = ENVDEP (EL.mapExtLab eenv toIncomplete)
   | toIncomplete (env as FUNCTOR_ENV _)               = env
@@ -1166,10 +1194,10 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
        | (SOME env1', NONE)       => SOME env1'
        | (NONE,       SOME env2') => SOME env2'
        | (NONE,       NONE)       => NONE)
-  | filterEnv (env as ENVLOC (env1, env2)) labs =
+  | filterEnv (env as LOCAL_ENV (env1, env2)) labs =
     (case (filterEnv env1 labs , filterEnv env2 labs) of
-	 (SOME env1', SOME env2') => SOME (ENVLOC (env1', env2'))
-       | (SOME env1', NONE)       => SOME (ENVLOC (env1', updateICmp false emptyEnvironment))
+	 (SOME env1', SOME env2') => SOME (LOCAL_ENV (env1', env2'))
+       | (SOME env1', NONE)       => SOME (LOCAL_ENV (env1', updateICmp false emptyEnvironment))
        | (NONE,       SOME env2') => SOME env2'
        | (NONE,       NONE)       => NONE)
   | filterEnv (env as ENVWHR (env1, longtyp)) labs =
@@ -1197,11 +1225,11 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
 	 if isEmptyIdEnv tyvenv'
 	 then NONE
 	 else SOME (ENVPOL (tyvenv', updateICmp false emptyEnvironment)))
-  | filterEnv (env as DATATYPE_CONSTRUCTOR_ENV (idl as (id, lab), env1)) labs =
+  | filterEnv (env as DATATYPE_CONSTRUCTOR_ENV (labelledId as (id, lab), env1)) labs =
     (case filterEnv env1 labs of
-	 SOME env1' => SOME (DATATYPE_CONSTRUCTOR_ENV (idl, env1'))
+	 SOME env1' => SOME (DATATYPE_CONSTRUCTOR_ENV (labelledId, env1'))
        | NONE       => if testlab lab labs
-		       then SOME (DATATYPE_CONSTRUCTOR_ENV (idl, updateICmp false emptyEnvironment))
+		       then SOME (DATATYPE_CONSTRUCTOR_ENV (labelledId, updateICmp false emptyEnvironment))
 		       else NONE)
   | filterEnv (env as ENVOPN opnenv) labs =
     (case filterOpnEnv opnenv labs of

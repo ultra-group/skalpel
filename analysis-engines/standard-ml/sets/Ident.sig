@@ -1,24 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -32,10 +25,10 @@
 signature ID = sig
 
     type id
-    type idl     = id * Label.label (*idl stands for id + label*)
+    type labelledId     = id * Label.label (*labelledId stands for id + label*)
     (*lid stands for longid*)
-    datatype lid = ID  of idl
-		 | LID of idl * lid * Label.label
+    datatype lid = ID  of labelledId
+		 | LID of labelledId * lid * Label.label
     type set
     type assoc
     type assocOut = (int * string) list
@@ -50,11 +43,11 @@ signature ID = sig
     val getLabs     : lid -> Label.labels
     val getTopLab   : lid -> Label.label
     val getLabId    : lid -> Label.label
-    val getTopIdl   : lid -> idl
-    val getLidOut   : lid -> idl list * idl
+    val getTopIdl   : lid -> labelledId
+    val getLidOut   : lid -> labelledId list * labelledId
 
     (* Returns the left-most identifier in a long identifier *)
-    val getLeftId   : lid -> idl
+    val getLeftId   : lid -> labelledId
 
     (* Returns the sub tree of a lid starting at the given id/label *)
     val getSubLid   : lid -> id -> Label.label -> lid option
@@ -100,8 +93,8 @@ signature ID = sig
     (* printing functions *)
     val printId        : id      -> string
     val printId'       : id      -> assoc  -> string
-    val printIdL       : idl     -> string
-    val printIdL'      : idl     -> assoc  -> string
+    val printIdL       : labelledId     -> string
+    val printIdL'      : labelledId     -> assoc  -> string
     val printLid       : lid     -> string
     val printLid'      : lid     -> assoc  -> string
     val printLidSt     : lid     -> assoc  -> string

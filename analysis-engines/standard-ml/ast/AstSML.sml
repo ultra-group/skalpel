@@ -1308,14 +1308,14 @@ and printAstLongStrIdList []        = ""
   | printAstLongStrIdList [x]       = printAstLongStrId x
   | printAstLongStrIdList (x :: xs) = printAstLongStrId x ^ " " ^ printAstLongStrIdList xs
 
-and printAstLongStrSeq (LongStrSeq (idl, _)) = printAstLongStrIdList idl
+and printAstLongStrSeq (LongStrSeq (labelledId, _)) = printAstLongStrIdList labelledId
   | printAstLongStrSeq (LongStrSeqDots pl)   = ldots () ^ printAstPartList pl ^ rdots ()
 
 and printAstIdentList []        = ""
   | printAstIdentList [x]       = printAstIdent x
   | printAstIdentList (x :: xs) = printAstIdent x ^ " " ^ printAstIdentList xs
 
-and printAstIdentSeq (IdentSeq (idl, _)) = printAstIdentList idl
+and printAstIdentSeq (IdentSeq (labelledId, _)) = printAstIdentList labelledId
   | printAstIdentSeq (IdentSeqDots pl)   = ldots () ^ printAstPartList pl ^ rdots ()
 
 and printAstDec (DecVal (tvs, vb, _, _))                 = "val "       ^ printAstTyvarseq tvs ^ " " ^ printAstValbind vb

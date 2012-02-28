@@ -837,11 +837,11 @@ signature ASTSML = sig
     (* These are used by the f_longid function in Analyze.sml.
      * This is also now used by f_condesc and f_conbind to extract
      * the information on the constructors of datatypes. *)
-    val getlabidStrId      : strid        -> Id.idl option
-    val getlabidIdent      : ident        -> Id.idl option
-    val getlabidLabId      : labid        -> Id.idl option
-    val getlabidTyCon      : tycon        -> Id.idl option
-    val getlabidLabclass   : labclass     -> Id.idl option
+    val getlabidStrId      : strid        -> Id.labelledId option
+    val getlabidIdent      : ident        -> Id.labelledId option
+    val getlabidLabId      : labid        -> Id.labelledId option
+    val getlabidTyCon      : tycon        -> Id.labelledId option
+    val getlabidLabclass   : labclass     -> Id.labelledId option
 
     (* Extract the top label of a labid *)
     val getLabelLabId      : labid        -> Label.labels

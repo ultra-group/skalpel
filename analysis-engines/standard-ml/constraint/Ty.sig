@@ -36,7 +36,7 @@ signature TY = sig
     type idor
     type labcons    = string (* int for tyname but string for labcons because not in any environment *)
     type flex       = Label.label option
-    type extv       = Id.idl option
+    type extv       = Id.labelledId option
     (* extv stands for EXplicit Type Variable *)
     type exttyvar   = tyvar ExtLab.extLab
 
@@ -53,7 +53,7 @@ signature TY = sig
     (* We have the last constructor (BB) because for type constructor labeled by BB
      * we might want to re-label them to get end points. *)
 
-    datatype orKind = VAL of Id.idl                       (* value    *)
+    datatype orKind = VAL of Id.labelledId                       (* value    *)
 		    | CST of string * Id.id * Label.label (* constant *)
 
     datatype labty  = LV  of labvar

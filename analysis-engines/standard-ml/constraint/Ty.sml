@@ -56,12 +56,12 @@ type tyname     = int
 type labcons    = string
 type idor       = int
 type flex       = L.label option
-type extv       = I.idl option (* extv stands for EXplicit Type Variable*)
+type extv       = I.labelledId option (* extv stands for EXplicit Type Variable*)
 type assoc      = (int * string) list
 type exttyvar   = tyvar ExtLab.extLab
 datatype poly   = POLY | MONO
 datatype kcons  = DE of I.id | PA | OT | BB
-datatype orKind = VAL of I.idl
+datatype orKind = VAL of I.labelledId
 		| CST of string * I.id * L.label
 
 datatype labty = LV  of labvar
@@ -731,7 +731,7 @@ fun printidor i = Int.toString i
 fun printPoly POLY = "POLY"
   | printPoly MONO = "MONO"
 
-fun printOrKind (VAL idl) = "VAL(" ^ I.printIdL idl ^ ")"
+fun printOrKind (VAL labelledId) = "VAL(" ^ I.printIdL labelledId ^ ")"
   | printOrKind (CST (st, id, lab)) = "CST(" ^ st ^ "," ^ I.printId id ^ "," ^ L.printLab lab ^ ")"
 
 
