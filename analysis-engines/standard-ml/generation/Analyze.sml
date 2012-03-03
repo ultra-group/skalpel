@@ -2419,8 +2419,12 @@ fun generateConstraints' prog pack nenv =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
 		   val (tns, typs, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+
+		   (* generate fresh environment variables that we use later *)
 		   val envVar   = E.freshEnvVar ()
+
 		   val c = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
+
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
 	       in (env', contextSensitiveSyntaxError)
 	       end
