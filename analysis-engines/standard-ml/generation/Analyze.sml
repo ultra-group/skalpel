@@ -86,7 +86,7 @@ fun clearRebound css =
 fun buildin (env, css) ascid true =
     let val (typs, cst1) = NA.getTyName ascid
 	val (vids, cst2) = OP.getOpType ascid
-	val cst  = E.uenvcst [cst1, cst2]
+	val cst  = E.unionConstraintsList [cst1, cst2]
 	val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (E.emtv, E.updateTypenames typs (E.projVids vids)))
     in if E.isEmptyIdEnv vids andalso E.isEmptyIdEnv typs
        then (env, css)
@@ -570,7 +570,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv, cst2, css2) = f_labexp labexp
 		   val rv = T.freshrowvar ()
 		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
-	       in ((lop, rv), E.consConstraint (lab, c) (E.uenvcst [cst1, cst2]), css2)
+	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
 	       end
 	     | f_exprow (A.ExpRowDots pl) =
 	       let val rv  = T.freshrowvar ()
@@ -582,11 +582,11 @@ fun generateConstraints' prog pack nenv =
 	   and f_seqexp (A.SeqExp (labexps, labexp, _, _, lab, _)) =
 	       let val (tv2, cst2, css2) = f_labexp labexp
 		   val (_, csts, csss) = unzipThree (map f_labexp labexps)
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 		   val tv  = T.freshtyvar ()
 		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-	       in (tv, E.consConstraint (lab, c) (E.uenvcst [cst, cst2]), E.uenvcss [contextSensitiveSyntaxError, css2])
+	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst, cst2]), E.uenvcss [contextSensitiveSyntaxError, css2])
 	       end
 	     | f_seqexp (A.SeqExpSl (parts, labexp, _, lab, _)) =
 	       let val env1 = f_partlist parts
@@ -614,7 +614,7 @@ fun generateConstraints' prog pack nenv =
                let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpTuple (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv = T.freshtyvar ()
 		   val (tvl, csts, csss) = unzipThree (map f_labexp expl)
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 		   val c   = E.initTypeConstraint (T.consV tv) (T.constytuple tvl lab) lab
                in (tv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -624,7 +624,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv = T.freshtyvar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
-		   val cst  = E.uenvcst csts
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
@@ -635,7 +635,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv  = T.freshtyvar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
-		   val cst  = E.uenvcst csts
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   (* We condiser that as a widlcard because it is incomplete: *)
@@ -672,7 +672,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv   = T.freshtyvar ()
 		   val tv'  = T.freshtyvar ()
 		   val (tvs, csts, csss) = unzipThree (map f_labexp labexps)
-		   val cst  = E.uenvcst csts
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val cs'  = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
@@ -701,7 +701,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tvs, csts, csss) = unzipThree (map f_quote quotes)
 		   val tv  = T.freshtyvar ()
 		   val tv' = T.freshtyvar ()
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 		   val cs' = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
 		   val c   = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
@@ -759,7 +759,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_atexp atexp
 		   val tv  = T.freshtyvar ()
 		   val c   = E.initTypeConstraint (T.consV tv1) (T.constyarrow tv2 tv lab) lab
-	       in (tv, E.consConstraint (lab, c) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let
@@ -770,7 +770,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tvs, cst2, contextSensitiveSyntaxError2) = f_match match
 		   val cs  = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
 		   val c   = E.initTypeConstraint (T.consV tv') (T.constyarrow tv1 tv lab) lab
-	       in (tv, E.conscsts (lab, c :: cs) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.conscsts (lab, c :: cs) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpConsList (id, labexp1, labexp2, reg, lab, nxt)) =
 	       if benv
@@ -782,7 +782,7 @@ fun generateConstraints' prog pack nenv =
 			val tv = T.freshtyvar ()
 			val c1 = E.initTypeConstraint (T.consV tv)  (T.constylist tv1 lab) lab
 			val c2 = E.initTypeConstraint (T.consV tv2) (T.constylist tv1 lab) lab
-		    in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+		    in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 		    end
 	     | f_exp (A.ExpOp (st, id, labexp1, labexp2, _, lab, _)) =
 	       let
@@ -798,7 +798,7 @@ fun generateConstraints' prog pack nenv =
 		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 		   val _ = D.printDebug 3 D.AZE ("ExpOp constraints generated\n")
-	       in (tvo, E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tvo, E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpOr (labexp1, labexp2, _, lab, _)) =
 	       let
@@ -809,7 +809,7 @@ fun generateConstraints' prog pack nenv =
 		   val c1  = E.initTypeConstraint (T.consV tvo) (T.constybool lab) lab
 		   val c2  = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
 		   val c3  = E.initTypeConstraint (T.consV tv2) (T.constybool lab) lab
-	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpAnd (labexp1, labexp2, _, lab, _)) =
 	       let
@@ -820,7 +820,7 @@ fun generateConstraints' prog pack nenv =
 		   val c1  = E.initTypeConstraint (T.consV tvo) (T.constybool lab) lab
 		   val c2  = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
 		   val c3  = E.initTypeConstraint (T.consV tv2) (T.constybool lab) lab
-	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpTyped (labexp, labtyp, _, lab, _)) =
 	       let
@@ -830,7 +830,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val c1 = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
 		   val c2 = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-	       in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpIte (labexp1, labexp2, labexp3, _, lab, _)) =
 	       let
@@ -849,7 +849,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
 		   val c3  = E.initTypeConstraint (T.consV tv) (T.consV tv3) lab
 
-		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2, cst3])
+		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2, cst3])
 		   val contextSensitiveSyntaxError = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2, contextSensitiveSyntaxError3]
 		   val _   = D.printDebug 3 D.AZE ("A.ExpIte constraints generated\n")
 	       in (tv, cst, contextSensitiveSyntaxError)
@@ -862,7 +862,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
 		   val c1 = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
 		   val c2 = E.initTypeConstraint (T.consV tv) (T.constytuple [] lab) lab
-	       in (tv, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpRaise (labexp, _, lab, _)) =
 	       let
@@ -882,7 +882,7 @@ fun generateConstraints' prog pack nenv =
 		   val cs  = map (fn x => E.initTypeConstraint ty (T.consV x) lab) tvs
 		   val c1  = E.initTypeConstraint ty (T.consTyArrowTy (T.constyexception lab) (T.consV tv1) lab T.OT) lab
 		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-	       in (tv, E.conscsts (lab, c1 :: c2 :: cs) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.conscsts (lab, c1 :: c2 :: cs) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpDots pl) =
 	       let
@@ -895,7 +895,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar list, Env.cst, Env.css) *)
 	   and f_match (A.Match (mrules, _, _)) =
 	       let val (tvs, csts, csss) = unzipThree (map f_mrule mrules)
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 	       in (tvs, cst, contextSensitiveSyntaxError)
 	       end
@@ -953,7 +953,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val rv = T.freshrowvar ()
 		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
-	       in ((lop, rv), E.consConstraint (lab, c) (E.uenvcst [cst1, cst2]), contextSensitiveSyntaxError2)
+	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError2)
 	       end
 	     | f_tyrow (A.TyRowDots pl) =
 	       let val rv  = T.freshrowvar ()
@@ -971,12 +971,12 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp2
 		   val tv = T.freshtyvar ()
 		   val c  = E.initTypeConstraint (T.consV tv) (T.constyarrow tv1 tv2 lab) lab
-               in (tv, E.consConstraint (lab, c) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+               in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
                end
 	     | f_type (A.TypeTuple (labtyps, _, lab, _)) =
                let val (tvs, csts, csss) = unzipThree (map f_labtype labtyps)
 		   val tv  = T.freshtyvar ()
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 		   val c   = E.initTypeConstraint (T.consV tv) (T.constytuple tvs lab) lab
                in (tv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -985,7 +985,7 @@ fun generateConstraints' prog pack nenv =
                let val (xs, csts, csss) = unzipThree (map f_tyrow tyrows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val tv   = T.freshtyvar ()
-		   val cst  = E.uenvcst csts
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
@@ -995,7 +995,7 @@ fun generateConstraints' prog pack nenv =
                let val (xs, csts, csss) = unzipThree (map f_tyrow tyrows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val tv   = T.freshtyvar ()
-		   val cst  = E.uenvcst csts
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab
@@ -1010,7 +1010,7 @@ fun generateConstraints' prog pack nenv =
 		   val c1  = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV sv', T.consV tv', lab)) lab
 		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv') lab
 		   val c3  = E.initSequenceConstraint (T.SV sv) (T.SV sv') lab
-               in (tv, E.conscsts (lab, [c1, c2, c3]) (E.uenvcst [cst1, cst2]), contextSensitiveSyntaxError1)
+               in (tv, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError1)
                end
 	     | f_type (A.TypeParen (labtyp, _, _, lab, _)) =
                let val (tv, cst, contextSensitiveSyntaxError) = f_labtype labtyp
@@ -1039,7 +1039,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_typeseq (A.TypeSeqSeq (labtyps, _, lab, _)) =
                let val (svs, csts, csss) = unzipThree (map f_labtype labtyps)
 		   val sv  = T.freshseqvar ()
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.uenvcss csss
 		   val c   = E.initSequenceConstraint (T.SV sv) (T.SC (T.constuple svs lab, T.noflex (), lab)) lab
                in (sv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -1071,7 +1071,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv = T.freshtyvar ()
 		   val c1 = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
 		   val c2 = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-	       in (tv, vids, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, vids, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_identty (A.IdentTyDots pl) =
 	       let val env = f_partlist pl
@@ -1098,7 +1098,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv, vids, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
 		   val rv = T.freshrowvar ()
 		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
-	       in ((lop, SOME rv, NONE), vids, E.consConstraint (lab, c) (E.uenvcst [cst1, cst2]), contextSensitiveSyntaxError2)
+	       in ((lop, SOME rv, NONE), vids, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError2)
 	       end
 	     | f_patrow (A.PatRowId (identty, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_identty identty
@@ -1113,7 +1113,7 @@ fun generateConstraints' prog pack nenv =
 				 in E.consConstraint (l1, c1) (E.singleConstraint (l2, c2))
 				 end
 		   val lop  = case llop of NONE => NONE | SOME (_, l, s) => SOME (s, l)
-	       in ((lop, SOME rv, NONE), vids, E.uenvcst [cst, cst'], contextSensitiveSyntaxError)
+	       in ((lop, SOME rv, NONE), vids, E.unionConstraintsList [cst, cst'], contextSensitiveSyntaxError)
 	       end
 	     | f_patrow (A.PatRowAs (labidty, labpat, _, lab, _)) =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labidty labidty
@@ -1133,9 +1133,9 @@ fun generateConstraints' prog pack nenv =
 				 in E.consConstraint (l1, c1) (E.singleConstraint (l2, c2))
 				 end
 		   val lop' = case llop of NONE => NONE | SOME (_, l, s) => SOME (s, l)
-		   val cst  = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2, cst])
+		   val cst  = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2, cst])
 		   val contextSensitiveSyntaxError  = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
-	       in ((lop', SOME rv, NONE), E.uenv [E.toRECVids vids1 labs, vids2], cst, contextSensitiveSyntaxError)
+	       in ((lop', SOME rv, NONE), E.unionEnvironmentList [E.toRECVids vids1 labs, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_patrow (A.PatRowWild (r, l, n)) = ((NONE, NONE, SOME l), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	     | f_patrow (A.PatRowDots pl) =
@@ -1156,8 +1156,8 @@ fun generateConstraints' prog pack nenv =
 	     | f_atpat (A.AtPatTuple (labpats, _, lab, _)) =
                let val tv   = T.freshtyvar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
-		   val vids = E.uenv    vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList    vidss
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constytuple tvs lab) lab
                in (tv, vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -1166,8 +1166,8 @@ fun generateConstraints' prog pack nenv =
                let val tv   = T.freshtyvar ()
 		   val (xs, vidss, csts, csss) = unzipFour (map f_patrow patrows)
 		   val (lops, rvs, flexs) = unzipThree xs
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   val rvs' = List.mapPartial (fn x => x) rvs
@@ -1188,8 +1188,8 @@ fun generateConstraints' prog pack nenv =
                let val tv   = T.freshtyvar ()
 		   val tv'  = T.freshtyvar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val cs   = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
 		   val c    = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
@@ -1197,8 +1197,8 @@ fun generateConstraints' prog pack nenv =
                end
 	     | f_atpat (A.AtPatOr (labpats, _, lab, _)) =
                let val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
-		   val vids = E.uenv vidss (* do something else here: treatAtPatOr envs *)
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss (* do something else here: treatAtPatOr envs *)
+		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.uenvcss csss
 		   val tv   = T.freshtyvar ()
 		   val cs   = map (fn x => E.initTypeConstraint (T.consV tv) (T.consV x) lab) tvs
@@ -1221,7 +1221,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst = if A.isLongIdent longid
 			     then E.singleConstraint (lab', E.initClassConstraint cl (CL.consCON ()) lab')
 			     else E.emptyConstraint
-               in (tv, vids1, E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2, cst]), contextSensitiveSyntaxError1)
+               in (tv, vids1, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2, cst]), contextSensitiveSyntaxError1)
                end
 	     | f_pat (A.PatConsList (v, labpat1, labpat2, reg, lab, next)) =
 	       if benv
@@ -1231,9 +1231,9 @@ fun generateConstraints' prog pack nenv =
 			val tv  = T.freshtyvar ()
 			val c1  = E.initTypeConstraint (T.consV tv) (T.constylist tv1 lab) lab
 			val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-			val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
+			val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 			val contextSensitiveSyntaxError = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
-		    in (tv, E.uenv [vids1, vids2], cst, contextSensitiveSyntaxError)
+		    in (tv, E.unionEnvironmentList [vids1, vids2], cst, contextSensitiveSyntaxError)
 		    end
 	     | f_pat (A.PatOp (st, v, labpat1, labpat2, _, lab, _)) =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labpat labpat1
@@ -1243,9 +1243,9 @@ fun generateConstraints' prog pack nenv =
 		   val tvo = T.freshtyvar ()
 		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (v, lab)) ty (CL.consDA1 ()) lab) lab
-		   val cst = E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.uenvcst [cst1, cst2])
+		   val cst = E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.unionConstraintsList [cst1, cst2])
 		   val contextSensitiveSyntaxError = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
-	       in (tvo, E.uenv [vids1, vids2], cst, contextSensitiveSyntaxError)
+	       in (tvo, E.unionEnvironmentList [vids1, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatTyped (labpat, labtyp, _, lab, _)) =
 	       let val tv = T.freshtyvar ()
@@ -1253,7 +1253,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val c1  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
 		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-		   val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
+		   val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 		   val contextSensitiveSyntaxError = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 	       in (tv, vids, cst, contextSensitiveSyntaxError)
 	       end
@@ -1266,11 +1266,11 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
 		   (*val c3   = E.initClassConstraint clv (CL.consPAT ()) lab*)
 		   val labs = L.cons lab (A.getlabelsLabIdTy labidty)
-		   val cst  = E.conscsts (lab, [c1, c2(*, c3*)]) (E.uenvcst [cst1, cst2])
+		   val cst  = E.conscsts (lab, [c1, c2(*, c3*)]) (E.unionConstraintsList [cst1, cst2])
 		   val contextSensitiveSyntaxError  = E.uenvcss [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 		   (*val vids = E.toCLSVids vids1 clv labs*)
 		   val vids = E.toPATVids vids1 labs
-	       in (tv, E.uenv [vids, vids2], cst, contextSensitiveSyntaxError)
+	       in (tv, E.unionEnvironmentList [vids, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatDots pl) =
 	       let val tv  = T.freshtyvar ()
@@ -1294,7 +1294,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
 		   val cst' = E.conscsts (lab, [c1, c2]) (E.consConstraint (lab1, c3) (E.consConstraint (lab2, c4) cst))
 		   (*(2010-06-24)I don't believe labid's label is necessary here, but
@@ -1318,8 +1318,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar list, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbindseq (A.ConBindSeq conbinds) =
                let val (tvs, conss, csts, csss) = unzipFour (map f_conbind conbinds)
-		   val cons = E.uenv conss
-		   val cst  = E.uenvcst csts
+		   val cons = E.unionEnvironmentList conss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
                in (tvs, cons, cst, css)
                end
@@ -1365,8 +1365,8 @@ fun generateConstraints' prog pack nenv =
                end
 	     | f_typevarseq (A.TyVarSeqSeq (typevars, _, lab, _)) =
                let val (tvs, tyvss, csts) = unzipThree (map f_labtypevarbind typevars)
-		   val tyvs = E.uenv tyvss
-		   val cst  = E.uenvcst csts
+		   val tyvs = E.unionEnvironmentList tyvss
+		   val cst  = E.unionConstraintsList csts
 		   val sv   = T.freshseqvar ()
 		   val sq   = T.SC (T.constuple tvs lab, T.noflex (), lab)
 		   val c    = E.initSequenceConstraint (T.SV sv) sq lab
@@ -1374,8 +1374,8 @@ fun generateConstraints' prog pack nenv =
                end
 	     | f_typevarseq (A.TyVarSeqDots tyvars) =
 	       let val (_, tyvss, csts) = unzipThree (map f_typevarbind tyvars)
-		   val tyvs = E.uenv tyvss
-		   val cst  = E.uenvcst csts
+		   val tyvs = E.unionEnvironmentList tyvss
+		   val cst  = E.unionConstraintsList csts
 		   val sv   = T.freshseqvar ()
                in (sv, tyvs, cst)
 	       end
@@ -1410,12 +1410,12 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typenv, (Ty.varenv * Id.idl option) list, Env.cst, Env.css) *)
 	   and f_datbindseq (A.DatBindSeq (datbinds, _, _)) =
                let val (typss, conss, csts1, csts2, csss) = unzipFive (map f_datbind datbinds)
-		   val typs = E.uenv typss
-		   val cst1 = E.uenvcst csts1
-		   val cst2 = E.uenvcst csts2
+		   val typs = E.unionEnvironmentList typss
+		   val cst1 = E.unionConstraintsList csts1
+		   val cst2 = E.unionConstraintsList csts2
 		   val css  = E.uenvcss csss
 		   val css1 = consCSM typs
-		   val css2 = consCSM (E.uenv (map (fn (cons, _) => cons) conss))
+		   val css2 = consCSM (E.unionEnvironmentList (map (fn (cons, _) => cons) conss))
                in (typs, conss, cst1, cst2, E.uenvcss [css, css1, css2])
                end
 	     | f_datbindseq (A.DatBindSeqDots pl) =
@@ -1443,9 +1443,9 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.cst, Env.cst, Env.css) *)
 	   and f_valbindseq (A.ValBindSeq (valbindcores, _, _)) =
 	       let val (vidss, csts1, csts2, csss) = unzipFour (map f_valbindcore valbindcores)
-		   val vids = E.uenv vidss
-		   val cst1 = E.uenvcst csts1
-		   val cst2 = E.uenvcst csts2
+		   val vids = E.unionEnvironmentList vidss
+		   val cst1 = E.unionConstraintsList csts1
+		   val cst2 = E.unionConstraintsList csts2
 		   val css  = E.uenvcss csss
 	       in (vids, cst1, cst2, css)
 	       end
@@ -1466,7 +1466,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_valbind (A.ValBind valbindseq) =
 	       let val (vids, cst1, cst2, css) = f_valbindseq valbindseq
-		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.uenvcst [cst1, cst2]), E.projVids vids)
+		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.projVids vids)
 	       in (env, css)
 	       end
 	     | f_valbind (A.ValBindDots pl) =
@@ -1497,17 +1497,17 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
 		   val tv  = T.freshtyvar ()
 		   val c   = E.initTypeConstraint (T.consV tv1) (T.constyarrow tv2 tv lab) lab
-		   val cst = E.consConstraint (lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, clearRebound css2]
-	       in (tv, vids, E.uenv [vids1, vids2], cst, css)
+	       in (tv, vids, E.unionEnvironmentList [vids1, vids2], cst, css)
 	       end
 	     | f_fmatch (A.FMatchSlApp (fmatch, labatpat, _)) =
 	       let val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
 		   val tv  = T.freshtyvar ()
-		   val cst = E.uenvcst [cst1, cst2]
+		   val cst = E.unionConstraintsList [cst1, cst2]
 		   val css = E.uenvcss [css1, clearRebound css2]
-	       in (tv, vids, E.uenv [vids1, vids2], cst, css)
+	       in (tv, vids, E.unionEnvironmentList [vids1, vids2], cst, css)
 	       end
 	     | f_fmatch (A.FMatchNoApp (fmatch, _)) =
 	       let val (_, vids, vids1, cst1, css1) = f_fmatch fmatch
@@ -1544,7 +1544,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv  = T.freshtyvar ()
 		   val c1  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
 		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-		   val cst = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
+		   val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (tv, vids1, vids1', cst, css)
 	       end
@@ -1575,12 +1575,12 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_fvalbindone (A.FValBindOne (fvalbindcores, _, lab, _)) =
 	       let val (vidss, csts, csss) = unzipThree (map f_fvalbindcore fvalbindcores)
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 		   val cst' = E.allEqualVids vids
 		   val css' = sameNameFun vids
-	       in (vids, E.uenvcst [cst, cst'], E.uenvcss [css, css'])
+	       in (vids, E.unionConstraintsList [cst, cst'], E.uenvcss [css, css'])
 	       end
 	     | f_fvalbindone (A.FVBOneDots pl) =
 	       let val env = f_partlist pl
@@ -1590,8 +1590,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.env, Env.css) *)
 	   and f_fvalbind (A.FValBind (fvalbindones, _, _)) =
 	       let val (vidss, csts, csss) = unzipThree (map f_fvalbindone fvalbindones)
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 		   val env  = E.SEQUENCE_ENV (E.projVids vids, E.CONSTRAINT_ENV cst)
 		   val css1 = createDiffNbArgFuns fvalbindones
@@ -1625,7 +1625,7 @@ fun generateConstraints' prog pack nenv =
 		   val (s, v, tv2, sv2, typs, cst2) = f_tyconbind tycon
 		   val css = consCSM tyvs
 	       (* NOTE: sv1 and sv2 have to be equal *)
-	       in (s, v, tv2, sv2, sv1, typs, tyvs, E.uenvcst [cst1, cst2], css)
+	       in (s, v, tv2, sv2, sv1, typs, tyvs, E.unionConstraintsList [cst1, cst2], css)
 	       end
 	     | f_datname A.DatNameDots =
 	       let val tv  = T.freshtyvar ()
@@ -1655,8 +1655,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
 	   and f_typbindseq (A.TypBindSeq (typbinds, _, _)) =
                let val (typss, csts, csss) = unzipThree (map f_typbind typbinds)
-		   val typs = E.uenv typss
-		   val cst  = E.uenvcst csts
+		   val typs = E.unionEnvironmentList typss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 		   val css1 = consCSM typs
                in (typs, cst, E.uenvcss [css, css1])
@@ -1683,7 +1683,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initClassConstraint clv2 (CL.consEX1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consEXC ()) lab2
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
 		   val cst' = E.conscsts (lab, [c1, c2]) (E.consConstraint(lab1, c3) (E.consConstraint(lab2, c4) cst))
 		   (*(2010-06-24)Same remark for labs as in f_conbind.*)
@@ -1702,7 +1702,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initClassConstraint cl clv lab
 		   val c3   = E.initClassConstraint cl (CL.consEXC ()) lab
 		   (* NOTE: the class could be a EX0 or a EX1 - a EXC *)
-		   val cst  = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst2])
+		   val cst  = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 		   (* NOTE: we build c like that so that the accessor in cst2 is resolved before c3
 		    * and we bind the class cl (and clv) to the correct EX0 or EX1 before checking
 		    * that it is a EXC. *)
@@ -1722,8 +1722,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_exbindseq (A.ExBindSeq (exbinds, _, _)) =
                let val (conss, csts, csss) = unzipThree (map f_exbind exbinds)
-		   val cons = E.uenv conss
-		   val cst  = E.uenvcst csts
+		   val cons = E.unionEnvironmentList conss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 		   val css1 = consCSM cons
                in (cons, cst, E.uenvcss [css, css1])
@@ -1830,7 +1830,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_tyclassseq (A.TyClassSeqSeq (labtyclasss, _, lab, _)) =
                let val (tvs, csts, csss) = unzipThree (map f_labtyclass labtyclasss)
 		   val sv  = T.freshseqvar ()
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val css = E.uenvcss csss
 		   val c   = E.initSequenceConstraint (T.SV sv) (T.SC (T.constuple tvs lab, T.noflex (), lab)) lab
                in (sv, E.consConstraint(lab, c) cst, css)
@@ -1857,7 +1857,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_typevarvallist (typevar :: typevars) =
 	       let val (tyvs1, cst1) = f_typevarval typevar
 		   val (tyvs2, cst2) = f_typevarvallist typevars
-	       in (E.uenv [tyvs1, tyvs2], E.uenvcst [cst1, cst2])
+	       in (E.unionEnvironmentList [tyvs1, tyvs2], E.unionConstraintsList [cst1, cst2])
 	       end
 
 	   (* RETURNS: (Env.tvenv, Env.cst) *)
@@ -1873,14 +1873,14 @@ fun generateConstraints' prog pack nenv =
 	     | f_tyvarseqval (A.TyVarSeqEm (_, lab, _)) = (E.emtv, E.emptyConstraint)
 	     | f_tyvarseqval (A.TyVarSeqSeq (typevars, _, lab, _)) =
                let val (tyvss, csts) = ListPair.unzip (map f_labtypevarval typevars)
-		   val tyvs = E.uenv tyvss
-		   val cst  = E.uenvcst csts
+		   val tyvs = E.unionEnvironmentList tyvss
+		   val cst  = E.unionConstraintsList csts
                in (tyvs, cst)
                end
 	     | f_tyvarseqval (A.TyVarSeqDots tyvars) =
 	       let val (tyvss, csts) = ListPair.unzip (map f_typevarval tyvars)
-		   val tyvs = E.uenv tyvss
-		   val cst  = E.uenvcst csts
+		   val tyvs = E.unionEnvironmentList tyvss
+		   val cst  = E.unionConstraintsList csts
                in (tyvs, cst)
 	       end
 
@@ -1893,9 +1893,9 @@ fun generateConstraints' prog pack nenv =
 						   (A.gettyvarTyVarSeq tvsq)
 						   (E.getTyvs env)
 						   cs
-						   (E.uenv [idG, idR])*)
+						   (E.unionEnvironmentList [idG, idR])*)
 		   val tyvs = E.plusenv tyvs2 tyvs1
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
 	       in (env', css)
 	       end
@@ -1909,7 +1909,7 @@ fun generateConstraints' prog pack nenv =
 						   cs
 						   idR*)
 		   val tyvs = E.plusenv tyvs2 tyvs1
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
 	       in (env', css)
 	       end
@@ -1937,7 +1937,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (s, v, tv, sv, typs, cst1) = f_tyconbind tycon
 		   val (tfv, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV sv, T.consV tv, lab)) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val opn = case A.longtyconToLid longtycon of
 				 NONE => E.emopn
 			       | SOME lid => E.singOEnv (lid, lab, E.DRE)
@@ -2033,7 +2033,7 @@ fun generateConstraints' prog pack nenv =
 		   val lid  = Option.getOpt (A.getlabidLabId labid, (I.dummyId, L.dummyLab))
 		   val c1   = E.initTypeConstraint (T.consV tv3) (T.OR (T.SV sv4, T.freshidor (), T.POLY, T.VAL lid, lab)) lab
 		   val c2   = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
-		   val cst  = E.conscsts (lab, [c1, c2]) (E.uenvcst [cst1, cst3, cst4])
+		   val cst  = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst3, cst4])
 		   val css  = E.uenvcss [css1, css2, css4]
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.projVids (E.toRECVids vids (L.singleton lab)))
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env1))
@@ -2043,7 +2043,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (sv1, ovcs, cst1) = f_labclassbind labclass
 		   val (sv2, cst2, css2) = f_tyclassseq tyclassseq
 		   val c   = E.initSequenceConstraint (T.SV sv1) (T.SV sv2) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.projOvcs ovcs)
 	       in (env, css2)
 	       end
@@ -2077,7 +2077,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
 		   val c   = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (E.toRECVids vids (L.singleton lab), cst, css)
 	       end
@@ -2089,8 +2089,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_valdesc (A.ValDesc (valdescs, _, _)) =
 	       let val (vidss, csts, csss) = unzipThree (map f_valdescone valdescs)
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (vids, cst, css)
 	       end
@@ -2119,12 +2119,15 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_typdesc (A.TypDesc (typdescs, _, _)) =
 	       let val _ = D.printDebug 2 D.AZE "generating constraints for A.TypDesc"
-		   val (tnss, typss, csts, csss) = unzipFour (map f_typdescone typdescs)
-		   val typs = E.uenv typss
-		   val cst  = E.uenvcst csts
+		   val (tnss, typss, constraints, csss) = unzipFour (map f_typdescone typdescs)
+		   val typs = E.unionEnvironmentList typss
+		   val constarint  = E.unionConstraintsList constraints
 		   val css  = E.uenvcss csss
+
+                   (* the list tnss contains items of the form NONE or SOME(x)
+                    * mapPartial (fn x => x) will remove all items of the form NONE from the list and return a list of the x values of items with the SOME(x) form *)
 		   val tns  = List.mapPartial (fn x => x) tnss
-	       in (tns, typs, cst, css)
+	       in (tns, typs, constraint, css)
 	       end
 	     | f_typdesc (A.TypDescDots pl) =
 	       let val env = f_partlist pl
@@ -2164,8 +2167,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.env, E.emptyContextSensitiveSyntaxError) *)
 	   and f_tdrdesc (A.TdrDesc (tdrdescs, _, _)) = f_tdrdesclist tdrdescs
 	       (*let val (typss, csts, csss) = unzipThree (map f_tdrdescone tdrdescs)
-		   val typs = E.uenv typss
-		   val cst  = E.uenvcst csts
+		   val typs = E.unionEnvironmentList typss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (typs, cst, css)
 	       end*)
@@ -2185,7 +2188,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, cst2, css2) = f_labtype labtyp
 		   val ty  = T.constyexception' lab (T.DE I.dummyId)
 		   val c   = E.initTypeConstraint (T.consV tv1) (T.consTyArrowTy (T.consV tv2) ty lab (T.DE I.dummyId)) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (E.toEX1Vids cons (L.singleton lab), cst, css)
 	       end
@@ -2197,8 +2200,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_excdesc (A.ExcDesc (exdescs, _, _)) =
 	       let val (vidss, csts, csss) = unzipThree (map f_excdescone exdescs)
-		   val vids = E.uenv vidss
-		   val cst  = E.uenvcst csts
+		   val vids = E.unionEnvironmentList vidss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (vids, cst, css)
 	       end
@@ -2223,7 +2226,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
 		   val cst' = E.conscsts (lab, [c1, c2]) (E.consConstraint(lab1, c3) (E.consConstraint(lab2, c4) cst))
 	       (*val cons = E.toDA1Vids cons (L.singleton lab)*)
@@ -2243,8 +2246,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyvar list, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_condesc (A.ConDesc (condescs, _, _)) =
                let val (tvs, conss, csts, csss) = unzipFour (map f_condescone condescs)
-		   val cons = E.uenv conss
-		   val cst  = E.uenvcst csts
+		   val cons = E.unionEnvironmentList conss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
                in (tvs, cons, cst, css)
                end
@@ -2279,9 +2282,9 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, (E.varenv * Id.idl option) list, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_datdesc (A.DatDesc (datdescs, _, _)) =
                let val (tnss, typss, conss, csts, csts', csss) = unzipSix (map f_datdescone datdescs)
-		   val typs = E.uenv typss
-		   val cst  = E.uenvcst csts
-		   val cst' = E.uenvcst csts'
+		   val typs = E.unionEnvironmentList typss
+		   val cst  = E.unionConstraintsList csts
+		   val cst' = E.unionConstraintsList csts'
 		   val css  = E.uenvcss csss
 		   val tns  = List.mapPartial (fn x => x) tnss
                in (tns, typs, conss, cst, cst', css)
@@ -2296,7 +2299,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val c   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (strs, cst, css)
 	       end
@@ -2308,8 +2311,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_strdesc (A.StrDesc (strdescs, _, _)) =
 	       let val (strss, csts, csss) = unzipThree (map f_strdescone strdescs)
-		   val strs = E.uenv strss
-		   val cst  = E.uenvcst csts
+		   val strs = E.unionEnvironmentList strss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (strs, cst, css)
 	       end
@@ -2375,7 +2378,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_typevarspeclist (typevar ::  typevars) =
 	       let val (tyvs1, cst1) = f_typevarspec typevar
 		   val (tyvs2, cst2) = f_typevarspeclist typevars
-	       in (E.uenv [tyvs1, tyvs2], E.uenvcst [cst1, cst2])
+	       in (E.unionEnvironmentList [tyvs1, tyvs2], E.unionConstraintsList [cst1, cst2])
 	       end
 
            (* value definitions inside a signature *)
@@ -2417,12 +2420,23 @@ fun generateConstraints' prog pack nenv =
              (* equality types declarations inside a signature *)
 	     | f_specone (A.SpecEqtype (typdesc, _, lab, _)) =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
-		   val (tns, typs, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+		   
+                   (* we call f_typdesc so that we can (get/generate)? information about the typdesc (type description? what does that mean?)
+                    * the first element of the tuple represents xxx
+		    * the first element of the tuple represents xxx
+		    * the first element of the tuple represents xxx
+		    * the first element of the tuple represents xxx
+		    *)
+                   val (tns, typs, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc 
+
+
+                   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
 
 		   (* generate fresh environment variables that we use later *)
 		   val envVar   = E.freshEnvVar ()
 
+                   (* equivalent to ENV_CONSTRAINT (EL.initExtLab (ENVVAR (envVar, lab), env) lab) *)
+                   (* equivalent to ENV_CONSTRAINT <need to know what initExtLab really is!>*)
 		   val c = E.initEnvConstraint (E.consENVVAR envVar lab) env lab
 
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR envVar lab) lab))
@@ -2506,7 +2520,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (s, v, tv, sv, typs, cst1) = f_tyconbind tycon
 		   val (tfv, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV sv, T.consV tv, lab)) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val opn = case A.longtyconToLid longtycon of
 				 NONE => E.emopn
 			       | SOME lid => E.singOEnv (lid, lab, E.DRE)
@@ -2552,7 +2566,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_longtyconeq (A.LongTyConEq (longtycons, _, lab, _)) =
 	       let val (tfvs, envs, csts) = unzipThree (map f_longtyconbind longtycons)
 		   val env = E.uenvEnv envs
-		   val cst = E.uenvcst csts
+		   val cst = E.unionConstraintsList csts
 		   val tfc = T.TFC (T.newSV (), T.newV (), lab)
 		   val cs  = map (fn tfv => E.initFunctionTypeConstraint (T.TFV tfv) tfc lab) tfvs
 	       in E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, cs) cst), env)
@@ -2602,8 +2616,8 @@ fun generateConstraints' prog pack nenv =
 	     | f_strbindonelist (x :: xs) =
 	       let val (strs1, cst1, css1) = f_strbindone x
 		   val (strs2, cst2, css2) = f_strbindonelist xs
-		   val strs = E.uenv [strs1, strs2]
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val strs = E.unionEnvironmentList [strs1, strs2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
 	       in (strs, cst, css)
 	       end
@@ -2616,9 +2630,9 @@ fun generateConstraints' prog pack nenv =
 		   val c    = E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab)
 		   val cst  = E.singleConstraint (lab, c)
 		   val css  = E.uenvcss [css1, css2, css3]
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.uenvcst [cst1, cst2]), E.CONSTRAINT_ENV cst)
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
-	       in (strs, E.uenvcst [cst3, cst'], css)
+	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     | f_strbindone (A.StrBindOneTr (strid, labsigexp, labstrexp, _, lab, _)) =
 	       let val (ev1, cst1, css1) = f_labstrexp labstrexp
@@ -2627,15 +2641,15 @@ fun generateConstraints' prog pack nenv =
 		   val c    = E.SIGNATURE_CONSTRAINT (ev2, SOME ev3, ev1, NONE, lab)
 		   val cst  = E.singleConstraint (lab, c)
 		   val css  = E.uenvcss [css1, css2, css3]
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.uenvcst [cst1, cst2]), E.CONSTRAINT_ENV cst)
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
-	       in (strs, E.uenvcst [cst3, cst'], css)
+	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     | f_strbindone (A.StrBindOne (strid, labstrexp, _, lab, _)) =
 	       let val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labstrexp labstrexp
 		   val c   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
-		   val cst = E.consConstraint(lab, c) (E.uenvcst [cst1, cst2])
+		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.uenvcss [css1, css2]
 	       in (strs, cst, css)
 	       end
@@ -2715,7 +2729,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val ev  = E.freshEnvVar ()
-		   val cst = E.uenvcst [cst1, cst2]
+		   val cst = E.unionConstraintsList [cst1, cst2]
 		   val css = E.uenvcss [css1, css2]
 		   val c   = E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev, lab)
 		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.CONSTRAINT_ENV (E.singleConstraint (lab, c)))
@@ -2725,7 +2739,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val ev  = E.freshEnvVar ()
-		   val cst = E.uenvcst [cst1, cst2]
+		   val cst = E.unionConstraintsList [cst1, cst2]
 		   val css = E.uenvcss [css1, css2]
 		   val c   = E.SIGNATURE_CONSTRAINT (ev2, SOME ev, ev1, NONE, lab)
 		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.CONSTRAINT_ENV (E.singleConstraint (lab, c)))
@@ -2736,7 +2750,7 @@ fun generateConstraints' prog pack nenv =
 		   val (ev2, cst2, css) = f_labstrexp labstrexp
 		   val ev  = E.freshEnvVar ()
 		   val c   = E.FUNCTOR_CONSTRAINT (ev0, ev1, ev2, ev, lab)
-		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.uenvcst [cst1, cst2]), E.CONSTRAINT_ENV (E.singleConstraint (lab, c)))
+		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV (E.singleConstraint (lab, c)))
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), css)
 	       end
 	     | f_strexp (A.StrExpFDec (funid, strdec, _, lab, _)) =
@@ -2816,11 +2830,11 @@ fun generateConstraints' prog pack nenv =
 			 case f_ltreadescone ltreadesc of
 			     (SOME lid, tfv, cst0, css0) =>
 			     let val longid = {lid = lid, sem = T.consTFV tfv, class = CL.consTYCON (), lab = lab}
-				 val cst1 = E.uenvcst [cst, cst0]
+				 val cst1 = E.unionConstraintsList [cst, cst0]
 				 val css1 = E.uenvcss [css, css0]
 			     in ((longid, L.singleton lab, L.empty, CD.empty) :: reas, cst1, css1)
 			     end
-			   | (NONE, _, cst0, css0) => (reas, E.uenvcst [cst, cst0], E.uenvcss [css, css0]))
+			   | (NONE, _, cst0, css0) => (reas, E.unionConstraintsList [cst, cst0], E.uenvcss [css, css0]))
 		     ([], E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 		     ltreadescs
 	     | f_ltreadesc (A.LTReaDescDots pl) =
@@ -2887,7 +2901,7 @@ fun generateConstraints' prog pack nenv =
 		   val (reas, cst2, css2) = f_ltreadesc rea
 		   val ev   = E.freshEnvVar ()
 		   val ev'  = E.freshEnvVar ()
-		   val cst  = E.uenvcst [cst1, cst2]
+		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.uenvcss [css1, css2]
 		   val c1   = E.initEnvConstraint (E.consENVVAR ev' lab) (E.consENVVAR ev1 lab) lab
 		   val env1 = foldl (fn (rea, env) => E.ENVWHR (env, rea)) (E.consENVVAR ev' lab) reas
@@ -2906,7 +2920,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (ev1, sigs, cst1) = f_sigidbind sigid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val c = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev2 lab) lab
-	       in (sigs, E.consConstraint(lab, c) (E.uenvcst [cst1, cst2]), css2)
+	       in (sigs, E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
 	       end
 	     | f_sigbindone (A.SigBindOneDots pl) =
 	       let val env = f_partlist pl
@@ -2916,8 +2930,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.sigenv, Env.cst, Env.css) *)
 	   and f_sigbind (A.SigBind (sigbinds, _, _)) =
 	       let val (sigss, csts, csss) = unzipThree (map f_sigbindone sigbinds)
-		   val sigs = E.uenv sigss
-		   val cst  = E.uenvcst csts
+		   val sigs = E.unionEnvironmentList sigss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (sigs, cst, css)
 	       end
@@ -2936,7 +2950,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
 		   val c3   = E.initEnvConstraint (E.consENVVAR ev1 lab) (E.consENVVAR ev4 lab) lab (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
-		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.uenvcst [cst2, cst3]))
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.unionConstraintsList [cst2, cst3]))
 		   val env2 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (env1, env0), E.CONSTRAINT_ENV cst4)
 		   val cst  = E.consConstraint(L.dummyLab, E.LET_CONSTRAINT env2) (E.conscsts (lab, [c2, c3]) cst1)
 		   val css  = E.uenvcss [css2, css3, css4]
@@ -2952,8 +2966,8 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev4, NONE, ev5, SOME ev1, lab)                       (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
-		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.uenvcst [cst2, cst3]))
-		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst4, cst5])
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.unionConstraintsList [cst2, cst3]))
+		   val env2 = E.CONSTRAINT_ENV (E.unionConstraintsList [cst4, cst5])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (env1, env0), E.SEQUENCE_ENV (env2, env3))
 		   val cst  = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env4)
@@ -2970,8 +2984,8 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the strid as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev4, SOME ev1, ev5, NONE, lab)                       (* the functor returns the labstrexp        *)
 		   val env0 = E.updateIFct true (E.projStrs strs) (* We mark the environment as being the parameter of a functor *)
-		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.uenvcst [cst2, cst3]))
-		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst4, cst5])
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c1) (E.unionConstraintsList [cst2, cst3]))
+		   val env2 = E.CONSTRAINT_ENV (E.unionConstraintsList [cst4, cst5])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (env1, env0), E.SEQUENCE_ENV (env2, env3))
 		   val cst  = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env4)
@@ -3004,7 +3018,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the spec as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev3, NONE, ev4, SOME ev1, lab)                       (* the functor returns the labstrexp       *)
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c1)), E.consENVVAR ev2 lab)
-		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst3, cst4])
+		   val env2 = E.CONSTRAINT_ENV (E.unionConstraintsList [cst3, cst4])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (env2, env3)
 		   val cst  = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT (E.SEQUENCE_ENV (env1, env4)))
@@ -3022,7 +3036,7 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENVVAR ev0 lab) (E.consENVVAR ev2 lab) lab (* the functor takes the spec as parameter *)
 		   val c3   = E.SIGNATURE_CONSTRAINT (ev3, SOME ev1, ev4, NONE, lab)                       (* the functor returns the labstrexp       *)
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c1)), E.consENVVAR ev2 lab)
-		   val env2 = E.CONSTRAINT_ENV (E.uenvcst [cst3, cst4])
+		   val env2 = E.CONSTRAINT_ENV (E.unionConstraintsList [cst3, cst4])
 		   val env3 = E.CONSTRAINT_ENV (E.conscsts (lab, [c2, c3]) cst1)
 		   val env4 = E.SEQUENCE_ENV (env2, env3)
 		   val cst  = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT (E.SEQUENCE_ENV (env1, env4)))
@@ -3038,8 +3052,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.funenv, Env.cst, Env.css) *)
 	   and f_funbind (A.FunBind (funbinds, _, _)) =
 	       let val (funss, csts, csss) = unzipThree (map f_funbindone funbinds)
-		   val funs = E.uenv funss
-		   val cst  = E.uenvcst csts
+		   val funs = E.unionEnvironmentList funss
+		   val cst  = E.unionConstraintsList csts
 		   val css  = E.uenvcss csss
 	       in (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.projFuns funs), css)
 	       end

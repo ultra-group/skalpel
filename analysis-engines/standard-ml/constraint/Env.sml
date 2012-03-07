@@ -464,15 +464,15 @@ fun consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info =
 
 fun consInfo lab cmp tns fct = {lab = lab, cmp = cmp, tns = tns, fct = fct}
 
-val emgen = OME.empty
-val emvar = emgen
-val emtyp = emgen
-val emtv  = emgen
-val emstr = emgen
-val emsig = emgen
-val emfun = emgen
+val emptyMap = OME.empty
+val emvar = emptyMap
+val emtyp = emptyMap
+val emtv  = emptyMap
+val emstr = emptyMap
+val emsig = emptyMap
+val emfun = emptyMap
 val emopn = OMO.empty
-val emoc  = emgen
+val emoc  = emptyMap
 val emful = true        (* The environment is initially complete                       *)
 val emtn  = [] : tnmap  (* The environment does not initially define any type name     *)
 val emfct = false       (* The environment is initially not the parameter of a functor *)
@@ -597,16 +597,19 @@ fun remenv id env = #1 (OME.remove (env, id)) handle LibBase.NotFound => env
 
 fun mapenv fmap env = OME.map fmap env
 
-fun uenv envl =
-    foldr (fn (env1, env2) => OME.unionWith (fn (x, y) => x @ y) (env1, env2))
-	  emgen
-	  envl
+(* unionEnvironmentList is a function which seems to union a list of environments *)
+fun unionEnvironmentList envList =
+    foldr (fn (env1, env2) => OME.unionWith           (* unionWith returns a map that is the union of two maps *)
+		                 (fn (x, y) => x @ y) (* used to define the map on elements that are in the domain of both maps *)
+                                 (env1, env2))        (* the two maps that are to be unioned *)
+	  emptyMap (* the empty map (from the ORD_MAP signature defined in the smlnj library *)
+	  envList     (* a list of maps to union, which foldr operates on *)
 
 (*fun outenv env dom = I.foldr (fn (x, env) => remenv x env) env dom
 fun inenv  env dom = I.foldr (fn (x, cenv) =>
 				 case OME.find (env, x) of
 				     NONE => cenv
-				   | SOME y => OME.insert (cenv, x, y)) emgen dom*)
+				   | SOME y => OME.insert (cenv, x, y)) emptyMap dom*)
 fun plusenv env1 env2 = OME.unionWith (fn (_, y) => y) (env1, env2)
 
 fun foldrenv  ffold init env = OME.foldr  ffold init env
@@ -623,7 +626,7 @@ fun doms envl = foldr (fn (x, y) => I.union (dom x) y) I.empty envl
 fun plusproj env id = case findenv id env of NONE => [] | SOME x => x
 
 fun bindToEnv binds =
-    List.foldr (fn (x, genenv) => uenv [singenv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emgen binds
+    List.foldr (fn (x, genenv) => unionEnvironmentList [singenv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emptyMap binds
 
 fun envToBind env = foldrenv (fn ([x], binds) => x :: binds
 			       | _ => raise EH.DeadBranch "")
@@ -657,13 +660,13 @@ fun uenvEnvC (ENVIRONMENT_CONSTRUCTOR {vids = vids1, typenames = typs1, tyvs = t
 		      sigs = sigs1, funs = funs1, ovcs = ovcs1, info = info1})
 	     (ENVIRONMENT_CONSTRUCTOR {vids = vids2, typenames = typs2, tyvs = tyvs2, strs = strs2,
 		      sigs = sigs2, funs = funs2, ovcs = ovcs2, info = info2}) =
-    consEnvironmentConstructor (uenv [vids1, vids2])
-	     (uenv [typs1, typs2])
-	     (uenv [tyvs1, tyvs2])
-	     (uenv [strs1, strs2])
-	     (uenv [sigs1, sigs2])
-	     (uenv [funs1, funs2])
-	     (uenv [ovcs1, ovcs2])
+         consEnvironmentConstructor (unionEnvironmentList [vids1, vids2])
+	     (unionEnvironmentList [typs1, typs2])
+	     (unionEnvironmentList [tyvs1, tyvs2])
+	     (unionEnvironmentList [strs1, strs2])
+	     (unionEnvironmentList [sigs1, sigs2])
+	     (unionEnvironmentList [funs1, funs2])
+	     (unionEnvironmentList [ovcs1, ovcs2])
 	     (uenvEnvInfo info1 info2)
   | uenvEnvC x y =
     if isEmptyEnv x
@@ -745,8 +748,12 @@ fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
 fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
 fun uenvcss xs = foldr (fn (x, y) => x@y) emptyContextSensitiveSyntaxError xs
-fun uenv2cst (CONSTRAINTS cst1) (CONSTRAINTS cst2) = CONSTRAINTS (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
-fun uenvcst xs = foldr (fn (x, y) => uenv2cst x y) emptyConstraint xs
+
+(* unionConstraints will union two CONSTRAINTNS values *)
+fun unionConstraints (CONSTRAINTS cst1) (CONSTRAINTS cst2) = CONSTRAINTS (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
+
+(* unionConstraintsList will take a list of CONSTRAINTS values, and use unionConstraints to union the values *)
+fun unionConstraintsList xs = foldr (fn (x, y) => unionConstraints x y) emptyConstraint xs
 
 fun foldlicst ffold init (CONSTRAINTS cst) = OMC.foldli ffold init cst
 fun foldricst ffold init (CONSTRAINTS cst) = OMC.foldri ffold init cst
@@ -1103,7 +1110,7 @@ fun filterIdEnv idenv labs =
 		      then (idenv, false)
 		      else (addenv (id, sem') idenv, cmp')
 		   end)
-	       (emgen, true)
+	       (emptyMap, true)
 	       idenv
 
 fun filterOpnEnv opnenv labs =

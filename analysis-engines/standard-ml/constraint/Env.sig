@@ -264,7 +264,7 @@ signature ENV = sig
     val emopn        : opnenv
     val emtv         : tyvenv
     val emoc         : ovcenv
-    val emgen        : 'a emap
+    val emptyMap     : 'a emap
     val emnfo        : infoEnv
 
     val consBind     : Id.id -> 'a -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
@@ -366,7 +366,7 @@ signature ENV = sig
     (*val appenv       : ('a -> unit) -> 'a emap -> unit
     val appienv      : ((Id.id * 'a) -> unit) -> 'a emap -> unit*)
     val mapenv       : ('a -> 'a) -> 'a emap -> 'a emap
-    val uenv         : 'a genericEnvironment list -> 'a genericEnvironment
+    val unionEnvironmentList         : 'a genericEnvironment list -> 'a genericEnvironment
     (*val remenv       : Id.id -> 'a emap -> 'a emap
     val inenv        : 'a emap -> Id.set -> 'a emap
     val outenv       : 'a emap -> Id.set -> 'a emap*)
@@ -420,7 +420,7 @@ signature ENV = sig
     val singcsss         : oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val singcsts         : (Label.label * oneConstraint list) -> constraints
     val uenvcss          : contextSensitiveSyntaxError list -> contextSensitiveSyntaxError 
-    val uenvcst          : constraints list -> constraints
+    val unionConstraintsList : constraints list -> constraints
     val getnbcs          : envcss -> int
     val getnbcss         : envcss -> int
     val getnbcst         : envcss -> int

@@ -854,7 +854,7 @@ fun buildIdEnv idenv state fresh ffresh fbuild bstr =
 					       end)
 				      sem)
 			     genenv)
-		E.emgen
+		E.emptyMap
 		idenv
 
 fun buildnobuild x _ _ _ _ _ = x
@@ -1620,7 +1620,7 @@ fun genTyFunGenEnv genenv state tfun dom b genfun =
 		val (cs', semty') = ListPair.unzip xs
 	    in (cs @ (List.concat cs'),	E.addenv (id, semty') genenv)
 	    end)
-	([], E.emgen)
+	([], E.emptyMap)
 	genenv
 
 (* This is actually used for matchings structure/signature and for sharing *)
@@ -1789,7 +1789,7 @@ fun applyTyFunGenEnv genenv tfun genfun =
 		val (cs', semty') = ListPair.unzip xs
 	    in (cs @ (List.concat cs'),	E.addenv (id, semty') genenv)
 	    end)
-	([], E.emgen)
+	([], E.emptyMap)
 	genenv
 
 fun applyTyFunEnv (env as E.ENVIRONMENT_CONSTRUCTOR _) tfun =
@@ -2576,7 +2576,7 @@ fun unif env filters user =
 			    foldr (fn (bind, (ubind, bin, bpol, bcomp, cst)) =>
 				      case fbuild bind of
 					  BINDOUT       => (ubind, bin, bpol, bcomp, cst)
-					| BINDNOT cst'  => (ubind, bin, bpol, bcomp, E.uenvcst [cst, cst'])
+					| BINDNOT cst'  => (ubind, bin, bpol, bcomp, E.unionConstraintsList [cst, cst'])
 					| BINDIN  bind' =>
 					  (if bin then genMultiError ubind bind' else ();
 					   (SOME bind', true, bpol, true, cst))
@@ -2595,7 +2595,7 @@ fun unif env filters user =
 			   NONE => (genenv, comp', cst')
 			 | SOME bind => (E.addenv (id, [bind]) genenv, comp', cst')
 		    end)
-		(E.emgen, true, E.emptyConstraint)
+		(E.emptyMap, true, E.emptyConstraint)
 		genenv
 
 
