@@ -485,17 +485,20 @@ structure Position :> INTEGER
 structure LargeInt :> INTEGER
     where type int = IntInf.int = _structLargeInt
 
-(* This is a hack to get a structure Word32 defining a type word *)
-signature WORD32 = sig type word end
-structure Word32 :> WORD32 = _structWord32
+(* This is a hack to get a structure LargeWord defining a type word *)
+signature LARGEWORD_HACK = sig type word end
+structure LargeWord :> LARGEWORD_HACK = _structLargeWord_Hack
 
 signature WORD =
   sig
     eqtype word
     val wordSize : int
-    val toLargeWord : word -> Word32.word
-    (*val toLargeWordX : word -> Word32.word*)
-    val fromLargeWord : Word32.word -> word
+    val toLarge : word -> LargeWord.word
+    val toLargeWord : word -> LargeWord.word
+    val toLargeX : word -> LargeWord.word
+    val toLargeWordX : word -> LargeWord.word
+    val fromLarge : LargeWord.word -> word
+    val fromLargeWord : LargeWord.word -> word
     val toLargeInt : word -> IntInf.int
     val toLargeIntX : word -> IntInf.int
     val fromLargeInt : IntInf.int -> word
@@ -534,10 +537,12 @@ structure Word      :> WORD
 structure Word8     :> WORD    = _structWord8
 structure Word31    :> WORD
 (*!*)(*where type word = word*)= _structWord31
-structure Word32    :> WORD
-    where type word = Word32.word = _structWord32
+structure Word32    :> WORD    = _structWord32
 structure Word64    :> WORD    = _structWord64
-structure LargeWord :> WORD    = _structLargeWord
+structure LargeWord :> WORD
+    where type word = LargeWord.word
+                               = _structLargeWord
+structure SysWord   :> WORD    = _structSysWord
 
 signature MONO_VECTOR =
   sig
@@ -926,7 +931,7 @@ signature FORMAT =
       | LEFT of int * fmt_item
       | LINT of IntInf.int
       | LREAL of real
-      | LWORD of Word32.word
+      | LWORD of LargeWord.word
       | REAL of real
       | RIGHT of int * fmt_item
       | STR of string
@@ -1200,8 +1205,8 @@ signature POSIX =
     structure Error :
       sig
         type syserror = OS.syserror (* SML Basis Library book erroneously says this is OS.Process.syserror *)
-        val toWord : syserror -> Word32.word
-        val fromWord : Word32.word -> syserror
+        val toWord : syserror -> SysWord.word
+        val fromWord : SysWord.word -> syserror
         val errorMsg : syserror -> string
         val errorName : syserror -> string
         val syserror : string -> syserror option
@@ -1252,8 +1257,8 @@ signature POSIX =
     structure Signal :
       sig
         eqtype signal
-        val toWord : signal -> Word32.word
-        val fromWord : Word32.word -> signal
+        val toWord : signal -> SysWord.word
+        val fromWord : SysWord.word -> signal
         val abrt : signal
         val alrm : signal
         val fpe : signal
@@ -1279,8 +1284,8 @@ signature POSIX =
       sig
         eqtype signal
         eqtype pid
-        val wordToPid : Word32.word -> pid
-        val pidToWord : pid -> Word32.word
+        val wordToPid : SysWord.word -> pid
+        val pidToWord : pid -> SysWord.word
         val fork : unit -> pid option
         val exec : string * string list -> 'a
         val exece : string * string list * string list -> 'a
@@ -1296,8 +1301,8 @@ signature POSIX =
         structure W :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1323,10 +1328,10 @@ signature POSIX =
         eqtype file_desc
         eqtype uid
 	eqtype gid
-        val uidToWord : uid -> Word32.word
-        val wordToUid : Word32.word -> uid
-        val gidToWord : gid -> Word32.word
-        val wordToGid : Word32.word -> gid
+        val uidToWord : uid -> SysWord.word
+        val wordToUid : SysWord.word -> uid
+        val gidToWord : gid -> SysWord.word
+        val wordToGid : SysWord.word -> gid
         val getpid : unit -> pid
         val getppid : unit -> pid
         val getuid : unit -> uid
@@ -1350,15 +1355,15 @@ signature POSIX =
         val ctermid : unit -> string
         val ttyname : file_desc -> string
         val isatty : file_desc -> bool
-        val sysconf : string -> Word32.word
+        val sysconf : string -> SysWord.word
       end
     structure FileSys :
       sig
         eqtype uid
         eqtype gid
         eqtype file_desc
-        val fdToWord : file_desc -> Word32.word
-        val wordToFD : Word32.word -> file_desc
+        val fdToWord : file_desc -> SysWord.word
+        val wordToFD : SysWord.word -> file_desc
         val fdToIOD : file_desc -> OS.IO.iodesc
         val iodToFD : OS.IO.iodesc -> file_desc option
         type dirstream
@@ -1375,8 +1380,8 @@ signature POSIX =
           sig
             type mode
             type flags = mode
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1402,8 +1407,8 @@ signature POSIX =
         structure O :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1433,11 +1438,11 @@ signature POSIX =
         val readlink : string -> string
         val ftruncate : file_desc * int -> unit
         eqtype dev
-        (*val wordToDev : Word32.word -> dev
-        val devToWord : dev -> Word32.word*)
+        (*val wordToDev : SysWord.word -> dev
+        val devToWord : dev -> SysWord.word*)
         eqtype ino
-        (*val wordToIno : Word32.word -> ino
-        val inoToWord : ino -> Word32.word*)
+        (*val wordToIno : SysWord.word -> ino
+        val inoToWord : ino -> SysWord.word*)
         structure ST :
           sig
             type stat
@@ -1469,9 +1474,9 @@ signature POSIX =
         val chown : string * uid * gid -> unit
         val fchown : file_desc * uid * gid -> unit
         (*val utime : string * {actime:Time.time, modtime:Time.time} option
-                    -> unit
-        val pathconf : string * string -> Word32.word option
-        val fpathconf : file_desc * string -> Word32.word option*)
+                    -> unit *)
+        val pathconf : string * string -> SysWord.word option
+        val fpathconf : file_desc * string -> SysWord.word option
       end
     structure IO :
       sig
@@ -1489,8 +1494,8 @@ signature POSIX =
         structure FD :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1502,8 +1507,8 @@ signature POSIX =
         structure O :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1576,15 +1581,15 @@ signature POSIX =
         val getpwuid : uid -> Passwd.passwd
         val getpwnam : string -> Passwd.passwd
       end
-    (*structure TTY :
+    structure TTY :
       sig
         eqtype pid
         eqtype file_desc
         structure I :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1606,8 +1611,8 @@ signature POSIX =
         structure O :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1619,8 +1624,8 @@ signature POSIX =
         structure C :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1642,8 +1647,8 @@ signature POSIX =
         structure L :
           sig
             eqtype flags
-            val toWord : flags -> Word32.word
-            val fromWord : Word32.word -> flags
+            val toWord : flags -> SysWord.word
+            val fromWord : SysWord.word -> flags
             val all : flags
             val flags : flags list -> flags
             val intersect : flags list -> flags
@@ -1681,8 +1686,8 @@ signature POSIX =
           end
         eqtype speed
         val compareSpeed : speed * speed -> order
-        val speedToWord : speed -> Word32.word
-        val wordToSpeed : Word32.word -> speed
+        val speedToWord : speed -> SysWord.word
+        val wordToSpeed : SysWord.word -> speed
         val b0 : speed
         val b50 : speed
         val b75 : speed
@@ -1731,22 +1736,24 @@ signature POSIX =
             val iflush : queue_sel
             val oflush : queue_sel
             val ioflush : queue_sel
+            (* For some reason in a much older SML/NJ version the
+             * following items were in the parent structure. *)
+            val getattr : file_desc -> termios
+            val setattr : file_desc * set_action * termios -> unit
+            val sendbreak : file_desc * int -> unit
+            val drain : file_desc -> unit
+            val flush : file_desc * queue_sel -> unit
+            val flow : file_desc * flow_action -> unit
+            val getpgrp : file_desc -> pid
+            val setpgrp : file_desc * pid -> unit
           end
-        val getattr : file_desc -> termios
-        val setattr : file_desc * TC.set_action * termios -> unit
-        val sendbreak : file_desc * int -> unit
-        val drain : file_desc -> unit
-        val flush : file_desc * TC.queue_sel -> unit
-        val flow : file_desc * TC.flow_action -> unit
-        val getpgrp : file_desc -> pid
-        val setpgrp : file_desc * pid -> unit
-      end*)
+      end
     sharing type SysDB.gid = FileSys.gid = ProcEnv.gid
     sharing type SysDB.uid = FileSys.uid = ProcEnv.uid
     (*sharing type IO.open_mode = FileSys.open_mode*)
-    sharing type (* TTY.file_desc = *) IO.file_desc = FileSys.file_desc = ProcEnv.file_desc
+    sharing type TTY.file_desc = IO.file_desc = FileSys.file_desc = ProcEnv.file_desc
     sharing type Signal.signal = Process.signal
-    sharing type (* TTY.pid = *) ProcEnv.pid = Process.pid
+    sharing type TTY.pid = ProcEnv.pid = Process.pid
   end
 
 structure Posix :> POSIX = _structPosix
@@ -3314,7 +3321,7 @@ structure ZString :> ZSTRING = _structZString
 
 (* OVERLOADING CLASSES *)
 overload Int    (int,    Int.int, Int31.int, Int32.int, Position.int, IntInf.int, LargeInt.int)
-overload Word   (word,   Word.word, Word8.word, Word31.word, Word32.word, LargeWord.word)
+overload Word   (word,   Word.word, Word8.word, Word31.word, Word32.word, LargeWord.word, SysWord.word)
 overload Real   (real,   Real.real, LargeReal.real)
 overload Char   (char,   Char.char)
 overload String (string, String.string)
