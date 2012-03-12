@@ -747,9 +747,10 @@ fun singcsss cs = cs
 fun singleConstraint (v, c) = consConstraint  (v, c)  emptyConstraint
 fun singcsts (v, cs) = conscsts (v, cs) emptyConstraint
 
-fun uenvcss xs = foldr (fn (x, y) => x@y) emptyContextSensitiveSyntaxError xs
+(* unions a list of context sensitive syntax errors *)
+fun unionContextSensitiveSyntaxErrors xs = foldr (fn (x, y) => x@y) emptyContextSensitiveSyntaxError xs
 
-(* unionConstraints will union two CONSTRAINTNS values *)
+(* unionConstraints will union two CONSTRAINTS values (will union two lists of constraints)*)
 fun unionConstraints (CONSTRAINTS cst1) (CONSTRAINTS cst2) = CONSTRAINTS (OMC.unionWith (fn (x, y) => x @ y) (cst1, cst2))
 
 (* unionConstraintsList will take a list of CONSTRAINTS values, and use unionConstraints to union the values *)
