@@ -419,7 +419,7 @@ signature ENV = sig
     val singcss          : oneContextSensitiveSyntaxError -> contextSensitiveSyntaxError
     val singcsss         : oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val singcsts         : (Label.label * oneConstraint list) -> constraints
-    val uenvcss          : contextSensitiveSyntaxError list -> contextSensitiveSyntaxError 
+    val unionContextSensitiveErrors: contextSensitiveSyntaxError list -> contextSensitiveSyntaxError 
     val unionConstraintsList : constraints list -> constraints
     val getnbcs          : envcss -> int
     val getnbcss         : envcss -> int

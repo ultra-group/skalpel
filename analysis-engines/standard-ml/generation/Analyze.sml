@@ -2136,11 +2136,18 @@ fun generateConstraints' prog pack nenv =
 
 		   (* because we have all first to fourth elements of the dypdescs now in a list, we have to union them *)
 		   val typs = E.unionEnvironmentList typss
+
+		   (* unions a list of CONSTRAINTS values
+		    * that is, unions a list of lists of constraints *)
 		   val constarint  = E.unionConstraintsList constraints
-		   val css  = E.uenvcss csss
-		   val tns  = List.mapPartial (fn x => x) tnss      (* the list tnss contains items of the form NONE or SOME(x)
-								     * mapPartial (fn x => x) will remove all items of the form NONE from the list and
-								     * returns a list of the x values of items with the SOME(x) form *)
+
+		   (* unions a list of context sensitive syntax errors *)
+		   val css  = E.unionContextSensitiveErrorList csss
+
+		   (* the list tnss contains items of the form NONE or SOME(x)
+		    * mapPartial (fn x => x) will remove all items of the form NONE from the list and return a list of the x values of items with the SOME(x) form *)
+		   val tns  = List.mapPartial (fn x => x) tnss
+
 	       in (tns, typs, constraint, css)
 	       end
 	     | f_typdesc (A.TypDescDots pl) =
@@ -2435,7 +2442,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_specone (A.SpecEqtype (typdesc, _, lab, _)) =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
 
-		   (* we call f_typdesc so that we can generate information about the type description (what we would call a typename?)
+		   (* we call f_typdesc so that we can (get/generate)? information about the typdesc (type description? what does that mean?)
 		    * the first element of the tuple represents xxx
 		    * the second element of the tuple represents xxx
 		    * the third element of the tuple represents the constraints that have been built from (???)
