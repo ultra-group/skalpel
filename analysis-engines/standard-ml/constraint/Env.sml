@@ -36,7 +36,7 @@ structure CL  = ClassId
 structure CD  = LongId
 structure EL  = ExtLab  (* WTF is the "Ext" for ?*)
 structure EH  = ErrorHandler
-structure OME = SplayMapFn (OrdId)  (* map for Environments *)
+structure environmentOrdMap = SplayMapFn (OrdId)  (* map for Environments *)
 structure OMC = SplayMapFn (OrdKey) (* map for Constraints, should be OrdLab *)
 structure OMO = Fifo (*SplayMapFn (OrdLid) (* map for Open environments *)*)
 
@@ -44,7 +44,7 @@ structure OMO = Fifo (*SplayMapFn (OrdLid) (* map for Open environments *)*)
 
 (* ------ MAPPINGS ------ *)
 type 'a cmap        = 'a OMC.map
-type 'a emap        = 'a OME.map
+type 'a emap        = 'a environmentOrdMap.map
 type 'a omap        = 'a OMO.fifo
 
 (* ------ VARIABLES ------ *)
@@ -69,7 +69,7 @@ type opnenv         = opnsem omap
 
 (* ------ VARENV ------ *)
 type extvar         = T.ty bind
-type varenv         = T.ty genericEnvironment (* Tyty (ConsId.bind ExtLab.extLab list) OME.mp *)
+type varenv         = T.ty genericEnvironment (* Tyty (ConsId.bind ExtLab.extLab list) environmentOrdMap.mp *)
 
 (* ------ KIND OF A TYPE DECLARATION *)
 datatype tnKind     = DAT | TYP
@@ -247,7 +247,7 @@ fun printTnKind DAT = "DAT"
 
 fun printGenEnv xs ind f =
     let val ind' = ind ^ "    "
-    in #1 (OME.foldli
+    in #1 (environmentOrdMap.foldli
 	       (fn (k, x, (y, z)) =>
 		   (y ^ z ^ I.printId k ^ ":" ^ f x, "\n" ^ ind'))
 	       ("", "")
@@ -464,7 +464,7 @@ fun consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info =
 
 fun consInfo lab cmp tns fct = {lab = lab, cmp = cmp, tns = tns, fct = fct}
 
-val emptyMap = OME.empty
+val emptyMap = environmentOrdMap.empty
 val emvar = emptyMap
 val emtyp = emptyMap
 val emtv  = emptyMap
@@ -568,7 +568,7 @@ fun projOvcs idD = updateOvcs idD emptyEnvironment
 fun projOpns idO = ENVOPN idO
 
 
-fun isEmptyIdEnv idenv = OME.numItems idenv = 0
+fun isEmptyIdEnv idenv = environmentOrdMap.numItems idenv = 0
 
 fun isEmptyVarEnv varenv = isEmptyIdEnv varenv
 fun isEmptyTyvEnv tyvenv = isEmptyIdEnv tyvenv
@@ -588,18 +588,20 @@ fun isEmptyEnv (env as ENVIRONMENT_CONSTRUCTOR _) =
   | isEmptyEnv (SEQUENCE_ENV (env1, env2)) = isEmptyEnv env1 andalso isEmptyEnv env2
   | isEmptyEnv env = false
 
-fun addenv  (v, semty) env = OME.insert (env,       v, semty)
-fun singenv (v, semty)     = OME.insert (OME.empty, v, semty)
+fun addenv  (v, semty) env = environmentOrdMap.insert (env,       v, semty)
 
-fun findenv id env = OME.find (env, id)
+(* a function which will take an key and a value and construct a new map for environments, with a mapping of that key to that value inside it *)
+fun consSingleEnv (v, semty)     = environmentOrdMap.insert (environmentOrdMap.empty, v, semty)
 
-fun remenv id env = #1 (OME.remove (env, id)) handle LibBase.NotFound => env
+fun findenv id env = environmentOrdMap.find (env, id)
 
-fun mapenv fmap env = OME.map fmap env
+fun remenv id env = #1 (environmentOrdMap.remove (env, id)) handle LibBase.NotFound => env
+
+fun mapenv fmap env = environmentOrdMap.map fmap env
 
 (* unionEnvironmentList is a function which seems to union a list of environments *)
 fun unionEnvironmentList envList =
-    foldr (fn (env1, env2) => OME.unionWith           (* unionWith returns a map that is the union of two maps *)
+    foldr (fn (env1, env2) => environmentOrdMap.unionWith           (* unionWith returns a map that is the union of two maps *)
 		                 (fn (x, y) => x @ y) (* used to define the map on elements that are in the domain of both maps *)
                                  (env1, env2))        (* the two maps that are to be unioned *)
 	  emptyMap (* the empty map (from the ORD_MAP signature defined in the smlnj library *)
@@ -607,26 +609,26 @@ fun unionEnvironmentList envList =
 
 (*fun outenv env dom = I.foldr (fn (x, env) => remenv x env) env dom
 fun inenv  env dom = I.foldr (fn (x, cenv) =>
-				 case OME.find (env, x) of
+				 case environmentOrdMap.find (env, x) of
 				     NONE => cenv
-				   | SOME y => OME.insert (cenv, x, y)) emptyMap dom*)
-fun plusenv env1 env2 = OME.unionWith (fn (_, y) => y) (env1, env2)
+				   | SOME y => environmentOrdMap.insert (cenv, x, y)) emptyMap dom*)
+fun plusenv env1 env2 = environmentOrdMap.unionWith (fn (_, y) => y) (env1, env2)
 
-fun foldrenv  ffold init env = OME.foldr  ffold init env
-fun foldlenv  ffold init env = OME.foldl  ffold init env
-fun foldrienv ffold init env = OME.foldri ffold init env
-fun foldlienv ffold init env = OME.foldli ffold init env
+fun foldrenv  ffold init env = environmentOrdMap.foldr  ffold init env
+fun foldlenv  ffold init env = environmentOrdMap.foldl  ffold init env
+fun foldrienv ffold init env = environmentOrdMap.foldri ffold init env
+fun foldlienv ffold init env = environmentOrdMap.foldli ffold init env
 
-fun appenv  fmap env = OME.app  fmap env
-fun appienv fmap env = OME.appi fmap env
+fun appenv  fmap env = environmentOrdMap.app  fmap env
+fun appienv fmap env = environmentOrdMap.appi fmap env
 
-fun dom  env  = OME.foldri (fn (l, _, set) => I.add l set) I.empty env
+fun dom  env  = environmentOrdMap.foldri (fn (l, _, set) => I.add l set) I.empty env
 fun doms envl = foldr (fn (x, y) => I.union (dom x) y) I.empty envl
 
 fun plusproj env id = case findenv id env of NONE => [] | SOME x => x
 
 fun bindToEnv binds =
-    List.foldr (fn (x, genenv) => unionEnvironmentList [singenv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emptyMap binds
+    List.foldr (fn (x, genenv) => unionEnvironmentList [consSingleEnv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emptyMap binds
 
 fun envToBind env = foldrenv (fn ([x], binds) => x :: binds
 			       | _ => raise EH.DeadBranch "")
@@ -809,7 +811,7 @@ fun getnbcs (env, css) = (getnbcstenv env) + (getnbcss' css)
 (* we get the labels at the csbindings *)
 
 fun getlabsidenv idenv =
-    OME.foldr
+    environmentOrdMap.foldr
 	(fn (sem, labs) => L.union (L.ord (map (fn (x, _, _, _) => C.getBindL x) sem)) labs)
 	L.empty
 	idenv
@@ -969,7 +971,7 @@ fun allEqualVids vids =
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshtyfvar ()
 	val c    = initFunctionTypeConstraint (T.consTFV tfv) tyfun lab
-	val typenames = singenv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
+	val typenames = consSingleEnv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
     in (singleConstraint (lab, c), consEnvironmentTypenames typenames)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
@@ -978,7 +980,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 	val ev2  = freshEnvVar ()
 	val c1   = initEnvConstraint (consENVVAR ev1 lab1) env1 lab1
 	val c2   = initEnvConstraint (consENVVAR ev2 lab2) (consENVVAR ev1 lab2) lab2
-	val strs = singenv (id, [consBindPoly id (consENVVAR ev2 lab1) (CL.consSTR ()) lab1])
+	val strs = consSingleEnv (id, [consBindPoly id (consENVVAR ev2 lab1) (CL.consSTR ()) lab1])
     in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStrs strs)
     end
 
@@ -1098,7 +1100,7 @@ fun testlab lab labs = L.eq lab L.dummyLab
 fun testlabs labs1 labs2 = L.subseteq labs1 (L.cons L.dummyLab (L.cons L.builtinLab labs2))
 
 fun filterIdEnv idenv labs =
-    OME.foldri (fn (id, sem, (idenv, cmp)) =>
+    environmentOrdMap.foldri (fn (id, sem, (idenv, cmp)) =>
 		   let val (sem', cmp') =
 			   foldr (fn (bind, (sem, cmp)) =>
 				     if testlabs (EL.getExtLabL bind) labs

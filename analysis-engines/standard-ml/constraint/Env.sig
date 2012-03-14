@@ -359,8 +359,8 @@ signature ENV = sig
     (* Extract the variable from an environment.  The environment has to be a variable. *)
     val envToEnvvar  : environment -> envvar*)
 
-    val addenv       : (Id.id * 'a) -> 'a emap -> 'a emap
-    val singenv      : (Id.id * 'a) -> 'a emap
+    val addenv        : (Id.id * 'a) -> 'a emap -> 'a emap
+    val consSingleEnv : (Id.id * 'a) -> 'a emap
     (*val findenv      : Id.id -> 'a emap -> 'a option*)
     val plusproj     : 'a genericEnvironment -> Id.id -> 'a bind list
     (*val appenv       : ('a -> unit) -> 'a emap -> unit
