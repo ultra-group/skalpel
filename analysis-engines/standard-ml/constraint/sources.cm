@@ -39,7 +39,7 @@ Library
   structure Expans
   structure Poly
   structure Ty
-  structure ExtLab
+  structure ExtendedLabel
 
 is
 

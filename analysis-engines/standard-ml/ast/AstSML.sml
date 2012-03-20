@@ -347,6 +347,9 @@ and funid =
     FunId           of string * I.id * R.region * L.label * next
   | FunIdDots
 
+(* string is the string of the type constructor, eg
+ * 1. 'Operators' 'datatype Operators = ADD | IF | LESS_THAN' *
+ * 2. 'mytype' in 'type mytype = int'*)
 and tycon =
     TyCon           of string * I.id * R.region * L.label * next
   | TyConDots

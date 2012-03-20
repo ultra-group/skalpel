@@ -157,15 +157,15 @@ signature ENV = sig
 			| TOP_LEVEL_ENV (*(2010-06-24)To mark that we reached the top-level.*)
 
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accid ExtLab.extLab (* value identifiers        *)
-	                    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.tyvar    accid ExtLab.extLab (* explicit type variables  *)
-                       	    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.tyfun    accid ExtLab.extLab (* type constructors        *)
-	                    | OVERLOADING_CLASSES_ACCESSOR of Ty.seqty    accid ExtLab.extLab (* overloading classes      *)
-	                    | STRUCTURE_ACCESSOR of environment         accid ExtLab.extLab (* structures               *)
-	                    | SIGNATURE_ACCESSOR of environment         accid ExtLab.extLab (* signatures               *)
-                            | FUNCTOR_ACCESSOR of (environment * environment) accid ExtLab.extLab (* functors              *)
+			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.tyvar    accid ExtLab.extLab (* explicit type variables  *)
+			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.tyfun    accid ExtLab.extLab (* type constructors        *)
+			    | OVERLOADING_CLASSES_ACCESSOR of Ty.seqty    accid ExtLab.extLab (* overloading classes      *)
+			    | STRUCTURE_ACCESSOR of environment         accid ExtLab.extLab (* structures               *)
+			    | SIGNATURE_ACCESSOR of environment         accid ExtLab.extLab (* signatures               *)
+			    | FUNCTOR_ACCESSOR of (environment * environment) accid ExtLab.extLab (* functors              *)
 
 	 and oneConstraint       = TYPE_CONSTRAINT of (Ty.ty    * Ty.ty)    ExtLab.extLab
-	                         | TYPENAME_CONSTRAINT of (Ty.tnty  * Ty.tnty)  ExtLab.extLab
+				 | TYPENAME_CONSTRAINT of (Ty.tnty  * Ty.tnty)  ExtLab.extLab
 				 | SEQUENCE_CONSTRAINT of (Ty.seqty * Ty.seqty) ExtLab.extLab
 				 | ROW_CONSTRAINT of (Ty.rowty * Ty.rowty) ExtLab.extLab
 				 | LABEL_CONSTRAINT of (Ty.labty * Ty.labty) ExtLab.extLab
@@ -173,20 +173,20 @@ signature ENV = sig
 				 | IDENTIFIER_CLASS_CONSTRAINT of (class    * class)    ExtLab.extLab
 				 | FUNCTION_TYPE_CONSTRAINT of (Ty.tyfun * Ty.tyfun) ExtLab.extLab
 				 | ACCESSOR_CONSTRAINT of accessor
-	                         | LET_CONSTRAINT of environment
-	                         | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an environment with a switch for opaque and translucent *)
-	                         | FUNCTOR_CONSTRAINT of evfbind (* Transform that into an environment *)
-                                 | SHARING_CONSTRAINT of shabind (* Transform that into an environment *)
+				 | LET_CONSTRAINT of environment
+				 | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an environment with a switch for opaque and translucent *)
+				 | FUNCTOR_CONSTRAINT of evfbind (* Transform that into an environment *)
+				 | SHARING_CONSTRAINT of shabind (* Transform that into an environment *)
 
 	 (* Concerning CSTVAL (used to close value declarations):
 	  * - the first  tvsbind is for the IMPLICIT bound tyvar at the val
 	  * - the second tvsbind is for the EXPLICIT bound tyvar at the val
-          * - the third element is for the tyvar to build *)
+	  * - the third element is for the tyvar to build *)
 	 (* Concerning ACCID: it will replace some type environments
-          * - 1st csenv: variables, 2nd csenv: rec/constructors, 3rd csenv: types
-          * - 1st cst: pattern, 2nd cst: expression
+	  * - 1st csenv: variables, 2nd csenv: rec/constructors, 3rd csenv: types
+	  * - 1st cst: pattern, 2nd cst: expression
 	  * - we would have to have the same for constructors, types and structures
-          * - what about tvenv? *)
+	  * - what about tvenv? *)
 	 and constraints        = CONSTRAINTS of oneConstraint list cmap
     (* constraints maps integers (program point labels) to lists (conceptually sets) of oneConstraint's *)
     (*(2010-04-14)Conceptually, (INJI extty) seems to be an environment of the form:
@@ -419,7 +419,7 @@ signature ENV = sig
     val singcss          : oneContextSensitiveSyntaxError -> contextSensitiveSyntaxError
     val singcsss         : oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val singcsts         : (Label.label * oneConstraint list) -> constraints
-    val unionContextSensitiveErrors: contextSensitiveSyntaxError list -> contextSensitiveSyntaxError 
+    val unionContextSensitiveSyntaxErrors: contextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val unionConstraintsList : constraints list -> constraints
     val getnbcs          : envcss -> int
     val getnbcss         : envcss -> int
@@ -427,7 +427,7 @@ signature ENV = sig
     val getnbcsttop      : envcss -> int
     val foldlicst        : ((int * oneConstraint list * 'b) -> 'b) -> 'b -> constraints -> 'b
     val getbindings      : environment -> Label.labels list * Label.labels
-    
+
     val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstTfAll  : Ty.tyfun  -> Ty.tyfun -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstTnAll  : Ty.tnty   -> Ty.tnty  -> Label.labels -> Label.labels -> LongId.set -> oneConstraint

@@ -453,12 +453,12 @@ value nil.")
   (let ((temp-dir (skalpel-get-temporary-directory)))
     (if (file-exists-p temp-dir)
 	;; *** Eeek!  Running rm -rf is dangerous!!!  We have not
-        ;; really validated temp-dir.  If
-        ;; (skalpel-get-temporary-directory) can ever return a bad
-        ;; value, we might remove all the user's files (or the entire
-        ;; system if running as root)!
-        (or skalpel-keep-temporary-files-for-debugging
-            (shell-command (format "rm -rf %s" temp-dir)))
+	;; really validated temp-dir.  If
+	;; (skalpel-get-temporary-directory) can ever return a bad
+	;; value, we might remove all the user's files (or the entire
+	;; system if running as root)!
+	(or skalpel-keep-temporary-files-for-debugging
+	    (shell-command (format "rm -rf %s" temp-dir)))
       )
     )
   )
@@ -523,7 +523,7 @@ value nil.")
       	      (output-file nil)
       	      (output-dir nil)
       	      (rest-command (format "\" \"\" %d %d;' | %s" skalpel-basis-option skalpel-timelimit skalpel-sml-process))
-              )
+	      )
       	  (skalpel-set-temporary-directory)
       	  (setq output-dir (skalpel-get-temporary-directory))
       	  (setq output-file (expand-file-name (format "%s.el" cur-file) output-dir))
@@ -590,7 +590,7 @@ value nil.")
 		(skalpel-forget-all-slices) ;; remove error info loaded previously
 		;; *** Use make-directory instead!  Arrgh!
 		(shell-command (format "mkdir %s" output-dir)) ;; create temp dir
-	        (print (format "mkdir %s" output-dir))
+		(print (format "mkdir %s" output-dir))
 		(skalpel-trace "RUNNING SLICER: Please wait..")
 		(setq skalpel-last-run-command run-command) ;; debugging trace
 		(skalpel-stop-skalpel-process) ;; kill skalpel- process
@@ -641,19 +641,19 @@ value nil.")
 	  (progn
 	    (safe-load-file (load-file output-file))
 	    (if ;; *** This should test *ALL* the buffers containing
-                ;; files Skalpel is working on as input!  BUG!
-                (buffer-modified-p (get-file-buffer skalpel-file-being-sliced))
+		;; files Skalpel is working on as input!  BUG!
+		(buffer-modified-p (get-file-buffer skalpel-file-being-sliced))
 		(progn
-                  ;; *** We should also kill the skalpel process!
-                  ;; Otherwise it will continue to run using oodles of
-                  ;; CPU time and memory.
+		  ;; *** We should also kill the skalpel process!
+		  ;; Otherwise it will continue to run using oodles of
+		  ;; CPU time and memory.
 		  (skalpel-delete-temporary-directory)
 		  (skalpel-trace "BUFFER MODIFIFED - SLICING STOPPED"))
 	      ;; Process the error
 	      (skalpel-process-error-file skalpel-slice-data)
 	      ;; Remove the error file that has just been processed
-              (or skalpel-keep-temporary-files-for-debugging
-                  (shell-command (format "rm %s " output-file)))
+	      (or skalpel-keep-temporary-files-for-debugging
+		  (shell-command (format "rm %s " output-file)))
 	      ;; Increment the counter that keeps track of the next error
 	      (setq skalpel-error-count (1+ skalpel-error-count))
 	      (setq skalpel-current-slice-pointer (butlast skalpel-slices))
@@ -697,7 +697,7 @@ value nil.")
 		     (return)))
 
 	  ;; Highlight the slice
-          ;; *** pass these as separate arguments!!!
+	  ;; *** pass these as separate arguments!!!
 	  (skalpel-highlight-slice (cons regs (cons (skalpel-format-slice-info slice assumptions kind) (cons id nil))))
 
 	  ;; foucs the first slice
@@ -724,7 +724,7 @@ value nil.")
 
 (defmacro skalpel-trace-signals (log &rest body)
   (declare (indent 2)
-           (debug (sexp sexp body)))
+	   (debug (sexp sexp body)))
   `(condition-case
        ;; *** should really generate a fresh symbol for this:
        skalpel-trace-signals-data
@@ -746,30 +746,29 @@ value nil.")
 
   (let ((formattedRegs nil)
 	(regs  (car args))
-	(slice (car (cdr args))) ;; *** why is this repeated below???
+	(slice (car (cdr args)))
 	(id    (car (cddr args)))
 	(myovs nil))
     (while regs
       (let* ((file    (caar (last regs))) ;; *** why processing last item first???
 	     (regions (cdr (assoc file regs))))
-        (with-current-buffer (find-file-noselect file)
-          ;; Put the information into a form in which it is easily processed
-          (setq slice (car (cdr args)))
-          (setq slice (cons id (cons (car slice) (cons (cons (car (cdr slice)) (cons (skalpel-contains-box regions) nil)) nil))))
-          (setq formattedRegs nil)
-          (setq formattedRegs (skalpel-mapslice formattedRegs regions slice))
-          ;; Highlight the regions
-          (let ((ovs
-                 (apply #'append
-                        (mapcar #'skalpel-highlight-region formattedRegs))))
-            (mapc
-             (lambda (ov) (overlay-put ov 'skalpel-slice ovs))
-             ovs)
-            (setq myovs (append myovs ovs)))
+	(with-current-buffer (find-file-noselect file)
+	  ;; Put the information into a form in which it is easily processed
+	  (setq slice (cons id (cons (car slice) (cons (cons (car (cdr slice)) (cons (skalpel-contains-box regions) nil)) nil))))
+	  (setq formattedRegs nil)
+	  (setq formattedRegs (skalpel-mapslice formattedRegs regions slice))
+	  ;; Highlight the regions
+	  (let ((ovs
+		 (apply #'append
+			(mapcar #'skalpel-highlight-region formattedRegs))))
+	    (mapc
+	     (lambda (ov) (overlay-put ov 'skalpel-slice ovs))
+	     ovs)
+	    (setq myovs (append myovs ovs)))
 
-          ;;	(setq regs (cdr regs))
-          (setq regs (butlast regs))
-          ))
+	  ;;	(setq regs (cdr regs))
+	  (setq regs (butlast regs))
+	  ))
       )
     ;; Keep track of the error slices
     (when (not skalpel-slices)
@@ -843,7 +842,7 @@ value nil.")
 	(info  (car (cdr (cdr (car (cdr args)))))))
     (set-text-properties 0 (length slice) nil slice)
     (if (functionp 'font-lock-append-text-property)
-        (font-lock-append-text-property 0 (length slice) 'face '(:family "fixed") slice))
+	(font-lock-append-text-property 0 (length slice) 'face '(:family "fixed") slice))
     (prog1
 	(destructuring-bind (type (bline bchar eline echar) color . subitems) reg
 	  (let* ((buf-and-pos-beg
@@ -1188,7 +1187,7 @@ value nil.")
 	    (progn
 	      ;; Set the previous slice to be in focus
 	      (skalpel-focus-slice (car last))
-              (skalpel-maybe-display-slice-as-much-as-possible (car last))
+	      (skalpel-maybe-display-slice-as-much-as-possible (car last))
 	      ;; Set the parts of the slice that have not been viewed to be the whole slice
 	      (setq skalpel-current-slice-not-viewed (car last))
 	      ;; Focus on the begining of the slice
@@ -1255,34 +1254,34 @@ value nil.")
     (when overlay
       ;; When the next overlay has no buffer (i.e. the buffer has been killed)...
       (if (not (overlay-buffer overlay))
-          ;; tidy up the list of slices so that it does not contain overlays which
-          ;; exist in buffers which do not exist.
-          ;; *** TO FIX: After tidying, if this slice still exists,
-          ;; display part of it.  If this slice has been tidied away,
-          ;; is it really okay to just silently do nothing?
-          (skalpel-tidy-slices)
+	  ;; tidy up the list of slices so that it does not contain overlays which
+	  ;; exist in buffers which do not exist.
+	  ;; *** TO FIX: After tidying, if this slice still exists,
+	  ;; display part of it.  If this slice has been tidied away,
+	  ;; is it really okay to just silently do nothing?
+	  (skalpel-tidy-slices)
 
-        ;; switch-to-buffer and/or select-window will be enough to
-        ;; arrange to change the buffer the next time the user is
-        ;; asked for input, but we may still be in an old unrelated
-        ;; buffer, so change now.
-        (set-buffer (overlay-buffer overlay))
+	;; switch-to-buffer and/or select-window will be enough to
+	;; arrange to change the buffer the next time the user is
+	;; asked for input, but we may still be in an old unrelated
+	;; buffer, so change now.
+	(set-buffer (overlay-buffer overlay))
 
-        ;; Set the selected window to show the buffer that contains the overlay
-        (let ((w (get-buffer-window (current-buffer))))
-          (if w
-              (select-window w)
-            (switch-to-buffer (current-buffer))
-            (setq w (selected-window)))
+	;; Set the selected window to show the buffer that contains the overlay
+	(let ((w (get-buffer-window (current-buffer))))
+	  (if w
+	      (select-window w)
+	    (switch-to-buffer (current-buffer))
+	    (setq w (selected-window)))
 
-          (goto-char (overlay-start overlay))
+	  (goto-char (overlay-start overlay))
 
-          ;; just in case already displaying buffer with different window-point
-          (set-window-point w (point))
+	  ;; just in case already displaying buffer with different window-point
+	  (set-window-point w (point))
 
-          (save-excursion
-            (beginning-of-line 0) ;; moves to beginning of previous line
-            (set-window-start w (point))))))))
+	  (save-excursion
+	    (beginning-of-line 0) ;; moves to beginning of previous line
+	    (set-window-start w (point))))))))
 
 
 (defun skalpel-skip-past-word-if-in-one ()
@@ -1290,12 +1289,12 @@ value nil.")
 immediately after some character of the identifier), moves to the end
 of it (and past 1 whitespace character if there is one)."
   (when (and (not (bobp))
-             (save-excursion
-               (backward-char)
-               (looking-at "[A-Za-z0-9_'][A-Za-z0-9_']")))
+	     (save-excursion
+	       (backward-char)
+	       (looking-at "[A-Za-z0-9_'][A-Za-z0-9_']")))
     (skip-chars-forward "A-Za-z0-9_'")
     (if (looking-at "\\s-")
-        (forward-char))))
+	(forward-char))))
 
 (defconst skalpel-dec-spec-keyword-list
   '("datatype" "eqtype" "exception" "structure" "type" "val"
@@ -1303,8 +1302,8 @@ of it (and past 1 whitespace character if there is one)."
 
 (defconst skalpel-dec-spec-keyword-regexp
   (mapconcat #'identity
-             skalpel-dec-spec-keyword-list
-             "\\|"))
+	     skalpel-dec-spec-keyword-list
+	     "\\|"))
 
 (defconst skalpel-backward-to-dec-regexp
   (format "\\(%s\\)\\s-" skalpel-dec-spec-keyword-regexp))
@@ -1316,11 +1315,11 @@ by a whitespace character."
   (interactive)
   (skalpel-skip-past-word-if-in-one)
   (while (and (re-search-backward
-               "[A-Za-z0-9_']"
-               nil
-               'move)
-              (skip-chars-backward "[A-Za-z0-9_']")
-              (not (looking-at skalpel-backward-to-dec-regexp)))))
+	       "[A-Za-z0-9_']"
+	       nil
+	       'move)
+	      (skip-chars-backward "[A-Za-z0-9_']")
+	      (not (looking-at skalpel-backward-to-dec-regexp)))))
 
 (defconst skalpel-forward-to-dec-regexp
   (format "[^A-Za-z0-9_']\\(%s\\)\\s-" skalpel-dec-spec-keyword-regexp))
@@ -1341,7 +1340,7 @@ point and is followed by a whitespace character."
 							   a different VALUE."
   (let ((item (assoc key (symbol-value sym))))
     (if item
-        (setcdr item val)
+	(setcdr item val)
       (push (cons key val) (symbol-value sym)))))
 
 ;; *** Maybe instead use the new aget function from assoc.el?
@@ -1362,97 +1361,97 @@ SYMBOL KEY VALUE)."
   (let (bufs earliests latests overlays)
     (dolist (ov ovs)
       (let* ((buf (overlay-buffer ov))
-             (old-earliest (skalpel-alist-get 'earliests buf))
-             ;;(old-latest (skalpel-alist-get 'latests buf))
-             )
-        (pushnew buf bufs)
-        (skalpel-alist-put 'overlays
-                           buf
-                           (adjoin ov
-                                   (skalpel-alist-get 'overlays buf)))
-        (skalpel-alist-put 'earliests buf
-                           (if old-earliest
-                               (min old-earliest
-                                    (overlay-start ov))
-                             (overlay-start ov)))
-        ;;(skalpel-alist-put 'latests buf
-        ;;                   (if old-latest
-        ;;                       (max old-latest
-        ;;                            (overlay-end ov))
-        ;;                     (overlay-end ov)))
-        ))
+	     (old-earliest (skalpel-alist-get 'earliests buf))
+	     ;;(old-latest (skalpel-alist-get 'latests buf))
+	     )
+	(pushnew buf bufs)
+	(skalpel-alist-put 'overlays
+			   buf
+			   (adjoin ov
+				   (skalpel-alist-get 'overlays buf)))
+	(skalpel-alist-put 'earliests buf
+			   (if old-earliest
+			       (min old-earliest
+				    (overlay-start ov))
+			     (overlay-start ov)))
+	;;(skalpel-alist-put 'latests buf
+	;;                   (if old-latest
+	;;                       (max old-latest
+	;;                            (overlay-end ov))
+	;;                     (overlay-end ov)))
+	))
     (delete-other-windows)
     (let ((wins (list (selected-window)))
-          next-level-wins)
+	  next-level-wins)
       (while (< (+ (length wins)
-                   (length next-level-wins))
-                (length bufs))
-        (when (null wins)
-          (setq wins (nreverse next-level-wins))
-          (setq next-level-wins nil))
-        (let ((new-win (split-window (car wins))))
-          (push (pop wins) next-level-wins)
-          (push new-win next-level-wins)))
+		   (length next-level-wins))
+		(length bufs))
+	(when (null wins)
+	  (setq wins (nreverse next-level-wins))
+	  (setq next-level-wins nil))
+	(let ((new-win (split-window (car wins))))
+	  (push (pop wins) next-level-wins)
+	  (push new-win next-level-wins)))
       (setq wins (append (nreverse next-level-wins) wins))
       (dolist (buf bufs)
-        (with-current-buffer buf
-          (let ((is-basis
-                 ;; *** don't test against the string "basis.sml".  do this right!
+	(with-current-buffer buf
+	  (let ((is-basis
+		 ;; *** don't test against the string "basis.sml".  do this right!
 		 ;; why don't we test: (equal skalpel-basis-file buffer-file-name)
-                 (equal skalpel-basis-file buffer-file-name))
-                (win (pop wins)))
-            (set-window-buffer win buf)
-            (set-window-start
-             win
-             (save-excursion
-               (goto-char (skalpel-alist-get 'earliests buf))
-               (cond (is-basis
-                      (forward-char 1)
-                      (skalpel-backward-to-dec))
-                     (t
-                      (beginning-of-line)))
-               (point)))
-            (when is-basis
-              ;; *** instead of disabling undo, this should be done
-              ;; with overlays instead of text properties.
-              ;; *** Setting read only and disabling undo should be
-              ;; done elsewhere.
-              ;; *** read-only should be adjusted with let so it is
-              ;; properly restored in case of abort.
-              (setq buffer-read-only nil)
-              (buffer-disable-undo)
-              (put-text-property (point-min) (point-max) 'display nil)
-              (goto-char (point-min))
-              (let ((sorted-ovs
-                     (sort (skalpel-alist-get 'overlays buf)
-                           (lambda (o1 o2)
-                             (< (overlay-start o1)
-                                (overlay-start o2))))))
-                (while sorted-ovs
-                  (let ((ov (pop sorted-ovs))
-                        (pos (save-excursion (beginning-of-line) (point))))
-                    (goto-char (1+ (overlay-start ov)))
-                    (skalpel-backward-to-dec)
-                    (put-text-property pos (save-excursion (beginning-of-line) (point)) 'display "\n")
-                    (skalpel-forward-to-dec)
-                    (while (and sorted-ovs
-                                (< (overlay-start (car sorted-ovs))
-                                   (point)))
-                      (pop sorted-ovs)))))
-              (put-text-property (point) (point-max) 'display "\n")
-              (setq buffer-read-only t)
-              (set-buffer-modified-p nil)
-              ;; (goto-char (1+ (skalpel-alist-get 'earliests buf)))
-              ;; ;;(put-text-property (point) (1+ (point)) 'display "•")
-              ;; (skalpel-backward-to-dec)
-              ;; ;;(put-text-property (point) (1+ (point)) 'display "‣")
-              ;; (put-text-property (point-min) (point) 'invisible t)
-              ;; (goto-char (skalpel-alist-get 'latests buf))
-              ;; ;;(put-text-property (1- (point)) (point) 'display "◦")
-              ;; (skalpel-forward-to-dec)
-              ;; ;;(put-text-property (1- (point)) (point) 'display "⁃")
-              ;; (put-text-property (point) (point-max) 'invisible t)
-              )))))))
+		 (equal skalpel-basis-file buffer-file-name))
+		(win (pop wins)))
+	    (set-window-buffer win buf)
+	    (set-window-start
+	     win
+	     (save-excursion
+	       (goto-char (skalpel-alist-get 'earliests buf))
+	       (cond (is-basis
+		      (forward-char 1)
+		      (skalpel-backward-to-dec))
+		     (t
+		      (beginning-of-line)))
+	       (point)))
+	    (when is-basis
+	      ;; *** instead of disabling undo, this should be done
+	      ;; with overlays instead of text properties.
+	      ;; *** Setting read only and disabling undo should be
+	      ;; done elsewhere.
+	      ;; *** read-only should be adjusted with let so it is
+	      ;; properly restored in case of abort.
+	      (setq buffer-read-only nil)
+	      (buffer-disable-undo)
+	      (put-text-property (point-min) (point-max) 'display nil)
+	      (goto-char (point-min))
+	      (let ((sorted-ovs
+		     (sort (skalpel-alist-get 'overlays buf)
+			   (lambda (o1 o2)
+			     (< (overlay-start o1)
+				(overlay-start o2))))))
+		(while sorted-ovs
+		  (let ((ov (pop sorted-ovs))
+			(pos (save-excursion (beginning-of-line) (point))))
+		    (goto-char (1+ (overlay-start ov)))
+		    (skalpel-backward-to-dec)
+		    (put-text-property pos (save-excursion (beginning-of-line) (point)) 'display "\n")
+		    (skalpel-forward-to-dec)
+		    (while (and sorted-ovs
+				(< (overlay-start (car sorted-ovs))
+				   (point)))
+		      (pop sorted-ovs)))))
+	      (put-text-property (point) (point-max) 'display "\n")
+	      (setq buffer-read-only t)
+	      (set-buffer-modified-p nil)
+	      ;; (goto-char (1+ (skalpel-alist-get 'earliests buf)))
+	      ;; ;;(put-text-property (point) (1+ (point)) 'display "•")
+	      ;; (skalpel-backward-to-dec)
+	      ;; ;;(put-text-property (point) (1+ (point)) 'display "‣")
+	      ;; (put-text-property (point-min) (point) 'invisible t)
+	      ;; (goto-char (skalpel-alist-get 'latests buf))
+	      ;; ;;(put-text-property (1- (point)) (point) 'display "◦")
+	      ;; (skalpel-forward-to-dec)
+	      ;; ;;(put-text-property (1- (point)) (point) 'display "⁃")
+	      ;; (put-text-property (point) (point-max) 'invisible t)
+	      )))))))
 
 (defun skalpel-adjust-slice-focus (ovs focus)
   "Adjust the focus of the slice that is made up of the overlays 'ovs'"
@@ -1551,10 +1550,10 @@ SYMBOL KEY VALUE)."
  "Removes the slice with id 'id'. Used to remove slices when they are no longer needed
  i.e. when Skalpel merges 2 or more slices"
 
-  ;; remove the slice from the list of slice information in *skalpel-slice-info* buffer 
+  ;; remove the slice from the list of slice information in *skalpel-slice-info* buffer
   (defvar looplist)
   (setq looplist skalpel-slice-info-slices)
-  
+
   (with-current-buffer "*skalpel-slice-info*"
   (catch 'break (while (not (equal looplist nil))
   (if (equal (car (car looplist)) id)
@@ -1657,10 +1656,10 @@ SYMBOL KEY VALUE)."
   "Loads and displays the help file for Skalpel"
   (interactive)
   (let* (;; *** not needed to calculate cur-window
-         (cur-window (selected-window))
+	 (cur-window (selected-window))
 	 (help-window (split-window
-                       ;; *** not needed to use cur-window (nil is equivalent here)
-                       cur-window nil)))
+		       ;; *** not needed to use cur-window (nil is equivalent here)
+		       cur-window nil)))
     (select-window help-window)
     ;; *** probably a bad idea to split the window before running
     ;; view-file, because when viewing is done the split will not be

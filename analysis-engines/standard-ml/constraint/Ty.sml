@@ -132,13 +132,13 @@ val CONSORDER          = 16
 val CONSFRAG           = 17
 val CONSTYPENAMESTART  = 18
 
-val nexttynamevar = ref 0
-val nexttyvar     = ref 0
-val nextseqvar    = ref 0
-val nextlabvar    = ref 0
-val nextrowvar    = ref 0
-val nexttyfvar    = ref 0
-val nextidor      = ref 0
+val nexttynamevar = ref 0 (* next type name variable *)
+val nexttyvar     = ref 0 (*  *)
+val nextseqvar    = ref 0 (* next sequence variable *)
+val nextlabvar    = ref 0 (* next label variable *)
+val nextrowvar    = ref 0 (* next row variable *)
+val nexttyfvar    = ref 0 (* next ?? *)
+val nextidor      = ref 0 (* next id variable *)
 val nexttyname    = ref (CONSTYPENAMESTART)
 
 (* sets the above ref values to a value n *)
