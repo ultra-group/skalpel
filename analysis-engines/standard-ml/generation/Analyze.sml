@@ -1384,13 +1384,13 @@ fun generateConstraints' prog pack nenv =
 	   and f_datbind (A.DatBind (datname, conbindseq, _, lab, _)) =
 	       let val (tvs, cons, cst1, css1) = f_conbindseq conbindseq
 		   val (s, v, tv, sv1, sv2, typs, tyvs, cst2, css2) = f_datname datname
-		   val tn   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
+		   val typename   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
 		   (* (2010-06-10)We do that so that for datatypes, the end points will not be
 		    * the equal signs but the datatype names, in the case of constructor clashes.*)
 		   val c1   = E.initSequenceConstraint (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
+		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SV sv1, lab')) lab'
 		   val c2'  = E.initTypeConstraint (T.consV tv) (T.consTyNameVar lab) lab
 		   (*(2010-06-21)c2' is similar to c2 but weaker.  It just constrains tv to be of the
 		    * form T.C.*)
@@ -1603,25 +1603,30 @@ fun generateConstraints' prog pack nenv =
 	       in (env, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* *)
+	   (* f_tyconbind: For type constructors. For example,
+	    *
+	    * datatype Operators = ADD | IF | LESS_THAN
+	    * type mytype = int
+	    *
+	    *)
 	   and f_tyconbind (A.TyCon (str, id, _, lab, _)) =
 	       let
 		   (* generate new type variable, sequence variable and fvariable (??) *)
-		   val tv   = T.freshtyvar  ()
-		   val sv   = T.freshseqvar ()
+		   val freshTypeVar   = T.freshtyvar  ()
+		   val freshSequenceVar   = T.freshseqvar ()
 		   val tfv  = T.freshtyfvar ()
 
-		   (* creates a new map, with v as the key, and the rhs as the value *)
+		   (* creates a new map, with id as the key, and the rhs as the value *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id (T.TFV tfv, E.TYP, ref (E.emvar, false)) (CL.consTYCON ()) lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
-		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV sv, T.consV tv, lab)) lab
+		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV freshSequenceVar, T.consV freshTypeVar, lab)) lab
 	       in
-		   (* str is the string of the type constructor, eg
+		   (* str is the name of the type constructor, eg
 		    * 1. 'Operators' 'datatype Operators = ADD | IF | LESS_THAN' *
 		    * 2. 'mytype' in 'type mytype = int'
 		    *
 		    * SOME(v, lab) is an option of an id and a label as a tuple *)
-		   (str, SOME (id, lab), typeVar, sequenceVar, typs, E.singleConstraint (lab, c))
+		   (str, SOME (id, lab), freshTypeVar, freshSequenceVar, typs, E.singleConstraint (lab, c))
 	       end
 	     | f_tyconbind A.TyConDots =
 	       let val tv = T.freshtyvar  ()
@@ -1632,6 +1637,8 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (string, Id.id option, Ty.tyvar, Ty.seqvar, Ty.seqvar, Env.typenv, Env.tvenv, Env.cst, Env.css) *)
 	   and f_datname (A.DatName (typvarseq, tycon, _, _)) =
 	       let val (sv1, tyvs, cst1) = f_typevarseq typvarseq
+
+		   (* call f_tyconbind, which deals with the new binding of type constructors *)
 		   val (str, idLabelPair, tv2, sv2, typs, cst2) = f_tyconbind tycon
 		   val css = consCSM tyvs
 	       (* NOTE: sv1 and sv2 have to be equal *)
@@ -2118,14 +2125,14 @@ fun generateConstraints' prog pack nenv =
 		   (* NOTE: tyvs is not used *)
 		   val id   = Option.getOpt (Option.map (fn (id, _) => id) idLabelPair, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, lab) => lab) idLabelPair, lab)
-		   val tn   = if benv andalso getBasis () then getTyNameString str else T.freshtyname ()
+		   val typename   = if benv andalso getBasis () then getTyNameString str else T.freshtyname ()
 		   val c1   = E.initSequenceConstraint (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
+		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SV sv1, lab')) lab'
 
 		   (* Option.map: maps NONE to NONE and SOME(v) to SOME(f v)
 		    * idLabelPair comes from f_tyconbind, where the id and label of A.TyCon are paired *)
-		   val tnop = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.TYP, name = tn}) idLabelPair
-	       in (tnop, typs, E.consConstraint(lab, c1) (E.consConstraint(lab', c2) cst), css)
+		   val typenameOption = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.TYP, name = typename}) idLabelPair
+	       in (typenameOption, typs, E.consConstraint(lab, c1) (E.consConstraint(lab', c2) cst), css)
 	       end
 	     | f_typdescone (A.TypDescOneDots pl) =
  	       let val env = f_partlist pl
@@ -2145,7 +2152,7 @@ fun generateConstraints' prog pack nenv =
 		    * If there are then each type description will be represented by f_typsescone via the map.
 		    * We then call unzipFour which puts all of the first element in the tuple of each f_typdescone in a list,
 		    * and then all the second elements, third, and fourth (we union these in the next lines) *)
-		   val (tnss, typss, constraints, csss) = unzipFour (map f_typdescone typdescs)
+		   val (typenameOption, typss, constraints, csss) = unzipFour (map f_typdescone typdescs)
 
 		   (* because we have all first to fourth elements of the dypdescs now in a list, we have to union them *)
 		   val typs = E.unionEnvironmentList typss
@@ -2157,11 +2164,11 @@ fun generateConstraints' prog pack nenv =
 		   (* unions a list of context sensitive syntax errors *)
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 
-		   (* the list tnss contains items of the form NONE or SOME(x)
+		   (* the list typenameOption contains items of the form NONE or SOME(x)
 		    * mapPartial (fn x => x) will remove all items of the form NONE from the list and return a list of the x values of items with the SOME(x) form *)
-		   val tns  = List.mapPartial (fn x => x) tnss
+		   val typename  = List.mapPartial (fn x => x) typenameOption
 
-	       in (tns, typs, constraint, css)
+	       in (typename, typs, constraint, css)
 	       end
 	     | f_typdesc (A.TypDescDots pl) =
 	       let val env = f_partlist pl
@@ -2294,19 +2301,19 @@ fun generateConstraints' prog pack nenv =
 	   and f_datdescone (A.DatDescOne (datname, consdesc, _, lab, _)) =
 	       let val (s, v, tv, sv1, sv2, typs, tyvs, cst1, css1) = f_datname datname
 		   val (tvs, cons, cst2, css2) = f_condesc consdesc
-		   val tn   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
+		   val typename   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
 		   val c1   = E.initSequenceConstraint (T.SV sv1) (T.SV sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (tn, T.DE id, lab'), T.SV sv1, lab')) lab'
+		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SV sv1, lab')) lab'
 		   val c3   = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2))
 		   val cs   = map (fn x => E.initTypeConstraint (T.consV x) (T.consV tv) lab) tvs
 		   val cst  = E.consConstraint(lab, c1) (E.consConstraint(lab', c2) cst1)
 		   val cst' = E.conscsts (lab, cs) (E.singleConstraint (L.dummyLab, c3))
-		   val tnop = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.DAT, name = tn}) v
+		   val typenameOption = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.DAT, name = typename}) v
 		   val typs = E.toTYCONTyps typs E.emvar false (L.singleton lab)
 		   (*val cs4 = checkTyVarInc (A.gettyvarDatName dn) (A.getlabDatName dn) (A.gettyvarConDesc cd)*)
-	       in (tnop, typs, (cons, v), cst, cst', E.unionContextSensitiveSyntaxErrors [css1, css2])
+	       in (typenameOption, typs, (cons, v), cst, cst', E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_datdescone (A.DatDescOneDots pl) =
 	       let val env = f_partlist pl
@@ -2315,13 +2322,13 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, (E.varenv * Id.idl option) list, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_datdesc (A.DatDesc (datdescs, _, _)) =
-	       let val (tnss, typss, conss, csts, csts', csss) = unzipSix (map f_datdescone datdescs)
+	       let val (typenameOption, typss, conss, csts, csts', csss) = unzipSix (map f_datdescone datdescs)
 		   val typs = E.unionEnvironmentList typss
 		   val cst  = E.unionConstraintsList csts
 		   val cst' = E.unionConstraintsList csts'
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
-		   val tns  = List.mapPartial (fn x => x) tnss
-	       in (tns, typs, conss, cst, cst', css)
+		   val typename  = List.mapPartial (fn x => x) typenameOption
+	       in (typename, typs, conss, cst, cst', css)
 	       end
 	     | f_datdesc (A.DatDescDots pl) =
 	       let val env = f_partlist pl
@@ -2442,8 +2449,8 @@ fun generateConstraints' prog pack nenv =
 
 	     (* type declarations inside a signature *)
 	     | f_specone (A.SpecType (typdesc, _, lab, _)) =
-	       let val (tns, typs, constraints, css) = f_typdesc typdesc
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+	       let val (typenames, typs, constraints, css) = f_typdesc typdesc
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames typenames (E.consEnvironmentTypenames typs))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENVVAR ev lab) env lab
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENVVAR ev lab) lab))
@@ -2455,14 +2462,14 @@ fun generateConstraints' prog pack nenv =
 	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
 
 		   (* we call f_typdesc so that we can (get/generate)? information about the typdesc (type description? what does that mean?)
-		    * the first element of the tuple represents xxx
+		    * the first element of the tuple represents the list of typenames for the new equality type
 		    * the second element of the tuple represents xxx
 		    * the third element of the tuple represents the constraints that have been built from (???)
 		    * the fourth element of the tuple represents context sensitive syntax error information
 		    *)
-		   val (tns, typs, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc
+		   val (typenames, typs, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc
 
-		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames tns (E.consEnvironmentTypenames typs))
+		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypenames typenames (E.consEnvironmentTypenames typs))
 
 		   (* generate fresh environment variables that we use later *)
 		   val envVar   = E.freshEnvVar ()
@@ -2504,11 +2511,11 @@ fun generateConstraints' prog pack nenv =
 	       let
 		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
 
-		   val (tns, typs, conss, cst1, cst2, css) = f_datdesc datdesc
+		   val (typenames, typs, conss, cst1, cst2, css) = f_datdesc datdesc
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projVids cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projVids cons)) conss
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.envsToSeq envs)
-		   val env2 = E.updateInfoTypenames tns (E.consEnvironmentTypenames typs)
+		   val env2 = E.updateInfoTypenames typenames (E.consEnvironmentTypenames typs)
 		   val env3 = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.ENVDEP (EL.initExtLab env2 lab)), env1)
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
