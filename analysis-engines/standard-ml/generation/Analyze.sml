@@ -1614,7 +1614,7 @@ fun generateConstraints' prog pack nenv =
 		   (* generate new type variable, sequence variable and fvariable (??) *)
 		   val freshTypeVar   = T.freshtyvar  ()
 		   val freshSequenceVar   = T.freshseqvar ()
-		   val tfv  = T.freshtyfvar ()
+ 		   val tfv  = T.freshtyfvar ()
 
 		   (* creates a new map, with id as the key, and the rhs as the value *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id (T.TFV tfv, E.TYP, ref (E.emvar, false)) (CL.consTYCON ()) lab])
@@ -2152,7 +2152,8 @@ fun generateConstraints' prog pack nenv =
 		    * If there are then each type description will be represented by f_typsescone via the map.
 		    * We then call unzipFour which puts all of the first element in the tuple of each f_typdescone in a list,
 		    * and then all the second elements, third, and fourth (we union these in the next lines) *)
-		   val (typenameOption, typss, constraints, csss) = unzipFour (map f_typdescone typdescs)
+		   (* could typss be a list of environments? Why is it a list of environments? *)
+		   val (typenamesOption, typss, constraints, csss) = unzipFour (map f_typdescone typdescs)
 
 		   (* because we have all first to fourth elements of the dypdescs now in a list, we have to union them *)
 		   val typs = E.unionEnvironmentList typss
@@ -2166,9 +2167,9 @@ fun generateConstraints' prog pack nenv =
 
 		   (* the list typenameOption contains items of the form NONE or SOME(x)
 		    * mapPartial (fn x => x) will remove all items of the form NONE from the list and return a list of the x values of items with the SOME(x) form *)
-		   val typename  = List.mapPartial (fn x => x) typenameOption
+		   val typename  = List.mapPartial (fn x => x) typenamesOption
 
-	       in (typename, typs, constraint, css)
+	       in (typename,  typs, constraint, css)
 	       end
 	     | f_typdesc (A.TypDescDots pl) =
 	       let val env = f_partlist pl
