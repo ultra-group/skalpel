@@ -22,9 +22,9 @@
  *)
 
 
-(*SML-TES-USE-FILE ../utils/sources.tes*)
-(*SML-TES-USE-FILE OrdKey.sml*)
-(*SML-TES-USE-FILE Label.sig*)
+(*SKALPEL-USE-FILE ../utils/sources.tes*)
+(*SKALPEL-USE-FILE OrdKey.sml*)
+(*SKALPEL-USE-FILE Label.sig*)
 
 
 structure Label :> LABEL = struct

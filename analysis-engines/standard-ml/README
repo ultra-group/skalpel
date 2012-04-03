@@ -128,21 +128,21 @@ directory.
 
 We allow 5 special SMLTES commands.  These commands are in the form of
 comments:
-  - (**SML-TES-DEC topdec *) where topdec is a unique topdec.
-  - (**SML-TES-SPEC spec *) where spec is a spec
-  - (**SML-TES-USE-FILE file *) where file is the path to a file.
+  - (**SKALPEL-DEC topdec *) where topdec is a unique topdec.
+  - (**SKALPEL-SPEC spec *) where spec is a spec
+  - (**SKALPEL-USE-FILE file *) where file is the path to a file.
   Unfortunately right now a file name cannot contain spaces, for
   example, as our parser would think two files are specified instead
   of one and that would be a parsing error.
-  - (**SML-TES-SET-BASIS file *) where file is the path to a file.
+  - (**SKALPEL-SET-BASIS file *) where file is the path to a file.
   The same comment applies here concerning file.
-  - (**SML-TES-CLEAR-BASIS*)
-  - (**SML-TES-QUASIQUOTES bool*) true to turn on the use of
+  - (**SKALPEL-CLEAR-BASIS*)
+  - (**SKALPEL-QUASIQUOTES bool*) true to turn on the use of
   quasiquotations.  WARNING: this switch is not working yet.  The
   default value is true.
 
-These commands can only be topdecs.   The SML-TES-USE-FILE,
-SML-TES-SET-BASIS and SML-TES-CLEAR-BASIS commands will always have
+These commands can only be topdecs.   The SKALPEL-USE-FILE,
+SKALPEL-SET-BASIS and SKALPEL-CLEAR-BASIS commands will always have
 the entire file in which they are placed as scope, even if used say at
 the end of a file.
 
