@@ -1617,7 +1617,10 @@ fun generateConstraints' prog pack nenv =
  		   val tfv  = T.freshtyfvar ()
 
 		   (* creates a new map, with id as the key, and the rhs as the value *)
-		   val typs = E.consSingleEnv (id, [E.consBindPoly id (T.TFV tfv, E.TYP, ref (E.emvar, false)) (CL.consTYCON ()) lab])
+		   val typs = E.consSingleEnv (id, [E.consBindPoly id
+								   (T.TFV tfv, E.TYP, ref (E.emvar, false))
+								   (CL.consTYCON ())
+								   lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
 		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV freshSequenceVar, T.consV freshTypeVar, lab)) lab
 	       in
