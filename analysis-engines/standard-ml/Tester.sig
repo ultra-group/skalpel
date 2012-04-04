@@ -56,7 +56,7 @@ signature TESTER = sig
 			string list  -> (* input files               *)
 			Error.export ->
 			int          -> (* see Analyze.sig for this integer - related to the basis *)
-			bool         -> (* true if running the slicer from the webdemo, so that SML-TES-USE-FILE and SML-TES-SET-BASIS are disabled *)
+			bool         -> (* true if running the slicer from the webdemo, so that SKALPEL-USE-FILE and SKALPEL-SET-BASIS are disabled *)
 			bool         -> (* true if we want to report non-minimal errors *)
 			bool         -> (* true if we want to output the all the errors in an html default file and the in the xml format in the standard output *)
 			bool         -> (* true to print the constaints in the standard output *)

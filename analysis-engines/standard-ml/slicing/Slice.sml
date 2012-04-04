@@ -179,32 +179,32 @@ fun printSlice' slprog indent sep =
 	and printSmlTes (A.SmlTesDec (s, rs, _))             ind =
 	    let val (l, k, c, x) = printATopDec s ind
 		val k' = case k of NONE => getLine rs | _ => k
-	    in (getLine rs, k', getCol rs, "(**SML-TES-DEC " ^ x ^ "*)")
+	    in (getLine rs, k', getCol rs, "(**SKALPEL-DEC " ^ x ^ "*)")
 	    end
 	  | printSmlTes (A.SmlTesSpec (s, rs, _))            ind =
 	    let val (l, k, c, x) = printSpec s ind
 		val k' = case k of NONE => getLine rs | _ => k
-	    in (getLine rs, k', getCol rs, "(**SML-TES-SPEC " ^ x ^ "*)")
+	    in (getLine rs, k', getCol rs, "(**SKALPEL-SPEC " ^ x ^ "*)")
 	    end
 	  | printSmlTes (A.SmlTesUse (af, rs, _))            ind =
 	    let val (l, k, c, x) = printAFile af ind
 		val k' = case k of NONE => getLine rs | _ => k
-	    in (getLine rs, k', getCol rs, "(**SML-TES-USE-FILE " ^ x ^ "*)")
+	    in (getLine rs, k', getCol rs, "(**SKALPEL-USE-FILE " ^ x ^ "*)")
 	    end
 	  | printSmlTes (A.SmlTesSBas (af, rs, _))           ind =
 	    let val (l, k, c, x) = printAFile af ind
 		val k' = case k of NONE => getLine rs | _ => k
-	    in (getLine rs, k', getCol rs, "(**SML-TES-SET-BASIS " ^ x ^ "*)")
+	    in (getLine rs, k', getCol rs, "(**SKALPEL-SET-BASIS " ^ x ^ "*)")
 	    end
 	  | printSmlTes (A.SmlTesCBas (rs, _, _))            ind =
-	    (getLine rs, getLine rs, getCol rs, "(**SML-TES-CLEAR-BASIS*)")
+	    (getLine rs, getLine rs, getCol rs, "(**SKALPEL-CLEAR-BASIS*)")
 	  | printSmlTes (A.SmlTesQuote (b, rs, _))            ind =
 	    let val (l, k, c, x) = printABool b ind
 		val k' = case k of NONE  => getLine rs | _ => k
-	    in (getLine rs, k', getCol rs, "(**SML-TES-QUOTATION " ^ x ^ "*)")
+	    in (getLine rs, k', getCol rs, "(**SKALPEL-QUOTATION " ^ x ^ "*)")
 	    end
 	  | printSmlTes (A.SmlTesType (st, rs, _))           ind =
-	    (getLine rs, getLine rs, getCol rs, "(**SML-TES-TYPE " ^ st ^ "*)")
+	    (getLine rs, getLine rs, getCol rs, "(**SKALPEL-TYPE " ^ st ^ "*)")
 	  | printSmlTes (A.SmlTesDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)

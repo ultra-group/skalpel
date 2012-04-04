@@ -696,13 +696,13 @@ and printAstTopDecOne (TopDecOneTes (x, _)) = printAstSmlTes x
   | printAstTopDecOne (TopDecOneDec (x, _)) = printAstATopDec x
   | printAstTopDecOne (TopDecOneDots pl)    = printAstPartList pl
 
-and printAstSmlTes (SmlTesDec  (td, _, _)) = "SML-TES-DEC"       ^ printAstATopDec td
-  | printAstSmlTes (SmlTesSpec (sp, _, _)) = "SML-TES-SPEC"      ^ printAstSpec    sp
-  | printAstSmlTes (SmlTesUse  (af, _, _)) = "SML-TES-USE-FILE"  ^ printAstAFile   af
-  | printAstSmlTes (SmlTesSBas (af, _, _)) = "SML-TES-SET-BASIS" ^ printAstAFile   af
-  | printAstSmlTes (SmlTesCBas (_, l, _))  = ldots () ^ "SML-TES-CLEAR-BASIS" ^ rfdots l
-  | printAstSmlTes (SmlTesQuote (b, _,_))  = "SML-TES-QUOTATION" ^ printAstABool b
-  | printAstSmlTes (SmlTesType (st, _,_))  = "SML-TES-TYPE     " ^ st
+and printAstSmlTes (SmlTesDec  (td, _, _)) = "SKALPEL-DEC"       ^ printAstATopDec td
+  | printAstSmlTes (SmlTesSpec (sp, _, _)) = "SKALPEL-SPEC"      ^ printAstSpec    sp
+  | printAstSmlTes (SmlTesUse  (af, _, _)) = "SKALPEL-USE-FILE"  ^ printAstAFile   af
+  | printAstSmlTes (SmlTesSBas (af, _, _)) = "SKALPEL-SET-BASIS" ^ printAstAFile   af
+  | printAstSmlTes (SmlTesCBas (_, l, _))  = ldots () ^ "SKALPEL-CLEAR-BASIS" ^ rfdots l
+  | printAstSmlTes (SmlTesQuote (b, _,_))  = "SKALPEL-QUOTATION" ^ printAstABool b
+  | printAstSmlTes (SmlTesType (st, _,_))  = "SKALPEL-TYPE     " ^ st
   | printAstSmlTes (SmlTesDots pl)         = printAstPartList pl
 
 and printAstATopDec (ATopDecStr s)   = printAstStrDec s

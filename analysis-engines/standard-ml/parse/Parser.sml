@@ -1,24 +1,17 @@
-(* Copyright 2002 Heriot-Watt University
- * Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2002 2009 2010 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli, Chrisitan Haack
  *  o Affiliation: Heriot-Watt University, MACS
@@ -59,7 +52,7 @@ structure MLBParser = JoinWithArg (structure ParserData = MLBLrVals.ParserData
                                    structure LrParser   = LrParser)
 
 (* Turn that to true if compiling for the Online Demo.
- * This is so that the SML-TES loading files are then ignored. *)
+ * This is so that the SKALPEL loading files are then ignored. *)
 val webdemo = ref false
 
 (* set/get methods for webdemo flag *)
@@ -243,7 +236,7 @@ fun parseTes tesfile stin lab nasc =
       end*)
 
 (*(* use file*)
- val useStringHead  = "(**SML-TES-USE-FILE "
+ val useStringHead  = "(**SKALPEL-USE-FILE "
  val nUseStringHead = String.size useStringHead
  val useStringTail  = "*)\n"
  val nUseStringTail = String.size useStringTail
@@ -266,7 +259,7 @@ fun parseTes tesfile stin lab nasc =
  (*******)
 
  (* clear basis *)
- val cbasStringHead  = "(**SML-TES-CLEAR-BASIS"
+ val cbasStringHead  = "(**SKALPEL-CLEAR-BASIS"
  val nCbasStringHead = String.size cbasStringHead
  val cbasStringTail  = "*)\n"
  val nCbasStringTail = String.size cbasStringTail
@@ -286,7 +279,7 @@ fun parseTes tesfile stin lab nasc =
  (*******)
 
  (* set basis *)
- val sbasStringHead  = "(**SML-TES-SET-BASIS "
+ val sbasStringHead  = "(**SKALPEL-SET-BASIS "
  val nSbasStringHead = String.size sbasStringHead
  val sbasStringTail  = "*)\n"
  val nSbasStringTail = String.size sbasStringTail
