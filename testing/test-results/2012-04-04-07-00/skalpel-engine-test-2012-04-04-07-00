@@ -1,0 +1,284 @@
+[begin database checking]
+Test 1 OK
+PROBLEM: test 2: a slice has not been found (Error UID = 3)
+Test 3 OK
+Test 4 OK
+Test 5 OK
+Test 6 OK
+Test 7 OK
+Test 8 OK
+Test 9 OK
+Test 10 OK
+Test 11 OK
+Test 12 OK
+Test 13 OK
+Test 14 OK
+Test 15 more than OK
+Test 16 OK
+Test 17 OK
+Test 18 OK
+Test 19 OK
+Test 20 OK
+Test 21 OK
+Test 22 OK
+Test 23 OK
+Test 24 OK
+Test 25 OK
+Test 26 OK
+Test 27 OK
+Test 28 OK
+Test 29 OK
+Test 30 OK
+Test 31 OK
+Test 32 OK
+Test 33 OK
+Test 34 OK
+Test 35 OK
+PROBLEM: test 36: a slice has not been found (Error UID = 0)
+Test 37 OK
+Test 38 OK
+Test 39 OK
+Test 40 OK
+Test 41 OK
+Test 42 OK
+Test 43 OK
+Test 44 OK
+Test 45 OK
+PROBLEM: test 46: not enough slices
+Test 47 OK
+Test 48 OK
+PROBLEM: test 49: not enough slices
+PROBLEM: test 50: not enough slices
+Test 51 OK
+Test 52 OK
+Test 53 OK
+Test 54 OK
+Test 55 OK
+Test 56 OK
+Test 57 OK
+PROBLEM: test 58: not enough slices
+Test 59 OK
+Test 60 OK
+Test 61 OK
+PROBLEM: test 62: a slice has not been found (Error UID = 2)
+PROBLEM: test 63: a slice has not been found (Error UID = 4)
+Test 64 OK
+Test 65 OK
+Test 66 OK
+Test 67 OK
+Test 68 OK
+Test 69 OK
+PROBLEM: test 70: not enough slices
+Test 71 OK
+PROBLEM: test 72: a slice has not been found (Error UID = 8)
+Test 73 more than OK
+Test 74 OK
+PROBLEM: test 75: a slice has not been found (Error UID = 12)
+Test 76 OK
+Test 77 OK
+Test 78 OK
+Test 79 OK
+Test 80 OK
+PROBLEM: test 81: not enough slices
+Test 82 OK
+Test 83 OK
+Test 84 OK
+Test 85 OK
+Test 86 OK
+Test 87 OK
+PROBLEM: test 88: TO CHECK!!!!
+Test 89 OK
+Test 90 OK
+PROBLEM: test 91: TO CHECK!!!!
+Test 92 OK
+Test 93 OK
+Test 94 OK
+Test 95 OK
+Test 96 OK
+PROBLEM: test 97: TO CHECK!!!!
+Test 98 OK
+PROBLEM: test 99: TO CHECK!!!!
+PROBLEM: test 100: TO CHECK!!!!
+PROBLEM: test 101: not enough slices
+PROBLEM: test 102: TO CHECK!!!!
+PROBLEM: test 103: TO CHECK!!!!
+Test 104 OK
+Test 105 OK
+Test 106 OK
+Test 107 OK
+PROBLEM: test 108: not enough slices
+Test 109 OK
+Test 110 OK
+PROBLEM: test 111: a slice has not been found (Error UID = 2)
+Test 112 OK
+Test 113 more than OK
+Test 114 more than OK
+Test 115 OK
+Test 116 OK
+Test 117 OK
+Test 118 OK
+Test 119 OK
+Test 120 OK
+Test 121 OK
+Test 122 OK
+Test 123 OK
+Test 124 OK
+PROBLEM: test 125: TO CHECK!!!!
+Test 126 OK
+Test 127 OK
+Test 128 OK
+Test 129 OK
+Test 130 OK
+Test 131 OK
+PROBLEM: test 132: not enough slices
+Test 133 OK
+Test 134 OK
+Test 135 OK
+Test 136 OK
+Test 137 OK
+Test 138 OK
+Test 139 OK
+Test 140 OK
+Test 141 OK
+PROBLEM: test 142: not enough slices
+Test 143 OK
+Test 144 OK
+PROBLEM: test 145: not enough slices
+Test 146 OK
+PROBLEM: test 147: TO CHECK!!!!
+Test 148 OK
+Test 149 OK
+PROBLEM: test 150: TO CHECK!!!!
+Test 151 OK
+Test 152 OK
+PROBLEM: test 153: a slice has not been found (Error UID = 2)
+Test 154 OK
+Test 155 OK
+PROBLEM: test 156: TO CHECK!!!!
+PROBLEM: test 157: TO CHECK!!!!
+PROBLEM: test 158: TO CHECK!!!!
+PROBLEM: test 159: TO CHECK!!!!
+Test 160 OK except the dependencies (0)
+Test 161 OK
+PROBLEM: test 162: TO CHECK!!!!
+PROBLEM: test 163: TO CHECK!!!!
+Test 164 OK
+Test 165 OK
+Test 166 OK
+Test 167 OK except the dependencies (4)
+Test 168 OK
+PROBLEM: test 169: TO CHECK!!!!
+PROBLEM: test 170: TO CHECK!!!!
+PROBLEM: test 171: TO CHECK!!!!
+PROBLEM: test 172: TO CHECK!!!!
+Test 173 OK
+PROBLEM: test 174: TO CHECK!!!!
+Test 175 OK
+PROBLEM: test 176: TO CHECK!!!!
+Test 177 OK
+Test 178 OK
+Test 179 OK
+Test 180 OK
+Test 181 OK
+Test 182 OK
+Test 183 OK
+Test 184 OK
+Test 185 OK
+Test 186 OK
+Test 187 OK
+Test 188 OK
+Test 189 OK
+Test 190 OK
+PROBLEM: test 191: TO CHECK!!!!
+Test 192 OK
+No test 193
+No test 194
+No test 195
+No test 196
+No test 197
+No test 198
+No test 199
+No test 200
+No test 201
+No test 202
+No test 203
+No test 204
+No test 205
+No test 206
+No test 207
+PROBLEM: test 208: TO CHECK!!!!
+No test 209
+No test 210
+No test 211
+No test 212
+No test 213
+No test 214
+No test 215
+No test 216
+No test 217
+No test 218
+No test 219
+Test 220 OK
+PROBLEM: test 221: TO CHECK!!!!
+Test 222 OK
+Test 223 OK
+Test 224 OK
+Test 225 OK
+Test 226 OK
+PROBLEM: test 227: TO CHECK!!!!
+Test 228 more than OK
+Test 229 OK
+Test 230 more than OK
+Test 231 OK
+Test 232 OK
+PROBLEM: test 233: TO CHECK!!!!
+Test 234 OK
+Test 235 OK but slower
+PROBLEM: test 236: TO CHECK!!!!
+Test 237 OK
+Test 238 OK
+Test 239 OK
+Test 240 more than OK
+Test 241 OK
+Test 242 OK
+PROBLEM: test 243: TO CHECK!!!!
+PROBLEM: test 244: TO CHECK!!!!
+PROBLEM: test 245: TO CHECK!!!!
+Test 246 OK
+Test 247 OK
+Test 248 OK
+Test 249 OK
+Test 250 OK
+Test 251 OK
+Test 252 OK
+PROBLEM: test 253: TO CHECK!!!!
+Test 254 OK
+PROBLEM: test 255: TO CHECK!!!!
+PROBLEM: test 256: TO CHECK!!!!
+Test 257 OK
+Test 258 OK
+Test 259 OK
+Test 260 OK
+Test 261 OK except the dependencies (1)
+Test 262 OK
+PROBLEM: test 263: TO CHECK!!!!
+PROBLEM: test 264: TO CHECK!!!!
+Test 265 OK
+No test 266
+PROBLEM: test 267: TO CHECK!!!!
+PROBLEM: test 268: TO CHECK!!!!
+Test 269 OK
+PROBLEM: test 270: TO CHECK!!!!
+PROBLEM: test 271: TO CHECK!!!!
+Test 272 OK
+Test 273 OK
+PROBLEM: test 274: TO CHECK!!!!
+PROBLEM: test 275: TO CHECK!!!!
+PROBLEM: test 276: a slice has not been found (Error UID = 1)
+PROBLEM: test 277: TO CHECK!!!!
+PROBLEM: test 278: TO CHECK!!!!
+PROBLEM: test 279: TO CHECK!!!!
+Test 280 OK
+PROBLEM: test 281: TO CHECK!!!!
+Test 282 OK
+
