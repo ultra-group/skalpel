@@ -299,7 +299,7 @@ fun getValOneState onestate x = MS.find (!onestate, x)
 fun getValStateTv state x = getValOneState (getStateTv state) (T.tyvarToInt     x)
 fun getValStateTf state x = getValOneState (getStateTf state) (T.tyfvarToInt    x)
 fun getValStateTn state x = getValOneState (getStateTn state) (T.tynamevarToInt x)
-fun getValStateSq state x = getValOneState (getStateSq state) (T.seqvarToInt    x)
+fun getValStateSq state x = getValOneState (getStateSq state) (T.sequenceVariableToInt    x)
 fun getValStateRt state x = getValOneState (getStateRt state) (T.rowvarToInt    x)
 fun getValStateLt state x = getValOneState (getStateLt state) (T.labvarToInt    x)
 fun getValStateEv state x = getValOneState (getStateEv state) (E.envVarToInt    x)
@@ -318,9 +318,9 @@ fun getValStateGe state x =
 			  resp)
     end
 
-fun buildSeq state (T.SV sv) =
+fun buildSeq state (T.SEQUENCE_VARIABLE sv) =
     (case getValStateSq state sv of
-	 NONE => T.newSV ()
+	 NONE => T.newSEQUENCE_VARIABLE ()
        | SOME sq => buildSeq state sq)
   | buildSeq state (T.SC (xs, flex, lab)) =
     T.SC (map (fn _ => T.newRV ()) xs, flex, lab)
@@ -334,7 +334,7 @@ fun getValStateAr state lid labop =
     let val onestate = getStateAr state
 	val key = buildKeyAr lid labop
     in case MT.find (!onestate, key) of
-	   NONE => let val ext = T.newSV ()
+	   NONE => let val ext = T.newSEQUENCE_VARIABLE ()
 		   in onestate := (MT.insert (!onestate, key, ext)); ext
 		   end
 	 | SOME sq => buildSeq state sq
@@ -374,7 +374,7 @@ fun isInGe state tv = Option.isSome (MS.find (!(getStateGe state), T.tyvarToInt 
 			(CD.union deps deps'))
   | gettyvarsrowty (T.RC (_, ty, _)) state labs stts deps =
     gettyvarsty ty state labs stts deps
-and gettyvarstyseq (T.SV sv) state labs stts deps =
+and gettyvarstyseq (T.SEQUENCE_VARIABLE sv) state labs stts deps =
     (case getValStateSq state sv of
 	 NONE => []
        | SOME (seq, labs', stts', deps') =>
@@ -435,7 +435,7 @@ fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
 
 fun updateStateTf state key value = updateOneState (getStateTf state) (T.tyfvarToInt    key) value
 fun updateStateTn state key value = updateOneState (getStateTn state) (T.tynamevarToInt key) value
-fun updateStateSq state key value = updateOneState (getStateSq state) (T.seqvarToInt    key) value
+fun updateStateSq state key value = updateOneState (getStateSq state) (T.sequenceVariableToInt    key) value
 fun updateStateRt state key value = updateOneState (getStateRt state) (T.rowvarToInt    key) value
 fun updateStateLt state key value = updateOneState (getStateLt state) (T.labvarToInt    key) value
 fun updateStateEv state key value = updateOneState (getStateEv state) (E.envVarToInt    key) value
@@ -1423,7 +1423,7 @@ fun removelabtyname (T.NV var) state = T.NV (removelabvar var (fgetStateTn state
 
 fun removelabrowty (T.RV rv)          _   state = T.RV (removelabvar rv (fgetStateRt state) T.removelabrowvar)
   | removelabrowty (T.RC (lt, ty, l)) tvl state = T.RC (removelablabty lt state, removelabty ty tvl state, l)
-and removelabtyseq (T.SV var)         _   state = T.SV (removelabvar var (fgetStateSq state) T.removelabseqvar)
+and removelabtyseq (T.SEQUENCE_VARIABLE var)         _   state = T.SEQUENCE_VARIABLE (removelabvar var (fgetStateSq state) T.removelabseqvar)
   | removelabtyseq (T.SC (trl, b, l)) tvl state = T.SC (map (fn rt => removelabrowty rt tvl state) trl, b, l)
 and removelabty (T.V tv)              _   = (T.V tv, L.empty, L.empty)
   | removelabty (T.E (n, tv, l))      lab =
@@ -1479,7 +1479,7 @@ fun generalisety (T.V tv) _ _ = T.V tv
     let val sq' = generaliseseqty sq tvl state
 	val ty' = generalisety    ty tvl state
     in T.Abs (sq', ty', l) end
-and generaliseseqty (T.SV sv) _ _ = T.SV sv
+and generaliseseqty (T.SEQUENCE_VARIABLE sv) _ _ = T.SEQUENCE_VARIABLE sv
   | generaliseseqty (T.SC (rtl, flex, l)) tvl state =
     T.SC (map (fn rt => generaliserowty rt tvl state) rtl, flex, l)
 and generaliserowty (T.RV rv) _ _ = T.RV rv

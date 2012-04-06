@@ -39,7 +39,7 @@ structure OM = SplayMapFn (OrdKey)
 type state = {tv : T.tyvar     option OM.map ref,
 	      tf : T.tyfvar    option OM.map ref,
 	      tn : T.tynamevar option OM.map ref,
-	      sq : T.seqvar    option OM.map ref,
+	      sq : T.sequenceVariable    option OM.map ref,
 	      rt : T.rowvar    option OM.map ref,
 	      lt : T.labvar    option OM.map ref,
 	      ev : E.envvar    option OM.map ref,
@@ -71,7 +71,7 @@ fun freshvargen x onestate ffresh fint =
 fun freshTyVar     x (state : state) = freshvargen x (#tv state) T.freshtyvar     T.tyvarToInt
 fun freshTyfVar    x (state : state) = freshvargen x (#tf state) T.freshtyfvar    T.tyfvarToInt
 fun freshTyNameVar x (state : state) = freshvargen x (#tn state) T.freshtynamevar T.tynamevarToInt
-fun freshSeqVar    x (state : state) = freshvargen x (#sq state) T.freshseqvar    T.seqvarToInt
+fun freshSequenceVariable    x (state : state) = freshvargen x (#sq state) T.freshSequenceVariable    T.sequenceVariableToInt
 fun freshRowVar    x (state : state) = freshvargen x (#rt state) T.freshrowvar    T.rowvarToInt
 fun freshLabVar    x (state : state) = freshvargen x (#lt state) T.freshlabvar    T.labvarToInt
 fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshEnvVar    E.envVarToInt

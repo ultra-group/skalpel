@@ -26,7 +26,7 @@ signature TY = sig
 
     (* ------ VARIABLES ------ *)
     type tyvar
-    type seqvar
+    type sequenceVariable
     type tynamevar
     type labvar
     type rowvar
@@ -66,7 +66,7 @@ signature TY = sig
 		    | RC  of labty * ty * Label.label
 		    | RD  of rowty ExtLab.extLab
 		    | RO (* marker to show that a row has been deleted from a sequence because it is cannot be an overloaded type while a RV can *)
-	 and seqty  = SV  of seqvar
+	 and seqty  = SEQUENCE_VARIABLE  of sequenceVariable
 		    | SC  of rowty list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
 		    | SD  of seqty ExtLab.extLab
 	 and tyfun  = TFV of tyfvar
@@ -101,12 +101,12 @@ signature TY = sig
     val consTyNameVar     : Label.label -> ty
 
     val consV             : tyvar  -> ty
-    val consSV            : seqvar -> seqty
+    val consSEQUENCE_VARIABLE            : sequenceVariable -> seqty
     val consTFV           : tyfvar -> tyfun
 
     val newV              : unit -> ty
     val newRV             : unit -> rowty
-    val newSV             : unit -> seqty
+    val newSEQUENCE_VARIABLE             : unit -> seqty
     val newTFV            : unit -> tyfun
 
     val tyvarToInt        : tyvar     -> int
@@ -115,13 +115,13 @@ signature TY = sig
     val tynameToInt       : tyname    -> int
     val labvarToInt       : labvar    -> int
     val rowvarToInt       : rowvar    -> int
-    val seqvarToInt       : seqvar    -> int
+    val sequenceVariableToInt       : sequenceVariable    -> int
     val idorToInt         : idor      -> int
 
     val tynameFromInt     : int -> tyname
 
     val eqTyvar           : tyvar     -> tyvar     -> bool
-    val eqSeqvar          : seqvar    -> seqvar    -> bool
+    val eqSequenceVariable          : sequenceVariable    -> sequenceVariable    -> bool
     val eqLabvar          : labvar    -> labvar    -> bool
     val eqRowvar          : rowvar    -> rowvar    -> bool
     val eqTyname          : tyname    -> tyname    -> bool
@@ -239,7 +239,7 @@ signature TY = sig
 
     val freshtyvar        : unit -> tyvar
     val freshtyfvar       : unit -> tyfvar
-    val freshseqvar       : unit -> seqvar
+    val freshSequenceVariable       : unit -> sequenceVariable
     val freshtynamevar    : unit -> tynamevar
     val freshlabvar       : unit -> labvar
     val freshrowvar       : unit -> rowvar
@@ -249,10 +249,10 @@ signature TY = sig
     val resetnexts        : unit -> unit
 
     val gettyvar          : unit -> tyvar
-    val getseqvar         : unit -> seqvar
+    val getsequenceVariable         : unit -> sequenceVariable
     val getrowvar         : unit -> rowvar
     val getlabvar         : unit -> labvar
-    val gettynamevar      : unit -> seqvar
+    val gettynamevar      : unit -> sequenceVariable
     val getidor           : unit -> idor
 
     val getTyNameString   : string -> tyname
@@ -264,8 +264,8 @@ signature TY = sig
 
     (*(* Extract the tyvar from a type.  The type has to be a type variable. *)
     val tyToTyvar         : ty -> tyvar
-    (* Extract the seqvar from a type sequence.  The type sequence has to be a sequence variable.*)
-    val seqToSeqvar       : seqty -> seqvar*)
+    (* Extract the sequenceVariable from a type sequence.  The type sequence has to be a sequence variable.*)
+    val seqToSequenceVariable       : seqty -> sequenceVariable*)
 
     (* strip the dependencies off a sequence type *)
     val stripDepsSq       : seqty -> seqty ExtLab.extLab
@@ -280,8 +280,8 @@ signature TY = sig
 
     val printtyvar        : tyvar       -> string
     val printtyvarlist    : tyvar list  -> string
-    val printseqvar       : seqvar      -> string
-    val printseqvarlist   : seqvar list -> string
+    val printSequenceVariable       : sequenceVariable      -> string
+    val printSequenceVariablelist   : sequenceVariable list -> string
     val printtynamevar    : tynamevar   -> string
     val printtyname       : tyname      -> string
     val printtyname'      : tyname      -> string

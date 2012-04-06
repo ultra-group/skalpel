@@ -273,7 +273,7 @@ and part =
     PartExp         of exp
   | PartDec         of dec
   | PartType        of types
-  | PartSeq         of typeseq
+  | PartSeq         of typeSequence
   | PartPat         of pat
   | PartIdTy        of identty
   | PartTyCon       of longtycon
@@ -401,15 +401,15 @@ and types =
   | TypeTuple       of labtype list * R.region list * L.label * next
   | TypeRecord      of tyrow list * R.region list * R.region list * L.label * next
   | TypeSlRec       of tyrow list * R.region list * L.label * next
-  | TypeTyCon       of typeseq * longtycon * R.region list * L.label * next
+  | TypeTyCon       of typeSequence * longtycon * R.region list * L.label * next
   | TypeParen       of labtype * R.region * R.region * L.label * next
   | TypeDots        of part list
 
-and typeseq =
-    TypeSeqOne      of types * R.region list * L.label * next
-  | TypeSeqEm       of R.region * L.label * next
-  | TypeSeqSeq      of labtype list * R.region list * L.label * next
-  | TypeSeqDots     of part list
+and typeSequence =
+    TypeSequenceOne      of types * R.region list * L.label * next
+  | TypeSequenceEm       of R.region * L.label * next
+  | TypeSequenceSeq      of labtype list * R.region list * L.label * next
+  | TypeSequenceDots     of part list
 
 and conbind =
     ConBind         of ident * next
@@ -1002,24 +1002,24 @@ and printAstExcDescList []        = ""
 and printAstExcDesc (ExcDesc (edl, _, _)) = printAstExcDescList edl
   | printAstExcDesc (ExcDescDots pl)      = printAstPartList pl
 
-and printAstPart (PartExp   e) = printAstExp       e
-  | printAstPart (PartDec   d) = printAstDec       d
-  | printAstPart (PartType  t) = printAstType      t
-  | printAstPart (PartSeq   s) = printAstTypeSeq   s
-  | printAstPart (PartPat   p) = printAstPat       p
-  | printAstPart (PartIdTy  i) = printAstIdentTy   i
-  | printAstPart (PartTyCon t) = printAstLongTyCon t
-  | printAstPart (PartSpec  s) = printAstSpecOne   s
-  | printAstPart (PartSige  s) = printAstSigExp    s
-  | printAstPart (PartStre  s) = printAstStrExp    s
-  (*| printAstPart (PartFund  d) = printAstFunDec    d*)
-  | printAstPart (PartSigd  s) = printAstSigDec    s
-  | printAstPart (PartStrd  s) = printAstStrDecOne s
-  | printAstPart (PartLgid  i) = printAstLongId    i
-  | printAstPart (PartLgsid i) = printAstLongStrId i
-  | printAstPart (PartSigid i) = printAstSigId     i
-  | printAstPart (PartTes   t) = printAstSmlTes    t
-  | printAstPart (PartClass c) = printAstClass     c
+and printAstPart (PartExp   e) = printAstExp            e
+  | printAstPart (PartDec   d) = printAstDec            d
+  | printAstPart (PartType  t) = printAstType           t
+  | printAstPart (PartSeq   s) = printAstTypeSequence   s
+  | printAstPart (PartPat   p) = printAstPat            p
+  | printAstPart (PartIdTy  i) = printAstIdentTy        i
+  | printAstPart (PartTyCon t) = printAstLongTyCon      t
+  | printAstPart (PartSpec  s) = printAstSpecOne        s
+  | printAstPart (PartSige  s) = printAstSigExp         s
+  | printAstPart (PartStre  s) = printAstStrExp         s
+  (*| printAstPart (PartFund  d) = printAstFunDec       d*)
+  | printAstPart (PartSigd  s) = printAstSigDec         s
+  | printAstPart (PartStrd  s) = printAstStrDecOne      s
+  | printAstPart (PartLgid  i) = printAstLongId         i
+  | printAstPart (PartLgsid i) = printAstLongStrId      i
+  | printAstPart (PartSigid i) = printAstSigId          i
+  | printAstPart (PartTes   t) = printAstSmlTes         t
+  | printAstPart (PartClass c) = printAstClass          c
 
 and printAstPartList []        = dots
   | printAstPartList (x :: xs) = dots ^ printAstPart x ^ printAstPartList xs
@@ -1143,18 +1143,18 @@ and printAstType (TypeOneVar tyv)                  = printAstTypeVar tyv
   | printAstType (TypeSlRec (trl, _, lab, _))      =
     ldots () ^ "{" ^ printAstTyRowList trl ^ "}" ^ rfdots lab
   | printAstType (TypeTyCon (ts, ltc, _, lab, _))  =
-    ldots () ^ printAstTypeSeq ts ^ " " ^ printAstLongTyCon ltc ^ rfdots lab
+    ldots () ^ printAstTypeSequence ts ^ " " ^ printAstLongTyCon ltc ^ rfdots lab
   | printAstType (TypeParen (ty, _, _, lab, _))    =
     ldots () ^ "(" ^ printAstLabType ty ^ ")" ^ rfdots lab
   | printAstType (TypeDots pl)                     = ldots () ^ printAstPartList pl ^ rdots ()
 
-and printAstTypeSeq (TypeSeqOne (ty, _, lab, _))  =
+and printAstTypeSequence (TypeSequenceOne (ty, _, lab, _))  =
     ldots () ^ printAstType ty ^ rfdots lab
-  | printAstTypeSeq (TypeSeqEm (_, lab, _))       =
+  | printAstTypeSequence (TypeSequenceEm (_, lab, _))       =
     ldots () ^ rfdots lab
-  | printAstTypeSeq (TypeSeqSeq (tyl, _, lab, _)) =
+  | printAstTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) =
     ldots () ^ "(" ^ printAstLabTypeSeq tyl ^ ")" ^ rfdots lab
-  | printAstTypeSeq (TypeSeqDots pl)              =
+  | printAstTypeSequence (TypeSequenceDots pl)              =
     ldots () ^ printAstPartList pl ^ rdots ()
 
 and printAstTyClass (TyClassCl (cl, _, l, _)) =
@@ -1787,10 +1787,10 @@ and gettyvarLabTyVar (LabTyVar (tv, _, _, _)) = [tv]
 and gettyvarLabType (LabType (t, _, _, _)) = gettyvarType t
   | gettyvarLabType (LabTypeDots _)        = []
 
-and gettyvarTypeseq (TypeSeqOne (ty, _, lab, _))  = gettyvarType ty
-  | gettyvarTypeseq (TypeSeqEm (_, lab, _))       = []
-  | gettyvarTypeseq (TypeSeqSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (gettyvarLabType x) @ y) [] tyl
-  | gettyvarTypeseq (TypeSeqDots _)               = []
+and gettyvarTypeSequence (TypeSequenceOne (ty, _, lab, _))  = gettyvarType ty
+  | gettyvarTypeSequence (TypeSequenceEm (_, lab, _))       = []
+  | gettyvarTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (gettyvarLabType x) @ y) [] tyl
+  | gettyvarTypeSequence (TypeSequenceDots _)               = []
 
 and gettyvarTyRow (TyRow (_, lt, _, _, _)) = gettyvarLabType lt
   | gettyvarTyRow (TyRowDots p_)           = []
@@ -1800,7 +1800,7 @@ and gettyvarType (TypeOneVar tv)                 = [tv]
   | gettyvarType (TypeTuple (tyl, _, _, _))      = foldr (fn (x, y) => (gettyvarLabType x) @ y) [] tyl
   | gettyvarType (TypeRecord (trl, _, _, _, _))  = foldr (fn (x, y) => (gettyvarTyRow x) @ y) [] trl
   | gettyvarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (gettyvarTyRow x) @ y) [] trl
-  | gettyvarType (TypeTyCon (ts, _, _, _, _))    = gettyvarTypeseq ts
+  | gettyvarType (TypeTyCon (ts, _, _, _, _))    = gettyvarTypeSequence ts
   | gettyvarType (TypeParen (ty, _, _, _, _))    = gettyvarLabType ty
   | gettyvarType (TypeDots _)                    = raise EH.TODO (* TODO: do that for all the other dot nodes! *)
 
@@ -2332,10 +2332,10 @@ and getTypeNext (TypeOneVar tv)                      = getTypeVarNext tv
   | getTypeNext (TypeParen (_, _, _, _, n))          = SOME n
   | getTypeNext (TypeDots pl)                        = getPartListNext pl
 
-and getTypeSeqNext (TypeSeqOne (_, _, _, n))         = SOME n
-  | getTypeSeqNext (TypeSeqEm (_, _, n))             = SOME n
-  | getTypeSeqNext (TypeSeqSeq (_, _, _, n))         = SOME n
-  | getTypeSeqNext (TypeSeqDots pl)                  = getPartListNext pl
+and getTypeSequenceNext (TypeSequenceOne (_, _, _, n))    = SOME n
+  | getTypeSequenceNext (TypeSequenceEm (_, _, n))        = SOME n
+  | getTypeSequenceNext (TypeSequenceSeq (_, _, _, n))     = SOME n
+  | getTypeSequenceNext (TypeSequenceDots pl)             = getPartListNext pl
 
 and getConBindNext (ConBind (_, n))                  = SOME n
   | getConBindNext (ConBindOf (_, _, _, _, n))       = SOME n
@@ -2521,7 +2521,7 @@ and getPartListNext []                               = NONE
 and getPartNext (PartExp   e)                        = getExpNext       e
   | getPartNext (PartDec   d)                        = getDecNext       d
   | getPartNext (PartType  t)                        = getTypeNext      t
-  | getPartNext (PartSeq   s)                        = getTypeSeqNext   s
+  | getPartNext (PartSeq   s)                        = getTypeSequenceNext   s
   | getPartNext (PartPat   p)                        = getPatNext       p
   | getPartNext (PartIdTy  i)                        = getIdentTyNext   i
   | getPartNext (PartTyCon t)                        = getLongTyConNext t
@@ -2719,7 +2719,7 @@ fun getPartListFirst []                               = NONE
 and getPartFirst (PartExp   e)                        = getExpFirst       e
   | getPartFirst (PartDec   d)                        = getDecFirst       d
   | getPartFirst (PartType  t)                        = getTypeFirst      t
-  | getPartFirst (PartSeq   s)                        = getTypeSeqFirst   s
+  | getPartFirst (PartSeq   s)                        = getTypeSequenceFirst   s
   | getPartFirst (PartPat   p)                        = getPatFirst       p
   | getPartFirst (PartIdTy  i)                        = getIdentTyFirst   i
   | getPartFirst (PartTyCon t)                        = getLongTyConFirst t
@@ -2830,10 +2830,10 @@ and getStrBOLFirst []                                 = NONE
 and getStrBindFirst (StrBind (s, _, _))               = getStrBOLFirst s
   | getStrBindFirst (StrBindDots pl)                  = getPartListFirst pl
 
-and getTypeSeqFirst (TypeSeqOne (_, _, l, _))         = SOME l
-  | getTypeSeqFirst (TypeSeqEm (_, l, _))             = SOME l
-  | getTypeSeqFirst (TypeSeqSeq (_, _, l, _))         = SOME l
-  | getTypeSeqFirst (TypeSeqDots pl)                  = getPartListFirst pl
+and getTypeSequenceFirst (TypeSequenceOne (_, _, l, _))         = SOME l
+  | getTypeSequenceFirst (TypeSequenceEm (_, l, _))             = SOME l
+  | getTypeSequenceFirst (TypeSequenceSeq (_, _, l, _))         = SOME l
+  | getTypeSequenceFirst (TypeSequenceDots pl)                  = getPartListFirst pl
 
 and getTyConFirst (TyCon (_, _, _, l, _))             = SOME l
   | getTyConFirst TyConDots                           = NONE

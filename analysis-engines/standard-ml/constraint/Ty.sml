@@ -44,13 +44,13 @@ structure D  = Debug
 exception unflex
 
 (* type and datatype declarations *)
-type tyvar     = int
-type seqvar    = int
-type tynamevar = int
-type labvar    = int
-type rowvar    = int
-type tyfvar    = int
-type eqType    = bool
+type tyvar            = int
+type sequenceVariable = int
+type tynamevar        = int
+type labvar           = int
+type rowvar           = int
+type tyfvar           = int
+type eqType           = bool
 
 type tyname     = int
 type labcons    = string
@@ -74,9 +74,16 @@ datatype rowty = RV  of rowvar
 	       | RC  of labty      * ty    * L.label
 	       | RD  of rowty EL.extLab
 	       | RO
-     and seqty = SV  of seqvar
+(* I suspect this is a type sequence, and that SV is a 'sequence variable'
+ * SC = sequence construction?
+ * SD = ??? *)
+     and seqty = SEQUENCE_VARIABLE  of sequenceVariable
 	       | SC  of rowty list * flex  * L.label
 	       | SD  of seqty EL.extLab
+(* suspected: type function (see 14.3.3 of rahli-thesis.pdf) *
+ * also- TFV may stand for Type Function Variable. These are used throughout
+ * Analyse.sml and might be used to impose constraints on type functions? Look
+ * at the uses of TFV and try to figure this out *)
      and tyfun = TFV of tyfvar
 	       | TFC of seqty      * ty    * L.label
 	       | TFD of tyfun EL.extLab
@@ -132,20 +139,20 @@ val CONSORDER          = 16
 val CONSFRAG           = 17
 val CONSTYPENAMESTART  = 18
 
-val nexttynamevar = ref 0 (* next type name variable *)
-val nexttyvar     = ref 0 (*  *)
-val nextseqvar    = ref 0 (* next sequence variable *)
-val nextlabvar    = ref 0 (* next label variable *)
-val nextrowvar    = ref 0 (* next row variable *)
-val nexttyfvar    = ref 0 (* next ?? *)
-val nextidor      = ref 0 (* next id variable *)
-val nexttyname    = ref (CONSTYPENAMESTART)
+val nexttynamevar          = ref 0 (* next type name variable *)
+val nexttyvar              = ref 0 (*  *)
+val nextSequenceVariable   = ref 0 (* next sequence variable *)
+val nextlabvar             = ref 0 (* next label variable *)
+val nextrowvar             = ref 0 (* next row variable *)
+val nexttyfvar             = ref 0 (* next ?? *)
+val nextidor               = ref 0 (* next id variable *)
+val nexttyname             = ref (CONSTYPENAMESTART)
 
 (* sets the above ref values to a value n *)
 fun setnexts n =
     let val _ = nexttynamevar := n
 	val _ = nexttyvar     := n
-	val _ = nextseqvar    := n
+	val _ = nextSequenceVariable    := n
 	val _ = nextrowvar    := n
 	val _ = nextlabvar    := n
 	val _ = nexttyfvar    := n
@@ -159,7 +166,7 @@ fun resetnexts () = setnexts 0
 
 (* accessor methods *)
 fun gettyvar     () = !nexttyvar
-fun getseqvar    () = !nextseqvar
+fun getsequenceVariable    () = !nextSequenceVariable
 fun getrowvar    () = !nextrowvar
 fun getlabvar    () = !nextlabvar
 fun gettyfvar    () = !nexttyfvar
@@ -173,7 +180,7 @@ fun labvarToInt    labvar    = labvar
 fun rowvarToInt    rowvar    = rowvar
 fun tynamevarToInt tynamevar = tynamevar
 fun tynameToInt    tyname    = tyname
-fun seqvarToInt    seqvar    = seqvar
+fun sequenceVariableToInt    sequenceVariable    = sequenceVariable
 fun idorToInt      idor      = idor
 
 fun tynameFromInt tyname = tyname
@@ -181,14 +188,14 @@ fun tynameFromInt tyname = tyname
 (* equality testing for defined types *)
 fun eqTyvar     tv1 tv2 = (tv1 = (tv2 : tyvar))
 fun eqTyfvar    fv1 fv2 = (fv1 = (fv2 : tyfvar))
-fun eqSeqvar    sv1 sv2 = (sv1 = (sv2 : seqvar))
+fun eqSequenceVariable    sv1 sv2 = (sv1 = (sv2 : sequenceVariable))
 fun eqLabvar    lv1 lv2 = (lv1 = (lv2 : labvar))
 fun eqRowvar    rv1 rv2 = (rv1 = (rv2 : rowvar))
 fun eqIdor      id1 id2 = (id1 = (id2 : idor))
 fun eqTyname    tn1 tn2 = (tn1 = (tn2 : tyname))
 fun eqTynamevar nv1 nv2 = (nv1 = (nv2 : tynamevar))
 
-(*fun eqSeqTy (SV sv1) (SV sv2) = eqSeqvar sv1 sv2
+(*fun eqSeqTy (SEQUENCE_VARIABLE sv1) (SEQUENCE_VARIABLE sv2) = eqSequenceVariable sv1 sv2
   | eqSeqTy (SC (rows1, _, _)) (SC (rows2, _, _)) = eqRowTys rows1 rows2
   | eqSeqTy _ _ = false
 
@@ -281,7 +288,7 @@ and stripDepsTy (ty as V _) = (ty, L.empty, L.empty, CD.empty)
     in (ty2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsSq (sq as SV _) = (sq, L.empty, L.empty, CD.empty)
+and stripDepsSq (sq as SEQUENCE_VARIABLE _) = (sq, L.empty, L.empty, CD.empty)
   | stripDepsSq (sq as SC (rows, flex, lab)) =
     let val (rows', labs, stts, deps) =
 	    foldr (fn (row, (rows, labs, stts, deps)) =>
@@ -349,8 +356,8 @@ and isTyName' (TFC (sq1, C (NC (name, _, _), sq2, _), _)) =
   | isTyName' (TFC (_, V (_, SOME _, _), _)) = NOTTYNAME
   | isTyName' _ = MAYTYNAME
 
-and eqSeqTy (SV sv1) (SV sv2) =
-    if eqSeqvar sv1 sv2
+and eqSeqTy (SEQUENCE_VARIABLE sv1) (SEQUENCE_VARIABLE sv2) =
+    if eqSequenceVariable sv1 sv2
     then SOME true
     else SOME false
   | eqSeqTy (SC (rows1, _, _)) (SC (rows2, _, _)) = eqRowTys rows1 rows2
@@ -397,7 +404,7 @@ fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 
 (* increments the ref associated with the function name *)
 fun freshtyvar     () = (D.printDebug 3 D.TY ("generating fresh AVar for tyvar ("^(Int.toString (!nexttyvar))^")");         freshAVar nexttyvar)
-fun freshseqvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for seqvar ("^(Int.toString (!nextseqvar))^")");       freshAVar nextseqvar)
+fun freshSequenceVariable    () = (D.printDebug 3 D.TY ("generating fresh AVar for sequenceVariable ("^(Int.toString (!nextSequenceVariable))^")");       freshAVar nextSequenceVariable)
 fun freshtynamevar () = (D.printDebug 3 D.TY ("generating fresh AVar for tynamevar ("^(Int.toString (!nexttynamevar))^")"); freshAVar nexttynamevar)
 fun freshlabvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labvar ("^(Int.toString (!nextlabvar))^")");       freshAVar nextlabvar)
 fun freshrowvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowvar ("^(Int.toString (!nextrowvar))^")");       freshAVar nextrowvar)
@@ -428,14 +435,14 @@ fun getTyNameString "unit"      = CONSRECORD
 
 (* type constructor for a label *)
 fun consTyNameVar lab = C (NV (freshtynamevar ()),
-			   SV (freshseqvar ()),
+			   SEQUENCE_VARIABLE (freshSequenceVariable ()),
 			   lab)
 
 (* constructs an implicit type variable *)
 fun consV   tv = V (tv, NONE, POLY)
 
 (* constructs a sequence variable *)
-fun consSV  sv  = SV sv
+fun consSEQUENCE_VARIABLE  sv  = SEQUENCE_VARIABLE sv
 
 (* constructs a row variable *)
 fun consRV  rv  = RV rv
@@ -445,7 +452,7 @@ fun consTFV tfv = TFV tfv
 
 fun newV   () = consV   (freshtyvar  ())
 fun newRV  () = consRV  (freshrowvar ())
-fun newSV  () = consSV  (freshseqvar ())
+fun newSEQUENCE_VARIABLE  () = consSEQUENCE_VARIABLE  (freshSequenceVariable ())
 fun newTFV () = consTFV (freshtyfvar ())
 
 (* check if parameter is a type construction *)
@@ -473,9 +480,9 @@ fun getTyLab (V  _)               = NONE
 (* Extract the tyvar from a type.  The type as to be a type variable. *)
 fun tyToTyvar (V (tv, _, _)) = tv
   | tyToTyvar _ = raise EH.DeadBranch "the type should a variable"
-(* Extract the seqvar from a type sequence.  The type sequence as to be a sequence variable.*)
-fun seqToSeqvar (SV sv) = sv
-  | seqToSeqvar _ = raise EH.DeadBranch "the type sequence should be a variable"
+(* Extract the sequenceVariable from a type sequence.  The type sequence as to be a sequence variable.*)
+fun seqToSequenceVariable (SEQUENCE_VARIABLE sv) = sv
+  | seqToSequenceVariable _ = raise EH.DeadBranch "the type sequence should be a variable"
 
 
 (**)
@@ -590,7 +597,7 @@ and labelBuiltinSq (SC (rows, flex, _)) lab = SOME (SC (labelBuiltinRowList rows
     (case labelBuiltinSq seq lab of
 	 SOME seq' => SOME (SD (seq', labs, stts, deps))
        | NONE => NONE)
-  | labelBuiltinSq (SV _) _ = NONE
+  | labelBuiltinSq (SEQUENCE_VARIABLE _) _ = NONE
 and labelBuiltinRowList xs lab = map (fn x => labelBuiltinRow x lab) xs
 and labelBuiltinRow (RV x)           _   = RV x
   | labelBuiltinRow (RC (lt, ty, _)) lab = RC (lt, labelBuiltinTy ty lab, lab)
@@ -609,7 +616,7 @@ fun isVarTyName (NV _) = true
 fun isShallowRow (RV _) = true
   | isShallowRow _ = false
 
-fun isShallowSeq (SV _)            = true
+fun isShallowSeq (SEQUENCE_VARIABLE _)            = true
   | isShallowSeq (SC (rows, _, _)) = List.all (fn row => isShallowRow row) rows
   | isShallowSeq (SD eseq)         = isShallowSeq (EL.getExtLabT eseq)
 
@@ -627,7 +634,7 @@ fun gettyvarsrowty (RV _)                       = S.empty
   | gettyvarsrowty (RC (_, ty, _))              = gettyvarsty ty
   | gettyvarsrowty (RD (row, labs, stts, deps)) = decorateExtTyVars (gettyvarsrowty row) labs stts deps
   | gettyvarsrowty RO                           = S.empty
-and gettyvarstyseq (SV _)                       = S.empty
+and gettyvarstyseq (SEQUENCE_VARIABLE _)                       = S.empty
   | gettyvarstyseq (SC (rows, _, _))            = foldr (fn (row, tvs) => unionExtTyVars (gettyvarsrowty row, tvs)) S.empty rows
   | gettyvarstyseq (SD (seq, labs, stts, deps)) = decorateExtTyVars (gettyvarstyseq seq) labs stts deps
 and gettyvarstytf  (TFV _)                      = S.empty
@@ -663,7 +670,7 @@ fun isPoly POLY = true
 
 fun printtyvar     tv  = "t"   ^ Int.toString tv
 fun printetyvar    tv  = "e"   ^ Int.toString tv (*printetyvar for print explicit type variable *)
-fun printseqvar    sv  = "s"   ^ Int.toString sv
+fun printSequenceVariable    sv  = "s"   ^ Int.toString sv
 fun printtynamevar tnv = "tnv" ^ Int.toString tnv
 fun printtyname    tn  = "n"   ^ Int.toString tn
 fun printrowvar    rv  = "r"   ^ Int.toString rv
@@ -709,7 +716,7 @@ fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) (
 
 fun printrowvarlist xs = printlistgen xs printrowvar
 fun printtyvarlist  xs = printlistgen xs printtyvar
-fun printseqvarlist xs = printlistgen xs printseqvar
+fun printSequenceVariablelist xs = printlistgen xs printSequenceVariable
 
 fun printKCons (DE id) = "DE(" ^ I.printId id ^ ")"
   | printKCons PA      = "PA"
@@ -744,7 +751,7 @@ fun printrowty (RV rv)            = "RV(" ^ printrowvar rv ^ ")"
   | printrowty (RD erow)          = "RD"  ^ EL.printExtLab' erow printrowty
   | printrowty RO                 = "RO"
 and printrowtylist xs             = printlistgen xs printrowty
-and printseqty (SV sv)            = "SV(" ^ printseqvar     sv ^ ")"
+and printseqty (SEQUENCE_VARIABLE sv)            = "SEQUENCE_VARIABLE(" ^ printSequenceVariable     sv ^ ")"
   | printseqty (SC (rl, b, l))    = "SC("  ^ printrowtylist rl ^
 				    ","    ^ printflex      b  ^
 				    ","    ^ printlabel     l  ^ ")"
@@ -794,7 +801,7 @@ fun printrowty' (RV rv)            = "RV(" ^ printrowvar rv ^ ")"
   | printrowty' (RD erow)          = "RD"  ^ EL.printExtLab' erow printrowty'
   | printrowty' RO                 = "RO"
 and printrowtylist' xs = printlistgen xs printrowty'
-and printseqty' (SV sv)            = "SV(" ^ printseqvar sv ^ ")"
+and printseqty' (SEQUENCE_VARIABLE sv)            = "SEQUENCE_VARIABLE(" ^ printSequenceVariable sv ^ ")"
   | printseqty' (SC (rtl, b, lab)) = "SC(" ^ printrowtylist' rtl ^
 				     ","   ^ printflex       b   ^
 				     ","   ^ printlabel      lab ^ ")"

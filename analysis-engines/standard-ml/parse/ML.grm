@@ -292,12 +292,12 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | labtype          of (R.region list -> A.labtype) t
 | types            of A.types t
 | tupty            of A.types t
-| typeseqcomma     of ((R.region list -> R.region list -> A.labtype list) * R.region list) t
+| typeSequenceComma     of ((R.region list -> R.region list -> A.labtype list) * R.region list) t
 | tyclass          of A.tyclass t
 | labtyclass       of (R.region list -> A.labtyclass) t
 | tyclassseq       of A.tyclassseq t
 | tyclassseqcomma  of ((R.region list -> R.region list -> A.labtyclass list) * R.region list) t
-| typeseq          of A.typeseq t
+| typeSequence     of A.typeSequence t
 | conbind          of A.conbind t
 | conbindbar       of A.conbind list t
 | conbindseq       of A.conbindseq t
@@ -1797,18 +1797,18 @@ typetuple :
 consty :
   atty
     (atty)
-| typeseq longtycon
+| typeSequence longtycon
     (fn (n, asc) =>
 	let val (tn, masc) = longtycon (L.nextLabel n, asc)
-	    val (ts, (p, asc')) = typeseq masc
-	    val reg = getRegion typeseqright longtyconleft
+	    val (ts, (p, asc')) = typeSequence masc
+	    val reg = getRegion typeSequenceright longtyconleft
 	in (A.TypeTyCon (ts, tn, reg, n, p), (p, asc'))
 	end)
 | longtycon
     (fn (n, asc) =>
 	let val (tn, (m, asc')) = longtycon (L.nextLabel n, asc)
 	    val regts = R.consReg longtyconleft longtyconleft
-	    val ts = A.TypeSeqEm (regts, m, L.nextLabel m)
+	    val ts = A.TypeSequenceEm (regts, m, L.nextLabel m)
 	in (A.TypeTyCon (ts, tn, [regts], n, L.nextLabel m), (L.nextLabel m, asc'))
 	end)
 
@@ -1863,7 +1863,7 @@ atty :
 	in (A.TypeParen (t rlt, reg1, reg2, n, m), (m, asc'))
 	end)
 
-typeseqcomma :
+typeSequenceComma :
   labtype COMMA labtype
     (fn nasc =>
 	let val (tv1, masc) = labtype1 nasc
@@ -1873,32 +1873,32 @@ typeseqcomma :
 	    val rr' = getRegion COMMAright labtype2left
 	in ((fn rl => fn rr => [tv1 (rl @ rl'), tv2 (rr' @ rr)], [reg]), pasc)
 	end)
-| labtype COMMA typeseqcomma
+| labtype COMMA typeSequenceComma
     (fn nasc =>
 	let val (t, masc) = labtype nasc
-	    val ((tc, regl), pasc) = typeseqcomma masc
+	    val ((tc, regl), pasc) = typeSequenceComma masc
 	    val reg = R.consReg COMMAleft COMMAleft
 	    val rl' = getRegion labtyperight COMMAleft
-	    val rr' = getRegion COMMAright typeseqcommaleft
+	    val rr' = getRegion COMMAright typeSequenceCommaleft
 	in ((fn rl => fn rr => (t (rl @ rl')) :: (tc rr' rr), reg :: regl), pasc)
 	end)
 
-typeseq :
+typeSequence :
   consty
     (fn (n, asc) =>
 	let val (ty, (m, ascm)) = consty (L.nextLabel n, asc)
 	    val rs = [R.consReg constyleft constyright]
-	in (A.TypeSeqOne (ty, rs, n, m), (m, ascm))
+	in (A.TypeSequenceOne (ty, rs, n, m), (m, ascm))
 	end)
-| LPAREN typeseqcomma RPAREN
+| LPAREN typeSequenceComma RPAREN
     (fn (n, asc) =>
-	let val ((ltv, regl'), (m, asc')) = typeseqcomma (L.nextLabel n, asc)
+	let val ((ltv, regl'), (m, asc')) = typeSequenceComma (L.nextLabel n, asc)
 	    val reg1 = R.consReg LPARENleft LPARENleft
 	    val reg2 = R.consReg RPARENleft RPARENleft
 	    val regl = reg1 :: regl' @ [reg2]
-	    val rl = getRegion LPARENright typeseqcommaleft
-	    val rr = getRegion typeseqcommaright RPARENleft
-	in (A.TypeSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
+	    val rl = getRegion LPARENright typeSequenceCommaleft
+	    val rr = getRegion typeSequenceCommaright RPARENleft
+	in (A.TypeSequenceSeq (ltv rl rr, regl, n, m), (m, asc'))
 	end)
 
 tyclass :

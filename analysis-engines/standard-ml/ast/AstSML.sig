@@ -286,7 +286,7 @@ signature ASTSML = sig
       | PartStre        of strexp
       (*Type*)
       | PartType        of types
-      | PartSeq         of typeseq
+      | PartSeq         of typeSequence
       (*Pattern*)
       | PartPat         of pat
       (*Spec*)
@@ -428,15 +428,15 @@ signature ASTSML = sig
       | TypeTuple       of labtype list * Reg.region list * Label.label * next
       | TypeRecord      of tyrow list * Reg.region list * Reg.region list * Label.label * next
       | TypeSlRec       of tyrow list * Reg.region list * Label.label * next
-      | TypeTyCon       of typeseq * longtycon * Reg.region list * Label.label * next
+      | TypeTyCon       of typeSequence * longtycon * Reg.region list * Label.label * next
       | TypeParen       of labtype * Reg.region * Reg.region * Label.label * next
       | TypeDots        of part list
 
-    and typeseq =
-	TypeSeqOne      of types * Reg.region list * Label.label * next (* The region list is for the unique type that compose the sequence.  It is a list because a type can span over multiple lines. *)
-      | TypeSeqEm       of Reg.region * Label.label * next
-      | TypeSeqSeq      of labtype list * Reg.region list * Label.label * next
-      | TypeSeqDots     of part list
+    and typeSequence =
+	TypeSequenceOne      of types * Reg.region list * Label.label * next (* The region list is for the unique type that compose the sequence.  It is a list because a type can span over multiple lines. *)
+      | TypeSequenceEm       of Reg.region * Label.label * next
+      | TypeSequenceSeq      of labtype list * Reg.region list * Label.label * next
+      | TypeSequenceDots     of part list
 
     and conbind =
 	ConBind         of ident * next

@@ -61,10 +61,10 @@ datatype error = Success of S.state
  * We check that given a CT, a CS, or a CR term, the variable does not
  * occur nested in the type. *)
 datatype occty = T  of T.tyvar  EL.extLab
-               | S  of T.seqvar EL.extLab
+               | S  of T.sequenceVariable EL.extLab
                | R  of T.rowvar EL.extLab
 datatype cocc  = CT of T.tyvar  * T.ty
-               | CS of T.seqvar * T.seqty
+               | CS of T.sequenceVariable * T.seqty
                | CR of T.rowvar * T.rowty
 
 (* THESE bind forms are used to solve binders.   *)
@@ -89,11 +89,11 @@ exception errorfound of ERR.error
 (* printing *)
 
 fun printCocc (CT (tv, ty))  = "CT(" ^ T.printtyvar  tv ^ "," ^ T.printty    ty ^ ")"
-  | printCocc (CS (sv, sq))  = "CS(" ^ T.printseqvar sv ^ "," ^ T.printseqty sq ^ ")"
+  | printCocc (CS (sv, sq))  = "CS(" ^ T.printSequenceVariable sv ^ "," ^ T.printseqty sq ^ ")"
   | printCocc (CR (rv, rt))  = "CR(" ^ T.printrowvar rv ^ "," ^ T.printrowty rt ^ ")"
 
 fun printOccty (T x) = "T" ^ EL.printExtLab' x T.printtyvar
-  | printOccty (S x) = "S" ^ EL.printExtLab' x T.printseqvar
+  | printOccty (S x) = "S" ^ EL.printExtLab' x T.printSequenceVariable
   | printOccty (R x) = "R" ^ EL.printExtLab' x T.printrowvar
 
 fun printOcctyList [] = ""
@@ -120,7 +120,7 @@ fun decomptyrow (T.RV rv)                ll deps ids = ([R (rv, ll, deps, ids)],
   | decomptyrow (T.RC (_, ty, _))        ll deps ids = decomptyty ty ll deps ids
   | decomptyrow (T.RD (r, x, y, z))      ll deps ids = decomptyrow r (L.union x ll) (L.union y deps) (CD.union z ids)
   | decomptyrow T.RO                     ll deps ids = ([], 0)
-and decomptysq  (T.SV sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
+and decomptysq  (T.SEQUENCE_VARIABLE sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
   | decomptysq  (T.SC (rtl, _, _))       ll deps ids = (decomptyrowlist rtl ll deps ids, 1)
   | decomptysq  (T.SD (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
 and decomptyty  (T.V (tv, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
@@ -272,7 +272,7 @@ fun gatherAllTnTy (T.C (tn, _, _)) = gatherAllTnTn tn
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
   | gatherAllTnTy _ = ([], L.empty, L.empty, CD.empty)
-and gatherAllTnSq (T.SV _) = ([], L.empty, L.empty, CD.empty)
+and gatherAllTnSq (T.SEQUENCE_VARIABLE _) = ([], L.empty, L.empty, CD.empty)
   | gatherAllTnSq (T.SC (rtl, _, _)) =
     foldr (fn ((list1, labs1, stts1, deps1), (list2, labs2, stts2, deps2)) =>
 	      (list1 @ list2,
@@ -304,7 +304,7 @@ fun isAllTy (T.OR (sq, _, _, _, _)) = isAllSq sq
   | isAllTy (T.C (tn, _, _)) = isAllTn tn
   | isAllTy (T.TD ety) = isAllTy (EL.getExtLabT ety)
   | isAllTy _ = false
-and isAllSq (T.SV _) = false
+and isAllSq (T.SEQUENCE_VARIABLE _) = false
   | isAllSq (T.SC (rtl, _, _)) = List.all isAllRt rtl
   | isAllSq (T.SD eseq) = isAllSq (EL.getExtLabT eseq)
 and isAllRt (T.RV _) = false
@@ -361,7 +361,7 @@ and findInOrSq tn path (T.SC (rtl, _, _)) =
 		end)
 	    (([], false, false), 0)
 	    rtl)
-  | findInOrSq _ _ (T.SV _) = ([], true, false)
+  | findInOrSq _ _ (T.SEQUENCE_VARIABLE _) = ([], true, false)
   | findInOrSq tn path (T.SD eseq) = findInOrSq tn path (EL.getExtLabT eseq)
 
 and findInOrRt tn path (T.RC (_, ty, _)) = findInOrTy tn path ty
@@ -391,7 +391,7 @@ and gotoInOrSq (p :: path) (T.SC (rtl, _, _)) =
     (gotoInOrRt path (List.nth (rtl, p))
      handle Subscript => raise EH.DeadBranch "an OR type has an unexpected structure")
   | gotoInOrSq [] (T.SC _) = raise EH.DeadBranch "an OR type has an unexpected structure"
-  | gotoInOrSq _ (T.SV _) = NONE
+  | gotoInOrSq _ (T.SEQUENCE_VARIABLE _) = NONE
   | gotoInOrSq path (T.SD (seq, labs, stts, deps)) =
     (case gotoInOrSq path seq of
 	 SOME ty => SOME (collapseTy ty labs stts deps)
@@ -412,7 +412,7 @@ and gotoInOrTn (tn as T.NC (name, _, _)) = SOME tn
 
 (* We build the sequence variable in a OR because in the case of overloading constants
  * These are not already built when dealing with the binder. *)
-fun buildDirectOr (ty as T.OR (T.SV sv, idor, poly, kind, lab)) state =
+fun buildDirectOr (ty as T.OR (T.SEQUENCE_VARIABLE sv, idor, poly, kind, lab)) state =
     (case S.getValStateSq state sv of
 	 NONE => ty
        | SOME sq => T.OR (sq, idor, poly, kind, lab))
@@ -428,7 +428,7 @@ fun getPathsCol (paths : S.paths) col =
 		    paths
 
 fun selectPathsSeq [] seq = NONE
-  | selectPathsSeq paths (seq as T.SV _) = SOME seq
+  | selectPathsSeq paths (seq as T.SEQUENCE_VARIABLE _) = SOME seq
   | selectPathsSeq paths (T.SD (seq, labs, stts, deps)) =
     (case selectPathsSeq paths seq of
 	 NONE => NONE
@@ -478,10 +478,10 @@ and selectPathsTy [] ty = NONE
 
 fun selectPaths paths seq =
     case selectPathsSeq paths seq of
-	NONE => T.SV (T.freshseqvar ())
+	NONE => T.SEQUENCE_VARIABLE (T.freshSequenceVariable ())
       | SOME seq => seq
 
-fun isFullOrSeq (T.SV _) = false
+fun isFullOrSeq (T.SEQUENCE_VARIABLE _) = false
   | isFullOrSeq (T.SD eseq) = isFullOrSeq (EL.getExtLabT eseq)
   | isFullOrSeq (T.SC (rows, _, _)) =
     List.all (fn row => isFullOrRow row) rows
@@ -520,7 +520,7 @@ fun concatOptList (list1, b1) (list2, b2) =
     in (list, b)
     end
 
-fun tryToMatchOrsSq path (T.SV _) sq2 = (([], false), ([], true), true)
+fun tryToMatchOrsSq path (T.SEQUENCE_VARIABLE _) sq2 = (([], false), ([], true), true)
   | tryToMatchOrsSq path (sq1 as T.SC (rows, _, _)) sq2 =
     let val (typaths1, typaths2, found, _) =
 	    foldl (fn (row, (typaths1, typaths2, found, c)) =>
@@ -589,7 +589,7 @@ fun freshrowty (T.RV rv)           _   state _    = T.RV (F.freshRowVar rv state
 and freshtyfun (T.TFV tfv)         _   state _    = T.TFV (F.freshTyfVar tfv state)
   | freshtyfun (T.TFC (sq, ty, l)) tvl state bstr = T.TFC (freshseqty sq tvl state bstr, freshty ty tvl state bstr, l)
   | freshtyfun (T.TFD etf)         tvl state bstr = T.TFD (EL.mapExtLab etf (fn tf => freshtyfun tf tvl state bstr))
-and freshseqty (T.SV var)          _   state _    = T.SV (F.freshSeqVar var state)
+and freshseqty (T.SEQUENCE_VARIABLE var)          _   state _    = T.SEQUENCE_VARIABLE (F.freshSequenceVariable var state)
   | freshseqty (T.SC (trl, b, l))  tvl state bstr = T.SC (map (fn rt => freshrowty rt tvl state bstr) trl, b, l)
   | freshseqty (T.SD eseq)         tvl state bstr = T.SD (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
 and freshty (T.V (tv, b, p))       tvl state bstr =
@@ -777,9 +777,9 @@ fun buildty (T.V (tv, b, p)) state dom bmon monfun =
     let val ty' = buildty ty state dom bmon monfun
     in collapseTy ty' labs stts deps
     end
-and buildseqty (T.SV sv) state dom bmon monfun =
+and buildseqty (T.SEQUENCE_VARIABLE sv) state dom bmon monfun =
     (case S.getValStateSq state sv of
-	 NONE => T.SV sv
+	 NONE => T.SEQUENCE_VARIABLE sv
        | SOME sq => buildseqty sq state dom bmon monfun)
   | buildseqty (T.SC (rtl, flex, l)) state dom bmon monfun =
     let val rtl' = map (fn rt => buildrowty rt state dom bmon monfun) rtl
@@ -945,7 +945,7 @@ fun getExplicitTyVars vids tyvs state =
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
 		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
-	and searchSeqTy (T.SV _) = NONE
+	and searchSeqTy (T.SEQUENCE_VARIABLE _) = NONE
 	  | searchSeqTy (T.SC (rows, _, _)) =
 	    foldr (fn (row, err) =>
 		      if Option.isSome err
@@ -1013,7 +1013,7 @@ fun getGenTyvars (T.V (tv, SOME idl, p)) = [idl]
     foldr (fn (ty, tvlabs) => (getGenTyvars ty) @ tvlabs) [] (!tys)
   | getGenTyvars (T.TD ety) = getGenTyvars (EL.getExtLabT ety)
 
-and getGenTyvarsSeq (T.SV _) = []
+and getGenTyvarsSeq (T.SEQUENCE_VARIABLE _) = []
   | getGenTyvarsSeq (T.SC (rows, _, _)) =
     foldr (fn (row, tvlabs) => (getGenTyvarsRow row) @ tvlabs) [] rows
   | getGenTyvarsSeq (T.SD eseq) = getGenTyvarsSeq (EL.getExtLabT eseq)
@@ -1255,7 +1255,7 @@ fun decorateTyFun tfn labs stts deps =
     OM.map (fn tf => collapseTf tf labs stts deps)
 	   tfn
 
-fun newTyFun () = T.TFC (T.newSV (), T.newV (), L.dummyLab)
+fun newTyFun () = T.TFC (T.newSEQUENCE_VARIABLE (), T.newV (), L.dummyLab)
 
 fun insertInTyFun tyfun name tf =
     let val tn = T.tynameToInt name
@@ -1573,7 +1573,7 @@ and genTyFunFunTy (x as T.TFV _) _ _ = ([], x)
     let val (cs, tf') = genTyFunFunTy tf tfun btyp
     in (cs, collapseTf tf' labs stts deps)
     end
-and genTyFunSeqTy (x as T.SV _) _ _ = ([], x)
+and genTyFunSeqTy (x as T.SEQUENCE_VARIABLE _) _ _ = ([], x)
   | genTyFunSeqTy (T.SC (rtl, flex, l)) state btyp =
     let val (cs, rtl') = ListPair.unzip (map (fn rt => genTyFunRowTy rt state btyp) rtl)
     in (List.concat cs, T.SC (rtl', flex, l))
@@ -1741,7 +1741,7 @@ and applyTyFunFunTy (x as (T.TFV _)) _ _ = ([], x)
     let val (cs, tf') = applyTyFunFunTy tf tfun btyp
     in (cs, collapseTf tf' labs stts deps)
     end
-and applyTyFunSeqTy (x as (T.SV _)) _ _ = ([], x)
+and applyTyFunSeqTy (x as (T.SEQUENCE_VARIABLE _)) _ _ = ([], x)
   | applyTyFunSeqTy (T.SC (rtl, flex, l)) state btyp =
     let val (cs, rtl') = ListPair.unzip (map (fn rt => applyTyFunRowTy rt state btyp) rtl)
     in (List.concat cs, T.SC (rtl', flex, l))
@@ -2033,7 +2033,7 @@ fun renamety (x as T.V _) _ = x
 and renametypfun (x as T.TFV _) _ = x
   | renametypfun (T.TFC (sq, ty, lab)) state = T.TFC (renameseqty sq state, renamety ty state, lab)
   | renametypfun (T.TFD etf)           state = T.TFD (EL.mapExtLab etf (fn tf => renametypfun tf state))
-and renameseqty (x as T.SV _) _ = x
+and renameseqty (x as T.SEQUENCE_VARIABLE _) _ = x
   | renameseqty (T.SC (rtl, flex, l)) state = T.SC (map (fn rt => renamerowty rt state) rtl, flex, l)
   | renameseqty (T.SD eseq)           state = T.SD (EL.mapExtLab eseq (fn seq => renameseqty seq state))
 and renamerowty (x as T.RV _)      _     = x
@@ -2120,9 +2120,9 @@ fun renameenv' env state = renameenv env state (initRen ())
 
 (* These are similar to the getValStateAr in StateEnv.sml *)
 
-fun buildSeqAr state (T.SV sv) labs stts deps=
+fun buildSeqAr state (T.SEQUENCE_VARIABLE sv) labs stts deps=
     (case S.getValStateSq state sv of
-	 NONE => T.newSV ()
+	 NONE => T.newSEQUENCE_VARIABLE ()
        | SOME sq => buildSeqAr state sq labs stts deps)
   | buildSeqAr state (T.SC (xs, flex, lab)) labs stts deps =
     T.SD (T.SC (map (fn _ => T.newRV ()) xs, flex, lab), labs, stts, deps)
@@ -2250,7 +2250,7 @@ fun unif env filters user =
 
 	fun foccurs c [] n l = true (* true because we have to add c to the state *)
 	  | foccurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTyvar  S.getValStateTv decomptyty  foccurs
-	  | foccurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqSeqvar S.getValStateSq decomptysq  foccurs
+	  | foccurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqSequenceVariable S.getValStateSq decomptysq  foccurs
 	  | foccurs (c as (CR (var1, sem))) [R (var2, labs, stts, deps)] 0 l = occursGenZero CR var1 var2 sem labs stts deps l T.eqRowvar S.getValStateRt decomptyrow foccurs
 	  | foccurs (c as (CT (var1, sem))) (var :: xs) n l =
 	    (case var of
@@ -2259,7 +2259,7 @@ fun unif env filters user =
 	       | R (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyrow foccurs)
 	  | foccurs (c as (CS (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqSeqvar S.getValStateSq decomptysq foccurs handleOccurs
+		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqSequenceVariable S.getValStateSq decomptysq foccurs handleOccurs
 	       | T (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty  foccurs
 	       | R (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyrow foccurs)
 	  | foccurs (c as (CR (var1, sem))) (var :: xs) n l =
@@ -3274,18 +3274,18 @@ fun unif env filters user =
                       let val c = E.genCstTnAll tn (T.NV tnv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV sqv1, sq2 as (T.SV sqv2)), ls, deps, ids)) :: cs') l =
-	    if T.eqSeqvar sqv1 sqv2
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VARIABLE sqv1, sq2 as (T.SEQUENCE_VARIABLE sqv2)), ls, deps, ids)) :: cs') l =
+	    if T.eqSequenceVariable sqv1 sqv2
 	    then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
                       NONE =>
                       let val _ = if occurs (CS (sqv1, sq2)) [S (sqv2, ls, deps, ids)] 0 l
-				  then S.updateStateSq state sqv1 (T.SD (T.SV sqv2, ls, deps, ids))
+				  then S.updateStateSq state sqv1 (T.SD (T.SEQUENCE_VARIABLE sqv2, ls, deps, ids))
 				  else ()
                       in fsimplify cs' l
                       end
 		    | SOME sq =>
-                      let val c = E.genCstSqAll sq (T.SV sqv2) ls deps ids
+                      let val c = E.genCstSqAll sq (T.SEQUENCE_VARIABLE sqv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.V (tv, b, p), ty), ls, deps, ids)) :: cs') l =
@@ -3336,7 +3336,7 @@ fun unif env filters user =
 		 let val c = E.genCstTnAll tnty tnty2 ls deps ids
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV sqv1, sq2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VARIABLE sqv1, sq2), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -3941,7 +3941,7 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.OR  x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.E   y, T.OR  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C   x, T.E   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.E   y, T.C   x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.NV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((T.NV  y, T.NC  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC  x, T.SV  y), ls, deps, ids)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SV  y, T.SC  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC  x, T.SEQUENCE_VARIABLE  y), ls, deps, ids)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VARIABLE  y, T.SC  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.SEQUENCE_ENV x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVIRONMENT_CONSTRUCTOR x, E.ENVVAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR y, E.ENVIRONMENT_CONSTRUCTOR x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO

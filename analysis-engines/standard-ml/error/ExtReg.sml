@@ -807,13 +807,13 @@ fun getTopRegionsSigId (A.SigId (_, _, r', _, _)) r =
   | getTopRegionsSigId _ _ = []
 
 (* on the right of r *)
-fun getTopRegionsTypeSeq (A.TypeSeqOne (_, (r' :: _), _, _)) r =
+fun getTopRegionsTypeSequence (A.TypeSequenceOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSeq (A.TypeSeqEm (r', _, _)) r =
+  | getTopRegionsTypeSequence (A.TypeSequenceEm (r', _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSeq (A.TypeSeqSeq (_, (r' :: _), _, _)) r =
+  | getTopRegionsTypeSequence (A.TypeSequenceSeq (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSeq _ _ = []
+  | getTopRegionsTypeSequence _ _ = []
 
 (* on the right of r *)
 fun getTopRegionsTyClassSeq (A.TyClassSeqOne (_, (r' :: _), _, _)) r =
@@ -1329,7 +1329,7 @@ and getpos_excdesc (A.ExcDesc (edol, rl, _)) ll = getpos_excdesconelist edol ll
 and getpos_part (A.PartExp   e) ll = getpos_exp       e ll
   | getpos_part (A.PartDec   d) ll = getpos_dec       d ll
   | getpos_part (A.PartType  t) ll = getpos_type      t ll
-  | getpos_part (A.PartSeq   s) ll = getpos_typeseq   s ll
+  | getpos_part (A.PartSeq   s) ll = getpos_typeSequence   s ll
   | getpos_part (A.PartPat   p) ll = getpos_pat       p ll
   | getpos_part (A.PartIdTy  i) ll = getpos_identty   i ll
   | getpos_part (A.PartTyCon t) ll = getpos_longtycon t ll
@@ -1494,7 +1494,7 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
     end
   | getpos_type (A.TypeTyCon (ts, ltc, rl, l, _)) ll =
     let val gp1 = getpos_longtycon ltc ll
-	val gp2 = getpos_typeseq ts ll
+	val gp2 = getpos_typeSequence ts ll
     in (mapCol l ll rl) @ gp1 @ gp2
     end
   | getpos_type (A.TypeParen (ty, r1, r2, l, _)) ll   =
@@ -1503,18 +1503,18 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
     end
   | getpos_type (A.TypeDots spl) ll                   = getpos_partlist spl ll
 
-and getpos_typeseq (A.TypeSeqOne (ty, rs, l, _)) ll =
+and getpos_typeSequence (A.TypeSequenceOne (ty, rs, l, _)) ll =
     let val gpp = getpos_type ty ll
 	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "" (*trickTyCon r gpp*)
 	(*val gpp' = splitRegsToPushInN rs gpp (getCol l ll) 1*)
     in (*gpp'*) [N (r', getCol l ll, 1, gpp)]
     end
-  | getpos_typeseq (A.TypeSeqEm (r, l, _))       ll = [H (r, getCol l ll, 1)]
-  | getpos_typeseq (A.TypeSeqSeq (tl, rl, l, _)) ll =
+  | getpos_typeSequence (A.TypeSequenceEm (r, l, _))       ll = [H (r, getCol l ll, 1)]
+  | getpos_typeSequence (A.TypeSequenceSeq (tl, rl, l, _)) ll =
     let val gp = (getpos_labtypelist tl ll)
     in (mapCol l ll rl) @ gp
     end
-  | getpos_typeseq (A.TypeSeqDots spl)           ll = getpos_partlist spl ll
+  | getpos_typeSequence (A.TypeSequenceDots spl)           ll = getpos_partlist spl ll
 
 and getpos_conbind (A.ConBind (id, _)) ll             = getpos_ident id ll
   | getpos_conbind (A.ConBindOf (id, ty, r, l, _)) ll =

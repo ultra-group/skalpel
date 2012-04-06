@@ -59,7 +59,7 @@ signature STATE = sig
     val getValStateTv      : state -> Ty.tyvar         -> stTv option
     val getValStateTf      : state -> Ty.tyfvar        -> stTf option
     val getValStateTn      : state -> Ty.tynamevar     -> stTn option
-    val getValStateSq      : state -> Ty.seqvar        -> stSq option
+    val getValStateSq      : state -> Ty.sequenceVariable        -> stSq option
     val getValStateRt      : state -> Ty.rowvar        -> stRt option
     val getValStateLt      : state -> Ty.labvar        -> stLt option
     val getValStateEv      : state -> Env.envvar       -> stEv option
@@ -90,7 +90,7 @@ signature STATE = sig
     val updateStateTv      : state -> Ty.tyvar         -> stTv -> unit
     val updateStateTf      : state -> Ty.tyfvar        -> stTf -> unit
     val updateStateTn      : state -> Ty.tynamevar     -> stTn -> unit
-    val updateStateSq      : state -> Ty.seqvar        -> stSq -> unit
+    val updateStateSq      : state -> Ty.sequenceVariable        -> stSq -> unit
     val updateStateRt      : state -> Ty.rowvar        -> stRt -> unit
     val updateStateLt      : state -> Ty.labvar        -> stLt -> unit
     val updateStateEv      : state -> Env.envvar       -> stEv -> unit

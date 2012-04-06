@@ -962,7 +962,7 @@ fun printSlice' slprog indent sep =
 	and printPart (A.PartExp   ex)                       ind = printExp       ex ind
 	  | printPart (A.PartDec   de)                       ind = printDec       de ind
 	  | printPart (A.PartType  ty)                       ind = printType      ty ind
-	  | printPart (A.PartSeq   se)                       ind = printTypeSeq   se ind
+	  | printPart (A.PartSeq   se)                       ind = printTypeSequence   se ind
 	  | printPart (A.PartPat   pa)                       ind = printPat       pa ind
 	  | printPart (A.PartIdTy  id)                       ind = printIdentTy   id ind
 	  | printPart (A.PartTyCon tc)                       ind = printLongTyCon tc ind
@@ -1185,7 +1185,7 @@ fun printSlice' slprog indent sep =
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printType (A.TypeTyCon (ts, ltc, _, _, _))       ind =
-	    let val (l, k, c, x) = printTypeSeq ts ind
+	    let val (l, k, c, x) = printTypeSequence ts ind
 		val (i, j, d, y) = printLongTyCon ltc ind
 		val sep = sepLines k i d ind
 	    in (l, j, c, x ^ sep ^ " " ^ y)
@@ -1199,13 +1199,13 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTypeSeq (A.TypeSeqOne (t, _, _, _))         ind =
+	and printTypeSequence (A.TypeSequenceOne (t, _, _, _))         ind =
 	    let val (l, k, c, x) = printType t (sind ind)
 	    in (l, k, c, splparen ^ x ^ sprparen)
 	    end
-	  | printTypeSeq (A.TypeSeqEm (r, _, _))             _   =
+	  | printTypeSequence (A.TypeSequenceEm (r, _, _))             _   =
 	    (getLine [r], getLine [r], getCol [r], splparen ^ sprparen) (*HACK: before it was: ""*)
-	  | printTypeSeq (A.TypeSeqSeq (tl, rs, _, _))       ind =
+	  | printTypeSequence (A.TypeSequenceSeq (tl, rs, _, _))       ind =
 	    let val (r1, r2) = (List.hd rs, List.last rs)
 		    handle Empty => raise EH.DeadBranch "Missing regions for type sequence parentheses"
 		val rs' = (List.rev o List.tl o List.rev o List.tl) rs
@@ -1215,7 +1215,7 @@ fun printSlice' slprog indent sep =
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "(" ^ sep1 ^ x ^ sep2 ^ ")")
 	    end
-	  | printTypeSeq (A.TypeSeqDots spl)                 ind =
+	  | printTypeSequence (A.TypeSequenceDots spl)                 ind =
 	    let val (l, k, c, x) = printPartDots spl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
@@ -2225,9 +2225,9 @@ fun flattenLabType [] = []
   | flattenLabType ((A.LabTypeDots sltp) :: xs) = sltp @ (flattenLabType xs)
   | flattenLabType ((A.LabType (t, _, _, _)) :: xs) = (A.PartType t) :: (flattenLabType xs)
 
-fun flattenTypeSeq [] = []
-  | flattenTypeSeq ((A.TypeSeqDots sltp) :: xs) = sltp @ (flattenTypeSeq xs)
-  | flattenTypeSeq (x :: xs) = (A.PartSeq x) :: (flattenTypeSeq xs)
+fun flattenTypeSequence [] = []
+  | flattenTypeSequence ((A.TypeSequenceDots sltp) :: xs) = sltp @ (flattenTypeSequence xs)
+  | flattenTypeSequence (x :: xs) = (A.PartSeq x) :: (flattenTypeSequence xs)
 
 fun flattenSeqExp [] = []
   | flattenSeqExp ((A.SeqExpDots slp) :: xs) = slp @ (flattenSeqExp xs)
@@ -2574,7 +2574,7 @@ fun slice prog labels =
 	      and sl_part (A.PartExp   e) ll = flattenExp       [sl_exp       e ll]
 		| sl_part (A.PartDec   d) ll = flattenDec       [sl_dec       d ll]
 		| sl_part (A.PartType  t) ll = flattenType      [sl_type      t ll]
-		| sl_part (A.PartSeq   s) ll = flattenTypeSeq   [sl_typeseq   s ll]
+		| sl_part (A.PartSeq   s) ll = flattenTypeSequence   [sl_typeSequence   s ll]
 		| sl_part (A.PartPat   p) ll = flattenPat       [sl_pat       p ll]
 		| sl_part (A.PartIdTy  i) ll = flattenIdentTy   [sl_identty   i ll]
 		| sl_part (A.PartTyCon t) ll = flattenLongTyCon [sl_longtycon t ll]
@@ -3107,16 +3107,16 @@ fun slice prog labels =
 		  then let val nxt = A.getLongTyConNext ltc
 			   val (lll, llr) = splitList nxt (L.delete l ll)
 			   val sltc = sl_sl_longtycon ltc lll
-			   val slts = sl_sl_typeseq ts llr
+			   val slts = sl_sl_typeSequence ts llr
 		       in A.TypeTyCon (slts, sltc, rl, l, n)
 		       end
 		  else let val nxt = A.getLongTyConNext ltc
 			   val (lll, llr) = splitList nxt ll
 			   val sltc = sl_sl_longtycon ltc lll
-			   val slts = sl_sl_typeseq ts llr
-		       in A.TypeDots ((flattenLongTyCon [sltc]) @ (flattenTypeSeq [slts]))
+			   val slts = sl_sl_typeSequence ts llr
+		       in A.TypeDots ((flattenLongTyCon [sltc]) @ (flattenTypeSequence [slts]))
 		       (* case sltc of
-			      A.LongTyConDots pl => A.TypeDots (pl @ (flattenTypeSeq [slts]))
+			      A.LongTyConDots pl => A.TypeDots (pl @ (flattenTypeSequence [slts]))
 			    | _                    => A.TypeTyCon (slts, sltc, rl, l, n)*)
 		       end
 		| sl_type (A.TypeParen (ty, r1, r2, l, n)) ll =
@@ -3125,26 +3125,26 @@ fun slice prog labels =
 		  else A.TypeDots (flattenLabType [sl_labtype ty ll])
 		| sl_type (A.TypeDots pl) ll = A.TypeDots (sl_partlist pl ll)
 
-	      and sl_sl_typeseq x ll =
+	      and sl_sl_typeSequence x ll =
 		  if isEmpty ll
-		  then A.TypeSeqDots []
-		  else sl_typeseq x ll
+		  then A.TypeSequenceDots []
+		  else sl_typeSequence x ll
 
-	      and sl_typeseq (A.TypeSeqOne (ty, r, l, n)) ll =
+	      and sl_typeSequence (A.TypeSequenceOne (ty, r, l, n)) ll =
 		  if isin l ll
-		  then A.TypeSeqOne (sl_sl_type ty (L.delete l ll), r, l, n)
-		  else A.TypeSeqDots (flattenType [sl_type ty ll])
-		| sl_typeseq (A.TypeSeqEm (r, l, n)) ll =
+		  then A.TypeSequenceOne (sl_sl_type ty (L.delete l ll), r, l, n)
+		  else A.TypeSequenceDots (flattenType [sl_type ty ll])
+		| sl_typeSequence (A.TypeSequenceEm (r, l, n)) ll =
 		  if isinone l ll
-		  then A.TypeSeqEm (r, l, n)
+		  then A.TypeSequenceEm (r, l, n)
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
-		  else A.TypeSeqDots []
-		| sl_typeseq (A.TypeSeqSeq (tl, rl, l, n)) ll =
+		  else A.TypeSequenceDots []
+		| sl_typeSequence (A.TypeSequenceSeq (tl, rl, l, n)) ll =
 		  if isin l ll
-		  then A.TypeSeqSeq (sl_sl_labtypelist tl (L.delete l ll), rl, l, n)
-		  else A.TypeSeqDots (flattenLabType (sl_labtypelist tl ll))
-		| sl_typeseq (A.TypeSeqDots pl) ll = A.TypeSeqDots (sl_partlist pl ll)
+		  then A.TypeSequenceSeq (sl_sl_labtypelist tl (L.delete l ll), rl, l, n)
+		  else A.TypeSequenceDots (flattenLabType (sl_labtypelist tl ll))
+		| sl_typeSequence (A.TypeSequenceDots pl) ll = A.TypeSequenceDots (sl_partlist pl ll)
 
 	      and sl_sl_conbind x ll =
 		  if isEmpty ll
