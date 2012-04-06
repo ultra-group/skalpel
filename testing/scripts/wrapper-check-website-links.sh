@@ -27,7 +27,7 @@
 #!/bin/bash
 
 # the current date in the format YEAR-MONTH-DAY-HOUR-MINUTE
-date=`date '+%Y-%m-%d-%H-%M'`
+date=`date '+%Y-%m-%d'`
 
 repoDir='/u1/pg/jp95/repos/skalpel'
 

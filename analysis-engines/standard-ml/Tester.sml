@@ -109,11 +109,9 @@ exception NewerTest             (* The slicer currently uses an older SOL than t
 val sep        = "    "
 val emacstab   = "        "
 
-(* val testFolder = "../../../../tes/implementation/database" *)
 val testFolder = ref "../../../testing/analysis-engine-tests/standard-ml"
 val mytempfile = "/tmp/smltes-tmp"
-val myfilebas  = "../../../lib/basis.sml"
-val myfilein   = "test-prog.sml"
+val myfilebas  = ref "../../../lib/basis.sml"
 val myfilehtml = "res.html"
 
 (* This is the file in which the debugging info from running
@@ -1029,12 +1027,12 @@ fun adderror filein nb bforce bfinal name nenv =
 	val tmptm = gettimelimit ()
 	val _     = settimelimit mytimelimit
 	val _     = print "running...\n"
-	val sl    = slicergen myfilebas [fileout2] nenv false
+	val sl    = slicergen (!myfilebas) [fileout2] nenv false
 	val _     = settimelimit tmptm
 	val name' = case name of "" => Int.toString nb | _ => name
     in case sl of
 	   SOME (errl, parse, bmin, times, envcss, initlab) =>
-	   let val _     = debuggingHTML errl parse bmin times envcss initlab bfinal name' true  nenv 1 removeBasisSlice fileout3 myfilebas true ""
+	   let val _     = debuggingHTML errl parse bmin times envcss initlab bfinal name' true  nenv 1 removeBasisSlice fileout3 (!myfilebas) true ""
 	       val st    = debuggingSML  errl parse bmin times envcss initlab bfinal name' false nenv 1 "" (* this last argument is not used *)
 	       val stout = TextIO.openOut fileout1
 	       val _     = TextIO.output (stout, st)
@@ -1419,7 +1417,7 @@ fun checktests listtests =
 		       val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *)
 		       val _      = if bfinal then () else raise TocheckTest
 		       val fcode  = getfilecode nb
-		       val comp   = slicergen myfilebas [fcode] bas false
+		       val comp   = slicergen (!myfilebas) [fcode] bas false
 		   in case comp of
 			  SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) =>
 			  let val (errs2, warns2) = toErrsAndWarns2 errs2

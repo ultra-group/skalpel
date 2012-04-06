@@ -24,15 +24,16 @@
 
 signature DEBUG = sig
 
-    datatype debugFiles = JSON  (* JsonParser.sml *)
-			| UNIF  (* Unification.sml *)
-			| LABEL (* Label.sml *)
-			| TY    (* Ty.sml *)
-			| MLGRM (* ML.grm *)
-			| AZE   (* Analyze.sml *)
-			| TEST   (* Tester.sml *)
-			| RUN   (* RunSlicer.sml *)
-			| ENV   (* Env.sml *)
+    datatype debugFiles = JSON     (* JsonParser.sml *)
+			| UNIF     (* Unification.sml *)
+			| LABEL    (* Label.sml *)
+			| TY       (* Ty.sml *)
+			| MLGRM    (* ML.grm *)
+			| AZE      (* Analyze.sml *)
+			| TEST     (* Tester.sml *)
+			| RUN      (* RunSlicer.sml *)
+			| ENV      (* Env.sml *)
+			| PARSER   (* Parser.sml *)
 
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit

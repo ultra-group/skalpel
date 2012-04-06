@@ -147,8 +147,7 @@ signature TESTER = sig
 
     (**)
     val error         : JsonParser.error
-    val myfilebas     : string
-    val myfilein      : string
+    val myfilebas     : string ref
     val myfilehtml    : string
 
     val vinnie        : int    -> unit

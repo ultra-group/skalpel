@@ -544,7 +544,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv, cst, contextSensitiveSyntaxError) = f_exp exp
 		   val tv' = T.freshtyvar ()
 		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
-		   val _   = D.printDebug 2 D.AZE ("A.LabExp constraints generated (tv = "^Int.toString(T.tyvarToInt tv)^", "
+		   val _   = D.printDebug 3 D.AZE ("A.LabExp constraints generated (tv = "^Int.toString(T.tyvarToInt tv)^", "
 						   ^"tv' = "^Int.toString(T.tyvarToInt tv')
 						   ^", lab = "^(Int.toString(L.toInt(lab))^")"))
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -924,7 +924,7 @@ fun generateConstraints' prog pack nenv =
 	   (* for type variables (such as 'a in a signature) *)
 	   (* RETURNS: (int option, Ty.tyvar, Env.cst) *)
 	   and f_typevar (A.TypeVar (st, id, _, lab, _)) =
-	       let val _   = D.printDebug 2 D.AZE ("in f_typevar - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFunc 2 D.AZE (fn _ => ("in f_typevar - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")"))
 		   val tv = T.freshtyvar ()
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 	       in (SOME id, tv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
@@ -1618,8 +1618,8 @@ fun generateConstraints' prog pack nenv =
 
 		   (* creates a new map, with id as the key, and the rhs as the value *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id
-								   (T.TFV tfv, E.TYP, ref (E.emvar, false))
-								   (CL.consTYCON ())
+								   (T.TFV tfv, E.TYP, ref (E.emvar, false)) (* the bind *)
+								   (CL.consTYCON ())                        (* the class of the  *)
 								   lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
 		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SV freshSequenceVar, T.consV freshTypeVar, lab)) lab

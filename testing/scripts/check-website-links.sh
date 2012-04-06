@@ -34,8 +34,12 @@ filesList=`mktemp`
 echo "Website directory set to $websiteDir"
 
 # create a list of files to search through, store that in the new file $filesList
-# we don't handle any mlton url - for some reason this is listed as forbidden, or times out
-find $websiteDir -name "*.html" | xargs grep "<a href" | grep -v "old-files" | grep -v "mlton" > $filesList
+# we don't handle all urls (limitation of wget), so we grep out things we can't check
+find $websiteDir -name "*.html" | xargs grep "<a href" | grep -v "old-files" \
+                                                       | grep -v "mlton" \
+						       | grep -v "stackoverflow" \
+						       | grep -v "web.archive.org" \
+						       | grep -v "w3.org" > $filesList
 
 # put the word 'empty' in to save an extra null check in each line iteration
 previousFile="empty"
@@ -50,19 +54,36 @@ do
     # we take out things like the name of the file that was left in by find so that we can just get the url
     currentUrl=`echo $line | sed s/".*href=\""//g | sed s/".*\[.*href=\""//g | sed s/"\".*"//g`
 
-    # wget outputs on stderr, so we do 2>&1 to allow for grepping with pipes
-    linkBroken=`wget -t 2 --spider $currentUrl 2>&1 | grep "broken link"`
+    isFile=`echo $currentUrl | grep "\.\./"`
 
-    if [ $previousFile != $currentFile ]
+    if [ -n "$isFile" ]
     then
-	previousFile=$currentFile
-	echo "Processing file: $currentFile"
-    fi
+	filename=`echo $currentUrl | sed s/"\.\."/"\/home\/www\/macs\/ultra\/skalpel"/g`
+	if [ ! -f "$filename" ]
+	then
+	    errCount=$(($errCount+1))
+	    echo -e "-------------->  Broken Link: $currentUrl"
+	fi
+    else
+        # wget outputs on stderr, so we do 2>&1 to allow for grepping with pipes
+ 	linkBroken=`wget -t 2 --spider $currentUrl 2>&1 | grep "broken link"`
 
-    if [ -n "$linkBroken" ]
-    then
-	errCount=$(($errCount+1))
-	echo -e "*** Broken Link: $currentUrl"
+	if [ $previousFile != $currentFile ]
+	then
+	    previousFile=$currentFile
+	    echo "Processing file: $currentFile"
+	fi
+
+	if [ -n "$linkBroken" ]
+	then
+	    # some sites block crawlers, so if we're forbidden we assume the page actually exists
+	    linkForbidden=`wget -t 2 --spider $currentUrl 2>&1 | grep -i "forbidden"`
+	    if [ ! -n "$linkForbidden" ]
+	    then
+		errCount=$(($errCount+1))
+		echo -e "-------------->  Broken Link: $currentUrl"
+	    fi
+	fi
     fi
 
 done < $filesList

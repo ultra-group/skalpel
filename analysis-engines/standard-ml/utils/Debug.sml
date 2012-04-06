@@ -24,21 +24,23 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
 
 (* the greater the depth, the more detail the print statements give *)
-val debugUnif  : int ref = ref 0
-val debugJson  : int ref = ref 0
-val debugLabel : int ref = ref 0
-val debugTy    : int ref = ref 0
-val debugGrm   : int ref = ref 0
-val debugAze   : int ref = ref 0
-val debugRun   : int ref = ref 0
-val debugEnv   : int ref = ref 0
-val debugTest  : int ref = ref 0
+val debugUnif    : int ref = ref 0
+val debugParser  : int ref = ref 0
+val debugJson    : int ref = ref 0
+val debugLabel   : int ref = ref 0
+val debugTy      : int ref = ref 0
+val debugGrm     : int ref = ref 0
+val debugAze     : int ref = ref 0
+val debugRun     : int ref = ref 0
+val debugEnv     : int ref = ref 0
+val debugTest    : int ref = ref 0
 
 fun setAllDebug value =
     (debugUnif := value;
+     debugParser := value;
      debugJson := value;
      debugLabel:= value;
      debugTy   := value;
@@ -53,6 +55,8 @@ fun printDebug depth JSON str =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ str ^ "\n") else ()
   | printDebug depth UNIF str =
     if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Unification.sml: " ^ str ^ "\n") else ()
+  | printDebug depth PARSER str =
+    if (!debugParser >= depth) then print ("("^(Int.toString depth)^") Parser.sml: " ^ str ^ "\n") else ()
   | printDebug depth LABEL str =
     if (!debugLabel >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ str ^ "\n") else ()
   | printDebug depth TY str =
@@ -74,6 +78,8 @@ fun printDebugFunc depth JSON func =
     if (!debugJson >= depth) then print ("("^(Int.toString depth)^") JsonParser.sml: " ^ (func ()) ^ "\n") else ()
   | printDebugFunc depth UNIF func =
     if (!debugUnif >= depth) then print ("("^(Int.toString depth)^") Unification.sml: " ^ (func ()) ^ "\n") else ()
+  | printDebugFunc depth PARSER func =
+    if (!debugParser >= depth) then print ("("^(Int.toString depth)^") Parser.sml: " ^ (func()) ^ "\n") else ()
   | printDebugFunc depth LABEL func =
     if (!debugLabel >= depth) then print ("("^(Int.toString depth)^") Label.sml: " ^ (func ()) ^ "\n") else ()
   | printDebugFunc depth TY func =

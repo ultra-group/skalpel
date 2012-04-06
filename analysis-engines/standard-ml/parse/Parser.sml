@@ -360,14 +360,18 @@ fun createOneErrFileAlready file fop =
 (* echos more accurate errors for what the user has stated to be a file *)
 fun convertToFull file fop fnames =
     case tokenizeSt file of
-	[x] => (let val f = OS.FileSys.fullPath x
+	[x] => (let
+		    val _ = D.printDebugFunc 2 D.PARSER (fn _ => "Getting full path of "^x^"...\n")
+		    val f = OS.FileSys.fullPath x
+		    val _ = D.printDebugFunc 1 D.PARSER (fn _ => "Opening file with full path: "^x)
 		in if OS.FileSys.isDir f orelse OS.FileSys.isLink f
 		   then createOneErrFileAccess file fop
 		   else if Tools.isin f fnames
 		   then createOneErrFileAlready f fop
 		   else (SOME f, [])
 		end
-		handle OS.SysErr _ => createOneErrFileAccess file fop)
+		handle OS.SysErr (str,_) => (print ("OS.SysErr was raised with string: "^str^"\n");
+					     createOneErrFileAccess file fop))
       | _ => createOneErrFileAccess file fop
 
 (* returns a list of three-tuples with [(<file>, NONE, bas), ...] *)

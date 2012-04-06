@@ -154,8 +154,7 @@ fun comparevidsenv idenv1 idenv2 filters ls deps ids =
 			 let val tvl1 = map (fn x => E.getBindT x) (E.plusproj idenv1 id)
 			     val tvl2 = map (fn x => E.getBindT x) (E.plusproj idenv2 id)
 			     val pairs = getpairs tvl1 tvl2
-			 in (D.printDebug 3 D.UNIF "in comparevidsenv - calling genCstTyAll";
-			     (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids) pairs) @ cs)
+			 in (map (fn (tv1, tv2) => E.genCstTyAll tv1 tv2 ls deps ids) pairs) @ cs
 			 end)
 		     []
 		     dom
@@ -1117,7 +1116,6 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 			       val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
 			       val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
 			       fun getTy2 () = if bfun then ty2 else freshty ty2 (SOME O.empty) (F.finitState ()) false
-			       val _ = D.printDebug 3 D.UNIF "in compone - calling genCstTyAll";
 			       val cs'  = map (fn ty1 => ((*D.printdebug2 (T.printty ty1 ^ "\n" ^
 									 T.printty ty2 ^ "\n" ^
 									 L.toString labs);*)
@@ -1539,7 +1537,6 @@ fun genTyFunTy (x as T.V _) _ _ = ([], x)
 		   let val (cs, s) = genTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
-		       val _ = D.printDebug 3 D.UNIF "in genTyFunTy - calling genCstTyAll";
 		       val c2 = E.genCstTyAll v ty' labs stts deps
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
@@ -1710,7 +1707,6 @@ fun applyTyFunTy (x as (T.V _)) _ _ = ([], x)
 		   let val (cs, s) = applyTyFunSeqTy sq tfun btyp
 		       val v  = T.newV ()
 		       val c1 = E.genCstSqAll s sq' labs stts deps (* the labels and context dependencies are not correct *)
-		       val _  = D.printDebug 3 D.UNIF "in applyTyFunTy - calling genCstTyAll";
 		       val c2 = E.genCstTyAll v ty' labs stts deps
 		   (*val _ = D.printdebug2 ("foo")*)
 		   in (c1 :: c2 :: cs, v)
@@ -2918,7 +2914,6 @@ fun unif env filters user =
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
-			       val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   (*val _     = D.printdebug2 (S.printState state)*)
@@ -2946,7 +2941,6 @@ fun unif env filters user =
 			   * 'too general in signature' errors.  This needs to be fixed.
 			   * Constraint solving shouldn't depend on the order in constraints. *)
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
-			  val _  = D.printDebug 3 D.UNIF "in solveacc - calling genCstTyAll";
 			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
 		      in fsimplify [c] l
 		      end
@@ -3125,10 +3119,7 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.C (tn1, sq1, l1), T.C (tn2, sq2, l2)), ls, deps, ids)) :: cs') l =
-	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two type constructions";
-	     D.printDebug 3 D.UNIF ("             - label information for constructions is l1="^(Int.toString(L.toInt l1))^", l2="^(Int.toString(L.toInt l2)));
-	     D.printDebug 3 D.UNIF ("             - label information (ls) is "^(L.toString(ls)));
-	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
+	    (	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 	       orelse
 	       (T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
 	    (* one is a tnv the other one is a -> or a * *)
@@ -3172,22 +3163,15 @@ fun unif env filters user =
 		     end
 	    else
 		let
-		    val _  = D.printDebug 3 D.UNIF "             - generating TYPENAME_CONSTRAINT by calling genCstTnAll"
 		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids
 		    val c2 = E.genCstSqAll sq1 sq2 ls deps ids
 		 in
 		    fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
-	    (D.printDebug 2 D.UNIF "in fsimplify - constarint type is two of tnty.NC";
-	     D.printDebug 3 D.UNIF("             - tnty.NC typenames are tn1 = "^(Int.toString(T.tynameToInt tn1))^" tn2 = "^(Int.toString(T.tynameToInt tn2)));
-	     if T.eqTyname tn1 tn2
-	     then (D.printDebug 3 D.UNIF ("typenames of both tnty.NC constructors are equal ("^(Int.toString (T.tynameToInt tn1))^").");
-		   fsimplify cs' l)
-	     else let val _   = D.printDebug 2 D.UNIF ("typenames of both tnty.NC constructors are not equal");
-		      val _   = D.printDebug 3 D.UNIF ("first tnty.NC  - label = "^(Int.toString (L.toInt l1))^", tyname = " ^ (Int.toString (T.tynameToInt tn1)))
-		      val _   = D.printDebug 3 D.UNIF ("second tnty.NC - label = "^(Int.toString (L.toInt l2))^", tyname = " ^ (Int.toString (T.tynameToInt tn2)))
-		      val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))
+	    (if T.eqTyname tn1 tn2
+	     then fsimplify cs' l
+	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt tn1), (L.toInt l2, T.tynameToInt tn2))
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		  in handleSimplify err cs' l
 		  end)
@@ -3234,8 +3218,6 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.V (tv1, b1, p1), ty2 as T.V (tv2, b2, p2)), ls, deps, ids)) :: cs') l =
 	     let
-		 val _     = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is two implicit type variables (tv1="^Int.toString(T.tyvarToInt tv1)^", tv2="^Int.toString(T.tyvarToInt tv2)^")");
-		 val _     = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls))
 		 fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
@@ -3249,7 +3231,6 @@ fun unif env filters user =
 		      | SOME ty =>
 			let val bop = if Option.isSome b2 then b2 else b1
 			    val t   = T.V (tv2, bop, p2)
-			    val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
 			    val c   = E.genCstTyAll ty t ls deps ids
 			in fsimplify (c :: cs') l
 	    		end
@@ -3261,25 +3242,21 @@ fun unif env filters user =
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
-			else let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is two implicit type variables"
-				 val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt lab2, T.tynameToInt (T.DUMMYTYNAME)))
+			else let val ek  = EK.TyConsClash ((L.toInt lab1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt lab2, T.tynameToInt (T.DUMMYTYNAME)))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 			     in handleSimplify err cs' l
 			     end
 		      | _ => continue ()
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E (n1, tv1, l1), T.E (n2, tv2, l2)), ls, deps, ids)) :: cs') l =
-	    (D.printDebug 2 D.UNIF  "in fsimplify - constarint type is two explicit type variables";
-	    if I.eqId n1 n2 (*tv1 = tv2*)
+	    (if I.eqId n1 n2 (*tv1 = tv2*)
 	    then fsimplify cs' l
-	    else let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is two explicit type variables"
-		     val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.DUMMYTYNAME)))
+	    else let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.DUMMYTYNAME)))
 		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		 in handleSimplify err cs' l
 		 end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.E (n, tv, l1), T.C (tn, sq, l2)), ls, deps, ids)) :: cs') l =
-	    let val _   = D.printDebug 2 D.UNIF "in fsimplify - constarint type is an explicit tyvar and a type construction"
-		val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
+	    let val ek  = EK.TyConsClash ((L.toInt l1, T.tynameToInt (T.DUMMYTYNAME)), (L.toInt l2, T.tynameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
 	    end
@@ -3313,8 +3290,6 @@ fun unif env filters user =
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.V (tv, b, p), ty), ls, deps, ids)) :: cs') l =
 	    let
-		val _   = D.printDebug 2 D.UNIF ("in fsimplify - constarint type is an implicit type variable ("^(Int.toString(T.tyvarToInt(tv)))^")")
-		val _   = D.printDebug 3 D.UNIF ("             - list of labels (ls) is "^L.toString(ls));
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
@@ -3348,8 +3323,7 @@ fun unif env filters user =
 		   in fsimplify cs' l
 		   end
 		 | SOME ty' =>
-		   let val _  = D.printDebug 3 D.UNIF "             - calling genCstTyAll";
-		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
+		   let val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
 		   in fsimplify (c :: cs') l
 		   end
 	    end
@@ -3422,17 +3396,13 @@ fun unif env filters user =
 	    (case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
-                 let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-		     val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids
+                 let val c = E.genCstTyAll (T.A (tf, seqty, lab)) t2 ls deps ids
                  in fsimplify (c :: cs') l
                  end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.A (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
-		val _     = D.printDebug 2 D.UNIF "in fsimplify - constarint type is a type scheme instantiation"
 		val labs = L.cons lab1 (L.cons lab2 ls)
-		(*val _ = D.printdebug2 (T.printty ty1)*)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
-		val _  = D.printDebug 3 D.UNIF    "             - calling genCstTyAll";
 		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
@@ -3454,10 +3424,6 @@ fun unif env filters user =
 				in (kind, labs, stts, deps)
 				end
 			(*val (seq', _, _, _) = T.stripDepsSq seq*)
-			(*val _ = D.printdebug2 (T.printtnty tnty ^ "\n" ^ T.printseqty seq ^ "\n" ^ T.printseqty seq')*)
-			(*val _ = D.printdebug2 (S.printState state ^ "\n" ^
-						 T.printty'   tc    ^ "\n" ^
-						 T.printty'   to)*)
 			(* we should check that tl is complete! *)
 			in case findInOrSq tn [] seq of
 			       ([], false, _) =>
@@ -3471,7 +3437,6 @@ fun unif env filters user =
 			     | ([], true, _) => fsimplify cs' l
 			     | (((t, path) :: _), true, _) =>
 			       let val _ = S.updateStateOr state idor ([path], labs, stts, deps)
-				   val _  = D.printDebug 3 D.UNIF "in checkTn - calling genCstTyAll";
 				   val c = E.genCstTyAll tc t labs stts deps
 			       in fsimplify (c :: cs') l end
 			     | _ => raise EH.DeadBranch ""
@@ -3481,7 +3446,6 @@ fun unif env filters user =
 								   (L.union stts stts1)
 								   (CD.union deps deps1)
 								   seq
-	    (*val _ = D.printdebug2 (T.printty to)*)
 	    in case S.getValStateOr state idor of
 		   NONE => checkTn tnty ls deps ids sq'
 		 | SOME ([], _, _, _) => raise EH.DeadBranch ""
@@ -3492,7 +3456,6 @@ fun unif env filters user =
 			let val labs0 = L.union ls ls'
 			    val stts0 = L.union deps deps'
 			    val deps0 = CD.union ids ids'
-			    val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
 			    val c = E.genCstTyAll tc t labs0 stts0 deps0
 			in fsimplify (c :: cs') l
 			end)
@@ -3588,16 +3551,13 @@ fun unif env filters user =
 				       andalso List.length typaths1 = List.length typaths2
 				    then upd i2 typaths2
 				    else ()
-			(*val _ = D.printdebug2 ("(E)")*)
 			in fsimplify cs' l
 			end
-	    (*val _ = D.printdebug2 ((*S.printState state ^ "\n" ^*) T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 	    in case (S.getValStateOr state i1, S.getValStateOr state i2) of
 		   (SOME ([path1], ls1, deps1, ids1), SOME ([path2], ls2, deps2, ids2)) =>
 		   (case (gotoInOrSq path1 sq1, gotoInOrSq path2 sq2) of
 			(SOME t1, SOME t2) =>
 			let (* (2010-02-05) This is never happening, is it? *)
-			    val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
 			    val c = E.genCstTyAll t1
 						  t2
 						  (L.unions [ls,   ls1,   ls2])
@@ -3609,16 +3569,14 @@ fun unif env filters user =
 		 | (SOME ([path1], labs1, stts1, deps1), NONE) =>
 		   (case gotoInOrSq path1 sq1 of
 			SOME t1 =>
-			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-			    val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1)
+			let val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (NONE, SOME ([path2], labs2, stts2, deps2)) =>
 		   (case gotoInOrSq path2 sq2 of
 			SOME t2 =>
-			let val _  = D.printDebug 3 D.UNIF "in fsimplify - calling genCstTyAll";
-			    val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2)
+			let val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -3658,8 +3616,7 @@ fun unif env filters user =
 		      in fsimplify cs' l
 		      end
 		    | SOME env =>
-                      let (*val _ = D.printdebug2 (O.toString labs1)*)
-			  val c = E.genCstEvAll env (E.ENVVAR (ev2, lab2)) ls deps ids
+                      let val c = E.genCstEvAll env (E.ENVVAR (ev2, lab2)) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVVAR (ev, lab), env), ls, deps, ids)) :: cs') l =
@@ -3712,10 +3669,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
-		val _  = D.printDebug 3 D.UNIF "in fsimplify (FUNCTION_TYPE_CONSTRAINT constructor) - calling genCstTyAll";
 		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
-	    (*val _ = D.printdebug2 (S.printState state)*)
-	    (*val _ = D.printdebug2 (L.toString labs)*)
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tyfun1, tyfun2 as T.TFV tfv), labs, stts, deps)) :: cs') l =
@@ -3852,15 +3806,12 @@ fun unif env filters user =
 	  | fsimplify ((E.SIGNATURE_CONSTRAINT (ev0, ev1, ev2, ev3, lab)) :: cs') l =
 	    (* 0: signature, 2: structure, 1: translucent, 3: opaque *)
 	    let val btest = FI.testtodo filters lab
-	    (*val _ = D.printdebug2 (S.printState state)*)
-	    (*val _ = D.printdebug2 (E.printEnv (E.consENVVAR ev0 lab) "")*)
+
 	    in if btest
 	       then let val env0 = buildFEnv (E.consENVVAR ev0 lab) state false
 			(*(2010-06-15)Why do we need to refresh the signature/structure?
 			 * Because we don't have proper type schemes and type functions? *)
 			val env2 = buildFEnv (E.consENVVAR ev2 lab) state true
-			(*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consENVVAR ev0 lab) "" ^ "\n" ^ E.printEnv (E.consENVVAR ev2 lab) "")*)
-			(*val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")*)
 			(*(2010-06-22)We might need to decorate all the constraint generated in here
 			 * with labs, stts and deps.*)
 			(*First we build the environments associated to the structure and signature,
@@ -3883,7 +3834,6 @@ fun unif env filters user =
 			 * We might however tag ev2 when dealing with a dummy structure in
 			 * the basis. *)
 			(*(2010-03-03)The second constraint set if for datatypes and type functions.*)
-			(*val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")*)
 			val (cs1, cs2) = matchSigStr env1 env2 lab filters L.empty L.empty CD.empty true err
 			(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, cs1))) "")*)
 			(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, cs2))) "")*)

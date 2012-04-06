@@ -39,9 +39,7 @@ type error = JsonParser.error
 val error : error = Tester.error
 
 (* localise Tester functions *)
-val myfilein       = Tester.myfilein
 val myfilehtml     = Tester.myfilehtml
-val myfilebas      = Tester.myfilebas
 
 (* datatype for determining whether the user wishes slices displayed in a terminal *)
 (* INTERACTIVE is not used yet. It perhaps should be added, so the user can cycle through slices *)
@@ -94,93 +92,6 @@ fun getDebugProblem () =
     let fun f () = "PROBLEM!\n"
     in (f, f, f, f, f, f)
     end
-
-(* the code below is commented as it can come in useful for special
- * configurations *)
-
-(*fun preslicer' filebas filesin fileout nenv bprint bhtml =
-    case Tester.slicergen filebas filesin nenv bprint of
-	SOME (errl, parse as (_, _, ascid), bmin, times, envcss as (env, css), initlab) =>
-	let val (nenv, filebas) = getFileBasAndNum nenv filebas
-	    val name  = "dummy"
-	    val dbg1  = Tester.debuggingXML  errl parse bmin times envcss initlab false name true nenv
-	    val dbg2  = Tester.debuggingSML  errl parse bmin times envcss initlab false name true nenv
-	    val dbg3  = Tester.debuggingLISP errl parse bmin times envcss initlab false name true nenv
-	    val dbg4  = Tester.debuggingPERL errl parse bmin times envcss initlab false name true nenv
-	    val dbg5  = Tester.debuggingHTML errl parse bmin times envcss initlab false name true nenv
-	    val err   = Tester.buildError    errl parse bmin times envcss initlab false name true nenv
-n	    val dbg5' = fn sep => (dbg5 fileout filebas bhtml sep; "")
-	    val _     = Tester.assignError (err "")
-            fun fev _ = (Env.printEnv env "") ^ "\n"
-	in (dbg1, dbg2, dbg3, dbg4, dbg5', fev)
-	end
-      | NONE => getDebugProblem ()*)
-
-(*fun preslicer filebas filesin fileout nenv bprint bhtml =
-    let val (nenv, filebas) = getFileBasAndNum nenv filebas
-    in preslicer' filebas filesin fileout nenv bprint bhtml
-    end*)
-
-(*fun pslicer filebas filesin fileout nenv bcs =
-    let val (dbgxml, dbgsml, dbglisp, dbgperl, dbghtml, fev) =
-	    preslicer filebas filesin fileout nenv true true
-	val _ = case fileout of "" => "" | _ => dbghtml ""
-    in print (Tester.testXML dbgxml);
-       if bcs then print (fev ()) else ()
-    end*)
-
-(*fun slicer filebas filesin fileout nenv time =
-    let val tmptm = Tester.gettimelimit ()
-    in Tester.settimelimit (Int.toLarge time);
-       pslicer filebas filesin fileout nenv false;
-       Tester.settimelimit tmptm
-    end*)
-
-(*fun myslicer b n = pslicer myfilebas [myfilein] myfilehtml n b*)
-
-(*fun myslicerp (_, [stb, stn]) =
-    let val b = Option.valOf (Bool.fromString stb)
-	    handle Option => raise EH.DeadBranch "the first argument should be a bool"
-	val n = Option.valOf (Int.fromString stn)
-	    handle Option => raise EH.DeadBranch "the second argument should be a int"
-	val _ = myslicer b n
-    in OS.Process.success
-    end
-  | myslicerp _ = OS.Process.failure*)
-
-
-(*fun noslicer b n =
-    let val tmptm = Tester.gettimelimit ()
-    in Tester.settimelimit Tester.notimelimit;
-       myslicer b n;
-       Tester.settimelimit tmptm
-    end*)
-
-(*fun genslicer bcs n time =
-    let val tmptm = Tester.gettimelimit ()
-    in Tester.settimelimit (Int.toLarge time);
-       myslicer bcs n;
-       Tester.settimelimit tmptm
-    end*)
-
-(* adds a test to the database, with the number of the test, whether the slices
- * for the error are OK as a boolean, the name of the test, and the environment
- * integer as parameters *)
-fun addtest testNum slicesCorrect testName env =
-    if testNum < 1  (* check for an invalid test *)
-    then ()
-    else Tester.adderror myfilein testNum false slicesCorrect testName env
-
-(* adds a test to the database in the same way as add test, but if the id
- * already exists it will be overwritten *)
-fun replaceTest testNum slicesCorrect testName env =
-    if testNum < 1 (* check for an invalid test number *)
-    then ()
-    else Tester.adderror myfilein testNum true slicesCorrect testName env
-
-(* functions to delete and move tests *)
-fun deltest numTest = Tester.delerror numTest
-fun mvtest  oldNum newNum = Tester.mverror oldNum newNum false
 
 (* tests is an integer list, give an empty list to run all test *)
 (*fun checktests  _ = Tester.newchecktests ()*)
@@ -519,11 +430,11 @@ fun smlTesStrArgs strArgs =
 		filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
 	  | parse ("-b"::"0"::file::tail) =
-	    (filebas:=file; basop:="0"; parse tail)
+	    (Tester.myfilebas:=file; basop:="0"; parse tail)
 	  | parse ("-b"::"1"::file::tail) =
-	    (filebas:=file; basop:="1"; parse tail)
+	    (Tester.myfilebas:=file; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
-	    (filebas:=file; basop:="2"; parse tail)
+	    (Tester.myfilebas:=file; basop:="2"; parse tail)
 	  | parse ("-e"::"0"::tail) =
 	    (terminalSlices := NO_DISPLAY; parse tail)
 	  | parse ("-e"::"1"::tail) =
@@ -541,7 +452,7 @@ fun smlTesStrArgs strArgs =
 	     then filejson:=str
 	     else if option = "-l"
 	     then filelisp:=str
-	     else if option = "-p"
+	     else if option = "-p" (*  *)
 	     then fileperl:=str
 	     else if option = "-x"
 	     then dev:=str
