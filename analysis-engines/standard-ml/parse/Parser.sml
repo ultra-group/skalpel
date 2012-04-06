@@ -414,12 +414,12 @@ fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
   | consProgsSml ((file, opf, bas) :: files) n nasc fnames webdemo =
     case convertToFull file opf fnames of
 	(NONE, xs) =>
-	(* let val (prog, m, masc) = dummyparsing xs n nasc (* Take care the errors generated using *)
-	(* 						  * fnames are discarded silently. *) *)
-	(*     val (progs, fnames', clear, p, pasc) = consProgsSml files m masc fnames webdemo *)
-	(* in (progs, fnames', clear, p, pasc) *)
-	(* end *)
-	raise Fail("Error loading file: "^file) (* die, input file cannot be used *)
+	(* we carry on, so that if a file is not found eg in SKALPEL-USE-FIE, then the
+	 * user gets an error about it *)
+	let val (prog, m, masc) = dummyparsing xs n nasc
+	    val (progs, fnames', clear, p, pasc) = consProgsSml files m masc fnames webdemo
+	in (progs, fnames', clear, p, pasc)
+	end
       | (SOME f1, _) =>
 	let val (prog, xs, m, masc) = treatAFile f1 n nasc webdemo
 
