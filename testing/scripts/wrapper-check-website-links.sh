@@ -51,3 +51,10 @@ mkdir -p $outputDir
 # NOTE: We can't currently do this here because we are not on the webserver,
 #       therefore for the moment this is done via a web server cron job
 $testFrameworkDir/scripts/check-website-links.sh > $outputDir/$deadLinksTestFilename 2> $outputDir/$deadLinksTestFilename-errors
+
+# if there weren't any errors that appeared in the output, remove the errors file
+linksErrors=`cat $outputDir/$deadLinksTestFilename-errors`
+if [ ! -n analysisErrors ]
+then
+    rm "$outputDir/$deadLinksTestFilename-errors"
+fi

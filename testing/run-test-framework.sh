@@ -60,6 +60,13 @@ mkdir -p $outputDir
 # run the analysis engine tests
 $skalpelBin -b 2 $basisFile -c $analysisTestDir > $outputDir/$analysisTestFilename 2> $outputDir/$analysisTestFilename-errors
 
+# if there weren't any errors that appeared in the output, remove the errors file
+analysisErrors=`cat $outputDir/$analysisTestFilename-errors`
+if [ ! -n analysisErrors ]
+then
+    rm "$outputDir/$analysisTestFilename-errors"
+fi
+
 # check for any dead links in the webdemo
 # NOTE: We can't currently do this here because we are not on the webserver,
 #       therefore for the moment this is done via a web server cron job
