@@ -36,6 +36,7 @@ echo "Website directory set to $websiteDir"
 # create a list of files to search through, store that in the new file $filesList
 # we don't handle all urls (limitation of wget), so we grep out things we can't check
 find $websiteDir -name "*.html" | xargs grep "<a href" | grep -v "old-files" \
+                                                       | grep -v "skalpel/init/" \
                                                        | grep -v "mlton" \
 						       | grep -v "stackoverflow" \
 						       | grep -v "web.archive.org" \
