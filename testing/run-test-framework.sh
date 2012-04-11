@@ -62,10 +62,17 @@ $skalpelBin -b 2 $basisFile -c $analysisTestDir > $outputDir/$analysisTestFilena
 
 # if there weren't any errors that appeared in the output, remove the errors file
 analysisErrors=`cat $outputDir/$analysisTestFilename-errors`
-if [ ! -n analysisErrors ]
+if [ ! -n "$analysisErrors" ]
 then
     rm "$outputDir/$analysisTestFilename-errors"
 fi
+
+deadLinksErrors=`cat $outputDir/$deadLinksTestFilename-errors`
+if [ ! -n "$deadLinksErrors" ]
+then
+    rm "$outputDir/$deadLinksTestFilename-errors"
+fi
+
 
 # check for any dead links in the webdemo
 # NOTE: We can't currently do this here because we are not on the webserver,

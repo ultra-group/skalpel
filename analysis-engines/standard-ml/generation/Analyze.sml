@@ -1625,7 +1625,7 @@ fun generateConstraints' prog pack nenv =
 		    * for typenames? Looks likely! *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id
 								   (T.TFV tfv, E.TYP, ref (E.emvar, false))
-								   (CL.consTYCON ())                        (* type constructor *)
+								   (CL.consTYCON ())                        (* the id represents a type constructor *)
 								   lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
 		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE freshSequenceVar, T.consV freshTypeVar, lab)) lab
