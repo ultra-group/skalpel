@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -38,11 +32,12 @@ structure I  = Id
 structure CL = ClassId
 structure EH = ErrorHandler
 
-type 'a bind = {id    : I.id,
-		bind  : 'a,
-		class : CL.class,
-		lab   : L.label,
-		poly  : P.poly}
+(* a binder is used for program occurences of id that are being bound*)
+type 'a bind = {id    : I.id,        (* Identifier for which we generate this constraint *)
+		bind  : 'a,          (* Type of the identifier                           *)
+		class : CL.class,    (* Status/class of the identifier                   *)
+		lab   : L.label,     (* Label of the contraint                           *)
+		poly  : P.poly}      (* Constraint on the poly/mono binding if binding   *)
 
 (* grabs a different field from bind *)
 fun getBindI (x : 'a bind) = #id    x

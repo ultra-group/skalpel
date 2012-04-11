@@ -947,6 +947,7 @@ fun toCLSVids vids cls labs =
 	   vids
 
 (* We have DAT here because this is only used for datatypes and datatype descriptions. *)
+(* WARNING: typenames here may not be typenames! It's this environment that's been going around! *)
 fun toTYCONTyps typenames cons b labs =
     let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DAT, ref (cons, b)))
     in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)

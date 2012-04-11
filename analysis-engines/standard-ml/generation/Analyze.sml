@@ -1608,6 +1608,9 @@ fun generateConstraints' prog pack nenv =
 	    * datatype Operators = ADD | IF | LESS_THAN
 	    * type mytype = int
 	    *
+	    * str is the name of the type constructor, eg
+	    * 1. 'Operators' 'datatype Operators = ADD | IF | LESS_THAN'
+	    * 2. 'mytype' in 'type mytype = int'
 	    *)
 	   and f_tyconbind (A.TyCon (str, id, _, lab, _)) =
 	       let
@@ -1617,18 +1620,16 @@ fun generateConstraints' prog pack nenv =
  		   val tfv  = T.freshtyfvar ()
 
 		   (* creates a new map, with id as the key, and the rhs as the value *)
+		   (* this is the environment for typenames? So str here is say mytype in mytype = int, then
+		    * we have an id that represents that. That id is used here in the mapping. So this is a mapping
+		    * for typenames? Looks likely! *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id
-								   (T.TFV tfv, E.TYP, ref (E.emvar, false)) (* the bind *)
-								   (CL.consTYCON ())                        (* the class of the  *)
+								   (T.TFV tfv, E.TYP, ref (E.emvar, false))
+								   (CL.consTYCON ())                        (* type constructor *)
 								   lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
 		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE freshSequenceVar, T.consV freshTypeVar, lab)) lab
 	       in
-		   (* str is the name of the type constructor, eg
-		    * 1. 'Operators' 'datatype Operators = ADD | IF | LESS_THAN' *
-		    * 2. 'mytype' in 'type mytype = int'
-		    *
-		    * SOME(v, lab) is an option of an id and a label as a tuple *)
 		   (str, SOME (id, lab), freshTypeVar, freshSequenceVar, typs, E.singleConstraint (lab, c))
 	       end
 	     | f_tyconbind A.TyConDots =
