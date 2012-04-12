@@ -60,17 +60,26 @@ type extv       = I.labelledId option (* extv stands for EXplicit Type Variable*
 type assoc      = (int * string) list
 type exttyvar   = tyvar ExtLab.extLab
 datatype poly   = POLY | MONO
-datatype kcons  = DE of I.id | PA | OT | BB
+
+(* Change the names of these constructors. They will confuse me endlessly *)
+datatype kcons  = DE of Id.id (* constructor from a DEclaration   *)
+		| PA          (* constructor from a PAttern       *)
+		| OT          (* OTher constructor                *)
+		| BB          (* constructor in the Builtin Basis *)
+
 datatype orKind = VAL of I.labelledId
 		| CST of string * I.id * L.label
 
-datatype labty = LV  of labvar
+datatype labty = LV  of labvar (* unclear why we need label variables *)
 	       | LC  of labcons            * L.label
 	       | LD  of labty EL.extLab
+(* Joe speculates that tnty and tyfun could be simply merged.
+ * This means the C and A cases of ty could also be merged.
+ * Probably nothing wrong with leaving them separate as they are now. *)
 datatype tnty  = NV  of tynamevar
 	       | NC  of tyname     * kcons * L.label
 	       | ND  of tnty EL.extLab
-datatype rowty = RV  of rowvar
+datatype rowty = RV  of rowvar (* this might or might not be the same as what is known as row variable in the literature *)
 	       | RC  of labty      * ty    * L.label
 	       | RD  of rowty EL.extLab
 	       | RO
@@ -84,13 +93,18 @@ datatype rowty = RV  of rowvar
  * also- TFV may stand for Type Function Variable. These are used throughout
  * Analyse.sml and might be used to impose constraints on type functions? Look
  * at the uses of TFV and try to figure this out *)
+
+(* This *is* type function *
+ * type 'a = 'a * 'a
+ * type function would stand for an unknown type function *
+ * remember also to change C and A below *)
      and tyfun = TFV of tyfvar
 	       | TFC of seqty      * ty    * L.label
 	       | TFD of tyfun EL.extLab
      and ty    = V   of tyvar * extv  * poly
 	       | E   of I.id  * tyvar * L.label
-	       | C   of tnty  * seqty * L.label
-	       | A   of tyfun * seqty * L.label
+	       | C   of tnty  * seqty * L.label (* construction *)
+	       | A   of tyfun * seqty * L.label (* application *)
 	       | OR  of seqty * idor  * poly * orKind * L.label
 	       | GEN of ty list ref
 	       | TD  of ty EL.extLab

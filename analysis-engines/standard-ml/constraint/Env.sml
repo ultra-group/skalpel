@@ -340,7 +340,7 @@ and printStrEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printFunEnv     xs ind = printGenEnv xs ind printFunSemList
 and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) ind =
     "\n" ^ ind ^ "{vids:" ^ printVarEnv vids ind ^
-    "\n" ^ ind ^ " typenames:" ^ printTypEnv typenames ind ^
+    "\n" ^ ind ^ " typenames:" ^ (*printTypEnv typenames ind ^*)
     "\n" ^ ind ^ " tyvs:" ^ printTyvEnv tyvs ind ^
     "\n" ^ ind ^ " strs:" ^ printStrEnv strs ind ^
     "\n" ^ ind ^ " sigs:" ^ printSigEnv sigs ind ^
