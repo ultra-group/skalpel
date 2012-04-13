@@ -1,7 +1,7 @@
 {
 "errors"       : [{"identifier"  : 0,
                    "labels"      : {"count": 10, "labelNumbers": [1, 2, 3, 4, 5, 6, 9, 10, 13, 14] },
-                   "kind"        : {"errorKindName": "ErrorKind.TyVarBind", "asmpOp": "NONE"},
+                   "kind"        : {"errorKindName": "ErrorKind.TypeVarBind", "asmpOp": "NONE"},
                    "time"        : ~1,
                    "slice"       : "(fn 〚..〚..〛 => 〚..〛 : 'a..〛) 〚..〛;",
                    "assumptions" : [],

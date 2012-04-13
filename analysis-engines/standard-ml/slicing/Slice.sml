@@ -1072,31 +1072,31 @@ fun printSlice' slprog indent sep =
 	    in (l, j, c, dots ^ x ^ y)
 	    end
 
-	and printLabTyVar (A.LabTyVar (tv, _, _, _))         ind = printTypeVar tv ind
-	  | printLabTyVar (A.LabTyVarDots tvl)               ind =
+	and printLabTypeVar (A.LabTypeVar (tv, _, _, _))         ind = printTypeVar tv ind
+	  | printLabTypeVar (A.LabTypeVarDots tvl)               ind =
 	    let val (l, k, c, x) = printTypeVarDots tvl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printLabTyVarList []                               _   = (NONE, NONE, NONE, "")
-	  | printLabTyVarList [x]                              ind = printLabTyVar x ind
-	  | printLabTyVarList (x :: xs)                        ind =
-	    let val (l, k, c, x) = printLabTyVar x ind
-		val (i, j, d, y) = printLabTyVarList xs ind
+	and printLabTypeVarList []                               _   = (NONE, NONE, NONE, "")
+	  | printLabTypeVarList [x]                              ind = printLabTypeVar x ind
+	  | printLabTypeVarList (x :: xs)                        ind =
+	    let val (l, k, c, x) = printLabTypeVar x ind
+		val (i, j, d, y) = printLabTypeVarList xs ind
 		val sep = sepLines k i d ind
 	    in (l, j, c, x ^ "," ^ sep ^ y)
 	    end
 
-	and printTyVarSeq (A.TyVarSeqOne (tv, _, _, _))      ind =
+	and printTypeVarSeq (A.TypeVarSeqOne (tv, _, _, _))      ind =
 	    let val (l, k, c, x) = printTypeVar tv (sind ind)
 	    in (l, k, c, splparen ^ x ^ sprparen)
 	    end
-	  | printTyVarSeq (A.TyVarSeqEm (_, _, _))           _   = (NONE, NONE, NONE, splparen ^ sprparen) (*HACK: before it was empty string*)
-	  | printTyVarSeq (A.TyVarSeqSeq (tvl, rs, _, _))    ind =
-	    let val (_, _, _, x) = printLabTyVarList tvl ind
+	  | printTypeVarSeq (A.TypeVarSeqEm (_, _, _))           _   = (NONE, NONE, NONE, splparen ^ sprparen) (*HACK: before it was empty string*)
+	  | printTypeVarSeq (A.TypeVarSeqSeq (tvl, rs, _, _))    ind =
+	    let val (_, _, _, x) = printLabTypeVarList tvl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
-	  | printTyVarSeq (A.TyVarSeqDots tvl)               ind =
+	  | printTypeVarSeq (A.TypeVarSeqDots tvl)               ind =
 	    let val (l, k, c, x) = printTypeVarDots tvl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
@@ -1350,14 +1350,14 @@ fun printSlice' slprog indent sep =
 	    end
 
 	and printDatName (A.DatName (tvs, tn, _, _))         ind =
-	    let val (l, k, c, x) = printTyVarSeq tvs ind
+	    let val (l, k, c, x) = printTypeVarSeq tvs ind
 		val (_, j, _, y) = printTyCon tn ind
 	    in (l, j, c, x ^ " " ^ y)
 	    end
 	  | printDatName A.DatNameDots                       _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printLDatName (A.LDatName (tvs, tn, _, _))       ind =
-	    let val (l, k, c, x) = printTyVarSeq tvs ind
+	    let val (l, k, c, x) = printTypeVarSeq tvs ind
 		val (_, j, _, y) = printLongTyCon tn ind
 	    in (l, j, c, x ^ " " ^ y)
 	    end
@@ -1616,14 +1616,14 @@ fun printSlice' slprog indent sep =
 	    end
 
 	and printDec (A.DecVal (tvs, vb, r, _))              ind =
-	    let val (l1, k1, c1, x) = printTyVarSeq tvs ind
+	    let val (l1, k1, c1, x) = printTypeVarSeq tvs ind
 		val (l2, k2, c2, y) = printValBind vb ind
 		val k2' = case k2 of NONE => k1 | _ => k2
 		val sep = sepLines (getLine [r]) l1 c1 ind
 	    in (getLine [r], k2', getCol [r], "val " ^ sep ^ x ^ " " ^ y)
 	    end
 	  | printDec (A.DecFVal (tvs, fvb, r, _))            ind =
-	    let val (l1, k1, c1, x) = printTyVarSeq tvs ind
+	    let val (l1, k1, c1, x) = printTypeVarSeq tvs ind
 		val (l2, k2, c2, y) = printFValBind fvb ind
 		val k2' = case k2 of NONE => k1 | _ => k2
 		val sep = sepLines (getLine [r]) l1 c1 ind
@@ -1694,7 +1694,7 @@ fun printSlice' slprog indent sep =
 		      | _ => raise EH.DeadBranch "not the correct number of regions"
 		val (l1, k1, c1, x) = printLabId      i ind
 		val (l2, k2, c2, y) = printLabType    t ind
-		val (l3, k3, c3, z) = printLabTyVar   v ind
+		val (l3, k3, c3, z) = printLabTypeVar   v ind
 		val (l4, k4, c4, w) = printTyClassSeq s ind
 		val k1'  = case k1 of NONE => getLine [r1] | _ => k1
 		val k2'  = case k2 of NONE => getLine [r2] | _ => k2
@@ -2217,9 +2217,9 @@ fun flattenTypeVar [] = []
   | flattenTypeVar (A.TypeVarDots :: xs) = flattenTypeVar xs
   | flattenTypeVar (x :: xs) = (A.PartType (A.TypeOneVar x)) :: (flattenTypeVar xs)
 
-fun flattenLabTyVar [] = []
-  | flattenLabTyVar ((A.LabTyVarDots sltp) :: xs) = (flattenTypeVar sltp) @ (flattenLabTyVar xs)
-  | flattenLabTyVar ((A.LabTyVar (t, _, _, _)) :: xs) = (A.PartType (A.TypeOneVar t)) :: (flattenLabTyVar xs)
+fun flattenLabTypeVar [] = []
+  | flattenLabTypeVar ((A.LabTypeVarDots sltp) :: xs) = (flattenTypeVar sltp) @ (flattenLabTypeVar xs)
+  | flattenLabTypeVar ((A.LabTypeVar (t, _, _, _)) :: xs) = (A.PartType (A.TypeOneVar t)) :: (flattenLabTypeVar xs)
 
 fun flattenLabType [] = []
   | flattenLabType ((A.LabTypeDots sltp) :: xs) = sltp @ (flattenLabType xs)
@@ -2923,7 +2923,7 @@ fun slice prog labels =
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
 		| sl_labtyvarlist (x :: xs) ll =
-		  let val nxt = A.getLabTyVarNext x
+		  let val nxt = A.getLabTypeVarNext x
 		      val (lll, llr) = splitList nxt ll
 		      val y = sl_sl_labtyvar x lll
 		      val ys = sl_labtyvarlist xs llr
@@ -2940,52 +2940,52 @@ fun slice prog labels =
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
 		| sl_labtyvardotlist (x :: xs) ll =
-		  let val nxt = A.getLabTyVarNext x
+		  let val nxt = A.getLabTypeVarNext x
 		      val (lll, llr) = splitList nxt ll
 		      val y = case sl_sl_labtyvar x lll of
-				  A.LabTyVar (tv, _, _, _) => [tv]
-				| A.LabTyVarDots tvl       => tvl
+				  A.LabTypeVar (tv, _, _, _) => [tv]
+				| A.LabTypeVarDots tvl       => tvl
 		      val ys = sl_sl_labtyvardotlist xs llr
 		  in y @ ys
 		  end
 
 	      and sl_sl_labtyvar x ll =
 		  if isEmpty ll
-		  then A.LabTyVarDots []
+		  then A.LabTypeVarDots []
 		  else sl_labtyvar x ll
 
-	      and sl_labtyvar (A.LabTyVar (tv, rl, l, n)) ll =
+	      and sl_labtyvar (A.LabTypeVar (tv, rl, l, n)) ll =
 		  if isin l ll
-		  then A.LabTyVar (sl_sl_typevar tv (L.delete l ll), rl, l, n)
-		  else A.LabTyVarDots (sl_typevardotlist [tv] ll)
-		| sl_labtyvar (A.LabTyVarDots tvl) ll =
-		  A.LabTyVarDots (sl_typevarlist tvl ll)
+		  then A.LabTypeVar (sl_sl_typevar tv (L.delete l ll), rl, l, n)
+		  else A.LabTypeVarDots (sl_typevardotlist [tv] ll)
+		| sl_labtyvar (A.LabTypeVarDots tvl) ll =
+		  A.LabTypeVarDots (sl_typevarlist tvl ll)
 
 	      and sl_sl_tyvarseq x ll =
 		  if isEmpty ll
-		  then A.TyVarSeqDots []
+		  then A.TypeVarSeqDots []
 		  else sl_tyvarseq x ll
 
-	      and sl_tyvarseq (A.TyVarSeqOne (tv, r, l, n)) ll =
+	      and sl_tyvarseq (A.TypeVarSeqOne (tv, r, l, n)) ll =
 		  if isin l ll
-		  then A.TyVarSeqOne (sl_sl_typevar tv (L.delete l ll), r, l, n)
+		  then A.TypeVarSeqOne (sl_sl_typevar tv (L.delete l ll), r, l, n)
 		  else let val sltv = sl_typevar tv ll
 		       in case sltv of
-			      A.TypeVarDots => A.TyVarSeqDots ([])
-			    | x               => A.TyVarSeqDots ([x])
+			      A.TypeVarDots => A.TypeVarSeqDots ([])
+			    | x               => A.TypeVarSeqDots ([x])
 		       end
-		| sl_tyvarseq (A.TyVarSeqEm (r, l, n)) ll =
+		| sl_tyvarseq (A.TypeVarSeqEm (r, l, n)) ll =
 		  if isinone l ll
-		  then A.TyVarSeqEm (r, l, n)
+		  then A.TypeVarSeqEm (r, l, n)
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
-		  else A.TyVarSeqDots []
-		| sl_tyvarseq (A.TyVarSeqSeq (tvl, rl, l, n)) ll =
+		  else A.TypeVarSeqDots []
+		| sl_tyvarseq (A.TypeVarSeqSeq (tvl, rl, l, n)) ll =
 		  if isin l ll
-		  then A.TyVarSeqSeq (sl_sl_labtyvarlist tvl (L.delete l ll), rl, l, n)
-		  else A.TyVarSeqDots (sl_labtyvardotlist tvl ll)
-		| sl_tyvarseq (A.TyVarSeqDots tvl) ll =
-		  A.TyVarSeqDots (sl_typevarlist tvl ll)
+		  then A.TypeVarSeqSeq (sl_sl_labtyvarlist tvl (L.delete l ll), rl, l, n)
+		  else A.TypeVarSeqDots (sl_labtyvardotlist tvl ll)
+		| sl_tyvarseq (A.TypeVarSeqDots tvl) ll =
+		  A.TypeVarSeqDots (sl_typevarlist tvl ll)
 	      (* Can we have an error inside the parentheses without having the parentheses in the error?
 	         Do we want to use the same function sl_typevarlist in the else branch?
                     - In the else branch we don't have the sequence structure in the slice (l') so maybe
@@ -3221,7 +3221,7 @@ fun slice prog labels =
 		      val sltn  = sl_sl_longtycon tn lll
 		      val sltvs = sl_sl_tyvarseq tvs llr
 		  in case (sltn, sltvs) of
-			 (A.LongTyConDots [], A.TyVarSeqDots []) => A.LDatNameDots
+			 (A.LongTyConDots [], A.TypeVarSeqDots []) => A.LDatNameDots
 		       | _ => A.LDatName (sltvs, sltn, rl, n)
 		  end
 		| sl_ldatname A.LDatNameDots ll =
@@ -3240,7 +3240,7 @@ fun slice prog labels =
 		      val sltn = sl_sl_tycon tn lll
 		      val sltvs = sl_sl_tyvarseq tvs llr
 		  in case (sltn, sltvs) of
-			 (A.TyConDots, A.TyVarSeqDots []) => A.DatNameDots
+			 (A.TyConDots, A.TypeVarSeqDots []) => A.DatNameDots
 		       | _ => A.DatName (sltvs, sltn, rl, n)
 		  end
 		| sl_datname A.DatNameDots ll =
@@ -3944,21 +3944,21 @@ fun slice prog labels =
 		  else sl_dec x ll
 
 	      and sl_dec (A.DecVal (tvs, vb, r, n)) ll =
-		  let val nxt = A.getTyVarSeqNext tvs
+		  let val nxt = A.getTypeVarSeqNext tvs
 		      val (ll1, ll2) = splitList nxt ll
 		      val sltvs = sl_sl_tyvarseq tvs ll1
 		      val slvb  = sl_sl_valbind vb ll2
 		  in case (slvb, sltvs) of
-			 (A.ValBindDots x, A.TyVarSeqDots []) => A.DecDots x
+			 (A.ValBindDots x, A.TypeVarSeqDots []) => A.DecDots x
 		       | _ => A.DecVal (sltvs, slvb, r, n)
 		  end
 		| sl_dec (A.DecFVal (tvs, fvb, r, n)) ll =
-		  let val nxt = A.getTyVarSeqNext tvs
+		  let val nxt = A.getTypeVarSeqNext tvs
 		      val (ll1, ll2) = splitList nxt ll
 		      val sltvs = sl_sl_tyvarseq tvs ll1
 		      val slfvb = sl_sl_fvalbind fvb ll2
 		  in case (slfvb, sltvs) of
-			 (A.FValBindDots x, A.TyVarSeqDots []) => A.DecDots x
+			 (A.FValBindDots x, A.TypeVarSeqDots []) => A.DecDots x
 		       | _ => A.DecFVal (sltvs, slfvb, r, n)
 		  end
 		| sl_dec (A.DecDatType (dbs, r, n)) ll =
@@ -4092,7 +4092,7 @@ fun slice prog labels =
 		  if isin l ll
 		  then let val nxt1 = A.getLabIdNext    id
 			   val nxt2 = A.getLabTypeNext  ty
-			   val nxt3 = A.getLabTyVarNext tv
+			   val nxt3 = A.getLabTypeVarNext tv
 			   val (ll1, ll')  = splitList nxt1 (L.delete l ll)
 			   val (ll2, ll'') = splitList nxt2 ll'
 			   val (ll3, ll4)  = splitList nxt3 ll''
@@ -4104,7 +4104,7 @@ fun slice prog labels =
 		       end
 		  else let val nxt1 = A.getLabIdNext    id
 			   val nxt2 = A.getLabTypeNext  ty
-			   val nxt3 = A.getLabTyVarNext tv
+			   val nxt3 = A.getLabTypeVarNext tv
 			   val (ll1, ll')  = splitList nxt1 ll
 			   val (ll2, ll'') = splitList nxt2 ll'
 			   val (ll3, ll4)  = splitList nxt3 ll''
@@ -4114,7 +4114,7 @@ fun slice prog labels =
 			   val slts = sl_sl_tyclassseq ts ll4
 		       in A.DecDots ((flattenLabId      [slid]) @
 				     (flattenLabType    [slty]) @
-				     (flattenLabTyVar   [sltv]) @
+				     (flattenLabTypeVar   [sltv]) @
 				     (flattenTyClassSeq [slts]))
 		       end
 		| sl_dec (A.DecClass (id, ts, r, l, n)) ll =

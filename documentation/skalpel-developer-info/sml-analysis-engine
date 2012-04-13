@@ -1,0 +1,57 @@
+################################################################################
+##
+## Copyright 2012 Heriot-Watt University
+##
+## Skalpel is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This file is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+##
+## Authors: John Pirie
+## Date: January 2012
+## Description: Contains information about the analysis engine
+##
+################################################################################
+
+================================================================================
+                                   Compilation
+================================================================================
+
+It is assumed that the user is in the analysis-engines/standard-ml/
+directory.
+
+If there is no Makefile, then run the configure script with
+./configure.
+
+================================================================================
+                                  Abbreviations
+================================================================================
+
+As few abbreviations should be used as possible should be used in the
+analysis engine. The more abbreviations that are used, the more
+confusing the code becomes. That said, it is true that very long lines
+of code are also not good programming practice. Therefore a list of
+allowed abbreviations are below, and any new created should be added
+to this list.
+
+Note that such a list of abbreviations doesn't apply to simple small
+uses of variables for example x in fn x => x, but rather to frequently
+used letters, such as datatype constructors and function names. For
+example, getND is a bad function name for a function that returns
+typename dependancies. Use getTypenameDependancies instead, so anyone
+who looks at the code has a fair idea of what is going on. Structure
+names are exempt from all of this (eg structure T = Ty is acceptable).
+
+cons - constructor
+var  - variable
+poly - polymorphic
+mono - monomorphic
+id   - identifier

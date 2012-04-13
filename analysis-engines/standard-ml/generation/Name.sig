@@ -30,6 +30,6 @@
 signature NAME = sig
 
     (* binds top level names *)
-    val getTyName : Id.assoc -> Env.typenv * Env.constraints
+    val getTypename : Id.assoc -> Env.typenv * Env.constraints
 
 end

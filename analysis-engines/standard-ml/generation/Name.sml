@@ -43,7 +43,7 @@ fun genCstTyZero ftycons tf lab =
 	lab
 
 fun genCstTyOne ftycons tf lab =
-    let val tv = T.freshtyvar ()
+    let val tv = T.freshTypeVar ()
     in E.initFunctionTypeConstraint
 	   tf
 	   (T.TFC (T.SC (T.constuple [tv] lab, T.noflex (), lab), ftycons tv lab, lab))
@@ -51,10 +51,10 @@ fun genCstTyOne ftycons tf lab =
     end
 
 (* construct a type with zero arguments *)
-fun constyZ f    lab = f    lab T.BB
+fun constyZ f    lab = f    lab T.BUILTIN_BASIS_CONS
 
 (* construct a type with one argument, passing in the type variable *)
-fun constyO f tv lab = f tv lab T.BB
+fun constyO f tv lab = f tv lab T.BUILTIN_BASIS_CONS
 
 (* generate constraints for types with zero arguments (eg string) *)
 fun genCstTyZero' ftycons = genCstTyZero (constyZ ftycons)
@@ -68,7 +68,7 @@ fun genBind id tyf tnKind = E.consBindPoly id (tyf, tnKind, ref (E.emvar, false)
 (* genBuiltZero is for types which do not require some kind of argument
  * such as string, int, or bool *)
 fun genBuildZero f id tnKind =
-    let val tyf  = T.newTFV ()
+    let val tyf  = T.newTYPE_FUNCTION_VAR ()
 	val c    = genCstTyZero' f tyf L.builtinLab
 	val bind = genBind id tyf tnKind
     in (bind, c)
@@ -77,15 +77,15 @@ fun genBuildZero f id tnKind =
 (* genBuildOne is for types which require some kind of argument
  * such as ref, list, or option *)
 fun genBuildOne f id tnKind =
-    let val tyf  = T.newTFV ()
+    let val tyf  = T.newTYPE_FUNCTION_VAR ()
 	val c    = genCstTyOne' f tyf L.builtinLab
 	val bind = genBind id tyf tnKind
     in (bind, c)
     end
 
 (* Generates binding for top level type names *)
-fun getTyName ascid =
-    let val ltnid = List.mapPartial (fn x => case I.lookupSt x ascid of SOME y => SOME (y, x) | _ => NONE) T.tyNames
+fun getTypename ascid =
+    let val ltnid = List.mapPartial (fn x => case I.lookupSt x ascid of SOME y => SOME (y, x) | _ => NONE) T.typenames
 	fun bindTyName (id, "unit")      = genBuildZero T.constyunit'      id E.TYP
 	  | bindTyName (id, "int")       = genBuildZero T.constyint'       id E.TYP
 	  | bindTyName (id, "word")      = genBuildZero T.constyword'      id E.TYP

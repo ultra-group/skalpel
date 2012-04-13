@@ -1,24 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -41,18 +34,22 @@ structure EH = ErrorHandler
 (* declare some types (mostly for errors!) *)
 type label    = int
 type id       = int
-type tyname   = int
+type typename   = int
 type laberr   = (label * string) list
 type recerr   = laberr * laberr * laberr * laberr
 type specerr  = label * id
 type arrerr   = label * int
 type iderr    = label * id
 type idserr   = label * id * string
-type tnerr    = label * tyname
+type tnerr    = label * typename
 type unmerr   = specerr * specerr list * label
 type synerr   = (int list * int) option
 
 (* in the Overload errors, need to add the labels associated with the overloading classes. *)
+(* WARNING: Changing the names of these constructors will break tests in the test database, so
+ *          when making any changes to the names of the constructors, changes MUST be made
+ *          there also. Furthermore, changes need to be made in JsonParser.sml, which also
+ *          has a list of these type constructors *)
 datatype kind = Circularity
 	      | Overload       of iderr  * tnerr * tnerr list (* value iderr overloaded to tnerrlist used on tnerr     *)
 	      | OverloadCst    of idserr * tnerr * tnerr list (* constant idserr overloaded to tnerrlist used on tnerr *)
@@ -79,7 +76,7 @@ datatype kind = Circularity
 	      | ExcIsDat       of synerr
 	      | ConIsVar       of synerr
 	      | DatIsExc       of synerr
-	      | TyVarBind      of synerr
+	      | TypeVarBind      of synerr
 	      | Warning        of string
 	      | Parsing        of string
 	      | NonFlexWhere   of iderr * iderr
@@ -89,7 +86,7 @@ datatype kind = Circularity
 	      | AppNotApp
 	      | DiffFunName
 	      | DiffNbArgFun
-	      | FreeTyVarTop
+	      | FreeTypeVarTop
 	      | AsPatVar
 	      | FnRecExp
 	      | RealInPat
@@ -132,9 +129,9 @@ fun printFields xs =
 	    xs) ^
     "}"
 
-fun printLabTyNames [] = ""
-  | printLabTyNames [(l, tn)] = T.printtyname' tn
-  | printLabTyNames ((l, tn) :: xs) = T.printtyname' tn ^ ", " ^ printLabTyNames xs
+fun printLabTypenames [] = ""
+  | printLabTypenames [(l, tn)] = T.printTypename' tn
+  | printLabTypenames ((l, tn) :: xs) = T.printTypename' tn ^ ", " ^ printLabTypenames xs
 
 fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (Overload ((lid, id), (l, tn), ltns)) asc =
@@ -142,9 +139,9 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
      "Variable "
      ^ getSt id asc
      ^ " overloaded to a list of types not including "
-     (*^ printLabTyNames ltns
+     (*^ printLabTypenames ltns
       ^ " not defined at type "*)
-     ^ T.printtyname' (T.tynameFromInt tn))
+     ^ T.printTypename' (T.typenameFromInt tn))
   | printErrKind (OverloadCst ((lid, id, str), (l, tn), ltns)) asc =
     ("OVC",
      "Constant "
@@ -152,7 +149,7 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
      ^ " overloaded to the overloading class "
      ^ getSt id asc
      ^  " not including "
-     ^ T.printtyname' (T.tynameFromInt tn))
+     ^ T.printTypename' (T.typenameFromInt tn))
   | printErrKind (OverloadClash ((lid1, id1, str1), ltns1, (lid2, id2, str2), ltns2)) asc =
     ("OCL",
      "Clash between the two constants "
@@ -186,19 +183,19 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (TyConsClash ((l1, tn1), (l2, tn2))) asc =
     ("TYP",
      "Type constructor clash between "
-     ^ T.printtyname' (T.tynameFromInt tn1)
+     ^ T.printTypename' (T.typenameFromInt tn1)
      ^ " and "
-     ^ T.printtyname' (T.tynameFromInt tn2))
+     ^ T.printTypename' (T.typenameFromInt tn2))
   | printErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) asc =
     ("ETR",
      "Equality type required to compare "
-     ^ T.printtyname' (T.tynameFromInt tn1)
+     ^ T.printTypename' (T.typenameFromInt tn1)
      ^ " and "
-     ^ T.printtyname' (T.tynameFromInt tn2))
+     ^ T.printTypename' (T.typenameFromInt tn2))
   | printErrKind (NotGenClash ((l1, tv), (l2, tn))) _ =
     ("GEN",
      "Structure's signature too general at type "
-     ^ T.printtyname' (T.tynameFromInt tn))
+     ^ T.printTypename' (T.typenameFromInt tn))
   | printErrKind (TooGenSig ((lab1, id), (lab2, tv), labs)) asc =
     ("TGS",
      "The value identifier "
@@ -275,14 +272,14 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (ExcIsDat   eo) _ = ("EXD", "Identifier declared as a datatype constructor and used as an exception")
   | printErrKind (ConIsVar   eo) _ = ("LON", "Identifier declared as a value and used as a constructor")  (*datatype/exception*)
   | printErrKind (DatIsExc   eo) _ = ("DCE", "Identifier declared as an exception and used as a datatype constructor")
-  | printErrKind (TyVarBind  eo) _ = ("UNG", "Ungeneralisable bound type variable")
+  | printErrKind (TypeVarBind  eo) _ = ("UNG", "Ungeneralisable bound type variable")
   | printErrKind Inclusion       _ = ("INC", "Unbound type variable in type or datatype declaration")
   | printErrKind AppNotApp       _ = ("APP", "Applied and not applied value")
   | printErrKind (ConsArgNApp _) _ = ("CAN", "Non applied constructor that is defined to take an argument")
   | printErrKind (ConsNArgApp _) _ = ("CNA", "Applied constructor that is defined to take no argument")
   | printErrKind DiffFunName     _ = ("FUN", "Different function name")
   | printErrKind DiffNbArgFun    _ = ("ARG", "Different number of arguments")
-  | printErrKind FreeTyVarTop    _ = ("FRE", "Free tyvar at top-level")
+  | printErrKind FreeTypeVarTop    _ = ("FRE", "Free type variable at top-level")
   | printErrKind AsPatVar        _ = ("LAS", "Left of 'as' must be a variable")
   | printErrKind FnRecExp        _ = ("FNE", "Expressions within rec value bindings must be functions")
   | printErrKind RealInPat       _ = ("REA", "Reals cannot occur within patterns")
@@ -318,13 +315,13 @@ fun printJsonUnm []             = ""
   | printJsonUnm ((l, n) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"id\": " ^ Int.toString n ^ " }," ^ printJsonUnm xs
 
 
-fun printSmlLabTyNames []              = ""
-  | printSmlLabTyNames [(l, tn)]       = "(" ^ printLab l ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ ")"
-  | printSmlLabTyNames ((l, tn) :: xs) = "(" ^ printLab l ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ ")," ^ printSmlLabTyNames xs
+fun printSmlLabTypenames []              = ""
+  | printSmlLabTypenames [(l, tn)]       = "(" ^ printLab l ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ ")"
+  | printSmlLabTypenames ((l, tn) :: xs) = "(" ^ printLab l ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ ")," ^ printSmlLabTypenames xs
 
-fun printJsonLabTyNames []             = ""
-  | printJsonLabTyNames [(l, tn)]       = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}"
-  | printJsonLabTyNames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"tyname\": " ^ T.printsmltn (T.tynameFromInt tn) ^ "}, " ^ printJsonLabTyNames xs
+fun printJsonLabTypenames []             = ""
+  | printJsonLabTypenames [(l, tn)]       = "{ \"label\": " ^ printLab l ^ ", \"Typename\": " ^ T.printsmltn (T.typenameFromInt tn) ^ "}"
+  | printJsonLabTypenames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"Typename\": " ^ T.printsmltn (T.typenameFromInt tn) ^ "}, " ^ printJsonLabTypenames xs
 
 val transfun = fn #"\n" => ""
 		| #"\\" => "\\\\"
@@ -335,41 +332,41 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind (Overload ((id, lid), (l, tn), ltns)) =
     "ErrorKind.Overload("
     ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ "),"
-    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.typenameFromInt tn)  ^ "),"
+    ^ "[" ^ printSmlLabTypenames ltns ^ "])"
   | printSmlErrKind (OverloadCst ((id, lid, str), (l, tn), ltns)) =
     "ErrorKind.OverloadCst("
     ^ "(" ^ printLab id ^ "," ^ Int.toString lid ^ ",\"" ^ str ^ "\"" ^ "),"
-    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.tynameFromInt tn)  ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns ^ "])"
+    ^ "(" ^ printLab l  ^ "," ^ T.printsmltn (T.typenameFromInt tn)  ^ "),"
+    ^ "[" ^ printSmlLabTypenames ltns ^ "])"
   | printSmlErrKind (OverloadClash ((id1, lid1, str1), ltns1, (id2, lid2, str2), ltns2)) =
     "ErrorKind.OverloadClash("
     ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ ",\"" ^  String.translate transfun str1 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
+    ^ "[" ^ printSmlLabTypenames ltns1 ^ "],"
     ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^  String.translate transfun str2 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+    ^ "[" ^ printSmlLabTypenames ltns2 ^ "])"
   | printSmlErrKind (OverloadIdCst ((id1, lid1), ltns1, (id2, lid2, str2), ltns2)) =
     "ErrorKind.OverloadIdCst("
     ^ "(" ^ printLab id1 ^ "," ^ Int.toString lid1 ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns1 ^ "],"
+    ^ "[" ^ printSmlLabTypenames ltns1 ^ "],"
     ^ "(" ^ printLab id2 ^ "," ^ Int.toString lid2 ^ ",\"" ^ String.translate transfun str2 ^ "\"" ^ "),"
-    ^ "[" ^ printSmlLabTyNames ltns2 ^ "])"
+    ^ "[" ^ printSmlLabTypenames ltns2 ^ "])"
   | printSmlErrKind (ArityClash ((l1, n1), (l2, n2))) =
     "ErrorKind.ArityClash("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString n1 ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ Int.toString n2 ^ "))"
   | printSmlErrKind (TyConsClash ((l1, tn1), (l2, tn2))) =
     "ErrorKind.TyConsClash("
-    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
+    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.typenameFromInt tn1) ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.typenameFromInt tn2) ^ "))"
   | printSmlErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) =
     "ErrorKind.EqTypeRequired("
-    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.tynameFromInt tn1) ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn2) ^ "))"
+    ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.typenameFromInt tn1) ^ "),"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.typenameFromInt tn2) ^ "))"
   | printSmlErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "ErrorKind.NotGenClash("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ "))"
   | printSmlErrKind (TooGenSig ((l1, id), (l2, tv), labs)) =
     "ErrorKind.TooGenSig("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString id ^ "),"
@@ -378,7 +375,7 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind (TyFunClash ((l1, tv), (l2, tn))) =
     "ErrorKind.TyFunClash("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
-    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.tynameFromInt tn) ^ "))"
+    ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ "))"
   | printSmlErrKind (LabTyClash (ll1, ll2, ll3, ll4)) =
     "ErrorKind.LabTyClash("
     ^ "[" ^ printSmlLabErr ll1 ^ "]" ^ "," ^ "[" ^ printSmlLabErr ll2 ^ "]" ^ ","
@@ -421,7 +418,7 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind (ExcIsDat   eo) = "ErrorKind.ExcIsDat("   ^ printSmlAsmpOp eo ^ ")"
   | printSmlErrKind (ConIsVar   eo) = "ErrorKind.ConIsVar("   ^ printSmlAsmpOp eo ^ ")"
   | printSmlErrKind (DatIsExc   eo) = "ErrorKind.DatIsExc("   ^ printSmlAsmpOp eo ^ ")"
-  | printSmlErrKind (TyVarBind  eo) = "ErrorKind.TyVarBind("  ^ printSmlAsmpOp eo ^ ")"
+  | printSmlErrKind (TypeVarBind  eo) = "ErrorKind.TypeVarBind("  ^ printSmlAsmpOp eo ^ ")"
   | printSmlErrKind (Warning    st) = "ErrorKind.Warning(\""  ^ st ^ "\")"
   | printSmlErrKind (Parsing    st) = "ErrorKind.Parsing(\""  ^ st ^ "\")"
   | printSmlErrKind RigidWhere      = "ErrorKind.RigidWhere"
@@ -429,7 +426,7 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind AppNotApp       = "ErrorKind.AppNotApp"
   | printSmlErrKind DiffFunName     = "ErrorKind.DiffFunName"
   | printSmlErrKind DiffNbArgFun    = "ErrorKind.DiffNbArgFun"
-  | printSmlErrKind FreeTyVarTop    = "ErrorKind.FreeTyVarTop"
+  | printSmlErrKind FreeTypeVarTop    = "ErrorKind.FreeTypeVarTop"
   | printSmlErrKind AsPatVar        = "ErrorKind.AsPatVar"
   | printSmlErrKind FnRecExp        = "ErrorKind.FnRecExp"
   | printSmlErrKind RealInPat       = "ErrorKind.RealInPat"
@@ -441,41 +438,41 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (Overload ((id, lid), (l, tn), ltns)) =
     "{\"errorKindName\": \"ErrorKind.Overload\", \"errorKindInfo\": {"
     ^ "\"iderrLabel\": " ^ printLab id ^ ", \"iderrId\": " ^ Int.toString lid
-    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTyname\": " ^ T.printsmltn (T.tynameFromInt tn)
-    ^ ", \"tnerrList\": [" ^ printJsonLabTyNames ltns ^ "]}}"
+    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTypename\": " ^ T.printsmltn (T.typenameFromInt tn)
+    ^ ", \"tnerrList\": [" ^ printJsonLabTypenames ltns ^ "]}}"
   | printJsonErrKind (OverloadCst ((id, lid, str), (l, tn), ltns)) =
     "{\"errorKindName\": \"ErrorKind.OverloadCst\", \"errorKindInfo\": {"
     ^ "\"idserrLabel\": " ^ printLab id ^ ", \"idserrId\": " ^ Int.toString lid ^ ", \"idserrString\": \""^ str ^"\""
-    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTyname\": " ^ T.printsmltn (T.tynameFromInt tn)
-    ^ ", \"tnerrList\": [" ^ printJsonLabTyNames ltns ^ "]}}"
+    ^ ", \"tnerrLabel\": " ^ printLab l  ^ ", \"tnerrTypename\": " ^ T.printsmltn (T.typenameFromInt tn)
+    ^ ", \"tnerrList\": [" ^ printJsonLabTypenames ltns ^ "]}}"
   | printJsonErrKind (OverloadClash ((id1, lid1, str1), ltns1, (id2, lid2, str2), ltns2)) =
     "{\"errorKindName\": \"ErrorKind.OverloadClash\", \"errorKindInfo\": {"
     ^ "\"idserrLabel1\": " ^ printLab id1 ^ ", \"idserrId1\": " ^ Int.toString lid1 ^ ", \"idserrString1\": \""^ String.translate transfun str1 ^"\""
-    ^ ", \"tnerrList1\": [" ^ printJsonLabTyNames ltns1 ^ "]"
+    ^ ", \"tnerrList1\": [" ^ printJsonLabTypenames ltns1 ^ "]"
     ^ ", \"idserrLabel2\": " ^ printLab id2 ^ ", \"idserrId2\": " ^ Int.toString lid2 ^ ", \"idserrString2\": \""^ String.translate transfun str2 ^"\""
-    ^ ", \"tnerrList2\": [" ^ printJsonLabTyNames ltns2 ^ "]}}"
+    ^ ", \"tnerrList2\": [" ^ printJsonLabTypenames ltns2 ^ "]}}"
   | printJsonErrKind (OverloadIdCst ((id1, lid1), ltns1, (id2, lid2, str2), ltns2)) =
     "{\"errorKindName\": \"ErrorKind.OverloadIdCst\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab id1 ^ ", \"iderrId1\": " ^ Int.toString lid1
-    ^ ", \"tnerrList1\": [" ^ printJsonLabTyNames ltns1 ^ "]"
+    ^ ", \"tnerrList1\": [" ^ printJsonLabTypenames ltns1 ^ "]"
     ^ ", \"idserrLabel2\": " ^ printLab id2 ^ ", \"idserrId2\": " ^ Int.toString lid2 ^ ", \"idserrString2\": \""^ String.translate transfun str2 ^"\""
-    ^ ", \"tnerrList2\": [" ^ printJsonLabTyNames ltns2 ^ "]}}"
+    ^ ", \"tnerrList2\": [" ^ printJsonLabTypenames ltns2 ^ "]}}"
   | printJsonErrKind (ArityClash ((l1, n1), (l2, n2))) =
     "{\"errorKindName\": \"ErrorKind.ArityClash\", \"errorKindInfo\": {"
     ^ "\"arrerrLabel1\": " ^ printLab l1 ^ ", \"arrerrId1\": " ^ Int.toString n1
     ^ ", \"arrerrLabel2\": " ^ printLab l2 ^ ", \"arrerrId2\": " ^ Int.toString n2 ^"}}"
   | printJsonErrKind (TyConsClash ((l1, tn1), (l2, tn2))) =
     "{\"errorKindName\": \"ErrorKind.TyConsClash\", \"errorKindInfo\": {"
-    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
+    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTypename1\": " ^ T.printsmltn (T.typenameFromInt tn1)
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTypename2\": " ^ T.printsmltn (T.typenameFromInt tn2) ^"}}"
   | printJsonErrKind (EqTypeRequired ((l1, tn1), (l2, tn2))) =
     "{\"errorKindName\": \"ErrorKind.EqTypeRequired\", \"errorKindInfo\": {"
-    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTyname1\": " ^ T.printsmltn (T.tynameFromInt tn1)
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn2) ^"}}"
+    ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTypename1\": " ^ T.printsmltn (T.typenameFromInt tn1)
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTypename2\": " ^ T.printsmltn (T.typenameFromInt tn2) ^"}}"
   | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.NotGenClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTypename2\": " ^ T.printsmltn (T.typenameFromInt tn) ^"}}"
   | printJsonErrKind (TooGenSig ((l1, id), (l2, tv), labs)) =
     "{\"errorKindName\": \"ErrorKind.TooGenSig\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString id
@@ -484,7 +481,7 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (TyFunClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.TyFunClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv
-    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTyname2\": " ^ T.printsmltn (T.tynameFromInt tn) ^"}}"
+    ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTypename2\": " ^ T.printsmltn (T.typenameFromInt tn) ^"}}"
   | printJsonErrKind (LabTyClash (ll1, ll2, ll3, ll4)) =
     "{\"errorKindName\": \"ErrorKind.LabTyClash\", \"errorKindInfo\": {"
     ^ "\"laberr1\": [" ^ printJsonLabErr ll1 ^ "], \"laberr2\": [" ^ printJsonLabErr ll2 ^ "], "
@@ -530,7 +527,7 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (ExcIsDat   eo) = "{\"errorKindName\": \"ErrorKind.ExcIsDat\", "   ^ printJsonAsmpOp eo
   | printJsonErrKind (ConIsVar   eo) = "{\"errorKindName\": \"ErrorKind.ConIsVar\", "   ^ printJsonAsmpOp eo
   | printJsonErrKind (DatIsExc   eo) = "{\"errorKindName\": \"ErrorKind.DatIsExc\", "   ^ printJsonAsmpOp eo
-  | printJsonErrKind (TyVarBind  eo) = "{\"errorKindName\": \"ErrorKind.TyVarBind\", "  ^ printJsonAsmpOp eo
+  | printJsonErrKind (TypeVarBind  eo) = "{\"errorKindName\": \"ErrorKind.TypeVarBind\", "  ^ printJsonAsmpOp eo
   | printJsonErrKind (Warning    st) = "{\"errorKindName\": \"ErrorKind.Warning\", \"warningStr\": \"" ^ st ^ "\"}"
   | printJsonErrKind (Parsing    st) = "{\"errorKindName\": \"ErrorKind.Parsing\", \"parsingStr\": \"" ^ st ^ "\"}"
   | printJsonErrKind RigidWhere      = "{\"errorKindName\": \"ErrorKind.RigidWhere\"}"
@@ -538,7 +535,7 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind AppNotApp       = "{\"errorKindName\": \"ErrorKind.AppNotApp\"}"
   | printJsonErrKind DiffFunName     = "{\"errorKindName\": \"ErrorKind.DiffFunName\"}"
   | printJsonErrKind DiffNbArgFun    = "{\"errorKindName\": \"ErrorKind.DiffNbArgFun\"}"
-  | printJsonErrKind FreeTyVarTop    = "{\"errorKindName\": \"ErrorKind.FreeTyVarTop\"}"
+  | printJsonErrKind FreeTypeVarTop    = "{\"errorKindName\": \"ErrorKind.FreeTypeVarTop\"}"
   | printJsonErrKind AsPatVar        = "{\"errorKindName\": \"ErrorKind.AsPatVar\"}"
   | printJsonErrKind FnRecExp        = "{\"errorKindName\": \"ErrorKind.FnRecExp\"}"
   | printJsonErrKind RealInPat       = "{\"errorKindName\": \"ErrorKind.RealInPat\"}"
@@ -573,14 +570,14 @@ fun issem Circularity        = true
   | issem (ExcIsDat       _) = false
   | issem (ConIsVar       _) = false
   | issem (DatIsExc       _) = false
-  | issem (TyVarBind      _) = false
+  | issem (TypeVarBind      _) = false
   | issem (Warning        _) = false
   | issem (Parsing        _) = false
   | issem Inclusion          = false
   | issem AppNotApp          = false
   | issem DiffFunName        = false
   | issem DiffNbArgFun       = false
-  | issem FreeTyVarTop       = false
+  | issem FreeTypeVarTop       = false
   | issem AsPatVar           = false
   | issem FnRecExp           = false
   | issem RealInPat          = false
@@ -593,42 +590,5 @@ fun issyn x = not (issem x)
  * stay in the minimal error. *)
 fun getLabsEk (ArityClash ((lab1, _), (lab2, _))) = L.ord [L.fromInt lab1, L.fromInt lab2]
   | getLabsEk _ = L.empty
-
-(*(* This does not seem to be used anymore.
- * Where and why was it used in the first place? *)
-fun getLabelsErrorKind (ArityClash  ((l1, _), (l2, _))) = O.ord [l1, l2]
-  | getLabelsErrorKind (TyConsClash ((l1, _), (l2, _))) = O.ord [l1, l2]
-  | getLabelsErrorKind (NotGenClash ((l1, _), (l2, _))) = O.ord [l1, l2]
-  | getLabelsErrorKind (TyFunClash  ((l1, _), (l2, _))) = O.ord [l1, l2]
-  | getLabelsErrorKind (LabTyClash  (l1, l2, l3, l4))   = O.ord (map (fn (l, _) => l) (l1 @ l2 @ l3 @ l4))
-  | getLabelsErrorKind (Unmatched   ((l, _), ls, lab))  = O.ord (l :: map (fn (l, _) => l) ls)
-  | getLabelsErrorKind (UnbWhere    ((l, _), ls, lab))  = O.ord (l :: map (fn (l, _) => l) ls)
-  | getLabelsErrorKind (MissConsSig ((l, _), ls))       = O.ord (l :: map (fn (l, _) => l) ls)
-  | getLabelsErrorKind (MissConsStr ((l, _), ls))       = O.ord (l :: map (fn (l, _) => l) ls)
-  | getLabelsErrorKind (DatTypClash (_, l1, l2))        = O.ord [l1, l2]
-  | getLabelsErrorKind (ConsArgNApp (l1, l2))           = O.ord [l1, l2]
-  | getLabelsErrorKind (ConsNArgApp (l1, l2))           = O.ord [l1, l2]
-  | getLabelsErrorKind (Overload    (_, (l, _), ltns))  = O.ord (l :: (map (fn (l, _) => l) ltns))
-  | getLabelsErrorKind Circularity    = O.empty
-  | getLabelsErrorKind (MultiOcc   _) = O.empty
-  | getLabelsErrorKind (ValVarApp  _) = O.empty
-  | getLabelsErrorKind (ExcIsVar   _) = O.empty
-  | getLabelsErrorKind (ExcIsDat   _) = O.empty
-  | getLabelsErrorKind (ConIsVar   _) = O.empty
-  | getLabelsErrorKind (DatIsExc   _) = O.empty
-  | getLabelsErrorKind (TyVarBind  _) = O.empty
-  | getLabelsErrorKind (Parsing    _) = O.empty
-  | getLabelsErrorKind Inclusion      = O.empty
-  | getLabelsErrorKind AppNotApp      = O.empty
-  | getLabelsErrorKind DiffFunName    = O.empty
-  | getLabelsErrorKind DiffNbArgFun   = O.empty
-  | getLabelsErrorKind FreeTyVarTop   = O.empty
-  | getLabelsErrorKind AsPatVar       = O.empty
-  | getLabelsErrorKind FnRecExp       = O.empty
-  | getLabelsErrorKind RealInPat      = O.empty
-  | getLabelsErrorKind FreeIdent      = O.empty
-
-(* This is not used anymore. *)
-fun getNameErrorKind x = #2 (printErrKind x I.emAssoc)*)
 
 end

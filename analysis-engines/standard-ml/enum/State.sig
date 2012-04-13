@@ -1,21 +1,17 @@
 (* Copyright 2009 2010 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -29,22 +25,22 @@ signature STATE = sig
 
     type path  = int list (* the int corresponds to the nth type of a ortype *)
     type paths = path list
-    type rcty  = Ty.rowty list * Ty.flex * (Label.label * Ty.labcons) ExtLab.extLab list
+    type rcty  = Ty.rowType list * Ty.flex * (Label.label * Ty.labcons) ExtLab.extLab list
 
     type stTv = Ty.ty
-    type stTf = Ty.tyfun
-    type stTn = Ty.tnty
-    type stSq = Ty.seqty
-    type stRt = Ty.rowty
-    type stLt = Ty.labty
+    type stTf = Ty.typeFunction
+    type stTn = Ty.typenameType
+    type stSq = Ty.sequenceType
+    type stRt = Ty.rowType
+    type stLt = Ty.labelType
     type stEv = Env.environment
     type stRc = (rcty * rcty) (* this is for records *)
-    type stGe = Ty.exttyvar
-    type stAr = Ty.seqty
+    type stGe = Ty.explicitTypeVar
+    type stAr = Ty.sequenceType
     type stOr = paths         ExtLab.extLab
     type stCl = ClassId.class ExtLab.extLab
-    type stNa = Ty.tyname     ExtLab.extLab
-    (* We could also add, along with the tyvar list, a boolean to mark
+    type stNa = Ty.typename     ExtLab.extLab
+    (* We could also add, along with the typeVar list, a boolean to mark
      * such an entry and dependent (true) or independent (false).
      * We might need the depth of the dependency as well (rank?). *)
 
@@ -56,16 +52,16 @@ signature STATE = sig
     type state
 
     (* ACCESS THE UNIFIERS AND ENVIRONMENTS *)
-    val getValStateTv      : state -> Ty.tyvar         -> stTv option
-    val getValStateTf      : state -> Ty.tyfvar        -> stTf option
-    val getValStateTn      : state -> Ty.tynamevar     -> stTn option
-    val getValStateSq      : state -> Ty.sequenceVariable        -> stSq option
-    val getValStateRt      : state -> Ty.rowvar        -> stRt option
-    val getValStateLt      : state -> Ty.labvar        -> stLt option
+    val getValStateTv      : state -> Ty.typeVar         -> stTv option
+    val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
+    val getValStateTn      : state -> Ty.typenameVar     -> stTn option
+    val getValStateSq      : state -> Ty.sequenceVar        -> stSq option
+    val getValStateRt      : state -> Ty.rowVar        -> stRt option
+    val getValStateLt      : state -> Ty.labelVar        -> stLt option
     val getValStateEv      : state -> Env.envvar       -> stEv option
     val getValStateOr      : state -> Ty.idor          -> stOr option
     val getValStateCl      : state -> ClassId.classvar -> stCl option
-    val getValStateGe      : state -> Ty.tyvar         -> stGe option
+    val getValStateGe      : state -> Ty.typeVar         -> stGe option
 
     val getValStateAr      : state -> Id.lid -> Label.label option -> stAr
 
@@ -87,16 +83,16 @@ signature STATE = sig
     (*val getValStateApFirst : state -> Id.lid -> stUb option*)
 
     (* UPDATE THE UNIFIERS AND ENVIRONMENTS *)
-    val updateStateTv      : state -> Ty.tyvar         -> stTv -> unit
-    val updateStateTf      : state -> Ty.tyfvar        -> stTf -> unit
-    val updateStateTn      : state -> Ty.tynamevar     -> stTn -> unit
-    val updateStateSq      : state -> Ty.sequenceVariable        -> stSq -> unit
-    val updateStateRt      : state -> Ty.rowvar        -> stRt -> unit
-    val updateStateLt      : state -> Ty.labvar        -> stLt -> unit
+    val updateStateTv      : state -> Ty.typeVar         -> stTv -> unit
+    val updateStateTf      : state -> Ty.typeFunctionVar        -> stTf -> unit
+    val updateStateTn      : state -> Ty.typenameVar     -> stTn -> unit
+    val updateStateSq      : state -> Ty.sequenceVar        -> stSq -> unit
+    val updateStateRt      : state -> Ty.rowVar        -> stRt -> unit
+    val updateStateLt      : state -> Ty.labelVar        -> stLt -> unit
     val updateStateEv      : state -> Env.envvar       -> stEv -> unit
     val updateStateOr      : state -> Ty.idor          -> stOr -> unit
     val updateStateCl      : state -> ClassId.classvar -> stCl -> unit
-    val updateStateGe      : state -> Ty.tyvar         -> stGe -> unit
+    val updateStateGe      : state -> Ty.typeVar         -> stGe -> unit
 
     (* for free identifiers *)
     val updateStateFr      : state -> Id.labelledId -> unit
@@ -127,21 +123,21 @@ signature STATE = sig
     val getDomTv           : state -> OrdSet.ordset
     val getDomGe           : state -> OrdSet.ordset
 
-    val isInGe             : state -> Ty.tyvar -> bool
+    val isInGe             : state -> Ty.typeVar -> bool
 
     val initState          : unit  -> state
     (*val resetState         : state -> unit*)
     val isEmpty            : state -> bool
     (*val copyState          : state -> state*)
 
-    (* checks if the tyname is in the state *)
-    val isAName            : Ty.tyname -> state -> bool
+    (* checks if the typename is in the state *)
+    val isAName            : Ty.typename -> state -> bool
 
     (* PUSH AN ENVIRONMENT ONTO A STATE *)
-    val pushEnvToState     : bool -> Env.environment -> state -> (Ty.tyvar list * stNa list)
+    val pushEnvToState     : bool -> Env.environment -> state -> (Ty.typeVar list * stNa list)
 
     (* REMOVE AN ENVIRONMENT FROM A STATE *)
-    val remEnvFromState    : bool -> (Ty.tyvar list * stNa list) -> state -> unit
+    val remEnvFromState    : bool -> (Ty.typeVar list * stNa list) -> state -> unit
 
     (* CHECKS IF THE ENVIRONMENT IN THE STATE HIDS WITH ENVIRONMENT VARIABLES *)
     val hasEnvVar          : state -> bool

@@ -1,21 +1,17 @@
 (* Copyright 2009 2010 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -36,12 +32,12 @@ structure OM = SplayMapFn (OrdKey)
 
 (* a new type which will hold the state of all the various
  * different variables from Ty *)
-type state = {tv : T.tyvar     option OM.map ref,
-	      tf : T.tyfvar    option OM.map ref,
-	      tn : T.tynamevar option OM.map ref,
-	      sq : T.sequenceVariable    option OM.map ref,
-	      rt : T.rowvar    option OM.map ref,
-	      lt : T.labvar    option OM.map ref,
+type state = {tv : T.typeVar     option OM.map ref,
+	      tf : T.typeFunctionVar    option OM.map ref,
+	      tn : T.typenameVar option OM.map ref,
+	      sq : T.sequenceVar    option OM.map ref,
+	      rt : T.rowVar    option OM.map ref,
+	      lt : T.labelVar  option OM.map ref,
 	      ev : E.envvar    option OM.map ref,
 	      or : T.idor      option OM.map ref}
 
@@ -68,13 +64,13 @@ fun freshvargen x onestate ffresh fint =
        | SOME y => y)
 
 (* generates fresh variables from Ty *)
-fun freshTyVar     x (state : state) = freshvargen x (#tv state) T.freshtyvar     T.tyvarToInt
-fun freshTyfVar    x (state : state) = freshvargen x (#tf state) T.freshtyfvar    T.tyfvarToInt
-fun freshTyNameVar x (state : state) = freshvargen x (#tn state) T.freshtynamevar T.tynamevarToInt
-fun freshSequenceVariable    x (state : state) = freshvargen x (#sq state) T.freshSequenceVariable    T.sequenceVariableToInt
-fun freshRowVar    x (state : state) = freshvargen x (#rt state) T.freshrowvar    T.rowvarToInt
-fun freshLabVar    x (state : state) = freshvargen x (#lt state) T.freshlabvar    T.labvarToInt
-fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshEnvVar    E.envVarToInt
-fun freshIdOr      x (state : state) = freshvargen x (#or state) T.freshidor      T.idorToInt
+fun freshTypeVar         x (state : state) = freshvargen x (#tv state) T.freshTypeVar         T.typeVarToInt
+fun freshTypeFunctionVar x (state : state) = freshvargen x (#tf state) T.freshTypeFunctionVar T.typeFunctionVarToInt
+fun freshTypenameVar  x (state : state) = freshvargen x (#tn state) T.freshTypenameVar T.typenameVarToInt
+fun freshSequenceVar x (state : state) = freshvargen x (#sq state) T.freshSequenceVar    T.sequenceVarToInt
+fun freshRowVar    x (state : state) = freshvargen x (#rt state) T.freshRowVar   T.rowVarToInt
+fun freshLabVar    x (state : state) = freshvargen x (#lt state) T.freshLabelVar T.labelVarToInt
+fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshEnvVar   E.envVarToInt
+fun freshIdOr      x (state : state) = freshvargen x (#or state) T.freshidor     T.idorToInt
 
 end

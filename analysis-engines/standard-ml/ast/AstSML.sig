@@ -397,19 +397,19 @@ signature ASTSML = sig
       | LongTyConId     of tycon
       | LongTyConDots   of part list
 
-    and labtyvar =
-	LabTyVar        of typevar * Reg.region list * Label.label * next
-      | LabTyVarDots    of typevar list
+    and labtypevar =
+	LabTypeVar        of typevar * Reg.region list * Label.label * next
+      | LabTypeVarDots    of typevar list
 
     and typevar =
 	TypeVar         of string * Id.id * Reg.region * Label.label * next (* the int is a typevar *)
       | TypeVarDots
 
-    and tyvarseq =
-	TyVarSeqOne     of typevar * Reg.region * Label.label * next
-      | TyVarSeqEm      of Reg.region * Label.label * next
-      | TyVarSeqSeq     of labtyvar list * Reg.region list * Label.label * next
-      | TyVarSeqDots    of typevar list
+    and typevarseq =
+	TypeVarSeqOne     of typevar * Reg.region * Label.label * next
+      | TypeVarSeqEm      of Reg.region * Label.label * next
+      | TypeVarSeqSeq     of labtypevar list * Reg.region list * Label.label * next
+      | TypeVarSeqDots    of typevar list
 
     (* NO REG.REGION? *)
     (* Do we need this labtype in a constructor binding or a unique type sequence? *)
@@ -472,11 +472,11 @@ signature ASTSML = sig
       | ValBindDots     of part list
 
     and datname =
-	DatName         of tyvarseq * tycon * Reg.region list * next
+	DatName         of typevarseq * tycon * Reg.region list * next
       | DatNameDots
 
     and ldatname = (* stands for long dat name because of the longtycon *)
-	LDatName        of tyvarseq * longtycon * Reg.region list * next
+	LDatName        of typevarseq * longtycon * Reg.region list * next
       | LDatNameDots
 
     and datbind =
@@ -563,8 +563,8 @@ signature ASTSML = sig
       | IdentSeqDots    of part list
 
     and dec =
-	DecVal          of tyvarseq * valbind  * Reg.region * next
-      | DecFVal         of tyvarseq * fvalbind * Reg.region * next
+	DecVal          of typevarseq * valbind  * Reg.region * next
+      | DecFVal         of typevarseq * fvalbind * Reg.region * next
       | DecDatType      of datbindseq * Reg.region * next
       | DecDatWith      of datbindseq * typbindseq * Reg.region list * Label.label * next
       | DecDatRep       of tycon * longtycon * Reg.region list * Label.label * next
@@ -577,7 +577,7 @@ signature ASTSML = sig
       | DecInfix        of int * identseq * Reg.region * Label.label * next (* default is 0 *)
       | DecInfixr       of int * identseq * Reg.region * Label.label * next
       | DecNonfix       of identseq * Reg.region * Label.label * next
-      | DecOverload     of labid * labtype * labtyvar * tyclassseq * Reg.region list * Label.label * next
+      | DecOverload     of labid * labtype * labtypevar * tyclassseq * Reg.region list * Label.label * next
       | DecClass        of labclass * tyclassseq * Reg.region * Label.label * next
       | DecDots         of part list
 
@@ -740,7 +740,7 @@ signature ASTSML = sig
     val getNonBasProgs     : progs -> progs
 
     (* These functions are only used in Slice.sml by the slicing algorithm *)
-    val getTyVarSeqNext    : tyvarseq     -> next option
+    val getTypeVarSeqNext    : typevarseq     -> next option
     val getLabTypeNext     : labtype      -> next option
     val getTypeNext        : types        -> next option
     val getTyRowNext       : tyrow        -> next option
@@ -787,7 +787,7 @@ signature ASTSML = sig
     val getFunIdNext       : funid        -> next option
     val getLongTyConNext   : longtycon    -> next option
     val getTypeVarNext     : typevar      -> next option
-    val getLabTyVarNext    : labtyvar     -> next option
+    val getLabTypeVarNext  : labtypevar     -> next option
     val getSigExpNext      : sigexp       -> next option
     val getLabSigExpNext   : labsigexp    -> next option
     val getStrDecNext      : strdec       -> next option
@@ -819,7 +819,7 @@ signature ASTSML = sig
     val getProgOneFirst   : progone   -> Label.label option
     val getProgFirst      : prog      -> Label.label option
 
-    val getlabTyvarseq     : tyvarseq     -> Label.labels
+    val getlabTypeVarseq     : typevarseq     -> Label.labels
 
     (*val getlabIdent        : ident        -> Label.labels*)
     val getlabDatName      : datname      -> Label.labels
@@ -877,21 +877,21 @@ signature ASTSML = sig
      * member of the list will is the variable (represented as the AST
      * subtree containing the occurrence) representing an exception
      * definition the type variable occurs within. *)
-    val gettyvarConbindseq : conbindseq   -> typevar list
-    val gettyvarType       : types        -> typevar list
-    val gettyvarLabType    : labtype      -> typevar list
-    val gettyvarDatName    : datname      -> typevar list
-    val gettyvarLDatName   : ldatname     -> typevar list
-    val gettyvarValBind    : valbind      -> typevar list
-    val gettyvarFValBind   : fvalbind     -> typevar list
-    val gettyvarExp        : exp          -> typevar list
-    val gettyvarLabExp     : labexp       -> typevar list
-    val gettyvarSigExp     : sigexp       -> typevar list
-    val gettyvarProg       : prog         -> typevar list
-    val gettyvarProgs      : progs        -> typevar list
-    val gettyvarValDesc    : valdesc      -> typevar list
-    val gettyvarConDesc    : condesc      -> typevar list
-    val gettyvarTyVarSeq   : tyvarseq     -> typevar list
+    val getTypeVarConbindseq : conbindseq   -> typevar list
+    val getTypeVarType       : types        -> typevar list
+    val getTypeVarLabType    : labtype      -> typevar list
+    val getTypeVarDatName    : datname      -> typevar list
+    val getTypeVarLDatName   : ldatname     -> typevar list
+    val getTypeVarValBind    : valbind      -> typevar list
+    val getTypeVarFValBind   : fvalbind     -> typevar list
+    val getTypeVarExp        : exp          -> typevar list
+    val getTypeVarLabExp     : labexp       -> typevar list
+    val getTypeVarSigExp     : sigexp       -> typevar list
+    val getTypeVarProg       : prog         -> typevar list
+    val getTypeVarProgs      : progs        -> typevar list
+    val getTypeVarValDesc    : valdesc      -> typevar list
+    val getTypeVarConDesc    : condesc      -> typevar list
+    val getTypeVarTypeVarSeq : typevarseq     -> typevar list
 
     (* returns the labels of the expressions which are not functions *)
     val isExpFnValBindSeq  : valbindseq   -> Label.labels list

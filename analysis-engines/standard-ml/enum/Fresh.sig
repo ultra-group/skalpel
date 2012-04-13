@@ -29,13 +29,13 @@ signature FRESH = sig
     val finitState : unit -> state
 
     (* generates fresh variables *)
-    val freshTyVar          : Ty.tyvar     -> state -> Ty.tyvar
-    val freshTyfVar         : Ty.tyfvar    -> state -> Ty.tyfvar
-    val freshTyNameVar      : Ty.tynamevar -> state -> Ty.tynamevar
-    val freshSequenceVariable    : Ty.sequenceVariable    -> state -> Ty.sequenceVariable
-    val freshRowVar         : Ty.rowvar    -> state -> Ty.rowvar
-    val freshLabVar         : Ty.labvar    -> state -> Ty.labvar
-    val freshEnvVar         : Env.envvar   -> state -> Env.envvar
-    val freshIdOr           : Ty.idor      -> state -> Ty.idor
+    val freshTypeVar            : Ty.typeVar     -> state -> Ty.typeVar
+    val freshTypeFunctionVar    : Ty.typeFunctionVar    -> state -> Ty.typeFunctionVar
+    val freshTypenameVar        : Ty.typenameVar -> state -> Ty.typenameVar
+    val freshSequenceVar        : Ty.sequenceVar    -> state -> Ty.sequenceVar
+    val freshRowVar             : Ty.rowVar    -> state -> Ty.rowVar
+    val freshLabVar             : Ty.labelVar    -> state -> Ty.labelVar
+    val freshEnvVar             : Env.envvar   -> state -> Env.envvar
+    val freshIdOr               : Ty.idor      -> state -> Ty.idor
 
 end

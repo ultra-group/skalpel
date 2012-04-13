@@ -280,9 +280,9 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | tylab            of A.tylab t
 | tycon            of A.tycon t
 | typevar          of A.typevar t
-| labtyvar         of (R.region list -> A.labtyvar) t
-| tyvarseqcomma    of ((R.region list -> R.region list -> A.labtyvar list) * R.region list) t
-| tyvarseq         of A.tyvarseq t
+| labtypevar         of (R.region list -> A.labtypevar) t
+| typevarseqcomma    of ((R.region list -> R.region list -> A.labtypevar list) * R.region list) t
+| typevarseq         of A.typevarseq t
 | typetuple        of (A.types t) list * R.region list list * R.region list
 | consty           of A.types t
 | onetyrow         of A.tyrow t
@@ -1208,21 +1208,21 @@ condesc :
 	end)
 
 datdescone :
-  tyvarseq tycon EQUALOP condesc
+  typevarseq tycon EQUALOP condesc
     (fn (n, nasc) =>
 	let val (tn, masc) = tycon (L.nextLabel n, nasc)
-	    val (tvs, (p, pasc)) = tyvarseq masc
+	    val (tvs, (p, pasc)) = typevarseq masc
 	    val (cd, (q, qasc)) = condesc (p, pasc)
-	    val reg1 = getRegion tyvarseqright tyconleft
+	    val reg1 = getRegion typevarseqright tyconleft
 	    val reg2 = R.consReg EQUALOPleft EQUALOPright
- 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tyvarseq tycon EQUALOP condesc"
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: typevarseq tycon EQUALOP condesc"
 	in (A.DatDescOne (A.DatName (tvs, tn, reg1, p), cd, reg2, n, q), (q, qasc))
 	end)
 | tycon EQUALOP condesc
     (fn (n, nasc) =>
 	let val (tn, (p, pasc)) = tycon (L.nextLabel n, nasc)
 	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val tvs = A.TypeVarSeqEm (tvsreg, p, L.nextLabel p)
 	    val (cd, (q, qasc)) = condesc (L.nextLabel p, pasc)
 	    val reg = R.consReg EQUALOPleft EQUALOPright
  	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tycon EQUALOP condesc"
@@ -1697,45 +1697,45 @@ typevar :
 	in (A.TypeVar (EQTYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
 
-labtyvar :
+labtypevar :
   typevar
     (fn (n, asc) =>
 	let val (tv, (m, ascm)) = typevar (L.nextLabel n, asc)
-	in (fn rs => A.LabTyVar (tv, rs, n, m), (m, ascm))
+	in (fn rs => A.LabTypeVar (tv, rs, n, m), (m, ascm))
 	end)
 
-tyvarseqcomma :
-  labtyvar
+typevarseqcomma :
+  labtypevar
     (fn nasc =>
-	let val (tv, masc) = labtyvar nasc
+	let val (tv, masc) = labtypevar nasc
 	in ((fn rl => fn rr => [tv (rl @ rr)], []), masc)
 	end)
-| labtyvar COMMA tyvarseqcomma
+| labtypevar COMMA typevarseqcomma
     (fn nasc =>
-	let val (tv, masc) = labtyvar nasc
-	    val ((tvc, regl), pasc) = tyvarseqcomma masc
+	let val (tv, masc) = labtypevar nasc
+	    val ((tvc, regl), pasc) = typevarseqcomma masc
 	    val reg = R.consReg COMMAleft COMMAleft
-	    val rl' = getRegion labtyvarright COMMAleft
-	    val rr' = getRegion COMMAright tyvarseqcommaleft
+	    val rl' = getRegion labtypevarright COMMAleft
+	    val rr' = getRegion COMMAright typevarseqcommaleft
 	in ((fn rl => fn rr => (tv (rl @ rl')) :: (tvc rr' rr), reg :: regl), pasc)
 	end)
 
-tyvarseq :
+typevarseq :
   typevar
     (fn (n, asc) =>
 	let val (tv, (m, asc')) = typevar (L.nextLabel n, asc)
 	    val reg = R.consReg typevarleft typevarright
-	in (A.TyVarSeqOne (tv, reg, n, m), (m, asc'))
+	in (A.TypeVarSeqOne (tv, reg, n, m), (m, asc'))
 	end)
-| LPAREN tyvarseqcomma RPAREN
+| LPAREN typevarseqcomma RPAREN
     (fn (n, asc) =>
-	let val ((ltv, regl'), (m, asc')) = tyvarseqcomma (L.nextLabel n, asc)
+	let val ((ltv, regl'), (m, asc')) = typevarseqcomma (L.nextLabel n, asc)
 	    val reg1 = R.consReg LPARENleft LPARENleft
 	    val reg2 = R.consReg RPARENleft RPARENleft
 	    val regl = reg1 :: regl' @ [reg2]
-	    val rl = getRegion LPARENright tyvarseqcommaleft
-	    val rr = getRegion tyvarseqcommaright RPARENleft
-	in (A.TyVarSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
+	    val rl = getRegion LPARENright typevarseqcommaleft
+	    val rr = getRegion typevarseqcommaright RPARENleft
+	in (A.TypeVarSeqSeq (ltv rl rr, regl, n, m), (m, asc'))
 	end)
 
 labtype :
@@ -2053,53 +2053,53 @@ valbind :
 	end)
 
 datname :
-  tyvarseq tycon
+  typevarseq tycon
     (fn nasc =>
 	let val (tn, masc) = tycon nasc
-	    val (tvs, (p, asc')) = tyvarseq masc
-	    val reg = getRegion tyvarseqright tyconleft
+	    val (tvs, (p, asc')) = typevarseq masc
+	    val reg = getRegion typevarseqright tyconleft
 	in (A.DatName (tvs, tn, reg, p), (p, asc'))
 	end)
 | tycon
     (fn nasc =>
 	let val (tn, (p, asc')) = tycon nasc
 	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val tvs = A.TypeVarSeqEm (tvsreg, p, L.nextLabel p)
 	in (A.DatName (tvs, tn, [tvsreg], L.nextLabel p), (L.nextLabel p, asc'))
 	end)
 
 ldatname :
-  tyvarseq longtycon
+  typevarseq longtycon
     (fn nasc =>
 	let val (tn, masc) = longtycon nasc
-	    val (tvs, (p, asc')) = tyvarseq masc
-	    val reg = getRegion tyvarseqright longtyconleft
+	    val (tvs, (p, asc')) = typevarseq masc
+	    val reg = getRegion typevarseqright longtyconleft
 	in (A.LDatName (tvs, tn, reg, p), (p, asc'))
 	end)
 | longtycon
     (fn nasc =>
 	let val (tn, (p, asc')) = longtycon nasc
 	    val tvsreg = R.consReg (R.downPos longtyconleft) (R.downPos longtyconleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val tvs = A.TypeVarSeqEm (tvsreg, p, L.nextLabel p)
 	in (A.LDatName (tvs, tn, [tvsreg], L.nextLabel p), (L.nextLabel p, asc'))
 	end)
 
 datbind :
-  tyvarseq tycon EQUALOP conbindseq
+  typevarseq tycon EQUALOP conbindseq
     (fn (n, nasc) =>
 	let val (tn, masc) = tycon (L.nextLabel n, nasc)
-	    val (tvs, (p, pasc)) = tyvarseq masc
+	    val (tvs, (p, pasc)) = typevarseq masc
 	    val (cbs, (q, qasc)) = conbindseq (p, pasc)
-	    val reg1 = getRegion tyvarseqright tyconleft
+	    val reg1 = getRegion typevarseqright tyconleft
 	    val reg2 = R.consReg EQUALOPleft EQUALOPright
- 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tyvarseq tycon EQUALOP conbindseq"
+ 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: typevarseq tycon EQUALOP conbindseq"
 	in (A.DatBind (A.DatName (tvs, tn, reg1, p), cbs, reg2, n, q), (q, qasc))
 	end)
 | tycon EQUALOP conbindseq
     (fn (n, nasc) =>
 	let val (tn, (p, pasc)) = tycon (L.nextLabel n, nasc)
 	    val tvsreg = R.consReg (R.downPos tyconleft) (R.downPos tyconleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, p, L.nextLabel p)
+	    val tvs = A.TypeVarSeqEm (tvsreg, p, L.nextLabel p)
 	    val (cbs, (q, qasc)) = conbindseq (L.nextLabel p, pasc)
 	    val reg = R.consReg EQUALOPleft EQUALOPright
  	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tycon EQUALOP conbindseq"
@@ -2466,14 +2466,14 @@ dec' :
   VAL valbind
     (fn (n, nasc) =>
 	let val tvsreg = R.consReg (R.downPos valbindleft) (R.downPos valbindleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, n, L.nextLabel n)
+	    val tvs = A.TypeVarSeqEm (tvsreg, n, L.nextLabel n)
 	    val reg = R.consReg VALleft VALright
 	    val (vb, (m, masc)) = valbind (L.nextLabel n, nasc)
 	in (A.DecVal (tvs, vb, reg, m), (m, masc))
 	end)
-| VAL tyvarseq valbind
+| VAL typevarseq valbind
     (fn nasc =>
-	let val (tvs, masc) = tyvarseq nasc
+	let val (tvs, masc) = typevarseq nasc
 	    val (vb,  (p, pasc)) = valbind masc
 	    val reg = R.consReg VALleft VALright
 	in (A.DecVal (tvs, vb, reg, p), (p, pasc))
@@ -2527,14 +2527,14 @@ dec' :
 | FUN fvalbind
     (fn (n, nasc) =>
 	let val tvsreg = R.consReg (R.downPos fvalbindleft) (R.downPos fvalbindleft)
-	    val tvs = A.TyVarSeqEm (tvsreg, n, L.nextLabel n)
+	    val tvs = A.TypeVarSeqEm (tvsreg, n, L.nextLabel n)
 	    val reg = R.consReg FUNleft FUNright
 	    val (fvb, (m, masc)) = fvalbind (L.nextLabel n, nasc)
 	in (A.DecFVal (tvs, fvb, reg, m), (m, masc))
 	end)
-| FUN tyvarseq fvalbind
+| FUN typevarseq fvalbind
     (fn nasc =>
-	let val (tvs, masc) = tyvarseq nasc
+	let val (tvs, masc) = typevarseq nasc
 	    val (fvb, (p, pasc)) = fvalbind masc
 	    val reg = R.consReg FUNleft FUNright
 	in (A.DecFVal (tvs, fvb, reg, p), (p, pasc))
@@ -2579,11 +2579,11 @@ dec' :
 	    val _   = map (fn st => F.rmInfix st) (A.getNamesIdentSeq ids)
 	in (A.DecNonfix (ids, reg, n, m), (m, masc))
 	end)
-| OVERLOAD labid COLON labtype WITH labtyvar IN tyclassseq
+| OVERLOAD labid COLON labtype WITH labtypevar IN tyclassseq
     (fn (n, nasc) =>
 	let val (id, masc) = labid (L.nextLabel n, nasc)
 	    val (ty, pasc) = labtype masc
-	    val (tv, qasc) = labtyvar pasc
+	    val (tv, qasc) = labtypevar pasc
 	    val (ts, (u, uasc)) = tyclassseq qasc
 	    val reg1 = R.consReg OVERLOADleft OVERLOADright
 	    val reg2 = R.consReg COLONleft COLONright
@@ -2593,8 +2593,8 @@ dec' :
 	    val rri  = getRegion labidright COLONleft
 	    val rlt  = getRegion COLONright labtypeleft
 	    val rrt  = getRegion labtyperight WITHleft
-	    val rlv  = getRegion WITHright labtyvarleft
-	    val rrv  = getRegion labtyvarright INleft
+	    val rlv  = getRegion WITHright labtypevarleft
+	    val rrv  = getRegion labtypevarright INleft
 	    val rs   = [reg1, reg2, reg3, reg4]
 	in (A.DecOverload (id (rli @ rri), ty (rlt @ rrt), tv (rlv @ rrv), ts, rs, n, u), (u, uasc))
 	end)

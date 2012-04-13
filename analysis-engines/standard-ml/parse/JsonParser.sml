@@ -321,11 +321,11 @@ fun parseTest testfile =
 			then EK.DatIsExc (NONE)
 			else EK.DatIsExc (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
-		  | "ErrorKind.TyVarBind" =>
+		  | "ErrorKind.TypeVarBind" =>
 		    let val (errInfo, rest) = getObject rest "asmpOp" in
 			if (getString(errInfo) = "NONE" handle EH.DeadBranch _ => false)
-			then EK.TyVarBind (NONE)
-			else EK.TyVarBind (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
+			then EK.TypeVarBind (NONE)
+			else EK.TypeVarBind (SOME (getIntArray(findIdVal errInfo "synerrList"), getInt(findIdVal errInfo "synerrInt")))
 		    end
 		  | "ErrorKind.Warning" => EK.Warning(getString(findIdVal rest "warningStr"))
 		  | "ErrorKind.Parsing" => EK.Parsing(getString(findIdVal rest "parsingStr"))
@@ -334,13 +334,13 @@ fun parseTest testfile =
 		  | "ErrorKind.AppNotApp"  => EK.AppNotApp
 		  | "ErrorKind.DiffFunName"  => EK.DiffFunName
 		  | "ErrorKind.DiffNbArgFun"  => EK.DiffNbArgFun
-		  | "ErrorKind.FreeTyVarTop"  => EK.FreeTyVarTop
+		  | "ErrorKind.FreeTypeVarTop"  => EK.FreeTypeVarTop
 		  | "ErrorKind.AsPatVar"  => EK.AsPatVar
 		  | "ErrorKind.FnRecExp"  => EK.FnRecExp
 		  | "ErrorKind.RealInPat" => EK.RealInPat
 		  | "ErrorKind.FreeIdent" => EK.FreeIdent
 		  | "ErrorKind.FreeOpen"  => EK.FreeOpen
-		  | _ => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind)")
+		  | str => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind: "^str^")")
 	    end
 
 	fun getErrors (JSON.ARRAY []) = (D.printDebug 1 D.JSON "finished parsing errors object!"; [])

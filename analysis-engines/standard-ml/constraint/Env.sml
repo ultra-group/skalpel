@@ -75,21 +75,21 @@ type varenv         = T.ty genericEnvironment (* Tyty (ConsId.bind ExtLab.extLab
 datatype tnKind     = DAT | TYP
 
 (* ------ TYPENV ------ *)
-type exttyp         = (T.tyfun * tnKind * (varenv * bool) ref) bind
-type typenv         = (T.tyfun * tnKind * (varenv * bool) ref) genericEnvironment
+type exttyp         = (T.typeFunction * tnKind * (varenv * bool) ref) bind
+type typenv         = (T.typeFunction * tnKind * (varenv * bool) ref) genericEnvironment
 
 (* ------ OVERLOADINGENV ------ *)
-type extovc         = T.seqty bind
-type ovcenv         = T.seqty genericEnvironment
+type extovc         = T.sequenceType bind
+type ovcenv         = T.sequenceType genericEnvironment
 
-(* ------ TYVARENV ------ *)
-type exttyv         = (T.tyvar * bool) bind
-type tyvenv         = (T.tyvar * bool) genericEnvironment
+(* ------ TYPEVARENV ------ *)
+type exttyv         = (T.typeVar * bool) bind
+type tyvenv         = (T.typeVar * bool) genericEnvironment
 
 (* ------ INFORMATION ON ENVIRONMENT ------ *)
-type tname          = {id : I.id, lab : L.label, kind : tnKind, name : T.tyname}
+type tname          = {id : I.id, lab : L.label, kind : tnKind, name : T.typename}
 type tnmap          = tname list
-datatype names      = TYNAME of tname EL.extLab | DUMTYNAME of tname | MAYTYNAME | NOTTYNAME of I.id EL.extLab
+datatype names      = TYPENAME of tname EL.extLab | DUMTYPENAME of tname | MAYTYPENAME | NOTTYPENAME of I.id EL.extLab
 type infoEnv        = {lab : L.label, cmp : bool, tns : tnmap, fct : bool}
 
 (* ------ ENRICHEMENT AND INSTANTIATION ------ *)
@@ -102,14 +102,14 @@ type evfbind        = envvar * envvar * envvar * envvar * L.label
 type shabind        = envvar * envvar * envvar * L.label
 
 (*(* ------ GENERALISATION OF EXPLICIT TYPE VARIABLES ------ *)
-type tvsbind        = (T.tyvar * L.label) list
-type exttv          = T.tyvar bind*)
+type tvsbind        = (T.typeVar * L.label) list
+type exttv          = T.typeVar bind*)
 
 (* ------ ACCESSORS ------ *)
 type 'a accid       = {lid : I.lid, sem : 'a, class : CL.class, lab : L.label}
 
 (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
-type longtyp        = T.tyfun accid EL.extLab
+type longtyp        = T.typeFunction accid EL.extLab
 
 (*(* ------ CLASSES OF IDENTIFIERS ------ *)
 datatype class      = VCL of CL.classvar
@@ -158,7 +158,7 @@ datatype environment = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
 		    | FUNCTOR_ENV of constraints
 
                     (* CONSTRAINT_ENV is probably for constraint/environment
-                     * think this is c ::= μ1=μ2 | e1=e2 | τ1=τ2 
+                     * think this is c ::= μ1=μ2 | e1=e2 | τ1=τ2
                      * these act as both a constraint and an environment *)
 		    | CONSTRAINT_ENV of constraints
 		    | ENVPTY of string
@@ -166,21 +166,21 @@ datatype environment = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
 		    | TOP_LEVEL_ENV
 
      and accessor        = VALUEID_ACCESSOR of T.ty        accid EL.extLab
-		         | EXPLICIT_TYPEVAR_ACCESSOR of T.tyvar     accid EL.extLab
-		         | TYPE_CONSTRUCTOR_ACCESSOR of T.tyfun     accid EL.extLab
-		         | OVERLOADING_CLASSES_ACCESSOR of T.seqty     accid EL.extLab
+		         | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar     accid EL.extLab
+		         | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction     accid EL.extLab
+		         | OVERLOADING_CLASSES_ACCESSOR of T.sequenceType     accid EL.extLab
 		         | STRUCTURE_ACCESSOR of environment         accid EL.extLab
 			 | SIGNATURE_ACCESSOR of environment         accid EL.extLab
 			 | FUNCTOR_ACCESSOR of (environment * environment) accid EL.extLab
 
      and oneConstraint    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
-		          | TYPENAME_CONSTRAINT of (T.tnty   * T.tnty)   EL.extLab
-		          | SEQUENCE_CONSTRAINT of (T.seqty  * T.seqty)  EL.extLab
-		          | ROW_CONSTRAINT of (T.rowty  * T.rowty)  EL.extLab
-		          | LABEL_CONSTRAINT of (T.labty  * T.labty)  EL.extLab
+		          | TYPENAME_CONSTRAINT of (T.typenameType   * T.typenameType)   EL.extLab
+		          | SEQUENCE_CONSTRAINT of (T.sequenceType  * T.sequenceType)  EL.extLab
+		          | ROW_CONSTRAINT of (T.rowType  * T.rowType)  EL.extLab
+		          | LABEL_CONSTRAINT of (T.labelType  * T.labelType)  EL.extLab
 			  | ENV_CONSTRAINT of (environment      * environment)      EL.extLab
 			  | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
-			  | FUNCTION_TYPE_CONSTRAINT of (T.tyfun  * T.tyfun)  EL.extLab
+			  | FUNCTION_TYPE_CONSTRAINT of (T.typeFunction  * T.typeFunction)  EL.extLab
 			  | ACCESSOR_CONSTRAINT of accessor
 			  | LET_CONSTRAINT of environment
 			  | SIGNATURE_CONSTRAINT of evsbind
@@ -255,7 +255,7 @@ fun printGenEnv xs ind f =
     end
 
 fun printExtVar extvar = printBind' extvar T.printty
-and printExtTyv exttyv = printBind' exttyv (fn (tv, b) => "(" ^ T.printtyvar tv ^ "," ^ Bool.toString b ^ ")")
+and printExtTyv exttyv = printBind' exttyv (fn (tv, b) => "(" ^ T.printTypeVar tv ^ "," ^ Bool.toString b ^ ")")
 and printExtTyp exttyp = printBind' exttyp (fn (tyf, tnkind, cons) => "(" ^ T.printtyf tyf ^ "," ^ printTnKind tnkind ^ "," ^ printExtCon (!cons) ^ ")")
 and printExtSeq extovc = printBind' extovc T.printseqty
 and printExtCon (cons, b) = "(" ^ printVarEnv cons "" ^ "," ^ Bool.toString b ^ ")"
@@ -290,7 +290,7 @@ fun printTnmap xs =
 		        "(" ^ I.printId     id   ^
 			"," ^ L.printLab    lab  ^
 			"," ^ printTnKind   kind ^
-			"," ^ T.printtyname name ^ ")")
+			"," ^ T.printTypename name ^ ")")
 
 fun printNfoEnv {lab, cmp, tns, fct} =
     "(" ^ L.printLab    lab ^
@@ -372,7 +372,7 @@ and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, 
 and printAcc (VALUEID_ACCESSOR x) ind ascid =
     "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printty' ind ascid) ascid ^ ")"
   | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid =
-    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyvar ind ascid) ascid ^ ")"
+    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printTypeVar ind ascid) ascid ^ ")"
   | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid =
     "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyf' ind ascid) ascid ^ ")"
   | printAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid =
@@ -955,7 +955,7 @@ fun toTYCONTyps typenames cons b labs =
     end
 
 fun allEqualVids vids =
-    let val ty = T.newV ()
+    let val ty = T.newTYPE_VAR ()
     in foldrenv (fn (sems, cst) =>
 		    foldr (fn (bind, cst) =>
 			      let val ty' = getBindT bind
@@ -971,9 +971,9 @@ fun allEqualVids vids =
 
 (* Generates an environment from a long identifier and a type function *)
 fun genLongEnv (I.ID (id, lab)) tyfun =
-    let val tfv  = T.freshtyfvar ()
-	val c    = initFunctionTypeConstraint (T.consTFV tfv) tyfun lab
-	val typenames = consSingleEnv (id, [consBindPoly id (T.consTFV tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
+    let val tfv  = T.freshTypeFunctionVar ()
+	val c    = initFunctionTypeConstraint (T.consTYPE_FUNCTION_VAR tfv) tyfun lab
+	val typenames = consSingleEnv (id, [consBindPoly id (T.consTYPE_FUNCTION_VAR tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
     in (singleConstraint (lab, c), consEnvironmentTypenames typenames)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
@@ -1056,32 +1056,32 @@ fun getLabEnv (env as ENVIRONMENT_CONSTRUCTOR _) = getILab env
 
 
 (* Extract the type names defined in a type constructor environment *)
-fun getTyNames typenames =
+fun getTypenames typenames =
     foldrienv (fn (id, sem, tnmap) =>
 		  List.foldr (fn (bind, tnmap) =>
 				 let val (tf, tnKind, _) = getBindT bind
 				     val lab = getBindL bind
-				     val (names, labs, stts, deps) = T.isTyName tf
+				     val (names, labs, stts, deps) = T.isTypename tf
 				 in case names of
-					T.TYNAME name =>
+					T.TYPENAME name =>
 					let val labs  = L.union  labs (EL.getExtLabL bind)
 					    val stts  = L.union  stts (EL.getExtLabE bind)
 					    val deps  = CD.union deps (EL.getExtLabD bind)
 					    val tname = {id = id, lab = lab, kind = tnKind, name = name}
-					    val names = TYNAME (tname, labs, stts, deps)
+					    val names = TYPENAME (tname, labs, stts, deps)
 					in names :: tnmap
 					end
-				      | T.DUMTYNAME name =>
+				      | T.DUMTYPENAME name =>
 					let val tname = {id = id, lab = lab, kind = tnKind, name = name}
-					    val names = DUMTYNAME tname
+					    val names = DUMTYPENAME tname
 					in names :: tnmap
 					end
-				      | T.MAYTYNAME => tnmap
-				      | T.NOTTYNAME =>
+				      | T.MAYTYPENAME => tnmap
+				      | T.NOTTYPENAME =>
 					let val labs  = L.union  labs (EL.getExtLabL bind)
 					    val stts  = L.union  stts (EL.getExtLabE bind)
 					    val deps  = CD.union deps (EL.getExtLabD bind)
-					    val names = NOTTYNAME (id, labs, stts, deps)
+					    val names = NOTTYPENAME (id, labs, stts, deps)
 					in names :: tnmap
 					end
 				 end)

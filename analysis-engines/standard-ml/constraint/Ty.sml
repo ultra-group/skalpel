@@ -44,80 +44,114 @@ structure D  = Debug
 exception unflex
 
 (* type and datatype declarations *)
-type tyvar            = int
-type sequenceVariable = int
-type tynamevar        = int
-type labvar           = int
-type rowvar           = int
-type tyfvar           = int
+type typeVar            = int
+type sequenceVar = int
+type typenameVar        = int
+type labelVar           = int
+type rowVar           = int
+type typeFunctionVar           = int
 type eqType           = bool
 
-type tyname     = int
+(* int for typename but string for labcons because not in any environment *)
+type typename     = int (* 1: arrow, 2: record, ... *)
 type labcons    = string
 type idor       = int
 type flex       = L.label option
 type extv       = I.labelledId option (* extv stands for EXplicit Type Variable*)
 type assoc      = (int * string) list
-type exttyvar   = tyvar ExtLab.extLab
-datatype poly   = POLY | MONO
 
-(* Change the names of these constructors. They will confuse me endlessly *)
-datatype kcons  = DE of Id.id (* constructor from a DEclaration   *)
-		| PA          (* constructor from a PAttern       *)
-		| OT          (* OTher constructor                *)
-		| BB          (* constructor in the Builtin Basis *)
+type explicitTypeVar = typeVar ExtLab.extLab
 
-datatype orKind = VAL of I.labelledId
-		| CST of string * I.id * L.label
+    datatype poly   = POLY (* polymorphic type var *)
+		    | MONO (* monomorphic type var *)
 
-datatype labty = LV  of labvar (* unclear why we need label variables *)
-	       | LC  of labcons            * L.label
-	       | LD  of labty EL.extLab
-(* Joe speculates that tnty and tyfun could be simply merged.
- * This means the C and A cases of ty could also be merged.
- * Probably nothing wrong with leaving them separate as they are now. *)
-datatype tnty  = NV  of tynamevar
-	       | NC  of tyname     * kcons * L.label
-	       | ND  of tnty EL.extLab
-datatype rowty = RV  of rowvar (* this might or might not be the same as what is known as row variable in the literature *)
-	       | RC  of labty      * ty    * L.label
-	       | RD  of rowty EL.extLab
-	       | RO
-(* I suspect this is a type sequence, and that SV is a 'sequence variable'
- * SC = sequence construction?
- * SD = ??? *)
-     and seqty = SEQUENCE_VARIABLE  of sequenceVariable
-	       | SC  of rowty list * flex  * L.label
-	       | SD  of seqty EL.extLab
-(* suspected: type function (see 14.3.3 of rahli-thesis.pdf) *
- * also- TFV may stand for Type Function Variable. These are used throughout
- * Analyse.sml and might be used to impose constraints on type functions? Look
- * at the uses of TFV and try to figure this out *)
+    (* --------------------------------------------------------------------------------
+     * The constructorKind datatype:
+     *
+     * DECLARATION_CONS: constructor from a declaration
+     * PATTERN_CONS: constructor from a pattern
+     * OTHER_CONS: other constructor
+     * BUILTIN_BASIS_CONS: We have this constructor because for type constructor labeled
+     *                     by BUILTIN_BASIS. We might want to re-label them to get end
+     *                     points. *)
 
-(* This *is* type function *
- * type 'a = 'a * 'a
- * type function would stand for an unknown type function *
- * remember also to change C and A below *)
-     and tyfun = TFV of tyfvar
-	       | TFC of seqty      * ty    * L.label
-	       | TFD of tyfun EL.extLab
-     and ty    = V   of tyvar * extv  * poly
-	       | E   of I.id  * tyvar * L.label
-	       | C   of tnty  * seqty * L.label (* construction *)
-	       | A   of tyfun * seqty * L.label (* application *)
-	       | OR  of seqty * idor  * poly * orKind * L.label
-	       | GEN of ty list ref
-	       | TD  of ty EL.extLab
+    datatype constructorKind  = DECLARATION_CONS of Id.id
+			      | PATTERN_CONS
+			      | OTHER_CONS
+			      | BUILTIN_BASIS_CONS
 
-val eqTypeTyVars : tyvar list ref = ref []
+    (* ------------------------------------------------------------------------------*)
 
-datatype names = TYNAME of tyname | DUMTYNAME of tyname | MAYTYNAME | NOTTYNAME
+    datatype orKind = VALUE of Id.labelledId
+		    | CONSTANT of string * Id.id * Label.label
 
-(* List of builtin type names.
+    (* it is unclear why we need label vars (LABEL_VAR constructor) *)
+    datatype labelType = LABEL_VAR  of labelVar
+		       | LC  of labcons * Label.label
+		       | LABEL_DEPENDANCY  of labelType ExtLab.extLab
+
+    (* Joe speculates that typenameType and tyfun could be simply merged.
+     * This means the C and A cases of ty could also be merged.
+     * Probably nothing wrong with leaving them separate as they are now.
+     *
+     * constructorKind in the NC constructor is used to know if the constructor
+     * comes from a declaration (arrow type: datatype constructor with argument).
+     * It is only used for the arrow type isn't it? *)
+    datatype typenameType = TYPENAME_VAR  of typenameVar
+			  | NC  of typename * constructorKind * Label.label
+			  | TYPENAME_DEPENDANCY  of typenameType ExtLab.extLab
+
+    (* ROW_NO_OVERLOAD: marker to show that a row has been deleted from a sequence because
+     * it is cannot be an overloaded type while a RV can *)
+    datatype rowType = ROW_VAR  of rowVar
+		     | RC  of labelType * ty * Label.label
+		     | ROW_DEPENDANCY  of rowType ExtLab.extLab
+		     | ROW_NO_OVERLOAD
+
+	 and sequenceType = SEQUENCE_VAR  of sequenceVar
+			  | SC  of rowType list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
+			  | SEQUENCE_DEPENDANCY  of sequenceType ExtLab.extLab
+
+	 and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
+			  | TFC of sequenceType * ty * Label.label
+			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
+
+	 (*--------------------------------------------------------------------------
+	  * The ty datatype:
+	  *
+	  * TYPE_VAR: implicit type variable. The option (extv) is  NONE if
+	  *                the variable does not come from an explicit type varaible
+	  * EXPLICIT_TYPE_VAR: explicit type variable. The second variable is
+	  *                         the generalisation
+	  * TYPE_CONSTRUCTOR: type constructor
+	  * APPLICATION: type scheme instantiation (do we need this?)
+	  * TYPE_POLY: polymorphic type. the idor is so that an or type is unique
+	  *            even after freshening. The id is so that we can in case of
+          *            an overloading type error, report the overloaded id.
+	  * GEN: intersection type
+	  * TYPE_DEPENDANCY: type annotated with dependancies *)
+
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly
+                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
+		| TYPE_CONSTRUCTOR       of typenameType   * sequenceType * Label.label
+		| APPLICATION            of typeFunction  * sequenceType * Label.label
+		| TYPE_POLY              of sequenceType  * idor  * poly * orKind * Label.label
+		| GEN                    of ty list ref
+		| TYPE_DEPENDANCY        of ty ExtLab.extLab
+
+         (*------------------------------------------------------------------------*)
+
+(* to hold type variables which are constrained to be equality types *)
+(* maybe we should be using CSTxxx for this....*)
+val eqTypeTyVars : typeVar list ref = ref []
+
+datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | NOTTYPENAME
+
+(* List of top level type constructors (builtin type names).
  * When analysing the basis file, the first occurrence of such a type name
  * is the occurrence which is affected the internal type name as defined by
- * the getTyNameString function (see below). *)
-val tyNames = ["unit"     , "int"  , "word" , "real"  , "char", "string",
+ * the getTypenameString function (see below). *)
+val typenames = ["unit"     , "int"  , "word" , "real"  , "char", "string",
 	       "substring", "exn"  , "array", "vector", "ref" , "bool"  ,
 	       "option"   , "order", "list" , "frag"]
 
@@ -133,7 +167,7 @@ fun isflex   f = Option.isSome f
 fun getflex  f = Option.valOf f handle Option => raise unflex
 
 (* integer constants representing types *)
-val DUMMYTYNAME        = 0
+val DUMMYTYPENAME        = 0
 val CONSARROW          = 1
 val CONSRECORD         = 2
 val CONSINT            = 3
@@ -153,25 +187,25 @@ val CONSORDER          = 16
 val CONSFRAG           = 17
 val CONSTYPENAMESTART  = 18
 
-val nexttynamevar          = ref 0 (* next type name variable *)
-val nexttyvar              = ref 0 (*  *)
-val nextSequenceVariable   = ref 0 (* next sequence variable *)
-val nextlabvar             = ref 0 (* next label variable *)
-val nextrowvar             = ref 0 (* next row variable *)
-val nexttyfvar             = ref 0 (* next ?? *)
+val nextTypenameVar        = ref 0 (* next type name variable *)
+val nextTypeVar            = ref 0 (*  *)
+val nextSequenceVar        = ref 0 (* next sequence variable *)
+val nextLabelVar           = ref 0 (* next label variable *)
+val nextRowVar             = ref 0 (* next row variable *)
+val nextTypeFunctionVar    = ref 0 (* next ?? *)
 val nextidor               = ref 0 (* next id variable *)
-val nexttyname             = ref (CONSTYPENAMESTART)
+val nextTypename           = ref (CONSTYPENAMESTART)
 
 (* sets the above ref values to a value n *)
 fun setnexts n =
-    let val _ = nexttynamevar := n
-	val _ = nexttyvar     := n
-	val _ = nextSequenceVariable    := n
-	val _ = nextrowvar    := n
-	val _ = nextlabvar    := n
-	val _ = nexttyfvar    := n
+    let val _ = nextTypenameVar := n
+	val _ = nextTypeVar     := n
+	val _ = nextSequenceVar    := n
+	val _ = nextRowVar    := n
+	val _ = nextLabelVar    := n
+	val _ = nextTypeFunctionVar    := n
 	val _ = nextidor      := n
-	val _ = nexttyname    := (CONSTYPENAMESTART)
+	val _ = nextTypename    := (CONSTYPENAMESTART)
     in ()
     end
 
@@ -179,74 +213,57 @@ fun setnexts n =
 fun resetnexts () = setnexts 0
 
 (* accessor methods *)
-fun gettyvar     () = !nexttyvar
-fun getsequenceVariable    () = !nextSequenceVariable
-fun getrowvar    () = !nextrowvar
-fun getlabvar    () = !nextlabvar
-fun gettyfvar    () = !nexttyfvar
+fun getTypeVar     () = !nextTypeVar
+fun getsequenceVar    () = !nextSequenceVar
+fun getRowVar    () = !nextRowVar
+fun getLabelVar    () = !nextLabelVar
+fun getTypeFunctionVar    () = !nextTypeFunctionVar
 fun getidor      () = !nextidor
-fun gettynamevar () = !nexttynamevar
+fun getTypenameVar () = !nextTypenameVar
 
 (* funtions to cast defined types to integers *)
-fun tyvarToInt     tyvar     = tyvar
-fun tyfvarToInt    tyfvar    = tyfvar
-fun labvarToInt    labvar    = labvar
-fun rowvarToInt    rowvar    = rowvar
-fun tynamevarToInt tynamevar = tynamevar
-fun tynameToInt    tyname    = tyname
-fun sequenceVariableToInt    sequenceVariable    = sequenceVariable
-fun idorToInt      idor      = idor
+fun typeVarToInt          typeVar         = typeVar
+fun typeFunctionVarToInt  typeFunctionVar = typeFunctionVar
+fun labelVarToInt         labelVar        = labelVar
+fun rowVarToInt           rowVar          = rowVar
+fun typenameVarToInt      typenameVar     = typenameVar
+fun typenameToInt         typename          = typename
+fun sequenceVarToInt      sequenceVar     = sequenceVar
+fun idorToInt             idor            = idor
 
-fun tynameFromInt tyname = tyname
+fun typenameFromInt typename = typename
 
 (* equality testing for defined types *)
-fun eqTyvar     tv1 tv2 = (tv1 = (tv2 : tyvar))
-fun eqTyfvar    fv1 fv2 = (fv1 = (fv2 : tyfvar))
-fun eqSequenceVariable    sv1 sv2 = (sv1 = (sv2 : sequenceVariable))
-fun eqLabvar    lv1 lv2 = (lv1 = (lv2 : labvar))
-fun eqRowvar    rv1 rv2 = (rv1 = (rv2 : rowvar))
+fun eqTypeVar     tv1 tv2 = (tv1 = (tv2 : typeVar))
+fun eqTypeFunctionVar    fv1 fv2 = (fv1 = (fv2 : typeFunctionVar))
+fun eqSequenceVar    sv1 sv2 = (sv1 = (sv2 : sequenceVar))
+fun eqLabelVar    lv1 lv2 = (lv1 = (lv2 : labelVar))
+fun eqRowVar    rv1 rv2 = (rv1 = (rv2 : rowVar))
 fun eqIdor      id1 id2 = (id1 = (id2 : idor))
-fun eqTyname    tn1 tn2 = (tn1 = (tn2 : tyname))
-fun eqTynamevar nv1 nv2 = (nv1 = (nv2 : tynamevar))
-
-(*fun eqSeqTy (SEQUENCE_VARIABLE sv1) (SEQUENCE_VARIABLE sv2) = eqSequenceVariable sv1 sv2
-  | eqSeqTy (SC (rows1, _, _)) (SC (rows2, _, _)) = eqRowTys rows1 rows2
-  | eqSeqTy _ _ = false
-
-and eqRowTys [] [] = true
-  | eqRowTys (row1 :: rows1) (row2 :: rows2) = eqRowTy row1 row2 andalso eqRowTys rows1 rows2
-  | eqRowTys _ _ = false
-
-and eqRowTy (RV rv1) (RV rv2) = eqRowvar rv1 rv2
-  | eqRowTy (RC (lab1, ty1, _)) (RC (lab2, ty2, _)) = eqLabTy lab1 lab2 andalso eqTy ty1 ty2
-  | eqRowTy _ _ = false
-
-and eqLabTy (LV lv1) (LV lv2) = eqLabvar lv1 lv2
-  | eqLabTy (LC (lc1, _)) (LC (lc2, _)) = lc1 = lc2
-  | eqLabTy _ _ = false
-
-and eqTy (V (tv1, _, _)) (V (tv2, _, _)) = eqTyvar tv1 tv2
-  | eqTy _ _ = raise EH.DeadBranch ""*)
-
+fun eqTypename    tn1 tn2 = (tn1 = (tn2 : typename))
+fun eqTypenameVar nv1 nv2 = (nv1 = (nv2 : typenameVar))
 
 (* Extract the name of a type name *)
+fun getNameTypenameTn (NC (name, _, _)) = SOME name
+  | getNameTypenameTn (TYPENAME_DEPENDANCY exttn) = getNameTypenameTn (EL.getExtLabT exttn)
+  | getNameTypenameTn _ = NONE
 
-fun getNameTyNameTn (NC (name, _, _)) = SOME name
-  | getNameTyNameTn (ND exttn) = getNameTyNameTn (EL.getExtLabT exttn)
-  | getNameTyNameTn _ = NONE
+fun getNameTypenameTy (TYPE_CONSTRUCTOR (tn, _, _)) = getNameTypenameTn tn
+  | getNameTypenameTy (TYPE_DEPENDANCY extty) = getNameTypenameTy (EL.getExtLabT extty)
+  | getNameTypenameTy _ = NONE
 
-fun getNameTyNameTy (C (tn, _, _)) = getNameTyNameTn tn
-  | getNameTyNameTy (TD extty) = getNameTyNameTy (EL.getExtLabT extty)
-  | getNameTyNameTy _ = NONE
 
-fun getNameTyName (TFC (_, ty, _)) = getNameTyNameTy ty
-  | getNameTyName (TFD exttf) = getNameTyName (EL.getExtLabT exttf)
-  | getNameTyName _ = NONE
+(* extract the type name from a type function of the form:
+ *   T.TFC (_, T.C (T.NC (name, _, _), _, _), _)
+ * where we omit the dependencies. *)
+fun getTypename (TFC (_, ty, _)) = getNameTypenameTy ty
+  | getTypename (TYPE_FUNCTION_DEPENDANCY exttf) = getTypename (EL.getExtLabT exttf)
+  | getTypename _ = NONE
 
 
 (* Strip dependencies off types *)
 
-fun stripDepsTf (tf as TFD (tf1, labs1, stts1, deps1)) =
+fun stripDepsTf (tf as TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1)) =
     let val (tf2, labs2, stts2, deps2) = stripDepsTf tf1
     in (tf2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
@@ -258,30 +275,30 @@ fun stripDepsTf (tf as TFD (tf1, labs1, stts1, deps1)) =
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
     end
-  | stripDepsTf (tf as TFV _) =
+  | stripDepsTf (tf as TYPE_FUNCTION_VAR _) =
     (tf, L.empty, L.empty, CD.empty)
 
-and stripDepsTy (ty as V _) = (ty, L.empty, L.empty, CD.empty)
-  | stripDepsTy (ty as E _) = (ty, L.empty, L.empty, CD.empty)
-  | stripDepsTy (ty as C (tn, sq, lab)) =
+and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
+  | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
+  | stripDepsTy (ty as TYPE_CONSTRUCTOR(tn, sq, lab)) =
     let val (tn', labs1, stts1, deps1) = stripDepsTn tn
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
-    in (C (tn', sq', lab),
+    in (TYPE_CONSTRUCTOR (tn', sq', lab),
 	L.union  labs1 labs2,
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
     end
-  | stripDepsTy (ty as A (tf, sq, lab)) =
+  | stripDepsTy (ty as APPLICATION (tf, sq, lab)) =
     let val (tf', labs1, stts1, deps1) = stripDepsTf tf
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
-    in (A (tf', sq', lab),
+    in (APPLICATION (tf', sq', lab),
 	L.union  labs1 labs2,
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
     end
-  | stripDepsTy (ty as OR (sq, id, p, k, lab)) =
+  | stripDepsTy (ty as TYPE_POLY (sq, id, p, k, lab)) =
     let val (sq', labs, stts, deps) = stripDepsSq sq
-    in (OR (sq', id, p, k, lab), labs, stts, deps)
+    in (TYPE_POLY (sq', id, p, k, lab), labs, stts, deps)
     end
   | stripDepsTy (ty as GEN tyr) =
     let val (tys, labs, stts, deps) =
@@ -297,12 +314,13 @@ and stripDepsTy (ty as V _) = (ty, L.empty, L.empty, CD.empty)
     in tyr := tys;
        (GEN tyr, labs, stts, deps)
     end
-  | stripDepsTy (ty as TD (ty1, labs1, stts1, deps1)) =
+  | stripDepsTy (ty as TYPE_DEPENDANCY (ty1, labs1, stts1, deps1)) =
     let val (ty2, labs2, stts2, deps2) = stripDepsTy ty1
     in (ty2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsSq (sq as SEQUENCE_VARIABLE _) = (sq, L.empty, L.empty, CD.empty)
+(* strip the dependencies off a sequence type *)
+and stripDepsSq (sq as SEQUENCE_VAR _) = (sq, L.empty, L.empty, CD.empty)
   | stripDepsSq (sq as SC (rows, flex, lab)) =
     let val (rows', labs, stts, deps) =
 	    foldr (fn (row, (rows, labs, stts, deps)) =>
@@ -316,12 +334,12 @@ and stripDepsSq (sq as SEQUENCE_VARIABLE _) = (sq, L.empty, L.empty, CD.empty)
 		  rows
     in (SC (rows', flex, lab), labs, stts, deps)
     end
-  | stripDepsSq (sq as SD (sq1, labs1, stts1, deps1)) =
+  | stripDepsSq (sq as SEQUENCE_DEPENDANCY (sq1, labs1, stts1, deps1)) =
     let val (sq2, labs2, stts2, deps2) = stripDepsSq sq1
     in (sq2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsRt (rt as RV _) = (rt, L.empty, L.empty, CD.empty)
+and stripDepsRt (rt as ROW_VAR _) = (rt, L.empty, L.empty, CD.empty)
   | stripDepsRt (rt as RC (lt, ty, lab)) =
     let val (lt', labs1, stts1, deps1) = stripDepsLt lt
 	val (ty', labs2, stts2, deps2) = stripDepsTy ty
@@ -330,22 +348,22 @@ and stripDepsRt (rt as RV _) = (rt, L.empty, L.empty, CD.empty)
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
     end
-  | stripDepsRt (rt as RD (rt1, labs1, stts1, deps1)) =
+  | stripDepsRt (rt as ROW_DEPENDANCY (rt1, labs1, stts1, deps1)) =
     let val (rt2, labs2, stts2, deps2) = stripDepsRt rt1
     in (rt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
   | stripDepsRt RO = (RO, L.empty, L.empty, CD.empty)
 
-and stripDepsLt (lt as LV _) = (lt, L.empty, L.empty, CD.empty)
+and stripDepsLt (lt as LABEL_VAR _) = (lt, L.empty, L.empty, CD.empty)
   | stripDepsLt (lt as LC _) = (lt, L.empty, L.empty, CD.empty)
-  | stripDepsLt (lt as LD (lt1, labs1, stts1, deps1)) =
+  | stripDepsLt (lt as LABEL_DEPENDANCY (lt1, labs1, stts1, deps1)) =
     let val (lt2, labs2, stts2, deps2) = stripDepsLt lt1
     in (lt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsTn (tn as NV _) = (tn, L.empty, L.empty, CD.empty)
+and stripDepsTn (tn as TYPENAME_VAR _) = (tn, L.empty, L.empty, CD.empty)
   | stripDepsTn (tn as NC _) = (tn, L.empty, L.empty, CD.empty)
-  | stripDepsTn (tn as ND (tn1, labs1, stts1, deps1)) =
+  | stripDepsTn (tn as TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1)) =
     let val (tn2, labs2, stts2, deps2) = stripDepsTn tn1
     in (tn2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
@@ -353,25 +371,25 @@ and stripDepsTn (tn as NV _) = (tn, L.empty, L.empty, CD.empty)
 
 (* NONE means not a type name, SOME SOME tn means a type name tn, SOME NONE means we can't now.*)
 
-fun isTyName tf =
+fun isTypename tf =
     let val (tf', labs, stts, deps) = stripDepsTf tf
-    in (isTyName' tf', labs, stts, deps)
+    in (isTypename' tf', labs, stts, deps)
     end
 
-and isTyName' (TFC (sq1, C (NC (name, _, _), sq2, _), _)) =
+and isTypename' (TFC (sq1, TYPE_CONSTRUCTOR (NC (name, _, _), sq2, _), _)) =
     (case eqSeqTy sq1 sq2 of
-	 SOME true  => TYNAME name
-       | SOME false => DUMTYNAME name
-       | NONE       => NOTTYNAME)
-  | isTyName' (TFC (sq1, C (_, sq2, _), _)) =
+	 SOME true  => TYPENAME name
+       | SOME false => DUMTYPENAME name
+       | NONE       => NOTTYPENAME)
+  | isTypename' (TFC (sq1, TYPE_CONSTRUCTOR (_, sq2, _), _)) =
     (case eqSeqTy sq1 sq2 of
-	 SOME _ => MAYTYNAME
-       | NONE   => NOTTYNAME)
-  | isTyName' (TFC (_, V (_, SOME _, _), _)) = NOTTYNAME
-  | isTyName' _ = MAYTYNAME
+	 SOME _ => MAYTYPENAME
+       | NONE   => NOTTYPENAME)
+  | isTypename' (TFC (_, TYPE_VAR (_, SOME _, _), _)) = NOTTYPENAME
+  | isTypename' _ = MAYTYPENAME
 
-and eqSeqTy (SEQUENCE_VARIABLE sv1) (SEQUENCE_VARIABLE sv2) =
-    if eqSequenceVariable sv1 sv2
+and eqSeqTy (SEQUENCE_VAR sv1) (SEQUENCE_VAR sv2) =
+    if eqSequenceVar sv1 sv2
     then SOME true
     else SOME false
   | eqSeqTy (SC (rows1, _, _)) (SC (rows2, _, _)) = eqRowTys rows1 rows2
@@ -384,8 +402,8 @@ and eqRowTys [] [] = SOME true
        | _ => NONE)
   | eqRowTys _ _ = NONE
 
-and eqRowTy (RV rv1) (RV rv2) =
-    if eqRowvar rv1 rv2
+and eqRowTy (ROW_VAR rv1) (ROW_VAR rv2) =
+    if eqRowVar rv1 rv2
     then SOME true
     else SOME false
   | eqRowTy (RC (lab1, ty1, _)) (RC (lab2, ty2, _)) =
@@ -394,8 +412,8 @@ and eqRowTy (RV rv1) (RV rv2) =
        | _ => NONE)
   | eqRowTy _ _ = SOME false
 
-and eqLabTy (LV lv1) (LV lv2) =
-    if eqLabvar lv1 lv2
+and eqLabTy (LABEL_VAR lv1) (LABEL_VAR lv2) =
+    if eqLabelVar lv1 lv2
     then SOME true
     else SOME false
   | eqLabTy (LC (lc1, _)) (LC (lc2, _)) =
@@ -404,8 +422,8 @@ and eqLabTy (LV lv1) (LV lv2) =
     else NONE
   | eqLabTy _ _ = SOME false
 
-and eqTy (V (tv1, _, _)) (V (tv2, _, _)) =
-    if eqTyvar tv1 tv2
+and eqTy (TYPE_VAR (tv1, _, _)) (TYPE_VAR (tv2, _, _)) =
+    if eqTypeVar tv1 tv2
     then SOME true
     else SOME false
   | eqTy _ _ = NONE
@@ -417,86 +435,86 @@ and eqTy (V (tv1, _, _)) (V (tv2, _, _)) =
 fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 
 (* increments the ref associated with the function name *)
-fun freshtyvar     () = (D.printDebug 3 D.TY ("generating fresh AVar for tyvar ("^(Int.toString (!nexttyvar))^")");         freshAVar nexttyvar)
-fun freshSequenceVariable    () = (D.printDebug 3 D.TY ("generating fresh AVar for sequenceVariable ("^(Int.toString (!nextSequenceVariable))^")");       freshAVar nextSequenceVariable)
-fun freshtynamevar () = (D.printDebug 3 D.TY ("generating fresh AVar for tynamevar ("^(Int.toString (!nexttynamevar))^")"); freshAVar nexttynamevar)
-fun freshlabvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labvar ("^(Int.toString (!nextlabvar))^")");       freshAVar nextlabvar)
-fun freshrowvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowvar ("^(Int.toString (!nextrowvar))^")");       freshAVar nextrowvar)
-fun freshtyfvar    () = (D.printDebug 3 D.TY ("generating fresh AVar for tyfvar ("^(Int.toString (!nexttyfvar))^")");       freshAVar nexttyfvar)
-fun freshtyname    () = (D.printDebug 3 D.TY ("generating fresh AVar for name ("^(Int.toString (!nexttyname))^")");         freshAVar nexttyname)
+fun freshTypeVar     () = (D.printDebug 3 D.TY ("generating fresh AVar for typeVar ("^(Int.toString (!nextTypeVar))^")");         freshAVar nextTypeVar)
+fun freshSequenceVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for sequenceVar ("^(Int.toString (!nextSequenceVar))^")");       freshAVar nextSequenceVar)
+fun freshTypenameVar () = (D.printDebug 3 D.TY ("generating fresh AVar for typenameVar ("^(Int.toString (!nextTypenameVar))^")"); freshAVar nextTypenameVar)
+fun freshLabelVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labelVar ("^(Int.toString (!nextLabelVar))^")");       freshAVar nextLabelVar)
+fun freshRowVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowVar ("^(Int.toString (!nextRowVar))^")");       freshAVar nextRowVar)
+fun freshTypeFunctionVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for typeFunctionVar ("^(Int.toString (!nextTypeFunctionVar))^")");       freshAVar nextTypeFunctionVar)
+fun freshTypename    () = (D.printDebug 3 D.TY ("generating fresh AVar for name ("^(Int.toString (!nextTypename))^")");         freshAVar nextTypename)
 fun freshidor      () = (D.printDebug 3 D.TY ("generating fresh AVar for idor ("^(Int.toString (!nextidor))^")");           freshAVar nextidor)
 
-fun getTyNameString "unit"      = CONSRECORD
-  | getTyNameString "int"       = CONSINT
-  | getTyNameString "word"      = CONSWORD
-  | getTyNameString "real"      = CONSREAL
-  | getTyNameString "bool"      = CONSBOOL
-  | getTyNameString "string"    = CONSSTRING
-  | getTyNameString "list"      = CONSLIST
-  | getTyNameString "ref"       = CONSREF
-  | getTyNameString "char"      = CONSCHAR
-  | getTyNameString "exn"       = CONSEXCEPTION
-  | getTyNameString "substring" = CONSSUBSTRING
-  | getTyNameString "array"     = CONSARRAY
-  | getTyNameString "vector"    = CONSVECTOR
-  | getTyNameString "option"    = CONSOPTION
-  | getTyNameString "order"     = CONSORDER
-  | getTyNameString "frag"      = CONSFRAG
-  | getTyNameString _           = freshtyname   ()
+fun getTypenameString "unit"      = CONSRECORD
+  | getTypenameString "int"       = CONSINT
+  | getTypenameString "word"      = CONSWORD
+  | getTypenameString "real"      = CONSREAL
+  | getTypenameString "bool"      = CONSBOOL
+  | getTypenameString "string"    = CONSSTRING
+  | getTypenameString "list"      = CONSLIST
+  | getTypenameString "ref"       = CONSREF
+  | getTypenameString "char"      = CONSCHAR
+  | getTypenameString "exn"       = CONSEXCEPTION
+  | getTypenameString "substring" = CONSSUBSTRING
+  | getTypenameString "array"     = CONSARRAY
+  | getTypenameString "vector"    = CONSVECTOR
+  | getTypenameString "option"    = CONSOPTION
+  | getTypenameString "order"     = CONSORDER
+  | getTypenameString "frag"      = CONSFRAG
+  | getTypenameString _           = freshTypename ()
 
 
 (**)
 
 (* type constructor for a label *)
-fun consTyNameVar lab = C (NV (freshtynamevar ()),
-			   SEQUENCE_VARIABLE (freshSequenceVariable ()),
+fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
+			   SEQUENCE_VAR (freshSequenceVar ()),
 			   lab)
 
-(* constructs an implicit type variable *)
-fun consV   tv = V (tv, NONE, POLY)
+(* constructs an implicit type var *)
+fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY)
 
-(* constructs a sequence variable *)
-fun consSEQUENCE_VARIABLE  sv  = SEQUENCE_VARIABLE sv
+(* constructs a sequence var *)
+fun consSEQUENCE_VAR  sv  = SEQUENCE_VAR sv
 
 (* constructs a row variable *)
-fun consRV  rv  = RV rv
+fun consROW_VAR  rv  = ROW_VAR rv
 
 (* constructs a function variable *)
-fun consTFV tfv = TFV tfv
+fun consTYPE_FUNCTION_VAR tfv = TYPE_FUNCTION_VAR tfv
 
-fun newV   () = consV   (freshtyvar  ())
-fun newRV  () = consRV  (freshrowvar ())
-fun newSEQUENCE_VARIABLE  () = consSEQUENCE_VARIABLE  (freshSequenceVariable ())
-fun newTFV () = consTFV (freshtyfvar ())
+fun newTYPE_VAR   () = consTYPE_VAR   (freshTypeVar  ())
+fun newROW_VAR  () = consROW_VAR  (freshRowVar ())
+fun newSEQUENCE_VAR  () = consSEQUENCE_VAR  (freshSequenceVar ())
+fun newTYPE_FUNCTION_VAR () = consTYPE_FUNCTION_VAR (freshTypeFunctionVar ())
 
 (* check if parameter is a type construction *)
-fun isTyC (C _)    = true
-  | isTyC _        = false
+fun isTyC (TYPE_CONSTRUCTOR _)    = true
+  | isTyC _                        = false
 
 (* check if the parameter is an implicit type variable *)
-fun isTyV (V _)    = true
+fun isTyV (TYPE_VAR _)    = true
   | isTyV _        = false
 
 (* gets type name modelled by the type constructor *)
-fun getTyName (C (tn, _, _)) = SOME tn
-  | getTyName  _             = NONE
+fun getTypenameType (TYPE_CONSTRUCTOR (tn, _, _)) = SOME tn
+  | getTypenameType  _             = NONE
 
 (* returns labels from TyLab*)
-fun getTyLab (V  _)               = NONE
-  | getTyLab (E  (_, _, l))       = SOME l
-  | getTyLab (C  (_, _, l))       = SOME l
-  | getTyLab (A  (_, _, l))       = SOME l
-  | getTyLab (OR (_, _, _, _, l)) = SOME l
+fun getTyLab (TYPE_VAR  _)               = NONE
+  | getTyLab (EXPLICIT_TYPE_VAR (_, _, l))       = SOME l
+  | getTyLab (TYPE_CONSTRUCTOR  (_, _, l))       = SOME l
+  | getTyLab (APPLICATION  (_, _, l))       = SOME l
+  | getTyLab (TYPE_POLY (_, _, _, _, l)) = SOME l
   | getTyLab (GEN _)              = NONE
-  | getTyLab (TD  _)              = NONE
+  | getTyLab (TYPE_DEPENDANCY  _)              = NONE
 
 
 (* Extract the tyvar from a type.  The type as to be a type variable. *)
-fun tyToTyvar (V (tv, _, _)) = tv
-  | tyToTyvar _ = raise EH.DeadBranch "the type should a variable"
+fun tyToTypeVar (TYPE_VAR (tv, _, _)) = tv
+  | tyToTypeVar _ = raise EH.DeadBranch "the type should a var"
 (* Extract the sequenceVariable from a type sequence.  The type sequence as to be a sequence variable.*)
-fun seqToSequenceVariable (SEQUENCE_VARIABLE sv) = sv
-  | seqToSequenceVariable _ = raise EH.DeadBranch "the type sequence should be a variable"
+fun seqToSequenceVar (SEQUENCE_VAR sv) = sv
+  | seqToSequenceVar _ = raise EH.DeadBranch "the type sequence should be a var"
 
 
 (**)
@@ -506,175 +524,183 @@ fun conslabty n lab = LC (Int.toString n, lab)
 
 fun constuple tvl lab =
     let fun cons []          _ = []
-	  | cons (tv :: tvl) n = (RC (conslabty n lab, consV tv, lab)) :: (cons tvl (n + 1))
+	  | cons (tv :: tvl) n = (RC (conslabty n lab, consTYPE_VAR tv, lab)) :: (cons tvl (n + 1))
     in cons tvl 1
     end
 
 fun consTupleTy tyl lab =
     #1 (foldl (fn (x, (xs, n)) => ((RC (conslabty n lab, x, lab)) :: xs, n+1)) ([], 1) tyl)
 
-fun constyarrow' tv1 tv2 lab k = C (NC (CONSARROW, k, lab), SC (constuple [tv1, tv2] lab, noflex (), lab), lab)
-fun constyrecord'  tvl f lab k = C (NC (CONSRECORD, k, lab), SC (map (fn x => RV x) tvl, f, lab), lab)
-fun constybool'          lab k = C (NC (CONSBOOL, k, lab), SC ([], noflex (), lab), lab)
-fun constyint'           lab k = C (NC (CONSINT, k, lab), SC ([], noflex (), lab), lab)
-fun constyword'          lab k = C (NC (CONSWORD, k, lab), SC ([], noflex (), lab), lab)
-fun constyreal'          lab k = C (NC (CONSREAL, k, lab), SC ([], noflex (), lab), lab)
-fun constychar'          lab k = C (NC (CONSCHAR, k, lab), SC ([], noflex (), lab), lab)
-fun constystring'        lab k = C (NC (CONSSTRING, k, lab), SC ([], noflex (), lab), lab)
-fun constyexception'     lab k = C (NC (CONSEXCEPTION, k, lab), SC ([], noflex (), lab), lab)
-fun constyunit'          lab k = C (NC (CONSRECORD, k, lab), SC ([], noflex (), lab), lab)
-fun constylist'       tv lab k = C (NC (CONSLIST, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyref'        tv lab k = C (NC (CONSREF, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constytuple'     tvl lab k = C (NC (CONSRECORD, k, lab), SC (constuple tvl lab, noflex (), lab), lab)
-fun constysubstring'     lab k = C (NC (CONSSUBSTRING, k, lab), SC ([], noflex (), lab), lab)
-fun constyarray'      tv lab k = C (NC (CONSARRAY, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyvector'     tv lab k = C (NC (CONSVECTOR, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyoption'     tv lab k = C (NC (CONSOPTION, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constyorder'         lab k = C (NC (CONSORDER, k, lab), SC ([], noflex (), lab), lab)
-fun constyfrag'       tv lab k = C (NC (CONSFRAG, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
-fun constynewcons'       lab k = C (NC (freshtyname   (), k, lab), SC ([], noflex (), lab), lab) (* a new constant type *)
+(* constructors with kinds *)
+fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), SC (constuple [tv1, tv2] lab, noflex (), lab), lab)
+fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), SC (map (fn x => ROW_VAR x) tvl, f, lab), lab)
+fun constybool'          lab k = TYPE_CONSTRUCTOR (NC (CONSBOOL, k, lab), SC ([], noflex (), lab), lab)
+fun constyint'           lab k = TYPE_CONSTRUCTOR (NC (CONSINT, k, lab), SC ([], noflex (), lab), lab)
+fun constyword'          lab k = TYPE_CONSTRUCTOR (NC (CONSWORD, k, lab), SC ([], noflex (), lab), lab)
+fun constyreal'          lab k = TYPE_CONSTRUCTOR (NC (CONSREAL, k, lab), SC ([], noflex (), lab), lab)
+fun constychar'          lab k = TYPE_CONSTRUCTOR (NC (CONSCHAR, k, lab), SC ([], noflex (), lab), lab)
+fun constystring'        lab k = TYPE_CONSTRUCTOR (NC (CONSSTRING, k, lab), SC ([], noflex (), lab), lab)
+fun constyexception'     lab k = TYPE_CONSTRUCTOR (NC (CONSEXCEPTION, k, lab), SC ([], noflex (), lab), lab)
+fun constyunit'          lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), SC ([], noflex (), lab), lab)
+fun constylist'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSLIST, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyref'        tv lab k = TYPE_CONSTRUCTOR (NC (CONSREF, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constytuple'     tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), SC (constuple tvl lab, noflex (), lab), lab)
+fun constysubstring'     lab k = TYPE_CONSTRUCTOR (NC (CONSSUBSTRING, k, lab), SC ([], noflex (), lab), lab)
+fun constyarray'      tv lab k = TYPE_CONSTRUCTOR (NC (CONSARRAY, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyvector'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSVECTOR, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyoption'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSOPTION, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constyorder'         lab k = TYPE_CONSTRUCTOR (NC (CONSORDER, k, lab), SC ([], noflex (), lab), lab)
+fun constyfrag'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSFRAG, k, lab), SC (constuple [tv] lab, noflex (), lab), lab)
+fun constynewcons'       lab k = TYPE_CONSTRUCTOR (NC (freshTypename   (), k, lab), SC ([], noflex (), lab), lab) (* a new constant type *)
 
-fun consTyArrowTy ty1 ty2 lab k = C (NC (CONSARROW, k, lab), SC (consTupleTy [ty1, ty2] lab, noflex (), lab), lab)
-fun consTyTupleTy     tyl lab k = C (NC (CONSRECORD, k, lab), SC (consTupleTy tyl lab, noflex (), lab), lab)
+(* constructors on types *)
+fun consTyArrowTy ty1 ty2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), SC (consTupleTy [ty1, ty2] lab, noflex (), lab), lab)
+fun consTyTupleTy     tyl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), SC (consTupleTy tyl lab, noflex (), lab), lab)
 
-fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OT
-fun constyrecord  tvl f lab = constyrecord'  tvl f lab OT
-fun constybool          lab = constybool'          lab OT
-fun constyint           lab = constyint'           lab OT
-fun constyword          lab = constyword'          lab OT
-fun constyreal          lab = constyreal'          lab OT
-fun constychar          lab = constychar'          lab OT
-fun constystring        lab = constystring'        lab OT
-fun constyexception     lab = constyexception'     lab OT
-fun constyunit          lab = constyunit'          lab OT
-fun constylist       tv lab = constylist'       tv lab OT
-fun constyref        tv lab = constyref'        tv lab OT
-fun constytuple     tvl lab = constytuple'     tvl lab OT
-fun constysubstring     lab = constysubstring'     lab OT
-fun constyarray      tv lab = constyarray'      tv lab OT
-fun constyvector     tv lab = constyvector'     tv lab OT
-fun constyoption     tv lab = constyoption'     tv lab OT
-fun constyorder         lab = constyorder'         lab OT
-fun constyfrag       tv lab = constyfrag'       tv lab OT
-fun constynewcons       lab = constynewcons'       lab OT
+(* constructors without kinds *)
+fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OTHER_CONS
+fun constyrecord  tvl f lab = constyrecord'  tvl f lab OTHER_CONS (* the label option is for the flex *)
+fun constybool          lab = constybool'          lab OTHER_CONS
+fun constyint           lab = constyint'           lab OTHER_CONS
+fun constyword          lab = constyword'          lab OTHER_CONS
+fun constyreal          lab = constyreal'          lab OTHER_CONS
+fun constychar          lab = constychar'          lab OTHER_CONS
+fun constystring        lab = constystring'        lab OTHER_CONS
+fun constyexception     lab = constyexception'     lab OTHER_CONS
+fun constyunit          lab = constyunit'          lab OTHER_CONS
+fun constylist       tv lab = constylist'       tv lab OTHER_CONS
+fun constyref        tv lab = constyref'        tv lab OTHER_CONS
+fun constytuple     tvl lab = constytuple'     tvl lab OTHER_CONS
+fun constysubstring     lab = constysubstring'     lab OTHER_CONS
+fun constyarray      tv lab = constyarray'      tv lab OTHER_CONS
+fun constyvector     tv lab = constyvector'     tv lab OTHER_CONS
+fun constyoption     tv lab = constyoption'     tv lab OTHER_CONS
+fun constyorder         lab = constyorder'         lab OTHER_CONS
+fun constyfrag       tv lab = constyfrag'       tv lab OTHER_CONS
+fun constynewcons       lab = constynewcons'       lab OTHER_CONS
 
-fun isBase' tn = tn < CONSTYPENAMESTART andalso tn > DUMMYTYNAME
+fun isBase' tn = tn < CONSTYPENAMESTART andalso tn > DUMMYTYPENAME
 fun isBase  tn = tn = CONSARROW         orelse  tn = CONSRECORD
 (*orelse (tn = CONSINT)*)
 
-fun isBaseTy (NV _)          = false
+fun isBaseTy (TYPENAME_VAR _)          = false
   | isBaseTy (NC (tn, _, _)) = isBase tn
-  | isBaseTy (ND etn)        = isBaseTy (EL.getExtLabT etn)
+  | isBaseTy (TYPENAME_DEPENDANCY etn)        = isBaseTy (EL.getExtLabT etn)
 
-fun isArrowTy (NV _)          = false
+fun isArrowTy (TYPENAME_VAR _)          = false
   | isArrowTy (NC (tn, _, _)) = tn = CONSARROW
-  | isArrowTy (ND etn)        = isArrowTy (EL.getExtLabT etn)
+  | isArrowTy (TYPENAME_DEPENDANCY etn)        = isArrowTy (EL.getExtLabT etn)
 
-fun isExcTy (NV _)          = false
+fun isExcTy (TYPENAME_VAR _)          = false
   | isExcTy (NC (tn, _, _)) = tn = CONSEXCEPTION
-  | isExcTy (ND etn)        = isExcTy (EL.getExtLabT etn)
+  | isExcTy (TYPENAME_DEPENDANCY etn)        = isExcTy (EL.getExtLabT etn)
 
-fun isDecTy (NC (_, DE _, _)) = true
-  | isDecTy (ND etn)          = isDecTy (EL.getExtLabT etn)
+fun isDecTy (NC (_, DECLARATION_CONS _, _)) = true
+  | isDecTy (TYPENAME_DEPENDANCY etn)          = isDecTy (EL.getExtLabT etn)
   | isDecTy _                 = false
 
 fun isPatTy (NC (_, PA, _)) = true
-  | isPatTy (ND etn)        = isPatTy (EL.getExtLabT etn)
+  | isPatTy (TYPENAME_DEPENDANCY etn)        = isPatTy (EL.getExtLabT etn)
   | isPatTy _               = false
 
 
 (* Check is the top level constructor of a type has been generated for a builtin identifier.
  * If it is the case then 3 labels are updated. *)
 (* We might have to do that in the rtls if the top label is the dummy one. *)
-fun labelBuiltinTy' (C (tn, seq, _)) lab =
+fun labelBuiltinTy' (TYPE_CONSTRUCTOR (tn, seq, _)) lab =
     (case (labelBuiltinTn tn lab, labelBuiltinSq seq lab) of
-	 (SOME tn', SOME seq') => SOME (C (tn', seq', lab))
+	 (SOME tn', SOME seq') => SOME (TYPE_CONSTRUCTOR (tn', seq', lab))
        | _ => NONE)
-  | labelBuiltinTy' (TD (ty, labs, stts, deps)) lab =
+  | labelBuiltinTy' (TYPE_DEPENDANCY (ty, labs, stts, deps)) lab =
     (case labelBuiltinTy' ty lab of
-	 SOME ty' => SOME (TD (ty', labs, stts, deps))
+	 SOME ty' => SOME (TYPE_DEPENDANCY (ty', labs, stts, deps))
        | NONE => NONE)
   | labelBuiltinTy' ty _ = NONE
+
+(* re-label a type if its top-level type constructor is from the builtin basis *)
 and labelBuiltinTy ty lab =
     (case labelBuiltinTy' ty lab of
 	 SOME ty' => ty'
        | NONE => ty)
-and labelBuiltinTn (NC (tn, BB, _)) lab = SOME (NC (tn, OT, lab))
-  | labelBuiltinTn (ND (tn, labs, stts, deps)) lab =
+and labelBuiltinTn (NC (tn, BUILTIN_BASIS_CONS, _)) lab = SOME (NC (tn, OTHER_CONS, lab))
+  | labelBuiltinTn (TYPENAME_DEPENDANCY (tn, labs, stts, deps)) lab =
     (case labelBuiltinTn tn lab of
-	 SOME tn' => SOME (ND (tn', labs, stts, deps))
+	 SOME tn' => SOME (TYPENAME_DEPENDANCY (tn', labs, stts, deps))
        | NONE => NONE)
   | labelBuiltinTn (NC _) _ = NONE
-  | labelBuiltinTn (NV _) _ = NONE
+  | labelBuiltinTn (TYPENAME_VAR _) _ = NONE
 and labelBuiltinSq (SC (rows, flex, _)) lab = SOME (SC (labelBuiltinRowList rows lab, flex, lab))
-  | labelBuiltinSq (SD (seq, labs, stts, deps)) lab =
+  | labelBuiltinSq (SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) lab =
     (case labelBuiltinSq seq lab of
-	 SOME seq' => SOME (SD (seq', labs, stts, deps))
+	 SOME seq' => SOME (SEQUENCE_DEPENDANCY (seq', labs, stts, deps))
        | NONE => NONE)
-  | labelBuiltinSq (SEQUENCE_VARIABLE _) _ = NONE
+  | labelBuiltinSq (SEQUENCE_VAR _) _ = NONE
 and labelBuiltinRowList xs lab = map (fn x => labelBuiltinRow x lab) xs
-and labelBuiltinRow (RV x)           _   = RV x
+and labelBuiltinRow (ROW_VAR x)           _   = ROW_VAR x
   | labelBuiltinRow (RC (lt, ty, _)) lab = RC (lt, labelBuiltinTy ty lab, lab)
-  | labelBuiltinRow (RD erow)        lab = RD (EL.mapExtLab erow (fn row => labelBuiltinRow row lab))
+  | labelBuiltinRow (ROW_DEPENDANCY erow)        lab = ROW_DEPENDANCY (EL.mapExtLab erow (fn row => labelBuiltinRow row lab))
   | labelBuiltinRow RO               _   = RO
 and labelBuiltinTyf (TFC (seq, ty, l)) lab =
     (case (labelBuiltinSq seq lab, labelBuiltinTy' ty lab) of
 	 (SOME seq', SOME ty') => TFC (seq', ty', lab)
        | _ => TFC (seq, ty, l))
-  | labelBuiltinTyf (TFD etf) lab = TFD (EL.mapExtLab etf (fn tf => labelBuiltinTyf tf lab))
-  | labelBuiltinTyf (TFV x) _ = (TFV x)
+  | labelBuiltinTyf (TYPE_FUNCTION_DEPENDANCY etf) lab = TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => labelBuiltinTyf tf lab))
+  | labelBuiltinTyf (TYPE_FUNCTION_VAR x) _ = (TYPE_FUNCTION_VAR x)
 
-fun isVarTyName (NV _) = true
-  | isVarTyName _ = false
+fun isVarTypename (TYPENAME_VAR _) = true
+  | isVarTypename _ = false
 
-fun isShallowRow (RV _) = true
+fun isShallowRow (ROW_VAR _) = true
   | isShallowRow _ = false
 
-fun isShallowSeq (SEQUENCE_VARIABLE _)            = true
+fun isShallowSeq (SEQUENCE_VAR _)            = true
   | isShallowSeq (SC (rows, _, _)) = List.all (fn row => isShallowRow row) rows
-  | isShallowSeq (SD eseq)         = isShallowSeq (EL.getExtLabT eseq)
+  | isShallowSeq (SEQUENCE_DEPENDANCY eseq)         = isShallowSeq (EL.getExtLabT eseq)
 
-fun decorateExtTyVars set labs stts deps =
+fun decorateExtTypeVars set labs stts deps =
     S.map (fn (labs0, stts0, deps0) =>
 	      (L.union labs labs0, L.union stts stts0, CD.union deps deps0))
 	  set
 
-fun unionExtTyVars (set1, set2) =
+fun unionExtTypeVars (set1, set2) =
     S.unionWith (fn ((labs1, stts1, deps1), (labs2, stts2, deps2)) =>
 		    (L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2))
 		(set1, set2)
 
-fun gettyvarsrowty (RV _)                       = S.empty
-  | gettyvarsrowty (RC (_, ty, _))              = gettyvarsty ty
-  | gettyvarsrowty (RD (row, labs, stts, deps)) = decorateExtTyVars (gettyvarsrowty row) labs stts deps
-  | gettyvarsrowty RO                           = S.empty
-and gettyvarstyseq (SEQUENCE_VARIABLE _)                       = S.empty
-  | gettyvarstyseq (SC (rows, _, _))            = foldr (fn (row, tvs) => unionExtTyVars (gettyvarsrowty row, tvs)) S.empty rows
-  | gettyvarstyseq (SD (seq, labs, stts, deps)) = decorateExtTyVars (gettyvarstyseq seq) labs stts deps
-and gettyvarstytf  (TFV _)                      = S.empty
-  | gettyvarstytf  (TFC (sq, ty, _))            = unionExtTyVars (gettyvarstyseq sq, gettyvarsty ty)
-  | gettyvarstytf  (TFD etf)                    = gettyvarstytf (EL.getExtLabT etf)
-and gettyvarsty    (V  (v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
-  | gettyvarsty    (E  (_, v, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
-  | gettyvarsty    (C  (_,  sq, _))             = gettyvarstyseq sq
-  | gettyvarsty    (A  (tf, sq, _))             = unionExtTyVars (gettyvarstytf tf, gettyvarstyseq sq)
-  | gettyvarsty    (OR (sq, _, _, _, _))        = gettyvarstyseq sq
-  | gettyvarsty    (GEN ty)                     = S.empty
-  | gettyvarsty    (TD (ty, labs, stts, deps))  = decorateExtTyVars (gettyvarsty ty) labs stts deps
-(*and gettyvarstylist xs = foldr (fn (x, y) => (gettyvarsty x) @ y) [] xs
-and gettyvarstyseqlist xs = foldr (fn (x, y) => (gettyvarstyseq x) @ y) [] xs*)
+fun getTypeVarsrowty (ROW_VAR _)                       = S.empty
+  | getTypeVarsrowty (RC (_, ty, _))              = getTypeVarsty ty
+  | getTypeVarsrowty (ROW_DEPENDANCY (row, labs, stts, deps)) = decorateExtTypeVars (getTypeVarsrowty row) labs stts deps
+  | getTypeVarsrowty RO                           = S.empty
+and getTypeVarstyseq (SEQUENCE_VAR _)                       = S.empty
+  | getTypeVarstyseq (SC (rows, _, _))            = foldr (fn (row, tvs) => unionExtTypeVars (getTypeVarsrowty row, tvs)) S.empty rows
+  | getTypeVarstyseq (SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) = decorateExtTypeVars (getTypeVarstyseq seq) labs stts deps
+and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
+  | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
+  | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
+and getTypeVarsty    (TYPE_VAR  (v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
+  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
+  | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _))             = getTypeVarstyseq sq
+  | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
+  | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _))        = getTypeVarstyseq sq
+  | getTypeVarsty    (GEN ty)                     = S.empty
+  | getTypeVarsty    (TYPE_DEPENDANCY (ty, labs, stts, deps))  = decorateExtTypeVars (getTypeVarsty ty) labs stts deps
+(*and getTypeVarstylist xs = foldr (fn (x, y) => (getTypeVarsty x) @ y) [] xs
+and getTypeVarstyseqlist xs = foldr (fn (x, y) => (getTypeVarstyseq x) @ y) [] xs*)
 
-fun getTyVarsTy ty =
+(* getTypeVarsty is used by the unification algorithm to recompute
+ * the monomorphic type variables.
+ * This is at least used by enum/StateEnv.sml *)
+fun getTypeVarsTy ty =
     S.foldri (fn (tv, (labs, stts, deps), list) =>
 		 (tv, labs, stts, deps) :: list)
 	     []
-	     (gettyvarsty ty)
+	     (getTypeVarsty ty)
 
 
-(* Returns the actual type constructor of a tnty *)
-fun tntyToTyCon (NV tnv)        = DUMMYTYNAME (* we could also return "tnv" but we don't care about the variable really *)
+(* Returns the actual type constructor of a typenameType *)
+fun tntyToTyCon (TYPENAME_VAR tnv)        = DUMMYTYPENAME (* we could also return "tnv" but we don't care about the variable really *)
   | tntyToTyCon (NC (tn, _, _)) = tn
-  | tntyToTyCon (ND etn)        = tntyToTyCon (EL.getExtLabT etn)
+  | tntyToTyCon (TYPENAME_DEPENDANCY etn)        = tntyToTyCon (EL.getExtLabT etn)
 
 (* determines if a parameter is of monomorphic or polymorphic type *)
 fun isPoly POLY = true
@@ -682,64 +708,64 @@ fun isPoly POLY = true
 
 (********* PRINTING SECTION **********)
 
-fun printtyvar     tv  = "t"   ^ Int.toString tv
+fun printTypeVar     tv  = "t"   ^ Int.toString tv
 fun printetyvar    tv  = "e"   ^ Int.toString tv (*printetyvar for print explicit type variable *)
-fun printSequenceVariable    sv  = "s"   ^ Int.toString sv
-fun printtynamevar tnv = "tnv" ^ Int.toString tnv
-fun printtyname    tn  = "n"   ^ Int.toString tn
-fun printrowvar    rv  = "r"   ^ Int.toString rv
-fun printlabvar    lv  = "f"   ^ Int.toString lv
-fun printtyfvar    tfv = "tfv" ^ Int.toString tfv
+fun printSequenceVar    sv  = "s"   ^ Int.toString sv
+fun printTypenameVar tnv = "tnv" ^ Int.toString tnv
+fun printTypename    tn  = "n"   ^ Int.toString tn
+fun printRowVar    rv  = "r"   ^ Int.toString rv
+fun printLabelVar    lv  = "f"   ^ Int.toString lv
+fun printTypeFunctionVar    tfv = "tfv" ^ Int.toString tfv
 fun printlabcons   lc  = lc
 fun printlabel     l   = "l"   ^ L.printLab l
 fun printsmllc     lc  = "\""  ^ lc ^ "\""
 fun printsmltn     tn  = Int.toString tn
 
-fun printtyname'   0   = "a new type name"
-  | printtyname'   1   = "arrow"
-  | printtyname'   2   = "record"
-  | printtyname'   3   = "int"
-  | printtyname'   4   = "word"
-  | printtyname'   5   = "real"
-  | printtyname'   6   = "bool"
-  | printtyname'   7   = "string"
-  | printtyname'   8   = "list"
-  | printtyname'   9   = "ref"
-  | printtyname'   10  = "char"
-  | printtyname'   11  = "exception"
-  | printtyname'   12  = "substring"
-  | printtyname'   13  = "array"
-  | printtyname'   14  = "vector"
-  | printtyname'   15  = "option"
-  | printtyname'   16  = "order"
-  | printtyname'   17  = "frag"
-  | printtyname'   _   = "a user type" (* should be a raise DeadBranch *)
+fun printTypename'   0   = "a new type name"
+  | printTypename'   1   = "arrow"
+  | printTypename'   2   = "record"
+  | printTypename'   3   = "int"
+  | printTypename'   4   = "word"
+  | printTypename'   5   = "real"
+  | printTypename'   6   = "bool"
+  | printTypename'   7   = "string"
+  | printTypename'   8   = "list"
+  | printTypename'   9   = "ref"
+  | printTypename'   10  = "char"
+  | printTypename'   11  = "exception"
+  | printTypename'   12  = "substring"
+  | printTypename'   13  = "array"
+  | printTypename'   14  = "vector"
+  | printTypename'   15  = "option"
+  | printTypename'   16  = "order"
+  | printTypename'   17  = "frag"
+  | printTypename'   _   = "a user type" (* should be a raise DeadBranch *)
 
-fun printTyNameAssoc tyname assoc =
-    if tyname >= CONSTYPENAMESTART
-    then case I.lookupId (I.fromInt tyname) assoc of
-	     NONE => printtyname' tyname
+fun printTypenameAssoc typename assoc =
+    if typename >= CONSTYPENAMESTART
+    then case I.lookupId (I.fromInt typename) assoc of
+	     NONE => printTypename' typename
 	   | SOME str => "a user type named " ^ str
-    else printtyname' tyname
+    else printTypename' typename
 
-fun printlabty (LV lv)      = printlabvar lv
+fun printlabty (LABEL_VAR lv)      = printLabelVar lv
   | printlabty (LC (lc, l)) = "(" ^ printlabcons lc ^ "," ^ printlabel l ^ ")"
-  | printlabty (LD elt)     = "LD" ^ EL.printExtLab' elt printlabty
+  | printlabty (LABEL_DEPENDANCY elt)     = "LD" ^ EL.printExtLab' elt printlabty
 
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
-fun printrowvarlist xs = printlistgen xs printrowvar
-fun printtyvarlist  xs = printlistgen xs printtyvar
-fun printSequenceVariablelist xs = printlistgen xs printSequenceVariable
+fun printRowVarlist xs = printlistgen xs printRowVar
+fun printTypeVarList  xs = printlistgen xs printTypeVar
+fun printSequenceVarList xs = printlistgen xs printSequenceVar
 
-fun printKCons (DE id) = "DE(" ^ I.printId id ^ ")"
-  | printKCons PA      = "PA"
-  | printKCons OT      = "OT"
-  | printKCons BB      = "BB"
+fun printKCons (DECLARATION_CONS id) = "DE(" ^ I.printId id ^ ")"
+  | printKCons PATTERN_CONS      = "PATTERN"
+  | printKCons OTHER_CONS      = "OTHER_CONS"
+  | printKCons BUILTIN_BASIS_CONS      = "BUILTIN_BASIS_CONS"
 
-fun printtnty (NV tnv)        = printtynamevar tnv
-  | printtnty (NC (tn, k, l)) = "(" ^ printtyname tn ^ "," ^ printKCons k ^ "," ^ printlabel l ^ ")"
-  | printtnty (ND etn)        = "ND" ^ EL.printExtLab' etn printtnty
+fun printtnty (TYPENAME_VAR tnv)        = printTypenameVar tnv
+  | printtnty (NC (tn, k, l)) = "(" ^ printTypename tn ^ "," ^ printKCons k ^ "," ^ printlabel l ^ ")"
+  | printtnty (TYPENAME_DEPENDANCY etn)        = "ND" ^ EL.printExtLab' etn printtnty
 
 fun printOp NONE     _ = "-"
   | printOp (SOME x) f = f x
@@ -752,48 +778,48 @@ fun printidor i = Int.toString i
 fun printPoly POLY = "POLY"
   | printPoly MONO = "MONO"
 
-fun printOrKind (VAL labelledId) = "VAL(" ^ I.printIdL labelledId ^ ")"
-  | printOrKind (CST (st, id, lab)) = "CST(" ^ st ^ "," ^ I.printId id ^ "," ^ L.printLab lab ^ ")"
+fun printOrKind (VALUE labelledId) = "VALUE(" ^ I.printIdL labelledId ^ ")"
+  | printOrKind (CONSTANT (st, id, lab)) = "CONSTANT(" ^ st ^ "," ^ I.printId id ^ "," ^ L.printLab lab ^ ")"
 
 
 (* functions to print internal types *)
 
-fun printrowty (RV rv)            = "RV(" ^ printrowvar rv ^ ")"
-  | printrowty (RC (lt, tv, l))   = "RC(" ^ printlabty lt ^
+fun printRowType (ROW_VAR rv)            = "ROW_VAR(" ^ printRowVar rv ^ ")"
+  | printRowType (RC (lt, tv, l))   = "RC(" ^ printlabty lt ^
 				    ":"   ^ printty    tv ^
 				    ","   ^ printlabel l  ^ ")"
-  | printrowty (RD erow)          = "RD"  ^ EL.printExtLab' erow printrowty
-  | printrowty RO                 = "RO"
-and printrowtylist xs             = printlistgen xs printrowty
-and printseqty (SEQUENCE_VARIABLE sv)            = "SEQUENCE_VARIABLE(" ^ printSequenceVariable     sv ^ ")"
+  | printRowType (ROW_DEPENDANCY erow)          = "ROW_DEPENDANCY"  ^ EL.printExtLab' erow printRowType
+  | printRowType RO                 = "RO"
+and printrowtylist xs             = printlistgen xs printRowType
+and printseqty (SEQUENCE_VAR sv)            = "SEQUENCE_VAR(" ^ printSequenceVar     sv ^ ")"
   | printseqty (SC (rl, b, l))    = "SC("  ^ printrowtylist rl ^
 				    ","    ^ printflex      b  ^
 				    ","    ^ printlabel     l  ^ ")"
-  | printseqty (SD eseq)          = "SD"   ^ EL.printExtLab' eseq printseqty
-and printtyf (TFV v)              = "TFV(" ^ printtyfvar   v   ^ ")"
+  | printseqty (SEQUENCE_DEPENDANCY eseq)          = "SD"   ^ EL.printExtLab' eseq printseqty
+and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
   | printtyf (TFC (sq, ty, l))    = "TFC(" ^ printseqty    sq  ^
 				    ","    ^ printty       ty  ^
 				    ","    ^ printlabel    l   ^ ")"
-  | printtyf (TFD etf)            = "TFD"  ^ EL.printExtLab' etf printtyf
-and printty (V (v, b, p))         = "V("   ^ printtyvar    v   ^
+  | printtyf (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"  ^ EL.printExtLab' etf printtyf
+and printty (TYPE_VAR (v, b, p))         = "TYPE_VAR("   ^ printTypeVar    v   ^
 				    ","    ^ printExplicit b   ^
 				    ","    ^ printPoly     p   ^ ")"
-  | printty (E (id, tv, l))       = "E("   ^ I.printId     id  ^
-				    ","    ^ printtyvar    tv  ^
+  | printty (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("   ^ I.printId     id  ^
+				    ","    ^ printTypeVar    tv  ^
 				    ","    ^ printlabel    l   ^ ")"
-  | printty (C (tn, sq, l))       = "C("   ^ printtnty     tn  ^
+  | printty (TYPE_CONSTRUCTOR (tn, sq, l))       = "TYPE_CONSTRUCTOR("   ^ printtnty     tn  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^ ")"
-  | printty (A (tf, sq, l))       = "A("   ^ printtyf      tf  ^
+  | printty (APPLICATION (tf, sq, l))       = "A("   ^ printtyf      tf  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^ ")"
-  | printty (OR (sq, i, p, k, l)) = "OR("  ^ printseqty    sq  ^
+  | printty (TYPE_POLY (sq, i, p, k, l)) = "TYPE_POLY("  ^ printseqty    sq  ^
 				    ","    ^ printidor     i   ^
 				    ","    ^ printPoly     p   ^
 				    ","    ^ printOrKind   k   ^
 				    ","    ^ printlabel    l   ^ ")"
   | printty (GEN tys)             = "GEN(" ^ printTyGen    tys ^ ")"
-  | printty (TD ety)              = "TD"   ^ EL.printExtLab' ety printty
+  | printty (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"   ^ EL.printExtLab' ety printty
 and printtylist    xs = printlistgen xs printty
 and printseqtylist xs = printlistgen xs printseqty
 and printTyGen tys = printtylist (!tys)
@@ -802,48 +828,48 @@ and printTyGen tys = printtylist (!tys)
 (* this printty is user friendly *)
 
 
-fun printtnty' (NV tnv)            = "NV(" ^ printtynamevar tnv ^ ")"
-  | printtnty' (NC (tn, k, l))     = "NC(" ^ printtyname' tn ^
+fun printtnty' (TYPENAME_VAR tnv)            = "NV(" ^ printTypenameVar tnv ^ ")"
+  | printtnty' (NC (tn, k, l))     = "NC(" ^ printTypename' tn ^
 				     ","   ^ printKCons   k  ^
 				     ","   ^ printlabel   l  ^ ")"
-  | printtnty' (ND etn)            = "ND"  ^ EL.printExtLab' etn printtnty'
+  | printtnty' (TYPENAME_DEPENDANCY etn)            = "ND"  ^ EL.printExtLab' etn printtnty'
 
-fun printrowty' (RV rv)            = "RV(" ^ printrowvar rv ^ ")"
+fun printrowty' (ROW_VAR rv)            = "RV(" ^ printRowVar rv ^ ")"
   | printrowty' (RC (lt, tv, l))   = "RC(" ^ printlabty  lt ^
 				     ":"   ^ printty'    tv ^
 				     ","   ^ printlabel  l  ^ ")"
-  | printrowty' (RD erow)          = "RD"  ^ EL.printExtLab' erow printrowty'
+  | printrowty' (ROW_DEPENDANCY erow)          = "ROW_DEPENDANCY"  ^ EL.printExtLab' erow printrowty'
   | printrowty' RO                 = "RO"
 and printrowtylist' xs = printlistgen xs printrowty'
-and printseqty' (SEQUENCE_VARIABLE sv)            = "SEQUENCE_VARIABLE(" ^ printSequenceVariable sv ^ ")"
+and printseqty' (SEQUENCE_VAR sv)            = "SEQUENCE_VAR(" ^ printSequenceVar sv ^ ")"
   | printseqty' (SC (rtl, b, lab)) = "SC(" ^ printrowtylist' rtl ^
 				     ","   ^ printflex       b   ^
 				     ","   ^ printlabel      lab ^ ")"
-  | printseqty' (SD eseq)          = "SD"  ^ EL.printExtLab' eseq printseqty'
-and printtyf' (TFV v)              = "TFV("  ^ printtyfvar   v   ^ ")"
+  | printseqty' (SEQUENCE_DEPENDANCY eseq)          = "SD"  ^ EL.printExtLab' eseq printseqty'
+and printtyf' (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR("  ^ printTypeFunctionVar   v   ^ ")"
   | printtyf' (TFC (sq, ty, l))    = "TFC("  ^ printseqty'   sq  ^
 				     ","     ^ printty'      ty  ^
 				     ","     ^ printlabel    l   ^ ")"
-  | printtyf' (TFD etf)            = "TFD"   ^ EL.printExtLab' etf printtyf'
-and printty' (V (v, b, p))         = "V("    ^ printtyvar    v   ^
+  | printtyf' (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"   ^ EL.printExtLab' etf printtyf'
+and printty' (TYPE_VAR (v, b, p))         = "TYPE_VAR("    ^ printTypeVar    v   ^
 				     ","     ^ printExplicit b   ^
 				     ","     ^ printPoly     p   ^ ")"
-  | printty' (E (id, tv, l))       = "E("    ^ I.printId     id  ^
-				     ","     ^ printtyvar    tv  ^
+  | printty' (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("    ^ I.printId     id  ^
+				     ","     ^ printTypeVar    tv  ^
 				     ","     ^ printlabel    l   ^ ")"
-  | printty' (C (tn, sq, l))       = "CONS(" ^ printtnty'    tn  ^
+  | printty' (TYPE_CONSTRUCTOR (tn, sq, l))       = "TYPE_CONSTRUCTOR (" ^ printtnty'    tn  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^ ")"
-  | printty' (A (tf, sq, l))       = "A("    ^ printtyf'     tf  ^
+  | printty' (APPLICATION (tf, sq, l))       = "A("    ^ printtyf'     tf  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^ ")"
-  | printty' (OR (sq, i, p, k, l)) = "OR("   ^ printseqty'   sq  ^
+  | printty' (TYPE_POLY (sq, i, p, k, l)) = "TYPE_POLY("   ^ printseqty'   sq  ^
 				     ","     ^ printidor     i   ^
 				     ","     ^ printPoly     p   ^
 				     ","     ^ printOrKind   k   ^
 				     ","     ^ printlabel    l   ^ ")"
   | printty' (GEN tys)             = "GEN("  ^ printTyGen'  tys  ^ ")"
-  | printty' (TD ety)              = "TD"    ^ EL.printExtLab' ety printty'
+  | printty' (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"    ^ EL.printExtLab' ety printty'
 and printtylist' tys = printlistgen tys printty'
 and printTyGen'  tys = printtylist' (!tys)
 

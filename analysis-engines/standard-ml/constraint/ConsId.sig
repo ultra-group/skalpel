@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 Heriot-Watt University
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,8 +59,8 @@ signature CONSID = sig
     val updClass          : 'a bind -> ClassId.class -> 'a bind
     val updPoly           : 'a bind -> Poly.poly     -> 'a bind
 
-    val getTyVar          : Ty.ty bind -> Ty.tyvar option
-    val getTyVars         : Ty.ty bind -> Ty.exttyvar list
+    val getTypeVar          : Ty.ty bind -> Ty.typeVar option
+    val getTypeVars         : Ty.ty bind -> Ty.explicitTypeVar list
 
     val isVAL             : 'a bind -> bool
     val isPAT             : 'a bind -> bool

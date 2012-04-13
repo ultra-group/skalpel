@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 Heriot-Watt University
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,15 +65,15 @@ fun updClass   {id, bind, class, lab, poly} cl   = consBind id bind cl    lab po
 fun updPoly    {id, bind, class, lab, poly} pol  = consBind id bind class lab pol
 
 (* get the type variables from the record *)
-fun getTyVar {id, bind = T.V (tv, _, _), class, lab, poly} = SOME tv
-  | getTyVar {id, bind, class, lab, poly} =
+fun getTypeVar {id, bind = T.TYPE_VAR (tv, _, _), class, lab, poly} = SOME tv
+  | getTypeVar {id, bind, class, lab, poly} =
     (*(2010-07-02) This is not totally safe, we should really return the
      * list of types in bind. *)
     if CL.classIsEXC class
     then NONE
     else (print (I.printId id ^ " " ^ T.printty bind ^ "\n"); raise EH.DeadBranch "")
 
-fun getTyVars {id, bind, class, lab, poly} = T.getTyVarsTy bind
+fun getTypeVars {id, bind, class, lab, poly} = T.getTypeVarsTy bind
 
 (* more checking to see what class the parameter is *)
 fun isVAL {id, bind, class, lab, poly} = CL.classIsVAL class

@@ -373,19 +373,19 @@ and longtycon =
   | LongTyConId     of tycon
   | LongTyConDots   of part list
 
-and labtyvar =
-    LabTyVar        of typevar * R.region list * L.label * next
-  | LabTyVarDots    of typevar list
+and labtypevar =
+    LabTypeVar        of typevar * R.region list * L.label * next
+  | LabTypeVarDots    of typevar list
 
 and typevar =
     TypeVar         of string * I.id * R.region * L.label * next
   | TypeVarDots
 
-and tyvarseq =
-    TyVarSeqOne     of typevar * R.region * L.label * next
-  | TyVarSeqEm      of R.region * L.label * next
-  | TyVarSeqSeq     of labtyvar list * R.region list * L.label * next
-  | TyVarSeqDots    of typevar list
+and typevarseq =
+    TypeVarSeqOne     of typevar * R.region * L.label * next
+  | TypeVarSeqEm      of R.region * L.label * next
+  | TypeVarSeqSeq     of labtypevar list * R.region list * L.label * next
+  | TypeVarSeqDots    of typevar list
 
 and labtype =
     LabType         of types * R.region list * L.label * next
@@ -435,11 +435,11 @@ and valbind =
   | ValBindDots     of part list
 
 and datname =
-    DatName         of tyvarseq * tycon * R.region list * next
+    DatName         of typevarseq * tycon * R.region list * next
   | DatNameDots
 
 and ldatname =
-    LDatName        of tyvarseq * longtycon * R.region list * next
+    LDatName        of typevarseq * longtycon * R.region list * next
   | LDatNameDots
 
 and datbind =
@@ -512,8 +512,8 @@ and identseq =
   | IdentSeqDots    of part list
 
 and dec =
-    DecVal          of tyvarseq * valbind  * R.region * next
-  | DecFVal         of tyvarseq * fvalbind * R.region * next
+    DecVal          of typevarseq * valbind  * R.region * next
+  | DecFVal         of typevarseq * fvalbind * R.region * next
   | DecDatType      of datbindseq * R.region * next
   | DecDatWith      of datbindseq * typbindseq * R.region list * L.label * next
   | DecDatRep       of tycon * longtycon * R.region list * L.label * next
@@ -526,7 +526,7 @@ and dec =
   | DecInfix        of int * identseq * R.region * L.label * next
   | DecInfixr       of int * identseq * R.region * L.label * next
   | DecNonfix       of identseq * R.region * L.label * next
-  | DecOverload     of labid * labtype * labtyvar * tyclassseq * R.region list * L.label * next
+  | DecOverload     of labid * labtype * labtypevar * tyclassseq * R.region list * L.label * next
   | DecClass        of labclass * tyclassseq * R.region * L.label * next
   | DecDots         of part list
 
@@ -1092,22 +1092,22 @@ and printAstTypeVarlist []          = ""
 and printAstTypeVarlistdots []        = dots
   | printAstTypeVarlistdots (ty::tyl) = dots ^ printAstTypeVar ty ^ printAstTypeVarlistdots tyl
 
-and printAstLabTyVar (LabTyVar (tv, _, lab, _)) =
+and printAstLabTypeVar (LabTypeVar (tv, _, lab, _)) =
     ldots () ^ printAstTypeVar tv ^ rfdots lab
-  | printAstLabTyVar (LabTyVarDots tvl)         =
+  | printAstLabTypeVar (LabTypeVarDots tvl)         =
     ldots () ^ printAstTypeVarlistdots tvl ^ rdots ()
 
-and printAstLabTyVarList []        = ""
-  | printAstLabTyVarList [x]       = printAstLabTyVar x
-  | printAstLabTyVarList (x :: xs) = printAstLabTyVar x ^ ", " ^ printAstLabTyVarList xs
+and printAstLabTypeVarList []        = ""
+  | printAstLabTypeVarList [x]       = printAstLabTypeVar x
+  | printAstLabTypeVarList (x :: xs) = printAstLabTypeVar x ^ ", " ^ printAstLabTypeVarList xs
 
-and printAstTyvarseq (TyVarSeqOne (ty, _, lab, _)) =
+and printAstTypeVarseq (TypeVarSeqOne (ty, _, lab, _)) =
     ldots () ^ printAstTypeVar ty ^ rfdots lab
-  | printAstTyvarseq (TyVarSeqEm (_, lab, _))   =
+  | printAstTypeVarseq (TypeVarSeqEm (_, lab, _))   =
     ldots () ^ rfdots lab
-  | printAstTyvarseq (TyVarSeqSeq (ltvl, _, lab, _))  =
-    ldots () ^ "(" ^ printAstLabTyVarList ltvl ^ ")" ^ rfdots lab
-  | printAstTyvarseq (TyVarSeqDots tvl)            =
+  | printAstTypeVarseq (TypeVarSeqSeq (ltvl, _, lab, _))  =
+    ldots () ^ "(" ^ printAstLabTypeVarList ltvl ^ ")" ^ rfdots lab
+  | printAstTypeVarseq (TypeVarSeqDots tvl)            =
     ldots ()  ^ printAstTypeVarlistdots tvl ^ rdots ()
 
 and printAstTypelist []        = ""
@@ -1216,11 +1216,11 @@ and printAstValbind (ValBindRec (vbs, _, l, _)) = ldots () ^ "rec " ^ printAstVa
   | printAstValbind (ValBindDots pl)            = ldots () ^ printAstPartList pl ^ rdots ()
 
 and printAstDatName (DatName (tvs, tn, _, _)) =
-    printAstTyvarseq tvs ^ " " ^ printAstTyCon tn
+    printAstTypeVarseq tvs ^ " " ^ printAstTyCon tn
   | printAstDatName DatNameDots               = ldots () ^ dots ^ rdots ()
 
 and printAstLDatName (LDatName (tvs, tn, _, _)) =
-    printAstTyvarseq tvs ^ " " ^ printAstLongTyCon tn
+    printAstTypeVarseq tvs ^ " " ^ printAstLongTyCon tn
   | printAstLDatName LDatNameDots               = ldots () ^ dots ^ rdots ()
 
 and printAstDatbind (DatBind (dtn, tycs, reg, lab, nxt)) =
@@ -1321,8 +1321,8 @@ and printAstIdentList []        = ""
 and printAstIdentSeq (IdentSeq (labelledId, _)) = printAstIdentList labelledId
   | printAstIdentSeq (IdentSeqDots pl)   = ldots () ^ printAstPartList pl ^ rdots ()
 
-and printAstDec (DecVal (tvs, vb, _, _))                 = "val "       ^ printAstTyvarseq tvs ^ " " ^ printAstValbind vb
-  | printAstDec (DecFVal (tvs, fvb, _, _))               = "fun "       ^ printAstTyvarseq tvs ^ " " ^ printAstFValbind fvb
+and printAstDec (DecVal (tvs, vb, _, _))                 = "val "       ^ printAstTypeVarseq tvs ^ " " ^ printAstValbind vb
+  | printAstDec (DecFVal (tvs, fvb, _, _))               = "fun "       ^ printAstTypeVarseq tvs ^ " " ^ printAstFValbind fvb
   | printAstDec (DecDatType (dbs, _, _))                 = "datatype "  ^ printAstDatbindseq dbs
   | printAstDec (DecDatWith (db, tb, _, l, _))           = ldots () ^ "datatype " ^ printAstDatbindseq db ^ " withtype " ^ printAstTypBindSeq tb ^ rfdots l
   | printAstDec (DecDatRep (tc, ltc, _, l, _))           = ldots () ^ "datatype " ^ printAstTyCon tc ^ " = datatype " ^ printAstLongTyCon ltc ^ rfdots l
@@ -1335,7 +1335,7 @@ and printAstDec (DecVal (tvs, vb, _, _))                 = "val "       ^ printA
   | printAstDec (DecInfix  (i, ids, _, l, _))            = ldots () ^ "infix "    ^ Int.toString i ^ " " ^ printAstIdentSeq ids ^ rfdots l
   | printAstDec (DecInfixr (i, ids, _, l, _))            = ldots () ^ "infixr "   ^ Int.toString i ^ " " ^ printAstIdentSeq ids ^ rfdots l
   | printAstDec (DecNonfix (ids, _, l, _))               = ldots () ^ "nonfix "   ^ printAstIdentSeq ids ^ rfdots l
-  | printAstDec (DecOverload (id, ty, tv, ts, _, l, _))  = ldots () ^ "overload "  ^ printAstLabId id ^ " : " ^ printAstLabType ty ^ " with " ^ printAstLabTyVar tv ^ " in " ^ printAstTyClassSeq ts ^ rfdots l
+  | printAstDec (DecOverload (id, ty, tv, ts, _, l, _))  = ldots () ^ "overload "  ^ printAstLabId id ^ " : " ^ printAstLabType ty ^ " with " ^ printAstLabTypeVar tv ^ " in " ^ printAstTyClassSeq ts ^ rfdots l
   | printAstDec (DecClass (cl, ts, _, l, _))             = ldots () ^ "overload "  ^ printAstLabClass cl ^ " " ^ printAstTyClassSeq ts ^ rfdots l
   | printAstDec (DecDots pl)                             = ldots () ^ printAstPartList pl ^ rdots ()
 
@@ -1657,15 +1657,15 @@ and getlabPcon (PconBool (_, _, _, l, _)) = L.singleton l
   | getlabPcon (PconRef  (_, _, _, l, _)) = L.singleton l
   | getlabPcon PconDots                   = L.empty
 
-fun getlabTyvarseq (TyVarSeqOne (_, _, l, _)) = L.singleton l
-  | getlabTyvarseq (TyVarSeqEm (_, l, _))     = L.singleton l
-  | getlabTyvarseq (TyVarSeqSeq (_, _, l, _)) = L.singleton l
-  | getlabTyvarseq (TyVarSeqDots _)           = L.empty
+fun getlabTypeVarseq (TypeVarSeqOne (_, _, l, _)) = L.singleton l
+  | getlabTypeVarseq (TypeVarSeqEm (_, l, _))     = L.singleton l
+  | getlabTypeVarseq (TypeVarSeqSeq (_, _, l, _)) = L.singleton l
+  | getlabTypeVarseq (TypeVarSeqDots _)           = L.empty
 
-fun getlabDatName (DatName (tvs, _, _, _)) = getlabTyvarseq tvs
+fun getlabDatName (DatName (tvs, _, _, _)) = getlabTypeVarseq tvs
   | getlabDatName DatNameDots              = L.empty
 
-fun getlabLDatName (LDatName (tvs, _, _, _)) = getlabTyvarseq tvs
+fun getlabLDatName (LDatName (tvs, _, _, _)) = getlabTypeVarseq tvs
   | getlabLDatName LDatNameDots              = L.empty
 
 
@@ -1774,339 +1774,339 @@ fun getLabelsIdLabId (LabId (ident, _, lab, _)) =
 
 (* Get the type variables from some type related expressions *)
 
-fun gettyvarTyVarSeq (TyVarSeqOne (ty, reg, lab, nxt))   = [ty]
-  | gettyvarTyVarSeq (TyVarSeqEm (reg, lab, nxt))        = []
-  | gettyvarTyVarSeq (TyVarSeqSeq (tvl, regl, lab, nxt)) = gettyvarLabTyVarList tvl
-  | gettyvarTyVarSeq (TyVarSeqDots tvl)                  = map (fn x => x) tvl
-
-and gettyvarLabTyVarList xs = foldr (fn (x, y) => (gettyvarLabTyVar x) @ y) [] xs
-
-and gettyvarLabTyVar (LabTyVar (tv, _, _, _)) = [tv]
-  | gettyvarLabTyVar (LabTyVarDots _)         = []
-
-and gettyvarLabType (LabType (t, _, _, _)) = gettyvarType t
-  | gettyvarLabType (LabTypeDots _)        = []
-
-and gettyvarTypeSequence (TypeSequenceOne (ty, _, lab, _))  = gettyvarType ty
-  | gettyvarTypeSequence (TypeSequenceEm (_, lab, _))       = []
-  | gettyvarTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (gettyvarLabType x) @ y) [] tyl
-  | gettyvarTypeSequence (TypeSequenceDots _)               = []
-
-and gettyvarTyRow (TyRow (_, lt, _, _, _)) = gettyvarLabType lt
-  | gettyvarTyRow (TyRowDots p_)           = []
-
-and gettyvarType (TypeOneVar tv)                 = [tv]
-  | gettyvarType (TypeArrow (ty1, ty2, _, _, _)) = (gettyvarLabType ty1) @ (gettyvarLabType ty2)
-  | gettyvarType (TypeTuple (tyl, _, _, _))      = foldr (fn (x, y) => (gettyvarLabType x) @ y) [] tyl
-  | gettyvarType (TypeRecord (trl, _, _, _, _))  = foldr (fn (x, y) => (gettyvarTyRow x) @ y) [] trl
-  | gettyvarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (gettyvarTyRow x) @ y) [] trl
-  | gettyvarType (TypeTyCon (ts, _, _, _, _))    = gettyvarTypeSequence ts
-  | gettyvarType (TypeParen (ty, _, _, _, _))    = gettyvarLabType ty
-  | gettyvarType (TypeDots _)                    = raise EH.TODO (* TODO: do that for all the other dot nodes! *)
-
-and gettyvarConbind (ConBind _)                         = []
-  | gettyvarConbind (ConBindOf (id, ty, reg, lab, nxt)) = gettyvarLabType ty
-  | gettyvarConbind (ConBindNoOf _)                     = []
-  | gettyvarConbind (ConBindDots _)                     = []
-
-and gettyvarConbindseq (ConBindSeq tycl)  = foldr (fn (x, y) => (gettyvarConbind x) @ y) [] tycl
-  | gettyvarConbindseq (ConBindSeqDots _) = []
-
-and gettyvarLabExp (LabExp (e, _, _, _, _)) = gettyvarExp e
-  | gettyvarLabExp (LabExpDots _)           = []
-
-and gettyvarExpRow (ExpRow (_, e, _, _, _, _)) = gettyvarLabExp e
-  | gettyvarExpRow (ExpRowDots _)              = []
-
-(*and gettyvarExpRec (ExpRecSeq (erl, _, _, _)) = foldr (fn (x, y) => (gettyvarExpRow x) @ y) [] erl
-  | gettyvarExpRec (ExpRecSet erl)            = foldr (fn (x, y) => (gettyvarExpRow x) @ y) [] erl
-  | gettyvarExpRec (ExpRecDots _)             = []*)
-
-and gettyvarAtExp (AtExpId _)                     = []
-  | gettyvarAtExp (AtExpScon _)                   = []
-  | gettyvarAtExp (AtExpTuple (lel, _, _, _))     = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] lel
-  | gettyvarAtExp (AtExpRecord (erl, _, _, _, _)) = foldr (fn (x, y) => (gettyvarExpRow x) @ y) [] erl
-  | gettyvarAtExp (AtExpSlRec (erl, _, _, _))     = foldr (fn (x, y) => (gettyvarExpRow x) @ y) [] erl
-  | gettyvarAtExp (AtExpLet (ds, le, _, _, _))    = (gettyvarDecs ds) @ (gettyvarLabExp le)
-  | gettyvarAtExp (AtExpDLet (ds, seq, _, _, _))  = (gettyvarDecs ds) @ (gettyvarSeqExp seq)
-  | gettyvarAtExp (AtExpParen (le, _, _, _, _))   = gettyvarLabExp le
-  | gettyvarAtExp (AtExpList (lel, _, _, _))      = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] lel
-  | gettyvarAtExp (AtExpProj _)                   = []
-  | gettyvarAtExp (AtExpSeq (seq, _, _, _))       = gettyvarSeqExp seq
-  | gettyvarAtExp (AtExpQuote (quotes, _, _, _))  = gettyvarQuotes quotes
-  | gettyvarAtExp (AtExpDots _)                   = []
-
-and gettyvarQuotes quotes = foldr (fn (quote, tyvars) => (gettyvarQuote quote) @ tyvars) [] quotes
-
-and gettyvarQuote (Quote _)                  = []
-  | gettyvarQuote (Antiquote (exp, _, _, _)) = gettyvarExp exp
-  | gettyvarQuote (QuoteDots _)              = []
-
-and gettyvarSeqExp (SeqExp (el, e, _, _, _, _))  = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] (el @ [e])
-  | gettyvarSeqExp (SeqExpSl (pl, e, _, _, _))   = gettyvarLabExp e
-  | gettyvarSeqExp (SeqExpDots _)                = []
-
-and gettyvarExp (ExpAtExp ae)                      = gettyvarAtExp ae
-  | gettyvarExp (ExpFn (m, _, _, _))               = gettyvarMatch m
-  | gettyvarExp (ExpApp (le, ae, _, _, _, _, _))   = (gettyvarExp le) @ (gettyvarAtExp ae)
-  | gettyvarExp (ExpCase (le, m, _, _, _, _))      = (gettyvarLabExp le) @ (gettyvarMatch m)
-  | gettyvarExp (ExpConsList (_, e1, e2, _, _, _)) = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [e1, e2]
-  | gettyvarExp (ExpOp (_, _, le1, le2, _, _, _))  = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [le1, le2]
-  | gettyvarExp (ExpOr (le1, le2, _, _, _))        = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [le1, le2]
-  | gettyvarExp (ExpAnd (le1, le2, _, _, _))       = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [le1, le2]
-  | gettyvarExp (ExpTyped (le, lt, _, _, _))       = (gettyvarLabExp le) @ (gettyvarLabType lt)
-  | gettyvarExp (ExpIte (le1, le2, le3, _, _, _))  = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [le1, le2, le3]
-  | gettyvarExp (ExpWhile (le1, le2, _, _, _, _))  = foldr (fn (x, y) => (gettyvarLabExp x) @ y) [] [le1, le2]
-  | gettyvarExp (ExpRaise (e, _, _, _))            = gettyvarLabExp e
-  | gettyvarExp (ExpHandle (e, m, _, _, _))        = (gettyvarLabExp e) @ (gettyvarMatch m)
-  | gettyvarExp (ExpDots _)                        = []
-
-and gettyvarMRule (Mrule (lp, le, _, _, _)) = (gettyvarLabPat lp) @ (gettyvarLabExp le)
-  | gettyvarMRule (MruleDots _)             = []
-
-and gettyvarMatch (Match (mrl, _, _)) = foldr (fn (x, y) => (gettyvarMRule x) @ y) [] mrl
-  | gettyvarMatch (MatchDots _)       = []
-
-and gettyvarLabPat (LabPat (p, _, _, _, _)) = gettyvarPat p
-  | gettyvarLabPat (LabPatDots _)           = []
-
-and gettyvarIdentTy (IdentTyId _)               = []
-  | gettyvarIdentTy (IdentTyTy (_, t, _, _, _)) = gettyvarLabType t
-  | gettyvarIdentTy (IdentTyDots _)             = []
-
-and gettyvarLabIdTy (LabIdTy (id, _, _, _)) = gettyvarIdentTy id
-  | gettyvarLabIdTy (LabIdTyDots _)         = []
-
-and gettyvarPatRow (PatRow (_, p, _, _, _, _)) = gettyvarLabPat p
-  | gettyvarPatRow (PatRowId (id, _))          = gettyvarIdentTy id
-  | gettyvarPatRow (PatRowAs (id, p, _, _, _)) = (gettyvarLabIdTy id) @ (gettyvarLabPat p)
-  | gettyvarPatRow (PatRowWild _)              = []
-  | gettyvarPatRow (PatRowDots _)              = []
-
-and gettyvarAtPat (AtPatWild _)                 = []
-  | gettyvarAtPat (AtPatId _)                   = []
-  | gettyvarAtPat (AtPatScon _)                 = []
-  | gettyvarAtPat (AtPatTuple (p, _, _, _))     = foldr (fn (x, y) => (gettyvarLabPat x) @ y) [] p
-  | gettyvarAtPat (AtPatRecord (p, _, _, _, _)) = foldr (fn (x, y) => (gettyvarPatRow x) @ y) [] p
-  | gettyvarAtPat (AtPatParen (lp, _, _, _, _)) = gettyvarLabPat lp
-  | gettyvarAtPat (AtPatList (xs, _, _, _))     = foldr (fn (x, y) => (gettyvarLabPat x) @ y) [] xs
-  | gettyvarAtPat (AtPatOr (xs, _, _, _))       = foldr (fn (x, y) => (gettyvarLabPat x) @ y) [] xs
-  | gettyvarAtPat (AtPatDots _)                 = []
-
-and gettyvarPat (PatAtPat ap)                      = gettyvarAtPat ap
-  | gettyvarPat (PatApp (_, ap, _, _, _, _))       = gettyvarAtPat ap
-  | gettyvarPat (PatConsList (_, p1, p2, _, _, _)) = foldr (fn (x, y) => (gettyvarLabPat x) @ y) [] [p1, p2]
-  | gettyvarPat (PatOp (_, _, p1, p2, _, _, _))    = foldr (fn (x, y) => (gettyvarLabPat x) @ y) [] [p1, p2]
-  | gettyvarPat (PatTyped (lp, lt, _, _, _))       = (gettyvarLabPat lp) @ (gettyvarLabType lt)
-  | gettyvarPat (PatAs (id, lp, _, _, _))          = (gettyvarLabIdTy id) @ (gettyvarLabPat lp)
-  | gettyvarPat (PatDots _)                        = []
-
-and gettyvarLabAtPat (LabAtPat (ap, _, _, _))   = gettyvarAtPat ap
-  | gettyvarLabAtPat (LabAtPatDots _)           = []
-
-and gettyvarFMatch (FMatchId _)                         = []
-  | gettyvarFMatch (FMatchApp (fm, lap, _, _, _, _))    = (gettyvarFMatch fm) @ (gettyvarLabAtPat lap)
-  | gettyvarFMatch (FMatchSlApp (fm, lap, _))           = (gettyvarFMatch fm) @ (gettyvarLabAtPat lap)
-  | gettyvarFMatch (FMatchNoApp (fm, _))                = gettyvarFMatch fm
-  | gettyvarFMatch FMatchDots                           = []
-
-and gettyvarDatName (DatName (tvs, _, _, _)) = gettyvarTyVarSeq tvs
-  | gettyvarDatName DatNameDots              = []
-
-and gettyvarLDatName (LDatName (tvs, _, _, _)) = gettyvarTyVarSeq tvs
-  | gettyvarLDatName LDatNameDots              = []
-
-and gettyvarLabFMatch (LabFMatch (fm, _, _, _))          = gettyvarFMatch fm
-  (*| gettyvarLabFMatch (LabFMatchTy (fm, ty, _, _, _, _)) = (gettyvarFMatch fm) @ (gettyvarLabType ty)*)
-  | gettyvarLabFMatch (LabFMatchSl (fm, _))              = gettyvarFMatch fm
-  | gettyvarLabFMatch LabFMatchDots                      = []
-
-and gettyvarFMatchTy (FMatchT fm)                  = gettyvarLabFMatch fm
-  | gettyvarFMatchTy (FMatchTTy (fm, ty, _, _, _)) = (gettyvarLabFMatch fm) @ (gettyvarLabType ty)
-  | gettyvarFMatchTy FMatchTDots                   = []
-
-and gettyvarFValBindCore (FValBindCore (fm, le, _, _, _)) = (gettyvarFMatchTy fm) @ (gettyvarLabExp le)
-  (*| gettyvarFValBindCore (FVBCoreTy (lfm, ty, le, _, _, _, _)) = (gettyvarLabFMatch lfm) @ (gettyvarLabType ty) @ (gettyvarLabExp le)*)
-  | gettyvarFValBindCore (FVBCoreDots _)                  = []
-
-and gettyvarFValBindOne (FValBindOne (fvbcl, _, _, _)) = foldr (fn (x, y) => (gettyvarFValBindCore x) @ y) [] fvbcl
-  | gettyvarFValBindOne (FVBOneDots _)                 = []
-
-and gettyvarFValBind (FValBind (fvbol, _, _)) = foldr (fn (x, y) => (gettyvarFValBindOne x) @ y) [] fvbol
-  | gettyvarFValBind (FValBindDots _)         = []
-
-and gettyvarExBind (ExBind _)                 = []
-  | gettyvarExBind (ExBindOf (_, t, _, l, _)) = gettyvarLabType t
-  | gettyvarExBind (ExBindEq _)               = []
-  | gettyvarExBind (ExBindNo _)               = []
-  | gettyvarExBind (ExBindDots _)             = []
-
-and gettyvarExBindSeq (ExBindSeq (ebl, _, _)) = foldr (fn (x, y) => (gettyvarExBind x) @ y) [] ebl
-  | gettyvarExBindSeq (ExBindSeqDots pl)      = []
-
-and gettyvarValBindCore (ValBindCore (p, e, _, _, _)) = (gettyvarLabPat p) @ (gettyvarLabExp e)
-  | gettyvarValBindCore (ValBindCoreDots pl)          = []
-
-and gettyvarValBindSeq (ValBindSeq (xs, _, _)) = foldr (fn (x, y) => (gettyvarValBindCore x) @ y) [] xs
-  | gettyvarValBindSeq (ValBindSeqDots _)      = []
-
-and gettyvarValBind (ValBind vbs)               = gettyvarValBindSeq vbs
-  | gettyvarValBind (ValBindRec (vbs, _, _, _)) = gettyvarValBindSeq vbs
-  | gettyvarValBind (ValBindDots _)             = []
-
-and gettyvarDec (DecVal       _)         = [] (*gettyvarValBind vb*) (* it depends on the expansivness of the nested expressions *)
-  | gettyvarDec (DecDatType   _)         = []
-  | gettyvarDec (DecDatWith   _)         = []
-  | gettyvarDec (DecDatRep    _)         = []
-  | gettyvarDec (DecFVal      _)         = []
-  | gettyvarDec (DecType      _)         = []
-  | gettyvarDec (DecEx (ebs, _, _))      = gettyvarExBindSeq ebs
-  | gettyvarDec (DecOpen (ids, _, _, _)) = [] (* TODO:  oooooooooooh that's tough! - do we still need these gettyvar anyway??? *)
-  | gettyvarDec (DecLocal    _)          = []
-  | gettyvarDec (DecAbsType  _)          = []
-  | gettyvarDec (DecAbsWith  _)          = []
-  | gettyvarDec (DecInfix    _)          = []
-  | gettyvarDec (DecInfixr   _)          = []
-  | gettyvarDec (DecNonfix   _)          = []
-  | gettyvarDec (DecOverload _)          = []
-  | gettyvarDec (DecClass    _)          = []
-  | gettyvarDec (DecDots     _)          = []
-
-and gettyvarDecs (Decs (dl, _)) = foldr (fn (x, y) => (gettyvarDec x) @ y) [] dl
-  | gettyvarDecs (DecsDots pl)  = []
-
-and gettyvarValDescOne (ValDescOne (_, t, _, _, _)) = gettyvarLabType t
-  | gettyvarValDescOne (ValDescOneDots pl)          = []
-
-and gettyvarValDesc (ValDesc (vdl, _, _)) = foldr (fn (x, y) => (gettyvarValDescOne x) @ y) [] vdl
-  | gettyvarValDesc (ValDescDots pl)      = []
-
-and gettyvarStrDec (StrDec (xs, _, _)) = gettyvarStrDecOneList xs
-  | gettyvarStrDec (StrDecDots pl)     = []
-
-and gettyvarStrDecOneList xs = foldr (fn (x, y) => (gettyvarStrDecOne x) @ y) [] xs
-
-and gettyvarStrDecOne (StrDecOneDec  d) = gettyvarDecs d
-  | gettyvarStrDecOne (StrDecOneStr  _) = [] (* check that *)
-  | gettyvarStrDecOne (StrDecOneLoc  _) = []
-  | gettyvarStrDecOne (StrDecOneFun  _) = []
-  | gettyvarStrDecOne (StrDecOneDots _) = []
-
-and gettyvarExcDescOne (ExcDescOne _)               = []
-  | gettyvarExcDescOne (ExcDescOf (_, t, _, _, _) ) = gettyvarLabType t
-  | gettyvarExcDescOne (ExcDescOneDots pl)          = []
-
-and gettyvarExcDesc (ExcDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarExcDescOne x) @ y) [] xs
-  | gettyvarExcDesc (ExcDescDots pl)     = []
-
-and gettyvarTypDescOne (TypDescOne (dn, _, _)) = gettyvarDatName dn
-  | gettyvarTypDescOne (TypDescOneDots pl)     = []
-
-and gettyvarTypDesc (TypDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarTypDescOne x) @ y) [] xs
-  | gettyvarTypDesc (TypDescDots pl)     = []
-
-and gettyvarTdrDescOne (TdrDescOne (dn, ty, _, _, _)) = (gettyvarDatName dn) @ (gettyvarLabType ty)
-  | gettyvarTdrDescOne (TdrDescOneDots pl)            = []
-
-and gettyvarTdrDesc (TdrDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarTdrDescOne x) @ y) [] xs
-  | gettyvarTdrDesc (TdrDescDots pl)     = []
-
-and gettyvarConDescOne (ConDescOneId _)                = []
-  | gettyvarConDescOne (ConDescOneOf (_, ty, _, _, _)) = gettyvarLabType ty
-  | gettyvarConDescOne (ConDescOneNoOf _)              = []
-  | gettyvarConDescOne (ConDescOneDots pl)             = []
-
-and gettyvarConDesc (ConDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarConDescOne x) @ y) [] xs
-  | gettyvarConDesc (ConDescDots pl)     = []
-
-and gettyvarDatDescOne (DatDescOne (dn, cd, _, _, _)) = (gettyvarDatName dn) @ (gettyvarConDesc cd)
-  | gettyvarDatDescOne (DatDescOneDots pl)            = []
-
-and gettyvarDatDesc (DatDesc (xs, _, _)) = foldr (fn (x, y) => (gettyvarDatDescOne x) @ y) [] xs
-  | gettyvarDatDesc (DatDescDots pl)     = []
-
-and gettyvarSpecOne (SpecValue (vd, _, _, _)) = []
-  | gettyvarSpecOne (SpecType (tp, _, _, _)) = gettyvarTypDesc tp
-  | gettyvarSpecOne (SpecEqtype (tp, _, _, _)) = gettyvarTypDesc tp
-  | gettyvarSpecOne (SpecException (ex, _, _, _)) = gettyvarExcDesc ex
-  | gettyvarSpecOne (SpecTdr (tp, _, _, _)) = gettyvarTdrDesc tp
-  | gettyvarSpecOne (SpecDat (dd, _, _, _)) = gettyvarDatDesc dd
-  | gettyvarSpecOne (SpecStr (sd, _, _, _)) = [] (* What should be here? *)
-  | gettyvarSpecOne (SpecInc (si, _, _, _)) = []
-  | gettyvarSpecOne (SpecIsi _)             = []
-  | gettyvarSpecOne (SpecRep _)             = []
-  | gettyvarSpecOne (SpecSha _)             = []
-  | gettyvarSpecOne (SpecSsi _)             = []
-  | gettyvarSpecOne (SpecOneDots _)         = []
-
-and gettyvarSpec (Spec (xs, _)) = foldr (fn (x, y) => (gettyvarSpecOne x) @ y) [] xs
-  | gettyvarSpec (SpecDots pl)  = []
-
-and gettyvarLabSigExp (LabSigExp (e, _, _, _, _)) = gettyvarSigExp e
-  | gettyvarLabSigExp (LabSigExpDots pl)          = []
-
-and gettyvarSigExp (SigExpBasic (sp, _, _, _)) = gettyvarSpec sp
-  | gettyvarSigExp (SigExpId _)                = []
-  | gettyvarSigExp (SigExpRea _)               = []
-  | gettyvarSigExp (SigExpDots pl)             = []
-
-and gettyvarLabStrExp (LabStrExp (e, _, _, _, _)) = gettyvarStrExp e
-  | gettyvarLabStrExp (LabStrExpDots pl)          = []
-
-and gettyvarStrExp (StrExpBasic (sd, _, _, _)) = gettyvarStrDec sd
-  | gettyvarStrExp (StrExpId    _)             = []
-  | gettyvarStrExp (StrExpOp    _)             = []
-  | gettyvarStrExp (StrExpTr    _)             = []
-  | gettyvarStrExp (StrExpFExp  _)             = []
-  | gettyvarStrExp (StrExpFDec  _)             = []
-  | gettyvarStrExp (StrExpLocal _)             = []
-  | gettyvarStrExp (StrExpDots pl)             = []
-
-and gettyvarSigBindOne (SigBindOne (id, se, _, _, _)) = gettyvarLabSigExp se
-  | gettyvarSigBindOne (SigBindOneDots _)             = []
-
-and gettyvarSigBind (SigBind (xs, _, _)) = foldr (fn (x, y) => (gettyvarSigBindOne x) @ y) [] xs
-  | gettyvarSigBind (SigBindDots _)      = []
-
-and gettyvarSigDec (SigDec (sb, _, _)) = gettyvarSigBind sb
-  | gettyvarSigDec (SigDecDots _)      = []
-
-and gettyvarFunBindOne (FunBindO   (_, _, si, se, _, _, _))      = (gettyvarLabSigExp si) @ (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindOO  (_, _, si, si', se, _, _, _)) = (gettyvarLabSigExp si) @ (gettyvarLabSigExp si') @ (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindOT  (_, _, si, si', se, _, _, _)) = (gettyvarLabSigExp si) @ (gettyvarLabSigExp si') @ (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindOS  (_, _, se, _, _, _))          = (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindOSO (_, _, si, se, _, _, _))      = (gettyvarLabSigExp si) @ (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindOST (_, _, si, se, _, _, _))      = (gettyvarLabSigExp si) @ (gettyvarLabStrExp se)
-  | gettyvarFunBindOne (FunBindODots _)                          = []
-
-and gettyvarFunBind (FunBind (xs, _, _)) = foldr (fn (x, y) => (gettyvarFunBindOne x) @ y) [] xs
-  | gettyvarFunBind (FunBindDots _)      = []
-
-(*and gettyvarFunDec (FunDec (sb, _, _, _)) = gettyvarFunBind sb
-  | gettyvarFunDec (FunDecDots _)         = []*)
-
-and gettyvarATopDec (ATopDecStr s)  = gettyvarStrDec s
-  | gettyvarATopDec (ATopDecSig s)  = gettyvarSigDec s
-  (*| gettyvarATopDec (TopDecOneFun f)  = gettyvarFunDec f*)
-  | gettyvarATopDec (ATopDecDots _) = []
-
-and gettyvarTopDecOne (TopDecOneTes _)      = []
-  | gettyvarTopDecOne (TopDecOneDec (x, _)) = gettyvarATopDec x
-  | gettyvarTopDecOne (TopDecOneDots _)     = []
-
-and gettyvarTopDec (TopDec xs)    = foldr (fn (x, y) => (gettyvarTopDecOne x) @ y) [] xs
-  | gettyvarTopDec (TopDecDots _) = []
-
-and gettyvarProgOne (ProgOneDec td)  = gettyvarTopDec td
-  | gettyvarProgOne (ProgOneExp   _) = []
-  | gettyvarProgOne (ProgOneParse _) = []
-  | gettyvarProgOne (ProgOneFile  _) = []
-  | gettyvarProgOne (ProgOneDots  _) = []
-
-and gettyvarProg (Prog xs)     = foldr (fn (x, y) => (gettyvarProgOne x) @ y) [] xs
-  | gettyvarProg (ProgDots _)  = []
-
-and gettyvarProgs (Progs xs) = foldr (fn ((x, _, _, _), y) => (gettyvarProg x) @ y) [] xs
+fun getTypeVarTypeVarSeq (TypeVarSeqOne (ty, reg, lab, nxt))   = [ty]
+  | getTypeVarTypeVarSeq (TypeVarSeqEm (reg, lab, nxt))        = []
+  | getTypeVarTypeVarSeq (TypeVarSeqSeq (tvl, regl, lab, nxt)) = getTypeVarLabTypeVarList tvl
+  | getTypeVarTypeVarSeq (TypeVarSeqDots tvl)                  = map (fn x => x) tvl
+
+and getTypeVarLabTypeVarList xs = foldr (fn (x, y) => (getTypeVarLabTypeVar x) @ y) [] xs
+
+and getTypeVarLabTypeVar (LabTypeVar (tv, _, _, _)) = [tv]
+  | getTypeVarLabTypeVar (LabTypeVarDots _)         = []
+
+and getTypeVarLabType (LabType (t, _, _, _)) = getTypeVarType t
+  | getTypeVarLabType (LabTypeDots _)        = []
+
+and getTypeVarTypeSequence (TypeSequenceOne (ty, _, lab, _))  = getTypeVarType ty
+  | getTypeVarTypeSequence (TypeSequenceEm (_, lab, _))       = []
+  | getTypeVarTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (getTypeVarLabType x) @ y) [] tyl
+  | getTypeVarTypeSequence (TypeSequenceDots _)               = []
+
+and getTypeVarTyRow (TyRow (_, lt, _, _, _)) = getTypeVarLabType lt
+  | getTypeVarTyRow (TyRowDots p_)           = []
+
+and getTypeVarType (TypeOneVar tv)                 = [tv]
+  | getTypeVarType (TypeArrow (ty1, ty2, _, _, _)) = (getTypeVarLabType ty1) @ (getTypeVarLabType ty2)
+  | getTypeVarType (TypeTuple (tyl, _, _, _))      = foldr (fn (x, y) => (getTypeVarLabType x) @ y) [] tyl
+  | getTypeVarType (TypeRecord (trl, _, _, _, _))  = foldr (fn (x, y) => (getTypeVarTyRow x) @ y) [] trl
+  | getTypeVarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (getTypeVarTyRow x) @ y) [] trl
+  | getTypeVarType (TypeTyCon (ts, _, _, _, _))    = getTypeVarTypeSequence ts
+  | getTypeVarType (TypeParen (ty, _, _, _, _))    = getTypeVarLabType ty
+  | getTypeVarType (TypeDots _)                    = raise EH.TODO (* TODO: do that for all the other dot nodes! *)
+
+and getTypeVarConbind (ConBind _)                         = []
+  | getTypeVarConbind (ConBindOf (id, ty, reg, lab, nxt)) = getTypeVarLabType ty
+  | getTypeVarConbind (ConBindNoOf _)                     = []
+  | getTypeVarConbind (ConBindDots _)                     = []
+
+and getTypeVarConbindseq (ConBindSeq tycl)  = foldr (fn (x, y) => (getTypeVarConbind x) @ y) [] tycl
+  | getTypeVarConbindseq (ConBindSeqDots _) = []
+
+and getTypeVarLabExp (LabExp (e, _, _, _, _)) = getTypeVarExp e
+  | getTypeVarLabExp (LabExpDots _)           = []
+
+and getTypeVarExpRow (ExpRow (_, e, _, _, _, _)) = getTypeVarLabExp e
+  | getTypeVarExpRow (ExpRowDots _)              = []
+
+(*and getTypeVarExpRec (ExpRecSeq (erl, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+  | getTypeVarExpRec (ExpRecSet erl)            = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+  | getTypeVarExpRec (ExpRecDots _)             = []*)
+
+and getTypeVarAtExp (AtExpId _)                     = []
+  | getTypeVarAtExp (AtExpScon _)                   = []
+  | getTypeVarAtExp (AtExpTuple (lel, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] lel
+  | getTypeVarAtExp (AtExpRecord (erl, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+  | getTypeVarAtExp (AtExpSlRec (erl, _, _, _))     = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+  | getTypeVarAtExp (AtExpLet (ds, le, _, _, _))    = (getTypeVarDecs ds) @ (getTypeVarLabExp le)
+  | getTypeVarAtExp (AtExpDLet (ds, seq, _, _, _))  = (getTypeVarDecs ds) @ (getTypeVarSeqExp seq)
+  | getTypeVarAtExp (AtExpParen (le, _, _, _, _))   = getTypeVarLabExp le
+  | getTypeVarAtExp (AtExpList (lel, _, _, _))      = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] lel
+  | getTypeVarAtExp (AtExpProj _)                   = []
+  | getTypeVarAtExp (AtExpSeq (seq, _, _, _))       = getTypeVarSeqExp seq
+  | getTypeVarAtExp (AtExpQuote (quotes, _, _, _))  = getTypeVarQuotes quotes
+  | getTypeVarAtExp (AtExpDots _)                   = []
+
+and getTypeVarQuotes quotes = foldr (fn (quote, typeVars) => (getTypeVarQuote quote) @ typeVars) [] quotes
+
+and getTypeVarQuote (Quote _)                  = []
+  | getTypeVarQuote (Antiquote (exp, _, _, _)) = getTypeVarExp exp
+  | getTypeVarQuote (QuoteDots _)              = []
+
+and getTypeVarSeqExp (SeqExp (el, e, _, _, _, _))  = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] (el @ [e])
+  | getTypeVarSeqExp (SeqExpSl (pl, e, _, _, _))   = getTypeVarLabExp e
+  | getTypeVarSeqExp (SeqExpDots _)                = []
+
+and getTypeVarExp (ExpAtExp ae)                      = getTypeVarAtExp ae
+  | getTypeVarExp (ExpFn (m, _, _, _))               = getTypeVarMatch m
+  | getTypeVarExp (ExpApp (le, ae, _, _, _, _, _))   = (getTypeVarExp le) @ (getTypeVarAtExp ae)
+  | getTypeVarExp (ExpCase (le, m, _, _, _, _))      = (getTypeVarLabExp le) @ (getTypeVarMatch m)
+  | getTypeVarExp (ExpConsList (_, e1, e2, _, _, _)) = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [e1, e2]
+  | getTypeVarExp (ExpOp (_, _, le1, le2, _, _, _))  = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [le1, le2]
+  | getTypeVarExp (ExpOr (le1, le2, _, _, _))        = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [le1, le2]
+  | getTypeVarExp (ExpAnd (le1, le2, _, _, _))       = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [le1, le2]
+  | getTypeVarExp (ExpTyped (le, lt, _, _, _))       = (getTypeVarLabExp le) @ (getTypeVarLabType lt)
+  | getTypeVarExp (ExpIte (le1, le2, le3, _, _, _))  = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [le1, le2, le3]
+  | getTypeVarExp (ExpWhile (le1, le2, _, _, _, _))  = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] [le1, le2]
+  | getTypeVarExp (ExpRaise (e, _, _, _))            = getTypeVarLabExp e
+  | getTypeVarExp (ExpHandle (e, m, _, _, _))        = (getTypeVarLabExp e) @ (getTypeVarMatch m)
+  | getTypeVarExp (ExpDots _)                        = []
+
+and getTypeVarMRule (Mrule (lp, le, _, _, _)) = (getTypeVarLabPat lp) @ (getTypeVarLabExp le)
+  | getTypeVarMRule (MruleDots _)             = []
+
+and getTypeVarMatch (Match (mrl, _, _)) = foldr (fn (x, y) => (getTypeVarMRule x) @ y) [] mrl
+  | getTypeVarMatch (MatchDots _)       = []
+
+and getTypeVarLabPat (LabPat (p, _, _, _, _)) = getTypeVarPat p
+  | getTypeVarLabPat (LabPatDots _)           = []
+
+and getTypeVarIdentTy (IdentTyId _)               = []
+  | getTypeVarIdentTy (IdentTyTy (_, t, _, _, _)) = getTypeVarLabType t
+  | getTypeVarIdentTy (IdentTyDots _)             = []
+
+and getTypeVarLabIdTy (LabIdTy (id, _, _, _)) = getTypeVarIdentTy id
+  | getTypeVarLabIdTy (LabIdTyDots _)         = []
+
+and getTypeVarPatRow (PatRow (_, p, _, _, _, _)) = getTypeVarLabPat p
+  | getTypeVarPatRow (PatRowId (id, _))          = getTypeVarIdentTy id
+  | getTypeVarPatRow (PatRowAs (id, p, _, _, _)) = (getTypeVarLabIdTy id) @ (getTypeVarLabPat p)
+  | getTypeVarPatRow (PatRowWild _)              = []
+  | getTypeVarPatRow (PatRowDots _)              = []
+
+and getTypeVarAtPat (AtPatWild _)                 = []
+  | getTypeVarAtPat (AtPatId _)                   = []
+  | getTypeVarAtPat (AtPatScon _)                 = []
+  | getTypeVarAtPat (AtPatTuple (p, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] p
+  | getTypeVarAtPat (AtPatRecord (p, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarPatRow x) @ y) [] p
+  | getTypeVarAtPat (AtPatParen (lp, _, _, _, _)) = getTypeVarLabPat lp
+  | getTypeVarAtPat (AtPatList (xs, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] xs
+  | getTypeVarAtPat (AtPatOr (xs, _, _, _))       = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] xs
+  | getTypeVarAtPat (AtPatDots _)                 = []
+
+and getTypeVarPat (PatAtPat ap)                      = getTypeVarAtPat ap
+  | getTypeVarPat (PatApp (_, ap, _, _, _, _))       = getTypeVarAtPat ap
+  | getTypeVarPat (PatConsList (_, p1, p2, _, _, _)) = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] [p1, p2]
+  | getTypeVarPat (PatOp (_, _, p1, p2, _, _, _))    = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] [p1, p2]
+  | getTypeVarPat (PatTyped (lp, lt, _, _, _))       = (getTypeVarLabPat lp) @ (getTypeVarLabType lt)
+  | getTypeVarPat (PatAs (id, lp, _, _, _))          = (getTypeVarLabIdTy id) @ (getTypeVarLabPat lp)
+  | getTypeVarPat (PatDots _)                        = []
+
+and getTypeVarLabAtPat (LabAtPat (ap, _, _, _))   = getTypeVarAtPat ap
+  | getTypeVarLabAtPat (LabAtPatDots _)           = []
+
+and getTypeVarFMatch (FMatchId _)                         = []
+  | getTypeVarFMatch (FMatchApp (fm, lap, _, _, _, _))    = (getTypeVarFMatch fm) @ (getTypeVarLabAtPat lap)
+  | getTypeVarFMatch (FMatchSlApp (fm, lap, _))           = (getTypeVarFMatch fm) @ (getTypeVarLabAtPat lap)
+  | getTypeVarFMatch (FMatchNoApp (fm, _))                = getTypeVarFMatch fm
+  | getTypeVarFMatch FMatchDots                           = []
+
+and getTypeVarDatName (DatName (tvs, _, _, _)) = getTypeVarTypeVarSeq tvs
+  | getTypeVarDatName DatNameDots              = []
+
+and getTypeVarLDatName (LDatName (tvs, _, _, _)) = getTypeVarTypeVarSeq tvs
+  | getTypeVarLDatName LDatNameDots              = []
+
+and getTypeVarLabFMatch (LabFMatch (fm, _, _, _))          = getTypeVarFMatch fm
+  (*| getTypeVarLabFMatch (LabFMatchTy (fm, ty, _, _, _, _)) = (getTypeVarFMatch fm) @ (getTypeVarLabType ty)*)
+  | getTypeVarLabFMatch (LabFMatchSl (fm, _))              = getTypeVarFMatch fm
+  | getTypeVarLabFMatch LabFMatchDots                      = []
+
+and getTypeVarFMatchTy (FMatchT fm)                  = getTypeVarLabFMatch fm
+  | getTypeVarFMatchTy (FMatchTTy (fm, ty, _, _, _)) = (getTypeVarLabFMatch fm) @ (getTypeVarLabType ty)
+  | getTypeVarFMatchTy FMatchTDots                   = []
+
+and getTypeVarFValBindCore (FValBindCore (fm, le, _, _, _)) = (getTypeVarFMatchTy fm) @ (getTypeVarLabExp le)
+  (*| getTypeVarFValBindCore (FVBCoreTy (lfm, ty, le, _, _, _, _)) = (getTypeVarLabFMatch lfm) @ (getTypeVarLabType ty) @ (getTypeVarLabExp le)*)
+  | getTypeVarFValBindCore (FVBCoreDots _)                  = []
+
+and getTypeVarFValBindOne (FValBindOne (fvbcl, _, _, _)) = foldr (fn (x, y) => (getTypeVarFValBindCore x) @ y) [] fvbcl
+  | getTypeVarFValBindOne (FVBOneDots _)                 = []
+
+and getTypeVarFValBind (FValBind (fvbol, _, _)) = foldr (fn (x, y) => (getTypeVarFValBindOne x) @ y) [] fvbol
+  | getTypeVarFValBind (FValBindDots _)         = []
+
+and getTypeVarExBind (ExBind _)                 = []
+  | getTypeVarExBind (ExBindOf (_, t, _, l, _)) = getTypeVarLabType t
+  | getTypeVarExBind (ExBindEq _)               = []
+  | getTypeVarExBind (ExBindNo _)               = []
+  | getTypeVarExBind (ExBindDots _)             = []
+
+and getTypeVarExBindSeq (ExBindSeq (ebl, _, _)) = foldr (fn (x, y) => (getTypeVarExBind x) @ y) [] ebl
+  | getTypeVarExBindSeq (ExBindSeqDots pl)      = []
+
+and getTypeVarValBindCore (ValBindCore (p, e, _, _, _)) = (getTypeVarLabPat p) @ (getTypeVarLabExp e)
+  | getTypeVarValBindCore (ValBindCoreDots pl)          = []
+
+and getTypeVarValBindSeq (ValBindSeq (xs, _, _)) = foldr (fn (x, y) => (getTypeVarValBindCore x) @ y) [] xs
+  | getTypeVarValBindSeq (ValBindSeqDots _)      = []
+
+and getTypeVarValBind (ValBind vbs)               = getTypeVarValBindSeq vbs
+  | getTypeVarValBind (ValBindRec (vbs, _, _, _)) = getTypeVarValBindSeq vbs
+  | getTypeVarValBind (ValBindDots _)             = []
+
+and getTypeVarDec (DecVal       _)         = [] (*getTypeVarValBind vb*) (* it depends on the expansivness of the nested expressions *)
+  | getTypeVarDec (DecDatType   _)         = []
+  | getTypeVarDec (DecDatWith   _)         = []
+  | getTypeVarDec (DecDatRep    _)         = []
+  | getTypeVarDec (DecFVal      _)         = []
+  | getTypeVarDec (DecType      _)         = []
+  | getTypeVarDec (DecEx (ebs, _, _))      = getTypeVarExBindSeq ebs
+  | getTypeVarDec (DecOpen (ids, _, _, _)) = [] (* TODO:  oooooooooooh that's tough! - do we still need these getTypeVar anyway??? *)
+  | getTypeVarDec (DecLocal    _)          = []
+  | getTypeVarDec (DecAbsType  _)          = []
+  | getTypeVarDec (DecAbsWith  _)          = []
+  | getTypeVarDec (DecInfix    _)          = []
+  | getTypeVarDec (DecInfixr   _)          = []
+  | getTypeVarDec (DecNonfix   _)          = []
+  | getTypeVarDec (DecOverload _)          = []
+  | getTypeVarDec (DecClass    _)          = []
+  | getTypeVarDec (DecDots     _)          = []
+
+and getTypeVarDecs (Decs (dl, _)) = foldr (fn (x, y) => (getTypeVarDec x) @ y) [] dl
+  | getTypeVarDecs (DecsDots pl)  = []
+
+and getTypeVarValDescOne (ValDescOne (_, t, _, _, _)) = getTypeVarLabType t
+  | getTypeVarValDescOne (ValDescOneDots pl)          = []
+
+and getTypeVarValDesc (ValDesc (vdl, _, _)) = foldr (fn (x, y) => (getTypeVarValDescOne x) @ y) [] vdl
+  | getTypeVarValDesc (ValDescDots pl)      = []
+
+and getTypeVarStrDec (StrDec (xs, _, _)) = getTypeVarStrDecOneList xs
+  | getTypeVarStrDec (StrDecDots pl)     = []
+
+and getTypeVarStrDecOneList xs = foldr (fn (x, y) => (getTypeVarStrDecOne x) @ y) [] xs
+
+and getTypeVarStrDecOne (StrDecOneDec  d) = getTypeVarDecs d
+  | getTypeVarStrDecOne (StrDecOneStr  _) = [] (* check that *)
+  | getTypeVarStrDecOne (StrDecOneLoc  _) = []
+  | getTypeVarStrDecOne (StrDecOneFun  _) = []
+  | getTypeVarStrDecOne (StrDecOneDots _) = []
+
+and getTypeVarExcDescOne (ExcDescOne _)               = []
+  | getTypeVarExcDescOne (ExcDescOf (_, t, _, _, _) ) = getTypeVarLabType t
+  | getTypeVarExcDescOne (ExcDescOneDots pl)          = []
+
+and getTypeVarExcDesc (ExcDesc (xs, _, _)) = foldr (fn (x, y) => (getTypeVarExcDescOne x) @ y) [] xs
+  | getTypeVarExcDesc (ExcDescDots pl)     = []
+
+and getTypeVarTypDescOne (TypDescOne (dn, _, _)) = getTypeVarDatName dn
+  | getTypeVarTypDescOne (TypDescOneDots pl)     = []
+
+and getTypeVarTypDesc (TypDesc (xs, _, _)) = foldr (fn (x, y) => (getTypeVarTypDescOne x) @ y) [] xs
+  | getTypeVarTypDesc (TypDescDots pl)     = []
+
+and getTypeVarTdrDescOne (TdrDescOne (dn, ty, _, _, _)) = (getTypeVarDatName dn) @ (getTypeVarLabType ty)
+  | getTypeVarTdrDescOne (TdrDescOneDots pl)            = []
+
+and getTypeVarTdrDesc (TdrDesc (xs, _, _)) = foldr (fn (x, y) => (getTypeVarTdrDescOne x) @ y) [] xs
+  | getTypeVarTdrDesc (TdrDescDots pl)     = []
+
+and getTypeVarConDescOne (ConDescOneId _)                = []
+  | getTypeVarConDescOne (ConDescOneOf (_, ty, _, _, _)) = getTypeVarLabType ty
+  | getTypeVarConDescOne (ConDescOneNoOf _)              = []
+  | getTypeVarConDescOne (ConDescOneDots pl)             = []
+
+and getTypeVarConDesc (ConDesc (xs, _, _)) = foldr (fn (x, y) => (getTypeVarConDescOne x) @ y) [] xs
+  | getTypeVarConDesc (ConDescDots pl)     = []
+
+and getTypeVarDatDescOne (DatDescOne (dn, cd, _, _, _)) = (getTypeVarDatName dn) @ (getTypeVarConDesc cd)
+  | getTypeVarDatDescOne (DatDescOneDots pl)            = []
+
+and getTypeVarDatDesc (DatDesc (xs, _, _)) = foldr (fn (x, y) => (getTypeVarDatDescOne x) @ y) [] xs
+  | getTypeVarDatDesc (DatDescDots pl)     = []
+
+and getTypeVarSpecOne (SpecValue (vd, _, _, _)) = []
+  | getTypeVarSpecOne (SpecType (tp, _, _, _)) = getTypeVarTypDesc tp
+  | getTypeVarSpecOne (SpecEqtype (tp, _, _, _)) = getTypeVarTypDesc tp
+  | getTypeVarSpecOne (SpecException (ex, _, _, _)) = getTypeVarExcDesc ex
+  | getTypeVarSpecOne (SpecTdr (tp, _, _, _)) = getTypeVarTdrDesc tp
+  | getTypeVarSpecOne (SpecDat (dd, _, _, _)) = getTypeVarDatDesc dd
+  | getTypeVarSpecOne (SpecStr (sd, _, _, _)) = [] (* What should be here? *)
+  | getTypeVarSpecOne (SpecInc (si, _, _, _)) = []
+  | getTypeVarSpecOne (SpecIsi _)             = []
+  | getTypeVarSpecOne (SpecRep _)             = []
+  | getTypeVarSpecOne (SpecSha _)             = []
+  | getTypeVarSpecOne (SpecSsi _)             = []
+  | getTypeVarSpecOne (SpecOneDots _)         = []
+
+and getTypeVarSpec (Spec (xs, _)) = foldr (fn (x, y) => (getTypeVarSpecOne x) @ y) [] xs
+  | getTypeVarSpec (SpecDots pl)  = []
+
+and getTypeVarLabSigExp (LabSigExp (e, _, _, _, _)) = getTypeVarSigExp e
+  | getTypeVarLabSigExp (LabSigExpDots pl)          = []
+
+and getTypeVarSigExp (SigExpBasic (sp, _, _, _)) = getTypeVarSpec sp
+  | getTypeVarSigExp (SigExpId _)                = []
+  | getTypeVarSigExp (SigExpRea _)               = []
+  | getTypeVarSigExp (SigExpDots pl)             = []
+
+and getTypeVarLabStrExp (LabStrExp (e, _, _, _, _)) = getTypeVarStrExp e
+  | getTypeVarLabStrExp (LabStrExpDots pl)          = []
+
+and getTypeVarStrExp (StrExpBasic (sd, _, _, _)) = getTypeVarStrDec sd
+  | getTypeVarStrExp (StrExpId    _)             = []
+  | getTypeVarStrExp (StrExpOp    _)             = []
+  | getTypeVarStrExp (StrExpTr    _)             = []
+  | getTypeVarStrExp (StrExpFExp  _)             = []
+  | getTypeVarStrExp (StrExpFDec  _)             = []
+  | getTypeVarStrExp (StrExpLocal _)             = []
+  | getTypeVarStrExp (StrExpDots pl)             = []
+
+and getTypeVarSigBindOne (SigBindOne (id, se, _, _, _)) = getTypeVarLabSigExp se
+  | getTypeVarSigBindOne (SigBindOneDots _)             = []
+
+and getTypeVarSigBind (SigBind (xs, _, _)) = foldr (fn (x, y) => (getTypeVarSigBindOne x) @ y) [] xs
+  | getTypeVarSigBind (SigBindDots _)      = []
+
+and getTypeVarSigDec (SigDec (sb, _, _)) = getTypeVarSigBind sb
+  | getTypeVarSigDec (SigDecDots _)      = []
+
+and getTypeVarFunBindOne (FunBindO   (_, _, si, se, _, _, _))      = (getTypeVarLabSigExp si) @ (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindOO  (_, _, si, si', se, _, _, _)) = (getTypeVarLabSigExp si) @ (getTypeVarLabSigExp si') @ (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindOT  (_, _, si, si', se, _, _, _)) = (getTypeVarLabSigExp si) @ (getTypeVarLabSigExp si') @ (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindOS  (_, _, se, _, _, _))          = (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindOSO (_, _, si, se, _, _, _))      = (getTypeVarLabSigExp si) @ (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindOST (_, _, si, se, _, _, _))      = (getTypeVarLabSigExp si) @ (getTypeVarLabStrExp se)
+  | getTypeVarFunBindOne (FunBindODots _)                          = []
+
+and getTypeVarFunBind (FunBind (xs, _, _)) = foldr (fn (x, y) => (getTypeVarFunBindOne x) @ y) [] xs
+  | getTypeVarFunBind (FunBindDots _)      = []
+
+(*and getTypeVarFunDec (FunDec (sb, _, _, _)) = getTypeVarFunBind sb
+  | getTypeVarFunDec (FunDecDots _)         = []*)
+
+and getTypeVarATopDec (ATopDecStr s)  = getTypeVarStrDec s
+  | getTypeVarATopDec (ATopDecSig s)  = getTypeVarSigDec s
+  (*| getTypeVarATopDec (TopDecOneFun f)  = getTypeVarFunDec f*)
+  | getTypeVarATopDec (ATopDecDots _) = []
+
+and getTypeVarTopDecOne (TopDecOneTes _)      = []
+  | getTypeVarTopDecOne (TopDecOneDec (x, _)) = getTypeVarATopDec x
+  | getTypeVarTopDecOne (TopDecOneDots _)     = []
+
+and getTypeVarTopDec (TopDec xs)    = foldr (fn (x, y) => (getTypeVarTopDecOne x) @ y) [] xs
+  | getTypeVarTopDec (TopDecDots _) = []
+
+and getTypeVarProgOne (ProgOneDec td)  = getTypeVarTopDec td
+  | getTypeVarProgOne (ProgOneExp   _) = []
+  | getTypeVarProgOne (ProgOneParse _) = []
+  | getTypeVarProgOne (ProgOneFile  _) = []
+  | getTypeVarProgOne (ProgOneDots  _) = []
+
+and getTypeVarProg (Prog xs)     = foldr (fn (x, y) => (getTypeVarProgOne x) @ y) [] xs
+  | getTypeVarProg (ProgDots _)  = []
+
+and getTypeVarProgs (Progs xs) = foldr (fn ((x, _, _, _), y) => (getTypeVarProg x) @ y) [] xs
 
 
 (* inclusion type variable *)
@@ -2114,15 +2114,15 @@ and gettyvarProgs (Progs xs) = foldr (fn ((x, _, _, _), y) => (gettyvarProg x) @
 
 
 (*
-fun getstregtyvarlist [] = []
-  | getstregtyvarlist ((TypeVar (st, n, reg, lab, nxt))::xs) = (st, reg)::(getstregtyvarlist xs)
+fun getstregtypeVarlist [] = []
+  | getstregtypeVarlist ((TypeVar (st, n, reg, lab, nxt))::xs) = (st, reg)::(getstregtypeVarlist xs)
 
-fun tyvarin _ [] = false
-  | tyvarin (x as (TypeVar (_, n, reg, _, _))) ((TypeVar (_, m, reg', _, _))::xs) =
-      if n = m then true else tyvarin x xs
+fun typeVarin _ [] = false
+  | typeVarin (x as (TypeVar (_, n, reg, _, _))) ((TypeVar (_, m, reg', _, _))::xs) =
+      if n = m then true else typeVarin x xs
 
-fun tyvarnotincl [] ys      = []
-  | tyvarnotincl (x::xs) ys = if (tyvarin x ys) then tyvarnotincl xs ys else x::(tyvarnotincl xs ys)
+fun typeVarnotincl [] ys      = []
+  | typeVarnotincl (x::xs) ys = if (typeVarin x ys) then typeVarnotincl xs ys else x::(typeVarnotincl xs ys)
 *)
 
 
@@ -2130,9 +2130,9 @@ fun tyvarnotincl [] ys      = []
 
 
 (*
-fun tyvarin _ [] = false
-  | tyvarin (x as (TypeVar (_, n, _, _, _))) ((TypeVar (_, m, _, _, _))::xs) =
-      if n = m then true else tyvarin x xs
+fun typeVarin _ [] = false
+  | typeVarin (x as (TypeVar (_, n, _, _, _))) ((TypeVar (_, m, _, _, _))::xs) =
+      if n = m then true else typeVarin x xs
 *)
 
 
@@ -2140,7 +2140,7 @@ fun tyvarin _ [] = false
 
 
 (*
-val getmultiocctyvar = fn tyl =>
+val getmultiocctypeVar = fn tyl =>
   let
   fun find st [] = ([], [])
     | find st ((x as (TypeVar (s, _, reg, _, _)))::xs) =
@@ -2168,9 +2168,9 @@ val getmultiocctyvar = fn tyl =>
 
 
 (*
-fun getlabtyvar (TypeVar (st, n, reg, lab, nxt))    = lab
+fun getlabtypeVar (TypeVar (st, n, reg, lab, nxt))    = lab
 
-fun getlabty (TypeOneVar tv)                        = getlabtyvar tv
+fun getlabty (TypeOneVar tv)                        = getlabtypeVar tv
   | getlabty (TypeUnit (reg, lab, nxt))             = lab
   | getlabty (TypeArrow (ty1, ty2, reg, lab, nxt))  = lab
   | getlabty (TypeTuple (tyl, regl, lab, nxt))      = lab
@@ -2302,8 +2302,8 @@ and getTyLabNext (TyLab (_, _, _, n))                = SOME n
 and getTyConNext (TyCon (_, _, _, _, n))             = SOME n
   | getTyConNext TyConDots                           = NONE
 
-and getLabTyVarNext (LabTyVar (_, _, _, n))          = SOME n
-  | getLabTyVarNext (LabTyVarDots tvl)               = getTypeVarListNext tvl
+and getLabTypeVarNext (LabTypeVar (_, _, _, n))          = SOME n
+  | getLabTypeVarNext (LabTypeVarDots tvl)               = getTypeVarListNext tvl
 
 and getTypeVarNext (TypeVar (_, _, _, _, n))         = SOME n
   | getTypeVarNext TypeVarNext                       = NONE
@@ -2312,10 +2312,10 @@ and getTypeVarListNext []                            = NONE
   | getTypeVarListNext [tv]                          = getTypeVarNext tv
   | getTypeVarListNext (_ :: xs)                     = getTypeVarListNext xs
 
-and getTyVarSeqNext (TyVarSeqOne (_, _, _, n))       = SOME n
-  | getTyVarSeqNext (TyVarSeqEm (_, _, n))           = SOME n
-  | getTyVarSeqNext (TyVarSeqSeq (_, _, _, n))       = SOME n
-  | getTyVarSeqNext (TyVarSeqDots tvl)               = getTypeVarListNext tvl
+and getTypeVarSeqNext (TypeVarSeqOne (_, _, _, n))       = SOME n
+  | getTypeVarSeqNext (TypeVarSeqEm (_, _, n))           = SOME n
+  | getTypeVarSeqNext (TypeVarSeqSeq (_, _, _, n))       = SOME n
+  | getTypeVarSeqNext (TypeVarSeqDots tvl)               = getTypeVarListNext tvl
 
 and getLabTypeNext (LabType (_, _, _, n))            = SOME n
   | getLabTypeNext (LabTypeDots pl)                  = getPartListNext pl
@@ -2857,10 +2857,10 @@ and getTypeVarFirst (TypeVar (_, _, _, l, _))         = SOME l
 and getTypeVarListFirst []                            = NONE
   | getTypeVarListFirst (x :: _)                      = getTypeVarFirst x
 
-and getTyVarSeqFirst (TyVarSeqOne (_, _, l, _))       = SOME l
-  | getTyVarSeqFirst (TyVarSeqEm (_, l, _))           = SOME l
-  | getTyVarSeqFirst (TyVarSeqSeq (_, _, l, _))       = SOME l
-  | getTyVarSeqFirst (TyVarSeqDots tvl)               = getTypeVarListFirst tvl
+and getTypeVarSeqFirst (TypeVarSeqOne (_, _, l, _))       = SOME l
+  | getTypeVarSeqFirst (TypeVarSeqEm (_, l, _))           = SOME l
+  | getTypeVarSeqFirst (TypeVarSeqSeq (_, _, l, _))       = SOME l
+  | getTypeVarSeqFirst (TypeVarSeqDots tvl)               = getTypeVarListFirst tvl
 
 and getExBindFirst (ExBind (_, l, _))                 = SOME l
   | getExBindFirst (ExBindOf (_, _, _, l, _))         = SOME l
@@ -2892,8 +2892,8 @@ and getDatBindListFirst []                            = NONE
 and getDatBindSeqFirst (DatBindSeq (d, _, _))         = getDatBindListFirst d
   | getDatBindSeqFirst (DatBindSeqDots pl)            = getPartListFirst pl
 
-and getDecFirst (DecVal (t, _, _, _))                 = getTyVarSeqFirst t
-  | getDecFirst (DecFVal (t, _, _, _))                = getTyVarSeqFirst t
+and getDecFirst (DecVal (t, _, _, _))                 = getTypeVarSeqFirst t
+  | getDecFirst (DecFVal (t, _, _, _))                = getTypeVarSeqFirst t
   | getDecFirst (DecDatType (d, _, _))                = getDatBindSeqFirst d
   | getDecFirst (DecDatWith (_, _, _, l, _))          = SOME l
   | getDecFirst (DecDatRep (_, _, _, l, _))           = SOME l

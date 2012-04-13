@@ -106,6 +106,6 @@ echo -e "\n\n******************************\n  Website Broken Links Log   \n****
 cat $outputDir/$deadLinksTestFilename >> $mailFile
 
 # apparently you can't send mail to non-HW adresses with this. There's probably a way around that though.
-cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk
+cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
 
 rm $mailFile

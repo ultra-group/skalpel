@@ -84,7 +84,7 @@ fun clearRebound css =
 
 
 fun buildin (env, css) ascid true =
-    let val (typs, cst1) = NA.getTyName ascid
+    let val (typs, cst1) = NA.getTypename ascid
 	val (vids, cst2) = OP.getOpType ascid
 	val cst  = E.unionConstraintsList [cst1, cst2]
 	val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (E.emtv, E.updateTypenames typs (E.projVids vids)))
@@ -168,20 +168,20 @@ fun consCSMlab [] = []
     in E.unionContextSensitiveSyntaxErrors [css1, css2]
     end
 
-fun checkTyVarInc tyvarsbind labs tyvars =
+fun checkTypeVarInc typeVarsbind labs typeVars =
     let val (labs, ids) =
 	    foldl (fn (A.TypeVar (_, id, _, lab, _), (labs, ids)) =>
 		      (L.cons lab labs, I.add id ids)
 		    | (A.TypeVarDots, x) => x)
 		  (labs, I.empty)
-		  tyvarsbind
+		  typeVarsbind
 	fun f [] = E.emptyContextSensitiveSyntaxError
 	  | f ((A.TypeVar (_, id, _, lab, _)) :: xs) =
 	    if I.isin id ids
 	    then f xs
 	    else ((E.CSSINCL (L.cons lab labs))::(f xs))
 	  | f (A.TypeVarDots :: xs) = f xs
-    in f tyvars
+    in f typeVars
     end
 
 fun createDiffNbArgFun llops =
@@ -277,12 +277,12 @@ fun generateConstraints' prog pack nenv =
 	fun setBasis x = isBasis := x
 	fun getBasis _ = !isBasis
 
-	val tyNamesTop : string list ref = ref T.tyNames
+	val typenamesTop : string list ref = ref T.typenames
 
-	fun getTyNameString s = if Tools.isin s (!tyNamesTop)
-				then (tyNamesTop := #2 (Tools.remove s (!tyNamesTop));
-				      T.getTyNameString s)
-				else T.freshtyname ()
+	fun getTypenameString s = if Tools.isin s (!typenamesTop)
+				then (typenamesTop := #2 (Tools.remove s (!typenamesTop));
+				      T.getTypenameString s)
+				else T.freshTypename ()
 
 	fun f_partlist _ = raise EH.TODO
 
@@ -290,72 +290,72 @@ fun generateConstraints' prog pack nenv =
 	   and f_scon (A.SconInt (s, v, _, lab, _)) =
 	       if benv (* We bind the integer to the "Int" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val sv = T.freshSequenceVariable ()
-			val tv = T.freshtyvar  ()
-			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val sv = T.freshSequenceVar ()
+			val tv = T.freshTypeVar  ()
+			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab)) lab
 		    in (tv, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constyint lab) lab
+			val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyint lab) lab
 		    in (tv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_scon (A.SconWord (s, v, _, lab, _)) =
 	       if benv (* We bind the word to the "Word" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val sv = T.freshSequenceVariable ()
-			val tv = T.freshtyvar  ()
-			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val sv = T.freshSequenceVar ()
+			val tv = T.freshTypeVar  ()
+			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab)) lab
 		    in (tv, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constyword lab) lab
+			val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyword lab) lab
 		    in (tv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_scon (A.SconReal (s, v, _, lab, _)) =
 	       if benv (* We bind the real to the "Real" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val sv = T.freshSequenceVariable ()
-			val tv = T.freshtyvar  ()
-			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val sv = T.freshSequenceVar ()
+			val tv = T.freshTypeVar  ()
+			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab)) lab
 		    in (tv, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constyreal lab) lab
-			val _   = D.printDebug 3 D.AZE ("A.SconReal constraints generated (tv = "^Int.toString(T.tyvarToInt tv)^")")
+			val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyreal lab) lab
+			val _   = D.printDebug 3 D.AZE ("A.SconReal constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^")")
 		    in (tv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_scon (A.SconString (s, v, _, lab, _)) =
 	       if benv (* We bind the string to the "String" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val sv = T.freshSequenceVariable ()
-			val tv = T.freshtyvar  ()
-			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val sv = T.freshSequenceVar ()
+			val tv = T.freshTypeVar  ()
+			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab)) lab
 		    in (tv, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constystring lab) lab
+			val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constystring lab) lab
 		    in (tv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_scon (A.SconChar (s, v, _, lab, _)) =
 	       if benv (* We bind the char to the "Char" overloading class *)
 	       then let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val sv = T.freshSequenceVariable ()
-			val tv = T.freshtyvar  ()
-			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.CST (s, v, lab), lab)) lab
+			val sv = T.freshSequenceVar ()
+			val tv = T.freshTypeVar  ()
+			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab)) lab
 		    in (tv, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebug 3 D.AZE ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
-			val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constychar lab) lab
+			val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constychar lab) lab
 			val bs = (Char.fromString
 				      (String.translate (fn #"\\" => "\\\\" | x => Char.toString x)
 							(String.substring (s, 2, (String.size s) - 3))))
@@ -369,18 +369,18 @@ fun generateConstraints' prog pack nenv =
 					     else E.singcss (charSizeCs lab)
 		    in (tv, E.singleConstraint (lab, c), contextSensitiveSyntaxError)
 		    end
-	     | f_scon A.SconDots = (D.printDebug 3 D.AZE ("generating constraints for A.SconDots"); (T.freshtyvar (), E.emptyConstraint, E.emptyContextSensitiveSyntaxError))
+	     | f_scon A.SconDots = (D.printDebug 3 D.AZE ("generating constraints for A.SconDots"); (T.freshTypeVar (), E.emptyConstraint, E.emptyContextSensitiveSyntaxError))
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_labid (A.LabId (ident, _, lab, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_identpat ident
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labid (A.LabIdDots pl) =
 	       let val env = f_partlist pl
-	       in (T.freshtyvar (), E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	       in (T.freshTypeVar (), E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.envvar, Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
@@ -451,62 +451,62 @@ fun generateConstraints' prog pack nenv =
 		    end
 	     | f_sigidbind A.SigIdDots = (E.freshEnvVar (), E.emsig, E.emptyConstraint)
 
-	   (* RETURNS: (Ty.tyvar, Env.cst) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst) *)
 	   and f_longidexp longid =
 	       case A.longidToLid longid of
 		   NONE => (D.printDebug 3 D.AZE "in f_longidexp - result of `A.longidToLid longid` was NONE";
-			    (T.freshtyvar (), L.dummyLab, CL.newCl (), E.emptyConstraint))
+			    (T.freshTypeVar (), L.dummyLab, CL.newCl (), E.emptyConstraint))
 		 | SOME lid =>
 		   let
 		       val _   = D.printDebug 3 D.AZE "in f_longidexp - result of `A.longidToLid longid` was SOME lid";
 		       val lab = I.getLabId lid
 		       (* NOTE: We want all the labels from lid *)
-		       val tv  = T.freshtyvar ()
+		       val tv  = T.freshTypeVar ()
 		       val cl  = CL.newCl ()
-		       val a   = E.genAccIvEm (E.consAccId lid (T.consV tv) cl lab) lab
-		       val _   = D.printDebug 3 D.AZE ("               - lab = "^Int.toString(L.toInt lab)^", tv = "^Int.toString(T.tyvarToInt tv));
+		       val a   = E.genAccIvEm (E.consAccId lid (T.consTYPE_VAR tv) cl lab) lab
+		       val _   = D.printDebug 3 D.AZE ("               - lab = "^Int.toString(L.toInt lab)^", tv = "^Int.toString(T.typeVarToInt tv));
 		   in (tv, lab, cl, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 		   end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_pconpat (A.PconBool (s, v, reg, lab, nxt)) =
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
-	       else let val tv = T.freshtyvar ()
-			val c  = E.initTypeConstraint (T.consV tv) (T.constybool lab) lab
+	       else let val tv = T.freshTypeVar ()
+			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constybool lab) lab
 		    in (tv, E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s))
 		    end
 	     | f_pconpat (A.PconRef (s, v, reg, lab, nxt)) =
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
-	       else let val tv  = T.freshtyvar ()
-			val tv' = T.freshtyvar ()
-			val c   = E.initTypeConstraint (T.consV tv) (T.consTyArrowTy (T.consV tv') (T.constyref tv' lab) lab T.OT) lab
+	       else let val tv  = T.freshTypeVar ()
+			val tv' = T.freshTypeVar ()
+			val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTyArrowTy (T.consTYPE_VAR tv') (T.constyref tv' lab) lab T.OTHER_CONS) lab
 		    in (tv, E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s))
 		    end
 	     | f_pconpat (A.PconNil (s, v, reg, lab, nxt)) =
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
-	       else let val tv  = T.freshtyvar ()
-			val tv' = T.freshtyvar ()
-			val c   = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
+	       else let val tv  = T.freshTypeVar ()
+			val tv' = T.freshTypeVar ()
+			val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constylist tv' lab) lab
 		    in (tv, E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s)) end
-	     | f_pconpat A.PconDots = (T.freshtyvar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	     | f_pconpat A.PconDots = (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_identpat (A.Ident (s, id, _, lab, _)) =
 	       if String.isPrefix "_" s
-	       then (T.freshtyvar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
-	       else let val tv1  = T.freshtyvar ()
-			val tv2  = T.freshtyvar ()
-			val vids = E.consSingleEnv (id, [E.consBindPoly id (T.consV tv2) (CL.consVAL ()) lab])
-			val c    = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
+	       then (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	       else let val tv1  = T.freshTypeVar ()
+			val tv2  = T.freshTypeVar ()
+			val vids = E.consSingleEnv (id, [E.consBindPoly id (T.consTYPE_VAR tv2) (CL.consVAL ()) lab])
+			val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		    in (tv1, vids, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_identpat (A.IdentPcon pc) = f_pconpat pc
-	     | f_identpat A.IdentDots = (T.freshtyvar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	     | f_identpat A.IdentDots = (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 
-	   (* RETURNS: (Ty.tyvar, Env.env, Env.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.env, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_longidpat (A.LongIdId ident) = f_identpat ident
 	     | f_longidpat longid =
 	       let val (tv, lab, cl, cst) = f_longidexp longid
@@ -529,187 +529,187 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyfvar, Env.cst) *)
 	   and f_longtycon longtycon =
 	       case A.longtyconToLid longtycon of
-		   NONE => (T.freshtyfvar (), E.emptyConstraint)
+		   NONE => (T.freshTypeFunctionVar (), E.emptyConstraint)
 		 | SOME lid =>
 		   let val lab = I.getLabId lid
-		       val tfv = T.freshtyfvar ()
-		       val a   = E.genAccItEm (E.consAccId lid (T.consTFV tfv) (CL.consTYCON ()) lab) lab
+		       val tfv = T.freshTypeFunctionVar ()
+		       val a   = E.genAccItEm (E.consAccId lid (T.consTYPE_FUNCTION_VAR tfv) (CL.consTYCON ()) lab) lab
 		   in (tfv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 		   end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_labexp (A.LabExp (exp, _, _, lab, _)) =
 	       let
 		   val _   = D.printDebug 2 D.AZE ("generating constraints for A.LabExp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, cst, contextSensitiveSyntaxError) = f_exp exp
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
-		   val _   = D.printDebug 3 D.AZE ("A.LabExp constraints generated (tv = "^Int.toString(T.tyvarToInt tv)^", "
-						   ^"tv' = "^Int.toString(T.tyvarToInt tv')
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
+		   val _   = D.printDebug 3 D.AZE ("A.LabExp constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^", "
+						   ^"tv' = "^Int.toString(T.typeVarToInt tv')
 						   ^", lab = "^(Int.toString(L.toInt(lab))^")"))
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labexp (A.LabExpDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.labvar, (string, Label.label) option, Env.cst) *)
 	   and f_tylab (A.TyLab (s, _, lab, _)) =
-	       let val lv = T.freshlabvar ()
-		   val c  = E.initLabelConstraint (T.LV lv) (T.LC (s, lab)) lab
+	       let val lv = T.freshLabelVar ()
+		   val c  = E.initLabelConstraint (T.LABEL_VAR lv) (T.LC (s, lab)) lab
 	       in (lv, SOME (s, lab), E.singleConstraint (lab, c))
 	       end
 	     | f_tylab A.TyLabDots =
-	       (T.freshlabvar (), NONE, E.emptyConstraint)
+	       (T.freshLabelVar (), NONE, E.emptyConstraint)
 
 	   (* RETURNS: (((string, Label.label) option, Ty.rowvar), Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_exprow (A.ExpRow (tylab, labexp, _, _, lab, _)) =
 	       let val (lv, lop, cst1)  = f_tylab tylab
 		   val (tv, cst2, css2) = f_labexp labexp
-		   val rv = T.freshrowvar ()
-		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
+		   val rv = T.freshRowVar ()
+		   val c  = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv, lab)) lab
 	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
 	       end
 	     | f_exprow (A.ExpRowDots pl) =
-	       let val rv  = T.freshrowvar ()
+	       let val rv  = T.freshRowVar ()
 		   val env = f_partlist pl
 	       in ((NONE, rv), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_seqexp (A.SeqExp (labexps, labexp, _, _, lab, _)) =
 	       let val (tv2, cst2, css2) = f_labexp labexp
 		   val (_, csts, csss) = unzipThree (map f_labexp labexps)
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val tv  = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv  = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css2])
 	       end
 	     | f_seqexp (A.SeqExpSl (parts, labexp, _, lab, _)) =
 	       let val env1 = f_partlist parts
 		   val (tv2, cst2, css2) = f_labexp labexp
-		   val tv = T.freshtyvar ()
-		   val c  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv = T.freshTypeVar ()
+		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.conscsts (lab, [E.LET_CONSTRAINT env1, c]) cst2, css2)
 	       end
 	     | f_seqexp (A.SeqExpDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_atexp (A.AtExpId id) =
 	       let
 		   val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpId (calling f_longidexp with parameter id)")
 		   val (tv, _, _, cst) = f_longidexp id
-		   val _   = D.printDebug 3 D.AZE ("A.AtExpId constraints generated (tv = "^Int.toString(T.tyvarToInt tv)^")")
+		   val _   = D.printDebug 3 D.AZE ("A.AtExpId constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^")")
 	       in (tv, cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpScon sc) = (D.printDebug 3 D.AZE ("generating constraints for A.AtExpScon"); f_scon sc)
 	     | f_atexp (A.AtExpTuple (expl, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpTuple (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 		   val (tvl, csts, csss) = unzipThree (map f_labexp expl)
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val c   = E.initTypeConstraint (T.consV tv) (T.constytuple tvl lab) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpRecord (exprows, _, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpRecord (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.noflex ()) lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css'])
 	       end
 	     | f_atexp (A.AtExpSlRec (exprows, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpSlRec (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val (xs, csts, csss) = unzipThree (map f_exprow exprows)
 		   val (lops, rts) = ListPair.unzip xs
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   (* We condiser that as a widlcard because it is incomplete: *)
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.consflex lab) lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atexp (A.AtExpLet (decs, labexp, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpLet (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv   = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
 		   val (env1, css1) = f_decs decs
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val env = E.envsToSeq [env1, E.CONSTRAINT_ENV cst2]
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c)), E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_atexp (A.AtExpDLet (decs, seqexp, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpDLet (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv   = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
 		   val (env1, contextSensitiveSyntaxError1) = f_decs decs
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_seqexp seqexp
 		   val env = E.envsToSeq [env1, E.CONSTRAINT_ENV cst2]
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c)), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_atexp (A.AtExpParen (labexp, _, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpParen (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, cst, contextSensitiveSyntaxError) = f_labexp labexp
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpList (labexps, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpList (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val tv   = T.freshtyvar ()
-		   val tv'  = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
+		   val tv'  = T.freshTypeVar ()
 		   val (tvs, csts, csss) = unzipThree (map f_labexp labexps)
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
-		   val cs'  = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
+		   val cs'  = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constylist tv' lab) lab
 	       in (tv, E.conscsts (lab, c :: cs') cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpProj (tylab, _, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpProj (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (lv, _, cst) = f_tylab tylab
-		   val tv  = T.freshtyvar ()
-		   val tv' = T.freshtyvar ()
-		   val rv  = T.freshrowvar ()
+		   val tv  = T.freshTypeVar ()
+		   val tv' = T.freshTypeVar ()
+		   val rv  = T.freshRowVar ()
 		   val ty  = (T.constyrecord [rv] (T.consflex lab) lab)
-		   val c1  = E.initTypeConstraint (T.consV tv) (T.consTyArrowTy ty (T.consV tv') lab T.OT) lab
-		   val c2  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv', lab)) lab
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTyArrowTy ty (T.consTYPE_VAR tv') lab T.OTHER_CONS) lab
+		   val c2  = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv', lab)) lab
 	       in (tv, E.conscsts (lab, [c1, c2]) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpSeq (seqseq, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpSeq (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, cst, contextSensitiveSyntaxError) = f_seqexp seqseq
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpQuote (quotes, _, lab, _)) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpQuote (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tvs, csts, csss) = unzipThree (map f_quote quotes)
-		   val tv  = T.freshtyvar ()
-		   val tv' = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
+		   val tv' = T.freshTypeVar ()
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val cs' = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
-		   val c   = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
+		   val cs' = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constylist tv' lab) lab
 	       in (tv, E.conscsts (lab, c :: cs') cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpDots pl) =
 	       let val _   = D.printDebug 3 D.AZE ("generating constraints for A.AtExpDots")
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
@@ -721,26 +721,26 @@ fun generateConstraints' prog pack nenv =
 	    *   tv  = int
 	    *   tv' = type of the antiquote *)
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_quote (A.Quote (_, _, lab, _)) =
-	       let val tv1 = T.freshtyvar ()
-		   val tv2 = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv1) (T.constyfrag tv2 lab) lab
+	       let val tv1 = T.freshTypeVar ()
+		   val tv2 = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyfrag tv2 lab) lab
 	       in (tv1, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_quote (A.Antiquote(exp, _, lab, _)) =
 	       let val (tv, cst, contextSensitiveSyntaxError) = f_exp exp
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.constyfrag tv lab) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.constyfrag tv lab) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_quote (A.QuoteDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_exp (A.ExpAtExp atexp) =
 	       (D.printDebug 2 D.AZE "generating constraints for A.ExpAtExp (just returns result of atexp applied to f_atexp)";
 		f_atexp atexp)
@@ -748,8 +748,8 @@ fun generateConstraints' prog pack nenv =
 	       let
 		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpFn (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tvs, cst, contextSensitiveSyntaxError) = f_match match
-		   val tv = T.freshtyvar ()
-		   val cs = map (fn x => E.initTypeConstraint (T.consV tv) (T.consV x) lab) tvs
+		   val tv = T.freshTypeVar ()
+		   val cs = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR x) lab) tvs
 	       in (tv, E.conscsts (lab, cs) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_exp (A.ExpApp (exp, atexp, _, _, _, lab, _)) =
@@ -757,19 +757,19 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_exp exp
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_atexp atexp
-		   val tv  = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv1) (T.constyarrow tv2 tv lab) lab
+		   val tv  = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
 	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpCase"
-		   val tv  = T.freshtyvar ()
-		   val tv' = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
+		   val tv' = T.freshTypeVar ()
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tvs, cst2, contextSensitiveSyntaxError2) = f_match match
-		   val cs  = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
-		   val c   = E.initTypeConstraint (T.consV tv') (T.constyarrow tv1 tv lab) lab
+		   val cs  = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.constyarrow tv1 tv lab) lab
 	       in (tv, E.conscsts (lab, c :: cs) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpConsList (id, labexp1, labexp2, reg, lab, nxt)) =
@@ -779,9 +779,9 @@ fun generateConstraints' prog pack nenv =
 			val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpConsList"
 			val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
 			val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-			val tv = T.freshtyvar ()
-			val c1 = E.initTypeConstraint (T.consV tv)  (T.constylist tv1 lab) lab
-			val c2 = E.initTypeConstraint (T.consV tv2) (T.constylist tv1 lab) lab
+			val tv = T.freshTypeVar ()
+			val c1 = E.initTypeConstraint (T.consTYPE_VAR tv)  (T.constylist tv1 lab) lab
+			val c2 = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.constylist tv1 lab) lab
 		    in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 		    end
 	     | f_exp (A.ExpOp (st, id, labexp1, labexp2, _, lab, _)) =
@@ -791,11 +791,11 @@ fun generateConstraints' prog pack nenv =
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
 		   val _ = D.printDebug 3 D.AZE  ("**********  ExpOp right hand side... **********")
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val _ = D.printDebug 3 D.AZE ("ExpOp type variables are tv1 = "^(Int.toString(T.tyvarToInt(tv1)))^", tv2 = "^(Int.toString(T.tyvarToInt(tv2))))
-		   val ty  = T.newV ()
+		   val _ = D.printDebug 3 D.AZE ("ExpOp type variables are tv1 = "^(Int.toString(T.typeVarToInt(tv1)))^", tv2 = "^(Int.toString(T.typeVarToInt(tv2))))
+		   val ty  = T.newTYPE_VAR ()
 		   val ti  = T.constytuple [tv1, tv2] lab
-		   val tvo = T.freshtyvar ()
-		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
+		   val tvo = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consTYPE_VAR tvo) lab T.OTHER_CONS) lab
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 		   val _ = D.printDebug 3 D.AZE ("ExpOp constraints generated\n")
 	       in (tvo, E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
@@ -805,10 +805,10 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpOr"
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val tvo = T.freshtyvar ()
-		   val c1  = E.initTypeConstraint (T.consV tvo) (T.constybool lab) lab
-		   val c2  = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
-		   val c3  = E.initTypeConstraint (T.consV tv2) (T.constybool lab) lab
+		   val tvo = T.freshTypeVar ()
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tvo) (T.constybool lab) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constybool lab) lab
+		   val c3  = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.constybool lab) lab
 	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpAnd (labexp1, labexp2, _, lab, _)) =
@@ -816,20 +816,20 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpAnd"
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val tvo = T.freshtyvar ()
-		   val c1  = E.initTypeConstraint (T.consV tvo) (T.constybool lab) lab
-		   val c2  = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
-		   val c3  = E.initTypeConstraint (T.consV tv2) (T.constybool lab) lab
+		   val tvo = T.freshTypeVar ()
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tvo) (T.constybool lab) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constybool lab) lab
+		   val c3  = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.constybool lab) lab
 	       in (tvo, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpTyped (labexp, labtyp, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpTyped"
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
-		   val c1 = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2 = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val c1 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpIte (labexp1, labexp2, labexp3, _, lab, _)) =
@@ -841,13 +841,13 @@ fun generateConstraints' prog pack nenv =
 		   val (tv3, cst3, contextSensitiveSyntaxError3) = f_labexp labexp3
 
 		   (* constrain the condition of the if statement to be of type bool*)
-		   val c1  = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constybool lab) lab
 
 		   (* generate a fresh type variable and constrain the true/false branches
 		    * of the if statemnt to be of the same type *)
-		   val tv = T.freshtyvar ()
-		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
-		   val c3  = E.initTypeConstraint (T.consV tv) (T.consV tv3) lab
+		   val tv = T.freshTypeVar ()
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
+		   val c3  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv3) lab
 
 		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2, cst3])
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2, contextSensitiveSyntaxError3]
@@ -857,19 +857,19 @@ fun generateConstraints' prog pack nenv =
 	     | f_exp (A.ExpWhile (labexp1, labexp2, _, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpWhile"
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val c1 = E.initTypeConstraint (T.consV tv1) (T.constybool lab) lab
-		   val c2 = E.initTypeConstraint (T.consV tv) (T.constytuple [] lab) lab
+		   val c1 = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constybool lab) lab
+		   val c2 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple [] lab) lab
 	       in (tv, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpRaise (labexp, _, lab, _)) =
 	       let
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpRaise"
 		   val (tv, cst, contextSensitiveSyntaxError) = f_labexp labexp
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv) (T.constyexception lab) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception lab) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_exp (A.ExpHandle (labexp, match, _, lab, _)) =
@@ -877,22 +877,22 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpHandle"
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tvs, cst2, contextSensitiveSyntaxError2) = f_match match
-		   val ty  = T.newV ()
-		   val tv  = T.freshtyvar ()
-		   val cs  = map (fn x => E.initTypeConstraint ty (T.consV x) lab) tvs
-		   val c1  = E.initTypeConstraint ty (T.consTyArrowTy (T.constyexception lab) (T.consV tv1) lab T.OT) lab
-		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
+		   val ty  = T.newTYPE_VAR ()
+		   val tv  = T.freshTypeVar ()
+		   val cs  = map (fn x => E.initTypeConstraint ty (T.consTYPE_VAR x) lab) tvs
+		   val c1  = E.initTypeConstraint ty (T.consTyArrowTy (T.constyexception lab) (T.consTYPE_VAR tv1) lab T.OTHER_CONS) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
 	       in (tv, E.conscsts (lab, c1 :: c2 :: cs) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpDots pl) =
 	       let
 		   val _ = D.printDebug 2 D.AZE "generating constraints for A.ExpDots"
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar list, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar list, Env.cst, Env.css) *)
 	   and f_match (A.Match (mrules, _, _)) =
 	       let val (tvs, csts, csss) = unzipThree (map f_mrule mrules)
 		   val cst = E.unionConstraintsList csts
@@ -904,45 +904,45 @@ fun generateConstraints' prog pack nenv =
 	       in ([], E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_mrule (A.Mrule (labpat, labexp, _, lab, _)) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat labpat
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp
 		   val env = E.SEQUENCE_ENV (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projVids (E.toMonoVids vids (L.singleton lab))), E.CONSTRAINT_ENV cst2)
-		   val c   = E.initTypeConstraint (T.consV tv) (T.constyarrow tv1 tv2 lab) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyarrow tv1 tv2 lab) lab
 		   val cst = E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c))
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [clearRebound contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 	       in (tv, cst, contextSensitiveSyntaxError)
 	       end
 	     | f_mrule (A.MruleDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* for type variables (such as 'a in a signature) *)
-	   (* RETURNS: (int option, Ty.tyvar, Env.cst) *)
+	   (* RETURNS: (int option, Ty.typeVar, Env.cst) *)
 	   and f_typevar (A.TypeVar (st, id, _, lab, _)) =
 	       let val _   = D.printDebugFunc 2 D.AZE (fn _ => ("in f_typevar - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")"))
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 	       in (SOME id, tv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 	       end
 	     | f_typevar A.TypeVarDots =
-	       let val tv = T.freshtyvar ()
+	       let val tv = T.freshTypeVar ()
 	       in (NONE, tv, E.emptyConstraint)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_labtype (A.LabType (typ, _, lab, _)) =
 	       let val (tv, cst, contextSensitiveSyntaxError) = f_type typ
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labtype (A.LabTypeDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
@@ -951,144 +951,144 @@ fun generateConstraints' prog pack nenv =
 	   and f_tyrow (A.TyRow (tylab, labtyp, _, lab, _)) =
 	       let val (lv, lop, cst1)  = f_tylab tylab
 		   val (tv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
-		   val rv = T.freshrowvar ()
-		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
+		   val rv = T.freshRowVar ()
+		   val c  = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv, lab)) lab
 	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError2)
 	       end
 	     | f_tyrow (A.TyRowDots pl) =
-	       let val rv  = T.freshrowvar ()
+	       let val rv  = T.freshRowVar ()
 		   val env = f_partlist pl
 	       in ((NONE, rv), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
-	   and f_type (A.TypeOneVar tyvar) =
-	       let val (_, tv, cst) = f_typevar tyvar
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
+	   and f_type (A.TypeOneVar typeVar) =
+	       let val (_, tv, cst) = f_typevar typeVar
 	       in (tv, cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_type (A.TypeArrow (labtyp1, labtyp2, _, lab, _)) =
 	       let val (tv1, cst1, contextSensitiveSyntaxError1) = f_labtype labtyp1
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp2
-		   val tv = T.freshtyvar ()
-		   val c  = E.initTypeConstraint (T.consV tv) (T.constyarrow tv1 tv2 lab) lab
+		   val tv = T.freshTypeVar ()
+		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyarrow tv1 tv2 lab) lab
 	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_type (A.TypeTuple (labtyps, _, lab, _)) =
 	       let val (tvs, csts, csss) = unzipThree (map f_labtype labtyps)
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val c   = E.initTypeConstraint (T.consV tv) (T.constytuple tvs lab) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvs lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_type (A.TypeRecord (tyrows, _, _, lab, _)) =
 	       let val (xs, csts, csss) = unzipThree (map f_tyrow tyrows)
 		   val (lops, rts) = ListPair.unzip xs
-		   val tv   = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.noflex ()) lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.noflex ()) lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_type (A.TypeSlRec (tyrows, _, lab, _)) =
 	       let val (xs, csts, csss) = unzipThree (map f_tyrow tyrows)
 		   val (lops, rts) = ListPair.unzip xs
-		   val tv   = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rts (T.consflex lab) lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.consflex lab) lab) lab
 	       in (tv, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_type (A.TypeTyCon (typseq, longtycon, _, lab, _)) =
 	       let val (sv, cst1, contextSensitiveSyntaxError1) = f_typeSequence typseq
 		   val (tfv, cst2) = f_longtycon longtycon
-		   val tv  = T.freshtyvar ()
-		   val tv' = T.freshtyvar ()
-		   val sv' = T.freshSequenceVariable ()
-		   val c1  = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE sv', T.consV tv', lab)) lab
-		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv') lab
-		   val c3  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SEQUENCE_VARIABLE sv') lab
+		   val tv  = T.freshTypeVar ()
+		   val tv' = T.freshTypeVar ()
+		   val sv' = T.freshSequenceVar ()
+		   val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) (T.TFC (T.SEQUENCE_VAR sv', T.consTYPE_VAR tv', lab)) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
+		   val c3  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SEQUENCE_VAR sv') lab
 	       in (tv, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError1)
 	       end
 	     | f_type (A.TypeParen (labtyp, _, _, lab, _)) =
 	       let val (tv, cst, contextSensitiveSyntaxError) = f_labtype labtyp
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_type (A.TypeDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (T.sequenceVariable, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (T.sequenceVar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_typeSequence (A.TypeSequenceOne (typ, _, lab, _)) =
 	       let val (tv, cst, contextSensitiveSyntaxError) = f_type typ
-		   val sv = T.freshSequenceVariable ()
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC (T.constuple [tv] lab, T.noflex (), lab)) lab
+		   val sv = T.freshSequenceVar ()
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC (T.constuple [tv] lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_typeSequence (A.TypeSequenceEm (_, lab, _)) =
-	       let val sv = T.freshSequenceVariable ()
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC ([], T.noflex (), lab)) lab
+	       let val sv = T.freshSequenceVar ()
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC ([], T.noflex (), lab)) lab
 	       in (sv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_typeSequence (A.TypeSequenceSeq (labtyps, _, lab, _)) =
 	       let val (svs, csts, csss) = unzipThree (map f_labtype labtyps)
-		   val sv  = T.freshSequenceVariable ()
+		   val sv  = T.freshSequenceVar ()
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val c   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC (T.constuple svs lab, T.noflex (), lab)) lab
+		   val c   = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC (T.constuple svs lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_typeSequence (A.TypeSequenceDots pl) =
-	       let val sv  = T.freshSequenceVariable ()
+	       let val sv  = T.freshSequenceVar ()
 		   val env = f_partlist pl
 	       in (sv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, Env.css) *)
 	   and f_labpat (A.LabPat (pat, _, _, lab, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_pat pat
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labpat (A.LabPatDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_identty (A.IdentTyId ident) = f_identpat ident
 	     | f_identty (A.IdentTyTy (labid, labtyp, _, lab, _)) =
 	       let val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labid labid
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
-		   val tv = T.freshtyvar ()
-		   val c1 = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2 = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv = T.freshTypeVar ()
+		   val c1 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, vids, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_identty (A.IdentTyDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_labidty (A.LabIdTy (identty, _, lab, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_identty identty
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labidty (A.LabIdTyDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
@@ -1096,20 +1096,20 @@ fun generateConstraints' prog pack nenv =
 	   and f_patrow (A.PatRow (tylab, labpat, _, _, lab, _)) =
 	       let val (lv, lop, cst1) = f_tylab tylab
 		   val (tv, vids, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
-		   val rv = T.freshrowvar ()
-		   val c  = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, lab)) lab
+		   val rv = T.freshRowVar ()
+		   val c  = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv, lab)) lab
 	       in ((lop, SOME rv, NONE), vids, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError2)
 	       end
 	     | f_patrow (A.PatRowId (identty, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_identty identty
-		   val rv   = T.freshrowvar ()
+		   val rv   = T.freshRowVar ()
 		   val llop = A.getlabstIdentTy identty
 		   val cst' = case llop of
 				 NONE => E.emptyConstraint
 			       | SOME (l1, l2, s) =>
-				 let val lv = T.freshlabvar ()
-				     val c1 = E.initLabelConstraint (T.LV lv) (T.LC (s, l1)) l1
-				     val c2 = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, l2)) l2
+				 let val lv = T.freshLabelVar ()
+				     val c1 = E.initLabelConstraint (T.LABEL_VAR lv) (T.LC (s, l1)) l1
+				     val c2 = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv, l2)) l2
 				 in E.consConstraint (l1, c1) (E.singleConstraint (l2, c2))
 				 end
 		   val lop  = case llop of NONE => NONE | SOME (_, l, s) => SOME (s, l)
@@ -1118,18 +1118,18 @@ fun generateConstraints' prog pack nenv =
 	     | f_patrow (A.PatRowAs (labidty, labpat, _, lab, _)) =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labidty labidty
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
-		   val tv   = T.freshtyvar ()
-		   val rv   = T.freshrowvar ()
-		   val c1   = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv   = T.freshTypeVar ()
+		   val rv   = T.freshRowVar ()
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 		   val labs = L.cons lab (A.getlabelsLabIdTy labidty)
 		   val llop = A.getlabstLabIdTy labidty
 		   val cst  = case llop of
 				 NONE => E.emptyConstraint
 			       | SOME (l1, l2, s) =>
-				 let val lv = T.freshlabvar ()
-				     val c1 = E.initLabelConstraint (T.LV lv) (T.LC (s, l1)) l1
-				     val c2 = E.initRowConstraint (T.RV rv) (T.RC (T.LV lv, T.consV tv, l2)) l2
+				 let val lv = T.freshLabelVar ()
+				     val c1 = E.initLabelConstraint (T.LABEL_VAR lv) (T.LC (s, l1)) l1
+				     val c2 = E.initRowConstraint (T.ROW_VAR rv) (T.RC (T.LABEL_VAR lv, T.consTYPE_VAR tv, l2)) l2
 				 in E.consConstraint (l1, c1) (E.singleConstraint (l2, c2))
 				 end
 		   val lop' = case llop of NONE => NONE | SOME (_, l, s) => SOME (s, l)
@@ -1143,8 +1143,8 @@ fun generateConstraints' prog pack nenv =
 	       in ((NONE, NONE, NONE), E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.cst, Env.css) *)
-	   and f_atpat (A.AtPatWild _) = (T.freshtyvar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
+	   and f_atpat (A.AtPatWild _) = (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	     | f_atpat (A.AtPatId longid) = f_longidpat longid
 	     | f_atpat (A.AtPatScon scon) =
 	       let val (tv, cst, contextSensitiveSyntaxError) = f_scon scon
@@ -1154,16 +1154,16 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.emvar, cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atpat (A.AtPatTuple (labpats, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
+	       let val tv   = T.freshTypeVar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
 		   val vids = E.unionEnvironmentList    vidss
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constytuple tvs lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvs lab) lab
 	       in (tv, vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatRecord (patrows, _, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
+	       let val tv   = T.freshTypeVar ()
 		   val (xs, vidss, csts, csss) = unzipFour (map f_patrow patrows)
 		   val (lops, rvs, flexs) = unzipThree xs
 		   val vids = E.unionEnvironmentList vidss
@@ -1175,24 +1175,24 @@ fun generateConstraints' prog pack nenv =
 				  []  => T.noflex ()
 				| [x] => T.consflex x
 				| _   => raise EH.DeadBranch "Only one flex per record"
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constyrecord rvs' flex lab) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rvs' flex lab) lab
 	       in (tv, vids, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atpat (A.AtPatParen (labpat, _, _, lab, _)) =
 	       let val (tv, vids, cst, contextSensitiveSyntaxError) = f_labpat labpat
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatList (labpats, _, lab, _)) =
-	       let val tv   = T.freshtyvar ()
-		   val tv'  = T.freshtyvar ()
+	       let val tv   = T.freshTypeVar ()
+		   val tv'  = T.freshTypeVar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
 		   val vids = E.unionEnvironmentList vidss
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
-		   val cs   = map (fn x => E.initTypeConstraint (T.consV tv') (T.consV x) lab) tvs
-		   val c    = E.initTypeConstraint (T.consV tv) (T.constylist tv' lab) lab
+		   val cs   = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constylist tv' lab) lab
 	       in (tv, vids, E.conscsts (lab, c :: cs) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatOr (labpats, _, lab, _)) =
@@ -1200,23 +1200,23 @@ fun generateConstraints' prog pack nenv =
 		   val vids = E.unionEnvironmentList vidss (* do something else here: treatAtPatOr envs *)
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
-		   val tv   = T.freshtyvar ()
-		   val cs   = map (fn x => E.initTypeConstraint (T.consV tv) (T.consV x) lab) tvs
+		   val tv   = T.freshTypeVar ()
+		   val cs   = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR x) lab) tvs
 	       in (tv, vids, E.conscsts (lab, cs) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_pat (A.PatAtPat atpat) = f_atpat atpat
 	     | f_pat (A.PatApp (longid, atpat, _, _, lab, _)) =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_atpat atpat
 		   val (tv2, lab', cl, cst2) = f_longidexp longid
-		   val tv  = T.freshtyvar ()
-		   val c1  = E.initTypeConstraint (T.consV tv2) (T.constyarrow' tv1 tv lab T.PA) lab
+		   val tv  = T.freshTypeVar ()
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.constyarrow' tv1 tv lab T.PATTERN_CONS) lab
 		   val c2  = E.initClassConstraint cl (CL.consCO1 ()) lab
 		   val cst = if A.isLongIdent longid
 			     then E.singleConstraint (lab', E.initClassConstraint cl (CL.consCON ()) lab')
@@ -1228,9 +1228,9 @@ fun generateConstraints' prog pack nenv =
 	       then f_pat (A.PatOp ("::", v, labpat1, labpat2, reg, lab, next))
 	       else let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labpat labpat1
 			val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat2
-			val tv  = T.freshtyvar ()
-			val c1  = E.initTypeConstraint (T.consV tv) (T.constylist tv1 lab) lab
-			val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+			val tv  = T.freshTypeVar ()
+			val c1  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constylist tv1 lab) lab
+			val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 			val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 			val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 		    in (tv, E.unionEnvironmentList [vids1, vids2], cst, contextSensitiveSyntaxError)
@@ -1238,21 +1238,21 @@ fun generateConstraints' prog pack nenv =
 	     | f_pat (A.PatOp (st, v, labpat1, labpat2, _, lab, _)) =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labpat labpat1
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat2
-		   val ty  = T.newV ()
+		   val ty  = T.newTYPE_VAR ()
 		   val ti  = T.constytuple [tv1, tv2] lab
-		   val tvo = T.freshtyvar ()
-		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consV tvo) lab T.OT) lab
+		   val tvo = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consTYPE_VAR tvo) lab T.OTHER_CONS) lab
 		   val a   = E.genAccIvEm (E.consAccId (I.ID (v, lab)) ty (CL.consDA1 ()) lab) lab
 		   val cst = E.conscsts (lab, [c, E.ACCESSOR_CONSTRAINT a]) (E.unionConstraintsList [cst1, cst2])
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 	       in (tvo, E.unionEnvironmentList [vids1, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatTyped (labpat, labtyp, _, lab, _)) =
-	       let val tv = T.freshtyvar ()
+	       let val tv = T.freshTypeVar ()
 		   val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat labpat
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
-		   val c1  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 		   val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2]
 	       in (tv, vids, cst, contextSensitiveSyntaxError)
@@ -1261,9 +1261,9 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labidty labidty
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
 		   (*val clv  = CL.newCl ()*)
-		   val tv   = T.freshtyvar ()
-		   val c1   = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv   = T.freshTypeVar ()
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 		   (*val c3   = E.initClassConstraint clv (CL.consPAT ()) lab*)
 		   val labs = L.cons lab (A.getlabelsLabIdTy labidty)
 		   val cst  = E.conscsts (lab, [c1, c2(*, c3*)]) (E.unionConstraintsList [cst1, cst2])
@@ -1273,12 +1273,12 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.unionEnvironmentList [vids, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbind (A.ConBind (ident, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
 	       in (tv, E.toDA0Vids cons L.empty, cst, css)
@@ -1289,8 +1289,8 @@ fun generateConstraints' prog pack nenv =
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
-		   val tv   = T.freshtyvar ()
-		   val c1   = E.initTypeConstraint (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab
+		   val tv   = T.freshTypeVar ()
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow' tv2 tv lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
@@ -1306,16 +1306,16 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_conbind (A.ConBindNoOf (ident, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val tv' = T.freshtyvar ()
+		   val tv' = T.freshTypeVar ()
 	       in (tv', E.toDATVids cons L.empty, cst, css)
 	       end
 	     | f_conbind (A.ConBindDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar list, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbindseq (A.ConBindSeq conbinds) =
 	       let val (tvs, conss, csts, csss) = unzipFour (map f_conbind conbinds)
 		   val cons = E.unionEnvironmentList conss
@@ -1328,55 +1328,55 @@ fun generateConstraints' prog pack nenv =
 	       in ([], E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Ty.tvenv, Env.cst) *)
+	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
 	   and f_typevarbind (A.TypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebug 2 D.AZE ("in f_typevarbind - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
-		   val tv1  = T.freshtyvar ()
-		   val tv2  = T.freshtyvar ()
+		   val tv1  = T.freshTypeVar ()
+		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
-		   val c    = E.initTypeConstraint (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY)) lab
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
-	     | f_typevarbind A.TypeVarDots = (T.freshtyvar (), E.emtv, E.emptyConstraint)
+	     | f_typevarbind A.TypeVarDots = (T.freshTypeVar (), E.emtv, E.emptyConstraint)
 
-	   (* RETURNS: (Ty.tyvar, Ty.tvenv, Env.cst) *)
-	   and f_labtypevarbind (A.LabTyVar (tyvar, _, lab, _)) =
-	       let val (tv, tyvs, cst) = f_typevarbind tyvar
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv') lab
+	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
+	   and f_labtypevarbind (A.LabTypeVar (typeVar, _, lab, _)) =
+	       let val (tv, tyvs, cst) = f_typevarbind typeVar
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_labtypevarbind (A.LabTyVarDots tyvars) =
-	       (T.freshtyvar (), E.emtv, E.emptyConstraint)
+	     | f_labtypevarbind (A.LabTypeVarDots typeVars) =
+	       (T.freshTypeVar (), E.emtv, E.emptyConstraint)
 
-	   (* RETURNS: (Ty.sequenceVariable, Ty.tvenv, Env.cst) *)
-	   and f_typevarseq (A.TyVarSeqOne (tyvar, _, lab, _)) =
-	       let val (tv, tyvs, cst) = f_typevarbind tyvar
-		   val sv = T.freshSequenceVariable ()
+	   (* RETURNS: (Ty.sequenceVar, Ty.tvenv, Env.cst) *)
+	   and f_typevarseq (A.TypeVarSeqOne (typeVar, _, lab, _)) =
+	       let val (tv, tyvs, cst) = f_typevarbind typeVar
+		   val sv = T.freshSequenceVar ()
 		   val sq = T.SC (T.constuple [tv] lab, T.noflex (), lab)
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) sq lab
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) sq lab
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_typevarseq (A.TyVarSeqEm (_, lab, _)) =
-	       let val sv = T.freshSequenceVariable ()
+	     | f_typevarseq (A.TypeVarSeqEm (_, lab, _)) =
+	       let val sv = T.freshSequenceVar ()
 		   val sq = T.SC ([], T.noflex (), lab)
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) sq lab
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) sq lab
 	       in (sv, E.emtv, E.singleConstraint (lab, c))
 	       end
-	     | f_typevarseq (A.TyVarSeqSeq (typevars, _, lab, _)) =
+	     | f_typevarseq (A.TypeVarSeqSeq (typevars, _, lab, _)) =
 	       let val (tvs, tyvss, csts) = unzipThree (map f_labtypevarbind typevars)
 		   val tyvs = E.unionEnvironmentList tyvss
 		   val cst  = E.unionConstraintsList csts
-		   val sv   = T.freshSequenceVariable ()
+		   val sv   = T.freshSequenceVar ()
 		   val sq   = T.SC (T.constuple tvs lab, T.noflex (), lab)
-		   val c    = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) sq lab
+		   val c    = E.initSequenceConstraint (T.SEQUENCE_VAR sv) sq lab
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_typevarseq (A.TyVarSeqDots tyvars) =
-	       let val (_, tyvss, csts) = unzipThree (map f_typevarbind tyvars)
+	     | f_typevarseq (A.TypeVarSeqDots typeVars) =
+	       let val (_, tyvss, csts) = unzipThree (map f_typevarbind typeVars)
 		   val tyvs = E.unionEnvironmentList tyvss
 		   val cst  = E.unionConstraintsList csts
-		   val sv   = T.freshSequenceVariable ()
+		   val sv   = T.freshSequenceVar ()
 	       in (sv, tyvs, cst)
 	       end
 
@@ -1384,21 +1384,21 @@ fun generateConstraints' prog pack nenv =
 	   and f_datbind (A.DatBind (datname, conbindseq, _, lab, _)) =
 	       let val (tvs, cons, cst1, css1) = f_conbindseq conbindseq
 		   val (s, v, tv, sv1, sv2, typs, tyvs, cst2, css2) = f_datname datname
-		   val typename   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
+		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
 		   (* (2010-06-10)We do that so that for datatypes, the end points will not be
 		    * the equal signs but the datatype names, in the case of constructor clashes.*)
-		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SEQUENCE_VARIABLE sv1, lab')) lab'
-		   val c2'  = E.initTypeConstraint (T.consV tv) (T.consTyNameVar lab) lab
+		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.SEQUENCE_VAR sv1, lab')) lab'
+		   val c2'  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTypenameVar lab) lab
 		   (*(2010-06-21)c2' is similar to c2 but weaker.  It just constrains tv to be of the
-		    * form T.C.*)
+		    * form T.TYPE_CONSTRUCTOR.*)
 		   val c3   = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst1))
-		   val cs   = map (fn x => E.initTypeConstraint (T.consV x) (T.consV tv) lab) tvs
+		   val cs   = map (fn x => E.initTypeConstraint (T.consTYPE_VAR x) (T.consTYPE_VAR tv) lab) tvs
 		   val cst  = E.conscsts (lab, [c1, c2']) (E.consConstraint (lab', c2) cst2)
 		   val cst' = E.conscsts (lab, cs) (E.singleConstraint (L.dummyLab, c3))
-		   val css3 = checkTyVarInc (A.gettyvarDatName datname) (A.getlabDatName datname) (A.gettyvarConbindseq conbindseq)
+		   val css3 = checkTypeVarInc (A.getTypeVarDatName datname) (A.getlabDatName datname) (A.getTypeVarConbindseq conbindseq)
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
 	       in (E.toTYCONTyps typs E.emvar false (L.singleton lab), (cons, v), cst, cst', css)
 	       end
@@ -1429,10 +1429,10 @@ fun generateConstraints' prog pack nenv =
 		   val (tv1, vids, cst1, css1) = f_labpat labpat
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val vids' = E.closeVids vids (V.nonexpLabExp labexp)
-		   val c     = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
+		   val c     = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst   = E.consConstraint (lab, c) (cst2)
 		   val css   = E.unionContextSensitiveSyntaxErrors [clearRebound css1, css2]
-		   val _     = D.printDebug 3 D.AZE ("A.ValBindCore constraints generated (tv1="^Int.toString(T.tyvarToInt tv1)^", tv2="^Int.toString(T.tyvarToInt tv2)^")\n")
+		   val _     = D.printDebug 3 D.AZE ("A.ValBindCore constraints generated (tv1="^Int.toString(T.typeVarToInt tv1)^", tv2="^Int.toString(T.typeVarToInt tv2)^")\n")
 	       in (vids', cst1, cst, css)
 	       end
 	     | f_valbindcore (A.ValBindCoreDots pl) =
@@ -1474,20 +1474,20 @@ fun generateConstraints' prog pack nenv =
 	       in (env, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_labatpat (A.LabAtPat (atpat, _, lab, _)) =
 	       let val (tv, vids, cst, css) = f_atpat atpat
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv') lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, css)
 	       end
 	     | f_labatpat (A.LabAtPatDots pl) =
-	       let val tv  = T.freshtyvar ()
+	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_fmatch (A.FMatchId (ident, _, _)) =
 	       let val (tv, vids, cst, css) = f_identpat ident
 	       in (tv, vids, E.emvar, cst, css)
@@ -1495,8 +1495,8 @@ fun generateConstraints' prog pack nenv =
 	     | f_fmatch (A.FMatchApp (fmatch, labatpat, _, _, lab, _)) =
 	       let val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
-		   val tv  = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv1) (T.constyarrow tv2 tv lab) lab
+		   val tv  = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
 		   val cst = E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, clearRebound css2]
 	       in (tv, vids, E.unionEnvironmentList [vids1, vids2], cst, css)
@@ -1504,52 +1504,52 @@ fun generateConstraints' prog pack nenv =
 	     | f_fmatch (A.FMatchSlApp (fmatch, labatpat, _)) =
 	       let val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val cst = E.unionConstraintsList [cst1, cst2]
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, clearRebound css2]
 	       in (tv, vids, E.unionEnvironmentList [vids1, vids2], cst, css)
 	       end
 	     | f_fmatch (A.FMatchNoApp (fmatch, _)) =
 	       let val (_, vids, vids1, cst1, css1) = f_fmatch fmatch
-		   val tv = T.freshtyvar ()
+		   val tv = T.freshTypeVar ()
 	       in (tv, vids, vids1, cst1, css1)
 	       end
 	     | f_fmatch A.FMatchDots =
-	       let val tv = T.freshtyvar ()
+	       let val tv = T.freshTypeVar ()
 	       in (tv, E.emvar, E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_labfmatch (A.LabFMatch (fmatch, _, lab, _)) =
 	       let val (tv, vids, vids', cst, css) = f_fmatch fmatch
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv) (T.consV tv') lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', vids, vids', E.consConstraint (lab, c) cst, css)
 	       end
 	     | f_labfmatch (A.LabFMatchSl (fmatch, _)) =
 	       let val (tv, vids, vids', cst, css) = f_fmatch fmatch
-		   val tv' = T.freshtyvar ()
+		   val tv' = T.freshTypeVar ()
 	       in (tv', vids, vids', cst, css)
 	       end
 	     | f_labfmatch A.LabFMatchDots =
-	       let val tv = T.freshtyvar ()
+	       let val tv = T.freshTypeVar ()
 	       in (tv, E.emvar, E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_fmatchty (A.FMatchT fmatch) = f_labfmatch fmatch
 	     | f_fmatchty (A.FMatchTTy (fmatch, labtyp, _, lab, _)) =
 	       let val (tv1, vids1, vids1', cst1, css1) = f_labfmatch fmatch
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val tv  = T.freshtyvar ()
-		   val c1  = E.initTypeConstraint (T.consV tv) (T.consV tv1) lab
-		   val c2  = E.initTypeConstraint (T.consV tv) (T.consV tv2) lab
+		   val tv  = T.freshTypeVar ()
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
+		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 		   val cst = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (tv, vids1, vids1', cst, css)
 	       end
 	     | f_fmatchty A.FMatchTDots =
-	       let val tv = T.freshtyvar ()
+	       let val tv = T.freshTypeVar ()
 	       in (tv, E.emvar, E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
@@ -1558,7 +1558,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, vids, vids', cst1, css1) = f_fmatchty fmatch
 		   val (tv2, cst2, css2) = f_labexp labexp
 		   val labs = L.singleton lab
-		   val c1   = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val env  = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projVids (E.toMonoVids vids' L.empty))
 		   val c2   = E.LET_CONSTRAINT (E.SEQUENCE_ENV (env, E.CONSTRAINT_ENV cst2))
 		   val cst  = E.consConstraint (lab, c1) (E.singleConstraint (L.dummyLab, c2))
@@ -1615,30 +1615,30 @@ fun generateConstraints' prog pack nenv =
 	   and f_tyconbind (A.TyCon (str, id, _, lab, _)) =
 	       let
 		   (* generate new type variable, sequence variable and fvariable (??) *)
-		   val freshTypeVar   = T.freshtyvar  ()
-		   val freshSequenceVar   = T.freshSequenceVariable ()
- 		   val tfv  = T.freshtyfvar ()
+		   val freshTypeVar   = T.freshTypeVar  ()
+		   val freshSequenceVar   = T.freshSequenceVar ()
+ 		   val tfv  = T.freshTypeFunctionVar ()
 
 		   (* creates a new map, with id as the key, and the rhs as the value *)
 		   (* this is the environment for typenames? So str here is say mytype in mytype = int, then
 		    * we have an id that represents that. That id is used here in the mapping. So this is a mapping
 		    * for typenames? Looks likely! *)
 		   val typs = E.consSingleEnv (id, [E.consBindPoly id
-								   (T.TFV tfv, E.TYP, ref (E.emvar, false))
+								   (T.TYPE_FUNCTION_VAR tfv, E.TYP, ref (E.emvar, false))
 								   (CL.consTYCON ())                        (* the id represents a type constructor *)
 								   lab])
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
-		   val c    = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE freshSequenceVar, T.consV freshTypeVar, lab)) lab
+		   val c    = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) (T.TFC (T.SEQUENCE_VAR freshSequenceVar, T.consTYPE_VAR freshTypeVar, lab)) lab
 	       in
 		   (str, SOME (id, lab), freshTypeVar, freshSequenceVar, typs, E.singleConstraint (lab, c))
 	       end
 	     | f_tyconbind A.TyConDots =
-	       let val tv = T.freshtyvar  ()
-		   val sv = T.freshSequenceVariable ()
+	       let val tv = T.freshTypeVar  ()
+		   val sv = T.freshSequenceVar ()
 	       in ("", NONE, tv, sv, E.emtyp, E.emptyConstraint)
 	       end
 
-	   (* RETURNS: (string, Id.id option, Ty.tyvar, Ty.sequenceVariable, Ty.sequenceVariable, Env.typenv, Env.tvenv, Env.cst, Env.css) *)
+	   (* RETURNS: (string, Id.id option, Ty.typeVar, Ty.sequenceVar, Ty.sequenceVar, Env.typenv, Env.tvenv, Env.cst, Env.css) *)
 	   and f_datname (A.DatName (typvarseq, tycon, _, _)) =
 	       let val (sv1, tyvs, cst1) = f_typevarseq typvarseq
 
@@ -1651,9 +1651,9 @@ fun generateConstraints' prog pack nenv =
 		   (str, idLabelPair, tv2, sv2, sv1, typs, tyvs, E.unionConstraintsList [cst1, cst2], css)
 	       end
 	     | f_datname A.DatNameDots =
-	       let val tv  = T.freshtyvar ()
-		   val sv1 = T.freshSequenceVariable ()
-		   val sv2 = T.freshSequenceVariable ()
+	       let val tv  = T.freshTypeVar ()
+		   val sv1 = T.freshSequenceVar ()
+		   val sv2 = T.freshSequenceVar ()
 	       in ("", NONE, tv, sv1, sv2, E.emtyp, E.emtv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
@@ -1663,8 +1663,8 @@ fun generateConstraints' prog pack nenv =
 		   val _   = D.printDebug 2 D.AZE "generating constraints for A.TypBind"
 		   val (_, _, tv1, sv1, sv1', typs, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1  = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
-		   val c2  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv1') lab
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
+		   val c2  = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv1') lab
 		   val c3  = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2))
 		   val cst = E.conscsts (lab, [c1, c2]) (E.consConstraint (L.dummyLab, c3) cst1)
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
@@ -1692,7 +1692,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_exbind (A.ExBind (ident, lab, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val c = E.initTypeConstraint (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab
+		   val c = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception' lab (T.DECLARATION_CONS I.dummyId)) lab
 	       in (E.toEX0Vids cons (L.singleton lab), E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_exbind (A.ExBindOf (labid, labtyp, _, lab, _)) =
@@ -1701,8 +1701,8 @@ fun generateConstraints' prog pack nenv =
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
-		   val ty   = T.constyexception' lab (T.DE I.dummyId)
-		   val c1   = E.initTypeConstraint (T.consV tv2) (T.consTyArrowTy (T.consV tv1) ty lab (T.DE I.dummyId)) lab
+		   val ty   = T.constyexception' lab (T.DECLARATION_CONS I.dummyId)
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.consTyArrowTy (T.consTYPE_VAR tv1) ty lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consEX1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consEXC ()) lab2
@@ -1721,7 +1721,7 @@ fun generateConstraints' prog pack nenv =
 	       let val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, _, cl, cst2) = f_longidexp longid
 		   val clv  = CL.newCl ()
-		   val c1   = E.initTypeConstraint (T.consV tv2) (T.consV tv1) lab
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv2) (T.consTYPE_VAR tv1) lab
 		   val c2   = E.initClassConstraint cl clv lab
 		   val c3   = E.initClassConstraint cl (CL.consEXC ()) lab
 		   (* NOTE: the class could be a EX0 or a EX1 - a EXC *)
@@ -1761,115 +1761,115 @@ fun generateConstraints' prog pack nenv =
 	       List.mapPartial (fn x => A.longstridToLid x) ids
 	     | f_longstrseq (A.LongStrSeqDots pl) = []
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.ocenv, Env.cst) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.ocenv, Env.cst) *)
 	   and f_classbind (A.Class (s, v, _, lab, _)) =
-	       let val sv1  = T.freshSequenceVariable ()
-		   val sv2  = T.freshSequenceVariable ()
-		   val c    = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
-		   val ovcs = E.consSingleEnv (v, [E.consBindPoly v (T.SEQUENCE_VARIABLE sv2) (CL.consOC ()) lab])
+	       let val sv1  = T.freshSequenceVar ()
+		   val sv2  = T.freshSequenceVar ()
+		   val c    = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
+		   val ovcs = E.consSingleEnv (v, [E.consBindPoly v (T.SEQUENCE_VAR sv2) (CL.consOC ()) lab])
 	       in (sv1, ovcs, E.singleConstraint (lab, c))
 	       end
 	     | f_classbind A.ClassDots =
-	       let val sv = T.freshSequenceVariable ()
+	       let val sv = T.freshSequenceVar ()
 	       in (sv, E.emoc, E.emptyConstraint)
 	       end
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.ocenv, Env.cst) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.ocenv, Env.cst) *)
 	   and f_labclassbind (A.LabClass (class, _, lab, _)) =
 	       let val (sv, ovcs, cst) = f_classbind class
-		   val sv' = T.freshSequenceVariable ()
-		   val c   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv') (T.SEQUENCE_VARIABLE sv) lab
+		   val sv' = T.freshSequenceVar ()
+		   val c   = E.initSequenceConstraint (T.SEQUENCE_VAR sv') (T.SEQUENCE_VAR sv) lab
 	       in (sv', ovcs, E.consConstraint(lab, c) cst)
 	       end
 	     | f_labclassbind (A.LabClassDots pl) =
 	       let val env = f_partlist pl
-	       in (T.freshSequenceVariable (), E.emoc, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
+	       in (T.freshSequenceVar (), E.emoc, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
 	       end
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.cst) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.cst) *)
 	   and f_class (A.Class (s, v, _, lab, _)) =
-	       let val sv = T.freshSequenceVariable ()
-		   val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VARIABLE sv) (CL.consOC ()) lab) lab
+	       let val sv = T.freshSequenceVar ()
+		   val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.SEQUENCE_VAR sv) (CL.consOC ()) lab) lab
 	       in (sv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 	       end
-	     | f_class A.ClassDots = (T.freshSequenceVariable (), E.emptyConstraint)
+	     | f_class A.ClassDots = (T.freshSequenceVar (), E.emptyConstraint)
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.cst) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.cst) *)
 	   and f_labclass (A.LabClass (class, _, lab, _)) =
 	       let val (sv, cst) = f_class class
-		   val sv' = T.freshSequenceVariable ()
-		   val c   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv') (T.SEQUENCE_VARIABLE sv) lab
+		   val sv' = T.freshSequenceVar ()
+		   val c   = E.initSequenceConstraint (T.SEQUENCE_VAR sv') (T.SEQUENCE_VAR sv) lab
 	       in (sv', E.consConstraint(lab, c) cst)
 	       end
 	     | f_labclass (A.LabClassDots pl) =
 	       let val env = f_partlist pl
-	       in (T.freshSequenceVariable (), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
+	       in (T.freshSequenceVar (), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_tyclass (A.TyClassCl (labclass, _, lab, _)) =
 	       let val (sv, cst) = f_labclass labclass
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 		   val lid = Option.getOpt (A.getlabidLabclass labclass, (I.dummyId, L.dummyLab))
-		   val c   = E.initTypeConstraint (T.consV tv) (T.OR (T.SEQUENCE_VARIABLE sv, T.freshidor (), T.POLY, T.VAL lid, lab)) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.SEQUENCE_VAR sv, T.freshidor (), T.POLY, T.VALUE lid, lab)) lab
 	       in (tv, E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclass (A.TyClassTy (typ, lab, _)) =
 	       let val (tv, cst, css) = f_type typ
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_tyclass (A.TyClassDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.cst, Env.css) *)
 	   and f_labtyclass (A.LabTyClass (tyclass, _, lab, _)) =
 	       let val (tv, cst, css) = f_tyclass tyclass
-		   val tv' = T.freshtyvar ()
-		   val c   = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val tv' = T.freshTypeVar ()
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_labtyclass (A.LabTyClassDots pl) =
 	       let val env = f_partlist pl
-	       in (T.freshtyvar (), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
+	       in (T.freshTypeVar (), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.sequenceVariable, Env.cst, Env.css) *)
+	   (* RETURNS: (Ty.sequenceVar, Env.cst, Env.css) *)
 	   and f_tyclassseq (A.TyClassSeqOne (tyclass, _, lab, _)) =
 	       let val (tv, cst, css) = f_tyclass tyclass
-		   val sv = T.freshSequenceVariable ()
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC (T.constuple [tv] lab, T.noflex (), lab)) lab
+		   val sv = T.freshSequenceVar ()
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC (T.constuple [tv] lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclassseq (A.TyClassSeqEm (_, lab, _)) =
-	       let val sv = T.freshSequenceVariable ()
-		   val c  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC ([], T.noflex (), lab)) lab
+	       let val sv = T.freshSequenceVar ()
+		   val c  = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC ([], T.noflex (), lab)) lab
 	       in (sv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclassseq (A.TyClassSeqSeq (labtyclasss, _, lab, _)) =
 	       let val (tvs, csts, csss) = unzipThree (map f_labtyclass labtyclasss)
-		   val sv  = T.freshSequenceVariable ()
+		   val sv  = T.freshSequenceVar ()
 		   val cst = E.unionConstraintsList csts
 		   val css = E.unionContextSensitiveSyntaxErrors csss
-		   val c   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv) (T.SC (T.constuple tvs lab, T.noflex (), lab)) lab
+		   val c   = E.initSequenceConstraint (T.SEQUENCE_VAR sv) (T.SC (T.constuple tvs lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_tyclassseq (A.TyClassSeqDots pl) =
 	       let val env = f_partlist pl
-		   val sv  = T.freshSequenceVariable ()
+		   val sv  = T.freshSequenceVar ()
 	       in (sv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.tvenv, Env.cst) *)
 	   and f_typevarval (A.TypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebug 2 D.AZE ("in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
-		   val tv   = T.freshtyvar ()
+		   val tv   = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
-		   val c    = E.initTypeConstraint (T.consV tv) (T.E (n, T.freshtyvar (), lab)) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab)) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarval A.TypeVarDots = (E.emtv, E.emptyConstraint)
@@ -1884,36 +1884,36 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Env.tvenv, Env.cst) *)
-	   and f_labtypevarval (A.LabTyVar (tyvar, _, lab, _)) =
-	       let val (tyvs, cst) = f_typevarval tyvar
+	   and f_labtypevarval (A.LabTypeVar (typeVar, _, lab, _)) =
+	       let val (tyvs, cst) = f_typevarval typeVar
 	       (* NOTE: the label is not used. *)
 	       in (tyvs, cst)
 	       end
-	     | f_labtypevarval (A.LabTyVarDots tyvars) = (E.emtv, E.emptyConstraint)
+	     | f_labtypevarval (A.LabTypeVarDots typeVars) = (E.emtv, E.emptyConstraint)
 
 	   (* RETURNS: (Env.tvenv, Env.cst) *)
-	   and f_tyvarseqval (A.TyVarSeqOne (tyvar, _, lab, _)) = f_typevarval tyvar
-	     | f_tyvarseqval (A.TyVarSeqEm (_, lab, _)) = (E.emtv, E.emptyConstraint)
-	     | f_tyvarseqval (A.TyVarSeqSeq (typevars, _, lab, _)) =
+	   and f_typeVarseqval (A.TypeVarSeqOne (typeVar, _, lab, _)) = f_typevarval typeVar
+	     | f_typeVarseqval (A.TypeVarSeqEm (_, lab, _)) = (E.emtv, E.emptyConstraint)
+	     | f_typeVarseqval (A.TypeVarSeqSeq (typevars, _, lab, _)) =
 	       let val (tyvss, csts) = ListPair.unzip (map f_labtypevarval typevars)
 		   val tyvs = E.unionEnvironmentList tyvss
 		   val cst  = E.unionConstraintsList csts
 	       in (tyvs, cst)
 	       end
-	     | f_tyvarseqval (A.TyVarSeqDots tyvars) =
-	       let val (tyvss, csts) = ListPair.unzip (map f_typevarval tyvars)
+	     | f_typeVarseqval (A.TypeVarSeqDots typeVars) =
+	       let val (tyvss, csts) = ListPair.unzip (map f_typevarval typeVars)
 		   val tyvs = E.unionEnvironmentList tyvss
 		   val cst  = E.unionConstraintsList csts
 	       in (tyvs, cst)
 	       end
 
 	   (* RETURNS: (Env.env, Env.css) *)
-	   and f_dec (A.DecVal (tyvarseq, valbind, _, _)) =
+	   and f_dec (A.DecVal (typeVarseq, valbind, _, _)) =
 	       let val (env, css) = f_valbind valbind
-		   val (tyvs1, cst1) = f_tyvarseqval tyvarseq
-		   val (tyvs2, cst2) = f_typevarvallist (A.gettyvarValBind valbind)
-		   (*val (idV, cs') = closeTypedTerm (A.gettyvarValBind vb)
-						   (A.gettyvarTyVarSeq tvsq)
+		   val (tyvs1, cst1) = f_typeVarseqval typeVarseq
+		   val (tyvs2, cst2) = f_typevarvallist (A.getTypeVarValBind valbind)
+		   (*val (idV, cs') = closeTypedTerm (A.gettypeVarValBind vb)
+						   (A.gettypeVarTypeVarSeq tvsq)
 						   (E.getTyvs env)
 						   cs
 						   (E.unionEnvironmentList [idG, idR])*)
@@ -1922,15 +1922,10 @@ fun generateConstraints' prog pack nenv =
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
 	       in (env', css)
 	       end
-	     | f_dec (A.DecFVal (tyvarseq, fvalbind, _, _)) =
+	     | f_dec (A.DecFVal (typeVarseq, fvalbind, _, _)) =
 	       let val (env, css) = f_fvalbind fvalbind
-		   val (tyvs1, cst1) = f_tyvarseqval tyvarseq
-		   val (tyvs2, cst2) = f_typevarvallist (A.gettyvarFValBind fvalbind)
-		   (*val (idV, cs') = closeTypedTerm (A.gettyvarFValBind fvb)
-						   (A.gettyvarTyVarSeq tvsq)
-						   (E.getTyvs env)
-						   cs
-						   idR*)
+		   val (tyvs1, cst1) = f_typeVarseqval typeVarseq
+		   val (tyvs2, cst2) = f_typevarvallist (A.getTypeVarFValBind fvalbind)
 		   val tyvs = E.plusenv tyvs2 tyvs1
 		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val env' = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
@@ -1959,7 +1954,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_dec (A.DecDatRep (tycon, longtycon, _, lab, _)) =
 	       let val (s, v, tv, sv, typs, cst1) = f_tyconbind tycon
 		   val (tfv, cst2) = f_longtycon longtycon
-		   val c   = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE sv, T.consV tv, lab)) lab
+		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) (T.TFC (T.SEQUENCE_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val opn = case A.longtyconToLid longtycon of
 				 NONE => E.emopn
@@ -2048,14 +2043,14 @@ fun generateConstraints' prog pack nenv =
 			     else E.singcss (notFullyCs lab "nonfix")
 	       in (E.emptyEnvironment, css)
 	       end
-	     | f_dec (A.DecOverload (labid, labtyp, labtyvar, tyclassseq, _, lab, _)) =
+	     | f_dec (A.DecOverload (labid, labtyp, labTypeVar, tyclassseq, _, lab, _)) =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val (tv3, tyvs, cst3) = f_labtypevarbind labtyvar
+		   val (tv3, tyvs, cst3) = f_labtypevarbind labTypeVar
 		   val (sv4, cst4, css4) = f_tyclassseq tyclassseq
 		   val lid  = Option.getOpt (A.getlabidLabId labid, (I.dummyId, L.dummyLab))
-		   val c1   = E.initTypeConstraint (T.consV tv3) (T.OR (T.SEQUENCE_VARIABLE sv4, T.freshidor (), T.POLY, T.VAL lid, lab)) lab
-		   val c2   = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv3) (T.TYPE_POLY (T.SEQUENCE_VAR sv4, T.freshidor (), T.POLY, T.VALUE lid, lab)) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst  = E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst3, cst4])
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css4]
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.projVids (E.toRECVids vids (L.singleton lab)))
@@ -2065,7 +2060,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_dec (A.DecClass (labclass, tyclassseq, _, lab, _)) =
 	       let val (sv1, ovcs, cst1) = f_labclassbind labclass
 		   val (sv2, cst2, css2) = f_tyclassseq tyclassseq
-		   val c   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
+		   val c   = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val env = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.projOvcs ovcs)
 	       in (env, css2)
@@ -2099,7 +2094,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_valdescone (A.ValDescOne (labid, labtyp, _, lab, _)) =
 	       let val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c   = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (E.toRECVids vids (L.singleton lab), cst, css)
@@ -2129,9 +2124,9 @@ fun generateConstraints' prog pack nenv =
 		   (* NOTE: tyvs is not used *)
 		   val id   = Option.getOpt (Option.map (fn (id, _) => id) idLabelPair, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, lab) => lab) idLabelPair, lab)
-		   val typename   = if benv andalso getBasis () then getTyNameString str else T.freshtyname ()
-		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SEQUENCE_VARIABLE sv1, lab')) lab'
+		   val typename   = if benv andalso getBasis () then getTypenameString str else T.freshTypename ()
+		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.SEQUENCE_VAR sv1, lab')) lab'
 
 		   (* Option.map: maps NONE to NONE and SOME(v) to SOME(f v)
 		    * idLabelPair comes from f_tyconbind, where the id and label of A.TyCon are paired *)
@@ -2145,7 +2140,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* called when types or equality types are defined in a signature
 	    *
-	    * from the definition: typdesc ::= tyvarsec tycon <and typdesc>
+	    * from the definition: typdesc ::= typeVarsec tycon <and typdesc>
 	    *                         spec ::= [...] | type typdesc | eqtype typdesc | [...] *
 	    *
 	    *)
@@ -2184,8 +2179,8 @@ fun generateConstraints' prog pack nenv =
 	   and f_tdrdescone (A.TdrDescOne (datname, labtyp, _, lab, _)) =
 	       let val (s, v, tv1, sv1, sv2, typs, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val c1  = E.initTypeConstraint (T.consV tv1) (T.consV tv2) lab
-		   val c2  = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
+		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
+		   val c2  = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
 		   val c3  = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2))
 		   val env = E.ENVDEP (EL.initExtLab (E.consEnvironmentTypenames typs) lab)
 		   val cst = E.conscsts (lab, [c1, c2]) (E.consConstraint(L.dummyLab, c3) cst1)
@@ -2226,14 +2221,14 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_excdescone (A.ExcDescOne (ident, lab, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val c = E.initTypeConstraint (T.consV tv) (T.constyexception' lab (T.DE I.dummyId)) lab
+		   val c = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception' lab (T.DECLARATION_CONS I.dummyId)) lab
 	       in (E.toEX0Vids cons (L.singleton lab), E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_excdescone (A.ExcDescOf (labid, labtyp, _, lab, _)) =
 	       let val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, cst2, css2) = f_labtype labtyp
-		   val ty  = T.constyexception' lab (T.DE I.dummyId)
-		   val c   = E.initTypeConstraint (T.consV tv1) (T.consTyArrowTy (T.consV tv2) ty lab (T.DE I.dummyId)) lab
+		   val ty  = T.constyexception' lab (T.DECLARATION_CONS I.dummyId)
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTyArrowTy (T.consTYPE_VAR tv2) ty lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (E.toEX1Vids cons (L.singleton lab), cst, css)
@@ -2256,7 +2251,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_condescone (A.ConDescOneId (ident, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
 	       in (tv, E.toDA0Vids cons L.empty, cst, css)
@@ -2267,8 +2262,8 @@ fun generateConstraints' prog pack nenv =
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newCl ()
 		   val clv2 = CL.newCl ()
-		   val tv   = T.freshtyvar ()
-		   val c1   = E.initTypeConstraint (T.consV tv1) (T.constyarrow' tv2 tv lab (T.DE I.dummyId)) lab
+		   val tv   = T.freshTypeVar ()
+		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow' tv2 tv lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
@@ -2280,16 +2275,16 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_condescone (A.ConDescOneNoOf (ident, _)) =
 	       let val (tv, cons, cst, css) = f_identpat ident
-		   val tv' = T.freshtyvar ()
+		   val tv' = T.freshTypeVar ()
 	       in (tv, E.toDATVids cons L.empty, cst, css)
 	       end
 	     | f_condescone (A.ConDescOneDots pl) =
 	       let val env = f_partlist pl
-		   val tv  = T.freshtyvar ()
+		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Ty.tyvar list, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_condesc (A.ConDesc (condescs, _, _)) =
 	       let val (tvs, conss, csts, csss) = unzipFour (map f_condescone condescs)
 		   val cons = E.unionEnvironmentList conss
@@ -2302,22 +2297,22 @@ fun generateConstraints' prog pack nenv =
 	       in ([], E.getVids env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, E.varenv * Id.idl option, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* RETURNS: ((Id.id, Ty.Typename) option, Env.typenv, E.varenv * Id.idl option, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_datdescone (A.DatDescOne (datname, consdesc, _, lab, _)) =
 	       let val (s, v, tv, sv1, sv2, typs, tyvs, cst1, css1) = f_datname datname
 		   val (tvs, cons, cst2, css2) = f_condesc consdesc
-		   val typename   = if benv andalso getBasis () then getTyNameString s else T.freshtyname ()
+		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
-		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VARIABLE sv1) (T.SEQUENCE_VARIABLE sv2) lab
-		   val c2   = E.initTypeConstraint (T.consV tv) (T.C (T.NC (typename, T.DE id, lab'), T.SEQUENCE_VARIABLE sv1, lab')) lab'
+		   val c1   = E.initSequenceConstraint (T.SEQUENCE_VAR sv1) (T.SEQUENCE_VAR sv2) lab
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.SEQUENCE_VAR sv1, lab')) lab'
 		   val c3   = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2))
-		   val cs   = map (fn x => E.initTypeConstraint (T.consV x) (T.consV tv) lab) tvs
+		   val cs   = map (fn x => E.initTypeConstraint (T.consTYPE_VAR x) (T.consTYPE_VAR tv) lab) tvs
 		   val cst  = E.consConstraint(lab, c1) (E.consConstraint(lab', c2) cst1)
 		   val cst' = E.conscsts (lab, cs) (E.singleConstraint (L.dummyLab, c3))
 		   val typenameOption = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.DAT, name = typename}) v
 		   val typs = E.toTYCONTyps typs E.emvar false (L.singleton lab)
-		   (*val cs4 = checkTyVarInc (A.gettyvarDatName dn) (A.getlabDatName dn) (A.gettyvarConDesc cd)*)
+		   (*val cs4 = checkTypeVarInc (A.gettypeVarDatName dn) (A.getlabDatName dn) (A.gettypeVarConDesc cd)*)
 	       in (typenameOption, typs, (cons, v), cst, cst', E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_datdescone (A.DatDescOneDots pl) =
@@ -2370,7 +2365,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (E.env, E.emptyContextSensitiveSyntaxError) *)
 	   and f_speconesmltes (A.SpecValue (valdesc, _, lab, _)) =
 	       let val (vids, cst1, css) = f_valdesc valdesc
-		   val (tyvs, cst2) = f_typevarvallist (A.gettyvarValDesc valdesc)
+		   val (tyvs, cst2) = f_typevarvallist (A.getTypeVarValDesc valdesc)
 		   val env1 = E.ENVPOL (tyvs, E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.projVids vids))
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, env1)
 		   val ev   = E.freshEnvVar ()
@@ -2408,11 +2403,11 @@ fun generateConstraints' prog pack nenv =
 	   and f_typevarspec (A.TypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebug 2 D.AZE ("in f_typevarspec - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   (* generate some fresh type variables *)
-		   val tv1  = T.freshtyvar ()
-		   val tv2  = T.freshtyvar ()
+		   val tv1  = T.freshTypeVar ()
+		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
 		   (* generate a type constraint (how is this actually used later?) *)
-		   val c    = E.initTypeConstraint (T.consV tv1) (T.V (tv2, SOME (n, lab), T.POLY)) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY)) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarspec A.TypeVarDots = (E.emtv, E.emptyConstraint)
@@ -2433,7 +2428,7 @@ fun generateConstraints' prog pack nenv =
 		   (*(2010-06-23)Before we were using f_typevarvallist which generates binders
 		    * of explicit type variables, now we use binders of implicit type variables
 		    * tagged with the labels of the implicit type variables they're coming from. *)
-		   val (tyvs, cst2) = f_typevarspeclist (A.gettyvarValDesc valdesc)
+		   val (tyvs, cst2) = f_typevarspeclist (A.getTypeVarValDesc valdesc)
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.projTyvs tyvs)
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.ENVDEP (EL.initExtLab (E.projVids vids) lab))
 		   (*val env3 = E.LOCAL_ENV (env1, env2)*)
@@ -2563,7 +2558,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_specone (A.SpecRep (tycon, longtycon, _, lab, _)) =
 	       let val (s, v, tv, sv, typs, cst1) = f_tyconbind tycon
 		   val (tfv, cst2) = f_longtycon longtycon
-		   val c   = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE sv, T.consV tv, lab)) lab
+		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) (T.TFC (T.SEQUENCE_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val opn = case A.longtyconToLid longtycon of
 				 NONE => E.emopn
@@ -2611,8 +2606,8 @@ fun generateConstraints' prog pack nenv =
 	       let val (tfvs, envs, csts) = unzipThree (map f_longtyconbind longtycons)
 		   val env = E.uenvEnv envs
 		   val cst = E.unionConstraintsList csts
-		   val tfc = T.TFC (T.newSEQUENCE_VARIABLE (), T.newV (), lab)
-		   val cs  = map (fn tfv => E.initFunctionTypeConstraint (T.TFV tfv) tfc lab) tfvs
+		   val tfc = T.TFC (T.newSEQUENCE_VAR (), T.newTYPE_VAR (), lab)
+		   val cs  = map (fn tfv => E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) tfc lab) tfvs
 	       in E.SEQUENCE_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, cs) cst), env)
 	       end
 	     | f_longtyconeq (A.LongTyConEqDots pl) =
@@ -2827,11 +2822,11 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.tyfvar, Env.env, Env.cst) *)
 	   and f_longtyconbind longtycon =
 	       case A.longtyconToLid longtycon of
-		   NONE => (T.freshtyfvar (), E.emptyEnvironment, E.emptyConstraint)
+		   NONE => (T.freshTypeFunctionVar (), E.emptyEnvironment, E.emptyConstraint)
 		 | SOME lid =>
 		   let val lab = I.getLabId lid
-		       val tfv = T.freshtyfvar ()
-		       val (cst, env) = E.genLongEnv lid (T.consTFV tfv)
+		       val tfv = T.freshTypeFunctionVar ()
+		       val (cst, env) = E.genLongEnv lid (T.consTYPE_FUNCTION_VAR tfv)
 		   in (tfv, env, cst)
 		   end
 
@@ -2841,14 +2836,14 @@ fun generateConstraints' prog pack nenv =
 		   NONE => NONE
 		 | SOME lid => SOME lid
 
-	   (* RETURNS: (Id.lid option, Ty.sequenceVariable, Env.env, Env.cst) *)
+	   (* RETURNS: (Id.lid option, Ty.sequenceVar, Env.env, Env.cst) *)
 	   and f_ldatname (A.LDatName (typevarseq, longtycon, _, _)) =
 	       let val (sv, tyvs, cst1) = f_typevarseq typevarseq
 		   val lidop = f_longtyconwhere longtycon
 	       in (lidop, sv, tyvs, cst1)
 	       end
 	     | f_ldatname A.LDatNameDots =
-	       let val sv  = T.freshSequenceVariable ()
+	       let val sv  = T.freshSequenceVar ()
 	       in (NONE, sv, E.emtv, E.emptyConstraint)
 	       end
 
@@ -2856,15 +2851,15 @@ fun generateConstraints' prog pack nenv =
 	   and f_ltreadescone (A.LTReaDOne (ldatname, labtyp, _, lab, _)) =
 	       let val (lidop, sv, tyvs, cst1) = f_ldatname ldatname
 		   val (tv, cst2, css) = f_labtype labtyp
-		   val tfv = T.freshtyfvar ()
-		   val c1  = E.initFunctionTypeConstraint (T.TFV tfv) (T.TFC (T.SEQUENCE_VARIABLE sv, T.consV tv, lab)) lab
+		   val tfv = T.freshTypeFunctionVar ()
+		   val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR tfv) (T.TFC (T.SEQUENCE_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val c2  = E.LET_CONSTRAINT (E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst1, E.SEQUENCE_ENV (E.projTyvs tyvs, E.CONSTRAINT_ENV cst2)))
-		   (*val cs3 = checkTyVarInc (A.gettyvarLDatName dn) (A.getlabLDatName dn) (A.gettyvarLabType ty)*)
+		   (*val cs3 = checkTypeVarInc (A.gettypeVarLDatName dn) (A.getlabLDatName dn) (A.gettypeVarLabType ty)*)
 	       in (lidop, tfv, E.consConstraint(lab, c1) (E.singleConstraint (L.dummyLab, c2)), css)
 	       end
 	     | f_ltreadescone (A.LTReaDOneDots pl) =
 	       let val env = f_partlist pl
-		   val tfv = T.freshtyfvar ()
+		   val tfv = T.freshTypeFunctionVar ()
 	       in (NONE, tfv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
@@ -2873,7 +2868,7 @@ fun generateConstraints' prog pack nenv =
 	       foldr (fn (ltreadesc, (reas, cst, css)) =>
 			 case f_ltreadescone ltreadesc of
 			     (SOME lid, tfv, cst0, css0) =>
-			     let val longid = {lid = lid, sem = T.consTFV tfv, class = CL.consTYCON (), lab = lab}
+			     let val longid = {lid = lid, sem = T.consTYPE_FUNCTION_VAR tfv, class = CL.consTYCON (), lab = lab}
 				 val cst1 = E.unionConstraintsList [cst, cst0]
 				 val css1 = E.unionContextSensitiveSyntaxErrors [css, css0]
 			     in ((longid, L.singleton lab, L.empty, CD.empty) :: reas, cst1, css1)
@@ -3181,14 +3176,13 @@ fun generateConstraints' prog pack nenv =
 	   and f_progone (A.ProgOneDec td) = f_topdec td
 	     | f_progone (A.ProgOneExp (exp, v, _, lab, _)) =
 	       let val (tv, cst1, css) = f_exp exp
-		   val (tyvs, cst2) = f_typevarvallist (A.gettyvarExp exp)
-		   val tv'  = T.freshtyvar ()
-		   val c    = E.initTypeConstraint (T.consV tv') (T.consV tv) lab
+		   val (tyvs, cst2) = f_typevarvallist (A.getTypeVarExp exp)
+		   val tv'  = T.freshTypeVar ()
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 		   val cst  = E.consConstraint(lab, c) cst1
-		   val vids = E.consSingleEnv (v, [E.consBindPoly v (T.consV tv') (CL.consVAL ()) lab])
+		   val vids = E.consSingleEnv (v, [E.consBindPoly v (T.consTYPE_VAR tv') (CL.consVAL ()) lab])
 		   val env1 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst, E.projVids (E.closeVids vids (V.nonexpExp exp)))
 		   val env2 = E.SEQUENCE_ENV (E.CONSTRAINT_ENV cst2, E.ENVPOL (tyvs, env1))
-	       (*val (idV, cs1) = closeTypedTerm (A.gettyvarExp exp) [] (E.getTyvs env2) cs0 idG'*)
 	       in (env2, css)
 	       end
 	     | f_progone (A.ProgOneParse (s, _, lab, _)) =
@@ -3265,30 +3259,30 @@ fun generateConstraints' prog pack nenv =
 		val class0 = CL.consDA0 ()
 		val class1 = CL.consDA1 ()
 		fun bindOne (id, "true") =
-		    let val ty1  = T.newV ()
-			val ty2  = T.constybool' L.dummyLab T.BB
+		    let val ty1  = T.newTYPE_VAR ()
+			val ty2  = T.constybool' L.dummyLab T.BUILTIN_BASIS_CONS
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
 		  | bindOne (id, "false") =
-		    let val ty1  = T.newV ()
-			val ty2  = T.constybool' L.dummyLab T.BB
+		    let val ty1  = T.newTYPE_VAR ()
+			val ty2  = T.constybool' L.dummyLab T.BUILTIN_BASIS_CONS
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
 		  | bindOne (id, "nil") =
-		    let val ty1  = T.newV ()
-			val ty2  = T.constylist' (T.freshtyvar ()) L.dummyLab T.BB
+		    let val ty1  = T.newTYPE_VAR ()
+			val ty2  = T.constylist' (T.freshTypeVar ()) L.dummyLab T.BUILTIN_BASIS_CONS
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly id ty1 class0 L.dummyLab
 		    in (bind, c)
 		    end
 		  | bindOne (id, "ref") =
-		    let val tv   = T.freshtyvar ()
-			val ty1  = T.newV ()
-			val ty2  = T.consTyArrowTy (T.consV tv) (T.constyref' tv L.dummyLab T.BB) L.dummyLab T.BB
+		    let val tv   = T.freshTypeVar ()
+			val ty1  = T.newTYPE_VAR ()
+			val ty2  = T.consTyArrowTy (T.consTYPE_VAR tv) (T.constyref' tv L.dummyLab T.BUILTIN_BASIS_CONS) L.dummyLab T.BUILTIN_BASIS_CONS
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly id ty1 class1 L.dummyLab
 		    in (bind, c)

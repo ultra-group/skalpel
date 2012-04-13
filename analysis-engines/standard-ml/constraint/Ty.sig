@@ -18,124 +18,107 @@
  *  o Date:        24 May 2010
  *  o File name:   Ty.sig
  *  o Description: This file defines the signature TY specifying the
- *      internal types used by our slicer.
+ *                 internal types used by our slicer.
  *)
 
 
 signature TY = sig
 
-    (* ------ VARIABLES ------ *)
-    type tyvar
-    type sequenceVariable
-    type tynamevar
-    type labvar
-    type rowvar
-    type tyfvar
+    type typeVar
+    type sequenceVar
+    type typenameVar
+    type labelVar
+    type rowVar
+    type typeFunctionVar
 
-    type tyname (* 1: arrow, 2: record, ... *)
+    type typename
     type idor
-    type labcons    = string (* int for tyname but string for labcons because not in any environment *)
+    type labcons    = string
     type flex       = Label.label option
     type extv       = Id.labelledId option
-    (* extv stands for EXplicit Type Variable *)
-    type exttyvar   = tyvar ExtLab.extLab
 
-    (* to hold type variables which are constrained to be equality types *)
-    (* maybe we should be using CSTxxx for this....*)
-    val eqTypeTyVars : tyvar list ref
+    type explicitTypeVar   = typeVar ExtLab.extLab
 
-    (*type assoc      = (tyvar * string) list*)
-    datatype poly   = POLY | MONO (* polymorphic or monomorphic type variable *)
-    datatype kcons  = DE of Id.id (* constructor from a DEclaration   *)
-		    | PA          (* constructor from a PAttern       *)
-		    | OT          (* OTher constructor                *)
-		    | BB          (* constructor in the Builtin Basis *)
-    (* We have the last constructor (BB) because for type constructor labeled by BB
-     * we might want to re-label them to get end points. *)
+    val eqTypeTyVars : typeVar list ref
 
-    datatype orKind = VAL of Id.labelledId                       (* value    *)
-		    | CST of string * Id.id * Label.label (* constant *)
+    datatype poly   = POLY
+		    | MONO
 
-    datatype labty  = LV  of labvar
-		    | LC  of labcons * Label.label
-		    | LD  of labty ExtLab.extLab
-    datatype tnty   = NV  of tynamevar
-		    | NC  of tyname * kcons * Label.label (* kcons is used to know if the constructor comes from a declaration (arrow type: datatype constructor with argument).  It is only used for the arrow type isn't it? *)
-		    | ND  of tnty ExtLab.extLab
-    datatype rowty  = RV  of rowvar
-		    | RC  of labty * ty * Label.label
-		    | RD  of rowty ExtLab.extLab
-		    | RO (* marker to show that a row has been deleted from a sequence because it is cannot be an overloaded type while a RV can *)
-	 and seqty  = SEQUENCE_VARIABLE  of sequenceVariable
-		    | SC  of rowty list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
-		    | SD  of seqty ExtLab.extLab
-	 and tyfun  = TFV of tyfvar
-		    | TFC of seqty * ty * Label.label
-		    | TFD of tyfun ExtLab.extLab
-	 and ty     = V   of tyvar  * extv  * poly                        (* Implicit Type variable    *)
-                    | E   of Id.id  * tyvar                 * Label.label (* Explicit type variable    *)
-                    | C   of tnty   * seqty                 * Label.label (* Type construction         *)
-		    | A   of tyfun  * seqty                 * Label.label (* Type scheme instantiation *) (*(2010-06-23)Do we actually use that?*)
-		    | OR  of seqty  * idor  * poly * orKind * Label.label (* Polymorphic type  *)
-		    | GEN of ty list ref                                  (* intersection type *)
-		    | TD  of ty ExtLab.extLab                             (* Type annotated with dependencies *)
-    (* Concerning V:
-     *   - The option (extv) is NONE if the variable does not come from an
-     *     explicit type variable.
-     * Concerning E:
-     *   - Used for an explicit type variable.
-     *   - The second variable is the generalisation.
-     * Concerning C:
-     *   - Used for a type constructor.
-     * Concerning Or:
-     *   - Used for a list of possible types: overloading.
-     *   - The idor is so that an or type is unique even after freshning.
-     *   - The identifier is so that we in case of an overloading type error,
-     *     we can report the overloaded identifier. *)
+    datatype constructorKind  = DECLARATION_CONS of Id.id
+			      | PATTERN_CONS
+			      | OTHER_CONS
+			      | BUILTIN_BASIS_CONS
 
-    datatype names = TYNAME of tyname | DUMTYNAME of tyname | MAYTYNAME | NOTTYNAME
+    datatype orKind = VALUE of Id.labelledId
+		    | CONSTANT of string * Id.id * Label.label
 
-    (* list of top-level type constructors *)
-    val tyNames           : string list
+    datatype labelType = LABEL_VAR  of labelVar
+		       | LC  of labcons * Label.label
+		       | LABEL_DEPENDANCY  of labelType ExtLab.extLab
 
-    val consTyNameVar     : Label.label -> ty
+    datatype typenameType = TYPENAME_VAR  of typenameVar
+			  | NC  of typename * constructorKind * Label.label
+			  | TYPENAME_DEPENDANCY  of typenameType ExtLab.extLab
 
-    val consV             : tyvar  -> ty
-    val consSEQUENCE_VARIABLE            : sequenceVariable -> seqty
-    val consTFV           : tyfvar -> tyfun
+    datatype rowType = ROW_VAR  of rowVar
+		     | RC  of labelType * ty * Label.label
+		     | ROW_DEPENDANCY  of rowType ExtLab.extLab
+		     | ROW_NO_OVERLOAD
 
-    val newV              : unit -> ty
-    val newRV             : unit -> rowty
-    val newSEQUENCE_VARIABLE             : unit -> seqty
-    val newTFV            : unit -> tyfun
+	 and sequenceType = SEQUENCE_VAR  of sequenceVar
+			  | SC  of rowType list * flex  * Label.label
+			  | SEQUENCE_DEPENDANCY  of sequenceType ExtLab.extLab
 
-    val tyvarToInt        : tyvar     -> int
-    val tyfvarToInt       : tyfvar    -> int
-    val tynamevarToInt    : tynamevar -> int
-    val tynameToInt       : tyname    -> int
-    val labvarToInt       : labvar    -> int
-    val rowvarToInt       : rowvar    -> int
-    val sequenceVariableToInt       : sequenceVariable    -> int
+	 and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
+			  | TFC of sequenceType * ty * Label.label
+			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
+
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly
+                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
+		| TYPE_CONSTRUCTOR       of typenameType   * sequenceType * Label.label
+		| APPLICATION            of typeFunction  * sequenceType * Label.label
+		| TYPE_POLY              of sequenceType  * idor  * poly * orKind * Label.label
+		| GEN                    of ty list ref
+		| TYPE_DEPENDANCY        of ty ExtLab.extLab
+
+
+    datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | NOTTYPENAME
+
+    val typenames           : string list
+
+    val consTypenameVar     : Label.label -> ty
+
+    val consTYPE_VAR             : typeVar  -> ty
+    val consSEQUENCE_VAR         : sequenceVar -> sequenceType
+    val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
+
+    val newTYPE_VAR           : unit -> ty
+    val newROW_VAR            : unit -> rowType
+    val newSEQUENCE_VAR       : unit -> sequenceType
+    val newTYPE_FUNCTION_VAR  : unit -> typeFunction
+
+    val typeVarToInt        : typeVar     -> int
+    val typeFunctionVarToInt       : typeFunctionVar    -> int
+    val typenameVarToInt    : typenameVar -> int
+    val typenameToInt       : typename    -> int
+    val labelVarToInt       : labelVar    -> int
+    val rowVarToInt       : rowVar    -> int
+    val sequenceVarToInt       : sequenceVar    -> int
     val idorToInt         : idor      -> int
 
-    val tynameFromInt     : int -> tyname
+    val typenameFromInt     : int -> typename
 
-    val eqTyvar           : tyvar     -> tyvar     -> bool
-    val eqSequenceVariable          : sequenceVariable    -> sequenceVariable    -> bool
-    val eqLabvar          : labvar    -> labvar    -> bool
-    val eqRowvar          : rowvar    -> rowvar    -> bool
-    val eqTyname          : tyname    -> tyname    -> bool
-    val eqTynamevar       : tynamevar -> tynamevar -> bool
+    val eqTypeVar           : typeVar     -> typeVar     -> bool
+    val eqSequenceVar          : sequenceVar    -> sequenceVar    -> bool
+    val eqLabelVar          : labelVar    -> labelVar    -> bool
+    val eqRowVar          : rowVar    -> rowVar    -> bool
+    val eqTypename          : typename    -> typename    -> bool
+    val eqTypenameVar       : typenameVar -> typenameVar -> bool
     val eqIdor            : idor      -> idor      -> bool
 
-    (*val eqSeqTy           : seqty     -> seqty     -> bool*)
+    val isTypename          : typeFunction -> names ExtLab.extLab
 
-    val isTyName          : tyfun -> names ExtLab.extLab
-
-    (* extract the type name from a type function of the form:
-     *   T.TFC (_, T.C (T.NC (name, _, _), _, _), _)
-     * where we omit the dependencies. *)
-    val getNameTyName     : tyfun -> tyname option
+    val getTypename     : typeFunction -> typename option
 
     val noflex            : unit -> flex
     val consflex          : Label.label -> flex
@@ -143,32 +126,11 @@ signature TY = sig
     val getflex           : flex -> Label.label
     val printflex         : flex -> string
 
-    (*val emAssoc           : assoc*)
+    val DUMMYTYPENAME       : typename
+    val CONSREAL          : typename
 
-    val DUMMYTYNAME       : tyname
-    (*val consrecord        : unit -> tyname
-    val consarrow         : unit -> tyname
-    val consint           : unit -> tyname
-    val consword          : unit -> tyname*)
-    val CONSREAL          : tyname
-    (*val consbool          : unit -> tyname
-    val consstring        : unit -> tyname
-    val conschar          : unit -> tyname
-    val consexception     : unit -> tyname
-    val conslist          : unit -> tyname
-    val consref           : unit -> tyname
-    val conssubstring     : unit -> tyname
-    val consarray         : unit -> tyname
-    val consvector        : unit -> tyname
-    val consoption        : unit -> tyname
-    val consorder         : unit -> tyname
-    val constypenamestart : unit -> tyname
+    val constuple         : typeVar list -> Label.label -> rowType list
 
-    val conslabty         : int -> Label.label -> labty*)
-
-    val constuple         : tyvar list -> Label.label -> rowty list
-
-    (* constructors without kinds *)
     val constyint         : Label.label -> ty
     val constyword        : Label.label -> ty
     val constyreal        : Label.label -> ty
@@ -180,129 +142,111 @@ signature TY = sig
     val constynewcons     : Label.label -> ty
     val constysubstring   : Label.label -> ty
     val constyorder       : Label.label -> ty
-    val constylist        : tyvar -> Label.label -> ty
-    val constyref         : tyvar -> Label.label -> ty
-    val constyarray       : tyvar -> Label.label -> ty
-    val constyvector      : tyvar -> Label.label -> ty
-    val constyoption      : tyvar -> Label.label -> ty
-    val constyfrag        : tyvar -> Label.label -> ty
-    val constyarrow       : tyvar -> tyvar -> Label.label -> ty
-    val constytuple       : tyvar list -> Label.label -> ty
-    val constyrecord      : rowvar list -> Label.label option -> Label.label -> ty
-    (* the label option is for the flex *)
+    val constylist        : typeVar -> Label.label -> ty
+    val constyref         : typeVar -> Label.label -> ty
+    val constyarray       : typeVar -> Label.label -> ty
+    val constyvector      : typeVar -> Label.label -> ty
+    val constyoption      : typeVar -> Label.label -> ty
+    val constyfrag        : typeVar -> Label.label -> ty
+    val constyarrow       : typeVar -> typeVar -> Label.label -> ty
+    val constytuple       : typeVar list -> Label.label -> ty
+    val constyrecord      : rowVar list -> Label.label option -> Label.label -> ty
 
-    (* constructors with kinds *)
-    val constyint'        : Label.label -> kcons -> ty
-    val constyword'       : Label.label -> kcons -> ty
-    val constyreal'       : Label.label -> kcons -> ty
-    val constybool'       : Label.label -> kcons -> ty
-    val constystring'     : Label.label -> kcons -> ty
-    val constychar'       : Label.label -> kcons -> ty
-    val constyexception'  : Label.label -> kcons -> ty
-    val constyunit'       : Label.label -> kcons -> ty
-    val constynewcons'    : Label.label -> kcons -> ty
-    val constysubstring'  : Label.label -> kcons -> ty
-    val constyorder'      : Label.label -> kcons -> ty
-    val constylist'       : tyvar -> Label.label -> kcons -> ty
-    val constyref'        : tyvar -> Label.label -> kcons -> ty
-    val constyarray'      : tyvar -> Label.label -> kcons -> ty
-    val constyvector'     : tyvar -> Label.label -> kcons -> ty
-    val constyoption'     : tyvar -> Label.label -> kcons -> ty
-    val constyfrag'       : tyvar -> Label.label -> kcons -> ty
-    val constyarrow'      : tyvar -> tyvar -> Label.label -> kcons -> ty
-    val constytuple'      : tyvar list -> Label.label -> kcons -> ty
-    val constyrecord'     : rowvar list -> Label.label option -> Label.label -> kcons -> ty
+    val constyint'        : Label.label -> constructorKind -> ty
+    val constyword'       : Label.label -> constructorKind -> ty
+    val constyreal'       : Label.label -> constructorKind -> ty
+    val constybool'       : Label.label -> constructorKind -> ty
+    val constystring'     : Label.label -> constructorKind -> ty
+    val constychar'       : Label.label -> constructorKind -> ty
+    val constyexception'  : Label.label -> constructorKind -> ty
+    val constyunit'       : Label.label -> constructorKind -> ty
+    val constynewcons'    : Label.label -> constructorKind -> ty
+    val constysubstring'  : Label.label -> constructorKind -> ty
+    val constyorder'      : Label.label -> constructorKind -> ty
+    val constylist'       : typeVar -> Label.label -> constructorKind -> ty
+    val constyref'        : typeVar -> Label.label -> constructorKind -> ty
+    val constyarray'      : typeVar -> Label.label -> constructorKind -> ty
+    val constyvector'     : typeVar -> Label.label -> constructorKind -> ty
+    val constyoption'     : typeVar -> Label.label -> constructorKind -> ty
+    val constyfrag'       : typeVar -> Label.label -> constructorKind -> ty
+    val constyarrow'      : typeVar -> typeVar -> Label.label -> constructorKind -> ty
+    val constytuple'      : typeVar list -> Label.label -> constructorKind -> ty
+    val constyrecord'     : rowVar list -> Label.label option -> Label.label -> constructorKind -> ty
 
-    (* constructors on types *)
-    val consTyArrowTy     : ty -> ty -> Label.label -> kcons -> ty
-    val consTyTupleTy     : ty list  -> Label.label -> kcons -> ty
+    val consTyArrowTy     : ty -> ty -> Label.label -> constructorKind -> ty
+    val consTyTupleTy     : ty list  -> Label.label -> constructorKind -> ty
 
-
-    (* re-label a type if its top-level type constructor is from the builtin basis *)
     val labelBuiltinTy    : ty    -> Label.label -> ty
-    val labelBuiltinTyf   : tyfun -> Label.label -> tyfun
+    val labelBuiltinTyf   : typeFunction -> Label.label -> typeFunction
 
     val isTyC             : ty -> bool
     val isTyV             : ty -> bool
     val getTyLab          : ty -> Label.label option
-    val getTyName         : ty -> tnty option
+    val getTypenameType   : ty -> typenameType option
 
-    val isBase            : tyname -> bool
-    val isBase'           : tyname -> bool
-    val isBaseTy          : tnty   -> bool
-    val isArrowTy         : tnty   -> bool
-    val isExcTy           : tnty   -> bool
-    val isDecTy           : tnty   -> bool
-    val isPatTy           : tnty   -> bool
-    val isVarTyName       : tnty   -> bool
-    val isShallowSeq      : seqty  -> bool
+    val isBase            : typename -> bool
+    val isBase'           : typename -> bool
+    val isBaseTy          : typenameType   -> bool
+    val isArrowTy         : typenameType   -> bool
+    val isExcTy           : typenameType   -> bool
+    val isDecTy           : typenameType   -> bool
+    val isPatTy           : typenameType   -> bool
+    val isVarTypename       : typenameType   -> bool
+    val isShallowSeq      : sequenceType  -> bool
 
-    val freshtyvar        : unit -> tyvar
-    val freshtyfvar       : unit -> tyfvar
-    val freshSequenceVariable       : unit -> sequenceVariable
-    val freshtynamevar    : unit -> tynamevar
-    val freshlabvar       : unit -> labvar
-    val freshrowvar       : unit -> rowvar
-    val freshtyname       : unit -> tyname
+    val freshTypeVar         : unit -> typeVar
+    val freshTypeFunctionVar : unit -> typeFunctionVar
+    val freshSequenceVar     : unit -> sequenceVar
+    val freshTypenameVar    : unit -> typenameVar
+    val freshLabelVar       : unit -> labelVar
+    val freshRowVar       : unit -> rowVar
+    val freshTypename       : unit -> typename
     val freshidor         : unit -> idor
 
     val resetnexts        : unit -> unit
 
-    val gettyvar          : unit -> tyvar
-    val getsequenceVariable         : unit -> sequenceVariable
-    val getrowvar         : unit -> rowvar
-    val getlabvar         : unit -> labvar
-    val gettynamevar      : unit -> sequenceVariable
+    val getTypeVar        : unit -> typeVar
+    val getsequenceVar    : unit -> sequenceVar
+    val getRowVar         : unit -> rowVar
+    val getLabelVar       : unit -> labelVar
+    val getTypenameVar      : unit -> sequenceVar
     val getidor           : unit -> idor
 
-    val getTyNameString   : string -> tyname
+    val getTypenameString   : string -> typename
 
-    (* gettyvarsty is used by the unification algorithm to recompute
-     * the monomorphic type variables.
-     * This is at least used by enum/StateEnv.sml *)
-    val getTyVarsTy       : ty -> exttyvar list
+    val getTypeVarsTy     : ty -> explicitTypeVar list
 
-    (*(* Extract the tyvar from a type.  The type has to be a type variable. *)
-    val tyToTyvar         : ty -> tyvar
-    (* Extract the sequenceVariable from a type sequence.  The type sequence has to be a sequence variable.*)
-    val seqToSequenceVariable       : seqty -> sequenceVariable*)
+    val stripDepsSq       : sequenceType -> sequenceType ExtLab.extLab
 
-    (* strip the dependencies off a sequence type *)
-    val stripDepsSq       : seqty -> seqty ExtLab.extLab
+    val tntyToTyCon       : typenameType -> typename
 
-    (* Returns the actual type constructor of a tnty *)
-    val tntyToTyCon       : tnty -> tyname
+    val printTypenameAssoc  : typename -> Id.assoc -> string
 
-    val printTyNameAssoc  : tyname -> Id.assoc -> string
-
-    (* true if a term of type poly is POLY, false if MONO *)
     val isPoly            : poly -> bool
 
-    val printtyvar        : tyvar       -> string
-    val printtyvarlist    : tyvar list  -> string
-    val printSequenceVariable       : sequenceVariable      -> string
-    val printSequenceVariablelist   : sequenceVariable list -> string
-    val printtynamevar    : tynamevar   -> string
-    val printtyname       : tyname      -> string
-    val printtyname'      : tyname      -> string
-    val printsmltn        : tyname      -> string
-    val printseqty        : seqty       -> string
-    val printseqty'       : seqty       -> string
-    val printtnty         : tnty        -> string
-    val printtnty'        : tnty        -> string
-    val printtyf          : tyfun       -> string
-    val printtyf'         : tyfun       -> string
+    val printTypeVar        : typeVar       -> string
+    val printTypeVarList    : typeVar list  -> string
+    val printSequenceVar       : sequenceVar      -> string
+    val printSequenceVarList   : sequenceVar list -> string
+    val printTypenameVar    : typenameVar   -> string
+    val printTypename       : typename      -> string
+    val printTypename'      : typename      -> string
+    val printsmltn        : typename      -> string
+    val printseqty        : sequenceType       -> string
+    val printseqty'       : sequenceType       -> string
+    val printtnty         : typenameType        -> string
+    val printtnty'        : typenameType        -> string
+    val printtyf         : typeFunction       -> string
+    val printtyf'         : typeFunction       -> string
     val printty           : ty          -> string
     val printty'          : ty          -> string
     val printtylist       : ty list     -> string
     val printlabcons      : labcons     -> string
     val printsmllc        : labcons     -> string
-    val printrowty        : rowty       -> string
-    val printrowty'       : rowty       -> string
-    val printrowtylist    : rowty list  -> string
-    val printrowvar       : rowvar      -> string
-    val printlabty        : labty       -> string
-    (*val printAssoc        : assoc       -> string
-    val printAssoc'       : assoc       -> string*)
+    val printRowType        : rowType       -> string
+    val printrowty'       : rowType       -> string
+    val printrowtylist    : rowType list  -> string
+    val printRowVar       : rowVar      -> string
+    val printlabty        : labelType       -> string
 
 end

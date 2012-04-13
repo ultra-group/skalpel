@@ -573,13 +573,13 @@ fun getCol' _ EK.Circularity                      = Red
   | getCol' _ (EK.ExcIsDat   _)                   = Red
   | getCol' _ (EK.ConIsVar   _)                   = Red
   | getCol' _ (EK.DatIsExc   _)                   = Red
-  | getCol' _ (EK.TyVarBind  _)                   = Red
+  | getCol' _ (EK.TypeVarBind  _)                   = Red
   | getCol' _ EK.RigidWhere                       = Red
   | getCol' _ EK.Inclusion                        = Red
   | getCol' _ EK.AppNotApp                        = Red
   | getCol' _ EK.DiffFunName                      = Red
   | getCol' _ EK.DiffNbArgFun                     = Red
-  | getCol' _ EK.FreeTyVarTop                     = Red
+  | getCol' _ EK.FreeTypeVarTop                     = Red
   | getCol' _ EK.AsPatVar                         = Red
   | getCol' _ EK.FnRecExp                         = Red
   | getCol' _ EK.RealInPat                        = Red
@@ -1427,28 +1427,28 @@ and getpos_typevar (A.TypeVar (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
 and getpos_typevarlist [] _           = []
   | getpos_typevarlist (tv :: tvl) ll = (getpos_typevar tv ll) @ (getpos_typevarlist tvl ll)
 
-and getpos_labtyvar (A.LabTyVar (tv, rl, l, _)) ll =
+and getpos_labtyvar (A.LabTypeVar (tv, rl, l, _)) ll =
     let val gp = getpos_typevar tv ll
     in (mapCol l ll rl) @ gp
     end
-  | getpos_labtyvar (A.LabTyVarDots tvl) ll        = getpos_typevarlist tvl ll
+  | getpos_labtyvar (A.LabTypeVarDots tvl) ll        = getpos_typevarlist tvl ll
 
 and getpos_labtyvarlist [] _         = []
   | getpos_labtyvarlist (x :: xs) ll = (getpos_labtyvar x ll) @ (getpos_labtyvarlist xs ll)
 
-and getpos_tyvarseq (A.TyVarSeqOne (tv, r, l, _))   ll =
+and getpos_tyvarseq (A.TypeVarSeqOne (tv, r, l, _))   ll =
     let (*val _  = Debug.printdebug2 "foo"*)
 	val gp = getpos_typevar tv ll
     in (*case tv of
 	   A.TypeVarDots =>*) [N (r, getCol l ll, 1, gp)]
 	 (*| _ => gp (* 2009-09-11: before it was just the N above, but that seems wrong, see test 3 *)*)
     end
-  | getpos_tyvarseq (A.TyVarSeqEm (r, l, _))        ll = [L (r, getCol l ll, 1)]
-  | getpos_tyvarseq (A.TyVarSeqSeq (tvl, rl, l, _)) ll =
+  | getpos_tyvarseq (A.TypeVarSeqEm (r, l, _))        ll = [L (r, getCol l ll, 1)]
+  | getpos_tyvarseq (A.TypeVarSeqSeq (tvl, rl, l, _)) ll =
     let val gp = getpos_labtyvarlist tvl ll
     in (mapCol l ll rl) @ gp
     end
-  | getpos_tyvarseq (A.TyVarSeqDots tvl)            ll = getpos_typevarlist tvl ll
+  | getpos_tyvarseq (A.TypeVarSeqDots tvl)            ll = getpos_typevarlist tvl ll
 
 and getpos_typelist [] _          = []
   | getpos_typelist (ty :: tl) ll = (getpos_type ty ll) @ (getpos_typelist tl ll)

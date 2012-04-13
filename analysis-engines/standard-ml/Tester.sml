@@ -322,7 +322,7 @@ fun debuggingXML errl
         val sts = begsep ^ "<solution val=\"" ^ Int.toString (SOL.toInt (SOL.getSol ())) ^ "\"/>\n"
         val stt = begsep ^ "<timelimit val=\"" ^ Int.toString (Int.fromLarge (gettimelimit ())) ^ "\"/>\n"
         val stf = begsep ^ "<time " ^ stt1 ^ " " ^ stt2 ^ " " ^ stt3 ^ " " ^ stt4 ^ " " ^ stt5 ^ "/>\n"
-        val stg = begsep ^ "<tyvar nb=\"" ^ Int.toString (T.tyvarToInt (T.gettyvar ())) ^ "\"" ^
+        val stg = begsep ^ "<tyvar nb=\"" ^ Int.toString (T.typeVarToInt (T.getTypeVar ())) ^ "\"" ^
 		  (if fullreport then " assoc=\"" ^ I.printAssoc ascid ^ "\"" else "") ^ "/>\n"
         val sth = begsep ^ "<ident" ^
 		  (if fullreport then " assoc=\"" ^ I.printAssoc ascid ^ "\"" else "") ^ "/>\n"
@@ -363,7 +363,7 @@ fun buildError errl (ast, m, ascid) bmin times envcss initlab bfinal name bslice
 		    total     = EV.getnbcss    envcss}
     in ref (SOME {errors       = toerrors errl,
 		  time         = times,
-		  tyvar        = (T.tyvarToInt (T.gettyvar ()), I.outAssoc ascid),
+		  tyvar        = (T.typeVarToInt (T.getTypeVar ()), I.outAssoc ascid),
 		  ident        = I.outAssoc ascid,
 		  constraint   = nbcs,
 		  labels       = (L.toInt m) - (L.toInt initlab),
@@ -577,7 +577,7 @@ fun debuggingSML errl
 		  "}"
         val stg = newsep ^ "tyvar        = " ^
 		  "(" ^
-		  Int.toString (T.tyvarToInt (T.gettyvar ())) ^
+		  Int.toString (T.typeVarToInt (T.getTypeVar ())) ^
 		  ", " ^
 		  I.printAssoc' ascid ^
 		  ")"
@@ -640,7 +640,7 @@ fun debuggingJSON errl
 		  "\"html\": "         ^ Int.toString (Int.fromLarge t5) ^
 		  "}"
         val stg = newsep ^ "\"tyvar\"        : " ^
-		  "{\"tyvar\": " ^ Int.toString (T.tyvarToInt (T.gettyvar ()))
+		  "{\"tyvar\": " ^ Int.toString (T.typeVarToInt (T.getTypeVar ()))
 		  ^ ", \"assoc\": " ^ I.printJsonAssoc ascid ^ "}"
 	val sti = newsep ^ "\"constraint\"   : " ^
 		  "{" ^

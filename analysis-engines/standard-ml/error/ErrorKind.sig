@@ -1,11 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
- *
- *
- * This file is part of the ULTRA SML Type Error Slicer (Skalpel) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
+(* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +26,14 @@ signature ERRORKIND = sig
 
     type label    = int                               (* external label: integer instead of Label.label *)
     type id       = int                               (* external id: integer instead of Id.id *)
-    type tyname   = int                               (* external tyname: integer instead of Ty.tyname *)
+    type typename = int                               (* external tyname: integer instead of Ty.tyname *)
     type laberr   = (label * string) list             (* a field name in a record *)
     type recerr   = laberr * laberr * laberr * laberr (* a record error: the first laberr are for the clashing fields in two clashing records, the last two ones are for the common fields *)
     type iderr    = label * id                        (* an identifier *)
     type idserr   = label * id * string               (* a constant *)
     type specerr  = label * id                        (* an identifier in a structure or signature or where clause *)
     type arrerr   = label * int                       (* the arity of a sequence *)
-    type tnerr    = label * tyname                    (* a type constructor *)
+    type tnerr    = label * typename                    (* a type constructor *)
     type unmerr   = specerr * specerr list * label    (* an unmatched error for a identifier not declared in a structure/signature *)
     type synerr   = (int list * int) option
     (* 39 kinds of error *)
@@ -73,7 +66,7 @@ signature ERRORKIND = sig
 		  | ExcIsDat       of synerr (* The argument is useless because it is a context independent error *)
 		  | ConIsVar       of synerr (* Do we need the argument here? *)
 		  | DatIsExc       of synerr (* Do we need the argument here?  They are never used *)
-		  | TyVarBind      of synerr
+		  | TypeVarBind      of synerr
 		  | Warning        of string
 		  | Parsing        of string
 		  | NonFlexWhere   of iderr * iderr
@@ -83,7 +76,7 @@ signature ERRORKIND = sig
 		  | AppNotApp
 		  | DiffFunName
 		  | DiffNbArgFun
-		  | FreeTyVarTop (* not used anymore, but should be *)
+		  | FreeTypeVarTop (* not used anymore, but should be *)
 		  | AsPatVar
 		  | FnRecExp
 		  | RealInPat

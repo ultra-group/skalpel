@@ -1,7 +1,7 @@
 {
 "errors"       : [{"identifier"  : 0,
                    "labels"      : {"count": 17, "labelNumbers": [3, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 24, 25, 26] },
-                   "kind"        : {"errorKindName": "ErrorKind.TyVarBind", "asmpOp": "NONE"},
+                   "kind"        : {"errorKindName": "ErrorKind.TypeVarBind", "asmpOp": "NONE"},
                    "time"        : 8,
                    "slice"       : "⟨..fn ⟨..⟨..z..⟩ => ⟨..val ⟨..⟩ ⟨..x = fn ⟨..y : 'a => ⟨..z y..⟩..⟩..⟩..⟩..⟩..⟩",
                    "assumptions" : [],

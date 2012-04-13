@@ -1,7 +1,7 @@
 {
 "errors"       : [{"identifier"  : 0,
                    "labels"      : {"count": 2, "labelNumbers": [33, 37] },
-                   "kind"        : {"errorKindName": "ErrorKind.FreeTyVarTop"},
+                   "kind"        : {"errorKindName": "ErrorKind.FreeTypeVarTop"},
                    "time"        : ~1,
                    "slice"       : "〚..exception 〚..〚..〛 of 〚..'a..〛..〛..〛",
                    "assumptions" : [],

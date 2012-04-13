@@ -60,147 +60,147 @@ fun getOpType ascid =
     (* returns three tuple of type on the left,
      * type on the right, and type of the operator *)
     let fun getTyBinaryOp "=" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.consV tv
-		val tr = T.consV tv
-		val to = T.constybool' l T.BB
+	    let val tv = T.freshTypeVar ()
+		val tl = T.consTYPE_VAR tv
+		val tr = T.consTYPE_VAR tv
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "=old" l =
-	    let val tl = T.constyint'  l T.BB
-		val tr = T.constyint'  l T.BB
-		val to = T.constybool' l T.BB
+	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "<>" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.consV tv
-		val tr = T.consV tv
-		val to = T.constybool' l T.BB
+	    let val tv = T.freshTypeVar ()
+		val tl = T.consTYPE_VAR tv
+		val tr = T.consTYPE_VAR tv
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp ">" l =
-	    let val tl = T.constyint'  l T.BB
-		val tr = T.constyint'  l T.BB
-		val to = T.constybool' l T.BB
+	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "<" l =
-	    let val tl = T.constyint'  l T.BB
-		val tr = T.constyint'  l T.BB
-		val to = T.constybool' l T.BB
+	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp ">=" l =
-	    let val tl = T.constyint'  l T.BB
-		val tr = T.constyint'  l T.BB
-		val to = T.constybool' l T.BB
+	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "<=" l =
-	    let val tl = T.constyint'  l T.BB
-		val tr = T.constyint'  l T.BB
-		val to = T.constybool' l T.BB
+	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "+" l =
-	    let val tl = T.constyint' l T.BB
-		val tr = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val tl = T.constyint' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "-" l =
-	    let val tl = T.constyint' l T.BB
-		val tr = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val tl = T.constyint' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "*" l =
-	    let val tl = T.constyint' l T.BB
-		val tr = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val tl = T.constyint' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "/" l =
-	    let val tl = T.constyreal' l T.BB
-		val tr = T.constyreal' l T.BB
-		val to = T.constyreal' l T.BB
+	    let val tl = T.constyreal' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyreal' l T.BUILTIN_BASIS_CONS
+		val to = T.constyreal' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "div" l =
-	    let val tl = T.constyint' l T.BB
-		val tr = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val tl = T.constyint' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "mod" l =
-	    let val tl = T.constyint' l T.BB
-		val tr = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val tl = T.constyint' l T.BUILTIN_BASIS_CONS
+		val tr = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "@" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.constylist' tv l T.BB
-		val tr = T.constylist' tv l T.BB
-		val to = T.constylist' tv l T.BB
+	    let val tv = T.freshTypeVar ()
+		val tl = T.constylist' tv l T.BUILTIN_BASIS_CONS
+		val tr = T.constylist' tv l T.BUILTIN_BASIS_CONS
+		val to = T.constylist' tv l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "^" l =
-	    let val tl  = T.constystring' l T.BB
-		val tr  = T.constystring' l T.BB
-		val to  = T.constystring' l T.BB
+	    let val tl  = T.constystring' l T.BUILTIN_BASIS_CONS
+		val tr  = T.constystring' l T.BUILTIN_BASIS_CONS
+		val to  = T.constystring' l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp ":=" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.constyref' tv l T.BB
-		val tr = T.consV tv
-		val to = T.constytuple' [] l T.BB
+	    let val tv = T.freshTypeVar ()
+		val tl = T.constyref' tv l T.BUILTIN_BASIS_CONS
+		val tr = T.consTYPE_VAR tv
+		val to = T.constytuple' [] l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp "o" l =
-	    let val tv1 = T.freshtyvar ()
-		val tv2 = T.freshtyvar ()
-		val tv3 = T.freshtyvar ()
-		val tl = T.constyarrow' tv2 tv3 l T.BB
-		val tr = T.constyarrow' tv1 tv2 l T.BB
-		val to = T.constyarrow' tv1 tv3 l T.BB
+	    let val tv1 = T.freshTypeVar ()
+		val tv2 = T.freshTypeVar ()
+		val tv3 = T.freshTypeVar ()
+		val tl = T.constyarrow' tv2 tv3 l T.BUILTIN_BASIS_CONS
+		val tr = T.constyarrow' tv1 tv2 l T.BUILTIN_BASIS_CONS
+		val to = T.constyarrow' tv1 tv3 l T.BUILTIN_BASIS_CONS
             in (tl, tr, to)
             end
 	  | getTyBinaryOp "before" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.consV tv
-		val tr = T.constyrecord' [] NONE l T.BB
-		val to = T.consV tv
+	    let val tv = T.freshTypeVar ()
+		val tl = T.consTYPE_VAR tv
+		val tr = T.constyrecord' [] NONE l T.BUILTIN_BASIS_CONS
+		val to = T.consTYPE_VAR tv
 	    in (tl, tr, to)
             end
 	  | getTyBinaryOp "::" l =
-	    let val tv = T.freshtyvar ()
-		val tl = T.consV tv
-		val tr = T.constylist' tv l T.BB
-		val to = T.constylist' tv l T.BB
+	    let val tv = T.freshTypeVar ()
+		val tl = T.consTYPE_VAR tv
+		val tr = T.constylist' tv l T.BUILTIN_BASIS_CONS
+		val to = T.constylist' tv l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
 	  | getTyBinaryOp __ = raise EH.DeadBranch ""
 	fun getTyUnaryOp "~" l =
-	    let val ti = T.constyint' l T.BB
-		val to = T.constyint' l T.BB
+	    let val ti = T.constyint' l T.BUILTIN_BASIS_CONS
+		val to = T.constyint' l T.BUILTIN_BASIS_CONS
 	    in (ti, to) (* type in and type out *)
 	    end
 	  | getTyUnaryOp "!" l =
-	    let val tv = T.freshtyvar ()
-		val ti = T.constyref' tv l T.BB
-		val to = T.consV tv
+	    let val tv = T.freshTypeVar ()
+		val ti = T.constyref' tv l T.BUILTIN_BASIS_CONS
+		val to = T.consTYPE_VAR tv
 	    in (ti, to) (* type in and type out *)
 	    end
 	  | getTyUnaryOp _ _ = raise EH.DeadBranch ""
 	fun scanBinary (id, str) =
 	    let val lab = L.builtinLab
 		val (tl, tr, to) = getTyBinaryOp str lab
-		val ty  = T.newV ()
-		val ti  = T.consTyTupleTy [tl, tr] lab T.BB
-		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BB) lab
+		val ty  = T.newTYPE_VAR ()
+		val ti  = T.consTyTupleTy [tl, tr] lab T.BUILTIN_BASIS_CONS
+		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
 		val bd  = E.consBindPoly id ty cl lab
@@ -209,8 +209,8 @@ fun getOpType ascid =
 	fun scanUnary (id, str) =
 	    let val lab = L.builtinLab
 		val (ti, to) = getTyUnaryOp str lab
-		val ty  = T.newV ()
-		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BB) lab
+		val ty  = T.newTYPE_VAR ()
+		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
 		val bd  = E.consBindPoly id ty (CL.consREC ()) lab
 	    in (bd, c)
 	    end
