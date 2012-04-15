@@ -33,7 +33,7 @@ signature STATE = sig
     type stSq = Ty.sequenceType
     type stRt = Ty.rowType
     type stLt = Ty.labelType
-    type stEv = Env.environment
+    type stEv = Env.env
     type stRc = (rcty * rcty) (* this is for records *)
     type stGe = Ty.explicitTypeVar
     type stAr = Ty.sequenceType
@@ -45,20 +45,20 @@ signature STATE = sig
      * We might need the depth of the dependency as well (rank?). *)
 
     (*(* stUb: is among other things for the arity of type names. *)
-    (* (2010-02-17) We really want an environment for free identifiers with stateub *)
+    (* (2010-02-17) We really want an env for free identifiers with stateub *)
     type stUb = Env.class ExtLab.extLab*)
 
-    (* Unification environment *)
+    (* Unification env *)
     type state
 
-    (* ACCESS THE UNIFIERS AND ENVIRONMENTS *)
+    (* ACCESS THE UNIFIERS AND ENVS *)
     val getValStateTv      : state -> Ty.typeVar         -> stTv option
     val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
     val getValStateTn      : state -> Ty.typenameVar     -> stTn option
     val getValStateSq      : state -> Ty.sequenceVar        -> stSq option
     val getValStateRt      : state -> Ty.rowVar        -> stRt option
     val getValStateLt      : state -> Ty.labelVar        -> stLt option
-    val getValStateEv      : state -> Env.envvar       -> stEv option
+    val getValStateEv      : state -> Env.envVar       -> stEv option
     val getValStateOr      : state -> Ty.idor          -> stOr option
     val getValStateCl      : state -> ClassId.classvar -> stCl option
     val getValStateGe      : state -> Ty.typeVar         -> stGe option
@@ -68,13 +68,13 @@ signature STATE = sig
     (* The second returned value is for incomplete structures.
      * The third  returned value is true if we successfully went down the lid.
      * In the first option, the bool is true if the binding comes from the parameter of a functor. *)
-    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extvar * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.exttyv * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.exttyp * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
-    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.labelledId * Env.environment ExtLab.extLab) option * bool
+    val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extVar * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdTv    : state -> Id.lid -> bool -> (Env.explicitTypeVar * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdTy    : state -> Id.lid -> bool -> (Env.extType * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdSt    : state -> Id.lid -> bool -> (Env.extstr * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdSi    : state -> Id.lid -> bool -> (Env.extsig * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdOc    : state -> Id.lid -> bool -> (Env.extovc * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdFu    : state -> Id.lid -> bool -> (Env.extfun * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
 
     (* get the 'fr' and 'op' parts of the state. *)
     val getValStateFree    : state -> (Id.labelledId * bool) list
@@ -82,14 +82,14 @@ signature STATE = sig
 
     (*val getValStateApFirst : state -> Id.lid -> stUb option*)
 
-    (* UPDATE THE UNIFIERS AND ENVIRONMENTS *)
+    (* UPDATE THE UNIFIERS AND ENVS *)
     val updateStateTv      : state -> Ty.typeVar         -> stTv -> unit
     val updateStateTf      : state -> Ty.typeFunctionVar        -> stTf -> unit
     val updateStateTn      : state -> Ty.typenameVar     -> stTn -> unit
     val updateStateSq      : state -> Ty.sequenceVar        -> stSq -> unit
     val updateStateRt      : state -> Ty.rowVar        -> stRt -> unit
     val updateStateLt      : state -> Ty.labelVar        -> stLt -> unit
-    val updateStateEv      : state -> Env.envvar       -> stEv -> unit
+    val updateStateEv      : state -> Env.envVar       -> stEv -> unit
     val updateStateOr      : state -> Ty.idor          -> stOr -> unit
     val updateStateCl      : state -> ClassId.classvar -> stCl -> unit
     val updateStateGe      : state -> Ty.typeVar         -> stGe -> unit
@@ -99,7 +99,7 @@ signature STATE = sig
     (* for free _opened_ identifiers *)
     val updateStateFo      : state -> Id.labelledId -> unit
 
-    val updateDatCons      : state -> Id.labelledId -> Env.environment -> unit
+    val updateDatCons      : state -> Id.labelledId -> Env.env -> unit
 
     val updateRecOne       : state ->
 			     stRc  ->
@@ -119,7 +119,7 @@ signature STATE = sig
     (*val deleteStateGe      : state -> int -> unit*)
     (*val eraseStateGe       : state -> int -> unit*)
 
-    (* GLOBAL HANDLING OF UNIFIERS AND ENVIRONMENTS *)
+    (* GLOBAL HANDLING OF UNIFIERS AND ENVS *)
     val getDomTv           : state -> OrdSet.ordset
     val getDomGe           : state -> OrdSet.ordset
 
@@ -133,16 +133,16 @@ signature STATE = sig
     (* checks if the typename is in the state *)
     val isAName            : Ty.typename -> state -> bool
 
-    (* PUSH AN ENVIRONMENT ONTO A STATE *)
-    val pushEnvToState     : bool -> Env.environment -> state -> (Ty.typeVar list * stNa list)
+    (* PUSH AN ENV ONTO A STATE *)
+    val pushEnvToState     : bool -> Env.env -> state -> (Ty.typeVar list * stNa list)
 
-    (* REMOVE AN ENVIRONMENT FROM A STATE *)
+    (* REMOVE AN ENV FROM A STATE *)
     val remEnvFromState    : bool -> (Ty.typeVar list * stNa list) -> state -> unit
 
-    (* CHECKS IF THE ENVIRONMENT IN THE STATE HIDS WITH ENVIRONMENT VARIABLES *)
+    (* CHECKS IF THE ENV IN THE STATE HIDS WITH ENV VARIABLES *)
     val hasEnvVar          : state -> bool
 
-    (* PRINT THE UNIFIERS AND ENVIRONMENTS *)
+    (* PRINT THE UNIFIERS AND ENVS *)
     val printState         : state -> string
 
     (*val combineStates      : state -> state -> Env.csext list*)
@@ -172,7 +172,7 @@ signature STATE = sig
      val updateStateIdSi    : state -> Id.id -> Env.extenv -> unit
      val updateStateIdOc    : state -> Id.id -> Env.extseq -> unit*)
 
-    (* REMOVE FROM THE ENVIRONMENTS *)
+    (* REMOVE FROM THE ENVS *)
     (*val deleteStateIdVa    : state -> Id.id -> unit
     val deleteStateIdTy    : state -> Id.id -> unit
     val deleteStateIdSt    : state -> Id.id -> unit

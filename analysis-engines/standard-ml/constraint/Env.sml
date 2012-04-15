@@ -36,19 +36,19 @@ structure CL  = ClassId
 structure CD  = LongId
 structure EL  = ExtLab  (* WTF is the "Ext" for ?*)
 structure EH  = ErrorHandler
-structure environmentOrdMap = SplayMapFn (OrdId)  (* map for Environments *)
+structure envOrdMap = SplayMapFn (OrdId)  (* map for environments *)
 structure OMC = SplayMapFn (OrdKey) (* map for Constraints, should be OrdLab *)
 structure OMO = Fifo (*SplayMapFn (OrdLid) (* map for Open environments *)*)
 
 (* ====== TYPES/DATATYPES ====== *)
 
 (* ------ MAPPINGS ------ *)
-type 'a cmap        = 'a OMC.map
-type 'a emap        = 'a environmentOrdMap.map
-type 'a omap        = 'a OMO.fifo
+type 'a constraintMap   = 'a OMC.map        (* constraint map *)
+type 'a envMap          = 'a envOrdMap.map  (* environment map *)
+type 'a openEnvMap      = 'a OMO.fifo       (* open environment map *)
 
 (* ------ VARIABLES ------ *)
-type envvar         = int
+type envVar         = int
 
 (* this is for what kind of bind indentifier we are binding. We have the:
  * - binding (the actual thing being bound, C.bind)
@@ -60,165 +60,197 @@ type 'a bind  = 'a C.bind EL.extLab
 (* genericEnvironment
  * stores binders of structures and signatures and such
  * it is suspected that this was created as a speed optimisation *)
-type 'a genericEnvironment  = 'a bind list emap
+(*(2010-04-08)We should use genericEnvironment for all our similar environments*)
+type 'a genericEnv  = 'a bind list envMap
 
 (* ------ OPENENV ------ *)
-datatype opnkind    = OST | DRE | ISI
-type opnsem         = I.lid * L.label * opnkind
-type opnenv         = opnsem omap
+datatype openKind    = OPENED_STRUCT        (* opened structure *)
+		     | DATATYPE_REPLICATION (* datatype replication *)
+		     | INCLUDED_SIG         (* included signature *)
+
+type openSem         = I.lid   *  (* id of struct to open *)
+		       L.label *  (* label of struct to open *)
+		       openKind    (* kind of the opening *)
+
+type openEnv         = openSem openEnvMap
 
 (* ------ VARENV ------ *)
-type extvar         = T.ty bind
-type varenv         = T.ty genericEnvironment (* Tyty (ConsId.bind ExtLab.extLab list) environmentOrdMap.mp *)
+(*(2010-06-10)The Boolean in Ty.ty bind to indicate if the varEnv is complete or not.*)
+type extVar         = T.ty bind
+type varEnv         = T.ty genericEnv (* Tyty (ConsId.bind ExtLab.extLab list) envOrdMap.mp *)
 
 (* ------ KIND OF A TYPE DECLARATION *)
-datatype tnKind     = DAT | TYP
+datatype typeNameKind = DATATYPE | TYPE
 
-(* ------ TYPENV ------ *)
-type exttyp         = (T.typeFunction * tnKind * (varenv * bool) ref) bind
-type typenv         = (T.typeFunction * tnKind * (varenv * bool) ref) genericEnvironment
+(* ------ TYPEENV ------ *)
+
+ (* extType maybe stands for explicit type variables? *)
+type extType         = (T.typeFunction * typeNameKind * (varEnv * bool) ref) bind
+type typeEnv         = (T.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
 
 (* ------ OVERLOADINGENV ------ *)
-type extovc         = T.sequenceType bind
-type ovcenv         = T.sequenceType genericEnvironment
+type extovc                = T.sequenceType bind
+type overloadingClassesEnv = T.sequenceType genericEnv
 
 (* ------ TYPEVARENV ------ *)
-type exttyv         = (T.typeVar * bool) bind
-type tyvenv         = (T.typeVar * bool) genericEnvironment
+type explicitTypeVar = (T.typeVar * bool) bind (* bool is true for an explicit type variable and false for an implicit one.*)
+type typeVarEnv      = (T.typeVar * bool) genericEnv
 
-(* ------ INFORMATION ON ENVIRONMENT ------ *)
-type tname          = {id : I.id, lab : L.label, kind : tnKind, name : T.typename}
-type tnmap          = tname list
-datatype names      = TYPENAME of tname EL.extLab | DUMTYPENAME of tname | MAYTYPENAME | NOTTYPENAME of I.id EL.extLab
-type infoEnv        = {lab : L.label, cmp : bool, tns : tnmap, fct : bool}
+(* ------ INFORMATION ON ENV ------ *)
+type typeName    = {id : I.id, lab : L.label, kind : typeNameKind, name : T.typename}
+type typeNameMap = typeName list (* this should be: tname extLab list *)
+datatype names   = TYPENAME of typeName EL.extLab (* definitely a typename *)
+		 | DUMTYPENAME of typeName       (* maybe a type name defining tname but not enough info to be sure *)
+		 | MAYTYPENAME                   (* maybe a type name but not enough info to know *)
+		 | NOTTYPENAME of I.id EL.extLab (* definitely not a type name *)
+
+type infoEnv     = {lab : L.label,   (* should be a list or a set. See uenvEnv in Analyze.sml *)
+		    complete : bool, (* true if env is complete (true when initialised and can be false during unification *)
+		    infoTypeNames : typeNameMap, (* typeNames introduced in the structure, these are here to ease the
+					      * collection of type names when pushing an env onto a unification context *)
+		    argOfFunctor : bool}      (* true if the env is the argument of a function *)
 
 (* ------ ENRICHEMENT AND INSTANTIATION ------ *)
-type evsbind        = envvar * envvar option * envvar * envvar option * L.label
+(* 1st envVar: instantiated signature
+ * 2nd envVar: signature matching
+ * 3rd envVar: enriched structure
+ * 4th envVar: resulting structure
+ * the bool if false if we want to impose some restrictions based on the
+ * structure env (where clauses). *)
+(* WARNING: it is suspected the above comment may not be relevant to the below. Read with caution! *)
+type evsbind        = envVar        *
+		      envVar option *
+		      envVar        *
+		      envVar option *
+		      L.label
 
 (* ------ FUNCTOR INSTANTIATION ------ *)
-type evfbind        = envvar * envvar * envvar * envvar * L.label
+type evfbind        = envVar * envVar * envVar * envVar * L.label
 
 (* ------ SHARING ------ *)
-type shabind        = envvar * envvar * envvar * L.label
-
-(*(* ------ GENERALISATION OF EXPLICIT TYPE VARIABLES ------ *)
-type tvsbind        = (T.typeVar * L.label) list
-type exttv          = T.typeVar bind*)
+type shabind        = envVar * envVar * envVar * L.label
 
 (* ------ ACCESSORS ------ *)
 type 'a accid       = {lid : I.lid, sem : 'a, class : CL.class, lab : L.label}
 
 (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
-type longtyp        = T.typeFunction accid EL.extLab
-
-(*(* ------ CLASSES OF IDENTIFIERS ------ *)
-datatype class      = VCL of CL.classvar
-		    | CCL of CL.class * L.label * I.lid * bool*)
+type longTypeConsBinder        = T.typeFunction accid EL.extLab
 
 type class = CL.class
 
 (* ------ SIGNATURE MATCHING ------ *)
-datatype matchKind  = OPA (* Opaque      *)
-		    | TRA (* Translucent *)
+datatype matchKind  = OPAQUE       (* for opaque signatures *)
+		    | TRANSLUCENT  (* for translucent signatures *)
 
-(* the environment datatype *)
-datatype environment = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
-			 typenames : typenv,
-			 tyvs : tyvenv,
-			 strs : environment genericEnvironment,
-			 sigs : environment genericEnvironment,
-			 funs : (environment * environment) genericEnvironment,
-			 ovcs : ovcenv,
-			 info : infoEnv}
-		    | ENVVAR of envvar * L.label
+(* the env datatype *)
+datatype env = ENV_CONS of {valueIds : varEnv,                          (* value identifiers *)
+			    typeNames : typeEnv,                        (* type names *)
+			    explicitTypeVars : typeVarEnv,              (* explicit type variables (not used any more?) *)
+			    structs : env genericEnv,                   (* structures (this is strenv *)
+			    sigs : env genericEnv,                      (* signatures (this is sigenv *)
+			    functors : (env * env) genericEnv,          (* functors (this is funenv *)
+			    overloadingClasses : overloadingClassesEnv, (* overloading classes *)
+			    info : infoEnv}
+	     | ENV_VAR of envVar * L.label
 
-                    (* SEQUENCE_ENV represents sequence environments
-                     * e := ... | e2; e1
-                     * we use sequences as a sort of logical AND *)
-		    | SEQUENCE_ENV of environment * environment
+	     (* SEQUENCE_ENV represents sequence envs
+	      * e := ... | e2; e1
+	      * we use sequences as a sort of logical AND *)
+	     | SEQUENCE_ENV of env * env
 
-                    (* LOCAL_ENV represents local environments
-                     * e := ... | loc e1 in e2
-                     * This builds an environment e2 which depends on e1 and only exports e2's binders,
-                     * so only e2's binders can be accessed from outside the local environment. This is
-                     * different from the environments of the form e1;e2 as this builds a new environment
-                     * from e1 and e2 and exports both e1's binders not shadowed by e2 and e2's binders *)
-		    | LOCAL_ENV of environment * environment
+	     (* LOCAL_ENV represents local envs
+	      * e := ... | loc e1 in e2
+	      * This builds an env e2 which depends on e1 and only exports e2's binders,
+	      * so only e2's binders can be accessed from outside the local env. This is
+	      * different from the envs of the form e1;e2 as this builds a new env
+	      * from e1 and e2 and exports both e1's binders not shadowed by e2 and e2's binders *)
+	     | LOCAL_ENV of env * env
 
-		    | ENVWHR of environment * longtyp
-		    | ENVSHA of environment * environment
+	     | ENVWHR of env * longTypeConsBinder
 
-                    (* SIGNATURE_ENV represents signature environments
-                     * in the paper this would be e := ... | e1;e2| ens(e) | subty *)
-		    | SIGNATURE_ENV of environment * environment * matchKind
-		    | ENVPOL of tyvenv * environment
-		    | DATATYPE_CONSTRUCTOR_ENV of I.labelledId  * environment
-		    | ENVOPN of opnenv
-		    | ENVDEP of environment EL.extLab
-		    | FUNCTOR_ENV of constraints
+	     (*(2010-07-07)We want something like: Ty.typeFunction accid extLab list, instead of the second env.*)
+	     | ENVSHA of env * env
 
-                    (* CONSTRAINT_ENV is probably for constraint/environment
-                     * think this is c ::= μ1=μ2 | e1=e2 | τ1=τ2
-                     * these act as both a constraint and an environment *)
-		    | CONSTRAINT_ENV of constraints
-		    | ENVPTY of string
-		    | ENVFIL of string * environment * (unit -> environment)
-		    | TOP_LEVEL_ENV
+	     (* SIGNATURE_ENV represents signature envs
+	      * in the paper this would be e := ... | e1;e2| ens(e) | subty *)
+	     | SIGNATURE_ENV of env * env * matchKind
 
-     and accessor        = VALUEID_ACCESSOR of T.ty        accid EL.extLab
-		         | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar     accid EL.extLab
-		         | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction     accid EL.extLab
-		         | OVERLOADING_CLASSES_ACCESSOR of T.sequenceType     accid EL.extLab
-		         | STRUCTURE_ACCESSOR of environment         accid EL.extLab
-			 | SIGNATURE_ACCESSOR of environment         accid EL.extLab
-			 | FUNCTOR_ACCESSOR of (environment * environment) accid EL.extLab
+
+	     | ENVPOL of typeVarEnv * env (* the first env is the explicit type variables and the second the value bindings *)
+	     | DATATYPE_CONSTRUCTOR_ENV of I.labelledId  * env (* (2010-06-10)This is to associate constructors to a datatype *)
+	     | ENVOPN of openEnv (* we want to move from ENVOPN to ENVDEP *)
+	     | ENVDEP of env EL.extLab
+	     | FUNCTOR_ENV of constraints (*(2010-06-22)This env is only solved when dealing with CSTFUN.*)
+
+	     (* CONSTRAINT_ENV is probably for constraint/env
+	      * think this is c ::= μ1=μ2 | e1=e2 | τ1=τ2
+	      * these act as both a constraint and an env *)
+	     | CONSTRAINT_ENV of constraints
+
+	     | ENVPTY of string (* This is generated by a sml-tes special comment SML-TES-TYPE and used to print the type of an identifier *)
+	     | ENVFIL of string * env * (unit -> env) (* Like a SEQ but the first env is from a file which has the name given by the string and the second env is a stream *)
+	     | TOP_LEVEL_ENV (* to mark that we reached the top level *)
+
+     and accessor        = VALUEID_ACCESSOR of T.ty accid EL.extLab (* value identifiers *)
+			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accid EL.extLab (* explicit type variables *)
+			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accid EL.extLab (* type constructors *)
+			 | OVERLOADING_CLASSES_ACCESSOR of T.sequenceType accid EL.extLab (* overloading classes *)
+			 | STRUCTURE_ACCESSOR of env accid EL.extLab (* structures *)
+			 | SIGNATURE_ACCESSOR of env accid EL.extLab (* signatures *)
+			 | FUNCTOR_ACCESSOR of (env * env) accid EL.extLab (* functors *)
 
      and oneConstraint    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
-		          | TYPENAME_CONSTRAINT of (T.typenameType   * T.typenameType)   EL.extLab
-		          | SEQUENCE_CONSTRAINT of (T.sequenceType  * T.sequenceType)  EL.extLab
-		          | ROW_CONSTRAINT of (T.rowType  * T.rowType)  EL.extLab
-		          | LABEL_CONSTRAINT of (T.labelType  * T.labelType)  EL.extLab
-			  | ENV_CONSTRAINT of (environment      * environment)      EL.extLab
+			  | TYPENAME_CONSTRAINT of (T.typenameType   * T.typenameType)   EL.extLab
+			  | SEQUENCE_CONSTRAINT of (T.sequenceType  * T.sequenceType)  EL.extLab
+			  | ROW_CONSTRAINT of (T.rowType  * T.rowType)  EL.extLab
+			  | LABEL_CONSTRAINT of (T.labelType  * T.labelType)  EL.extLab
+			  | ENV_CONSTRAINT of (env      * env)      EL.extLab
 			  | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
 			  | FUNCTION_TYPE_CONSTRAINT of (T.typeFunction  * T.typeFunction)  EL.extLab
 			  | ACCESSOR_CONSTRAINT of accessor
-			  | LET_CONSTRAINT of environment
-			  | SIGNATURE_CONSTRAINT of evsbind
-			  | FUNCTOR_CONSTRAINT of evfbind
-			  | SHARING_CONSTRAINT of shabind
-     and constraints      = CONSTRAINTS of oneConstraint list cmap
+			  | LET_CONSTRAINT of env
+			  | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an env with a switch for opaque and translucent *)
+			  | FUNCTOR_CONSTRAINT of evfbind   (* Transform that into an env *)
+			  | SHARING_CONSTRAINT of shabind   (* Transform that into an env *)
+     and constraints      = CONSTRAINTS of oneConstraint list constraintMap
+(* constraints maps integers (program point labels) to lists (conceptually sets) of oneConstraint's *)
+(*(2010-04-14)Conceptually, (INJI extty) seems to be an env of the form:
+ * ENVS (ENVV ev, ENVC x), where extty is declared in x and ev is fresh.*)
+(*(2010-03-02)not withtype because it is not SML valid and even though SML/NJ
+ * does not complain, MLton does.*)
 
-type extstr = environment bind
-type strenv = environment genericEnvironment
+type extstr = env bind
+type strenv = env genericEnv
 
-type extsig = environment bind
-type sigenv = environment genericEnvironment
+type extsig = env bind
+type sigenv = env genericEnv
 
-type funsem = environment * environment
+(* functor has type env1 -> env2 *)
+type funsem = env * env
 type extfun = funsem bind
-type funenv = funsem genericEnvironment
+type funenv = funsem genericEnv
 
 (* oneContextSensitiveSyntaxError
- * these used to be in the environment but they got moved out
+ * these used to be in the env but they got moved out
  * they are now separate because the usualyl get passed through *)
-datatype oneContextSensitiveSyntaxError = CSSMULT of L.labels
-                                        | CSSCVAR of L.labels
-					| CSSEVAR of L.labels
-					| CSSECON of L.labels
-					| CSSINCL of L.labels
-					| CSSAPPL of L.labels
-					| CSSFNAM of L.labels
-					| CSSFARG of L.labels
-					| CSSTYVA of L.labels
-					| CSSLEFT of L.labels
-					| CSSFREC of L.labels
-					| CSSREAL of L.labels
-					| CSSFREE of L.labels
-					| CSSWARN of L.labels * string
-	                                | CSSPARS of L.labels * string
-type contextSensitiveSyntaxError = oneContextSensitiveSyntaxError list
+datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
+					| CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
+					| CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
+					| CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
+					| CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)
+					| CSSAPPL of Label.labels (* for applied and not applied value in pattern            *)
+					| CSSFNAM of Label.labels (* for different function names                            *)
+					| CSSFARG of Label.labels (* a function with different number of arguments           *)
+					| CSSTYVA of Label.labels (* free type variable at top-level                         *)
+					| CSSLEFT of Label.labels (* ident to left of as in pattern must be a variable       *)
+					| CSSFREC of Label.labels (* expressions within rec value bindings must be functions *)
+					| CSSREAL of Label.labels (* reals cannot occur within patterns                      *)
+					| CSSFREE of Label.labels (* free identifier                                         *)
+					| CSSWARN of Label.labels * string (* for a warning *)
+					| CSSPARS of Label.labels * string (* for a parsing problem *)
+type contextSensitiveSyntaxError       = oneContextSensitiveSyntaxError list
 
-type envcss = environment * contextSensitiveSyntaxError
+type envContextSensitiveSyntaxPair = env * contextSensitiveSyntaxError
 
 
 (* ====== FUNCTIONS ====== *)
@@ -242,12 +274,12 @@ fun printOp NONE _ = "-"
 
 fun printEvOp       x = printOp x printEnvVar
 
-fun printTnKind DAT = "DAT"
-  | printTnKind TYP = "TYP"
+fun printTnKind DATATYPE = "DATATYPE"
+  | printTnKind TYPE = "TYPE"
 
 fun printGenEnv xs ind f =
     let val ind' = ind ^ "    "
-    in #1 (environmentOrdMap.foldli
+    in #1 (envOrdMap.foldli
 	       (fn (k, x, (y, z)) =>
 		   (y ^ z ^ I.printId k ^ ":" ^ f x, "\n" ^ ind'))
 	       ("", "")
@@ -265,38 +297,38 @@ and printExtTyvList xs = printlistgen xs printExtTyv
 and printExtTypList xs = printlistgen xs printExtTyp
 and printExtSeqList xs = printlistgen xs printExtSeq
 
-and printTyvEnv xs ind = printGenEnv xs ind printExtTyvList
+and printTypeVarEnv xs ind = printGenEnv xs ind printExtTyvList
 and printVarEnv xs ind = printGenEnv xs ind printExtVarList
-and printTypEnv xs ind = printGenEnv xs ind printExtTypList
+and printTypeEnv xs ind = printGenEnv xs ind printExtTypList
 and printOvcEnv xs ind = printGenEnv xs ind printExtSeqList
 
-fun printOpnKind OST = "OST"
-  | printOpnKind DRE = "DRE"
-  | printOpnKind ISI = "ISI"
+fun printOpenKind OPENED_STRUCT = "OPENED_STRUCT"
+  | printOpenKind DATATYPE_REPLICATION = "DATATYPE_REPLICATION"
+  | printOpenKind INCLUDED_SIG = "INCLUDED_SIG"
 
-fun printOpnEnv xs ind =
+fun printOpenEnv xs ind =
     #1 (OMO.foldl
 	    (fn ((i, l, k), (y, z)) =>
 		(y ^ z ^
 		 I.printLid      i ^ ":(" ^
 		 L.printLab      l ^ ","  ^
-		 printOpnKind    k ^ ")",
+		 printOpenKind    k ^ ")",
 		 "\n" ^ ind ^ "    "))
 	    ("", "")
 	    xs)
 
-fun printTnmap xs =
+fun printTypeNameMap xs =
     printlistgen xs (fn {id, lab, kind, name} =>
-		        "(" ^ I.printId     id   ^
+			"(" ^ I.printId     id   ^
 			"," ^ L.printLab    lab  ^
 			"," ^ printTnKind   kind ^
 			"," ^ T.printTypename name ^ ")")
 
-fun printNfoEnv {lab, cmp, tns, fct} =
+fun printNfoEnv {lab, complete, infoTypeNames, argOfFunctor} =
     "(" ^ L.printLab    lab ^
-    "," ^ Bool.toString cmp ^
-    "," ^ printTnmap    tns ^
-    "," ^ Bool.toString fct ^ ")"
+    "," ^ Bool.toString complete ^
+    "," ^ printTypeNameMap    infoTypeNames ^
+    "," ^ Bool.toString argOfFunctor ^ ")"
 
 fun printEvsBind (ev1, ev2, ev3, ev4, lab) =
     "(" ^ printEnvVar ev1 ^
@@ -326,11 +358,11 @@ fun printAccId {lid, sem, class, lab} f ind ascid =
     "," ^ CL.toString class     ^
     "," ^ L.printLab lab        ^ "}"
 
-fun printMatchKind OPA = "OPA"
-  | printMatchKind TRA = "TRA"
+fun printMatchKind OPAQUE = "OPAQUE"
+  | printMatchKind TRANSLUCENT = "TRANSLUCENT"
 
-fun printLongTyp longtyp ind =
-    "LONGTYP(" ^ EL.printExtLab' longtyp (fn x => printAccId x T.printtyf' ind I.emAssoc) ^ ")"
+fun printLongTypeConsBinder longTypeConsBinder ind =
+    "LONGTYPECONSBINDER(" ^ EL.printExtLab' longTypeConsBinder (fn x => printAccId x T.printtyf' ind I.emAssoc) ^ ")"
 
 fun printExtEnv     x      = printBind' x (fn x => printEnv x "")
 and printExtEnvList xs     = printlistgen xs printExtEnv
@@ -338,16 +370,16 @@ and printFunSemList xs     = printlistgen xs (fn (x, y) => "(" ^ printExtEnv x ^
 and printSigEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printStrEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printFunEnv     xs ind = printGenEnv xs ind printFunSemList
-and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) ind =
-    "\n" ^ ind ^ "{vids:" ^ printVarEnv vids ind ^
-    "\n" ^ ind ^ " typenames:" ^ (*printTypEnv typenames ind ^*)
-    "\n" ^ ind ^ " tyvs:" ^ printTyvEnv tyvs ind ^
-    "\n" ^ ind ^ " strs:" ^ printStrEnv strs ind ^
+and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) ind =
+    "\n" ^ ind ^ "{valueIds:" ^ printVarEnv valueIds ind ^
+    "\n" ^ ind ^ " typeNames:" ^ printTypeEnv typeNames ind ^
+    "\n" ^ ind ^ " explicitTypeVars:" ^ printTypeVarEnv explicitTypeVars ind ^
+    "\n" ^ ind ^ " structs:" ^ printStrEnv structs ind ^
     "\n" ^ ind ^ " sigs:" ^ printSigEnv sigs ind ^
-    "\n" ^ ind ^ " ovcs:" ^ printOvcEnv ovcs ind ^
+    "\n" ^ ind ^ " overloadingClasses:" ^ printOvcEnv overloadingClasses ind ^
     "\n" ^ ind ^ " info:" ^ printNfoEnv info ^ "}"
-  | printEnv (ENVVAR (ev, lab))  _   = "ENVVAR(" ^ printEnvVar ev ^ "," ^ L.printLab lab ^ ")"
-  | printEnv (ENVOPN opnenv)     ind = "ENVOPN(" ^ printOpnEnv opnenv ind ^ ")"
+  | printEnv (ENV_VAR (ev, lab))  _   = "ENV_VAR(" ^ printEnvVar ev ^ "," ^ L.printLab lab ^ ")"
+  | printEnv (ENVOPN openEnv)     ind = "ENVOPN(" ^ printOpenEnv openEnv ind ^ ")"
   | printEnv (ENVDEP extenv)     ind = "ENVDEP(" ^ EL.printExtLab' extenv (fn env => printEnv env ind) ^ ")"
   | printEnv (FUNCTOR_ENV cst) ind = "CONSTRAINT_ENV(" ^ printcst' cst ind I.emAssoc ^ ")"
   | printEnv (CONSTRAINT_ENV cst) ind = "CONSTRAINT_ENV(" ^ printcst' cst ind I.emAssoc ^ ")"
@@ -355,14 +387,14 @@ and printEnv (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, 
     "SEQUENCE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
   | printEnv (LOCAL_ENV (env1, env2)) ind =
     "LOCAL_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
-  | printEnv (ENVWHR (env, longtyp)) ind =
-    "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTyp longtyp ind ^ ")"
+  | printEnv (ENVWHR (env, longTypeConsBinder)) ind =
+    "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTypeConsBinder longTypeConsBinder ind ^ ")"
   | printEnv (ENVSHA (env1, env2)) ind =
     "ENVSHA(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
   | printEnv (SIGNATURE_ENV (env1, env2, kind)) ind =
     "SIGNATURE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")"
-  | printEnv (ENVPOL (tyvenv, env)) ind =
-    "ENVPOL(" ^ printTyvEnv tyvenv ind ^ ",\n" ^ ind ^ printEnv env ind ^ ")"
+  | printEnv (ENVPOL (typeVarEnv, env)) ind =
+    "ENVPOL(" ^ printTypeVarEnv typeVarEnv ind ^ ",\n" ^ ind ^ printEnv env ind ^ ")"
   | printEnv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env)) ind =
     "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL labelledId ^ "," ^ printEnv env ind ^ ")"
   | printEnv (ENVPTY st) ind = "ENVPTY(" ^ st ^ ")"
@@ -442,29 +474,29 @@ fun getEnvVar   () = !nextEnvVar
 fun freshEnvVar () = let val x = !nextEnvVar in nextEnvVar := x + 1; x end
 fun resetEnvVar () = setNextEnvVar 0
 
-fun envVarToInt envvar = envvar
+fun envVarToInt envVar = envVar
 
-fun eqEnvVar ev1 ev2 = (ev1 = (ev2 : envvar))
+fun eqEnvVar ev1 ev2 = (ev1 = (ev2 : envVar))
 
-fun consENVVAR ev lab = ENVVAR (ev, lab)
-fun newEnvVar  lab    = consENVVAR (freshEnvVar ()) lab
+fun consENV_VAR ev lab = ENV_VAR (ev, lab)
+fun newEnvVar  lab    = consENV_VAR (freshEnvVar ()) lab
 
-fun envToEnvvar (ENVVAR ev) = ev
-  | envToEnvvar _ = raise EH.DeadBranch "the environment should be a variable"
+fun envToEnvVar (ENV_VAR ev) = ev
+  | envToEnvVar _ = raise EH.DeadBranch "the env should be a variable"
 
-fun consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info =
-    ENVIRONMENT_CONSTRUCTOR {vids = vids,
-	    typenames = typenames,
-	    tyvs = tyvs,
-	    strs = strs,
+fun consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info =
+    ENV_CONS {valueIds = valueIds,
+	    typeNames = typeNames,
+	    explicitTypeVars = explicitTypeVars,
+	    structs = structs,
 	    sigs = sigs,
-	    funs = funs,
-	    ovcs = ovcs,
+	    functors = functors,
+	    overloadingClasses = overloadingClasses,
 	    info = info}
 
-fun consInfo lab cmp tns fct = {lab = lab, cmp = cmp, tns = tns, fct = fct}
+fun consInfo lab complete infoTypeNames argOfFunctor = {lab = lab, complete = complete, infoTypeNames = infoTypeNames, argOfFunctor = argOfFunctor}
 
-val emptyMap = environmentOrdMap.empty
+val emptyMap = envOrdMap.empty
 val emvar = emptyMap
 val emtyp = emptyMap
 val emtv  = emptyMap
@@ -473,169 +505,169 @@ val emsig = emptyMap
 val emfun = emptyMap
 val emopn = OMO.empty
 val emoc  = emptyMap
-val emful = true        (* The environment is initially complete                       *)
-val emtn  = [] : tnmap  (* The environment does not initially define any type name     *)
-val emfct = false       (* The environment is initially not the parameter of a functor *)
+val emful = true        (* The env is initially complete                       *)
+val emtn  = [] : typeNameMap  (* The env does not initially define any type name     *)
+val emfct = false       (* The env is initially not the parameter of a functor *)
 val emnfo = consInfo L.dummyLab emful emtn emfct
-val emptyEnvironment = consEnvironmentConstructor emvar emtyp emtv emstr emsig emfun emoc emnfo
+val emptyEnv = consEnvConstructor emvar emtyp emtv emstr emsig emfun emoc emnfo
 
 
-(* Accessors to environments *)
+(* Accessors to envs *)
 
-fun getVids (ENVIRONMENT_CONSTRUCTOR x) = #vids x
-  | getVids _          = raise EH.DeadBranch ""
-fun getTyps (ENVIRONMENT_CONSTRUCTOR x) = #typenames x
+fun getValueIds (ENV_CONS x) = #valueIds x
+  | getValueIds _          = raise EH.DeadBranch ""
+fun getTyps (ENV_CONS x) = #typeNames x
   | getTyps _          = raise EH.DeadBranch ""
-fun getTyvs (ENVIRONMENT_CONSTRUCTOR x) = #tyvs x
-  | getTyvs _          = raise EH.DeadBranch ""
-fun getStrs (ENVIRONMENT_CONSTRUCTOR x) = #strs x
-  | getStrs _          = raise EH.DeadBranch ""
-fun getSigs (ENVIRONMENT_CONSTRUCTOR x) = #sigs x
+fun getExplicitTypeVars (ENV_CONS x) = #explicitTypeVars x
+  | getExplicitTypeVars _          = raise EH.DeadBranch ""
+fun getStructs (ENV_CONS x) = #structs x
+  | getStructs _          = raise EH.DeadBranch ""
+fun getSigs (ENV_CONS x) = #sigs x
   | getSigs _          = raise EH.DeadBranch ""
-fun getFuns (ENVIRONMENT_CONSTRUCTOR x) = #funs x
-  | getFuns _          = raise EH.DeadBranch ""
-fun getOvcs (ENVIRONMENT_CONSTRUCTOR x) = #ovcs x
-  | getOvcs _          = raise EH.DeadBranch ""
-fun getInfo (ENVIRONMENT_CONSTRUCTOR x) = #info x
+fun getFunctors (ENV_CONS x) = #functors x
+  | getFunctors _          = raise EH.DeadBranch ""
+fun getOverloadingClasses (ENV_CONS x) = #overloadingClasses x
+  | getOverloadingClasses _          = raise EH.DeadBranch ""
+fun getInfo (ENV_CONS x) = #info x
   | getInfo _          = raise EH.DeadBranch ""
-fun getILab (ENVIRONMENT_CONSTRUCTOR x) = #lab (#info x)
+fun getILab (ENV_CONS x) = #lab (#info x)
   | getILab _          = raise EH.DeadBranch ""
-fun getICmp (ENVIRONMENT_CONSTRUCTOR x) = #cmp (#info x)
-  | getICmp _          = raise EH.DeadBranch ""
-fun getIFct (ENVIRONMENT_CONSTRUCTOR x) = #fct (#info x)
-  | getIFct _          = raise EH.DeadBranch ""
-fun getITns (ENVIRONMENT_CONSTRUCTOR x)        = #tns (#info x)
-  | getITns (SEQUENCE_ENV (e1, e2)) = (getITns e1) @ (getITns e2)
-  | getITns (ENVVAR _)        = []
-  | getITns env               = (print (printEnv env ""); raise EH.DeadBranch "")
+fun getIComplete (ENV_CONS x) = #complete (#info x)
+  | getIComplete _          = raise EH.DeadBranch ""
+fun getIArgOfFunctor (ENV_CONS x) = #argOfFunctor (#info x)
+  | getIArgOfFunctor _          = raise EH.DeadBranch ""
+fun getITypeNames (ENV_CONS x)        = #infoTypeNames (#info x)
+  | getITypeNames (SEQUENCE_ENV (e1, e2)) = (getITypeNames e1) @ (getITypeNames e2)
+  | getITypeNames (ENV_VAR _)        = []
+  | getITypeNames env               = (print (printEnv env ""); raise EH.DeadBranch "")
 
 (* update fields in a record of type infoEnv *)
-fun updateInfoLab lab {lab = _, cmp, tns, fct} = consInfo lab cmp tns fct
-fun updateInfoCmp cmp {lab, cmp = _, tns, fct} = consInfo lab cmp tns fct
-fun updateInfoTns tns {lab, cmp, tns = _, fct} = consInfo lab cmp tns fct
-fun updateInfoFct fct {lab, cmp, tns, fct = _} = consInfo lab cmp tns fct
+fun updateInfoLab lab {lab = _, complete, infoTypeNames, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
+fun updateInfoComplete complete {lab, complete = _, infoTypeNames, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
+fun updateInfoTypeNames infoTypeNames {lab, complete, infoTypeNames = _, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
+fun updateInfoArgOfFunctor argOfFunctor {lab, complete, infoTypeNames, argOfFunctor = _} = consInfo lab complete infoTypeNames argOfFunctor
 
 (* modifier methods to update values of constructors of the datatype env *)
-fun updateVids vids (ENVIRONMENT_CONSTRUCTOR {vids = _, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateVids _ _ = raise EH.DeadBranch ""
-fun updateTypenames typenames (ENVIRONMENT_CONSTRUCTOR {vids, typenames = _, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateTypenames _ _ = raise EH.DeadBranch ""
-fun updateTyvs tyvs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs = _, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateTyvs _ _ = raise EH.DeadBranch ""
-fun updateStrs strs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs = _, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateStrs _ _ = raise EH.DeadBranch ""
-fun updateSigs sigs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs = _, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
+fun updateValueIds valueIds (ENV_CONS {valueIds = _, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateValueIds _ _ = raise EH.DeadBranch ""
+fun updateTypeNames typeNames (ENV_CONS {valueIds, typeNames = _, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateTypeNames _ _ = raise EH.DeadBranch ""
+fun updateExplicitTypeVars explicitTypeVars (ENV_CONS {valueIds, typeNames, explicitTypeVars = _, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateExplicitTypeVars _ _ = raise EH.DeadBranch ""
+fun updateStructs structs (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs = _, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateStructs _ _ = raise EH.DeadBranch ""
+fun updateSigs sigs (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs = _, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
   | updateSigs _ _ = raise EH.DeadBranch ""
-fun updateFuns funs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs = _, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateFuns _ _ = raise EH.DeadBranch ""
-fun updateOvcs ovcs (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs = _, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
-  | updateOvcs _ _ = raise EH.DeadBranch ""
-fun updateILab lab (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoLab lab info)
+fun updateFunctors functors (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors = _, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateFunctors _ _ = raise EH.DeadBranch ""
+fun updateOverloadingClasses overloadingClasses (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses = _, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+  | updateOverloadingClasses _ _ = raise EH.DeadBranch ""
+fun updateILab lab (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses (updateInfoLab lab info)
   | updateILab lab (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateILab lab env1, updateILab lab env2)
   | updateILab lab (LOCAL_ENV (env1, env2)) = LOCAL_ENV (env1, updateILab lab env2)
   | updateILab _ env = env
-fun updateICmp cmp (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoCmp cmp info)
-  | updateICmp _ _ = raise EH.DeadBranch ""
-fun updateInfoTypenames tns (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info as {lab, cmp, tns = _, fct}}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (consInfo lab cmp tns fct)
-  | updateInfoTypenames _ _ = raise EH.DeadBranch ""
-fun updateIFct fct (ENVIRONMENT_CONSTRUCTOR {vids, typenames, tyvs, strs, sigs, funs, ovcs, info}) =
-    consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (updateInfoFct fct info)
-  | updateIFct fct (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateIFct fct env1, updateIFct fct env2)
-  | updateIFct fct (LOCAL_ENV (env1, env2)) = LOCAL_ENV (env1, updateIFct fct env2)
-  | updateIFct _ env = env
+fun updateIComplete complete (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses (updateInfoComplete complete info)
+  | updateIComplete _ _ = raise EH.DeadBranch ""
+fun updateInfoTypeNames infoTypeNames (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info as {lab, complete, infoTypeNames = _, argOfFunctor}}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses (consInfo lab complete infoTypeNames argOfFunctor)
+  | updateInfoTypeNames _ _ = raise EH.DeadBranch ""
+fun updateIArgOfFunctor argOfFunctor (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses (updateInfoArgOfFunctor argOfFunctor info)
+  | updateIArgOfFunctor argOfFunctor (SEQUENCE_ENV (env1, env2)) = SEQUENCE_ENV (updateIArgOfFunctor argOfFunctor env1, updateIArgOfFunctor argOfFunctor env2)
+  | updateIArgOfFunctor argOfFunctor (LOCAL_ENV (env1, env2)) = LOCAL_ENV (env1, updateIArgOfFunctor argOfFunctor env2)
+  | updateIArgOfFunctor _ env = env
 
-fun projVids idG = updateVids idG emptyEnvironment
+fun projValueIds idG = updateValueIds idG emptyEnv
 
-(* constructs an empty environment with typenames *)
-fun consEnvironmentTypenames idT = updateTypenames idT emptyEnvironment
+(* constructs an empty env with typeNames *)
+fun consEnvTypeNames idT = updateTypeNames idT emptyEnv
 
-fun projTyvs idV = updateTyvs idV emptyEnvironment
-fun projStrs idS = updateStrs idS emptyEnvironment
-fun projSigs idS = updateSigs idS emptyEnvironment
-fun projFuns idF = updateFuns idF emptyEnvironment
-fun projOvcs idD = updateOvcs idD emptyEnvironment
+fun projExplicitTypeVars idV = updateExplicitTypeVars idV emptyEnv
+fun projStructs idS = updateStructs idS emptyEnv
+fun projSigs idS = updateSigs idS emptyEnv
+fun projFunctors idF = updateFunctors idF emptyEnv
+fun projOverloadingClasses idD = updateOverloadingClasses idD emptyEnv
 
 fun projOpns idO = ENVOPN idO
 
 
-fun isEmptyIdEnv idenv = environmentOrdMap.numItems idenv = 0
+fun isEmptyIdEnv idenv = envOrdMap.numItems idenv = 0
 
 fun isEmptyVarEnv varenv = isEmptyIdEnv varenv
-fun isEmptyTyvEnv tyvenv = isEmptyIdEnv tyvenv
+fun isEmptyTypeVarEnv typeVarEnv = isEmptyIdEnv typeVarEnv
 fun isEmptyStrEnv strenv = isEmptyIdEnv strenv
-fun isEmptyOpnEnv opnenv = OMO.isEmpty opnenv
+fun isEmptyOpenEnv openEnv = OMO.isEmpty openEnv
 
-(* tests whether an environment is empty *)
-fun isEmptyEnv (env as ENVIRONMENT_CONSTRUCTOR _) =
-    isEmptyIdEnv (getVids env) andalso
+(* tests whether an env is empty *)
+fun isEmptyEnv (env as ENV_CONS _) =
+    isEmptyIdEnv (getValueIds env) andalso
     isEmptyIdEnv (getTyps env) andalso
-    isEmptyIdEnv (getTyvs env) andalso
-    isEmptyIdEnv (getStrs env) andalso
+    isEmptyIdEnv (getExplicitTypeVars env) andalso
+    isEmptyIdEnv (getStructs env) andalso
     isEmptyIdEnv (getSigs env) andalso
-    isEmptyIdEnv (getFuns env) andalso
-    isEmptyIdEnv (getOvcs env)
+    isEmptyIdEnv (getFunctors env) andalso
+    isEmptyIdEnv (getOverloadingClasses env)
   | isEmptyEnv (ENVDEP extenv) = isEmptyEnv (EL.getExtLabT extenv)
   | isEmptyEnv (SEQUENCE_ENV (env1, env2)) = isEmptyEnv env1 andalso isEmptyEnv env2
   | isEmptyEnv env = false
 
-fun addenv  (v, semty) env = environmentOrdMap.insert (env,       v, semty)
+fun addenv  (v, semty) env = envOrdMap.insert (env,       v, semty)
 
-(* a function which will take an key and a value and construct a new map for environments, with a mapping of that key to that value inside it *)
-fun consSingleEnv (v, semty)     = environmentOrdMap.insert (environmentOrdMap.empty, v, semty)
+(* a function which will take an key and a value and construct a new map for envs, with a mapping of that key to that value inside it *)
+fun consSingleEnv (v, semty)     = envOrdMap.insert (envOrdMap.empty, v, semty)
 
-fun findenv id env = environmentOrdMap.find (env, id)
+fun findenv id env = envOrdMap.find (env, id)
 
-fun remenv id env = #1 (environmentOrdMap.remove (env, id)) handle LibBase.NotFound => env
+fun remenv id env = #1 (envOrdMap.remove (env, id)) handle LibBase.NotFound => env
 
-fun mapenv fmap env = environmentOrdMap.map fmap env
+fun mapenv fmap env = envOrdMap.map fmap env
 
-(* unionEnvironmentList is a function which seems to union a list of environments *)
-fun unionEnvironmentList envList =
-    foldr (fn (env1, env2) => environmentOrdMap.unionWith           (* unionWith returns a map that is the union of two maps *)
-		                 (fn (x, y) => x @ y) (* used to define the map on elements that are in the domain of both maps *)
-                                 (env1, env2))        (* the two maps that are to be unioned *)
+(* unionEnvList is a function which seems to union a list of envs *)
+fun unionEnvList envList =
+    foldr (fn (env1, env2) => envOrdMap.unionWith           (* unionWith returns a map that is the union of two maps *)
+				 (fn (x, y) => x @ y) (* used to define the map on elements that are in the domain of both maps *)
+				 (env1, env2))        (* the two maps that are to be unioned *)
 	  emptyMap (* the empty map (from the ORD_MAP signature defined in the smlnj library *)
 	  envList     (* a list of maps to union, which foldr operates on *)
 
 (*fun outenv env dom = I.foldr (fn (x, env) => remenv x env) env dom
 fun inenv  env dom = I.foldr (fn (x, cenv) =>
-				 case environmentOrdMap.find (env, x) of
+				 case envOrdMap.find (env, x) of
 				     NONE => cenv
-				   | SOME y => environmentOrdMap.insert (cenv, x, y)) emptyMap dom*)
-fun plusenv env1 env2 = environmentOrdMap.unionWith (fn (_, y) => y) (env1, env2)
+				   | SOME y => envOrdMap.insert (cenv, x, y)) emptyMap dom*)
+fun plusenv env1 env2 = envOrdMap.unionWith (fn (_, y) => y) (env1, env2)
 
-fun foldrenv  ffold init env = environmentOrdMap.foldr  ffold init env
-fun foldlenv  ffold init env = environmentOrdMap.foldl  ffold init env
-fun foldrienv ffold init env = environmentOrdMap.foldri ffold init env
-fun foldlienv ffold init env = environmentOrdMap.foldli ffold init env
+fun foldrenv  ffold init env = envOrdMap.foldr  ffold init env
+fun foldlenv  ffold init env = envOrdMap.foldl  ffold init env
+fun foldrienv ffold init env = envOrdMap.foldri ffold init env
+fun foldlienv ffold init env = envOrdMap.foldli ffold init env
 
-fun appenv  fmap env = environmentOrdMap.app  fmap env
-fun appienv fmap env = environmentOrdMap.appi fmap env
+fun appenv  fmap env = envOrdMap.app  fmap env
+fun appienv fmap env = envOrdMap.appi fmap env
 
-fun dom  env  = environmentOrdMap.foldri (fn (l, _, set) => I.add l set) I.empty env
+fun dom  env  = envOrdMap.foldri (fn (l, _, set) => I.add l set) I.empty env
 fun doms envl = foldr (fn (x, y) => I.union (dom x) y) I.empty envl
 
 fun plusproj env id = case findenv id env of NONE => [] | SOME x => x
 
 fun bindToEnv binds =
-    List.foldr (fn (x, genenv) => unionEnvironmentList [consSingleEnv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emptyMap binds
+    List.foldr (fn (x, genenv) => unionEnvList [consSingleEnv (C.getBindI (EL.getExtLabT x), [x]), genenv]) emptyMap binds
 
 fun envToBind env = foldrenv (fn ([x], binds) => x :: binds
 			       | _ => raise EH.DeadBranch "")
 			     []
 			     env
 
-fun envsToSeq [] = emptyEnvironment
+fun envsToSeq [] = emptyEnv
   | envsToSeq [env] = env
   | envsToSeq (env :: envs) =
     if isEmptyEnv env
@@ -651,24 +683,24 @@ fun uOEnv envl =
 	  emopn
 	  envl
 
-fun uenvEnvInfo {lab = lab1, cmp = cmp1, tns = tns1, fct = fct1}
-		{lab = lab2, cmp = cmp2, tns = tns2, fct = fct2} =
+fun uenvEnvInfo {lab = lab1, complete = complete1, infoTypeNames = infoTypeNames1, argOfFunctor = argOfFunctor1}
+		{lab = lab2, complete = complete2, infoTypeNames = infoTypeNames2, argOfFunctor = argOfFunctor2} =
     consInfo lab2 (*(2010-04-06)Why do we keep the second one only?*)
-	     (cmp1 andalso cmp2) (* is complete if both are complete *)
-	     (tns1 @ tns2)
-	     (fct1 orelse fct2) (* is the argument of a functor if at least one is *)
+	     (complete1 andalso complete2) (* is complete if both are complete *)
+	     (infoTypeNames1 @ infoTypeNames2)
+	     (argOfFunctor1 orelse argOfFunctor2) (* is the argument of a functor if at least one is *)
 
-fun uenvEnvC (ENVIRONMENT_CONSTRUCTOR {vids = vids1, typenames = typs1, tyvs = tyvs1, strs = strs1,
-		      sigs = sigs1, funs = funs1, ovcs = ovcs1, info = info1})
-	     (ENVIRONMENT_CONSTRUCTOR {vids = vids2, typenames = typs2, tyvs = tyvs2, strs = strs2,
-		      sigs = sigs2, funs = funs2, ovcs = ovcs2, info = info2}) =
-         consEnvironmentConstructor (unionEnvironmentList [vids1, vids2])
-	     (unionEnvironmentList [typs1, typs2])
-	     (unionEnvironmentList [tyvs1, tyvs2])
-	     (unionEnvironmentList [strs1, strs2])
-	     (unionEnvironmentList [sigs1, sigs2])
-	     (unionEnvironmentList [funs1, funs2])
-	     (unionEnvironmentList [ovcs1, ovcs2])
+fun uenvEnvC (ENV_CONS {valueIds = valueIds1, typeNames = typs1, explicitTypeVars = explicitTypeVars1, structs = structs1,
+		      sigs = sigs1, functors = functors1, overloadingClasses = overloadingClasses1, info = info1})
+	     (ENV_CONS {valueIds = valueIds2, typeNames = typs2, explicitTypeVars = explicitTypeVars2, structs = structs2,
+		      sigs = sigs2, functors = functors2, overloadingClasses = overloadingClasses2, info = info2}) =
+	 consEnvConstructor (unionEnvList [valueIds1, valueIds2])
+	     (unionEnvList [typs1, typs2])
+	     (unionEnvList [explicitTypeVars1, explicitTypeVars2])
+	     (unionEnvList [structs1, structs2])
+	     (unionEnvList [sigs1, sigs2])
+	     (unionEnvList [functors1, functors2])
+	     (unionEnvList [overloadingClasses1, overloadingClasses2])
 	     (uenvEnvInfo info1 info2)
   | uenvEnvC x y =
     if isEmptyEnv x
@@ -677,25 +709,26 @@ fun uenvEnvC (ENVIRONMENT_CONSTRUCTOR {vids = vids1, typenames = typs1, tyvs = t
     then x
     else SEQUENCE_ENV (x, y)
 
-fun uenvEnv [] = emptyEnvironment
-  | uenvEnv ((SEQUENCE_ENV (env1, env2)) :: xs) = uenvEnv (env1 :: env2 :: xs)
-  | uenvEnv [x] = x
-  | uenvEnv (x :: xs) = uenvEnvC x (uenvEnv xs)
+(* union of an env *)
+fun unionEnv [] = emptyEnv
+  | unionEnv ((SEQUENCE_ENV (env1, env2)) :: xs) = unionEnv (env1 :: env2 :: xs)
+  | unionEnv [x] = x
+  | unionEnv (x :: xs) = uenvEnvC x (unionEnv xs)
 
-fun closeVids vids clos =
+fun closeValueIds valueIds clos =
     mapenv (fn sem => map (fn x => EL.mapExtLab x (fn x => C.closeBind x clos)) sem)
-	   vids
+	   valueIds
 
-fun plusEnv (env1 as ENVIRONMENT_CONSTRUCTOR _) (env2 as ENVIRONMENT_CONSTRUCTOR _) =
-    let val vids = plusenv (getVids env1) (getVids env2)
-	val typenames = plusenv (getTyps env1) (getTyps env2)
-	val tyvs = plusenv (getTyvs env1) (getTyvs env2)
-	val strs = plusenv (getStrs env1) (getStrs env2)
+fun plusEnv (env1 as ENV_CONS _) (env2 as ENV_CONS _) =
+    let val valueIds = plusenv (getValueIds env1) (getValueIds env2)
+	val typeNames = plusenv (getTyps env1) (getTyps env2)
+	val explicitTypeVars = plusenv (getExplicitTypeVars env1) (getExplicitTypeVars env2)
+	val structs = plusenv (getStructs env1) (getStructs env2)
 	val sigs = plusenv (getSigs env1) (getSigs env2)
-	val funs = plusenv (getFuns env1) (getFuns env2)
-	val ovcs = plusenv (getOvcs env1) (getOvcs env2)
+	val functors = plusenv (getFunctors env1) (getFunctors env2)
+	val overloadingClasses = plusenv (getOverloadingClasses env1) (getOverloadingClasses env2)
 	val info = uenvEnvInfo (getInfo env1) (getInfo env2)
-	val env = consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
+	val env = consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
     in env
     end
   | plusEnv (SEQUENCE_ENV (env1, env2)) env3 = SEQUENCE_ENV (env1, plusEnv env2 env3)
@@ -715,21 +748,21 @@ fun pushExtIdEnv idenv labs stts deps(* f*) =
 			  sem)
 	   idenv
 
-fun pushExtEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs stts deps =
+fun pushExtEnv (env as ENV_CONS _) labs stts deps =
     if isEmptyEnv env
     then ENVDEP (env, labs, stts, deps)
-    else let val vids = pushExtIdEnv (getVids env) labs stts deps(* dumPush*)
-	     val typenames = pushExtIdEnv (getTyps env) labs stts deps(* dumPush*)
-	     val tyvs = pushExtIdEnv (getTyvs env) labs stts deps(* dumPush*)
-	     val strs = pushExtIdEnv (getStrs env) labs stts deps(* pushExtEnv*)
+    else let val valueIds = pushExtIdEnv (getValueIds env) labs stts deps(* dumPush*)
+	     val typeNames = pushExtIdEnv (getTyps env) labs stts deps(* dumPush*)
+	     val explicitTypeVars = pushExtIdEnv (getExplicitTypeVars env) labs stts deps(* dumPush*)
+	     val structs = pushExtIdEnv (getStructs env) labs stts deps(* pushExtEnv*)
 	     val sigs = pushExtIdEnv (getSigs env) labs stts deps(* pushExtEnv*)
-	     val funs = pushExtIdEnv (getFuns env) labs stts deps(* pushExtFunEnv*)
-	     val ovcs = pushExtIdEnv (getOvcs env) labs stts deps(* dumPush*)
-	 in consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs (getInfo env)
+	     val functors = pushExtIdEnv (getFunctors env) labs stts deps(* pushExtFunEnv*)
+	     val overloadingClasses = pushExtIdEnv (getOverloadingClasses env) labs stts deps(* dumPush*)
+	 in consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses (getInfo env)
 	 end
   | pushExtEnv (SEQUENCE_ENV (env1, env2)) labs stts deps =
     SEQUENCE_ENV (pushExtEnv env1 labs stts deps, pushExtEnv env2 labs stts deps)
-  (*(2010-06-09)NOTE: we shouldn't need to push onto env1 because this environment
+  (*(2010-06-09)NOTE: we shouldn't need to push onto env1 because this env
    * should be useless. *)
   | pushExtEnv (ENVDEP (env, labs0, stts0, deps0)) labs stts deps =
     pushExtEnv env (L.union labs0 labs) (L.union stts0 stts) (CD.union deps0 deps)
@@ -782,8 +815,8 @@ fun getnbcst' cst =
 	      0
 	      cst
 
-and getnbcstenv (ENVIRONMENT_CONSTRUCTOR _) = 0
-  | getnbcstenv (ENVVAR _) = 0
+and getnbcstenv (ENV_CONS _) = 0
+  | getnbcstenv (ENV_VAR _) = 0
   | getnbcstenv (SEQUENCE_ENV (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (LOCAL_ENV (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
   | getnbcstenv (ENVSHA (env1, env2)) = (getnbcstenv env1) + (getnbcstenv env2)
@@ -812,40 +845,40 @@ fun getnbcs (env, css) = (getnbcstenv env) + (getnbcss' css)
 (* we get the labels at the csbindings *)
 
 fun getlabsidenv idenv =
-    environmentOrdMap.foldr
+    envOrdMap.foldr
 	(fn (sem, labs) => L.union (L.ord (map (fn (x, _, _, _) => C.getBindL x) sem)) labs)
 	L.empty
 	idenv
 
-fun getlabopnenv opnenv =
-    OMO.foldl (fn ((_, lab, _), set) => L.cons lab set) L.empty opnenv
+fun getlabopenEnv openEnv =
+    OMO.foldl (fn ((_, lab, _), set) => L.cons lab set) L.empty openEnv
 
 fun combineLabsEnv (outlabs1, inlabs1) (outlabs2, inlabs2) =
     (outlabs1 @ outlabs2, L.union inlabs1 inlabs2)
 
-fun getlabsenv (env as ENVIRONMENT_CONSTRUCTOR _) =
-    let val labsVids = getlabsidenv (getVids env)
+fun getlabsenv (env as ENV_CONS _) =
+    let val labsValueIds = getlabsidenv (getValueIds env)
 	val labsTyps = getlabsidenv (getTyps env)
-	val labsTyvs = getlabsidenv (getTyvs env)
-	val labsStrs = getlabsidenv (getStrs env)
+	val labsExplicitTypeVars = getlabsidenv (getExplicitTypeVars env)
+	val labsStructs = getlabsidenv (getStructs env)
 	val labsSigs = getlabsidenv (getSigs env)
-	val labsFuns = getlabsidenv (getFuns env)
-	val labsOvcs = getlabsidenv (getOvcs env)
+	val labsFunctors = getlabsidenv (getFunctors env)
+	val labsOverloadingClasses = getlabsidenv (getOverloadingClasses env)
 	(*(2010-04-06)Functors and type variables ?*)
-    in ([L.unions [labsVids, labsTyps, labsTyvs, labsStrs, labsSigs, labsFuns, labsOvcs]], L.empty)
+    in ([L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses]], L.empty)
     end
   | getlabsenv (SEQUENCE_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (LOCAL_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVSHA (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (SIGNATURE_ENV (env1, env2, _)) = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
-  | getlabsenv (ENVWHR (env, _))        = getlabsenv env (*Don't we want to get the label of the longtyp?*)
-  | getlabsenv (ENVPOL (tyvenv, env))   = combineLabsEnv ([getlabsidenv tyvenv], L.empty) (getlabsenv env)
+  | getlabsenv (ENVWHR (env, _))        = getlabsenv env (*Don't we want to get the label of the longTypeConsBinder?*)
+  | getlabsenv (ENVPOL (typeVarEnv, env))   = combineLabsEnv ([getlabsidenv typeVarEnv], L.empty) (getlabsenv env)
   | getlabsenv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env))      = getlabsenv env
-  | getlabsenv (ENVOPN opnenv)          = ([getlabopnenv opnenv], L.empty)
+  | getlabsenv (ENVOPN openEnv)          = ([getlabopenEnv openEnv], L.empty)
   | getlabsenv (ENVDEP eenv)            = getlabsenv (EL.getExtLabT eenv)
   | getlabsenv (FUNCTOR_ENV cst)             = getlabscst cst
   | getlabsenv (CONSTRAINT_ENV cst)             = getlabscst cst
-  | getlabsenv (ENVVAR _)               = ([], L.empty)
+  | getlabsenv (ENV_VAR _)               = ([], L.empty)
   | getlabsenv (ENVPTY _)               = ([], L.empty)
   | getlabsenv (ENVFIL (f, env, strm))  = combineLabsEnv (getlabsenv env) (getlabsenv (strm ()))
   | getlabsenv ENVTOP                   = ([], L.empty)
@@ -906,55 +939,55 @@ fun genAccIfEm x lab = FUNCTOR_ACCESSOR (EL.initExtLab x lab)
 
 fun isMonoBind bind = P.isMono (getBindP bind)
 
-fun toMonoVids vids labs =
+fun toMonoValueIds valueIds labs =
     mapenv (fn sems => map (fn extlab => EL.mapExtLab extlab (fn x => C.toMonoBind x (L.cons (getBindL extlab) labs))) sems)
-	   vids
+	   valueIds
 
-fun toPolyVids vids =
+fun toPolyValueIds valueIds =
     mapenv (fn sems => map (fn extlab => EL.mapExtLab extlab (fn x => C.toPolyBind x)) sems)
-	   vids
+	   valueIds
 
-fun toRECVids vids labs =
+fun toRECValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toREC) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toPATVids vids labs =
+fun toPATValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toPAT) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toEX0Vids vids labs =
+fun toEX0ValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX0) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toEX1Vids vids labs =
+fun toEX1ValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX1) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toDA0Vids vids labs =
+fun toDA0ValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA0) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toDA1Vids vids labs =
+fun toDA1ValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA1) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toDATVids vids labs =
+fun toDATValueIds valueIds labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDAT) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
-fun toCLSVids vids cls labs =
+fun toCLSValueIds valueIds cls labs =
     mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x (fn x => C.toCLS x cls)) labs L.empty CD.empty) sems)
-	   vids
+	   valueIds
 
 (* We have DAT here because this is only used for datatypes and datatype descriptions. *)
-(* WARNING: typenames here may not be typenames! It's this environment that's been going around! *)
-fun toTYCONTyps typenames cons b labs =
-    let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DAT, ref (cons, b)))
+(* WARNING: typeNames here may not be typeNames! It's this env that's been going around! *)
+fun toTYCONTyps typeNames cons b labs =
+    let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DATATYPE, ref (cons, b)))
     in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)
-	      typenames
+	      typeNames
     end
 
-fun allEqualVids vids =
+fun allEqualValueIds valueIds =
     let val ty = T.newTYPE_VAR ()
     in foldrenv (fn (sems, cst) =>
 		    foldr (fn (bind, cst) =>
@@ -966,55 +999,57 @@ fun allEqualVids vids =
 			  cst
 			  sems)
 		emptyConstraint
-		vids
+		valueIds
     end
 
-(* Generates an environment from a long identifier and a type function *)
+(* Generates an env from a long identifier and a type function *)
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshTypeFunctionVar ()
 	val c    = initFunctionTypeConstraint (T.consTYPE_FUNCTION_VAR tfv) tyfun lab
-	val typenames = consSingleEnv (id, [consBindPoly id (T.consTYPE_FUNCTION_VAR tfv, TYP, ref (emvar, false)) (CL.consTYCON ()) lab])
-    in (singleConstraint (lab, c), consEnvironmentTypenames typenames)
+	val typeNames = consSingleEnv (id, [consBindPoly id (T.consTYPE_FUNCTION_VAR tfv, TYPE, ref (emvar, false)) (CL.consTYCON ()) lab])
+    in (singleConstraint (lab, c), consEnvTypeNames typeNames)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
     let val (cst, env1) = genLongEnv lid tyfun
 	val ev1  = freshEnvVar ()
 	val ev2  = freshEnvVar ()
-	val c1   = initEnvConstraint (consENVVAR ev1 lab1) env1 lab1
-	val c2   = initEnvConstraint (consENVVAR ev2 lab2) (consENVVAR ev1 lab2) lab2
-	val strs = consSingleEnv (id, [consBindPoly id (consENVVAR ev2 lab1) (CL.consSTR ()) lab1])
-    in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStrs strs)
+	val c1   = initEnvConstraint (consENV_VAR ev1 lab1) env1 lab1
+	val c2   = initEnvConstraint (consENV_VAR ev2 lab2) (consENV_VAR ev1 lab2) lab2
+	val structs = consSingleEnv (id, [consBindPoly id (consENV_VAR ev2 lab1) (CL.consSTR ()) lab1])
+    in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStructs structs)
     end
 
 
-(* Checks whether the environment is composed by at least an environment variable. *)
-fun hasEnvVar (ENVVAR _)            = true
+(* Checks whether the env is composed by at least an env variable. *)
+fun hasEnvVar (ENV_VAR _)            = true
   | hasEnvVar (SEQUENCE_ENV (env1, env2)) = hasEnvVar env2 orelse hasEnvVar env1
   | hasEnvVar (ENVDEP extenv)       = hasEnvVar (EL.getExtLabT extenv)
   | hasEnvVar _                     = false
 
 
-(* Checks the second element in infoEnv (complete environment). *)
+(* Checks the second element in infoEnv (complete env). *)
 (* Should we check the label as well? *)
-fun completeEnv (env as ENVIRONMENT_CONSTRUCTOR _)     = getICmp env
+(* true if a the env is complete: checks the second element in infoEnv
+ * of an ENVC (false if not a ENVC). *)
+fun completeEnv (env as ENV_CONS _)     = getIComplete env
   | completeEnv (SEQUENCE_ENV (env1, env2)) = completeEnv env2 andalso completeEnv env1
   | completeEnv (ENVDEP extenv)       = completeEnv (EL.getExtLabT extenv)
   | completeEnv  _                    = false
 
-(*(* Marks an environment as being incomplete. *)
-fun toIncompleteEnv (env as ENVIRONMENT_CONSTRUCTOR _) = updateICmp false env
+(*(* Marks an env as being incomplete. *)
+fun toIncompleteEnv (env as ENV_CONS _) = updateIComplete false env
   | toIncompleteEnv x = x*)
 
 
-fun isEnvV (ENVVAR _) = true
-  | isEnvV _ = false
+fun isENV_VAR (ENV_VAR _) = true
+  | isENV_VAR _ = false
 
-(* Checks if the environment is a ENVIRONMENT_CONSTRUCTOR *)
-fun isEnvC (ENVIRONMENT_CONSTRUCTOR _) = true
-  | isEnvC _ = false
+(* Checks if the env is a ENV_CONS *)
+fun isENV_CONS (ENV_CONS _) = true
+  | isENV_CONS _ = false
 
 
-(* Returns the labels of environments *)
+(* Returns the labels of envs *)
 (* n is just some debugging info *)
 fun getLabsIdsGenEnv idenv =
     foldrienv (fn (id, semty, (lids, labs)) =>
@@ -1029,37 +1064,37 @@ fun getLabsIdsGenEnv idenv =
 	      ([], L.empty)
 	      idenv
 
-(* Returns the ids (as integers) of an environment along with the associated labels.
+(* Returns the ids (as integers) of an env along with the associated labels.
  * The int is a debugging info.
  * This function is only used by our unification algorithm (in Unification.sml). *)
-fun getLabsIdsEnv (env as ENVIRONMENT_CONSTRUCTOR _) n =
-    let val (idlabsVids, labsVids) = getLabsIdsGenEnv (getVids env)
+fun getLabsIdsEnv (env as ENV_CONS _) n =
+    let val (idlabsValueIds, labsValueIds) = getLabsIdsGenEnv (getValueIds env)
 	val (idlabsTyps, labsTyps) = getLabsIdsGenEnv (getTyps env)
-	val (idlabsTyvs, labsTyvs) = getLabsIdsGenEnv (getTyvs env)
-	val (idlabsStrs, labsStrs) = getLabsIdsGenEnv (getStrs env)
+	val (idlabsExplicitTypeVars, labsExplicitTypeVars) = getLabsIdsGenEnv (getExplicitTypeVars env)
+	val (idlabsStructs, labsStructs) = getLabsIdsGenEnv (getStructs env)
 	val (idlabsSigs, labsSigs) = getLabsIdsGenEnv (getSigs env)
-	val (idlabsFuns, labsFuns) = getLabsIdsGenEnv (getFuns env)
-	val (idlabsOvcs, labsOvcs) = getLabsIdsGenEnv (getOvcs env)
-    in (idlabsVids @ idlabsTyps @ idlabsTyvs @ idlabsStrs @ idlabsSigs @ idlabsFuns @ idlabsOvcs,
-	L.unions [labsVids, labsTyps, labsTyvs, labsStrs, labsSigs, labsFuns, labsOvcs])
+	val (idlabsFunctors, labsFunctors) = getLabsIdsGenEnv (getFunctors env)
+	val (idlabsOverloadingClasses, labsOverloadingClasses) = getLabsIdsGenEnv (getOverloadingClasses env)
+    in (idlabsValueIds @ idlabsTyps @ idlabsExplicitTypeVars @ idlabsStructs @ idlabsSigs @ idlabsFunctors @ idlabsOverloadingClasses,
+	L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses])
     end
   | getLabsIdsEnv _ _ = raise EH.DeadBranch "" (*([], L.empty)*)
 
 
-(* Returns the label associated to a environment (dummylab if not an ENVIRONMENT_CONSTRUCTOR).
- * This function is only used for complete environments which are ENVIRONMENT_CONSTRUCTORs.
+(* Returns the label associated to a env (dummylab if not an ENV_CONS).
+ * This function is only used for complete envs which are ENV_CONSs.
  * It is only used in Unification.sml.*)
-fun getLabEnv (env as ENVIRONMENT_CONSTRUCTOR _) = getILab env
+fun getLabEnv (env as ENV_CONS _) = getILab env
   | getLabEnv _                 = raise EH.DeadBranch "" (*L.dummyLab*)
 
 
 
 
-(* Extract the type names defined in a type constructor environment *)
-fun getTypenames typenames =
-    foldrienv (fn (id, sem, tnmap) =>
-		  List.foldr (fn (bind, tnmap) =>
-				 let val (tf, tnKind, _) = getBindT bind
+(* Extract the type names defined in a type constructor env *)
+fun getTypeNames typeNames =
+    foldrienv (fn (id, sem, typeNameMap) =>
+		  List.foldr (fn (bind, typeNameMap) =>
+				 let val (tf, typeNameKind, _) = getBindT bind
 				     val lab = getBindL bind
 				     val (names, labs, stts, deps) = T.isTypename tf
 				 in case names of
@@ -1067,28 +1102,28 @@ fun getTypenames typenames =
 					let val labs  = L.union  labs (EL.getExtLabL bind)
 					    val stts  = L.union  stts (EL.getExtLabE bind)
 					    val deps  = CD.union deps (EL.getExtLabD bind)
-					    val tname = {id = id, lab = lab, kind = tnKind, name = name}
+					    val tname = {id = id, lab = lab, kind = typeNameKind, name = name}
 					    val names = TYPENAME (tname, labs, stts, deps)
-					in names :: tnmap
+					in names :: typeNameMap
 					end
 				      | T.DUMTYPENAME name =>
-					let val tname = {id = id, lab = lab, kind = tnKind, name = name}
+					let val tname = {id = id, lab = lab, kind = typeNameKind, name = name}
 					    val names = DUMTYPENAME tname
-					in names :: tnmap
+					in names :: typeNameMap
 					end
-				      | T.MAYTYPENAME => tnmap
+				      | T.MAYTYPENAME => typeNameMap
 				      | T.NOTTYPENAME =>
 					let val labs  = L.union  labs (EL.getExtLabL bind)
 					    val stts  = L.union  stts (EL.getExtLabE bind)
 					    val deps  = CD.union deps (EL.getExtLabD bind)
 					    val names = NOTTYPENAME (id, labs, stts, deps)
-					in names :: tnmap
+					in names :: typeNameMap
 					end
 				 end)
-			     tnmap
+			     typeNameMap
 			     sem)
 	      []
-	      typenames
+	      typeNames
 
 
 
@@ -1102,47 +1137,47 @@ fun testlab lab labs = L.eq lab L.dummyLab
 fun testlabs labs1 labs2 = L.subseteq labs1 (L.cons L.dummyLab (L.cons L.builtinLab labs2))
 
 fun filterIdEnv idenv labs =
-    environmentOrdMap.foldri (fn (id, sem, (idenv, cmp)) =>
-		   let val (sem', cmp') =
-			   foldr (fn (bind, (sem, cmp)) =>
+    envOrdMap.foldri (fn (id, sem, (idenv, complete)) =>
+		   let val (sem', complete') =
+			   foldr (fn (bind, (sem, complete)) =>
 				     if testlabs (EL.getExtLabL bind) labs
-				     then (bind :: sem, cmp)
-				     else (sem, cmp(*false*)))
-				 ([], cmp)
+				     then (bind :: sem, complete)
+				     else (sem, complete(*false*)))
+				 ([], complete)
 				 sem
 		   in if List.null sem'
 		      then (idenv, false)
-		      else (addenv (id, sem') idenv, cmp')
+		      else (addenv (id, sem') idenv, complete')
 		   end)
 	       (emptyMap, true)
 	       idenv
 
-fun filterOpnEnv opnenv labs =
-    let val opnenv' =
-	    OMO.foldr (fn (opnsem as (lid, lab, kind), opnenv) =>
+fun filterOpenEnv openEnv labs =
+    let val openEnv' =
+	    OMO.foldr (fn (openSem as (lid, lab, kind), openEnv) =>
 			  if testlab lab labs
-			  then addOEnv opnsem opnenv
-			  else opnenv)
+			  then addOEnv openSem openEnv
+			  else openEnv)
 		      emopn
-		      opnenv
-    in if OMO.isEmpty opnenv'
+		      openEnv
+    in if OMO.isEmpty openEnv'
        then NONE
-       else SOME opnenv'
+       else SOME openEnv'
     end
 
-fun filterLongTyp (longtyp as ({lid, sem, class, lab}, _, _, _)) labs =
+fun filterLongTypeConsBinder (longTypeConsBinder as ({lid, sem, class, lab}, _, _, _)) labs =
     if testlab lab labs
-    then SOME longtyp
+    then SOME longTypeConsBinder
     else NONE
 
-fun toIncomplete (env as ENVIRONMENT_CONSTRUCTOR _)               = updateICmp false env
+fun toIncomplete (env as ENV_CONS _)               = updateIComplete false env
   | toIncomplete (env as SEQUENCE_ENV (env1, env2))    = SEQUENCE_ENV (toIncomplete env1, toIncomplete env2)
-  | toIncomplete (env as ENVVAR _)               = env
+  | toIncomplete (env as ENV_VAR _)               = env
   | toIncomplete (env as LOCAL_ENV (env1, env2))    = SEQUENCE_ENV (env1, toIncomplete env2)
-  | toIncomplete (env as ENVWHR (env1, longtyp)) = ENVWHR (toIncomplete env1, longtyp)
+  | toIncomplete (env as ENVWHR (env1, longTypeConsBinder)) = ENVWHR (toIncomplete env1, longTypeConsBinder)
   | toIncomplete (env as ENVSHA (env1, env2))    = ENVSHA (toIncomplete env1, env2)
   | toIncomplete (env as SIGNATURE_ENV (env1, env2, l)) = SIGNATURE_ENV (toIncomplete env1, env2, l)
-  | toIncomplete (env as ENVPOL (tyvenv, env1))  = ENVPOL (tyvenv, toIncomplete env1)
+  | toIncomplete (env as ENVPOL (typeVarEnv, env1))  = ENVPOL (typeVarEnv, toIncomplete env1)
   | toIncomplete (env as DATATYPE_CONSTRUCTOR_ENV (labelledId, env1))     = DATATYPE_CONSTRUCTOR_ENV (labelledId, toIncomplete env1)
   | toIncomplete (env as ENVOPN _)               = env
   | toIncomplete (env as ENVDEP eenv)            = ENVDEP (EL.mapExtLab eenv toIncomplete)
@@ -1160,8 +1195,8 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as ENV_CONSTRAINT ((env1, env2), labs0, stts0, deps0)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (ENV_CONSTRAINT ((env1', env2'), labs0, stts0, deps0))
-       | (SOME env1', NONE)       => SOME (ENV_CONSTRAINT ((env1', emptyEnvironment), labs0, stts0, deps0))
-       | (NONE,       SOME env2') => SOME (ENV_CONSTRAINT ((emptyEnvironment, env2'), labs0, stts0, deps0))
+       | (SOME env1', NONE)       => SOME (ENV_CONSTRAINT ((env1', emptyEnv), labs0, stts0, deps0))
+       | (NONE,       SOME env2') => SOME (ENV_CONSTRAINT ((emptyEnv, env2'), labs0, stts0, deps0))
        | (NONE,       NONE)       => NONE)
   | filterOcst (oneConstraint as IDENTIFIER_CLASS_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as FUNCTION_TYPE_CONSTRAINT _) labs = SOME oneConstraint
@@ -1183,22 +1218,22 @@ and filterCst (CONSTRAINTS oneConstraint) labs =
 			      else NONE)
 			  oneConstraint)
 
-and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
-    let val (vids, cmpVids) = filterIdEnv (getVids env) labs
-	val (typenames, cmpTyps) = filterIdEnv (getTyps env) labs
-	val (tyvs, cmpTyvs) = filterIdEnv (getTyvs env) labs
-	val (strs, cmpStrs) = filterIdEnv (getStrs env) labs
-	val (sigs, cmpSigs) = filterIdEnv (getSigs env) labs
-	val (funs, cmpFuns) = filterIdEnv (getFuns env) labs
-	val (ovcs, cmpOvcs) = filterIdEnv (getOvcs env) labs
-	val cmp  = cmpVids andalso cmpTyps andalso cmpTyvs andalso
-		   cmpStrs andalso cmpSigs andalso cmpFuns andalso
-		   cmpOvcs andalso getICmp env
-	val info = consInfo (getILab env) cmp (getITns env) (getIFct env)
-	val env' = consEnvironmentConstructor vids typenames tyvs strs sigs funs ovcs info
+and filterEnv (env as ENV_CONS _) labs =
+    let val (valueIds, completeValueIds) = filterIdEnv (getValueIds env) labs
+	val (typeNames, completeTyps) = filterIdEnv (getTyps env) labs
+	val (explicitTypeVars, completeExplicitTypeVars) = filterIdEnv (getExplicitTypeVars env) labs
+	val (structs, completeStructs) = filterIdEnv (getStructs env) labs
+	val (sigs, completeSigs) = filterIdEnv (getSigs env) labs
+	val (functors, completeFunctors) = filterIdEnv (getFunctors env) labs
+	val (overloadingClasses, completeOverloadingClasses) = filterIdEnv (getOverloadingClasses env) labs
+	val complete  = completeValueIds andalso completeTyps andalso completeExplicitTypeVars andalso
+		   completeStructs andalso completeSigs andalso completeFunctors andalso
+		   completeOverloadingClasses andalso getIComplete env
+	val info = consInfo (getILab env) complete (getITypeNames env) (getIArgOfFunctor env)
+	val env' = consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
     in SOME env'
     end
-  | filterEnv (env as ENVVAR _) labs = SOME env
+  | filterEnv (env as ENV_VAR _) labs = SOME env
   | filterEnv (env as SEQUENCE_ENV (env1, env2)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (SEQUENCE_ENV (env1', env2'))
@@ -1208,43 +1243,43 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
   | filterEnv (env as LOCAL_ENV (env1, env2)) labs =
     (case (filterEnv env1 labs , filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (LOCAL_ENV (env1', env2'))
-       | (SOME env1', NONE)       => SOME (LOCAL_ENV (env1', updateICmp false emptyEnvironment))
+       | (SOME env1', NONE)       => SOME (LOCAL_ENV (env1', updateIComplete false emptyEnv))
        | (NONE,       SOME env2') => SOME env2'
        | (NONE,       NONE)       => NONE)
-  | filterEnv (env as ENVWHR (env1, longtyp)) labs =
-    (case (filterEnv env1 labs, filterLongTyp longtyp labs) of
-	 (SOME env1', SOME longtyp') => SOME (ENVWHR (env1', longtyp'))
+  | filterEnv (env as ENVWHR (env1, longTypeConsBinder)) labs =
+    (case (filterEnv env1 labs, filterLongTypeConsBinder longTypeConsBinder labs) of
+	 (SOME env1', SOME longTypeConsBinder') => SOME (ENVWHR (env1', longTypeConsBinder'))
        | (SOME env1', NONE)          => SOME env1'
-       | (NONE,       SOME longtyp') => SOME (ENVWHR (updateICmp false emptyEnvironment, longtyp'))
+       | (NONE,       SOME longTypeConsBinder') => SOME (ENVWHR (updateIComplete false emptyEnv, longTypeConsBinder'))
        | (NONE,       NONE)          => NONE)
   | filterEnv (env as ENVSHA (env1, env2)) labs =
     (case (filterEnv env1 labs , filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (ENVSHA (env1', env2'))
        | (SOME env1', NONE)       => SOME env1'
-       | (NONE,       SOME env2') => SOME (ENVSHA (updateICmp false emptyEnvironment, env2'))
+       | (NONE,       SOME env2') => SOME (ENVSHA (updateIComplete false emptyEnv, env2'))
        | (NONE,       NONE)       => NONE)
   | filterEnv (env as SIGNATURE_ENV (env1, env2, kind)) labs =
     (case (filterEnv env1 labs , filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (SIGNATURE_ENV (env1', env2', kind))
-       | (SOME env1', NONE)       => SOME (SIGNATURE_ENV (env1', updateICmp false emptyEnvironment, kind))
-       | (NONE,       SOME env2') => SOME (SIGNATURE_ENV (updateICmp false emptyEnvironment, env2', kind))
+       | (SOME env1', NONE)       => SOME (SIGNATURE_ENV (env1', updateIComplete false emptyEnv, kind))
+       | (NONE,       SOME env2') => SOME (SIGNATURE_ENV (updateIComplete false emptyEnv, env2', kind))
        | (NONE,       NONE)       => NONE)
-  | filterEnv (env as ENVPOL (tyvenv, env1)) labs =
-    (case (filterIdEnv tyvenv labs , filterEnv env1 labs) of
-	 ((tyvenv', _), SOME env1') => SOME (ENVPOL (tyvenv', env1'))
-       | ((tyvenv', _), NONE)       =>
-	 if isEmptyIdEnv tyvenv'
+  | filterEnv (env as ENVPOL (typeVarEnv, env1)) labs =
+    (case (filterIdEnv typeVarEnv labs , filterEnv env1 labs) of
+	 ((typeVarEnv', _), SOME env1') => SOME (ENVPOL (typeVarEnv', env1'))
+       | ((typeVarEnv', _), NONE)       =>
+	 if isEmptyIdEnv typeVarEnv'
 	 then NONE
-	 else SOME (ENVPOL (tyvenv', updateICmp false emptyEnvironment)))
+	 else SOME (ENVPOL (typeVarEnv', updateIComplete false emptyEnv)))
   | filterEnv (env as DATATYPE_CONSTRUCTOR_ENV (labelledId as (id, lab), env1)) labs =
     (case filterEnv env1 labs of
 	 SOME env1' => SOME (DATATYPE_CONSTRUCTOR_ENV (labelledId, env1'))
        | NONE       => if testlab lab labs
-		       then SOME (DATATYPE_CONSTRUCTOR_ENV (labelledId, updateICmp false emptyEnvironment))
+		       then SOME (DATATYPE_CONSTRUCTOR_ENV (labelledId, updateIComplete false emptyEnv))
 		       else NONE)
-  | filterEnv (env as ENVOPN opnenv) labs =
-    (case filterOpnEnv opnenv labs of
-	 SOME opnenv' => SOME (ENVOPN opnenv')
+  | filterEnv (env as ENVOPN openEnv) labs =
+    (case filterOpenEnv openEnv labs of
+	 SOME openEnv' => SOME (ENVOPN openEnv')
        | NONE         => NONE)
   | filterEnv (env as ENVDEP (env1, labs1, stts1, deps1)) labs =
     if testlabs labs1 labs
@@ -1266,12 +1301,12 @@ and filterEnv (env as ENVIRONMENT_CONSTRUCTOR _) labs =
   | filterEnv (env as ENVFIL (file, e, strm)) labs =
     (case (filterEnv e labs, filterEnv (strm ()) labs) of
 	 (SOME env1, SOME env2) => SOME (ENVFIL (file, env1, fn () => env2))
-       | (SOME env1, NONE)      => SOME (ENVFIL (file, env1, fn () => emptyEnvironment))
-       | (NONE,      SOME env2) => SOME (ENVFIL (file, emptyEnvironment, fn () => env2))
+       | (SOME env1, NONE)      => SOME (ENVFIL (file, env1, fn () => emptyEnv))
+       | (NONE,      SOME env2) => SOME (ENVFIL (file, emptyEnv, fn () => env2))
        | (NONE,      NONE)      => NONE)
   | filterEnv (env as ENVTOP) _ = SOME env
 
-
-val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateICmp false emptyEnvironment | SOME env' => env'
+(* Filters the constraintss that are not in the label set *)
+val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateIComplete false emptyEnv | SOME env' => env'
 
 end

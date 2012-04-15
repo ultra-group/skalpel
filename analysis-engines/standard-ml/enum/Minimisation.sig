@@ -1,5 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
  *
  * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
@@ -31,7 +30,7 @@
 signature MIN = sig
 
     val minimizeallkind  : Error.error list       ->
-			   Env.envcss             ->
+			   Env.envContextSensitiveSyntaxPair             ->
 			   AstSML.packs           ->
 			   VTimer.timer           ->
 			   (Error.export') option ->
@@ -39,7 +38,7 @@ signature MIN = sig
 			   Error.error list
 
     val minimize         : Error.error            ->
-			   Env.envcss             ->
+			   Env.envContextSensitiveSyntaxPair             ->
 			   AstSML.packs           ->
 			   VTimer.timer           ->
 			   (Error.export') option ->

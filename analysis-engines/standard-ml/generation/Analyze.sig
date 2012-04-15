@@ -24,27 +24,8 @@
 
 signature ANALYZE = sig
 
-    (* the int is:
-     * 0 is we don't want any initial environment at all
-     * 1 if we want the builtin environment
-     * 2 if we want to use the basis.sml environment *)
-    val generateConstraints : AstSML.progs -> int -> Env.envcss
-
-    (* The first argument should be the output of analyze.  Program
-     * identifiers are represented by integers in the output of
-     * analyze, so the second argument is a mapping from the original
-     * program identifiers to these integers.  This function has
-     * builtin knowledge of types for all identifiers in the SML
-     * initial basis as well as a number from the SML Basis Library.
-     * The output is the input with additional constraints added to
-     * enforce these types. *)
-    val buildin : Env.envcss -> Id.assoc -> bool -> Env.envcss
-
-    (* generates the warnings about the free identifiers *)
-    (*val treatFreeIds : Env.env -> Env.env*)
-
-    (* calls the three previous functions sequentially *)
-    (* ths integer is as for generateConstraints *)
-    val fullConsGen :  AstSML.progs -> Id.assoc -> int -> Env.envcss
+    val generateConstraints : AstSML.progs -> int -> Env.envContextSensitiveSyntaxPair
+    val buildin : Env.envContextSensitiveSyntaxPair -> Id.assoc -> bool -> Env.envContextSensitiveSyntaxPair
+    val fullConsGen :  AstSML.progs -> Id.assoc -> int -> Env.envContextSensitiveSyntaxPair
 
 end

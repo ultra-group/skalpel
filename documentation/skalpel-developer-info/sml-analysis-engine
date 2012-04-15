@@ -55,3 +55,8 @@ var  - variable
 poly - polymorphic
 mono - monomorphic
 id   - identifier
+struct - structure
+env  - environment
+lab  - label
+info - information
+gen  - generate

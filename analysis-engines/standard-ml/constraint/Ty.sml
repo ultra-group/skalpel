@@ -44,13 +44,13 @@ structure D  = Debug
 exception unflex
 
 (* type and datatype declarations *)
-type typeVar            = int
-type sequenceVar = int
-type typenameVar        = int
-type labelVar           = int
-type rowVar           = int
-type typeFunctionVar           = int
-type eqType           = bool
+type typeVar         = int
+type sequenceVar     = int
+type typenameVar     = int
+type labelVar        = int
+type rowVar          = int
+type typeFunctionVar = int
+type eqType          = bool
 
 (* int for typename but string for labcons because not in any environment *)
 type typename     = int (* 1: arrow, 2: record, ... *)

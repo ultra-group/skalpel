@@ -37,7 +37,7 @@ signature UNIF = sig
      * which is not bound, but it is not the case at minimisation time because of the way
      * we report type constructor arity clashes. *)
 
-    val unif       : Env.environment -> (* constraints                    *)
+    val unif       : Env.env -> (* constraints                    *)
 		     Filter.filters  -> (* filters                        *)
 		     user            -> (* caller of the unification algo *)
 		     error

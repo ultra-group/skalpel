@@ -61,7 +61,7 @@ type 'a debug = ERR.error list ->
 		A.packs        ->
 		bool           ->
 		ERR.times      ->
-		EV.envcss      ->
+		EV.envContextSensitiveSyntaxPair      ->
 		L.label        ->
 		bool           ->
 		string         ->
@@ -74,7 +74,7 @@ type 'a debug = ERR.error list ->
 		    AstSML.packs     -> (* the int the next label w.r.t. progs *)
 		    bool        -> (* true if minimiser was called (this not used anymore, because the minimiser is always called now) *)
 		    Error.times ->
-		    Env.envcss  ->
+		    Env.envContextSensitiveSyntaxPair  ->
 		    Label.label -> (* the first label in progs                                *)
 		    bool        -> (* true if the slices look good enough                     *)
 		    string         -> (* the name of the test                                    *)
@@ -264,7 +264,7 @@ fun debuggingHTML errl
 		  (ast, m, ascid)
 		  bmin
 		  (t1, t2, t3, t4, t5)
-		  envcss
+		  envContextSensitiveSyntaxPair
 		  initlab
 		  bfinal
 		  name
@@ -305,7 +305,7 @@ fun debuggingXML errl
 		 (ast, m, ascid)
 		 bmin
 		 (t1, t2, t3, t4, t5)
-		 envcss
+		 envContextSensitiveSyntaxPair
 		 initlab
 		 bfinal
 		 name
@@ -326,9 +326,9 @@ fun debuggingXML errl
 		  (if fullreport then " assoc=\"" ^ I.printAssoc ascid ^ "\"" else "") ^ "/>\n"
         val sth = begsep ^ "<ident" ^
 		  (if fullreport then " assoc=\"" ^ I.printAssoc ascid ^ "\"" else "") ^ "/>\n"
-	val sti = begsep ^ "<constraint total=\"" ^ Int.toString (EV.getnbcs envcss) ^
-		  "\" top=\"" ^ Int.toString (EV.getnbcsttop envcss) ^
-		  "\" syntactic=\"" ^ Int.toString (EV.getnbcss envcss) ^ "\"/>\n"
+	val sti = begsep ^ "<constraint total=\"" ^ Int.toString (EV.getnbcs envContextSensitiveSyntaxPair) ^
+		  "\" top=\"" ^ Int.toString (EV.getnbcsttop envContextSensitiveSyntaxPair) ^
+		  "\" syntactic=\"" ^ Int.toString (EV.getnbcss envContextSensitiveSyntaxPair) ^ "\"/>\n"
 	val stl = begsep ^ "<labels nb=\"" ^ Int.toString ((L.toInt m) - (L.toInt initlab)) ^ "\"/>\n"
         val stj = begsep ^ "<final val=\"" ^ Bool.toString bfinal ^ "\"/>\n"
         val stk = begsep ^ "<name val=\""  ^ name ^ "\"/>\n"
@@ -343,7 +343,7 @@ fun testXML fdebug =
     let val head = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     in head ^ "\n<example>\n" ^ fdebug sep ^ "</example>\n" end
 
-fun buildError errl (ast, m, ascid) bmin times envcss initlab bfinal name bslice nenv _ =
+fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair initlab bfinal name bslice nenv _ =
     let fun toerrors [] = []
 	  | toerrors (err :: xs) =
 	    {labels      = (L.length (ERR.getL err), L.toList (ERR.getL err)),
@@ -358,9 +358,9 @@ fun buildError errl (ast, m, ascid) bmin times envcss initlab bfinal name bslice
 						 minimisation = t3,
 						 slicing      = t4,
 						 html         = t5}) times
-	val nbcs = {syntactic = EV.getnbcs     envcss,
-		    top       = EV.getnbcsttop envcss,
-		    total     = EV.getnbcss    envcss}
+	val nbcs = {syntactic = EV.getnbcs     envContextSensitiveSyntaxPair,
+		    top       = EV.getnbcsttop envContextSensitiveSyntaxPair,
+		    total     = EV.getnbcss    envContextSensitiveSyntaxPair}
     in ref (SOME {errors       = toerrors errl,
 		  time         = times,
 		  tyvar        = (T.typeVarToInt (T.getTypeVar ()), I.outAssoc ascid),
@@ -548,7 +548,7 @@ fun debuggingSML errl
 		 (ast, m, ascid)
 		 bmin
 		 (t1, t2, t3, t4, t5)
-		 envcss
+		 envContextSensitiveSyntaxPair
 		 initlab
 		 bfinal
 		 name
@@ -584,9 +584,9 @@ fun debuggingSML errl
         val sth = newsep ^ "ident        = " ^ I.printAssoc' ascid
 	val sti = newsep ^ "constraint   = " ^
 		  "{" ^
-		  "total = "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
-		  "top = "       ^ Int.toString (EV.getnbcsttop envcss)  ^ ", " ^
-		  "syntactic = " ^ Int.toString (EV.getnbcss envcss)     ^
+		  "total = "     ^ Int.toString (EV.getnbcs envContextSensitiveSyntaxPair)      ^ ", " ^
+		  "top = "       ^ Int.toString (EV.getnbcsttop envContextSensitiveSyntaxPair)  ^ ", " ^
+		  "syntactic = " ^ Int.toString (EV.getnbcss envContextSensitiveSyntaxPair)     ^
 		  "}"
 	val stl = newsep ^ "labels       = " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
 	val st  = "val _ = Slicer.error :=\n" ^
@@ -612,7 +612,7 @@ fun debuggingJSON errl
 		 (ast, m, ascid)
 		 bmin
 		 (t1, t2, t3, t4, t5)
-		 envcss
+		 envContextSensitiveSyntaxPair
 		 initlab
 		 bfinal
 		 name
@@ -644,9 +644,9 @@ fun debuggingJSON errl
 		  ^ ", \"assoc\": " ^ I.printJsonAssoc ascid ^ "}"
 	val sti = newsep ^ "\"constraint\"   : " ^
 		  "{" ^
-		  "\"total\" : "     ^ Int.toString (EV.getnbcs envcss)      ^ ", " ^
-		  "\"top\" : "       ^ Int.toString (EV.getnbcsttop envcss)  ^ ", " ^
-		  "\"syntactic\" : " ^ Int.toString (EV.getnbcss envcss)     ^
+		  "\"total\" : "     ^ Int.toString (EV.getnbcs envContextSensitiveSyntaxPair)      ^ ", " ^
+		  "\"top\" : "       ^ Int.toString (EV.getnbcsttop envContextSensitiveSyntaxPair)  ^ ", " ^
+		  "\"syntactic\" : " ^ Int.toString (EV.getnbcss envContextSensitiveSyntaxPair)     ^
 		  "}"
 	val stl = newsep ^ "\"labels\"       : " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
 	val st  = "{\n" ^
@@ -700,7 +700,7 @@ fun debuggingLISP' [] _ _ _ _ = ""
        )
     end
 
-fun debuggingLISP errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcss initlab bfinal name bslice nenv basisoverloading _ =
+fun debuggingLISP errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envContextSensitiveSyntaxPair initlab bfinal name bslice nenv basisoverloading _ =
     "(setq skalpel-slice-data '(" ^ (debuggingLISP' errl ascid "" bslice basisoverloading) ^ ")\n  )"
 
 fun debuggingPERL' [] _ _ _ _ = ""
@@ -765,42 +765,42 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 		val parse = (progs, m, ascid)
 		val _ = L.setNextLab m
 		val _ = print ("[Skalpel: constraint generation...]\n")
-		val envcss = AN.fullConsGen progs ascid nenv
+		val envContextSensitiveSyntaxPair = AN.fullConsGen progs ascid nenv
 		val _ = print ("[Skalpel: enumeration...]\n")
-		val (errl1, filters) = preEnum envcss parse
+		val (errl1, filters) = preEnum envContextSensitiveSyntaxPair parse
 		val errl2 = ERR.setSlices progs errl1
 		val errl3 = ERR.setRegs errl2 true
 		val firstCounter = 1
-		val counter = exportErrors errl3 funout 0 parse envcss firstCounter
-	    in (parse, envcss, errl3, filters, counter)
+		val counter = exportErrors errl3 funout 0 parse envContextSensitiveSyntaxPair firstCounter
+	    in (parse, envContextSensitiveSyntaxPair, errl3, filters, counter)
 	    end
 
-	fun initSlicing funout counter parse envcss found filters timerEnum (preEnum, initEnum, runEnum) =
+	fun initSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
 	    let val export = if !nonmin then SOME funout else NONE
 		val (errs1, found', filters', counter', continue) =
-		    initEnum envcss found filters timerEnum parse export counter
+		    initEnum envContextSensitiveSyntaxPair found filters timerEnum parse export counter
 		val found''   = found' (*ERR.recordSpeTreat found'*)
 		val errs2     = errs1  (*ERR.getMergedErrors (err :: ERR.getNewErrors found' found'')*)
 		(*(2010-07-05)We shouldn't need these 2 lines anymore because this was
 		 * when record errors were not directly reported as merged errors. *)
 		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
-		val counter'' = exportErrors errs2 funout time parse envcss counter'
+		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
 	    in (found'', filters', counter'', continue)
 	    end
 
-	fun runSlicing funout counter parse envcss found filters timerEnum (preEnum, initEnum, runEnum) =
+	fun runSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
 	    let val export    = if !nonmin then SOME funout else NONE
 		val timelimit = gettimelimit ()
 		val (errs1, found', filters', counter', continue) =
-		    runEnum envcss found filters timelimit timerEnum parse export counter
+		    runEnum envContextSensitiveSyntaxPair found filters timelimit timerEnum parse export counter
 		val found''   = found' (*ERR.recordSpeTreat found'*)
 		val errs2     = errs1  (*ERR.getMergedErrors (err :: ERR.getNewErrors found' found'')*)
 		(*(2010-07-05)Same as above concerning found'' and errs2.*)
 		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
-		val counter'' = exportErrors errs2 funout time parse envcss counter'
+		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
 	    (*val _ = print ("[" ^ Bool.toString continue ^ "]")*)
 	    in if continue
-	       then runSlicing funout counter'' parse envcss found'' filters' timerEnum (preEnum, initEnum, runEnum)
+	       then runSlicing funout counter'' parse envContextSensitiveSyntaxPair found'' filters' timerEnum (preEnum, initEnum, runEnum)
 	       else (counter'', found'')
 	    end
 
@@ -822,7 +822,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 	    in (counter'', errors, parse, envcs, timeCG, timeEN)
 	    end
 
-	val (counter, errors, parse, envcss as (env, css), timeCG, timeEN) =
+	val (counter, errors, parse, envContextSensitiveSyntaxPair as (env, css), timeCG, timeEN) =
 	    (case searchspace of
 		 1 => loopSlicing filebas filesin funout nenv webdemo bmin (EN1.preEnum, EN1.initEnum, EN1.runEnum)
 	       | 2 => loopSlicing filebas filesin funout nenv webdemo bmin (EN2.preEnum, EN2.initEnum, EN2.runEnum)
@@ -833,9 +833,9 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
        then let val (nenv, filebas) = getFileBasAndNum nenv filebas
 		val name    = "dummy"
 		val times   = (timeCG, timeEN, timeEN, timeEN, timeEN)
-		val dbgxml  = debuggingXML  errors parse bmin times envcss initLab false name true nenv basisoverloading
-		val dbghtml = debuggingHTML errors parse bmin times envcss initLab false name true nenv basisoverloading removeBasisSlice
-		val berr    = buildError    errors parse bmin times envcss initLab false name true nenv
+		val dbgxml  = debuggingXML  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading
+		val dbghtml = debuggingHTML errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading removeBasisSlice
+		val berr    = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
 		val _       = dbghtml myfilehtml filebas true ""
 		val _       = print (testXML dbgxml)
 		val _       = if bcs then print (Env.printEnv env "" ^ "\n") else ()
@@ -869,10 +869,10 @@ fun initialise filebas filesin nenv bprint =
 	val _ = L.setNextLab m
 	(* Generation of the constraints *)
 	val _ = if bprint then print "constraint generation...\n" else ()
-        val envcss as (env, css) = AN.fullConsGen progs ascid nenv
+        val envContextSensitiveSyntaxPair as (env, css) = AN.fullConsGen progs ascid nenv
 	(*val _ = D.printdebug2 (EV.printEnv env "")*)
         val t1 = VT.getMilliTime timer
-    in (initlab, parse, envcss, timer, t1)
+    in (initlab, parse, envContextSensitiveSyntaxPair, timer, t1)
     end
 
 fun outTerm filebas errs ascid ast =
@@ -883,13 +883,13 @@ fun outTerm filebas errs ascid ast =
 fun slicergen filebas filesin nenv bprint =
     let val (initlab,
 	     parse as (ast, m, ascid),
-	     envcss as (env, css),
+	     envContextSensitiveSyntaxPair as (env, css),
 	     timer,
 	     t1) = initialise filebas filesin nenv bprint
 	(* Enumeration of the type errors *)
 	val _      = if bprint then print "enumeration...\n" else ()
-        val (errl1, space) = EN.preEnum envcss parse
-        val (errl2, bmin)  = EN.enum envcss errl1 space (gettimelimit ()) parse
+        val (errl1, space) = EN.preEnum envContextSensitiveSyntaxPair parse
+        val (errl2, bmin)  = EN.enum envContextSensitiveSyntaxPair errl1 space (gettimelimit ()) parse
         val t2     = VT.getMilliTime timer
 	(* Minimisation *)
         val errl3  = errl2
@@ -918,7 +918,7 @@ fun slicergen filebas filesin nenv bprint =
 	(* Times *)
 	val times = (t1, t2, t3, t4, t5)
 	(*val _ = outTerm filebas errl10 ascid ast*)
-    in SOME (errl10, parse, bmin, times, envcss, initlab)
+    in SOME (errl10, parse, bmin, times, envContextSensitiveSyntaxPair, initlab)
     end
 
 
@@ -954,9 +954,9 @@ fun adderror filein nb bforce bfinal name nenv =
 	val _     = settimelimit tmptm
 	val name' = case name of "" => Int.toString nb | _ => name
     in case sl of
-	   SOME (errl, parse, bmin, times, envcss, initlab) =>
-	   let val _     = debuggingHTML errl parse bmin times envcss initlab bfinal name' true  nenv 1 removeBasisSlice fileout3 (!myfilebas) true ""
-	       val st    = debuggingSML  errl parse bmin times envcss initlab bfinal name' false nenv 1 "" (* this last argument is not used *)
+	   SOME (errl, parse, bmin, times, envContextSensitiveSyntaxPair, initlab) =>
+	   let val _     = debuggingHTML errl parse bmin times envContextSensitiveSyntaxPair initlab bfinal name' true  nenv 1 removeBasisSlice fileout3 (!myfilebas) true ""
+	       val st    = debuggingSML  errl parse bmin times envContextSensitiveSyntaxPair initlab bfinal name' false nenv 1 "" (* this last argument is not used *)
 	       val stout = TextIO.openOut fileout1
 	       val _     = TextIO.output (stout, st)
 	       val _     = TextIO.closeOut stout

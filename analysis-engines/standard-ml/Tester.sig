@@ -28,7 +28,7 @@ signature TESTER = sig
 		    AstSML.packs     -> (* the int the next label w.r.t. progs *)
 		    bool        -> (* true if minimiser was called (this not used anymore, because the minimiser is always called now) *)
 		    Error.times ->
-		    Env.envcss  ->
+		    Env.envContextSensitiveSyntaxPair  ->
 		    Label.label -> (* the first label in progs                                *)
 		    bool        -> (* true if the slices look good enough                     *)
 		    string      -> (* the name of the test                                    *)
@@ -41,7 +41,7 @@ signature TESTER = sig
 		    AstSML.packs     -> (* the int the next label w.r.t. progs *)
 		    bool        -> (* true if minimiser was called (this not used anymore, because the minimiser is always called now) *)
 		    Error.times ->
-		    Env.envcss  ->
+		    Env.envContextSensitiveSyntaxPair  ->
 		    Label.label -> (* the first label in progs                                *)
 		    bool        -> (* true if the slices look good enough                     *)
 		    string      -> (* the name of the test                                    *)
@@ -74,7 +74,7 @@ signature TESTER = sig
 			AstSML.packs     ->
 			bool        ->
 			Error.times ->
-			Env.envcss  ->
+			Env.envContextSensitiveSyntaxPair  ->
 			Label.label -> (* the first label in progs                                *)
 			bool        -> (* true if the slices look good enough                     *)
 			string      -> (* the name of the test                                    *)

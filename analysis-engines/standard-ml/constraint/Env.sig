@@ -27,67 +27,60 @@ signature ENV = sig
     (* ====== TYPES AND DATATYPES ====== *)
 
     (* ------ MAPPINGS ------ *)
-    type 'a cmap (* mapping for constraints       *)
-    type 'a emap (* mapping for environments      *)
-    type 'a omap (* mapping for open environments *)
+    type 'a constraintMap
+    type 'a envMap
+    type 'a openEnvMap
 
     (* ------ VARIABLES ------ *)
-    type envvar         = int
+    type envVar         = int
 
     (* ------ BINDERS ------ *)
     type 'a bind        = 'a ConsId.bind ExtLab.extLab
 
     (* ------ GENERIC ENVIRONMENT ------ *)
-    type 'a genericEnvironment        = 'a bind list emap
-    (*(2010-04-08)We should use genericEnvironment for all our similar environments*)
+    type 'a genericEnv        = 'a bind list envMap
 
     (* ------ OPENENV ------ *)
-    datatype opnkind    = OST (* opened structure     *)
-			| DRE (* datatype replication *)
-			| ISI (* included signature   *)
-    type opnsem         = Id.lid      * (* identifier of the structure to open *)
-			  Label.label * (* label of the structure to open      *)
-			  opnkind       (* kind of the opening                 *)
-    type opnenv         = opnsem omap
+
+    datatype openKind    = OPENED_STRUCT
+			 | DATATYPE_REPLICATION
+			 | INCLUDED_SIG
+
+    type openSem         = Id.lid * Label.label * openKind
+
+    type openEnv         = openSem openEnvMap
 
     (* ------ VARENV ------ *)
-    type extvar         = Ty.ty bind
-    type varenv         = Ty.ty genericEnvironment
+    type extVar         = Ty.ty bind
+    type varEnv         = Ty.ty genericEnv
 
     (* ------ KIND OF A TYPE DECLARATION *)
-    datatype tnKind     = DAT | TYP
+    datatype typeNameKind     = DATATYPE | TYPE
 
     (* ------ TYPENV ------ *)
-    (*(2010-06-10)The Boolean is to indicate if the varenv is complete or not.*)
-    type exttyp         = (Ty.typeFunction * tnKind * (varenv * bool) ref) bind
-    type typenv         = (Ty.typeFunction * tnKind * (varenv * bool) ref) genericEnvironment
+    type extType         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) bind
+    type typeEnv         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
 
     (* ------ OVERLADINGENV ------ *)
     type extovc         = Ty.sequenceType bind
-    type ovcenv         = Ty.sequenceType genericEnvironment
+    type overloadingClassesEnv = Ty.sequenceType genericEnv
 
     (* ------ TYPEVARENV ------ *)
-    type exttyv         = (Ty.typeVar * bool) bind (*(2010-06-14)The Boolean is true for an explicit type variable and false for an implicit one.*)
-    type tyvenv         = (Ty.typeVar * bool) genericEnvironment
+    type explicitTypeVar = (Ty.typeVar * bool) bind
+    type typeVarEnv         = (Ty.typeVar * bool) genericEnv
 
-    (* ------ INFORMATION ON ENVIRONMENTS ------ *)
-    type tname          = {id : Id.id, lab : Label.label, kind : tnKind, name : Ty.typename}
-    type tnmap          = tname list (* This should be: tname extLab list *)
-    datatype names      = TYPENAME    of tname ExtLab.extLab (* Definitely is a type name                                       *)
-			| DUMTYPENAME of tname               (* Maybe a type name defining tname but not enough info to be sure *)
-			| MAYTYPENAME                        (* Maybe a type name but not enough info to know                   *)
-			| NOTTYPENAME of Id.id ExtLab.extLab (* Definitely not a type name                                      *)
-    (* I should find a better name for infoEnv: *)
-    type infoEnv        = {lab : Label.label, (* This should be a list or a set.  See uenvEnv in Analyze.sml. *)
-			   cmp : bool,        (* true if the environment is complete (true when initialised and can be false during unification) *)
-			   tns : tnmap,       (* type names introduced in the structure *)
-			   fct : bool}        (* true if the environment is the argument of a functor *)
-    (* The tns part is to ease the collection of type names when pushing an environment onto
-     * a unification context. *)
+    (* ------ INFORMATION ON ENVS ------ *)
+    type typeName          = {id : Id.id, lab : Label.label, kind : typeNameKind, name : Ty.typename}
+    type typeNameMap       = typeName list
+    datatype names      = TYPENAME    of typeName ExtLab.extLab
+			| DUMTYPENAME of typeName
+			| MAYTYPENAME
+			| NOTTYPENAME of Id.id ExtLab.extLab
 
-    (*(* ------ CLASSES OF IDENTIFIERS ------ *)
-    datatype class      = VCL of ClassId.classvar
-			| CCL of ClassId.class * Label.label * Id.lid * bool (* true for an id at a binding position *)*)
+    type infoEnv        = {lab : Label.label,
+			   complete : bool,
+			   infoTypeNames : typeNameMap,
+			   argOfFunctor : bool}
 
     type class = ClassId.class
 
@@ -95,177 +88,138 @@ signature ENV = sig
     type 'a accid       = {lid : Id.lid, sem : 'a, class : ClassId.class, lab : Label.label}
 
     (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
-    type longtyp        = Ty.typeFunction accid ExtLab.extLab
+    type longTypeConsBinder        = Ty.typeFunction accid ExtLab.extLab
 
     (* ------ ENRICHEMENT AND INSTANTIATION ------ *)
-    type evsbind        = envvar * envvar option * envvar * envvar option * Label.label
-    (* 1st envvar: instantiated signature
-     * 2nd envvar: signature matching
-     * 3rd envvar: enriched structure
-     * 4th envvar: resulting structure
-     * the bool if false if we want to impose some restrictions based on the
-     * structure environment (where clauses). *)
+    type evsbind        = envVar * envVar option * envVar * envVar option * Label.label
 
     (* ------ FUNCTOR INSTANTIATION ------ *)
-    type evfbind        = envvar * envvar * envvar * envvar * Label.label
-    (* functor  : 1st envvar -> 2nd envvar
-     * argument : 3rd envvar
-     * result   : 4th envvar *)
+    type evfbind        = envVar * envVar * envVar * envVar * Label.label
 
     (* ------ SHARING ------ *)
-    type shabind        = envvar * envvar * envvar * Label.label
+    type shabind        = envVar * envVar * envVar * Label.label
 
     (* ------ SIGNATURE MATCHING ------ *)
-    datatype matchKind  = OPA (* Opaque      *)
-			| TRA (* Translucent *)
+    datatype matchKind  = OPAQUE
+			| TRANSLUCENT
 
-    (*(* ------ GENERALISATION OF EXPLICIT TYPE VARIABLES ------ *)
-    type tvsbind        = (Ty.typeVar * Label.label) list
-    type exttv          = Ty.typeVar bind (*(2010-04-08)Can't we use varenv?*)
-    (* tvsbind stands for Type Variable Sequence Binding
-     * it contains the type variables bound at a value declaration *)*)
-
-    (* ------ ENVIRONMENTS ------ *)
-    datatype environment        = ENVIRONMENT_CONSTRUCTOR of {vids : varenv,
-				     (* value identifiers *)
-				     typenames : typenv,
-				     (* type names *)
-				     tyvs : tyvenv,
-				     (* explicit type variables - not used anymore *)
-				     strs : environment genericEnvironment,
-				     (* structures - this is strenv *)
-				     sigs : environment genericEnvironment,
-				     (* signatures - this is sigenv *)
-				     funs : (environment * environment) genericEnvironment,
-				     (* functors this is a funenv *)
-				     ovcs : ovcenv,
-				     (* overloading classes *)
-				     info : infoEnv}
-			| ENVVAR of envvar * Label.label
-			| SEQUENCE_ENV of environment * environment
-			| LOCAL_ENV of environment * environment
-			| ENVSHA of environment * environment     (*(2010-07-07)We want something like: Ty.typeFunction accid extLab list, instead of the second environment.*)
-			| SIGNATURE_ENV of environment * environment * matchKind
-			| ENVWHR of environment * longtyp
-			| ENVPOL of tyvenv * environment  (* the first environment is the explicit type variables and the second the value bindings *)
-			| DATATYPE_CONSTRUCTOR_ENV of Id.labelledId * environment  (* (2010-06-10)This is to associate constructors to a datatype *)
-			| ENVOPN of opnenv
-			| ENVDEP of environment ExtLab.extLab (* we want to move from ENVOPN to ENVDEP *)
-			| FUNCTOR_ENV of constraints (*(2010-06-22)This environment is only solved when dealing with CSTFUN.*)
+    (* ------ ENVS ------ *)
+    datatype env        = ENV_CONS of {valueIds : varEnv,
+				       typeNames : typeEnv,
+				       explicitTypeVars : typeVarEnv,
+				       structs : env genericEnv,
+				       sigs : env genericEnv,
+				       functors : (env * env) genericEnv,
+				       overloadingClasses : overloadingClassesEnv,
+				       info : infoEnv}
+			| ENV_VAR of envVar * Label.label
+			| SEQUENCE_ENV of env * env
+			| LOCAL_ENV of env * env
+			| ENVSHA of env * env
+			| SIGNATURE_ENV of env * env * matchKind
+			| ENVWHR of env * longTypeConsBinder
+			| ENVPOL of typeVarEnv * env
+			| DATATYPE_CONSTRUCTOR_ENV of Id.labelledId * env
+			| ENVOPN of openEnv
+			| ENVDEP of env ExtLab.extLab
+			| FUNCTOR_ENV of constraints
 			| CONSTRAINT_ENV of constraints
-			| ENVPTY of string (* This is generated by a sml-tes special comment SML-TES-TYPE and used to print the type of an identifier *)
-			| ENVFIL of string * environment * (unit -> environment) (* Like a SEQ but the first environment is from a file which has the name given by the string and the second environment is a stream *)
-			| TOP_LEVEL_ENV (*(2010-06-24)To mark that we reached the top-level.*)
+			| ENVPTY of string
+			| ENVFIL of string * env * (unit -> env)
+			| TOP_LEVEL_ENV
 
-	and accessor        = VALUEID_ACCESSOR of Ty.ty       accid ExtLab.extLab (* value identifiers        *)
-			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accid ExtLab.extLab (* explicit type variables  *)
-			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accid ExtLab.extLab (* type constructors        *)
-			    | OVERLOADING_CLASSES_ACCESSOR of Ty.sequenceType    accid ExtLab.extLab (* overloading classes      *)
-			    | STRUCTURE_ACCESSOR of environment         accid ExtLab.extLab (* structures               *)
-			    | SIGNATURE_ACCESSOR of environment         accid ExtLab.extLab (* signatures               *)
-			    | FUNCTOR_ACCESSOR of (environment * environment) accid ExtLab.extLab (* functors              *)
+	and accessor        = VALUEID_ACCESSOR of Ty.ty       accid ExtLab.extLab
+			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accid ExtLab.extLab
+			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accid ExtLab.extLab
+			    | OVERLOADING_CLASSES_ACCESSOR of Ty.sequenceType    accid ExtLab.extLab
+			    | STRUCTURE_ACCESSOR of env         accid ExtLab.extLab
+			    | SIGNATURE_ACCESSOR of env         accid ExtLab.extLab
+			    | FUNCTOR_ACCESSOR of (env * env) accid ExtLab.extLab
 
 	 and oneConstraint       = TYPE_CONSTRAINT of (Ty.ty    * Ty.ty)    ExtLab.extLab
 				 | TYPENAME_CONSTRAINT of (Ty.typenameType  * Ty.typenameType)  ExtLab.extLab
 				 | SEQUENCE_CONSTRAINT of (Ty.sequenceType * Ty.sequenceType) ExtLab.extLab
 				 | ROW_CONSTRAINT of (Ty.rowType * Ty.rowType) ExtLab.extLab
 				 | LABEL_CONSTRAINT of (Ty.labelType * Ty.labelType) ExtLab.extLab
-				 | ENV_CONSTRAINT of (environment      * environment)      ExtLab.extLab
+				 | ENV_CONSTRAINT of (env      * env)      ExtLab.extLab
 				 | IDENTIFIER_CLASS_CONSTRAINT of (class    * class)    ExtLab.extLab
 				 | FUNCTION_TYPE_CONSTRAINT of (Ty.typeFunction * Ty.typeFunction) ExtLab.extLab
 				 | ACCESSOR_CONSTRAINT of accessor
-				 | LET_CONSTRAINT of environment
-				 | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an environment with a switch for opaque and translucent *)
-				 | FUNCTOR_CONSTRAINT of evfbind (* Transform that into an environment *)
-				 | SHARING_CONSTRAINT of shabind (* Transform that into an environment *)
+				 | LET_CONSTRAINT of env
+				 | SIGNATURE_CONSTRAINT of evsbind
+				 | FUNCTOR_CONSTRAINT of evfbind
+				 | SHARING_CONSTRAINT of shabind
 
-	 (* Concerning CSTVAL (used to close value declarations):
-	  * - the first  tvsbind is for the IMPLICIT bound typeVar at the val
-	  * - the second tvsbind is for the EXPLICIT bound typeVar at the val
-	  * - the third element is for the typeVar to build *)
-	 (* Concerning ACCID: it will replace some type environments
-	  * - 1st csenv: variables, 2nd csenv: rec/constructors, 3rd csenv: types
-	  * - 1st cst: pattern, 2nd cst: expression
-	  * - we would have to have the same for constructors, types and structures
-	  * - what about tvenv? *)
-	 and constraints        = CONSTRAINTS of oneConstraint list cmap
-    (* constraints maps integers (program point labels) to lists (conceptually sets) of oneConstraint's *)
-    (*(2010-04-14)Conceptually, (INJI extty) seems to be an environment of the form:
-     * ENVS (ENVV ev, ENVC x), where extty is declared in x and ev is fresh.*)
-    (*(2010-03-02)not withtype because it is not SML valid and even though SML/NJ
-     * does not complain, MLton does.*)
+	 and constraints        = CONSTRAINTS of oneConstraint list constraintMap
 
-    type extstr = environment bind
-    type strenv = environment genericEnvironment
+    type extstr = env bind
+    type strenv = env genericEnv
 
-    type extsig = environment bind
-    type sigenv = environment genericEnvironment
+    type extsig = env bind
+    type sigenv = env genericEnv
 
-    (* functor has type environment1 -> environment2 *)
-    type funsem = environment * environment
+    type funsem = env * env
     type extfun = funsem bind
-    type funenv = funsem genericEnvironment
+    type funenv = funsem genericEnv
 
-    (* "CSS" means "Context-Sensitive Syntax error"? *)
-    datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
-					    | CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
-					    | CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
-					    | CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
-					    | CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)
-					    | CSSAPPL of Label.labels (* for applied and not applied value in pattern            *)
-					    | CSSFNAM of Label.labels (* for different function names                            *)
-					    | CSSFARG of Label.labels (* a function with different number of arguments           *)
-					    | CSSTYVA of Label.labels (* free type variable at top-level                         *)
-					    | CSSLEFT of Label.labels (* ident to left of as in pattern must be a variable       *)
-					    | CSSFREC of Label.labels (* expressions within rec value bindings must be functions *)
-					    | CSSREAL of Label.labels (* reals cannot occur within patterns                      *)
-					    | CSSFREE of Label.labels (* free identifier                                         *)
-					    | CSSWARN of Label.labels * string (* for a warning *)
-					    | CSSPARS of Label.labels * string (* for a parsing problem *)
-    type contextSensitiveSyntaxError       = oneContextSensitiveSyntaxError list
+    datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels
+					    | CSSCVAR of Label.labels
+					    | CSSEVAR of Label.labels
+					    | CSSECON of Label.labels
+					    | CSSINCL of Label.labels
+					    | CSSAPPL of Label.labels
+					    | CSSFNAM of Label.labels
+					    | CSSFARG of Label.labels
+					    | CSSTYVA of Label.labels
+					    | CSSLEFT of Label.labels
+					    | CSSFREC of Label.labels
+					    | CSSREAL of Label.labels
+					    | CSSFREE of Label.labels
+					    | CSSWARN of Label.labels * string
+					    | CSSPARS of Label.labels * string
+    type contextSensitiveSyntaxError = oneContextSensitiveSyntaxError list
 
-    type envcss = environment * contextSensitiveSyntaxError
-
+    type envContextSensitiveSyntaxPair = env * contextSensitiveSyntaxError
 
     (* ====== FUNCTIONS ====== *)
 
     val resetEnvVar  : unit  -> unit
 
-    val freshEnvVar  : unit -> envvar
-    val getEnvVar    : unit -> envvar
+    val freshEnvVar  : unit -> envVar
+    val getEnvVar    : unit -> envVar
 
-    val envVarToInt  : envvar -> int
+    val envVarToInt  : envVar -> int
 
-    val eqEnvVar     : envvar -> envvar -> bool
+    val eqEnvVar     : envVar -> envVar -> bool
 
-    val newEnvVar    : Label.label -> environment
-    val consENVVAR   : envvar -> Label.label -> environment
+    val newEnvVar    : Label.label -> env
+    val consENV_VAR   : envVar -> Label.label -> env
 
-    val consEnvironmentConstructor     : varenv  ->
-		       typenv  ->
-		       tyvenv  ->
+    val consEnvConstructor     : varEnv  ->
+		       typeEnv  ->
+		       typeVarEnv  ->
 		       strenv  ->
 		       sigenv  ->
 		       funenv  ->
-		       ovcenv  ->
+		       overloadingClassesEnv  ->
 		       infoEnv ->
-		       environment
+		       env
     val consInfo     : Label.label ->
 		       bool        ->
-		       tnmap       ->
+		       typeNameMap       ->
 		       bool        ->
 		       infoEnv
 
-    val emptyEnvironment : environment
-    val emvar        : varenv
-    val emtyp        : typenv
+    val emptyEnv : env
+    val emvar        : varEnv
+    val emtyp        : typeEnv
     val emstr        : strenv
     val emsig        : sigenv
     val emfun        : funenv
-    val emopn        : opnenv
-    val emtv         : tyvenv
-    val emoc         : ovcenv
-    val emptyMap     : 'a emap
+    val emopn        : openEnv
+    val emtv         : typeVarEnv
+    val emoc         : overloadingClassesEnv
+    val emptyMap     : 'a envMap
     val emnfo        : infoEnv
 
     val consBind     : Id.id -> 'a -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
@@ -280,136 +234,102 @@ signature ENV = sig
     val getBindL     : 'a bind -> Label.label
     val getBindP     : 'a bind -> Poly.poly
 
-    val getVids      : environment -> varenv
-    val getTyps      : environment -> typenv
-    val getTyvs      : environment -> tyvenv
-    val getStrs      : environment -> strenv
-    val getSigs      : environment -> sigenv
-    val getFuns      : environment -> funenv
-    val getOvcs      : environment -> ovcenv
-    val getInfo      : environment -> infoEnv
-    val getILab      : environment -> Label.label
-    val getICmp      : environment -> bool
-    val getITns      : environment -> tnmap
-    val getIFct      : environment -> bool
+    val getValueIds      : env -> varEnv
+    val getTyps      : env -> typeEnv
+    val getExplicitTypeVars      : env -> typeVarEnv
+    val getStructs      : env -> strenv
+    val getSigs      : env -> sigenv
+    val getFunctors      : env -> funenv
+    val getOverloadingClasses      : env -> overloadingClassesEnv
+    val getInfo      : env -> infoEnv
+    val getILab      : env -> Label.label
+    val getIComplete      : env -> bool
+    val getITypeNames      : env -> typeNameMap
+    val getIArgOfFunctor      : env -> bool
 
-    val projVids     : varenv -> environment
-    val consEnvironmentTypenames : typenv -> environment
-    val projTyvs     : tyvenv -> environment
-    val projStrs     : strenv -> environment
-    val projSigs     : sigenv -> environment
-    val projFuns     : funenv -> environment
-    val projOpns     : opnenv -> environment
-    val projOvcs     : ovcenv  -> environment
+    val projValueIds     : varEnv -> env
+    val consEnvTypeNames : typeEnv -> env
+    val projExplicitTypeVars     : typeVarEnv -> env
+    val projStructs     : strenv -> env
+    val projSigs     : sigenv -> env
+    val projFunctors     : funenv -> env
+    val projOpns     : openEnv -> env
+    val projOverloadingClasses     : overloadingClassesEnv  -> env
 
-    val updateVids   : varenv -> environment -> environment
-    val updateTypenames : typenv -> environment -> environment
-    val updateTyvs   : tyvenv -> environment -> environment
-    val updateStrs   : strenv -> environment -> environment
-    val updateOvcs   : ovcenv  -> environment -> environment
-    val updateILab   : Label.label -> environment -> environment
-    val updateICmp   : bool   -> environment -> environment
-    val updateInfoTypenames : tnmap  -> environment -> environment
-    val updateIFct   : bool   -> environment -> environment
+    val updateValueIds   : varEnv -> env -> env
+    val updateTypeNames : typeEnv -> env -> env
+    val updateExplicitTypeVars   : typeVarEnv -> env -> env
+    val updateStructs   : strenv -> env -> env
+    val updateOverloadingClasses   : overloadingClassesEnv  -> env -> env
+    val updateILab   : Label.label -> env -> env
+    val updateIComplete   : bool   -> env -> env
+    val updateInfoTypeNames : typeNameMap  -> env -> env
+    val updateIArgOfFunctor   : bool   -> env -> env
 
-    val getTypenames   : typenv -> names list
+    val getTypeNames   : typeEnv -> names list
 
-    val plusEnv            : environment -> environment -> environment
+    val plusEnv            : env -> env -> env
 
-    val pushExtEnv         : environment -> Label.labels -> Label.labels -> LongId.set -> environment
+    val pushExtEnv         : env -> Label.labels -> Label.labels -> LongId.set -> env
 
-    val isEmptyIdEnv       : 'a emap  -> bool
-    val isEmptyEnv         : environment      -> bool
+    val isEmptyIdEnv       : 'a envMap  -> bool
+    val isEmptyEnv         : env      -> bool
 
-    (* Generates an environment from a long identifier and a type function *)
-    val genLongEnv    : Id.lid -> Ty.typeFunction -> constraints * environment
+    val genLongEnv    : Id.lid -> Ty.typeFunction -> constraints * env
 
-    (* Checks whether the environment is contains an environment variable *)
-    val hasEnvVar     : environment -> bool
+    val hasEnvVar     : env -> bool
 
-    (* true if a the environment is complete: checks the second element in infoEnv
-     * of an ENVC (false if not a ENVC). *)
-    val completeEnv     : environment -> bool
-    (*(* Marks an environment as being incomplete *)
-    val toIncompleteEnv : environment -> environment*)
+    val completeEnv     : env -> bool
 
-    val isEnvV        : environment -> bool
+    val isENV_VAR        : env -> bool
 
-    (* Checks the shape of the environment: if it is a ENVC *)
-    val isEnvC          : environment -> bool
+    val isENV_CONS          : env -> bool
 
-    (* Returns the ids (as ints) of an environment along with the associated labels.
-     * The int is a debugging info. *)
-    val getLabsIdsEnv : environment -> int -> (int * int) list * Label.labels
+    val getLabsIdsEnv : env -> int -> (int * int) list * Label.labels
 
-    (* Returns the label associated to a environment (dummylab if not an ENVC). *)
-    val getLabEnv     : environment -> Label.label
+    val getLabEnv     : env -> Label.label
 
-    (* Filters the constraintss that are not in the label set *)
-    val filterEnv     : environment -> Label.labels -> environment
+    val filterEnv     : env -> Label.labels -> env
 
-    (*(* Get all the type names defined by an environment *)
-    val getAllTns     : environment -> tnmap*)
-
-    (*(* Returns the variable contained in the ENVV if the environment is a ENVV. *)
-    val getEnvVar     : environment -> envvar option
-
-    (* Extracts the identifiers of a structure/signature. *)
-    (*val envToStrIds  : environment -> ClassId.str*)
-
-    (* Extract the variable from an environment.  The environment has to be a variable. *)
-    val envToEnvvar  : environment -> envvar*)
-
-    val addenv        : (Id.id * 'a) -> 'a emap -> 'a emap
-    val consSingleEnv : (Id.id * 'a) -> 'a emap
-    (*val findenv      : Id.id -> 'a emap -> 'a option*)
-    val plusproj     : 'a genericEnvironment -> Id.id -> 'a bind list
-    (*val appenv       : ('a -> unit) -> 'a emap -> unit
-    val appienv      : ((Id.id * 'a) -> unit) -> 'a emap -> unit*)
-    val mapenv       : ('a -> 'a) -> 'a emap -> 'a emap
-    val unionEnvironmentList         : 'a genericEnvironment list -> 'a genericEnvironment
-    (*val remenv       : Id.id -> 'a emap -> 'a emap
-    val inenv        : 'a emap -> Id.set -> 'a emap
-    val outenv       : 'a emap -> Id.set -> 'a emap*)
-    val plusenv      : 'a genericEnvironment -> 'a genericEnvironment -> 'a genericEnvironment
-    (*val foldrenv     : (('a * 'b) -> 'b) -> 'b -> 'a emap -> 'b
-    val foldlenv     : (('a * 'b) -> 'b) -> 'b -> 'a emap -> 'b*)
-    val foldrienv    : ((Id.id * 'a * 'b) -> 'b) -> 'b -> 'a emap -> 'b
-    (*val foldlienv    : ((Id.id * 'a * 'b) -> 'b) -> 'b -> 'a emap -> 'b*)
-    val dom          : 'a emap -> Id.set
-    (*val doms         : 'a emap list -> Id.set*)
+    val addenv        : (Id.id * 'a) -> 'a envMap -> 'a envMap
+    val consSingleEnv : (Id.id * 'a) -> 'a envMap
+    val plusproj     : 'a genericEnv -> Id.id -> 'a bind list
+    val mapenv       : ('a -> 'a) -> 'a envMap -> 'a envMap
+    val unionEnvList         : 'a genericEnv list -> 'a genericEnv
+    val plusenv      : 'a genericEnv -> 'a genericEnv -> 'a genericEnv
+    val foldrienv    : ((Id.id * 'a * 'b) -> 'b) -> 'b -> 'a envMap -> 'b
+    val dom          : 'a envMap -> Id.set
 
     val isMonoBind   : 'a bind -> bool
 
-    val toMonoVids   : varenv -> Label.labels -> varenv
-    val toPolyVids   : varenv -> varenv
-    val toRECVids    : varenv -> Label.labels -> varenv
-    val toPATVids    : varenv -> Label.labels -> varenv
-    val toEX0Vids    : varenv -> Label.labels -> varenv
-    val toEX1Vids    : varenv -> Label.labels -> varenv
-    val toDA0Vids    : varenv -> Label.labels -> varenv
-    val toDA1Vids    : varenv -> Label.labels -> varenv
-    val toDATVids    : varenv -> Label.labels -> varenv
-    val toCLSVids    : varenv -> ClassId.class -> Label.labels -> varenv
-    val toTYCONTyps  : typenv -> varenv -> bool -> Label.labels -> typenv
+    val toMonoValueIds   : varEnv -> Label.labels -> varEnv
+    val toPolyValueIds   : varEnv -> varEnv
+    val toRECValueIds    : varEnv -> Label.labels -> varEnv
+    val toPATValueIds    : varEnv -> Label.labels -> varEnv
+    val toEX0ValueIds    : varEnv -> Label.labels -> varEnv
+    val toEX1ValueIds    : varEnv -> Label.labels -> varEnv
+    val toDA0ValueIds    : varEnv -> Label.labels -> varEnv
+    val toDA1ValueIds    : varEnv -> Label.labels -> varEnv
+    val toDATValueIds    : varEnv -> Label.labels -> varEnv
+    val toCLSValueIds    : varEnv -> ClassId.class -> Label.labels -> varEnv
+    val toTYCONTyps  : typeEnv -> varEnv -> bool -> Label.labels -> typeEnv
 
-    val closeVids    : varenv -> Expans.nonexp -> varenv
+    val closeValueIds    : varEnv -> Expans.nonexp -> varEnv
 
-    val allEqualVids : varenv -> constraints
+    val allEqualValueIds : varEnv -> constraints
 
-    val bindToEnv    : 'a bind list -> 'a genericEnvironment
-    val envToBind    : 'a genericEnvironment      -> 'a bind list
+    val bindToEnv    : 'a bind list -> 'a genericEnv
+    val envToBind    : 'a genericEnv      -> 'a bind list
 
-    (* Union of environment *)
-    val uenvEnv      : environment list -> environment
+    val unionEnv      : env list -> env
 
-    val envsToSeq    : environment list -> environment
+    val envsToSeq    : env list -> env
 
-    val appOEnv      : (opnsem -> unit) -> opnenv -> unit
-    val addOEnv      : opnsem -> opnenv -> opnenv
-    val singOEnv     : opnsem -> opnenv
-    val uOEnv        : opnenv list -> opnenv
-    val foldlOEnv    : ((opnsem * 'b) -> 'b) -> 'b -> opnenv -> 'b
+    val appOEnv      : (openSem -> unit) -> openEnv -> unit
+    val addOEnv      : openSem -> openEnv -> openEnv
+    val singOEnv     : openSem -> openEnv
+    val uOEnv        : openEnv list -> openEnv
+    val foldlOEnv    : ((openSem * 'b) -> 'b) -> 'b -> openEnv -> 'b
 
     (* ------ FUNCTIONS FOR CONSTRAINTS ------*)
     val emptyContextSensitiveSyntaxError            : contextSensitiveSyntaxError
@@ -422,12 +342,12 @@ signature ENV = sig
     val singcsts         : (Label.label * oneConstraint list) -> constraints
     val unionContextSensitiveSyntaxErrors: contextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val unionConstraintsList : constraints list -> constraints
-    val getnbcs          : envcss -> int
-    val getnbcss         : envcss -> int
-    val getnbcst         : envcss -> int
-    val getnbcsttop      : envcss -> int
+    val getnbcs          : envContextSensitiveSyntaxPair -> int
+    val getnbcss         : envContextSensitiveSyntaxPair -> int
+    val getnbcst         : envContextSensitiveSyntaxPair -> int
+    val getnbcsttop      : envContextSensitiveSyntaxPair -> int
     val foldlicst        : ((int * oneConstraint list * 'b) -> 'b) -> 'b -> constraints -> 'b
-    val getbindings      : environment -> Label.labels list * Label.labels
+    val getbindings      : env -> Label.labels list * Label.labels
 
     val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstTfAll  : Ty.typeFunction  -> Ty.typeFunction -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
@@ -435,7 +355,7 @@ signature ENV = sig
     val genCstSqAll  : Ty.sequenceType  -> Ty.sequenceType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstRtAll  : Ty.rowType  -> Ty.rowType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstLtAll  : Ty.labelType  -> Ty.labelType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstEvAll  : environment       -> environment      -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstEvAll  : env       -> env      -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstClAll  : class     -> class    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
 
     val genValueIDAccessor  : Ty.ty    accid -> Label.labels -> Label.labels -> LongId.set -> accessor
@@ -446,16 +366,16 @@ signature ENV = sig
     val initSequenceConstraint     : Ty.sequenceType -> Ty.sequenceType -> Label.label -> oneConstraint
     val initRowConstraint          : Ty.rowType -> Ty.rowType -> Label.label -> oneConstraint
     val initLabelConstraint        : Ty.labelType -> Ty.labelType -> Label.label -> oneConstraint
-    val initEnvConstraint          : environment      -> environment      -> Label.label -> oneConstraint
+    val initEnvConstraint          : env      -> env      -> Label.label -> oneConstraint
     val initClassConstraint        : class    -> class    -> Label.label -> oneConstraint
 
     val genAccIvEm   : Ty.ty    accid -> Label.label -> accessor
     val genAccIeEm   : Ty.typeVar accid -> Label.label -> accessor
     val genAccItEm   : Ty.typeFunction accid -> Label.label -> accessor
     val genAccIoEm   : Ty.sequenceType accid -> Label.label -> accessor
-    val genAccIsEm   : environment      accid -> Label.label -> accessor
-    val genAccIiEm   : environment      accid -> Label.label -> accessor
+    val genAccIsEm   : env      accid -> Label.label -> accessor
+    val genAccIiEm   : env      accid -> Label.label -> accessor
     val genAccIfEm   : funsem   accid -> Label.label -> accessor
 
-    val printEnv     : environment    -> string -> string
+    val printEnv     : env    -> string -> string
 end

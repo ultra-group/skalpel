@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 2012 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -45,7 +39,7 @@ structure EK  = ErrorKind
 structure VT  = VTimer
 structure ERR = Error
 
-val currentBackground = ref (NONE : (VT.timer * ERR.export' * E.envcss * A.packs * int) option)
+val currentBackground = ref (NONE : (VT.timer * ERR.export' * E.envContextSensitiveSyntaxPair * A.packs * int) option)
 (* error being minimized *)
 val currentError = ref (NONE : (ERR.error * LargeInt.int * int) option)
 
@@ -487,8 +481,8 @@ fun reduce css done todo err = reduce1 css done todo err
 
 (* in todo we should test first the labels in the csbindings *)
 (* it does not seem to work quite well *)
-fun minimize4 err (envcss as (env, css)) lazy (parse as (ast, _, _)) timer export counter =
-    let val _        = setCurrentBackground timer export envcss parse err counter
+fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (ast, _, _)) timer export counter =
+    let val _        = setCurrentBackground timer export envContextSensitiveSyntaxPair parse err counter
 	val labs     = ERR.getL err
 	val done     = L.empty (*EK.getLabsEk (ERR.getK err)*)
 	val filters1 = FI.cons (SOME labs) NONE

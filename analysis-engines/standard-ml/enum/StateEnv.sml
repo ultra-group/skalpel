@@ -58,7 +58,7 @@ type stTn = T.typenameType
 type stSq = T.sequenceType
 type stRt = T.rowType
 type stLt = T.labelType
-type stEv = E.environment
+type stEv = E.env
 type stRc = (rcty * rcty)
 type stGe = T.explicitTypeVar
 type stAr = T.sequenceType
@@ -95,10 +95,10 @@ type stateor = stOr onestatemp
 
 type statege = stGe onestatege
 
-(* part of the state for the environment *)
-type stateid = Env.environment ref
+(* part of the state for the env *)
+type stateid = Env.env ref
 
-(* This is for the arity of type constructors *)
+(* This is for the arity of type conss *)
 type statear = stAr onestatear
 
 (* This is for the free identifiers *)
@@ -126,7 +126,7 @@ type stateub = {tc : statefr,
 		ap : statefr}*)
 
 type state   = {se : statese, (* unifiers         *)
-		id : stateid, (* environment      *)
+		id : stateid, (* env      *)
 		na : statena, (* type names       *)
 		rc : staterc, (* records          *)
 		ge : statege, (* monomorphism     *)
@@ -137,7 +137,7 @@ type state   = {se : statese, (* unifiers         *)
 
 (*cl : statecl, (* classes/statuses *)
  ub : stateub} (* free ids         *)*)
-(* id is for outter environment (we need something for the inner one as well - handled by constraints) *)
+(* id is for outter env (we need something for the inner one as well - handled by constraints) *)
 
 
 (* PRINTING SECTION *)
@@ -286,14 +286,14 @@ fun getStateCl x = #cl (getStateSe x)
 (*fun getStateTc x = #tc (getStateUb x)
 fun getStateAp x = #ap (getStateUb x)*)
 
-fun getStateIdVa x = E.getVids x
-fun getStateIdTv x = E.getTyvs x
+fun getStateIdVa x = E.getValueIds x
+fun getStateIdTv x = E.getExplicitTypeVars x
 fun getStateIdTy x = E.getTyps x
-fun getStateIdSt x = E.getStrs x
+fun getStateIdSt x = E.getStructs x
 fun getStateIdSi x = E.getSigs x
-fun getStateIdFn x = E.getFuns x
-fun getStateIdOc x = E.getOvcs x
-fun getStateIdFu x = E.getFuns x
+fun getStateIdFn x = E.getFunctors x
+fun getStateIdOc x = E.getOverloadingClasses x
+fun getStateIdFu x = E.getFunctors x
 
 fun getValOneState onestate x = MS.find (!onestate, x)
 fun getValStateTv state x = getValOneState (getStateTv state) (T.typeVarToInt     x)
@@ -556,19 +556,19 @@ fun isAName tyname state =
 fun updateFoundVal NONE _ = NONE
   | updateFoundVal (SOME (bind, b1)) b2 = SOME (bind, b1 orelse b2)
 
-fun getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.ID (id, lab)) _ fenv labs stts deps =
+fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
     (case List.find (fn x => true) (E.plusproj (fenv env) id) of
-	 SOME ext => (SOME (EL.updExtLab ext labs stts deps, E.getIFct env), NONE, true)
+	 SOME ext => (SOME (EL.updExtLab ext labs stts deps, E.getIArgOfFunctor env), NONE, true)
        | _        => (NONE, SOME ((id, lab), (env, labs, stts, deps)), false))
-  | getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.LID ((id, lab1), lid, lab2)) state fenv labs stts deps =
-    (case List.find (fn x => true) (E.plusproj (E.getStrs env) id) of
+  | getValStateId (env as E.ENV_CONS _) (I.LID ((id, lab1), lid, lab2)) state fenv labs stts deps =
+    (case List.find (fn x => true) (E.plusproj (E.getStructs env) id) of
 	 NONE => (NONE, (SOME ((id, lab1), (env, labs, stts, deps))), false)
        | SOME (bind, labs', stts', deps') =>
 	 let val labs0 = L.cons lab1 (L.cons lab2 (L.union labs labs'))
 	     val stts0 = L.union stts stts'
 	     val deps0 = CD.union deps deps'
 	     val (sem, str, b) =  getValStateId (C.getBindT bind) lid state fenv labs0 stts0 deps0
-	     val sem' = updateFoundVal sem (E.getIFct env)
+	     val sem' = updateFoundVal sem (E.getIArgOfFunctor env)
 	 (*val str' = if not (Option.isSome str) andalso not b
 		      then SOME ((id, lab1), (env, labs0, stts0, deps0))
 		      else str*)
@@ -582,7 +582,7 @@ fun getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.ID (id, lab)) _ fenv l
 			     then ((*D.printdebug2 (E.printEnv env2 "");*) (NONE, y, false))
 			     else getValStateId env1 lid state fenv labs stts deps
        | x => x)
-  | getValStateId (E.ENVVAR (ev, lab)) lid state fenv labs stts deps =
+  | getValStateId (E.ENV_VAR (ev, lab)) lid state fenv labs stts deps =
     (case getValStateEv state ev of
 	 NONE => (NONE, NONE, false)
        | SOME env =>
@@ -603,9 +603,9 @@ fun getValStateId (env as E.ENVIRONMENT_CONSTRUCTOR _) (I.ID (id, lab)) _ fenv l
 		  (CD.union deps deps0)
   | getValStateId env _ _ _ _ _ _ =
     (print (E.printEnv env "");
-     raise EH.DeadBranch "There shouldn't be such an environment in the unification environment")
+     raise EH.DeadBranch "There shouldn't be such an env in the unification env")
 
-(*(*(2010-03-01)The boolean bdown is true if in case of an environment var
+(*(*(2010-03-01)The boolean bdown is true if in case of an env var
  * we wanna use the structure stored in the class to create a dummy binding
  * for a long identifier.*)
 fun getValStateId state (I.ID (id, _)) fstate _ _ =
@@ -639,15 +639,15 @@ fun getValStateId state (I.ID (id, _)) fstate _ _ =
 				     L.cons l1 (L.cons l2 (L.union labs' labs)),
 				     sts,
 				     cds))))
-       | _ => raise EH.DeadBranch "No more that one binding per identifier in the unification environment")
+       | _ => raise EH.DeadBranch "No more that one binding per identifier in the unification env")
 (* MARK *)*)
 
-(* gets various fields from the record holding the environment *)
-fun selVa env = E.getVids env
+(* gets various fields from the record holding the env *)
+fun selVa env = E.getValueIds env
 fun selTy env = E.getTyps env
-fun selSt env = E.getStrs env
+fun selSt env = E.getStructs env
 fun selSi env = E.getSigs env
-fun selOc env = E.getOvcs env
+fun selOc env = E.getOverloadingClasses env
 
 (* TODO: we have to do the same for types, structures and signatures. *)
 (* The env as to be a ENVCON.  We update everything which is not in env. *)
@@ -658,7 +658,7 @@ fun selOc env = E.getOvcs env
 (*fun getBindRe id lab = getBindGen id lab T.consNewV  CL.consAVIr
 fun getBindCo id lab = getBindGen id lab T.consNewV  CL.consAVIc
 fun getBindVa id lab = getBindGen id lab T.consNewV  CL.consAVI (*CL.consAVI*)
-fun getBindTy id lab = getBindGen id lab T.consNewV  CL.consDAT (*(2010-03-02)type function because no constructor?!*)
+fun getBindTy id lab = getBindGen id lab T.consNewV  CL.consDAT (*(2010-03-02)type function because no cons?!*)
 fun getBindSt id lab = getBindGen id lab E.newEnvVar CL.consSTR
 fun getBindOc id lab = getBindGen id lab T.consNewS  CL.consOC*)
 
@@ -830,18 +830,18 @@ fun deleteStateGe state key value =
 
 
 
-fun updateDatCons state (id, lab) (env as E.ENVIRONMENT_CONSTRUCTOR _) =
+fun updateDatCons state (id, lab) (env as E.ENV_CONS _) =
     (case getValStateIdTy state (I.idToLid id lab) true of
 	 (SOME (({id, bind = (bind, tnKind, cons), lab = l, poly, class}, labs, stts, deps), _), _, _) =>
 	 if L.eq lab l
-	 then cons := (E.getVids env, E.getICmp env)
+	 then cons := (E.getValueIds env, E.getIComplete env)
 	 else ()
        | _ => ())
   | updateDatCons state idlab env = ()
 
 fun isEmpty state = MS.numItems (!(getStateTv state)) = 0
 
-fun initStateId () = ref E.emptyEnvironment
+fun initStateId () = ref E.emptyEnv
 
 fun initStateSe () =
     let val atv = ref MS.empty
@@ -1278,14 +1278,14 @@ fun updateRecOne state strc =
 
 (* PUSHING AN ENV ONTO A STATE *)
 
-fun getAllTns (env as E.ENVIRONMENT_CONSTRUCTOR _) state =
+fun getAllTns (env as E.ENV_CONS _) state =
     E.foldrienv (fn (_, sem, tns) => foldr (fn (bind, tns) => (getAllTns (E.getBindT bind) state) @ tns)
 					   tns
 					   sem)
-		(E.getITns env)
-		(E.getStrs env)
+		(E.getITypeNames env)
+		(E.getStructs env)
   | getAllTns (E.SEQUENCE_ENV (env1, env2)) state = (getAllTns env1 state) @ (getAllTns env2 state)
-  | getAllTns (E.ENVVAR (ev, lab)) state =
+  | getAllTns (E.ENV_VAR (ev, lab)) state =
     (case getValStateEv state ev of (* We need that because we don't fully build up structures as we should! *)
 	 NONE => []
        | SOME env => getAllTns env state)
@@ -1306,9 +1306,9 @@ val emMonos = MS.empty
 
 val emMonos = []*)
 
-fun getMonoTyVars (env as E.ENVIRONMENT_CONSTRUCTOR _) state =
-    let val vids = E.getVids env
-	val strs = E.getStrs env
+fun getMonoTyVars (env as E.ENV_CONS _) state =
+    let val vids = E.getValueIds env
+	val strs = E.getStructs env
 	(*val _ = D.printdebug2 (E.printEnv env "")*)
 	(*val _ = D.printdebug2 (E.printEnv env "")*)
     in E.foldrienv (fn (_, binds, monos) =>
@@ -1343,11 +1343,11 @@ fun getMonoTyVars (env as E.ENVIRONMENT_CONSTRUCTOR _) state =
     end
   | getMonoTyVars (E.SEQUENCE_ENV (env1, env2)) state =
     let val monos = getMonoTyVars env2 state
-    in if E.isEnvV env2
+    in if E.isENV_VAR env2
        then monos
        else combineTyVars monos (getMonoTyVars env1 state)
     end
-  | getMonoTyVars (E.ENVVAR (ev, lab)) state =
+  | getMonoTyVars (E.ENV_VAR (ev, lab)) state =
     (case getValStateEv state ev of (* We need that because we don't fully build up structures as we should! *)
 	 NONE => emMonos
        | SOME env => getMonoTyVars env state)
@@ -1372,7 +1372,7 @@ and getMonoTyVarsStrEnv strenv state =
 		strenv
 
 
-(* When pusing an environment to a state we have to also push its type names. *)
+(* When pusing an env to a state we have to also push its type names. *)
 fun pushEnvToState bempty env state =
     if bempty
     then ([], [])
@@ -1393,7 +1393,7 @@ fun pushEnvToState bempty env state =
 
 (* REMOVING AN ENV FROM A STATE *)
 
-(* when removing an environment from a state we also have to remove its type names. *)
+(* when removing an env from a state we also have to remove its type names. *)
 fun remEnvFromState bempty (tyvars, tns) state =
     if bempty
     then ()
@@ -1404,7 +1404,7 @@ fun remEnvFromState bempty (tyvars, tns) state =
 	     val stateid = getStateId state
 	 in case !stateid of
 		E.SEQUENCE_ENV (env1, env2) => stateid := env1
-	      | _ => raise EH.DeadBranch "It appears that the unification environment is not a sequence"
+	      | _ => raise EH.DeadBranch "It appears that the unification env is not a sequence"
 	 end
 
 

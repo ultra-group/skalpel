@@ -24,6 +24,6 @@
 
 signature OP = sig
 
-    val getOpType :  Id.assoc -> Env.varenv * Env.constraints
+    val getOpType :  Id.assoc -> Env.varEnv * Env.constraints
 
 end

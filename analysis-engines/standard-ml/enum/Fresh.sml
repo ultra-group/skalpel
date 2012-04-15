@@ -38,7 +38,7 @@ type state = {tv : T.typeVar     option OM.map ref,
 	      sq : T.sequenceVar    option OM.map ref,
 	      rt : T.rowVar    option OM.map ref,
 	      lt : T.labelVar  option OM.map ref,
-	      ev : E.envvar    option OM.map ref,
+	      ev : E.envVar    option OM.map ref,
 	      or : T.idor      option OM.map ref}
 
 (* initialises the state *)

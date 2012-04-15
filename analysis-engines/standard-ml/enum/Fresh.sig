@@ -35,7 +35,7 @@ signature FRESH = sig
     val freshSequenceVar        : Ty.sequenceVar    -> state -> Ty.sequenceVar
     val freshRowVar             : Ty.rowVar    -> state -> Ty.rowVar
     val freshLabVar             : Ty.labelVar    -> state -> Ty.labelVar
-    val freshEnvVar             : Env.envvar   -> state -> Env.envvar
+    val freshEnvVar             : Env.envVar   -> state -> Env.envVar
     val freshIdOr               : Ty.idor      -> state -> Ty.idor
 
 end

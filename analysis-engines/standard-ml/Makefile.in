@@ -199,7 +199,7 @@ smlnj-bin: ${SOURCESDIR}/bin/slicer-smlnj
 
 mlton-bin-gen: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
-	mlton -output bin/skalpel sources.mlb
+	mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
 
 # We need mlton-base here ohterwise the ML-mlton-grm.sml and such
 # might not exists and make is going to complain when checking
