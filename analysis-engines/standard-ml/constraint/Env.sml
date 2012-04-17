@@ -454,11 +454,11 @@ and printcst cst ascid = printcst' cst "" ascid
 (* Bindings constructors *)
 
 fun consBind     id bind class lab poly = EL.initExtLab (C.consBind     id bind class lab poly) lab
-fun consBindPoly id bind class lab      = EL.initExtLab (C.consBindPoly id bind class lab)      lab
+fun consBindPoly {id=id, typeOfId=bind, classOfId=class, labelOfConstraint=lab} =
+    EL.initExtLab (C.consBindPoly id bind class lab)      lab
 fun consBindMono id bind class lab      = EL.initExtLab (C.consBindMono id bind class lab)      lab
 
 fun consAccId lid sem class lab = {lid = lid, sem = sem, class = class, lab = lab}
-
 
 (* Accessors to a extenv *)
 
@@ -631,9 +631,9 @@ fun remenv id env = #1 (envOrdMap.remove (env, id)) handle LibBase.NotFound => e
 
 fun mapenv fmap env = envOrdMap.map fmap env
 
-(* unionEnvList is a function which seems to union a list of envs *)
+(* unionEnvList is a function which unions a list of environments *)
 fun unionEnvList envList =
-    foldr (fn (env1, env2) => envOrdMap.unionWith           (* unionWith returns a map that is the union of two maps *)
+    foldr (fn (env1, env2) => envOrdMap.unionWith     (* unionWith returns a map that is the union of two maps *)
 				 (fn (x, y) => x @ y) (* used to define the map on elements that are in the domain of both maps *)
 				 (env1, env2))        (* the two maps that are to be unioned *)
 	  emptyMap (* the empty map (from the ORD_MAP signature defined in the smlnj library *)
@@ -1006,7 +1006,11 @@ fun allEqualValueIds valueIds =
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshTypeFunctionVar ()
 	val c    = initFunctionTypeConstraint (T.consTYPE_FUNCTION_VAR tfv) tyfun lab
-	val typeNames = consSingleEnv (id, [consBindPoly id (T.consTYPE_FUNCTION_VAR tfv, TYPE, ref (emvar, false)) (CL.consTYCON ()) lab])
+	val typeNames = consSingleEnv (id, [consBindPoly
+						{id=id,
+						 typeOfId=(T.consTYPE_FUNCTION_VAR tfv, TYPE, ref (emvar, false)),
+						 classOfId=(CL.consTYCON ()),
+						 labelOfConstraint=lab}])
     in (singleConstraint (lab, c), consEnvTypeNames typeNames)
     end
   | genLongEnv (I.LID ((id, lab1), lid, lab2)) tyfun =
@@ -1015,7 +1019,11 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 	val ev2  = freshEnvVar ()
 	val c1   = initEnvConstraint (consENV_VAR ev1 lab1) env1 lab1
 	val c2   = initEnvConstraint (consENV_VAR ev2 lab2) (consENV_VAR ev1 lab2) lab2
-	val structs = consSingleEnv (id, [consBindPoly id (consENV_VAR ev2 lab1) (CL.consSTR ()) lab1])
+	val structs = consSingleEnv (id, [consBindPoly
+					      {id=id,
+					       typeOfId=(consENV_VAR ev2 lab1),
+					       classOfId=(CL.consSTR ()),
+					       labelOfConstraint=lab1}])
     in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStructs structs)
     end
 

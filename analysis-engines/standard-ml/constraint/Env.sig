@@ -223,7 +223,7 @@ signature ENV = sig
     val emnfo        : infoEnv
 
     val consBind     : Id.id -> 'a -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
-    val consBindPoly : Id.id -> 'a -> ClassId.class -> Label.label              -> 'a bind
+    val consBindPoly : {id : Id.id, typeOfId : 'a, classOfId : ClassId.class, labelOfConstraint : Label.label} -> 'a bind
     val consBindMono : Id.id -> 'a -> ClassId.class -> Label.label              -> 'a bind
 
     val consAccId    : Id.lid -> 'a -> ClassId.class -> Label.label -> 'a accid

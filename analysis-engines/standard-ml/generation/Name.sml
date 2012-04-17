@@ -63,7 +63,10 @@ fun genCstTyZero' ftycons = genCstTyZero (constyZ ftycons)
 fun genCstTyOne'  ftycons = genCstTyOne  (constyO ftycons)
 
 (* generates a binding *)
-fun genBind id tyf tnKind = E.consBindPoly id (tyf, tnKind, ref (E.emvar, false)) (CL.consTYCON ()) L.builtinLab
+fun genBind id tyf tnKind = E.consBindPoly {id=id,
+					    typeOfId=(tyf, tnKind, ref (E.emvar, false)),
+					    classOfId=(CL.consTYCON ()),
+					    labelOfConstraint=L.builtinLab}
 
 (* genBuiltZero is for types which do not require some kind of argument
  * such as string, int, or bool *)

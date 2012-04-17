@@ -2395,7 +2395,10 @@ fun unif env filters user =
 			      else BINDIN  bind3
 			   end
 	      | FI.OUT  => BINDOUT
-	      | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (T.newTYPE_VAR ()) (CL.consANY ()) (E.getBindL bind))
+	      | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						    typeOfId=(T.newTYPE_VAR ()),
+						    classOfId=(CL.consANY ()),
+						    labelOfConstraint=(E.getBindL bind)})
 
 	fun solveextvarcontext (bind as (_, labs, stts, deps)) cl =
 	    let val id  = E.getBindI bind
@@ -2424,14 +2427,23 @@ fun unif env filters user =
 		      (* NOTE: if in the env there is a dummy binding then we can't
 		       * generate a binding because we don't know if the one in the env
 		       * comes from a CON or a REC or something else.*)
-		      | CL.ANY     => BINDDUM (E.consBindPoly id (T.newTYPE_VAR ()) (CL.consANY ()) lab)
-		      | CL.CLVAR _ => BINDDUM (E.consBindPoly id (T.newTYPE_VAR ()) (CL.consANY ()) lab)
+		      | CL.ANY     => BINDDUM (E.consBindPoly {id=id,
+							       typeOfId=(T.newTYPE_VAR ()),
+							       classOfId=(CL.consANY ()),
+							       labelOfConstraint=lab})
+		      | CL.CLVAR _ => BINDDUM (E.consBindPoly {id=id,
+							       typeOfId=(T.newTYPE_VAR ()),
+							       classOfId=(CL.consANY ()),
+							       labelOfConstraint=lab})
 		      | class => (print (CL.toString class); raise EH.DeadBranch "identifier in env has an unexpected status"))
 		 (* NOTE: if the env in the state hides with env variables
 		  * then we can't know if one of these variable should in fact declare
 		  * a CON or EXC binder for the same if as the current pseudo-binder. *)
 		 | _ => if S.hasEnvVar state
-			then BINDDUM (E.consBindPoly id (T.newTYPE_VAR ()) (CL.consANY ()) lab)
+			then BINDDUM (E.consBindPoly {id=id,
+						      typeOfId=(T.newTYPE_VAR ()),
+						      classOfId=(CL.consANY ()),
+						      labelOfConstraint=lab})
 			else BINDIN (EL.updExtLabD bind (CD.sing id lab))
 	    end
 
@@ -2451,7 +2463,10 @@ fun unif env filters user =
 	      | CL.VID CL.EX1 => BINDIN bind
 	      | CL.VID CL.EXC => BINDIN bind
 	      | CL.ANY        => BINDIN bind
-	      | CL.CLVAR _    => BINDDUM (E.consBindPoly (E.getBindI bind) (T.newTYPE_VAR ()) (CL.consANY ()) (E.getBindL bind))
+	      | CL.CLVAR _    => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+							  typeOfId=(T.newTYPE_VAR ()),
+							  classOfId=(CL.consANY ()),
+							  labelOfConstraint=(E.getBindL bind)})
 	      | class => (print (CL.toString class); raise EH.DeadBranch "identifier in binder has an unexpected status")
 
 	fun solvedumvarbind bind =
@@ -2502,7 +2517,10 @@ fun unif env filters user =
 				      deps)
 			   end
 	      | FI.OUT  => BINDOUT
-	      | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind))
+	      | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						    typeOfId=(E.getBindT bind),
+						    classOfId=(CL.consANY ()),
+						    labelOfConstraint=(E.getBindL bind)})
 
 	fun solveextovc (bind as (bovc, labs, stts, deps)) =
 	    case FI.getStateLabs filters (EL.getExtLabL bind) of
@@ -2514,7 +2532,10 @@ fun unif env filters user =
 				      deps)
 			   end
 	      | FI.OUT  => BINDOUT
-	      | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind))
+	      | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						    typeOfId=(E.getBindT bind),
+						    classOfId=(CL.consANY ()),
+						    labelOfConstraint=(E.getBindL bind)})
 
 	fun solveexttyv bind =
 	    case FI.getStateLab filters (E.getBindL bind) of
@@ -2530,7 +2551,10 @@ fun unif env filters user =
 				     | _ => BINDIN bind
 				end)
 	      | FI.OUT  => BINDOUT
-	      | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind))
+	      | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						    typeOfId=(E.getBindT bind),
+						    classOfId=(CL.consANY ()),
+						    labelOfConstraint=(E.getBindL bind)})
 
 	fun solveextenv bind =
 	    (case FI.getStateLab filters (E.getBindL bind) of
@@ -2540,14 +2564,20 @@ fun unif env filters user =
 		 in BINDIN (EL.mapExtLab bind (fn benv => C.mapBind benv (fn _ => env2)))
 		 end*)
 	       | FI.OUT  => BINDOUT
-	       | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind)))
+	       | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						     typeOfId=(E.getBindT bind),
+						     classOfId=(CL.consANY ()),
+						     labelOfConstraint=(E.getBindL bind)}))
 
 	fun solveextfun bind =
 	    ((*D.printdebug2 (FI.toString filters ^ "\n" ^ I.printId (E.getBindI bind));*)
 	     case FI.getStateLab filters (E.getBindL bind) of
 		 FI.IN   => BINDIN bind
 	       | FI.OUT  => BINDOUT
-	       | FI.BIND => BINDDUM (E.consBindPoly (E.getBindI bind) (E.getBindT bind) (CL.consANY ()) (E.getBindL bind)))
+	       | FI.BIND => BINDDUM (E.consBindPoly {id=(E.getBindI bind),
+						     typeOfId=(E.getBindT bind),
+						     classOfId=(CL.consANY ()),
+						     labelOfConstraint=(E.getBindL bind)}))
 	(*(EL.mapExtLab (E.resetExtLab bind) C.resetPoly)*)
 
 	fun genMultiError (SOME bind1) bind2 =

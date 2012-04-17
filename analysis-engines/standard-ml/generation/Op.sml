@@ -203,7 +203,7 @@ fun getOpType ascid =
 		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
-		val bd  = E.consBindPoly id ty cl lab
+		val bd  = E.consBindPoly {id=id, typeOfId=ty, classOfId=cl, labelOfConstraint=lab}
 	    in (bd, c)
 	    end
 	fun scanUnary (id, str) =
@@ -211,7 +211,10 @@ fun getOpType ascid =
 		val (ti, to) = getTyUnaryOp str lab
 		val ty  = T.newTYPE_VAR ()
 		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
-		val bd  = E.consBindPoly id ty (CL.consREC ()) lab
+		val bd  = E.consBindPoly {id=id,
+					  typeOfId=ty,
+					  classOfId=(CL.consREC ()),
+					  labelOfConstraint=lab}
 	    in (bd, c)
 	    end
 	val (binds1, cst1) = foldr (fn (id, (binds, cs)) =>
