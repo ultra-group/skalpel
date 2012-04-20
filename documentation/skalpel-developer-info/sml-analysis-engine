@@ -28,8 +28,25 @@
 It is assumed that the user is in the analysis-engines/standard-ml/
 directory.
 
-If there is no Makefile, then run the configure script with
-./configure.
+If you have access to the files of another group member, it is
+advisable to copy their whole analysis-engines/ folder over your own,
+which will have all of the generated files (such as Makefiles, .mlb
+files, cmtotes binary etc) for you. Otherwise you should run the
+./configure script to generate the Makefile, and then run make
+mlton-bin-gen to compile the analysis engine.
+
+You may notice on compilation that this error appears:
+
+Error: /usr/lib/mlton/sml/smlnj-lib/JSON/json-lib.mlb 19.35 File
+  /Users/mtf/devel/smlnj/smlnj-110.72/lib/ml-lpt-lib.cm/ml-lpt-lib.mlb
+  does not exist.
+
+This is a bug in the MLton compiler library. First, copy the ml-lpt
+folder provided by SML/NJ into /usr/lib/mlton/sml/smlnj-lib/ folder,
+and then change line 19 of the file with the error in it above to
+$(SML_LIB)/smlnj-lib/ml-lpt/lib/ml-lpt-lib.mlb. Now try compiling again.
+
+
 
 ================================================================================
                                   Abbreviations
