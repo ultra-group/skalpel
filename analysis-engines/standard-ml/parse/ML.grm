@@ -285,19 +285,19 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | typevarseq         of A.typevarseq t
 | typetuple        of (A.types t) list * R.region list list * R.region list
 | consty           of A.types t
-| onetyrow         of A.tyrow t
-| tyrow            of (A.tyrow list * R.region list) t
-| tyrowopt         of (A.tyrow list * R.region list) t
+| onetyfield         of A.tyfield t
+| tyfield            of (A.tyfield list * R.region list) t
+| tyfieldopt         of (A.tyfield list * R.region list) t
 | atty             of A.types t
 | labtype          of (R.region list -> A.labtype) t
 | types            of A.types t
 | tupty            of A.types t
-| typeSequenceComma     of ((R.region list -> R.region list -> A.labtype list) * R.region list) t
+| typeRowComma     of ((R.region list -> R.region list -> A.labtype list) * R.region list) t
 | tyclass          of A.tyclass t
 | labtyclass       of (R.region list -> A.labtyclass) t
 | tyclassseq       of A.tyclassseq t
 | tyclassseqcomma  of ((R.region list -> R.region list -> A.labtyclass list) * R.region list) t
-| typeSequence     of A.typeSequence t
+| typeRow     of A.typeRow t
 | conbind          of A.conbind t
 | conbindbar       of A.conbind list t
 | conbindseq       of A.conbindseq t
@@ -338,9 +338,9 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | neexplist        of ((R.region list -> R.region list -> A.labexp list) * R.region list) t
 | seqexp           of (R.region list -> R.region list -> A.seqexp) t
 | labexp           of (R.region list -> A.labexp) t
-| oneexprow        of (R.region list -> A.exprow) t
-| exprow           of ((R.region list -> A.exprow list) * R.region list) t
-| exprowopt        of ((R.region list -> A.exprow list) * R.region list) t
+| oneexpfield        of (R.region list -> A.expfield) t
+| expfield           of ((R.region list -> A.expfield list) * R.region list) t
+| expfieldopt        of ((R.region list -> A.expfield list) * R.region list) t
 | atexp            of A.atexp t
 | appexp           of (A.atexp t) F.tree list
 | infexp           of A.exp t
@@ -355,9 +355,9 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 | nepatlist        of ((R.region list -> R.region list -> A.labpat list) * R.region list) t
 | labpat           of (R.region list -> A.labpat) t
 | labpatcpx        of (R.region list -> A.labpat) t
-| onepatrow        of A.patrow t
-| patrow           of (A.patrow list * R.region list) t
-| patrowopt        of (A.patrow list * R.region list) t
+| onepatfield        of A.patfield t
+| patfield           of (A.patfield list * R.region list) t
+| patfieldopt        of (A.patfield list * R.region list) t
 | atpat            of A.atpat t
 | atpat'           of A.atpat t
 | coltylist        of R.region list -> ((R.region list -> A.labtype) t * R.region * R.region list * R.region list * R.region) list
@@ -1797,49 +1797,49 @@ typetuple :
 consty :
   atty
     (atty)
-| typeSequence longtycon
+| typeRow longtycon
     (fn (n, asc) =>
 	let val (tn, masc) = longtycon (L.nextLabel n, asc)
-	    val (ts, (p, asc')) = typeSequence masc
-	    val reg = getRegion typeSequenceright longtyconleft
+	    val (ts, (p, asc')) = typeRow masc
+	    val reg = getRegion typeRowright longtyconleft
 	in (A.TypeTyCon (ts, tn, reg, n, p), (p, asc'))
 	end)
 | longtycon
     (fn (n, asc) =>
 	let val (tn, (m, asc')) = longtycon (L.nextLabel n, asc)
 	    val regts = R.consReg longtyconleft longtyconleft
-	    val ts = A.TypeSequenceEm (regts, m, L.nextLabel m)
+	    val ts = A.TypeRowEm (regts, m, L.nextLabel m)
 	in (A.TypeTyCon (ts, tn, [regts], n, L.nextLabel m), (L.nextLabel m, asc'))
 	end)
 
-onetyrow :
+onetyfield :
  tylab COLON labtype
     (fn (n, asc) =>
 	let val (l, masc) = tylab (L.nextLabel n, asc)
 	    val (t, (p, asc')) = labtype masc
 	    val reg = R.consReg COLONleft COLONright
 	    val rlt = getRegion COLONright labtypeleft
-	in (A.TyRow (l, t rlt, reg, n, p), (p, asc'))
+	in (A.TyField (l, t rlt, reg, n, p), (p, asc'))
 	end)
 
-tyrow :
-  onetyrow
+tyfield :
+  onetyfield
     (fn nasc =>
-	let val (otr, masc) = onetyrow nasc
+	let val (otr, masc) = onetyfield nasc
 	in (([otr], []), masc)
 	end)
-| onetyrow COMMA tyrow
+| onetyfield COMMA tyfield
     (fn nasc =>
-	let val (otr, masc) = onetyrow nasc
-	    val ((tr, regl), pasc) = tyrow masc
+	let val (otr, masc) = onetyfield nasc
+	    val ((tr, regl), pasc) = tyfield masc
 	    val reg = R.consReg COMMAleft COMMAright
 	in ((otr :: tr, reg :: regl), pasc)
 	end)
 
-tyrowopt :
+tyfieldopt :
     (fn nasc => (([], []), nasc))
-| tyrow
-    (tyrow)
+| tyfield
+    (tyfield)
 
 atty :
   typevar
@@ -1847,9 +1847,9 @@ atty :
 	let val (tv, masc) = typevar nasc
 	in (A.TypeOneVar tv, masc)
 	end)
-| LBRACE tyrowopt RBRACE
+| LBRACE tyfieldopt RBRACE
     (fn (n, asc) =>
-	let val ((trl, regl), (m, asc')) = tyrowopt (L.nextLabel n, asc)
+	let val ((trl, regl), (m, asc')) = tyfieldopt (L.nextLabel n, asc)
 	    val reg1 = R.consReg LBRACEleft LBRACEright
 	    val reg2 = R.consReg RBRACEleft RBRACEright
 	in (A.TypeRecord (trl, [reg1, reg2], regl, n, m), (m, asc'))
@@ -1863,7 +1863,7 @@ atty :
 	in (A.TypeParen (t rlt, reg1, reg2, n, m), (m, asc'))
 	end)
 
-typeSequenceComma :
+typeRowComma :
   labtype COMMA labtype
     (fn nasc =>
 	let val (tv1, masc) = labtype1 nasc
@@ -1873,32 +1873,32 @@ typeSequenceComma :
 	    val rr' = getRegion COMMAright labtype2left
 	in ((fn rl => fn rr => [tv1 (rl @ rl'), tv2 (rr' @ rr)], [reg]), pasc)
 	end)
-| labtype COMMA typeSequenceComma
+| labtype COMMA typeRowComma
     (fn nasc =>
 	let val (t, masc) = labtype nasc
-	    val ((tc, regl), pasc) = typeSequenceComma masc
+	    val ((tc, regl), pasc) = typeRowComma masc
 	    val reg = R.consReg COMMAleft COMMAleft
 	    val rl' = getRegion labtyperight COMMAleft
-	    val rr' = getRegion COMMAright typeSequenceCommaleft
+	    val rr' = getRegion COMMAright typeRowCommaleft
 	in ((fn rl => fn rr => (t (rl @ rl')) :: (tc rr' rr), reg :: regl), pasc)
 	end)
 
-typeSequence :
+typeRow :
   consty
     (fn (n, asc) =>
 	let val (ty, (m, ascm)) = consty (L.nextLabel n, asc)
 	    val rs = [R.consReg constyleft constyright]
-	in (A.TypeSequenceOne (ty, rs, n, m), (m, ascm))
+	in (A.TypeRowOne (ty, rs, n, m), (m, ascm))
 	end)
-| LPAREN typeSequenceComma RPAREN
+| LPAREN typeRowComma RPAREN
     (fn (n, asc) =>
-	let val ((ltv, regl'), (m, asc')) = typeSequenceComma (L.nextLabel n, asc)
+	let val ((ltv, regl'), (m, asc')) = typeRowComma (L.nextLabel n, asc)
 	    val reg1 = R.consReg LPARENleft LPARENleft
 	    val reg2 = R.consReg RPARENleft RPARENleft
 	    val regl = reg1 :: regl' @ [reg2]
-	    val rl = getRegion LPARENright typeSequenceCommaleft
-	    val rr = getRegion typeSequenceCommaright RPARENleft
-	in (A.TypeSequenceSeq (ltv rl rr, regl, n, m), (m, asc'))
+	    val rl = getRegion LPARENright typeRowCommaleft
+	    val rr = getRegion typeRowCommaright RPARENleft
+	in (A.TypeRowSeq (ltv rl rr, regl, n, m), (m, asc'))
 	end)
 
 tyclass :
@@ -2704,7 +2704,7 @@ labexp :
 	in (fn rs => A.LabExp (e, rs, re, n, m), (m, asc'))
 	end)
 
-oneexprow :
+oneexpfield :
  tylab EQUALOP labexp
     (fn (n, asc) =>
 	let val (l, masc) = tylab (L.nextLabel n, asc)
@@ -2713,28 +2713,28 @@ oneexprow :
 	    val rle = getRegion EQUALOPright labexpleft
 	    val rlt = getRegion tylabright EQUALOPleft
 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tylab EQUALOP labexp"
-	in (fn rl => A.ExpRow (l, e rle, reg, rl @ rlt, n, p), (p, asc'))
+	in (fn rl => A.ExpField (l, e rle, reg, rl @ rlt, n, p), (p, asc'))
 	end)
 
-exprow :
-  oneexprow
+expfield :
+  oneexpfield
     (fn nasc =>
-	let val (oer, masc) = oneexprow nasc
+	let val (oer, masc) = oneexpfield nasc
 	in ((fn rl => [oer rl], []), masc)
 	end)
-| oneexprow COMMA exprow
+| oneexpfield COMMA expfield
     (fn nasc =>
-	let val (oer, masc) = oneexprow nasc
-	    val ((er, regl), pasc) = exprow masc
+	let val (oer, masc) = oneexpfield nasc
+	    val ((er, regl), pasc) = expfield masc
 	    val reg = R.consReg COMMAleft COMMAright
-	    val rr  = getRegion COMMAright exprowleft
+	    val rr  = getRegion COMMAright expfieldleft
 	in ((fn rl => ((oer rl) :: (er rr)), reg :: regl), pasc)
 	end)
 
-exprowopt :
+expfieldopt :
     (fn nasc => ((fn _ => [], []), nasc))
-| exprow
-    (exprow)
+| expfield
+    (expfield)
 
 atexp :
   OP longid
@@ -2787,12 +2787,12 @@ atexp :
 	    val rle2 = getRegion labexpright RPARENleft
 	in (A.AtExpParen (e (rle1 @ rle2), reg1, reg2, n, m), (m, asc'))
 	end)
-| LBRACE exprowopt RBRACE
+| LBRACE expfieldopt RBRACE
     (fn (n, asc) =>
-	let val ((erl, regl), (m, asc')) = exprowopt (L.nextLabel n, asc)
+	let val ((erl, regl), (m, asc')) = expfieldopt (L.nextLabel n, asc)
 	    val reg1 = R.consReg LBRACEleft LBRACEright
 	    val reg2 = R.consReg RBRACEleft RBRACEright
-	    val rl   = getRegion LBRACEright exprowoptleft
+	    val rl   = getRegion LBRACEright expfieldoptleft
 	in (A.AtExpRecord (erl rl, [reg1, reg2], regl, n, m), (m, asc'))
 	end)
 | LET decs IN labexp END
@@ -3185,7 +3185,7 @@ labidty :
 	in (fn rs => A.LabIdTy (id, rs, n, m), (m, asc'))
 	end)
 
-onepatrow :
+onepatfield :
  tylab EQUALOP labpat
     (fn (n, asc) =>
 	let val (l, masc) = tylab (L.nextLabel n, asc)
@@ -3194,12 +3194,12 @@ onepatrow :
 	    val rlp = getRegion EQUALOPright labpatleft
 	    val rlt = getRegion tylabright EQUALOPleft
 	    val _   = D.printDebug 3 D.MLGRM "pattern detected: tylab EQUALOP labpat"
-	in (A.PatRow (l, pa rlp, reg, rlt, n, p), (p, asc'))
+	in (A.PatField (l, pa rlp, reg, rlt, n, p), (p, asc'))
 	end)
 | identty
     (fn (n, asc) =>
 	let val (id, (m, asc')) = identty (n, asc)
-	in (A.PatRowId (id, m), (m, asc'))
+	in (A.PatFieldId (id, m), (m, asc'))
 	end)
 | labidty AS labpat
     (fn (n, asc) =>
@@ -3208,32 +3208,32 @@ onepatrow :
 	    val reg = R.consReg ASleft ASright
 	    val rlp = getRegion ASright labpatleft
 	    val rli = getRegion labidtyright ASleft
-	in (A.PatRowAs (id rli, pa rlp, reg, n, p), (p, asc'))
+	in (A.PatFieldAs (id rli, pa rlp, reg, n, p), (p, asc'))
 	end)
 | WILDCARD
     (fn (n, asc) =>
 	let val reg = R.consReg WILDCARDleft WILDCARDright
-	in (A.PatRowWild (reg, n, L.nextLabel n), (L.nextLabel n, asc))
+	in (A.PatFieldWild (reg, n, L.nextLabel n), (L.nextLabel n, asc))
 	end)
 
-patrow :
-  onepatrow
+patfield :
+  onepatfield
     (fn nasc =>
-	let val (opr, masc) = onepatrow nasc
+	let val (opr, masc) = onepatfield nasc
 	in (([opr], []), masc)
 	end)
-| onepatrow COMMA patrow
+| onepatfield COMMA patfield
     (fn nasc =>
-	let val (opr, masc) = onepatrow nasc
-	    val ((pr, regl), pasc) = patrow masc
+	let val (opr, masc) = onepatfield nasc
+	    val ((pr, regl), pasc) = patfield masc
 	    val reg = R.consReg COMMAleft COMMAright
 	in ((opr :: pr, reg :: regl), pasc)
 	end)
 
-patrowopt :
+patfieldopt :
     (fn nasc => (([], []), nasc))
-| patrow
-    (patrow)
+| patfield
+    (patfield)
 
 (*atpat' :
   WILD
@@ -3271,9 +3271,9 @@ patrowopt :
 	    val rr   = getRegion labpatorright RPARENleft
 	in (A.AtPatOr (xs rl rr, regs, n, m), (m, masc))
 	end)
-| LBRACE patrowopt RBRACE
+| LBRACE patfieldopt RBRACE
     (fn (n, asc) =>
-	let val ((prl, regl), (m, asc')) = patrowopt (L.nextLabel n, asc)
+	let val ((prl, regl), (m, asc')) = patfieldopt (L.nextLabel n, asc)
 	    val reg1 = R.consReg LBRACEleft LBRACEright
 	    val reg2 = R.consReg RBRACEleft RBRACEright
 	in (A.AtPatRecord (prl, [reg1, reg2], regl, n, m), (m, asc'))
@@ -3715,9 +3715,9 @@ atpat' :
 	let val (sc, masc) = scon nasc
 	in (A.AtPatScon sc, masc)
 	end)
-| LBRACE patrowopt RBRACE
+| LBRACE patfieldopt RBRACE
     (fn (n, asc) =>
-	let val ((prl, regl), (m, asc')) = patrowopt (L.nextLabel n, asc)
+	let val ((prl, regl), (m, asc')) = patfieldopt (L.nextLabel n, asc)
 	    val reg1 = R.consReg LBRACEleft LBRACEright
 	    val reg2 = R.consReg RBRACEleft RBRACEright
 	in (A.AtPatRecord (prl, [reg1, reg2], regl, n, m), (m, asc'))

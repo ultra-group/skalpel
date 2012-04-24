@@ -61,11 +61,11 @@ datatype error = Success of S.state
  * We check that given a CT, a CS, or a CR term, the variable does not
  * occur nested in the type. *)
 datatype occty = T  of T.typeVar  EL.extLab
-               | S  of T.sequenceVar EL.extLab
-               | R  of T.rowVar EL.extLab
+               | S  of T.rowVar EL.extLab
+               | R  of T.fieldVar EL.extLab
 datatype cocc  = CT of T.typeVar  * T.ty
-               | CS of T.sequenceVar * T.sequenceType
-               | CR of T.rowVar * T.rowType
+               | CS of T.rowVar * T.rowType
+               | CR of T.fieldVar * T.fieldType
 
 (* THESE bind forms are used to solve binders.   *)
 datatype 'a sbind = BINDOUT                  (* the binding has been discarded                    *)
@@ -89,12 +89,12 @@ exception errorfound of ERR.error
 (* printing *)
 
 fun printCocc (CT (tv, ty))  = "CT(" ^ T.printTypeVar  tv ^ "," ^ T.printty    ty ^ ")"
-  | printCocc (CS (sv, sq))  = "CS(" ^ T.printSequenceVar sv ^ "," ^ T.printseqty sq ^ ")"
-  | printCocc (CR (rv, rt))  = "CR(" ^ T.printRowVar rv ^ "," ^ T.printRowType rt ^ ")"
+  | printCocc (CS (sv, sq))  = "CS(" ^ T.printRowVar sv ^ "," ^ T.printseqty sq ^ ")"
+  | printCocc (CR (rv, rt))  = "CR(" ^ T.printFieldVar rv ^ "," ^ T.printFieldType rt ^ ")"
 
 fun printOccty (T x) = "T" ^ EL.printExtLab' x T.printTypeVar
-  | printOccty (S x) = "S" ^ EL.printExtLab' x T.printSequenceVar
-  | printOccty (R x) = "R" ^ EL.printExtLab' x T.printRowVar
+  | printOccty (S x) = "S" ^ EL.printExtLab' x T.printRowVar
+  | printOccty (R x) = "R" ^ EL.printExtLab' x T.printFieldVar
 
 fun printOcctyList [] = ""
   | printOcctyList (x :: xs) = printOccty x ^ "\n" ^ printOcctyList xs
@@ -116,13 +116,13 @@ fun printTFun tfun =
 (* -------------- *)
 
 
-fun decomptyrow (T.ROW_VAR rv)                ll deps ids = ([R (rv, ll, deps, ids)], 0)
-  | decomptyrow (T.RC (_, ty, _))        ll deps ids = decomptyty ty ll deps ids
-  | decomptyrow (T.ROW_DEPENDANCY (r, x, y, z))      ll deps ids = decomptyrow r (L.union x ll) (L.union y deps) (CD.union z ids)
-  | decomptyrow T.ROW_NO_OVERLOAD                     ll deps ids = ([], 0)
-and decomptysq  (T.SEQUENCE_VAR sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
-  | decomptysq  (T.SC (rtl, _, _))       ll deps ids = (decomptyrowlist rtl ll deps ids, 1)
-  | decomptysq  (T.SEQUENCE_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
+fun decomptyfield (T.FIELD_VAR rv)                ll deps ids = ([R (rv, ll, deps, ids)], 0)
+  | decomptyfield (T.FC (_, ty, _))        ll deps ids = decomptyty ty ll deps ids
+  | decomptyfield (T.FIELD_DEPENDANCY (r, x, y, z))      ll deps ids = decomptyfield r (L.union x ll) (L.union y deps) (CD.union z ids)
+  | decomptyfield T.FIELD_NO_OVERLOAD                     ll deps ids = ([], 0)
+and decomptysq  (T.ROW_VAR sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
+  | decomptysq  (T.ROW_C (rtl, _, _))       ll deps ids = (decomptyfieldlist rtl ll deps ids, 1)
+  | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
 and decomptyty  (T.TYPE_VAR (tv, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
   | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _))         ll deps ids = decomptysq sq ll deps ids
@@ -130,7 +130,7 @@ and decomptyty  (T.TYPE_VAR (tv, _, _))         ll deps ids = ([T (tv, ll, deps,
   | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.GEN ty)               ll deps ids = ([], 0) (*(2010-06-23)Isn'y that risky?*)
   | decomptyty  (T.TYPE_DEPENDANCY (t, x, y, z))      ll deps ids = decomptyty t (L.union x ll) (L.union y deps) (CD.union z ids)
-and decomptyrowlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyrow x ll deps ids)) @ y) [] xs
+and decomptyfieldlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyfield x ll deps ids)) @ y) [] xs
 (*and decomptytylist  xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyty  x ll deps ids)) @ y) [] xs*)
 
 
@@ -186,12 +186,12 @@ fun comparestrsenv strenv1 strenv2 filters ls deps ids =
 (* compares the value identifiers from two different envs *)
 fun compareenv env1 env2 filters ls deps ids =
     let val cs1 = comparevidsenv (E.getValueIds env1) (E.getValueIds env2) filters ls deps ids
-	val cs2 = comparetypsenv (E.getTyps env1) (E.getTyps env2) filters ls deps ids
+	val cs2 = comparetypsenv (E.getTypeNameEnv env1) (E.getTypeNameEnv env2) filters ls deps ids
 	val cs3 = comparestrsenv (E.getStructs env1) (E.getStructs env2) filters ls deps ids
     in cs1 @ cs2 @ cs3
     end
 
-fun decorateCst' (E.SEQUENCE_CONSTRAINT x) labs stts deps = E.SEQUENCE_CONSTRAINT (EL.updExtLab x labs stts deps)
+fun decorateCst' (E.ROW_CONSTRAINT x) labs stts deps = E.ROW_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.TYPE_CONSTRAINT x) labs stts deps = E.TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.FUNCTION_TYPE_CONSTRAINT x) labs stts deps = E.FUNCTION_TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singleConstraint (L.dummyLab, c))) "");
@@ -215,29 +215,29 @@ fun collapseTy (T.TYPE_DEPENDANCY (T.TYPE_DEPENDANCY (ty, labs1, stts1, deps1), 
 	  CD.union deps1 deps2)
   | collapseTy ty labs stts deps = T.TYPE_DEPENDANCY (ty, labs, stts, deps)
 
-fun collapseSq (T.SEQUENCE_DEPENDANCY (T.SEQUENCE_DEPENDANCY (sq, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
+fun collapseSq (T.ROW_DEPENDANCY (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseSq sq
 	       (L.union  (L.union  labs1 labs2) labs3)
 	       (L.union  (L.union  stts1 stts2) stts3)
 	       (CD.union (CD.union deps1 deps2) deps3)
-  | collapseSq (T.SEQUENCE_DEPENDANCY (sq, labs1, stts1, deps1)) labs2 stts2 deps2 =
-    T.SEQUENCE_DEPENDANCY (sq,
+  | collapseSq (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1)) labs2 stts2 deps2 =
+    T.ROW_DEPENDANCY (sq,
 	  L.union  labs1 labs2,
 	  L.union  stts1 stts2,
 	  CD.union deps1 deps2)
-  | collapseSq sq labs stts deps = T.SEQUENCE_DEPENDANCY (sq, labs, stts, deps)
+  | collapseSq sq labs stts deps = T.ROW_DEPENDANCY (sq, labs, stts, deps)
 
-fun collapseRt (T.ROW_DEPENDANCY (T.ROW_DEPENDANCY (rt, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
+fun collapseRt (T.FIELD_DEPENDANCY (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseRt rt
 	       (L.union  (L.union  labs1 labs2) labs3)
 	       (L.union  (L.union  stts1 stts2) stts3)
 	       (CD.union (CD.union deps1 deps2) deps3)
-  | collapseRt (T.ROW_DEPENDANCY (rt, labs1, stts1, deps1)) labs2 stts2 deps2 =
-    T.ROW_DEPENDANCY (rt,
+  | collapseRt (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1)) labs2 stts2 deps2 =
+    T.FIELD_DEPENDANCY (rt,
 	  L.union  labs1 labs2,
 	  L.union  stts1 stts2,
 	  CD.union deps1 deps2)
-  | collapseRt rt labs stts deps = T.ROW_DEPENDANCY (rt, labs, stts, deps)
+  | collapseRt rt labs stts deps = T.FIELD_DEPENDANCY (rt, labs, stts, deps)
 
 fun collapseTn (T.TYPENAME_DEPENDANCY (T.TYPENAME_DEPENDANCY (tn, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTn tn
@@ -272,8 +272,8 @@ fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = gatherAllTnTn tn
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
   | gatherAllTnTy _ = ([], L.empty, L.empty, CD.empty)
-and gatherAllTnSq (T.SEQUENCE_VAR _) = ([], L.empty, L.empty, CD.empty)
-  | gatherAllTnSq (T.SC (rtl, _, _)) =
+and gatherAllTnSq (T.ROW_VAR _) = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnSq (T.ROW_C (rtl, _, _)) =
     foldr (fn ((list1, labs1, stts1, deps1), (list2, labs2, stts2, deps2)) =>
 	      (list1 @ list2,
 	       L.union  labs1 labs2,
@@ -281,17 +281,17 @@ and gatherAllTnSq (T.SEQUENCE_VAR _) = ([], L.empty, L.empty, CD.empty)
 	       CD.union deps1 deps2))
 	  ([], L.empty, L.empty, CD.empty)
 	  (map gatherAllTnRt rtl)
-  | gatherAllTnSq (T.SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) =
+  | gatherAllTnSq (T.ROW_DEPENDANCY (seq, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnSq seq
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
-and gatherAllTnRt (T.ROW_VAR _) = ([], L.empty, L.empty, CD.empty)
-  | gatherAllTnRt (T.RC (_, ty, _)) = gatherAllTnTy ty
-  | gatherAllTnRt (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-    let val (list, labs', stts', deps') = gatherAllTnRt row
+and gatherAllTnRt (T.FIELD_VAR _) = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnRt (T.FC (_, ty, _)) = gatherAllTnTy ty
+  | gatherAllTnRt (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+    let val (list, labs', stts', deps') = gatherAllTnRt field
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
-  | gatherAllTnRt T.ROW_NO_OVERLOAD = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnRt T.FIELD_NO_OVERLOAD = ([], L.empty, L.empty, CD.empty)
 and gatherAllTnTn (T.NC (tn, _, l)) =
     ([(L.toInt l, T.typenameToInt tn)], L.empty, L.empty, CD.empty)
   | gatherAllTnTn (T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)) =
@@ -304,13 +304,13 @@ fun isAllTy (T.TYPE_POLY (sq, _, _, _, _)) = isAllSq sq
   | isAllTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isAllTn tn
   | isAllTy (T.TYPE_DEPENDANCY ety) = isAllTy (EL.getExtLabT ety)
   | isAllTy _ = false
-and isAllSq (T.SEQUENCE_VAR _) = false
-  | isAllSq (T.SC (rtl, _, _)) = List.all isAllRt rtl
-  | isAllSq (T.SEQUENCE_DEPENDANCY eseq) = isAllSq (EL.getExtLabT eseq)
-and isAllRt (T.ROW_VAR _) = false
-  | isAllRt (T.RC (_, ty, _)) = isAllTy ty
-  | isAllRt (T.ROW_DEPENDANCY erow) = isAllRt (EL.getExtLabT erow)
-  | isAllRt T.ROW_NO_OVERLOAD = true
+and isAllSq (T.ROW_VAR _) = false
+  | isAllSq (T.ROW_C (rtl, _, _)) = List.all isAllRt rtl
+  | isAllSq (T.ROW_DEPENDANCY eseq) = isAllSq (EL.getExtLabT eseq)
+and isAllRt (T.FIELD_VAR _) = false
+  | isAllRt (T.FC (_, ty, _)) = isAllTy ty
+  | isAllRt (T.FIELD_DEPENDANCY efield) = isAllRt (EL.getExtLabT efield)
+  | isAllRt T.FIELD_NO_OVERLOAD = true
 and isAllTn (T.NC _) = true
   | isAllTn (T.TYPENAME_DEPENDANCY etn) = isAllTn (EL.getExtLabT etn)
   | isAllTn (T.TYPENAME_VAR _) = false
@@ -335,7 +335,7 @@ fun findInOrTy tn path (t as (T.TYPE_CONSTRUCTOR (tnc, _, _))) =
   | findInOrTy tn path (T.TYPE_DEPENDANCY ety) = findInOrTy tn path (EL.getExtLabT ety)
   | findInOrTy _ _ _ = ([], true, false)
 
-and findInOrSq tn path (T.SC (rtl, _, _)) =
+and findInOrSq tn path (T.ROW_C (rtl, _, _)) =
     #1 (List.foldl
 	    (fn (rt, ((x, y, z), c)) =>
 		(* y is true if we've found something.
@@ -361,13 +361,13 @@ and findInOrSq tn path (T.SC (rtl, _, _)) =
 		end)
 	    (([], false, false), 0)
 	    rtl)
-  | findInOrSq _ _ (T.SEQUENCE_VAR _) = ([], true, false)
-  | findInOrSq tn path (T.SEQUENCE_DEPENDANCY eseq) = findInOrSq tn path (EL.getExtLabT eseq)
+  | findInOrSq _ _ (T.ROW_VAR _) = ([], true, false)
+  | findInOrSq tn path (T.ROW_DEPENDANCY eseq) = findInOrSq tn path (EL.getExtLabT eseq)
 
-and findInOrRt tn path (T.RC (_, ty, _)) = findInOrTy tn path ty
-  | findInOrRt _ _ (T.ROW_VAR _) = ([], true, false)
-  | findInOrRt tn path (T.ROW_DEPENDANCY erow) = findInOrRt tn path (EL.getExtLabT erow)
-  | findInOrRt tn path T.ROW_NO_OVERLOAD = ([], false, false)
+and findInOrRt tn path (T.FC (_, ty, _)) = findInOrTy tn path ty
+  | findInOrRt _ _ (T.FIELD_VAR _) = ([], true, false)
+  | findInOrRt tn path (T.FIELD_DEPENDANCY efield) = findInOrRt tn path (EL.getExtLabT efield)
+  | findInOrRt tn path T.FIELD_NO_OVERLOAD = ([], false, false)
 
 and findInOrTn (T.NC (tn, _, _)) = SOME tn
   | findInOrTn (T.TYPENAME_VAR _) = NONE
@@ -387,22 +387,22 @@ fun gotoInOrTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) =
 	 SOME ty => SOME (collapseTy ty labs stts deps)
        | NONE => NONE)
   | gotoInOrTy _ _ = NONE
-and gotoInOrSq (p :: path) (T.SC (rtl, _, _)) =
+and gotoInOrSq (p :: path) (T.ROW_C (rtl, _, _)) =
     (gotoInOrRt path (List.nth (rtl, p))
      handle Subscript => raise EH.DeadBranch "an OR type has an unexpected structure")
-  | gotoInOrSq [] (T.SC _) = raise EH.DeadBranch "an OR type has an unexpected structure"
-  | gotoInOrSq _ (T.SEQUENCE_VAR _) = NONE
-  | gotoInOrSq path (T.SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) =
+  | gotoInOrSq [] (T.ROW_C _) = raise EH.DeadBranch "an OR type has an unexpected structure"
+  | gotoInOrSq _ (T.ROW_VAR _) = NONE
+  | gotoInOrSq path (T.ROW_DEPENDANCY (seq, labs, stts, deps)) =
     (case gotoInOrSq path seq of
 	 SOME ty => SOME (collapseTy ty labs stts deps)
        | NONE => NONE)
-and gotoInOrRt path (T.RC (_, ty, _)) = gotoInOrTy path ty
-  | gotoInOrRt _ (T.ROW_VAR _) = NONE
-  | gotoInOrRt path (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-    (case gotoInOrRt path row of
+and gotoInOrRt path (T.FC (_, ty, _)) = gotoInOrTy path ty
+  | gotoInOrRt _ (T.FIELD_VAR _) = NONE
+  | gotoInOrRt path (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+    (case gotoInOrRt path field of
 	 SOME ty => SOME (collapseTy ty labs stts deps)
        | NONE => NONE)
-  | gotoInOrRt path T.ROW_NO_OVERLOAD = NONE
+  | gotoInOrRt path T.FIELD_NO_OVERLOAD = NONE
 and gotoInOrTn (tn as T.NC (name, _, _)) = SOME tn
   | gotoInOrTn (T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)) =
     (case gotoInOrTn tn of
@@ -410,9 +410,9 @@ and gotoInOrTn (tn as T.NC (name, _, _)) = SOME tn
        | NONE => NONE)
   | gotoInOrTn (T.TYPENAME_VAR _) = NONE
 
-(* We build the sequence variable in a OR because in the case of overloading constants
+(* We build the row variable in a OR because in the case of overloading constants
  * These are not already built when dealing with the binder. *)
-fun buildDirectOr (ty as T.TYPE_POLY (T.SEQUENCE_VAR sv, idor, poly, kind, lab)) state =
+fun buildDirectOr (ty as T.TYPE_POLY (T.ROW_VAR sv, idor, poly, kind, lab)) state =
     (case S.getValStateSq state sv of
 	 NONE => ty
        | SOME sq => T.TYPE_POLY (sq, idor, poly, kind, lab))
@@ -428,37 +428,37 @@ fun getPathsCol (paths : S.paths) col =
 		    paths
 
 fun selectPathsSeq [] seq = NONE
-  | selectPathsSeq paths (seq as T.SEQUENCE_VAR _) = SOME seq
-  | selectPathsSeq paths (T.SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) =
+  | selectPathsSeq paths (seq as T.ROW_VAR _) = SOME seq
+  | selectPathsSeq paths (T.ROW_DEPENDANCY (seq, labs, stts, deps)) =
     (case selectPathsSeq paths seq of
 	 NONE => NONE
-       | SOME seq' => SOME (T.SEQUENCE_DEPENDANCY (seq', labs, stts, deps)))
-  | selectPathsSeq paths (sq as T.SC (rows, flex, lab)) =
-    let val (rows', some, _) =
-	    foldl (fn (row, (rows, some, col)) =>
+       | SOME seq' => SOME (T.ROW_DEPENDANCY (seq', labs, stts, deps)))
+  | selectPathsSeq paths (sq as T.ROW_C (fields, flex, lab)) =
+    let val (fields', some, _) =
+	    foldl (fn (field, (fields, some, col)) =>
 		      let val paths' = getPathsCol paths col
-		      in case selectPathsRow paths' row of
-			     NONE => (rows @ [T.ROW_NO_OVERLOAD], some, col + 1)
-			   | SOME row' => (rows @ [row'], true, col + 1)
+		      in case selectPathsField paths' field of
+			     NONE => (fields @ [T.FIELD_NO_OVERLOAD], some, col + 1)
+			   | SOME field' => (fields @ [field'], true, col + 1)
 		      end)
 		  ([], false, 0)
-		  rows
+		  fields
     in if some
-       then SOME (T.SC (rows', flex, lab))
+       then SOME (T.ROW_C (fields', flex, lab))
        else NONE
     end
 
-and selectPathsRow [] row = NONE
-  | selectPathsRow paths (row as T.ROW_VAR _) = SOME row
-  | selectPathsRow paths (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-    (case selectPathsRow paths row of
+and selectPathsField [] field = NONE
+  | selectPathsField paths (field as T.FIELD_VAR _) = SOME field
+  | selectPathsField paths (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+    (case selectPathsField paths field of
 	 NONE => NONE
-       | SOME row' => SOME (T.ROW_DEPENDANCY (row', labs, stts, deps)))
-  | selectPathsRow paths (T.RC (fieldname, ty, lab)) =
+       | SOME field' => SOME (T.FIELD_DEPENDANCY (field', labs, stts, deps)))
+  | selectPathsField paths (T.FC (fieldname, ty, lab)) =
     (case selectPathsTy paths ty of
 	 NONE => NONE
-       | SOME ty' => SOME (T.RC (fieldname, ty', lab)))
-  | selectPathsRow paths T.ROW_NO_OVERLOAD = SOME T.ROW_NO_OVERLOAD
+       | SOME ty' => SOME (T.FC (fieldname, ty', lab)))
+  | selectPathsField paths T.FIELD_NO_OVERLOAD = SOME T.FIELD_NO_OVERLOAD
 
 and selectPathsTy [] ty = NONE
   | selectPathsTy paths (ty as T.TYPE_CONSTRUCTOR (tn, seq, lab)) =
@@ -478,18 +478,18 @@ and selectPathsTy [] ty = NONE
 
 fun selectPaths paths seq =
     case selectPathsSeq paths seq of
-	NONE => T.SEQUENCE_VAR (T.freshSequenceVar ())
+	NONE => T.ROW_VAR (T.freshRowVar ())
       | SOME seq => seq
 
-fun isFullOrSeq (T.SEQUENCE_VAR _) = false
-  | isFullOrSeq (T.SEQUENCE_DEPENDANCY eseq) = isFullOrSeq (EL.getExtLabT eseq)
-  | isFullOrSeq (T.SC (rows, _, _)) =
-    List.all (fn row => isFullOrRow row) rows
+fun isFullOrSeq (T.ROW_VAR _) = false
+  | isFullOrSeq (T.ROW_DEPENDANCY eseq) = isFullOrSeq (EL.getExtLabT eseq)
+  | isFullOrSeq (T.ROW_C (fields, _, _)) =
+    List.all (fn field => isFullOrField field) fields
 
-and isFullOrRow (T.ROW_VAR _) = false
-  | isFullOrRow (T.ROW_DEPENDANCY erow) = isFullOrRow (EL.getExtLabT erow)
-  | isFullOrRow (T.RC (_, ty, _)) = isFullOrTy ty
-  | isFullOrRow T.ROW_NO_OVERLOAD = true
+and isFullOrField (T.FIELD_VAR _) = false
+  | isFullOrField (T.FIELD_DEPENDANCY efield) = isFullOrField (EL.getExtLabT efield)
+  | isFullOrField (T.FC (_, ty, _)) = isFullOrTy ty
+  | isFullOrField T.FIELD_NO_OVERLOAD = true
 
 and isFullOrTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isFullOrTn tn
   | isFullOrTy (T.TYPE_POLY (seq, _, _, _, _)) = isFullOrSeq seq
@@ -520,11 +520,11 @@ fun concatOptList (list1, b1) (list2, b2) =
     in (list, b)
     end
 
-fun tryToMatchOrsSq path (T.SEQUENCE_VAR _) sq2 = (([], false), ([], true), true)
-  | tryToMatchOrsSq path (sq1 as T.SC (rows, _, _)) sq2 =
+fun tryToMatchOrsSq path (T.ROW_VAR _) sq2 = (([], false), ([], true), true)
+  | tryToMatchOrsSq path (sq1 as T.ROW_C (fields, _, _)) sq2 =
     let val (typaths1, typaths2, found, _) =
-	    foldl (fn (row, (typaths1, typaths2, found, c)) =>
-		      case tryToMatchOrsRt (path @ [c]) row sq2 of
+	    foldl (fn (field, (typaths1, typaths2, found, c)) =>
+		      case tryToMatchOrsRt (path @ [c]) field sq2 of
 			  (_, _, false) => (typaths1, typaths2, found, c+1)
 			| (typaths1', typaths2', true) =>
 			  (concatOptList typaths1 typaths1',
@@ -532,13 +532,13 @@ fun tryToMatchOrsSq path (T.SEQUENCE_VAR _) sq2 = (([], false), ([], true), true
 			   true,
 			   c+1))
 		  (([], true), ([], true), false, 0)
-		  rows
+		  fields
 	(*val _ = D.printdebug2 ("[" ^ Bool.toString found ^ "]\n" ^
 			       T.printseqty sq1    ^ "\n" ^
 			       T.printseqty sq2)*)
     in (typaths1, typaths2, found)
     end
-  | tryToMatchOrsSq path (T.SEQUENCE_DEPENDANCY eseq) sq2 =
+  | tryToMatchOrsSq path (T.ROW_DEPENDANCY eseq) sq2 =
     tryToMatchOrsSq path (EL.getExtLabT eseq) sq2
 
 and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) sq =
@@ -566,11 +566,11 @@ and tryToMatchOrsTn path (T.NC (name, _, _)) sq =
   | tryToMatchOrsTn path (T.TYPENAME_DEPENDANCY etn) sq = tryToMatchOrsTn path (EL.getExtLabT etn) sq
   | tryToMatchOrsTn path (T.TYPENAME_VAR _) sq = ([], true)
 
-and tryToMatchOrsRt path (T.RC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
-  | tryToMatchOrsRt _ (T.ROW_VAR _) _ = (([], false), ([], true), true)
-  | tryToMatchOrsRt path (T.ROW_DEPENDANCY erow) sq2 =
-    tryToMatchOrsRt path (EL.getExtLabT erow) sq2
-  | tryToMatchOrsRt path T.ROW_NO_OVERLOAD sq2 = (([], true), ([], true), false)
+and tryToMatchOrsRt path (T.FC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
+  | tryToMatchOrsRt _ (T.FIELD_VAR _) _ = (([], false), ([], true), true)
+  | tryToMatchOrsRt path (T.FIELD_DEPENDANCY efield) sq2 =
+    tryToMatchOrsRt path (EL.getExtLabT efield) sq2
+  | tryToMatchOrsRt path T.FIELD_NO_OVERLOAD sq2 = (([], true), ([], true), false)
 
 fun tryToMatchOrs sq1 sq2 = tryToMatchOrsSq [] sq1 sq2
 
@@ -582,16 +582,16 @@ fun freshlabty (T.LABEL_VAR lv) state = T.LABEL_VAR (F.freshLabVar lv state)
 fun freshTypename (T.TYPENAME_VAR var) state = T.TYPENAME_VAR (F.freshTypenameVar var state)
   | freshTypename tnty       _     = tnty
 
-fun freshrowType (T.ROW_VAR rv)           _   state _    = T.ROW_VAR (F.freshRowVar rv state)
-  | freshrowType (T.RC (lt, ty, l))  tvl state bstr = T.RC (freshlabty lt state, freshty ty tvl state bstr, l)
-  | freshrowType (T.ROW_DEPENDANCY erow)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab erow (fn row => freshrowType row tvl state bstr))
-  | freshrowType T.ROW_NO_OVERLOAD                _   _     _    = T.ROW_NO_OVERLOAD
+fun freshfieldType (T.FIELD_VAR rv)           _   state _    = T.FIELD_VAR (F.freshFieldVar rv state)
+  | freshfieldType (T.FC (lt, ty, l))  tvl state bstr = T.FC (freshlabty lt state, freshty ty tvl state bstr, l)
+  | freshfieldType (T.FIELD_DEPENDANCY efield)         tvl state bstr = T.FIELD_DEPENDANCY (EL.mapExtLab efield (fn field => freshfieldType field tvl state bstr))
+  | freshfieldType T.FIELD_NO_OVERLOAD                _   _     _    = T.FIELD_NO_OVERLOAD
 and freshtypeFunction (T.TYPE_FUNCTION_VAR tfv)         _   state _    = T.TYPE_FUNCTION_VAR (F.freshTypeFunctionVar tfv state)
   | freshtypeFunction (T.TFC (sq, ty, l)) tvl state bstr = T.TFC (freshseqty sq tvl state bstr, freshty ty tvl state bstr, l)
   | freshtypeFunction (T.TYPE_FUNCTION_DEPENDANCY etf)         tvl state bstr = T.TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => freshtypeFunction tf tvl state bstr))
-and freshseqty (T.SEQUENCE_VAR var)          _   state _    = T.SEQUENCE_VAR (F.freshSequenceVar var state)
-  | freshseqty (T.SC (trl, b, l))  tvl state bstr = T.SC (map (fn rt => freshrowType rt tvl state bstr) trl, b, l)
-  | freshseqty (T.SEQUENCE_DEPENDANCY eseq)         tvl state bstr = T.SEQUENCE_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
+and freshseqty (T.ROW_VAR var)          _   state _    = T.ROW_VAR (F.freshRowVar var state)
+  | freshseqty (T.ROW_C (trl, b, l))  tvl state bstr = T.ROW_C (map (fn rt => freshfieldType rt tvl state bstr) trl, b, l)
+  | freshseqty (T.ROW_DEPENDANCY eseq)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
 and freshty (T.TYPE_VAR (tv, b, p))       tvl state bstr =
     (case (tvl, p) of
 	(NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p)
@@ -653,7 +653,7 @@ fun freshtypenv idenv tvl state bstr =
 fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev state, lab)
   | freshenv (env as E.ENV_CONS _) tvl state bstr =
     let val vids = freshvarenv (E.getValueIds env) tvl state bstr
-	val typs = freshtypenv (E.getTyps env) tvl state false (*bstr*)
+	val typs = freshtypenv (E.getTypeNameEnv env) tvl state false (*bstr*)
 	(*(2010-03-03)We want false for typs because the types
 	 * have to be the same, and so we want to know when a type
 	 * variables comes from an explicit type variable. *)
@@ -665,8 +665,8 @@ fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev sta
 	val info = E.getInfo env
     in E.consEnvConstructor vids typs tyvs strs sigs funs ovcs info
     end
-  | freshenv (E.SEQUENCE_ENV (env1, env2)) tvl state bstr =
-    E.SEQUENCE_ENV (freshenv env1 tvl state bstr, freshenv env2 tvl state bstr)
+  | freshenv (E.ROW_ENV (env1, env2)) tvl state bstr =
+    E.ROW_ENV (freshenv env1 tvl state bstr, freshenv env2 tvl state bstr)
   | freshenv (E.ENVDEP (env, labs, stts, deps)) tvl state bstr =
     let val env' = freshenv env tvl state bstr
     in E.ENVDEP (env', labs, stts, deps)
@@ -781,32 +781,32 @@ fun buildty (T.TYPE_VAR (tv, b, p)) state dom bmon monfun =
     let val ty' = buildty ty state dom bmon monfun
     in collapseTy ty' labs stts deps
     end
-and buildseqty (T.SEQUENCE_VAR sv) state dom bmon monfun =
+and buildseqty (T.ROW_VAR sv) state dom bmon monfun =
     (case S.getValStateSq state sv of
-	 NONE => T.SEQUENCE_VAR sv
+	 NONE => T.ROW_VAR sv
        | SOME sq => buildseqty sq state dom bmon monfun)
-  | buildseqty (T.SC (rtl, flex, l)) state dom bmon monfun =
-    let val rtl' = map (fn rt => buildrowType rt state dom bmon monfun) rtl
-    in T.SC (rtl', flex, l)
+  | buildseqty (T.ROW_C (rtl, flex, l)) state dom bmon monfun =
+    let val rtl' = map (fn rt => buildfieldType rt state dom bmon monfun) rtl
+    in T.ROW_C (rtl', flex, l)
     end
-  | buildseqty (T.SEQUENCE_DEPENDANCY (sq, labs, stts, deps)) state dom bmon monfun =
+  | buildseqty (T.ROW_DEPENDANCY (sq, labs, stts, deps)) state dom bmon monfun =
     let val sq' = buildseqty sq state dom bmon monfun
     in collapseSq sq' labs stts deps
     end
-and buildrowType (T.ROW_VAR rv) state dom bmon monfun =
+and buildfieldType (T.FIELD_VAR rv) state dom bmon monfun =
     (case S.getValStateRt state rv of
-	 NONE => T.ROW_VAR rv
-       | SOME rt => buildrowType rt state dom bmon monfun)
-  | buildrowType (T.RC (lt, ty, l)) state dom bmon monfun =
+	 NONE => T.FIELD_VAR rv
+       | SOME rt => buildfieldType rt state dom bmon monfun)
+  | buildfieldType (T.FC (lt, ty, l)) state dom bmon monfun =
     let val lt' = buildlabty lt state
 	val ty' = buildty    ty state dom bmon monfun
-    in T.RC (lt', ty', l)
+    in T.FC (lt', ty', l)
     end
-  | buildrowType (T.ROW_DEPENDANCY (row, labs, stts, deps)) state dom bmon monfun =
-    let val row' = buildrowType row state dom bmon monfun
-    in collapseRt row' labs stts deps
+  | buildfieldType (T.FIELD_DEPENDANCY (field, labs, stts, deps)) state dom bmon monfun =
+    let val field' = buildfieldType field state dom bmon monfun
+    in collapseRt field' labs stts deps
     end
-  | buildrowType (x as T.ROW_NO_OVERLOAD) _ _ _ _ = x
+  | buildfieldType (x as T.FIELD_NO_OVERLOAD) _ _ _ _ = x
 and buildtypeFunction (T.TYPE_FUNCTION_VAR tfv) state dom bmon monfun =
     (case S.getValStateTf state tfv of
 	 NONE => T.TYPE_FUNCTION_VAR tfv
@@ -893,14 +893,14 @@ fun buildEnv (E.ENV_VAR (ev, lab)) state fresh bstr =
 	  * We also need to gather these. *)
 	 in env'
 	 end)
-  | buildEnv (E.SEQUENCE_ENV (env1, env2)) state fresh bstr =
+  | buildEnv (E.ROW_ENV (env1, env2)) state fresh bstr =
     let val env1 = buildEnv env1 state fresh bstr
 	val env2 = buildEnv env2 state fresh bstr
-    in E.SEQUENCE_ENV (env1, env2)
+    in E.ROW_ENV (env1, env2)
     end
   | buildEnv (env as E.ENV_CONS _) state fresh bstr =
     E.consEnvConstructor (buildIdEnv (E.getValueIds env) state fresh freshty     buildTy'    bstr)
-	       (buildIdEnv (E.getTyps env) state fresh freshTypSem buildTypSem false)
+	       (buildIdEnv (E.getTypeNameEnv env) state fresh freshTypSem buildTypSem false)
 	       (buildIdEnv (E.getExplicitTypeVars env) state fresh freshTypeVar  buildTyVar  bstr)
 	       (buildIdEnv (E.getStructs env) state fresh freshEnv    buildEnv'   bstr)
 	       (buildIdEnv (E.getSigs env) state fresh freshEnv    buildEnv'   bstr)
@@ -949,27 +949,27 @@ fun getExplicitTyVars vids tyvs state =
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
 		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
-	and searchSeqTy (T.SEQUENCE_VAR _) = NONE
-	  | searchSeqTy (T.SC (rows, _, _)) =
-	    foldr (fn (row, err) =>
+	and searchSeqTy (T.ROW_VAR _) = NONE
+	  | searchSeqTy (T.ROW_C (fields, _, _)) =
+	    foldr (fn (field, err) =>
 		      if Option.isSome err
 		      then err
-		      else searchRow row)
+		      else searchField field)
 		  NONE
-		  rows
-	  | searchSeqTy (T.SEQUENCE_DEPENDANCY (seq, labs, stts, deps)) =
+		  fields
+	  | searchSeqTy (T.ROW_DEPENDANCY (seq, labs, stts, deps)) =
 	    (case searchSeqTy seq of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
 		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
-	and searchRow (T.ROW_VAR _) = NONE
-	  | searchRow (T.RC (_, ty, _)) = searchTy ty
-	  | searchRow (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-	    (case searchRow row of
+	and searchField (T.FIELD_VAR _) = NONE
+	  | searchField (T.FC (_, ty, _)) = searchTy ty
+	  | searchField (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+	    (case searchField field of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
 		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
-	  | searchRow T.ROW_NO_OVERLOAD = NONE
+	  | searchField T.FIELD_NO_OVERLOAD = NONE
 	and searchTypeFunction (T.TYPE_FUNCTION_VAR _) = NONE
 	  | searchTypeFunction (T.TFC (seqty, ty, _)) =
 	    let val err = searchSeqTy seqty
@@ -1017,15 +1017,15 @@ fun getGenTyvars (T.TYPE_VAR (tv, SOME idl, p)) = [idl]
     foldr (fn (ty, tvlabs) => (getGenTyvars ty) @ tvlabs) [] (!tys)
   | getGenTyvars (T.TYPE_DEPENDANCY ety) = getGenTyvars (EL.getExtLabT ety)
 
-and getGenTyvarsSeq (T.SEQUENCE_VAR _) = []
-  | getGenTyvarsSeq (T.SC (rows, _, _)) =
-    foldr (fn (row, tvlabs) => (getGenTyvarsRow row) @ tvlabs) [] rows
-  | getGenTyvarsSeq (T.SEQUENCE_DEPENDANCY eseq) = getGenTyvarsSeq (EL.getExtLabT eseq)
+and getGenTyvarsSeq (T.ROW_VAR _) = []
+  | getGenTyvarsSeq (T.ROW_C (fields, _, _)) =
+    foldr (fn (field, tvlabs) => (getGenTyvarsField field) @ tvlabs) [] fields
+  | getGenTyvarsSeq (T.ROW_DEPENDANCY eseq) = getGenTyvarsSeq (EL.getExtLabT eseq)
 
-and getGenTyvarsRow (T.ROW_VAR _) = []
-  | getGenTyvarsRow (T.RC (_, ty, _)) = getGenTyvars ty
-  | getGenTyvarsRow (T.ROW_DEPENDANCY erow) = getGenTyvarsRow (EL.getExtLabT erow)
-  | getGenTyvarsRow T.ROW_NO_OVERLOAD = []
+and getGenTyvarsField (T.FIELD_VAR _) = []
+  | getGenTyvarsField (T.FC (_, ty, _)) = getGenTyvars ty
+  | getGenTyvarsField (T.FIELD_DEPENDANCY efield) = getGenTyvarsField (EL.getExtLabT efield)
+  | getGenTyvarsField T.FIELD_NO_OVERLOAD = []
 
 
 fun extractTyGen (T.GEN _)   true  = [T.newTYPE_VAR ()]
@@ -1064,7 +1064,7 @@ fun idInEnv (env as E.ENV_CONS _) lab id =
     let val lab = L.fromInt lab
 	val id  = I.fromInt id
     in idInIdEnv (E.getValueIds env) lab id orelse
-       idInIdEnv (E.getTyps env) lab id orelse
+       idInIdEnv (E.getTypeNameEnv env) lab id orelse
        idInIdEnv (E.getStructs env) lab id orelse
        idInIdEnv (E.getSigs env) lab id orelse (* We don't need this one *)
        idInIdEnv (E.getFunctors env) lab id orelse
@@ -1178,8 +1178,8 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 	    map (fn etv => compone id (E.plusproj (E.getValueIds env) id) etv) semty
 	fun compT semty tn env = (* env: structure, etv: signature *)
 	    map (fn etv =>
-		    (()(*checkDatSigStruc (E.plusproj (E.getTyps env) tn) etv labs deps asmp l tn*);
-		     componeTyp tn (E.plusproj (E.getTyps env) tn) etv))
+		    (()(*checkDatSigStruc (E.plusproj (E.getTypeNameEnv env) tn) etv labs deps asmp l tn*);
+		     componeTyp tn (E.plusproj (E.getTypeNameEnv env) tn) etv))
 		semty
 	  (* We should also check the NONs, because these are errors.
 	   * SML/NJ says: Error: type t must be a datatype.
@@ -1194,7 +1194,7 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 	fun linkstr env1 env2 =
 	    let (* is there something in 'getValueIds env1' ?*)
 		val csG = compGen (E.getValueIds env1) compG env2
-		val csT = compGen (E.getTyps env1) compT env2
+		val csT = compGen (E.getTypeNameEnv env1) compT env2
 		val csS = compGen (E.getStructs env1) compS env2
 		val (csSV, csST) = ListPair.unzip csS
 		(*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, List.concat csST))) "")*)
@@ -1250,7 +1250,7 @@ fun domTFun tfun =
 
 (* (2010-06-04) Why does the seqty has to be a SC? *)
 fun mergeTypeFunction tfn1 tfn2 =
-    OM.unionWith (fn (tf1, tf2 as T.TFC ((*T.SC*) _, _, _)) => ((*D.printdebug2 (T.printtyf tf1 ^ "\n" ^ T.printtyf tf2);*) tf2)
+    OM.unionWith (fn (tf1, tf2 as T.TFC ((*T.ROW_C*) _, _, _)) => ((*D.printdebug2 (T.printtyf tf1 ^ "\n" ^ T.printtyf tf2);*) tf2)
 		   | (tf1, tf2) => ((*D.printdebug2 (T.printtyf tf1 ^ "\n" ^ T.printtyf tf2);*) tf2))
 		 (*(2010-07-06)This is to fix, we don't want to just keep the second one!*)
 		 (tfn1, tfn2)
@@ -1259,7 +1259,7 @@ fun decorateTypeFunction tfn labs stts deps =
     OM.map (fn tf => collapseTf tf labs stts deps)
 	   tfn
 
-fun newTypeFunction () = T.TFC (T.newSEQUENCE_VAR (), T.newTYPE_VAR (), L.dummyLab)
+fun newTypeFunction () = T.TFC (T.newROW_VAR (), T.newTYPE_VAR (), L.dummyLab)
 
 fun insertInTypeFunction typeFunction name tf =
     let val tn = T.typenameToInt name
@@ -1279,7 +1279,7 @@ fun getAllTypeFunctionEnv (env as E.ENV_CONS _) =
 	val (tfnDs2, tfnTs2) = getAllTypeFunctionStrEnv (E.getStructs env)
     in (mergeTypeFunction tfnDs1 tfnDs2, mergeTypeFunction tfnTs1 tfnTs2)
     end
-  | getAllTypeFunctionEnv (E.SEQUENCE_ENV (env1, env2)) =
+  | getAllTypeFunctionEnv (E.ROW_ENV (env1, env2)) =
     let val (tfnDs1, tfnTs1) = getAllTypeFunctionEnv env1
 	val (tfnDs2, tfnTs2) = getAllTypeFunctionEnv env2
     in (mergeTypeFunction tfnDs1 tfnDs2, mergeTypeFunction tfnTs1 tfnTs2)
@@ -1317,7 +1317,7 @@ and getAllTypeFunctionStrEnv strenv =
 fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts deps =
     let val (tfnDs1, tfnTs1) =
 	    foldr (fn ({id, lab, kind, name}, (tfnDs, tfnTs)) =>
-		      case E.plusproj (E.getTyps env2) id of
+		      case E.plusproj (E.getTypeNameEnv env2) id of
 			  [] => if E.getIComplete env2 (* The structure/realisation is complete. *)
 				then (tfnDs, tfnTs) (* not in the incomplete structure/realisation so we don't want to generalise *)
 				else (case kind of
@@ -1325,9 +1325,9 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
 					| E.TYPE => (tfnDs, insertInTypeFunction tfnTs name (newTypeFunction ())))
 			| [etv] =>
 			  let val ty = case E.getBindT etv of
-					   (tf, _, _) => (* What do we need the T.SC for? *)
+					   (tf, _, _) => (* What do we need the T.ROW_C for? *)
 					   (case collapseTf tf labs stts deps of
-						T.TYPE_FUNCTION_DEPENDANCY (T.TFC ((*T.SC*) _, _, _), _, _, _) =>
+						T.TYPE_FUNCTION_DEPENDANCY (T.TFC ((*T.ROW_C*) _, _, _), _, _, _) =>
 						collapseTf tf (EL.getExtLabL etv) (EL.getExtLabE etv) (EL.getExtLabD etv)
 					      | _ => newTypeFunction ())
 			  (* Here we put the new mapping in tfnT because we've got a match
@@ -1356,7 +1356,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
 		(L.union stts stts')
 		(CD.union deps deps')
   | getTypeFunctionEnv (env as E.ENV_CONS _) _ _ _ _ = getAllTypeFunctionEnv env
-  | getTypeFunctionEnv (E.SEQUENCE_ENV (env0, env1)) env2 labs stts deps =
+  | getTypeFunctionEnv (E.ROW_ENV (env0, env1)) env2 labs stts deps =
     let val (tfnDs1, tfnTs1) = getTypeFunctionEnv env0 env2 labs stts deps
 	val (tfnDs2, tfnTs2) = getTypeFunctionEnv env1 env2 labs stts deps
     in (mergeTypeFunction tfnDs1 tfnDs2, mergeTypeFunction tfnTs1 tfnTs2)
@@ -1429,14 +1429,14 @@ fun mergeUTypeFunctionSha (SOME utf1) (SOME utf2) = SOME (EL.unionExtLab utf1 ut
 fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
     let val (utfT, tfnT) =
 	    foldr (fn ({id, lab, kind, name}, (utf, tfns)) =>
-		      case E.plusproj (E.getTyps env2) id of
+		      case E.plusproj (E.getTypeNameEnv env2) id of
 			  [] => if E.getIComplete env2 (* The sharing structure is complete. *)
 				then (utf, tfns)  (* not in the incomplete sharing structure so we don't want to generalise *)
 				else (utf, OM.insert (tfns, T.typenameToInt name, NONE))
 			| [etv] =>
 			  if CL.classIsANY (E.getBindC etv)
 			  then (utf, OM.insert (tfns, T.typenameToInt name, NONE))
-			  else (case E.plusproj (E.getTyps env1) id of
+			  else (case E.plusproj (E.getTypeNameEnv env1) id of
 				    [] => (utf, OM.insert (tfns, T.typenameToInt name, NONE))
 				  | [etv'] => (case E.getBindT etv' of
 						   (tf, _, _) =>
@@ -1474,7 +1474,7 @@ fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
 	val tfn2 = OM.map (fn _ => NONE) tfn1
     in (NONE, tfn2)
     end
-  | getTypeFunctionEnvSha (E.SEQUENCE_ENV (env0, env1)) env2 =
+  | getTypeFunctionEnvSha (E.ROW_ENV (env0, env1)) env2 =
     let val (utf1, tfn1) = getTypeFunctionEnvSha env0 env2
 	val (utf2, tfn2) = getTypeFunctionEnvSha env1 env2
     in (mergeUTypeFunctionSha utf1 utf2, mergeTypeFunctionSha tfn1 tfn2)
@@ -1577,25 +1577,25 @@ and genTypeFunctionFunTy (x as T.TYPE_FUNCTION_VAR _) _ _ = ([], x)
     let val (cs, tf') = genTypeFunctionFunTy tf tfun btyp
     in (cs, collapseTf tf' labs stts deps)
     end
-and genTypeFunctionSeqTy (x as T.SEQUENCE_VAR _) _ _ = ([], x)
-  | genTypeFunctionSeqTy (T.SC (rtl, flex, l)) state btyp =
-    let val (cs, rtl') = ListPair.unzip (map (fn rt => genTypeFunctionRowType rt state btyp) rtl)
-    in (List.concat cs, T.SC (rtl', flex, l))
+and genTypeFunctionSeqTy (x as T.ROW_VAR _) _ _ = ([], x)
+  | genTypeFunctionSeqTy (T.ROW_C (rtl, flex, l)) state btyp =
+    let val (cs, rtl') = ListPair.unzip (map (fn rt => genTypeFunctionFieldType rt state btyp) rtl)
+    in (List.concat cs, T.ROW_C (rtl', flex, l))
     end
-  | genTypeFunctionSeqTy (T.SEQUENCE_DEPENDANCY (sq, labs, stts, deps)) tfun btyp =
+  | genTypeFunctionSeqTy (T.ROW_DEPENDANCY (sq, labs, stts, deps)) tfun btyp =
     let val (cs, sq') = genTypeFunctionSeqTy sq tfun btyp
     in (cs, collapseSq sq' labs stts deps)
     end
-and genTypeFunctionRowType (x as T.ROW_VAR _) _ _ = ([], x)
-  | genTypeFunctionRowType (T.RC (lt, ty, l)) tfun btyp =
+and genTypeFunctionFieldType (x as T.FIELD_VAR _) _ _ = ([], x)
+  | genTypeFunctionFieldType (T.FC (lt, ty, l)) tfun btyp =
     let val (cs, ty') = genTypeFunctionTy ty tfun btyp
-    in (cs, T.RC (lt, ty', l))
+    in (cs, T.FC (lt, ty', l))
     end
-  | genTypeFunctionRowType (T.ROW_DEPENDANCY (row, labs, stts, deps)) tfun btyp =
-    let val (cs, row') = genTypeFunctionRowType row tfun btyp
-    in (cs, collapseRt row' labs stts deps)
+  | genTypeFunctionFieldType (T.FIELD_DEPENDANCY (field, labs, stts, deps)) tfun btyp =
+    let val (cs, field') = genTypeFunctionFieldType field tfun btyp
+    in (cs, collapseRt field' labs stts deps)
     end
-  | genTypeFunctionRowType (x as T.ROW_NO_OVERLOAD) _ _  = ([], x)
+  | genTypeFunctionFieldType (x as T.FIELD_NO_OVERLOAD) _ _  = ([], x)
 
 fun genTypeFunctionExtGen bind tfun f btyp =
     let val sem = E.getBindT bind
@@ -1644,7 +1644,7 @@ fun genTypeFunctionEnv (env as E.ENV_CONS _) state tfun dom b =
 			   | _ => {id = id, lab = lab, kind = kind, name = name})
 		     (E.getITypeNames env)
 	val (csValueIds, vids) = genTypeFunctionGenEnv (E.getValueIds env) state tfun dom b genTypeFunctionExtTy
-	val (csTyps, typs) = genTypeFunctionGenEnv (E.getTyps env) state tfun dom b genTypeFunctionExtFunTy
+	val (csTyps, typs) = genTypeFunctionGenEnv (E.getTypeNameEnv env) state tfun dom b genTypeFunctionExtFunTy
 	val tyvs           = E.getExplicitTypeVars env
 	val (csStrs, strs) = genTypeFunctionGenEnv (E.getStructs env) state tfun dom b genTypeFunctionExtEnv
 	val (csSigs, sigs) = genTypeFunctionGenEnv (E.getSigs env) state tfun dom b genTypeFunctionExtEnv
@@ -1654,10 +1654,10 @@ fun genTypeFunctionEnv (env as E.ENV_CONS _) state tfun dom b =
 	val cs             = csValueIds @ csTyps @ csOvcs @ csStrs @ csSigs
     in (cs, E.consEnvConstructor vids typs tyvs strs sigs funs ovcs info)
     end
-  | genTypeFunctionEnv (x as E.SEQUENCE_ENV (env1, env2)) state tfun dom b =
+  | genTypeFunctionEnv (x as E.ROW_ENV (env1, env2)) state tfun dom b =
     let val (cs1, env1') = genTypeFunctionEnv env1 state tfun dom b
 	val (cs2, env2') = genTypeFunctionEnv env2 state tfun dom b
-    in (cs1 @ cs2, E.SEQUENCE_ENV (env1', env2'))
+    in (cs1 @ cs2, E.ROW_ENV (env1', env2'))
     end
   | genTypeFunctionEnv (x as E.ENVDEP (env, labs, stts, deps)) state tfun dom b =
     let val (cs, env') = genTypeFunctionEnv env state tfun dom b
@@ -1745,25 +1745,25 @@ and applyTypeFunctionFunTy (x as (T.TYPE_FUNCTION_VAR _)) _ _ = ([], x)
     let val (cs, tf') = applyTypeFunctionFunTy tf tfun btyp
     in (cs, collapseTf tf' labs stts deps)
     end
-and applyTypeFunctionSeqTy (x as (T.SEQUENCE_VAR _)) _ _ = ([], x)
-  | applyTypeFunctionSeqTy (T.SC (rtl, flex, l)) state btyp =
-    let val (cs, rtl') = ListPair.unzip (map (fn rt => applyTypeFunctionRowType rt state btyp) rtl)
-    in (List.concat cs, T.SC (rtl', flex, l))
+and applyTypeFunctionSeqTy (x as (T.ROW_VAR _)) _ _ = ([], x)
+  | applyTypeFunctionSeqTy (T.ROW_C (rtl, flex, l)) state btyp =
+    let val (cs, rtl') = ListPair.unzip (map (fn rt => applyTypeFunctionFieldType rt state btyp) rtl)
+    in (List.concat cs, T.ROW_C (rtl', flex, l))
     end
-  | applyTypeFunctionSeqTy (T.SEQUENCE_DEPENDANCY (sq, labs, stts, deps)) tfun btyp =
+  | applyTypeFunctionSeqTy (T.ROW_DEPENDANCY (sq, labs, stts, deps)) tfun btyp =
     let val (cs, sq') = applyTypeFunctionSeqTy sq tfun btyp
     in (cs, collapseSq sq' labs stts deps)
     end
-and applyTypeFunctionRowType (x as (T.ROW_VAR _)) _ _ = ([], x)
-  | applyTypeFunctionRowType (T.RC (lt, ty, l)) tfun btyp =
+and applyTypeFunctionFieldType (x as (T.FIELD_VAR _)) _ _ = ([], x)
+  | applyTypeFunctionFieldType (T.FC (lt, ty, l)) tfun btyp =
     let val (cs, ty') = applyTypeFunctionTy ty tfun btyp
-    in (cs, T.RC (lt, ty', l))
+    in (cs, T.FC (lt, ty', l))
     end
-  | applyTypeFunctionRowType (T.ROW_DEPENDANCY (row, labs, stts, deps)) tfun btyp =
-    let val (cs, row') = applyTypeFunctionRowType row tfun btyp
-    in (cs, collapseRt row' labs stts deps)
+  | applyTypeFunctionFieldType (T.FIELD_DEPENDANCY (field, labs, stts, deps)) tfun btyp =
+    let val (cs, field') = applyTypeFunctionFieldType field tfun btyp
+    in (cs, collapseRt field' labs stts deps)
     end
-  | applyTypeFunctionRowType (x as T.ROW_NO_OVERLOAD) _ _ = ([], x)
+  | applyTypeFunctionFieldType (x as T.FIELD_NO_OVERLOAD) _ _ = ([], x)
 
 fun applyTypeFunctionExtGen bind tfun f btyp =
     let val sem = E.getBindT bind
@@ -1794,7 +1794,7 @@ fun applyTypeFunctionGenEnv genenv tfun genfun =
 
 fun applyTypeFunctionEnv (env as E.ENV_CONS _) tfun =
     let val (csValueIds, vids) = applyTypeFunctionGenEnv (E.getValueIds env) tfun applyTypeFunctionExtTy
-	val (csTyps, typs) = applyTypeFunctionGenEnv (E.getTyps env) tfun applyTypeFunctionExtFunTy
+	val (csTyps, typs) = applyTypeFunctionGenEnv (E.getTypeNameEnv env) tfun applyTypeFunctionExtFunTy
 	val tyvs           = E.getExplicitTypeVars env
 	val (csStrs, strs) = applyTypeFunctionGenEnv (E.getStructs env) tfun applyTypeFunctionExtEnv
 	val (csSigs, sigs) = applyTypeFunctionGenEnv (E.getSigs env) tfun applyTypeFunctionExtEnv
@@ -1820,10 +1820,10 @@ fun applyTypeFunctionEnv (env as E.ENV_CONS _) tfun =
     (*TODO: rename the type names in the info part using tfun.*)
     in (cs, E.consEnvConstructor vids typs tyvs strs sigs funs ovcs info)
     end
-  | applyTypeFunctionEnv (x as E.SEQUENCE_ENV (env1, env2)) tfun =
+  | applyTypeFunctionEnv (x as E.ROW_ENV (env1, env2)) tfun =
     let val (cs1, env1') = applyTypeFunctionEnv env1 tfun
 	val (cs2, env2') = applyTypeFunctionEnv env2 tfun
-    in (cs1 @ cs2, E.SEQUENCE_ENV (env1', env2'))
+    in (cs1 @ cs2, E.ROW_ENV (env1', env2'))
     end
   | applyTypeFunctionEnv (x as E.ENVDEP (env, labs, stts, deps)) tfun =
     let val (cs, env') = applyTypeFunctionEnv env tfun
@@ -1863,7 +1863,7 @@ and applyTypeFunctionExtFun extfun tfun =
 fun matchWhereEnv envsig NONE state = (OM.empty, true)
   | matchWhereEnv (envsig as E.ENV_CONS _) (SOME ({lid = I.ID (idTc, labTc), sem, class, lab}, labs, stts, deps)) state =
     let val tmap = OM.empty
-    in case E.plusproj (E.getTyps envsig) idTc of
+    in case E.plusproj (E.getTypeNameEnv envsig) idTc of
 	   [] => (* There is no machting in the signature *)
 	   if E.getIComplete envsig andalso not (CL.classIsANY class)
 	   (* If the signature is complete then we need to raise a unmatched error. *)
@@ -1969,7 +1969,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	 in matchWhereEnv (E.getBindT bind) longtyp state
 	 end
        | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving")
-  | matchWhereEnv (envsig as E.SEQUENCE_ENV (env1, env2)) longtyp state =
+  | matchWhereEnv (envsig as E.ROW_ENV (env1, env2)) longtyp state =
     (let val (tmap, found) = matchWhereEnv env2 longtyp state
      (* If found then it means that we found the matching.
       * Otherwise, either we raised an error because we couldn't find any matching
@@ -2037,13 +2037,13 @@ fun renamety (x as T.TYPE_VAR _) _ = x
 and renametypfun (x as T.TYPE_FUNCTION_VAR _) _ = x
   | renametypfun (T.TFC (sq, ty, lab)) state = T.TFC (renameseqty sq state, renamety ty state, lab)
   | renametypfun (T.TYPE_FUNCTION_DEPENDANCY etf)           state = T.TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => renametypfun tf state))
-and renameseqty (x as T.SEQUENCE_VAR _) _ = x
-  | renameseqty (T.SC (rtl, flex, l)) state = T.SC (map (fn rt => renamerowType rt state) rtl, flex, l)
-  | renameseqty (T.SEQUENCE_DEPENDANCY eseq)           state = T.SEQUENCE_DEPENDANCY (EL.mapExtLab eseq (fn seq => renameseqty seq state))
-and renamerowType (x as T.ROW_VAR _)      _     = x
-  | renamerowType (T.RC (lt, ty, l)) state = T.RC (lt, renamety ty state, l)
-  | renamerowType (T.ROW_DEPENDANCY erow)        state = T.ROW_DEPENDANCY (EL.mapExtLab erow (fn row => renamerowType row state))
-  | renamerowType (x as T.ROW_NO_OVERLOAD)        _     = T.ROW_NO_OVERLOAD
+and renameseqty (x as T.ROW_VAR _) _ = x
+  | renameseqty (T.ROW_C (rtl, flex, l)) state = T.ROW_C (map (fn rt => renamefieldType rt state) rtl, flex, l)
+  | renameseqty (T.ROW_DEPENDANCY eseq)           state = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => renameseqty seq state))
+and renamefieldType (x as T.FIELD_VAR _)      _     = x
+  | renamefieldType (T.FC (lt, ty, l)) state = T.FC (lt, renamety ty state, l)
+  | renamefieldType (T.FIELD_DEPENDANCY efield)        state = T.FIELD_DEPENDANCY (EL.mapExtLab efield (fn field => renamefieldType field state))
+  | renamefieldType (x as T.FIELD_NO_OVERLOAD)        _     = T.FIELD_NO_OVERLOAD
 (*and renametylist xs state = map (fn x => renamety x state) xs
 and renameseqtylist xs state = map (fn x => renameseqty x state) xs*)
 
@@ -2087,13 +2087,13 @@ and renameenv (env as E.ENV_CONS _) state ren =
 	(* We do the strs, sigs and funs before as they can update ren *)
 	val ovcs  = renameseqenv (E.getOverloadingClasses env) state ren
 	val vids  = renamevarenv (E.getValueIds env) state ren
-	val typs  = renametypenv (E.getTyps env) state ren
+	val typs  = renametypenv (E.getTypeNameEnv env) state ren
 	val tyvs  = E.getExplicitTypeVars env
 	val info  = E.consInfo (E.getILab env) (E.getIComplete env) tns (E.getIArgOfFunctor env)
     in E.consEnvConstructor vids typs tyvs strs sigs funs ovcs info
     end
-  | renameenv (E.SEQUENCE_ENV (env1, env2)) state ren =
-    E.SEQUENCE_ENV (renameenv env1 state ren, renameenv env2 state ren)
+  | renameenv (E.ROW_ENV (env1, env2)) state ren =
+    E.ROW_ENV (renameenv env1 state ren, renameenv env2 state ren)
   | renameenv (E.ENVDEP (env, labs, stts, deps)) state ren =
     let val env' = renameenv env state ren
     in E.ENVDEP (env', labs, stts, deps)
@@ -2124,15 +2124,15 @@ fun renameenv' env state = renameenv env state (initRen ())
 
 (* These are similar to the getValStateAr in StateEnv.sml *)
 
-fun buildSeqAr state (T.SEQUENCE_VAR sv) labs stts deps=
+fun buildSeqAr state (T.ROW_VAR sv) labs stts deps=
     (case S.getValStateSq state sv of
-	 NONE => T.newSEQUENCE_VAR ()
+	 NONE => T.newROW_VAR ()
        | SOME sq => buildSeqAr state sq labs stts deps)
-  | buildSeqAr state (T.SC (xs, flex, lab)) labs stts deps =
-    T.SEQUENCE_DEPENDANCY (T.SC (map (fn _ => T.newROW_VAR ()) xs, flex, lab), labs, stts, deps)
-  | buildSeqAr state (T.SEQUENCE_DEPENDANCY (sq1, labs1, stts1, deps1)) labs stts deps =
+  | buildSeqAr state (T.ROW_C (xs, flex, lab)) labs stts deps =
+    T.ROW_DEPENDANCY (T.ROW_C (map (fn _ => T.newFIELD_VAR ()) xs, flex, lab), labs, stts, deps)
+  | buildSeqAr state (T.ROW_DEPENDANCY (sq1, labs1, stts1, deps1)) labs stts deps =
     let val sq2 = buildSeqAr state sq1 labs stts deps
-    in T.SEQUENCE_DEPENDANCY (sq2, labs1, stts1, deps1)
+    in T.ROW_DEPENDANCY (sq2, labs1, stts1, deps1)
     end
 
 fun buildTypeFunctionAr state (T.TYPE_FUNCTION_VAR tfv) lab labs stts deps =
@@ -2254,21 +2254,21 @@ fun unif env filters user =
 
 	fun foccurs c [] n l = true (* true because we have to add c to the state *)
 	  | foccurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTypeVar  S.getValStateTv decomptyty  foccurs
-	  | foccurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqSequenceVar S.getValStateSq decomptysq  foccurs
-	  | foccurs (c as (CR (var1, sem))) [R (var2, labs, stts, deps)] 0 l = occursGenZero CR var1 var2 sem labs stts deps l T.eqRowVar S.getValStateRt decomptyrow foccurs
+	  | foccurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqRowVar S.getValStateSq decomptysq  foccurs
+	  | foccurs (c as (CR (var1, sem))) [R (var2, labs, stts, deps)] 0 l = occursGenZero CR var1 var2 sem labs stts deps l T.eqFieldVar S.getValStateRt decomptyfield foccurs
 	  | foccurs (c as (CT (var1, sem))) (var :: xs) n l =
 	    (case var of
 		 T (var2, labs, stts, deps) => occursGenListEq CT var1 var2 sem labs stts deps xs n l T.eqTypeVar S.getValStateTv decomptyty foccurs handleOccurs
 	       | S (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq  foccurs
-	       | R (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyrow foccurs)
+	       | R (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield foccurs)
 	  | foccurs (c as (CS (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqSequenceVar S.getValStateSq decomptysq foccurs handleOccurs
+		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqRowVar S.getValStateSq decomptysq foccurs handleOccurs
 	       | T (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty  foccurs
-	       | R (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyrow foccurs)
+	       | R (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield foccurs)
 	  | foccurs (c as (CR (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 R (var2, labs, stts, deps) => occursGenListEq CR var1 var2 sem labs stts deps xs n l T.eqRowVar S.getValStateRt decomptyrow foccurs handleOccurs
+		 R (var2, labs, stts, deps) => occursGenListEq CR var1 var2 sem labs stts deps xs n l T.eqFieldVar S.getValStateRt decomptyfield foccurs handleOccurs
 	       | T (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty foccurs
 	       | S (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq foccurs)
 
@@ -2356,10 +2356,10 @@ fun unif env filters user =
 	    let val env' = preSolveEnv env
 	    in E.pushExtEnv env' labs stts deps
 	    end
-	  | preSolveEnv (E.SEQUENCE_ENV (env1, env2)) =
+	  | preSolveEnv (E.ROW_ENV (env1, env2)) =
 	    let val env1' = preSolveEnv env1
 		val env2' = preSolveEnv env2
-	    in E.SEQUENCE_ENV (env1', env2')
+	    in E.ROW_ENV (env1', env2')
 	    end
 	  | preSolveEnv env = env
 
@@ -2653,7 +2653,7 @@ fun unif env filters user =
 	  (* Here we don't need to re-solve env, preSolveEnv is enough *)
 	  | solveenv (env as E.ENV_CONS _) bmon =
 	    (let val (vids, compValueIds, cst) = solvevarenv (E.getValueIds env) bmon
-		 val (typs, compTyps, _)   = solvetypenv (E.getTyps env) bmon
+		 val (typs, compTyps, _)   = solvetypenv (E.getTypeNameEnv env) bmon
 		 val (tyvs, compTyvs, _)   = solvetyvenv (E.getExplicitTypeVars env) bmon
 		 val (strs, compStrs, _)   = solvestrenv (E.getStructs env) bmon
 		 val (sigs, compSigs, _)   = solvesigenv (E.getSigs env) bmon
@@ -2669,7 +2669,7 @@ fun unif env filters user =
 	     in env'
 	     end
 	     handle errorfound err => handleSolveEnv err env)
-	  | solveenv (E.SEQUENCE_ENV (env1, env2)) bmon =
+	  | solveenv (E.ROW_ENV (env1, env2)) bmon =
 	    let val env1' = solveenv env1 bmon
 		val b     = E.isEmptyEnv env1'
 		val tvs   = S.pushEnvToState b env1' state
@@ -3138,15 +3138,15 @@ fun unif env filters user =
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_DEPENDANCY  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_DEPENDANCY  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LABEL_DEPENDANCY  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  (**)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TYPE_FUNCTION_DEPENDANCY (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TYPE_DEPENDANCY  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.TYPENAME_DEPENDANCY  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, T.SEQUENCE_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((rt1, T.ROW_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((sq1, T.ROW_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FIELD_CONSTRAINT ((rt1, T.FIELD_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LABEL_DEPENDANCY  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 	  (**)
 	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
@@ -3209,7 +3209,7 @@ fun unif env filters user =
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 		  in handleSimplify err cs' l
 		  end)
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC (rtl1, b1, l1), T.SC (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C (rtl1, b1, l1), T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let val n1 = length rtl1
 		val n2 = length rtl2
 	    (*val _  = D.printdebug2 ("-("  ^ (O.printelt l1)   ^
@@ -3227,8 +3227,8 @@ fun unif env filters user =
 			 * but for some strange reason it seems to slow down the code a lot
 			 * - that's normal that's because there is no constraint with ls1 or ls2 *)
 			(* anyway I should use something else than these srec... *)
-			val rtl1' = map (fn row => T.ROW_DEPENDANCY (row, ls, deps, ids)) rtl1
-			val rtl2' = map (fn row => T.ROW_DEPENDANCY (row, ls, deps, ids)) rtl2
+			val rtl1' = map (fn field => T.FIELD_DEPENDANCY (field, ls, deps, ids)) rtl1
+			val rtl2' = map (fn field => T.FIELD_DEPENDANCY (field, ls, deps, ids)) rtl2
 			val sr = ((rtl1', b1, []), (rtl2', b2, []))
 			val (cs'', err) = S.updateRecOne state  sr
 		    (* don't we get unwanted occurrences of srec by doing that? *)
@@ -3308,18 +3308,18 @@ fun unif env filters user =
                       let val c = E.genCstTnAll tn (T.TYPENAME_VAR tnv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VAR sqv1, sq2 as (T.SEQUENCE_VAR sqv2)), ls, deps, ids)) :: cs') l =
-	    if T.eqSequenceVar sqv1 sqv2
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2 as (T.ROW_VAR sqv2)), ls, deps, ids)) :: cs') l =
+	    if T.eqRowVar sqv1 sqv2
 	    then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
                       NONE =>
                       let val _ = if occurs (CS (sqv1, sq2)) [S (sqv2, ls, deps, ids)] 0 l
-				  then S.updateStateSq state sqv1 (T.SEQUENCE_DEPENDANCY (T.SEQUENCE_VAR sqv2, ls, deps, ids))
+				  then S.updateStateSq state sqv1 (T.ROW_DEPENDANCY (T.ROW_VAR sqv2, ls, deps, ids))
 				  else ()
                       in fsimplify cs' l
                       end
 		    | SOME sq =>
-                      let val c = E.genCstSqAll sq (T.SEQUENCE_VAR sqv2) ls deps ids
+                      let val c = E.genCstSqAll sq (T.ROW_VAR sqv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p), ty), ls, deps, ids)) :: cs') l =
@@ -3370,7 +3370,7 @@ fun unif env filters user =
 		 let val c = E.genCstTnAll tnty tnty2 ls deps ids
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VAR sqv1, sq2), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -3383,10 +3383,10 @@ fun unif env filters user =
 		 let val c = E.genCstSqAll sq sq2 ls deps ids
 		 in fsimplify (c :: cs') l
 		 end)
-	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR rv, rt as T.RC _), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_VAR rv, rt as T.FC _), ls, deps, ids)) :: cs') l =
 	    (case S.getValStateRt state rv of
 		 NONE =>
-		 let val (rho, n) = decomptyrow rt ls deps ids
+		 let val (rho, n) = decomptyfield rt ls deps ids
 		     val _ = if occurs (CR (rv, rt)) rho n l
 			     then S.updateStateRt state rv (collapseRt rt ls deps ids)
 			     else ()
@@ -3519,7 +3519,7 @@ fun unif env filters user =
 		    end
 	       else fsimplify cs' l
 	    end
-	  | fsimplify ((E.ROW_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.FIELD_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
 	  | fsimplify ((E.LABEL_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_POLY (sq1, i1, poly1, orKind1, lab1),
 				   ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2)),
@@ -3568,7 +3568,7 @@ fun unif env filters user =
 		      | ((typaths1, f1), (typaths2, f2), true) =>
 			let fun upd id typaths = S.updateStateOr state id (map (fn (_, y) => y) typaths, ls, deps, ids)
 			    val _ = if f2  (* f2 means that we've found a concrete match of seq1 in seq2 *)
-				       andalso isFullOr seq2 (* means that no row of seq2 is a var *)
+				       andalso isFullOr seq2 (* means that no field of seq2 is a var *)
 				       andalso (not (T.isPoly poly1))
 				       (* why do we insist that poly1 is not poly?
 					* It seems to be why we don't get an error
@@ -3578,7 +3578,7 @@ fun unif env filters user =
 				       andalso not (List.null typaths1)
 				    then upd i1 typaths1
 				    else ()
-			    (* Why don't we have the same set of conditions for the second sequence? *)
+			    (* Why don't we have the same set of conditions for the second row? *)
 			    val _ = if f1
 				       andalso (not (T.isPoly poly2))
 				       andalso not (List.null typaths2)
@@ -3635,7 +3635,7 @@ fun unif env filters user =
 			 (L.unions  [deps, deps1, deps2])
 			 (CD.unions [ids,  ids1,  ids2])
 		 | (NONE, NONE) =>
-		   (* The 2 sequences are not set yet to a path (a path set),
+		   (* The 2 rows are not set yet to a path (a path set),
 		    * so we don't know yet whether they match on at least a type.
 		    * We've got to check that with 'match'. *)
 		   match sq1 sq2 ls deps ids
@@ -3670,24 +3670,24 @@ fun unif env filters user =
 	    in fsimplify (cs @ cs') l
 	    end
 	  (*(2010-04-16)TODO:*)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.SEQUENCE_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
 	  (**)
@@ -3975,8 +3975,8 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.TYPENAME_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR  y, T.NC  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SC  x, T.SEQUENCE_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.SEQUENCE_CONSTRAINT ((T.SEQUENCE_VAR  y, T.SC  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.SEQUENCE_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.SEQUENCE_ENV x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C  x, T.ROW_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR  y, T.ROW_C  x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO
 

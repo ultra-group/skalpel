@@ -1,0 +1,3 @@
+(bg-build
+ :name "Skalpel"
+ :shell "nice -n5 make mlton-bin-gen")

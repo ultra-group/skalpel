@@ -89,6 +89,11 @@ echo -e "This message describes the daily Skalpel test results for date $date. I
 diff, the left hand side (<) represents the results from yesterday and the results\n\
 on the right hand side (>) are the results from today. The diffs are given first,\n\
 then the full test result logs are given at the end of this message.\n" >> $mailFile
+
+echo -e "The most recent commit message of the skalpel repository is directly below.\n" >> $mailFile
+
+git log | head -n 5 >> $mailFile
+
 echo -e "******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
 
 diff $yesterdayOutputDir/$analysisTestFilenameYesterday $outputDir/$analysisTestFilename >> $mailFile

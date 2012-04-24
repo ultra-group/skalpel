@@ -962,7 +962,7 @@ fun printSlice' slprog indent sep =
 	and printPart (A.PartExp   ex)                       ind = printExp       ex ind
 	  | printPart (A.PartDec   de)                       ind = printDec       de ind
 	  | printPart (A.PartType  ty)                       ind = printType      ty ind
-	  | printPart (A.PartSeq   se)                       ind = printTypeSequence   se ind
+	  | printPart (A.PartSeq   se)                       ind = printTypeRow   se ind
 	  | printPart (A.PartPat   pa)                       ind = printPat       pa ind
 	  | printPart (A.PartIdTy  id)                       ind = printIdentTy   id ind
 	  | printPart (A.PartTyCon tc)                       ind = printLongTyCon tc ind
@@ -1127,7 +1127,7 @@ fun printSlice' slprog indent sep =
 		val sep2 = sepLines (getLine [r]) i d ind
 	    in (l, j', c, x ^ sep1 ^ "," ^ sep2 ^ y)
 	    end
-	  | printLabTypeList _ _                               _   = raise EH.DeadBranch "Missing region for a type sequence comma"
+	  | printLabTypeList _ _                               _   = raise EH.DeadBranch "Missing region for a type row comma"
 
 	and printLabTypeTuple []                               _   = (NONE, NONE, NONE, "")
 	  | printLabTypeTuple [ty]                             ind = printLabType ty ind
@@ -1143,28 +1143,28 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTyRow (A.TyRow (tl, lt, _, _, _))           ind =
+	and printTyField (A.TyField (tl, lt, _, _, _))           ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabType lt ind
 	    in (l, j, c, x ^ ":" ^ y)
 	    end
-	  | printTyRow (A.TyRowDots pl)                      ind =
+	  | printTyField (A.TyFieldDots pl)                      ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTyRowList []                                  _   = (NONE, NONE, NONE, "")
-	  | printTyRowList [x]                                 ind = printTyRow x ind
-	  | printTyRowList (x :: xs)                           ind =
-	    let val (l, k, c, x) = printTyRow x ind
-		val (_, j, _, y) = printTyRowList xs ind
+	and printTyFieldList []                                  _   = (NONE, NONE, NONE, "")
+	  | printTyFieldList [x]                                 ind = printTyField x ind
+	  | printTyFieldList (x :: xs)                           ind =
+	    let val (l, k, c, x) = printTyField x ind
+		val (_, j, _, y) = printTyFieldList xs ind
 	    in (l, j, c, x ^ "," ^ y)
 	    end
 
-	and printTyRowSlList []                                _   = (NONE, NONE, NONE, dots)
-	  | printTyRowSlList (x :: xs)                         ind =
-	    let val (l, k, c, x) = printTyRow x (dind ind)
-		val (i, j, d, y) = printTyRowSlList xs ind
+	and printTyFieldSlList []                                _   = (NONE, NONE, NONE, dots)
+	  | printTyFieldSlList (x :: xs)                         ind =
+	    let val (l, k, c, x) = printTyField x (dind ind)
+		val (i, j, d, y) = printTyFieldSlList xs ind
 		val sep = sepLines k i d ind
 	    in (l, j, c, dots ^ "," ^ x ^ "," ^ sep ^ y)
 	    end
@@ -1177,15 +1177,15 @@ fun printSlice' slprog indent sep =
 	    end
 	  | printType (A.TypeTuple (tl, _, _, _))            ind = printLabTypeTuple tl ind
 	  | printType (A.TypeRecord (trl, rs, _, _, _))      ind =
-	    let val (_, _, _, x) = printTyRowList trl ind
+	    let val (_, _, _, x) = printTyFieldList trl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printType (A.TypeSlRec (trl, rs, _, _))          ind =
-	    let val (_, _, _, x) = printTyRowSlList trl ind
+	    let val (_, _, _, x) = printTyFieldSlList trl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printType (A.TypeTyCon (ts, ltc, _, _, _))       ind =
-	    let val (l, k, c, x) = printTypeSequence ts ind
+	    let val (l, k, c, x) = printTypeRow ts ind
 		val (i, j, d, y) = printLongTyCon ltc ind
 		val sep = sepLines k i d ind
 	    in (l, j, c, x ^ sep ^ " " ^ y)
@@ -1199,15 +1199,15 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTypeSequence (A.TypeSequenceOne (t, _, _, _))         ind =
+	and printTypeRow (A.TypeRowOne (t, _, _, _))         ind =
 	    let val (l, k, c, x) = printType t (sind ind)
 	    in (l, k, c, splparen ^ x ^ sprparen)
 	    end
-	  | printTypeSequence (A.TypeSequenceEm (r, _, _))             _   =
+	  | printTypeRow (A.TypeRowEm (r, _, _))             _   =
 	    (getLine [r], getLine [r], getCol [r], splparen ^ sprparen) (*HACK: before it was: ""*)
-	  | printTypeSequence (A.TypeSequenceSeq (tl, rs, _, _))       ind =
+	  | printTypeRow (A.TypeRowSeq (tl, rs, _, _))       ind =
 	    let val (r1, r2) = (List.hd rs, List.last rs)
-		    handle Empty => raise EH.DeadBranch "Missing regions for type sequence parentheses"
+		    handle Empty => raise EH.DeadBranch "Missing regions for type row parentheses"
 		val rs' = (List.rev o List.tl o List.rev o List.tl) rs
 		val (l, k, c, x) = printLabTypeList tl rs' ind
 		val k'   = case k of NONE => getLine [r1] | _ => k
@@ -1215,7 +1215,7 @@ fun printSlice' slprog indent sep =
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "(" ^ sep1 ^ x ^ sep2 ^ ")")
 	    end
-	  | printTypeSequence (A.TypeSequenceDots spl)                 ind =
+	  | printTypeRow (A.TypeRowDots spl)                 ind =
 	    let val (l, k, c, x) = printPartDots spl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
@@ -1248,7 +1248,7 @@ fun printSlice' slprog indent sep =
 		val sep2 = sepLines (getLine [r]) i d ind
 	    in (l, j', c, x ^ sep1 ^ "," ^ sep2 ^ y)
 	    end
-	  | printLabTyClassList _ _                            _   = raise EH.DeadBranch "Missing region for a type sequence comma"
+	  | printLabTyClassList _ _                            _   = raise EH.DeadBranch "Missing region for a type row comma"
 
 	and printTyClassSeq (A.TyClassSeqOne (t, _, _, _))   ind =
 	    let val (l, k, c, x) = printTyClass t (sind ind)
@@ -1258,7 +1258,7 @@ fun printSlice' slprog indent sep =
 	    (getLine [r], getLine [r], getCol [r], splparen ^ sprparen) (*HACK: before it was: ""*)
 	  | printTyClassSeq (A.TyClassSeqSeq (tl, rs, _, _)) ind =
 	    let val (r1, r2) = (List.hd rs, List.last rs)
-		    handle Empty => raise EH.DeadBranch "Missing regions for tyclass sequence parentheses"
+		    handle Empty => raise EH.DeadBranch "Missing regions for tyclass row parentheses"
 		val rs' = (List.rev o List.tl o List.rev o List.tl) rs
 		val (l, k, c, x) = printLabTyClassList tl rs' ind
 		val k'   = case k of NONE => getLine [r1] | _ => k
@@ -1781,28 +1781,28 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printExpRow (A.ExpRow (tl, e, _, _, _, _))       ind =
+	and printExpField (A.ExpField (tl, e, _, _, _, _))       ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabExp e ind
 	    in (l, j, c, x ^ "=" ^ y)
 	    end
-	  | printExpRow (A.ExpRowDots pl)                    ind =
+	  | printExpField (A.ExpFieldDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printExpRowList []                                 _   = (NONE, NONE, NONE, "")
-	  | printExpRowList [x]                                ind = printExpRow x ind
-	  | printExpRowList (x :: xs)                          ind =
-	    let val (l, k, c, x) = printExpRow x ind
-		val (_, j, _, y) = printExpRowList xs ind
+	and printExpFieldList []                                 _   = (NONE, NONE, NONE, "")
+	  | printExpFieldList [x]                                ind = printExpField x ind
+	  | printExpFieldList (x :: xs)                          ind =
+	    let val (l, k, c, x) = printExpField x ind
+		val (_, j, _, y) = printExpFieldList xs ind
 	    in (l, j, c, x ^ "," ^ y)
 	    end
 
-	and printExpRowSlList []                               _   = (NONE, NONE, NONE, dots)
-	  | printExpRowSlList (x :: xs)                        ind =
-	    let val (l, k, c, x) = printExpRow x (dind ind)
-		val (i, j, d, y) = printExpRowSlList xs ind
+	and printExpFieldSlList []                               _   = (NONE, NONE, NONE, dots)
+	  | printExpFieldSlList (x :: xs)                        ind =
+	    let val (l, k, c, x) = printExpField x (dind ind)
+		val (i, j, d, y) = printExpFieldSlList xs ind
 		val sep = sepLines k i d ind
 	    in (l, j, c, dots ^ "," ^ x ^ "," ^ sep ^ y)
 	    end
@@ -1822,11 +1822,11 @@ fun printSlice' slprog indent sep =
 	    in (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
 	  | printAtExp (A.AtExpRecord (erl, rs, _, _, _))    ind =
-	    let val (_, _, _, x) = printExpRowList erl ind
+	    let val (_, _, _, x) = printExpFieldList erl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtExp (A.AtExpSlRec (erl, rs, _, _))        ind =
-	    let val (_, _, _, x) = printExpRowSlList erl ind
+	    let val (_, _, _, x) = printExpFieldSlList erl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtExp (A.AtExpLet (d, e, rs, _, _))         ind =
@@ -2087,28 +2087,28 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printPatRow (A.PatRow (tl, p, _, _, _, _))       ind =
+	and printPatField (A.PatField (tl, p, _, _, _, _))       ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabPat p ind
 	    in (l, j, c, x ^ "=" ^ y)
 	    end
-	  | printPatRow (A.PatRowId (id, _))                 ind = printIdentTy id ind
-	  | printPatRow (A.PatRowAs (id, p, _, _, _))        ind =
+	  | printPatField (A.PatFieldId (id, _))                 ind = printIdentTy id ind
+	  | printPatField (A.PatFieldAs (id, p, _, _, _))        ind =
 	    let val (l, k, c, x) = printLabIdTy id ind
 		val (_, j, _, y) = printLabPat p ind
 	    in (l, j, c, x ^ " as " ^ y)
 	    end
-	  | printPatRow (A.PatRowWild (r, _, _))             _   = (getLine [r], getLine [r], getCol [r], "...")
-	  | printPatRow (A.PatRowDots pl)                    ind =
+	  | printPatField (A.PatFieldWild (r, _, _))             _   = (getLine [r], getLine [r], getCol [r], "...")
+	  | printPatField (A.PatFieldDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printPatRowList []                                 _   = (NONE, NONE, NONE, "")
-	  | printPatRowList [x]                                ind = printPatRow x ind
-	  | printPatRowList (x :: xs)                          ind =
-	    let val (l, k, c, x) = printPatRow x ind
-		val (_, j, _, y) = printPatRowList xs ind
+	and printPatFieldList []                                 _   = (NONE, NONE, NONE, "")
+	  | printPatFieldList [x]                                ind = printPatField x ind
+	  | printPatFieldList (x :: xs)                          ind =
+	    let val (l, k, c, x) = printPatField x ind
+		val (_, j, _, y) = printPatFieldList xs ind
 	    in (l, j, c, x ^ "," ^ y)
 	    end
 
@@ -2120,7 +2120,7 @@ fun printSlice' slprog indent sep =
 	    in (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
 	  | printAtPat (A.AtPatRecord (prl, rs, _, _, _))    ind =
-	    let val (_, _, _, x) = printPatRowList prl ind
+	    let val (_, _, _, x) = printPatFieldList prl ind
 	    in (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtPat (A.AtPatParen (p, r1, r2, _, _))      ind =
@@ -2225,13 +2225,13 @@ fun flattenLabType [] = []
   | flattenLabType ((A.LabTypeDots sltp) :: xs) = sltp @ (flattenLabType xs)
   | flattenLabType ((A.LabType (t, _, _, _)) :: xs) = (A.PartType t) :: (flattenLabType xs)
 
-fun flattenTypeSequence [] = []
-  | flattenTypeSequence ((A.TypeSequenceDots sltp) :: xs) = sltp @ (flattenTypeSequence xs)
-  | flattenTypeSequence (x :: xs) = (A.PartSeq x) :: (flattenTypeSequence xs)
+fun flattenTypeRow [] = []
+  | flattenTypeRow ((A.TypeRowDots sltp) :: xs) = sltp @ (flattenTypeRow xs)
+  | flattenTypeRow (x :: xs) = (A.PartSeq x) :: (flattenTypeRow xs)
 
 fun flattenSeqExp [] = []
   | flattenSeqExp ((A.SeqExpDots slp) :: xs) = slp @ (flattenSeqExp xs)
-  | flattenSeqExp _ = raise EH.DeadBranch "flattening of a sequence of expressions failed" (* we might want to relax this condition *)
+  | flattenSeqExp _ = raise EH.DeadBranch "flattening of a row of expressions failed" (* we might want to relax this condition *)
 
 fun flattenAtExp [] = []
   | flattenAtExp ((A.AtExpDots slp) :: xs) = slp @ (flattenAtExp xs)
@@ -2390,19 +2390,19 @@ fun flattenMrule [] = []
   | flattenMrule ((A.MruleDots []) :: xs) = flattenMrule xs
   | flattenMrule (x :: xs) = x :: (flattenMrule xs)
 
-fun flattenTyRow [] = []
-  | flattenTyRow ((A.TyRowDots x) :: (A.TyRowDots y) :: xs) = flattenTyRow ((A.TyRowDots (x @ y)) :: xs)
-  | flattenTyRow ((A.TyRowDots []) :: xs) = flattenTyRow xs
-  | flattenTyRow (x :: xs) = x :: (flattenTyRow xs)
+fun flattenTyField [] = []
+  | flattenTyField ((A.TyFieldDots x) :: (A.TyFieldDots y) :: xs) = flattenTyField ((A.TyFieldDots (x @ y)) :: xs)
+  | flattenTyField ((A.TyFieldDots []) :: xs) = flattenTyField xs
+  | flattenTyField (x :: xs) = x :: (flattenTyField xs)
 
-fun flattenExpRow [] = []
-  | flattenExpRow ((A.ExpRowDots x) :: (A.ExpRowDots y) :: xs) = flattenExpRow ((A.ExpRowDots (x @ y)) :: xs)
-  | flattenExpRow ((A.ExpRowDots []) :: xs) = flattenExpRow xs
-  | flattenExpRow (x :: xs) = x :: (flattenExpRow xs)
+fun flattenExpField [] = []
+  | flattenExpField ((A.ExpFieldDots x) :: (A.ExpFieldDots y) :: xs) = flattenExpField ((A.ExpFieldDots (x @ y)) :: xs)
+  | flattenExpField ((A.ExpFieldDots []) :: xs) = flattenExpField xs
+  | flattenExpField (x :: xs) = x :: (flattenExpField xs)
 
-fun flattenPatRow [] = []
-  | flattenPatRow ((A.PatRowDots x) :: (A.PatRowDots y) :: xs) = flattenPatRow ((A.PatRowDots (x @ y)) :: xs)
-  | flattenPatRow (x :: xs) = x :: (flattenPatRow xs)
+fun flattenPatField [] = []
+  | flattenPatField ((A.PatFieldDots x) :: (A.PatFieldDots y) :: xs) = flattenPatField ((A.PatFieldDots (x @ y)) :: xs)
+  | flattenPatField (x :: xs) = x :: (flattenPatField xs)
 
 fun flattenFValBindOne [] = []
   | flattenFValBindOne ((A.FVBOneDots x) :: (A.FVBOneDots y) :: xs) = flattenFValBindOne ((A.FVBOneDots (x @ y)) :: xs)
@@ -2574,7 +2574,7 @@ fun slice prog labels =
 	      and sl_part (A.PartExp   e) ll = flattenExp       [sl_exp       e ll]
 		| sl_part (A.PartDec   d) ll = flattenDec       [sl_dec       d ll]
 		| sl_part (A.PartType  t) ll = flattenType      [sl_type      t ll]
-		| sl_part (A.PartSeq   s) ll = flattenTypeSequence   [sl_typeSequence   s ll]
+		| sl_part (A.PartSeq   s) ll = flattenTypeRow   [sl_typeRow   s ll]
 		| sl_part (A.PartPat   p) ll = flattenPat       [sl_pat       p ll]
 		| sl_part (A.PartIdTy  i) ll = flattenIdentTy   [sl_identty   i ll]
 		| sl_part (A.PartTyCon t) ll = flattenLongTyCon [sl_longtycon t ll]
@@ -2988,10 +2988,10 @@ fun slice prog labels =
 		  A.TypeVarSeqDots (sl_typevarlist tvl ll)
 	      (* Can we have an error inside the parentheses without having the parentheses in the error?
 	         Do we want to use the same function sl_typevarlist in the else branch?
-                    - In the else branch we don't have the sequence structure in the slice (l') so maybe
+                    - In the else branch we don't have the row structure in the slice (l') so maybe
                       we don't care about the position of each variable.
-                      This remark stands for all sort of sequence I guess *)
-	      (* I took care of this case - do the same for the other sequences - the flattening already take care of that *)
+                      This remark stands for all sort of row I guess *)
+	      (* I took care of this case - do the same for the other rows - the flattening already take care of that *)
 
 	      and sl_sl_labtypelist xs ll = sl_labtypelist xs ll
 
@@ -3018,40 +3018,40 @@ fun slice prog labels =
 		  else A.LabTypeDots (flattenType [sl_type t ll])
 		| sl_labtype (A.LabTypeDots pl) ll = A.LabTypeDots (sl_partlist pl ll)
 
-	      and sl_sl_tyrow x ll =
+	      and sl_sl_tyfield x ll =
 		  if isEmpty ll
-		  then A.TyRowDots []
-		  else sl_tyrow x ll
+		  then A.TyFieldDots []
+		  else sl_tyfield x ll
 
-	      and sl_tyrow (A.TyRow (tl, t, r, l, n)) ll =
+	      and sl_tyfield (A.TyField (tl, t, r, l, n)) ll =
 		  if isin l ll
 		  then let val nxt = A.getTyLabNext tl
 			   val (lll, llr) = splitList nxt (L.delete l ll)
 			   val sltl = sl_sl_tylab tl lll
 			   val slt  = sl_sl_labtype t llr
-		       in A.TyRow (sltl, slt, r, l, n)
+		       in A.TyField (sltl, slt, r, l, n)
 	  	       end
 		  else let val nxt = A.getTyLabNext tl
 			   val (lll, llr) = splitList nxt ll
 			   val sltl = sl_sl_tylab tl lll
 			   val slt  = sl_sl_labtype t llr
 		       in case sltl of
-			      A.TyLabDots => A.TyRowDots (flattenLabType [slt])
-			    | _             => A.TyRow (sltl, slt, r, l, n)
+			      A.TyLabDots => A.TyFieldDots (flattenLabType [slt])
+			    | _             => A.TyField (sltl, slt, r, l, n)
 	  	       end
-		| sl_tyrow (A.TyRowDots pl) ll = A.TyRowDots (sl_partlist pl ll)
+		| sl_tyfield (A.TyFieldDots pl) ll = A.TyFieldDots (sl_partlist pl ll)
 
-	      and sl_sl_tyrowlist xs ll = sl_tyrowlist xs ll
+	      and sl_sl_tyfieldlist xs ll = sl_tyfieldlist xs ll
 
-	      and sl_tyrowlist [] ll =
+	      and sl_tyfieldlist [] ll =
 		  if isEmptyL ll
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
-		| sl_tyrowlist (x :: xs) ll =
-		  let val nxt = A.getTyRowNext x
+		| sl_tyfieldlist (x :: xs) ll =
+		  let val nxt = A.getTyFieldNext x
 		      val (lll, llr) = splitList nxt ll
-		      val slx  = sl_sl_tyrow x lll
-		      val slxs = sl_tyrowlist xs llr
+		      val slx  = sl_sl_tyfield x lll
+		      val slxs = sl_tyfieldlist xs llr
 		  in slx :: slxs
 		  end
 
@@ -3086,20 +3086,20 @@ fun slice prog labels =
 		  else A.TypeDots (flattenLabType (sl_labtypelist tl ll))
 		| sl_type (A.TypeRecord (rtl, rl1, rl2, l, n)) ll =
 		  if isin l ll
-		  then A.TypeRecord (sl_sl_tyrowlist rtl (L.delete l ll), rl1, rl2, l, n)
-		  else let val slrtl = sl_tyrowlist rtl ll
-		       in case flattenTyRow slrtl of
+		  then A.TypeRecord (sl_sl_tyfieldlist rtl (L.delete l ll), rl1, rl2, l, n)
+		  else let val slrtl = sl_tyfieldlist rtl ll
+		       in case flattenTyField slrtl of
 			      [] => A.TypeDots [] (* NEW - related to strictLab *)
-			    | [A.TyRowDots x] => A.TypeDots x
+			    | [A.TyFieldDots x] => A.TypeDots x
 			    | x                 => A.TypeSlRec (x, rl1, l, n)
 		       end
 		| sl_type (A.TypeSlRec (rtl, rl, l, n)) ll =
 		  if isin l ll
-		  then  A.TypeSlRec (sl_sl_tyrowlist rtl (L.delete l ll), rl, l, n)
-		  else let val slrtl = sl_tyrowlist rtl ll
-		       in case flattenTyRow slrtl of
+		  then  A.TypeSlRec (sl_sl_tyfieldlist rtl (L.delete l ll), rl, l, n)
+		  else let val slrtl = sl_tyfieldlist rtl ll
+		       in case flattenTyField slrtl of
 			      [] => A.TypeDots [] (* NEW - related to strictLab *)
-			    | [A.TyRowDots x] => A.TypeDots x
+			    | [A.TyFieldDots x] => A.TypeDots x
 			    | x                 => A.TypeSlRec (x, rl, l, n)
 		       end
 		| sl_type (A.TypeTyCon (ts, ltc, rl, l, n)) ll =
@@ -3107,16 +3107,16 @@ fun slice prog labels =
 		  then let val nxt = A.getLongTyConNext ltc
 			   val (lll, llr) = splitList nxt (L.delete l ll)
 			   val sltc = sl_sl_longtycon ltc lll
-			   val slts = sl_sl_typeSequence ts llr
+			   val slts = sl_sl_typeRow ts llr
 		       in A.TypeTyCon (slts, sltc, rl, l, n)
 		       end
 		  else let val nxt = A.getLongTyConNext ltc
 			   val (lll, llr) = splitList nxt ll
 			   val sltc = sl_sl_longtycon ltc lll
-			   val slts = sl_sl_typeSequence ts llr
-		       in A.TypeDots ((flattenLongTyCon [sltc]) @ (flattenTypeSequence [slts]))
+			   val slts = sl_sl_typeRow ts llr
+		       in A.TypeDots ((flattenLongTyCon [sltc]) @ (flattenTypeRow [slts]))
 		       (* case sltc of
-			      A.LongTyConDots pl => A.TypeDots (pl @ (flattenTypeSequence [slts]))
+			      A.LongTyConDots pl => A.TypeDots (pl @ (flattenTypeRow [slts]))
 			    | _                    => A.TypeTyCon (slts, sltc, rl, l, n)*)
 		       end
 		| sl_type (A.TypeParen (ty, r1, r2, l, n)) ll =
@@ -3125,26 +3125,26 @@ fun slice prog labels =
 		  else A.TypeDots (flattenLabType [sl_labtype ty ll])
 		| sl_type (A.TypeDots pl) ll = A.TypeDots (sl_partlist pl ll)
 
-	      and sl_sl_typeSequence x ll =
+	      and sl_sl_typeRow x ll =
 		  if isEmpty ll
-		  then A.TypeSequenceDots []
-		  else sl_typeSequence x ll
+		  then A.TypeRowDots []
+		  else sl_typeRow x ll
 
-	      and sl_typeSequence (A.TypeSequenceOne (ty, r, l, n)) ll =
+	      and sl_typeRow (A.TypeRowOne (ty, r, l, n)) ll =
 		  if isin l ll
-		  then A.TypeSequenceOne (sl_sl_type ty (L.delete l ll), r, l, n)
-		  else A.TypeSequenceDots (flattenType [sl_type ty ll])
-		| sl_typeSequence (A.TypeSequenceEm (r, l, n)) ll =
+		  then A.TypeRowOne (sl_sl_type ty (L.delete l ll), r, l, n)
+		  else A.TypeRowDots (flattenType [sl_type ty ll])
+		| sl_typeRow (A.TypeRowEm (r, l, n)) ll =
 		  if isinone l ll
-		  then A.TypeSequenceEm (r, l, n)
+		  then A.TypeRowEm (r, l, n)
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
-		  else A.TypeSequenceDots []
-		| sl_typeSequence (A.TypeSequenceSeq (tl, rl, l, n)) ll =
+		  else A.TypeRowDots []
+		| sl_typeRow (A.TypeRowSeq (tl, rl, l, n)) ll =
 		  if isin l ll
-		  then A.TypeSequenceSeq (sl_sl_labtypelist tl (L.delete l ll), rl, l, n)
-		  else A.TypeSequenceDots (flattenLabType (sl_labtypelist tl ll))
-		| sl_typeSequence (A.TypeSequenceDots pl) ll = A.TypeSequenceDots (sl_partlist pl ll)
+		  then A.TypeRowSeq (sl_sl_labtypelist tl (L.delete l ll), rl, l, n)
+		  else A.TypeRowDots (flattenLabType (sl_labtypelist tl ll))
+		| sl_typeRow (A.TypeRowDots pl) ll = A.TypeRowDots (sl_partlist pl ll)
 
 	      and sl_sl_conbind x ll =
 		  if isEmpty ll
@@ -4200,12 +4200,12 @@ fun slice prog labels =
 		  else A.LabExpDots (flattenExp [sl_exp e ll])
 		| sl_labexp (A.LabExpDots pl) ll = A.LabExpDots (sl_partlist pl ll)
 
-	      and sl_sl_exprow x ll =
+	      and sl_sl_expfield x ll =
 		  if isEmpty ll
-		  then A.ExpRowDots []
-		  else sl_exprow x ll
+		  then A.ExpFieldDots []
+		  else sl_expfield x ll
 
-	      and sl_exprow (A.ExpRow (tl, e, r, rl, l, n)) ll =
+	      and sl_expfield (A.ExpField (tl, e, r, rl, l, n)) ll =
 		  if isin l ll
 		  then
 		      let
@@ -4213,7 +4213,7 @@ fun slice prog labels =
 			  val (lll, llr) = splitList nxt (L.delete l ll)
 			  val sltl = sl_sl_tylab tl lll
 			  val sle  = sl_sl_labexp e llr
-		      in A.ExpRow (sltl, sle, r, rl, l, n)
+		      in A.ExpField (sltl, sle, r, rl, l, n)
 	  	      end
 		  else
 		      let
@@ -4222,23 +4222,23 @@ fun slice prog labels =
 			  val sltl = sl_sl_tylab tl lll
 			  val sle  = sl_sl_labexp e llr
 		      in case sltl of
-			     A.TyLabDots => A.ExpRowDots (flattenLabExp [sle])
-			   | _             => A.ExpRow (sltl, sle, r, rl, l, n)
+			     A.TyLabDots => A.ExpFieldDots (flattenLabExp [sle])
+			   | _             => A.ExpField (sltl, sle, r, rl, l, n)
 	  	      end
-		| sl_exprow (A.ExpRowDots pl) ll = A.ExpRowDots (sl_partlist pl ll)
+		| sl_expfield (A.ExpFieldDots pl) ll = A.ExpFieldDots (sl_partlist pl ll)
 
-	      and sl_sl_exprowlist xs ll = sl_exprowlist xs ll
+	      and sl_sl_expfieldlist xs ll = sl_expfieldlist xs ll
 
-	      and sl_exprowlist [] ll =
+	      and sl_expfieldlist [] ll =
 		  if isEmptyL ll
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
-		| sl_exprowlist (x :: xs) ll =
+		| sl_expfieldlist (x :: xs) ll =
 		  let
-		      val nxt = A.getExpRowNext x
+		      val nxt = A.getExpFieldNext x
 		      val (lll, llr) = splitList nxt ll
-		      val slx  = sl_sl_exprow x lll
-		      val slxs = sl_exprowlist xs llr
+		      val slx  = sl_sl_expfield x lll
+		      val slxs = sl_expfieldlist xs llr
 		  in slx :: slxs
 		  end
 
@@ -4288,24 +4288,24 @@ fun slice prog labels =
 		  else A.AtExpDots (flattenLabExp (sl_labexplist el ll))
 		| sl_atexp (A.AtExpRecord (erl, rl1, rl2, l, n)) ll =
 		  if isin l ll
-		  then A.AtExpRecord (sl_sl_exprowlist erl (L.delete l ll), rl1, rl2, l, n)
+		  then A.AtExpRecord (sl_sl_expfieldlist erl (L.delete l ll), rl1, rl2, l, n)
 		  else
 		      let
-			  val sler = sl_exprowlist erl ll
-		      in case flattenExpRow sler of
+			  val sler = sl_expfieldlist erl ll
+		      in case flattenExpField sler of
 			     [] => A.AtExpDots [] (* NEW - related to strictLab *)
-			   | [A.ExpRowDots x] => A.AtExpDots x
+			   | [A.ExpFieldDots x] => A.AtExpDots x
 			   | x                  => A.AtExpSlRec (x, rl1, l, n) (* NEW: x instead of sler *)
 		      end
 		| sl_atexp (A.AtExpSlRec (erl, rl, l, n)) ll =
 		  if isin l ll
-		  then A.AtExpSlRec (sl_sl_exprowlist erl (L.delete l ll), rl, l, n)
+		  then A.AtExpSlRec (sl_sl_expfieldlist erl (L.delete l ll), rl, l, n)
 		  else
 		      let
-			  val slerl = sl_exprowlist erl ll
-		      in case flattenExpRow slerl of
+			  val slerl = sl_expfieldlist erl ll
+		      in case flattenExpField slerl of
 			     [] => A.AtExpDots [] (* NEW - related to strictLab *)
-			   | [A.ExpRowDots x] => A.AtExpDots x
+			   | [A.ExpFieldDots x] => A.AtExpDots x
 			   | x                  => A.AtExpSlRec (x, rl, l, n)
 		      end
 		| sl_atexp (A.AtExpLet (ds, e, rl, l, n)) ll =
@@ -4658,78 +4658,78 @@ fun slice prog labels =
 		  else A.LabPatDots (flattenPat [sl_pat p ll])
 		| sl_labpat (A.LabPatDots pl) ll = A.LabPatDots (sl_partlist pl ll)
 
-	      and sl_sl_patrow x ll =
+	      and sl_sl_patfield x ll =
 		  if isEmpty ll
-		  then A.PatRowDots []
-		  else sl_patrow x ll
+		  then A.PatFieldDots []
+		  else sl_patfield x ll
 
-	      and sl_patrow (A.PatRow (tl, p, r, rl, l, n)) ll =
+	      and sl_patfield (A.PatField (tl, p, r, rl, l, n)) ll =
 		  if isin l ll
 		  then let val nxt = A.getTyLabNext tl
 			   val (lll, llr) = splitList nxt (L.delete l ll)
 			   val sltl = sl_sl_tylab tl lll
 			   val slp  = sl_sl_labpat p llr
-		       in A.PatRow (sltl, slp, r, rl, l, n)
+		       in A.PatField (sltl, slp, r, rl, l, n)
 	  	       end
 		  else let val nxt = A.getTyLabNext tl
 			   val (lll, llr) = splitList nxt ll
 			   val sltl = sl_sl_tylab tl lll
 			   val slp  = sl_sl_labpat p llr
 		       in case sltl of
-			      A.TyLabDots => A.PatRowDots (flattenLabPat [slp])
-			    | _             => A.PatRow (sltl, slp, r, rl, l, n)
+			      A.TyLabDots => A.PatFieldDots (flattenLabPat [slp])
+			    | _             => A.PatField (sltl, slp, r, rl, l, n)
 	  	       end
-		| sl_patrow (A.PatRowId (id, n)) ll =
+		| sl_patfield (A.PatFieldId (id, n)) ll =
 		  (case sl_identty id ll of
-		       A.IdentTyDots pl => A.PatRowDots pl
-		     | x                  => A.PatRowId (x, n))
-		| sl_patrow (A.PatRowAs (id, p, r, l, n)) ll =
+		       A.IdentTyDots pl => A.PatFieldDots pl
+		     | x                  => A.PatFieldId (x, n))
+		| sl_patfield (A.PatFieldAs (id, p, r, l, n)) ll =
 		  if isin l ll
 		  then let val nxt = A.getLabIdTyNext id
 			   val (lll, llr) = splitList nxt (L.delete l ll)
 			   val slid = sl_sl_labidty id lll
 			   val slp  = sl_sl_labpat p llr
-		       in A.PatRowAs (slid, slp, r, l, n)
+		       in A.PatFieldAs (slid, slp, r, l, n)
 	  	       end
 		  else let val nxt = A.getLabIdTyNext id
 			   val (lll, llr) = splitList nxt ll
 			   val slid = sl_sl_labidty id lll
 			   val slp  = sl_sl_labpat p llr
 		       in case slid of
-			      A.LabIdTyDots pl => A.PatRowDots (pl @ (flattenLabPat [slp]))
-			    | _                  => A.PatRowAs (slid, slp, r, l, n)
+			      A.LabIdTyDots pl => A.PatFieldDots (pl @ (flattenLabPat [slp]))
+			    | _                  => A.PatFieldAs (slid, slp, r, l, n)
 	  	       end
-		| sl_patrow (A.PatRowWild (r, l, n)) ll =
+		| sl_patfield (A.PatFieldWild (r, l, n)) ll =
 		  if isinone l ll
-		  then A.PatRowWild (r, l, n)
+		  then A.PatFieldWild (r, l, n)
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
-		  else A.PatRowDots []
-		| sl_patrow (A.PatRowDots pl) ll = A.PatRowDots (sl_partlist pl ll)
+		  else A.PatFieldDots []
+		| sl_patfield (A.PatFieldDots pl) ll = A.PatFieldDots (sl_partlist pl ll)
 
-	      and sl_sl_patrowlist xs ll = sl_patrowlist xs ll
+	      and sl_sl_patfieldlist xs ll = sl_patfieldlist xs ll
 
-	      and sl_patrowlist [] ll =
+	      and sl_patfieldlist [] ll =
 		  if isEmptyL ll
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
-		| sl_patrowlist (x :: xs) ll =
-		  let val nxt = A.getPatRowNext x
+		| sl_patfieldlist (x :: xs) ll =
+		  let val nxt = A.getPatFieldNext x
 		      val (lll, llr) = splitList nxt ll
-		      val slx  = sl_sl_patrow x lll
-		      val slxs = sl_patrowlist xs llr
+		      val slx  = sl_sl_patfield x lll
+		      val slxs = sl_patfieldlist xs llr
 		  in slx :: slxs
 		  end
 
-	      and sl_idrowlist [] ll =
+	      and sl_idfieldlist [] ll =
 		  if isEmptyL ll
 		  then []
 		  else raise EH.DeadBranch (msgEmpty ll)
-		| sl_idrowlist (x :: xs) ll =
+		| sl_idfieldlist (x :: xs) ll =
 		  let val nxt = A.getIdentNext x
 		      val (lll, llr) = splitList nxt ll
 		      val slx  = sl_sl_ident x lll
-		      val slxs = sl_idrowlist xs llr
+		      val slxs = sl_idfieldlist xs llr
 		  in slx :: slxs
 		  end
 
@@ -4756,11 +4756,11 @@ fun slice prog labels =
 		  else A.AtPatDots (flattenLabPat (sl_labpatlist pal ll))
 		| sl_atpat (A.AtPatRecord (prl, rl1, rl2, l, n)) ll =
 		  if isin l ll
-		  then A.AtPatRecord (sl_sl_patrowlist prl (L.delete l ll), rl1, rl2, l, n)
-		  else let val slprl = sl_patrowlist prl ll
-		       in case flattenPatRow slprl of
+		  then A.AtPatRecord (sl_sl_patfieldlist prl (L.delete l ll), rl1, rl2, l, n)
+		  else let val slprl = sl_patfieldlist prl ll
+		       in case flattenPatField slprl of
 			      [] => A.AtPatDots [] (* NEW - related to strictLab *)
-			    | [A.PatRowDots x] => A.AtPatDots x
+			    | [A.PatFieldDots x] => A.AtPatDots x
 			    | x                  => A.AtPatRecord (x, rl1, rl2, l, n)
 		       end
 		| sl_atpat (A.AtPatParen (pa, r1, r2, l, n)) ll =

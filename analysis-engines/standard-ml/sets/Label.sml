@@ -42,7 +42,7 @@ structure D  = Debug
 
 (* val debugString = S.debugString *)
 
-
+(* label is a program position *)
 type label  = S.item
 type labels = S.set
 

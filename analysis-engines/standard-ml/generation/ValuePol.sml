@@ -112,8 +112,8 @@ and toplabLabExp (A.LabExp (e, _, _, l, _)) = l :: (toplabExp e)
 fun nonexpAtExp (A.AtExpId id)                    = X.Nonexp
   | nonexpAtExp (A.AtExpScon _)                   = X.Nonexp
   | nonexpAtExp (A.AtExpTuple (lel, _, l, _))     = X.addnonexp (nonexpLabExpList lel) l
-  | nonexpAtExp (A.AtExpRecord (erl, _, _, l, _)) = X.addnonexp (nonexpExpRowList erl) l
-  | nonexpAtExp (A.AtExpSlRec (erl, _, l, _))     = X.addnonexp (nonexpExpRowList erl) l
+  | nonexpAtExp (A.AtExpRecord (erl, _, _, l, _)) = X.addnonexp (nonexpExpFieldList erl) l
+  | nonexpAtExp (A.AtExpSlRec (erl, _, l, _))     = X.addnonexp (nonexpExpFieldList erl) l
   | nonexpAtExp (A.AtExpLet (_, _, _, l, _))      = X.genOneExpans l
   | nonexpAtExp (A.AtExpDLet (_, _, _, l, _))     = X.genOneExpans l
   | nonexpAtExp (A.AtExpParen (le, _, _, l, _))   = X.addnonexp (nonexpLabExp le) l
@@ -133,8 +133,8 @@ and nonexpLabExp (A.LabExp (e, _, _, l, _)) = X.addnonexp (nonexpExp e) l
   | nonexpLabExp (A.LabExpDots _)           = X.Expans []
 
 
-and nonexpExpRow (A.ExpRow (_, e, _, _, l, _)) = X.addnonexp (nonexpLabExp e) l
-  | nonexpExpRow (A.ExpRowDots _)              = X.Expans []
+and nonexpExpField (A.ExpField (_, e, _, _, l, _)) = X.addnonexp (nonexpLabExp e) l
+  | nonexpExpField (A.ExpFieldDots _)              = X.Expans []
 
 
 and nonexpExp (A.ExpAtExp ae)                      = nonexpAtExp ae
@@ -193,6 +193,6 @@ and nonexpConPcon (A.PconBool _)               = X.Nonexp
   | nonexpConPcon A.PconDots                   = X.Expans []
 
 and nonexpLabExpList el = X.composeNonexp (map (fn x => nonexpLabExp x) el)
-and nonexpExpRowList el = X.composeNonexp (map (fn x => nonexpExpRow x) el)
+and nonexpExpFieldList el = X.composeNonexp (map (fn x => nonexpExpField x) el)
 
 end

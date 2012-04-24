@@ -50,18 +50,18 @@ structure SL = BinarySetFn(OrdIdl) (* Set LongIds *)
 (* type definitions *)
 type path  = int list
 type paths = path list
-type rcty  = T.rowType list * T.flex * (L.label * T.labcons) EL.extLab list
+type rcty  = T.fieldType list * T.flex * (L.label * T.fieldName) EL.extLab list
 
 type stTv = T.ty
 type stTf = T.typeFunction
 type stTn = T.typenameType
-type stSq = T.sequenceType
-type stRt = T.rowType
+type stSq = T.rowType
+type stRt = T.fieldType
 type stLt = T.labelType
 type stEv = E.env
 type stRc = (rcty * rcty)
 type stGe = T.explicitTypeVar
-type stAr = T.sequenceType
+type stAr = T.rowType
 type stOr = paths    EL.extLab
 type stCl = CL.class EL.extLab
 type stNa = T.typename EL.extLab
@@ -163,10 +163,10 @@ fun printStateOr ors =
 	      (!ors)
 
 fun printlabtylist xs =
-    printlistgen xs (fn ext => EL.printExtLab' ext (fn (l, lc) => "(" ^ L.printLab l ^ "," ^ T.printlabcons lc ^ ")"))
+    printlistgen xs (fn ext => EL.printExtLab' ext (fn (l, lc) => "(" ^ L.printLab l ^ "," ^ T.printFieldName lc ^ ")"))
 
 fun printRcTy (rtl, flex, ltl) =
-    "(" ^ T.printrowtylist rtl  ^
+    "(" ^ T.printfieldtylist rtl  ^
     "," ^ T.printflex      flex ^
     "," ^ printlabtylist   ltl  ^ ")"
 
@@ -235,7 +235,7 @@ fun printStateSe {tv, tf, tn, sq, rt, lt, ev, cl} =
     "State TF:\n" ^ printStateGen  tf T.printtyf   ^ "\n" ^
     "State TN:\n" ^ printStateGen  tn T.printtnty  ^ "\n" ^
     "State SQ:\n" ^ printStateGen  sq T.printseqty ^ "\n" ^
-    "State RT:\n" ^ printStateGen  rt T.printRowType ^ "\n" ^
+    "State RT:\n" ^ printStateGen  rt T.printFieldType ^ "\n" ^
     "State LT:\n" ^ printStateGen  lt T.printlabty ^ "\n" ^
     "State EV:\n" ^ printStateGen  ev printenv     ^ "\n" ^
     "State CL:\n" ^ printStateGen' cl CL.toString  ^ "\n"
@@ -288,7 +288,7 @@ fun getStateAp x = #ap (getStateUb x)*)
 
 fun getStateIdVa x = E.getValueIds x
 fun getStateIdTv x = E.getExplicitTypeVars x
-fun getStateIdTy x = E.getTyps x
+fun getStateIdTy x = E.getTypeNameEnv x
 fun getStateIdSt x = E.getStructs x
 fun getStateIdSi x = E.getSigs x
 fun getStateIdFn x = E.getFunctors x
@@ -299,8 +299,8 @@ fun getValOneState onestate x = MS.find (!onestate, x)
 fun getValStateTv state x = getValOneState (getStateTv state) (T.typeVarToInt     x)
 fun getValStateTf state x = getValOneState (getStateTf state) (T.typeFunctionVarToInt    x)
 fun getValStateTn state x = getValOneState (getStateTn state) (T.typenameVarToInt x)
-fun getValStateSq state x = getValOneState (getStateSq state) (T.sequenceVarToInt    x)
-fun getValStateRt state x = getValOneState (getStateRt state) (T.rowVarToInt    x)
+fun getValStateSq state x = getValOneState (getStateSq state) (T.rowVarToInt    x)
+fun getValStateRt state x = getValOneState (getStateRt state) (T.fieldVarToInt    x)
 fun getValStateLt state x = getValOneState (getStateLt state) (T.labelVarToInt    x)
 fun getValStateEv state x = getValOneState (getStateEv state) (E.envVarToInt    x)
 fun getValStateCl state x = getValOneState (getStateCl state) (CL.classvarToInt x)
@@ -318,14 +318,14 @@ fun getValStateGe state x =
 			  resp)
     end
 
-fun buildSeq state (T.SEQUENCE_VAR sv) =
+fun buildSeq state (T.ROW_VAR sv) =
     (case getValStateSq state sv of
-	 NONE => T.newSEQUENCE_VAR ()
+	 NONE => T.newROW_VAR ()
        | SOME sq => buildSeq state sq)
-  | buildSeq state (T.SC (xs, flex, lab)) =
-    T.SC (map (fn _ => T.newROW_VAR ()) xs, flex, lab)
-  | buildSeq state (T.SEQUENCE_DEPENDANCY (sq1, labs1, stts1, deps1)) =
-    T.SEQUENCE_DEPENDANCY (buildSeq state sq1, labs1, stts1, deps1)
+  | buildSeq state (T.ROW_C (xs, flex, lab)) =
+    T.ROW_C (map (fn _ => T.newFIELD_VAR ()) xs, flex, lab)
+  | buildSeq state (T.ROW_DEPENDANCY (sq1, labs1, stts1, deps1)) =
+    T.ROW_DEPENDANCY (buildSeq state sq1, labs1, stts1, deps1)
 
 fun buildKeyAr lid NONE = (L.dummyLab, lid)
   | buildKeyAr lid (SOME lab) = (lab, lid)
@@ -334,7 +334,7 @@ fun getValStateAr state lid labop =
     let val onestate = getStateAr state
 	val key = buildKeyAr lid labop
     in case MT.find (!onestate, key) of
-	   NONE => let val ext = T.newSEQUENCE_VAR ()
+	   NONE => let val ext = T.newROW_VAR ()
 		   in onestate := (MT.insert (!onestate, key, ext)); ext
 		   end
 	 | SOME sq => buildSeq state sq
@@ -363,18 +363,18 @@ fun isInGe state tv = Option.isSome (MS.find (!(getStateGe state), T.typeVarToIn
 (* UPDATING OF THE UNIFIER *)
 
 
-(*fun gettyvarsrowty (T.ROW_VAR rv) state labs stts deps=
+(*fun gettyvarsfieldty (T.FIELD_VAR rv) state labs stts deps=
     (case getValStateRt state rv of
 	 NONE => []
-       | SOME (row, labs', stts', deps') =>
-	 gettyvarsrowty row
+       | SOME (field, labs', stts', deps') =>
+	 gettyvarsfieldty field
 			state
 			(L.union  labs labs')
 			(L.union  stts stts')
 			(CD.union deps deps'))
-  | gettyvarsrowty (T.RC (_, ty, _)) state labs stts deps =
+  | gettyvarsfieldty (T.FC (_, ty, _)) state labs stts deps =
     gettyvarsty ty state labs stts deps
-and gettyvarstyseq (T.SEQUENCE_VAR sv) state labs stts deps =
+and gettyvarstyseq (T.ROW_VAR sv) state labs stts deps =
     (case getValStateSq state sv of
 	 NONE => []
        | SOME (seq, labs', stts', deps') =>
@@ -383,8 +383,8 @@ and gettyvarstyseq (T.SEQUENCE_VAR sv) state labs stts deps =
 			(L.union labs labs')
 			(L.union stts stts')
 			(CD.union deps deps'))
-  | gettyvarstyseq (T.SC (rows, _, _)) state labs stts deps =
-    List.concat (map (fn row => gettyvarsrowty row state labs stts deps) rows)
+  | gettyvarstyseq (T.ROW_C (fields, _, _)) state labs stts deps =
+    List.concat (map (fn field => gettyvarsfieldty field state labs stts deps) fields)
 and gettyvarstytf (T.TFV tfv) state labs stts deps =
     (case getValStateTf state tfv of
 	 NONE => []
@@ -435,8 +435,8 @@ fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
 
 fun updateStateTf state key value = updateOneState (getStateTf state) (T.typeFunctionVarToInt    key) value
 fun updateStateTn state key value = updateOneState (getStateTn state) (T.typenameVarToInt key) value
-fun updateStateSq state key value = updateOneState (getStateSq state) (T.sequenceVarToInt    key) value
-fun updateStateRt state key value = updateOneState (getStateRt state) (T.rowVarToInt    key) value
+fun updateStateSq state key value = updateOneState (getStateSq state) (T.rowVarToInt    key) value
+fun updateStateRt state key value = updateOneState (getStateRt state) (T.fieldVarToInt    key) value
 fun updateStateLt state key value = updateOneState (getStateLt state) (T.labelVarToInt    key) value
 fun updateStateEv state key value = updateOneState (getStateEv state) (E.envVarToInt    key) value
 fun updateStateOr state key value = updateOneState (getStateOr state) (T.idorToInt      key) value
@@ -576,7 +576,7 @@ fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
 	  * and so we need to update the str to some SOME something.*)
 	 in (sem', str, true)
 	 end)
-  | getValStateId (E.SEQUENCE_ENV (env1, env2)) lid state fenv labs stts deps =
+  | getValStateId (E.ROW_ENV (env1, env2)) lid state fenv labs stts deps =
     (case getValStateId env2 lid state fenv labs stts deps of
 	 (NONE, y, false) => if E.hasEnvVar env2
 			     then ((*D.printdebug2 (E.printEnv env2 "");*) (NONE, y, false))
@@ -644,7 +644,7 @@ fun getValStateId state (I.ID (id, _)) fstate _ _ =
 
 (* gets various fields from the record holding the env *)
 fun selVa env = E.getValueIds env
-fun selTy env = E.getTyps env
+fun selTy env = E.getTypeNameEnv env
 fun selSt env = E.getStructs env
 fun selSi env = E.getSigs env
 fun selOc env = E.getOverloadingClasses env
@@ -999,10 +999,10 @@ fun reportLabTyClashLC (T.LABEL_VAR _) = NONE
 	 end
        | NONE => NONE)
 
-fun reportLabTyClashRC (T.ROW_VAR _) = NONE
-  | reportLabTyClashRC (T.RC (lt, _, _)) = reportLabTyClashLC lt
-  | reportLabTyClashRC (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-    (case reportLabTyClashRC row of
+fun reportLabTyClashRC (T.FIELD_VAR _) = NONE
+  | reportLabTyClashRC (T.FC (lt, _, _)) = reportLabTyClashLC lt
+  | reportLabTyClashRC (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+    (case reportLabTyClashRC field of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
 	 let val labs1 = L.union  labs labs0
 	     val stts1 = L.union  stts stts0
@@ -1010,11 +1010,11 @@ fun reportLabTyClashRC (T.ROW_VAR _) = NONE
 	 in SOME (lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
-  | reportLabTyClashRC T.ROW_NO_OVERLOAD = NONE
+  | reportLabTyClashRC T.FIELD_NO_OVERLOAD = NONE
 
-fun reportLabTyClash rows =
-    foldr (fn (row, (list, labs, stts, deps)) =>
-	      case reportLabTyClashRC row of
+fun reportLabTyClash fields =
+    foldr (fn (field, (list, labs, stts, deps)) =>
+	      case reportLabTyClashRC field of
 		  SOME (lab, lc, labs0, stts0, deps0) =>
 		  let val labs1 = L.union  labs labs0
 		      val stts1 = L.union  stts stts0
@@ -1023,7 +1023,7 @@ fun reportLabTyClash rows =
 		  end
 		| NONE => (list, labs, stts, deps))
 	  ([], L.empty, L.empty, CD.empty)
-	  rows
+	  fields
 
 fun reportRcty xs =
     foldr (fn (((lab, lc), labs1, stts1, deps1), (list, labs2, stts2, deps2)) =>
@@ -1040,10 +1040,10 @@ fun interEmpty rtl1 rtl2 =
 	  | gatherLC (T.LABEL_DEPENDANCY elt)     = gatherLC (EL.getExtLabT elt)
 	  | gatherLC (T.LABEL_VAR _)       = []
 	fun gatherRC []                        = []
-	  | gatherRC ((T.RC (lt, _, _)) :: xs) = (gatherLC lt) @ (gatherRC xs)
-	  | gatherRC ((T.ROW_DEPENDANCY erow) :: xs)       = gatherRC ((EL.getExtLabT erow) :: xs)
-	  | gatherRC ((T.ROW_VAR _) :: xs)          = gatherRC xs
-	  | gatherRC (T.ROW_NO_OVERLOAD :: xs)              = gatherRC xs
+	  | gatherRC ((T.FC (lt, _, _)) :: xs) = (gatherLC lt) @ (gatherRC xs)
+	  | gatherRC ((T.FIELD_DEPENDANCY efield) :: xs)       = gatherRC ((EL.getExtLabT efield) :: xs)
+	  | gatherRC ((T.FIELD_VAR _) :: xs)          = gatherRC xs
+	  | gatherRC (T.FIELD_NO_OVERLOAD :: xs)              = gatherRC xs
     in List.null (Tools.inter (gatherRC rtl1) (gatherRC rtl2))
     end
 
@@ -1052,27 +1052,27 @@ fun isnotEmptyLC (T.LC _)   = true
   | isnotEmptyLC (T.LABEL_VAR _)   = false
 
 fun isnotEmpty []                         = false
-  | isnotEmpty ((T.RC (lt, _, _)) :: rtl) = isnotEmptyLC lt orelse isnotEmpty rtl
-  | isnotEmpty ((T.ROW_DEPENDANCY erow) :: rtl)       = isnotEmpty ((EL.getExtLabT erow) :: rtl)
-  | isnotEmpty ((T.ROW_VAR _) :: rtl)          = isnotEmpty rtl
-  | isnotEmpty (T.ROW_NO_OVERLOAD :: rtl)              = isnotEmpty rtl
+  | isnotEmpty ((T.FC (lt, _, _)) :: rtl) = isnotEmptyLC lt orelse isnotEmpty rtl
+  | isnotEmpty ((T.FIELD_DEPENDANCY efield) :: rtl)       = isnotEmpty ((EL.getExtLabT efield) :: rtl)
+  | isnotEmpty ((T.FIELD_VAR _) :: rtl)          = isnotEmpty rtl
+  | isnotEmpty (T.FIELD_NO_OVERLOAD :: rtl)              = isnotEmpty rtl
 
 fun isCompleteLC (T.LC _)   = true
   | isCompleteLC (T.LABEL_DEPENDANCY elt) = isCompleteLC (EL.getExtLabT elt)
   | isCompleteLC (T.LABEL_VAR _)   = false
 
 fun isComplete []                         = true
-  | isComplete ((T.RC (lt, _, _)) :: rtl) = isCompleteLC lt andalso isComplete rtl
-  | isComplete ((T.ROW_DEPENDANCY erow) :: rtl)       = isComplete ((EL.getExtLabT erow) :: rtl)
-  | isComplete ((T.ROW_VAR _) :: rtl)          = false
-  | isComplete (T.ROW_NO_OVERLOAD :: rtl)              = false
+  | isComplete ((T.FC (lt, _, _)) :: rtl) = isCompleteLC lt andalso isComplete rtl
+  | isComplete ((T.FIELD_DEPENDANCY efield) :: rtl)       = isComplete ((EL.getExtLabT efield) :: rtl)
+  | isComplete ((T.FIELD_VAR _) :: rtl)          = false
+  | isComplete (T.FIELD_NO_OVERLOAD :: rtl)              = false
 
-fun getLabConsLC lc0 (T.LC (lc, lab)) =
+fun getFieldNameLC lc0 (T.LC (lc, lab)) =
     if lc0 = lc
     then SOME (lab, lc, L.empty, L.empty, CD.empty)
     else NONE
-  | getLabConsLC lc0 (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
-    (case getLabConsLC lc0 lt of
+  | getFieldNameLC lc0 (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
+    (case getFieldNameLC lc0 lt of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
 	 let val labs1 = L.union  labs labs0
 	     val stts1 = L.union  stts stts0
@@ -1080,15 +1080,15 @@ fun getLabConsLC lc0 (T.LC (lc, lab)) =
 	 in SOME (lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
-  | getLabConsLC lc0 (T.LABEL_VAR _) = NONE
+  | getFieldNameLC lc0 (T.LABEL_VAR _) = NONE
 
-fun getLabConsRC lc (rt as T.RC (lt, ty, lab)) =
-    (case getLabConsLC lc lt of
+fun getFieldNameRC lc (rt as T.FC (lt, ty, lab)) =
+    (case getFieldNameLC lc lt of
 	 SOME (lab0, lc0, labs0, stts0, deps0) =>
 	 SOME (ty, lab0, lc0, labs0, stts0, deps0)
        | NONE => NONE)
-  | getLabConsRC lc (T.ROW_DEPENDANCY (row, labs, stts, deps)) =
-    (case getLabConsRC lc row of
+  | getFieldNameRC lc (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
+    (case getFieldNameRC lc field of
 	 SOME (ty, lab, lc, labs0, stts0, deps0) =>
 	 let val labs1 = L.union  labs labs0
 	     val stts1 = L.union  stts stts0
@@ -1096,25 +1096,25 @@ fun getLabConsRC lc (rt as T.RC (lt, ty, lab)) =
 	 in SOME (ty, lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
-  | getLabConsRC lc (T.ROW_VAR _) = NONE
-  | getLabConsRC lc T.ROW_NO_OVERLOAD = NONE
+  | getFieldNameRC lc (T.FIELD_VAR _) = NONE
+  | getFieldNameRC lc T.FIELD_NO_OVERLOAD = NONE
 
-fun getLabCons lc [] = NONE
-  | getLabCons lc (row :: rows) =
-    (case getLabConsRC lc row of
+fun getFieldName lc [] = NONE
+  | getFieldName lc (field :: fields) =
+    (case getFieldNameRC lc field of
 	 SOME (ty, lab, lc, labs, stts, deps) =>
-	 SOME (ty, lab, lc, labs, stts, deps, rows)
+	 SOME (ty, lab, lc, labs, stts, deps, fields)
        | NONE =>
-	 (case getLabCons lc rows of
-	      SOME (ty, lab, lc, labs, stts, deps, rows') =>
-	      SOME (ty, lab, lc, labs, stts, deps, row :: rows')
+	 (case getFieldName lc fields of
+	      SOME (ty, lab, lc, labs, stts, deps, fields') =>
+	      SOME (ty, lab, lc, labs, stts, deps, field :: fields')
 	    | NONE => NONE))
 
-(* we remove the matching pairs of rowtys and create constraints from them *)
+(* we remove the matching pairs of fieldtys and create constraints from them *)
 (* but we don't want to loose the information for the matching pairs
    - so we store them in llc1 and llc2 *)
 fun ziprecLC (T.LC (lc, lab)) rtl =
-    (case getLabCons lc rtl of
+    (case getFieldName lc rtl of
 	 SOME (ty, lab0, lc0, labs0, stts0, deps0, rtl) =>
 	 SOME (ty, lab0, lc0, lab, lc, labs0, stts0, deps0, rtl)
        | NONE => NONE)
@@ -1129,13 +1129,13 @@ fun ziprecLC (T.LC (lc, lab)) rtl =
        | NONE => NONE)
   | ziprecLC (T.LABEL_VAR _) _ = NONE
 
-fun ziprecRC (T.RC (lt, ty, _)) rtl =
+fun ziprecRC (T.FC (lt, ty, _)) rtl =
     (case ziprecLC lt rtl of
 	 SOME (ty', lab1, lc1, lab2, lc2, labs, stts, deps, rtl') =>
 	 SOME (ty, ty', lab1, lc1, lab2, lc2, labs, stts, deps, rtl')
        | NONE => NONE)
-  | ziprecRC (T.ROW_DEPENDANCY (row, labs, stts, deps)) rtl =
-    (case ziprecRC row rtl of
+  | ziprecRC (T.FIELD_DEPENDANCY (field, labs, stts, deps)) rtl =
+    (case ziprecRC field rtl of
 	 SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs', stts', deps', rtl') =>
 	 let val labs0 = L.union  labs labs'
 	     val stts0 = L.union  stts stts'
@@ -1143,8 +1143,8 @@ fun ziprecRC (T.RC (lt, ty, _)) rtl =
 	 in SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs0, stts0, deps0, rtl')
 	 end
        | NONE => NONE)
-  | ziprecRC (T.ROW_VAR _) _ = NONE
-  | ziprecRC T.ROW_NO_OVERLOAD _ = NONE
+  | ziprecRC (T.FIELD_VAR _) _ = NONE
+  | ziprecRC T.FIELD_NO_OVERLOAD _ = NONE
 
 fun ziprec [] rtl2 = ([], [], rtl2, [], [])
   | ziprec (rt :: rtl1) rtl2 =
@@ -1216,14 +1216,14 @@ fun ftestrecords srecs =
 
 (* sts is for status and cds us for context dependencies. *)
 fun updateRecordRt state ((rtl1, b1, llc1), (rtl2, b2, llc2)) =
-    let fun updateRC (row as T.ROW_VAR rv) =
+    let fun updateRC (field as T.FIELD_VAR rv) =
 	    (case getValStateRt state rv of
-		 NONE => row
-	       | SOME row => row)
-	  | updateRC (T.ROW_DEPENDANCY erow) = T.ROW_DEPENDANCY (EL.mapExtLab erow updateRC)
-	  | updateRC (row as T.RC _) = row
-	  | updateRC (row as T.ROW_NO_OVERLOAD) = row
-	fun update rows = map updateRC rows
+		 NONE => field
+	       | SOME field => field)
+	  | updateRC (T.FIELD_DEPENDANCY efield) = T.FIELD_DEPENDANCY (EL.mapExtLab efield updateRC)
+	  | updateRC (field as T.FC _) = field
+	  | updateRC (field as T.FIELD_NO_OVERLOAD) = field
+	fun update fields = map updateRC fields
     in ((update rtl1, b1, llc1), (update rtl2, b2, llc2))
     end
 
@@ -1237,11 +1237,11 @@ fun updateRecordLt state ((rtl1, b1, llc1), (rtl2, b2, llc2)) =
 	       | NONE => lt)
 	  | updateLC (T.LABEL_DEPENDANCY elt) = T.LABEL_DEPENDANCY (EL.mapExtLab elt updateLC)
 	  | updateLC (lt as T.LC _) = lt
-	fun updateRC (T.RC (lt, tv, lab)) = T.RC (updateLC lt, tv, lab)
-	  | updateRC (T.ROW_DEPENDANCY erow) = T.ROW_DEPENDANCY (EL.mapExtLab erow updateRC)
-	  | updateRC (row as T.ROW_VAR _) = row
-	  | updateRC (row as T.ROW_NO_OVERLOAD) = row
-	fun update rows = map updateRC rows
+	fun updateRC (T.FC (lt, tv, lab)) = T.FC (updateLC lt, tv, lab)
+	  | updateRC (T.FIELD_DEPENDANCY efield) = T.FIELD_DEPENDANCY (EL.mapExtLab efield updateRC)
+	  | updateRC (field as T.FIELD_VAR _) = field
+	  | updateRC (field as T.FIELD_NO_OVERLOAD) = field
+	fun update fields = map updateRC fields
     in ((update rtl1, b1, llc1), (update rtl2, b2, llc2))
     end
 
@@ -1284,7 +1284,7 @@ fun getAllTns (env as E.ENV_CONS _) state =
 					   sem)
 		(E.getITypeNames env)
 		(E.getStructs env)
-  | getAllTns (E.SEQUENCE_ENV (env1, env2)) state = (getAllTns env1 state) @ (getAllTns env2 state)
+  | getAllTns (E.ROW_ENV (env1, env2)) state = (getAllTns env1 state) @ (getAllTns env2 state)
   | getAllTns (E.ENV_VAR (ev, lab)) state =
     (case getValStateEv state ev of (* We need that because we don't fully build up structures as we should! *)
 	 NONE => []
@@ -1341,7 +1341,7 @@ fun getMonoTyVars (env as E.ENV_CONS _) state =
 		   (getMonoTyVarsStrEnv strs state)
 		   vids
     end
-  | getMonoTyVars (E.SEQUENCE_ENV (env1, env2)) state =
+  | getMonoTyVars (E.ROW_ENV (env1, env2)) state =
     let val monos = getMonoTyVars env2 state
     in if E.isENV_VAR env2
        then monos
@@ -1386,7 +1386,7 @@ fun pushEnvToState bempty env state =
 	     val statena = getStateNa state
 	     val _       = statena := NA.addList (!statena, tns)
 	     val stateid = getStateId state
-	     val _       = stateid := E.SEQUENCE_ENV (!stateid, env)
+	     val _       = stateid := E.ROW_ENV (!stateid, env)
 	 in (tyvars, tns)
 	 end
 
@@ -1403,8 +1403,8 @@ fun remEnvFromState bempty (tyvars, tns) state =
 	     val _       = app (fn tn => statena := NA.delete (!statena, tn) handle LibBase.NotFound => ()) tns
 	     val stateid = getStateId state
 	 in case !stateid of
-		E.SEQUENCE_ENV (env1, env2) => stateid := env1
-	      | _ => raise EH.DeadBranch "It appears that the unification env is not a sequence"
+		E.ROW_ENV (env1, env2) => stateid := env1
+	      | _ => raise EH.DeadBranch "It appears that the unification env is not a row"
 	 end
 
 
@@ -1421,10 +1421,10 @@ fun removelablabty (T.LABEL_VAR lv) state = T.LABEL_VAR (removelabvar lv (fgetSt
 fun removelabtyname (T.NV var) state = T.NV (removelabvar var (fgetStateTn state) T.removelabtynamevar)
   | removelabtyname tnty       _     = tnty
 
-fun removelabrowty (T.ROW_VAR rv)          _   state = T.ROW_VAR (removelabvar rv (fgetStateRt state) T.removelabrowvar)
-  | removelabrowty (T.RC (lt, ty, l)) tvl state = T.RC (removelablabty lt state, removelabty ty tvl state, l)
-and removelabtyseq (T.SEQUENCE_VAR var)         _   state = T.SEQUENCE_VAR (removelabvar var (fgetStateSq state) T.removelabseqvar)
-  | removelabtyseq (T.SC (trl, b, l)) tvl state = T.SC (map (fn rt => removelabrowty rt tvl state) trl, b, l)
+fun removelabfieldty (T.FIELD_VAR rv)          _   state = T.FIELD_VAR (removelabvar rv (fgetStateRt state) T.removelabfieldvar)
+  | removelabfieldty (T.FC (lt, ty, l)) tvl state = T.FC (removelablabty lt state, removelabty ty tvl state, l)
+and removelabtyseq (T.ROW_VAR var)         _   state = T.ROW_VAR (removelabvar var (fgetStateSq state) T.removelabseqvar)
+  | removelabtyseq (T.ROW_C (trl, b, l)) tvl state = T.ROW_C (map (fn rt => removelabfieldty rt tvl state) trl, b, l)
 and removelabty (T.V tv)              _   = (T.V tv, L.empty, L.empty)
   | removelabty (T.E (n, tv, l))      lab =
     if lab = l
@@ -1479,12 +1479,12 @@ fun generalisety (T.V tv) _ _ = T.V tv
     let val sq' = generaliseseqty sq tvl state
 	val ty' = generalisety    ty tvl state
     in T.Abs (sq', ty', l) end
-and generaliseseqty (T.SEQUENCE_VAR sv) _ _ = T.SEQUENCE_VAR sv
-  | generaliseseqty (T.SC (rtl, flex, l)) tvl state =
-    T.SC (map (fn rt => generaliserowty rt tvl state) rtl, flex, l)
-and generaliserowty (T.ROW_VAR rv) _ _ = T.ROW_VAR rv
-  | generaliserowty (T.RC (lt, ty, l)) tvl state =
-    T.RC (lt, generalisety ty tvl state, l)
+and generaliseseqty (T.ROW_VAR sv) _ _ = T.ROW_VAR sv
+  | generaliseseqty (T.ROW_C (rtl, flex, l)) tvl state =
+    T.ROW_C (map (fn rt => generalisefieldty rt tvl state) rtl, flex, l)
+and generalisefieldty (T.FIELD_VAR rv) _ _ = T.FIELD_VAR rv
+  | generalisefieldty (T.FC (lt, ty, l)) tvl state =
+    T.FC (lt, generalisety ty tvl state, l)
 
 fun generalise state tvl =
     let
@@ -1496,7 +1496,7 @@ fun generalise state tvl =
 		 (!onestate))
 	val _ = modif (getStateTv state) generalisety
 	val _ =	modif (getStateSq state) generaliseseqty
-	val _ = modif (getStateRt state) generaliserowty
+	val _ = modif (getStateRt state) generalisefieldty
     (* TODO: need to generalise strc too!! *)
     (* TODO: need to generalise stge too!! *)
     in ()

@@ -25,18 +25,18 @@ signature STATE = sig
 
     type path  = int list (* the int corresponds to the nth type of a ortype *)
     type paths = path list
-    type rcty  = Ty.rowType list * Ty.flex * (Label.label * Ty.labcons) ExtLab.extLab list
+    type rcty  = Ty.fieldType list * Ty.flex * (Label.label * Ty.fieldName) ExtLab.extLab list
 
     type stTv = Ty.ty
     type stTf = Ty.typeFunction
     type stTn = Ty.typenameType
-    type stSq = Ty.sequenceType
-    type stRt = Ty.rowType
+    type stSq = Ty.rowType
+    type stRt = Ty.fieldType
     type stLt = Ty.labelType
     type stEv = Env.env
     type stRc = (rcty * rcty) (* this is for records *)
     type stGe = Ty.explicitTypeVar
-    type stAr = Ty.sequenceType
+    type stAr = Ty.rowType
     type stOr = paths         ExtLab.extLab
     type stCl = ClassId.class ExtLab.extLab
     type stNa = Ty.typename     ExtLab.extLab
@@ -55,8 +55,8 @@ signature STATE = sig
     val getValStateTv      : state -> Ty.typeVar         -> stTv option
     val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
     val getValStateTn      : state -> Ty.typenameVar     -> stTn option
-    val getValStateSq      : state -> Ty.sequenceVar        -> stSq option
-    val getValStateRt      : state -> Ty.rowVar        -> stRt option
+    val getValStateSq      : state -> Ty.rowVar        -> stSq option
+    val getValStateRt      : state -> Ty.fieldVar        -> stRt option
     val getValStateLt      : state -> Ty.labelVar        -> stLt option
     val getValStateEv      : state -> Env.envVar       -> stEv option
     val getValStateOr      : state -> Ty.idor          -> stOr option
@@ -86,8 +86,8 @@ signature STATE = sig
     val updateStateTv      : state -> Ty.typeVar         -> stTv -> unit
     val updateStateTf      : state -> Ty.typeFunctionVar        -> stTf -> unit
     val updateStateTn      : state -> Ty.typenameVar     -> stTn -> unit
-    val updateStateSq      : state -> Ty.sequenceVar        -> stSq -> unit
-    val updateStateRt      : state -> Ty.rowVar        -> stRt -> unit
+    val updateStateSq      : state -> Ty.rowVar        -> stSq -> unit
+    val updateStateRt      : state -> Ty.fieldVar        -> stRt -> unit
     val updateStateLt      : state -> Ty.labelVar        -> stLt -> unit
     val updateStateEv      : state -> Env.envVar       -> stEv -> unit
     val updateStateOr      : state -> Ty.idor          -> stOr -> unit

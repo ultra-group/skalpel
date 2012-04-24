@@ -24,10 +24,10 @@
 
 signature EXTLAB = sig
 
-    type 'a extLab = 'a           * (* labelled term                           *)
-		     Label.labels * (* labels labelling the term               *)
-		     Label.labels * (* distinguised labels : id status         *)
-		     LongId.set     (* context dependencies labelling the term *)
+    type 'a extLab = 'a           *
+		     Label.labels *
+		     Label.labels *
+		     LongId.set
 
     val getExtLabT   : 'a extLab -> 'a
     val getExtLabL   : 'a extLab -> Label.labels

@@ -807,13 +807,13 @@ fun getTopRegionsSigId (A.SigId (_, _, r', _, _)) r =
   | getTopRegionsSigId _ _ = []
 
 (* on the right of r *)
-fun getTopRegionsTypeSequence (A.TypeSequenceOne (_, (r' :: _), _, _)) r =
+fun getTopRegionsTypeRow (A.TypeRowOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSequence (A.TypeSequenceEm (r', _, _)) r =
+  | getTopRegionsTypeRow (A.TypeRowEm (r', _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSequence (A.TypeSequenceSeq (_, (r' :: _), _, _)) r =
+  | getTopRegionsTypeRow (A.TypeRowSeq (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
-  | getTopRegionsTypeSequence _ _ = []
+  | getTopRegionsTypeRow _ _ = []
 
 (* on the right of r *)
 fun getTopRegionsTyClassSeq (A.TyClassSeqOne (_, (r' :: _), _, _)) r =
@@ -1329,7 +1329,7 @@ and getpos_excdesc (A.ExcDesc (edol, rl, _)) ll = getpos_excdesconelist edol ll
 and getpos_part (A.PartExp   e) ll = getpos_exp       e ll
   | getpos_part (A.PartDec   d) ll = getpos_dec       d ll
   | getpos_part (A.PartType  t) ll = getpos_type      t ll
-  | getpos_part (A.PartSeq   s) ll = getpos_typeSequence   s ll
+  | getpos_part (A.PartSeq   s) ll = getpos_typeRow   s ll
   | getpos_part (A.PartPat   p) ll = getpos_pat       p ll
   | getpos_part (A.PartIdTy  i) ll = getpos_identty   i ll
   | getpos_part (A.PartTyCon t) ll = getpos_longtycon t ll
@@ -1462,16 +1462,16 @@ and getpos_labtype (A.LabType (t, rl, l, _)) ll =
     end
   | getpos_labtype (A.LabTypeDots pl) ll        = getpos_partlist pl ll
 
-and getpos_tyrow (A.TyRow (tl, lt, r, l, _)) ll =
+and getpos_tyfield (A.TyField (tl, lt, r, l, _)) ll =
     let val gp1 = (getpos_tylab tl ll)
 	val gp2 = (getpos_labtype lt ll)
 	val gp = (L (r, getCol l ll, 1))
     in gp :: gp1 @ gp2
     end
-  | getpos_tyrow (A.TyRowDots pl) ll            = getpos_partlist pl ll
+  | getpos_tyfield (A.TyFieldDots pl) ll            = getpos_partlist pl ll
 
-and getpos_tyrowlist []        _  = []
-  | getpos_tyrowlist (x :: xs) ll = (getpos_tyrow x ll) @ (getpos_tyrowlist xs ll)
+and getpos_tyfieldlist []        _  = []
+  | getpos_tyfieldlist (x :: xs) ll = (getpos_tyfield x ll) @ (getpos_tyfieldlist xs ll)
 
 and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
   | getpos_type (A.TypeArrow (ty1, ty2, r, l, _)) ll  =
@@ -1485,16 +1485,16 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_type (A.TypeRecord (trl, rl1, rl2, l, _)) ll =
-    let val gp = getpos_tyrowlist trl ll
+    let val gp = getpos_tyfieldlist trl ll
     in (mapCol l ll (rl1 @ rl2)) @ gp
     end
   | getpos_type (A.TypeSlRec (trl, rl, l, _)) ll =
-    let val gp = getpos_tyrowlist trl ll
+    let val gp = getpos_tyfieldlist trl ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_type (A.TypeTyCon (ts, ltc, rl, l, _)) ll =
     let val gp1 = getpos_longtycon ltc ll
-	val gp2 = getpos_typeSequence ts ll
+	val gp2 = getpos_typeRow ts ll
     in (mapCol l ll rl) @ gp1 @ gp2
     end
   | getpos_type (A.TypeParen (ty, r1, r2, l, _)) ll   =
@@ -1503,18 +1503,18 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
     end
   | getpos_type (A.TypeDots spl) ll                   = getpos_partlist spl ll
 
-and getpos_typeSequence (A.TypeSequenceOne (ty, rs, l, _)) ll =
+and getpos_typeRow (A.TypeRowOne (ty, rs, l, _)) ll =
     let val gpp = getpos_type ty ll
 	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "" (*trickTyCon r gpp*)
 	(*val gpp' = splitRegsToPushInN rs gpp (getCol l ll) 1*)
     in (*gpp'*) [N (r', getCol l ll, 1, gpp)]
     end
-  | getpos_typeSequence (A.TypeSequenceEm (r, l, _))       ll = [H (r, getCol l ll, 1)]
-  | getpos_typeSequence (A.TypeSequenceSeq (tl, rl, l, _)) ll =
+  | getpos_typeRow (A.TypeRowEm (r, l, _))       ll = [H (r, getCol l ll, 1)]
+  | getpos_typeRow (A.TypeRowSeq (tl, rl, l, _)) ll =
     let val gp = (getpos_labtypelist tl ll)
     in (mapCol l ll rl) @ gp
     end
-  | getpos_typeSequence (A.TypeSequenceDots spl)           ll = getpos_partlist spl ll
+  | getpos_typeRow (A.TypeRowDots spl)           ll = getpos_partlist spl ll
 
 and getpos_conbind (A.ConBind (id, _)) ll             = getpos_ident id ll
   | getpos_conbind (A.ConBindOf (id, ty, r, l, _)) ll =
@@ -1858,17 +1858,17 @@ and getpos_labexplist [] _         _ = []
 and getpos_labexp (A.LabExp (e, rl, re, l, _)) ll = (mapCol l ll rl) @ (getpos_exp e ll)
   | getpos_labexp (A.LabExpDots pl)            ll = getpos_partlist pl ll
 
-and getpos_exprow (A.ExpRow (tl, e, r, rlt, l, _)) ll =
+and getpos_expfield (A.ExpField (tl, e, r, rlt, l, _)) ll =
     let val gp1 = getpos_tylab tl ll
 	val gp2 = getpos_labexp e ll
 	val gpp = mapRed rlt
 	val gp  = (L (r, getCol l ll, 1))
     in gp :: gpp @ gp1 @ gp2
     end
-  | getpos_exprow (A.ExpRowDots pl) ll           = getpos_partlist pl ll
+  | getpos_expfield (A.ExpFieldDots pl) ll           = getpos_partlist pl ll
 
-and getpos_exprowlist [] _         = []
-  | getpos_exprowlist (x :: xs) ll = (getpos_exprow x ll) @ (getpos_exprowlist xs ll)
+and getpos_expfieldlist [] _         = []
+  | getpos_expfieldlist (x :: xs) ll = (getpos_expfield x ll) @ (getpos_expfieldlist xs ll)
 
 and getpos_seqexp (A.SeqExp (el, e, r, rs, l, n)) ll =
     let val gp = getpos_labexplist (el @ [e]) ll NONE
@@ -1891,11 +1891,11 @@ and getpos_atexp (A.AtExpId id) ll                        = getpos_longid id ll
     in (map m rl) @ gp
     end
   | getpos_atexp (A.AtExpRecord (erl, rl1, rl2, l, _)) ll =
-    let val gp = getpos_exprowlist erl ll
+    let val gp = getpos_expfieldlist erl ll
     in (mapCol l ll (rl1 @ rl2)) @ gp
     end
   | getpos_atexp (A.AtExpSlRec (erl, rl, l, _)) ll =
-    let val gp = getpos_exprowlist erl ll
+    let val gp = getpos_expfieldlist erl ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_atexp (A.AtExpLet (ds, e, rl, l, _)) ll        =
@@ -2078,24 +2078,24 @@ and getpos_labidty (A.LabIdTy (id, rl, l, _)) ll =
     end
   | getpos_labidty (A.LabIdTyDots pl) ll         = getpos_partlist pl ll
 
-and getpos_patrow (A.PatRow (tl, p, r, rl, l, _)) ll   =
+and getpos_patfield (A.PatField (tl, p, r, rl, l, _)) ll   =
     let val gp1 = getpos_tylab tl ll
 	val gp2 = getpos_labpat p ll
 	val gpp = mapCol l ll rl
 	val gp  = (L (r, getCol l ll, 1))
     in gp :: gpp @ gp1 @ gp2
     end
-  | getpos_patrow (A.PatRowId (id, _)) ll          = getpos_identty id ll
-  | getpos_patrow (A.PatRowAs (id, p, r, l, _)) ll =
+  | getpos_patfield (A.PatFieldId (id, _)) ll          = getpos_identty id ll
+  | getpos_patfield (A.PatFieldAs (id, p, r, l, _)) ll =
     let val gp1 = getpos_labidty id ll
 	val gp2 = getpos_labpat p ll
 	val gp = (L (r, getCol l ll, 1))
     in gp :: gp1 @ gp2
     end
-  | getpos_patrow (A.PatRowWild (r, l, _)) ll      = [(L (r, getCol l ll, 1))]
-  | getpos_patrow (A.PatRowDots pl) ll             = getpos_partlist pl ll
+  | getpos_patfield (A.PatFieldWild (r, l, _)) ll      = [(L (r, getCol l ll, 1))]
+  | getpos_patfield (A.PatFieldDots pl) ll             = getpos_partlist pl ll
 
-and getpos_patrowlist xs ll = foldr (fn (x, y) => (getpos_patrow x ll) @ y) [] xs
+and getpos_patfieldlist xs ll = foldr (fn (x, y) => (getpos_patfield x ll) @ y) [] xs
 
 and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch ""
   | getpos_atpat (A.AtPatId id) ll                      = getpos_longid id ll
@@ -2108,7 +2108,7 @@ and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch ""
     in (map m rl) @ gp
     end
   | getpos_atpat (A.AtPatRecord (p, rl1, rl2, l, _)) ll =
-    let val gp = getpos_patrowlist p ll
+    let val gp = getpos_patfieldlist p ll
     in (mapCol l ll (rl1 @ rl2)) @ gp
     end
   | getpos_atpat (A.AtPatParen (pa, r1, r2, l, _))   ll =

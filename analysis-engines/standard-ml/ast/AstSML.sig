@@ -286,7 +286,7 @@ signature ASTSML = sig
       | PartStre        of strexp
       (*Type*)
       | PartType        of types
-      | PartSeq         of typeSequence
+      | PartSeq         of typeRow
       (*Pattern*)
       | PartPat         of pat
       (*Spec*)
@@ -350,7 +350,7 @@ signature ASTSML = sig
       | LabTyClassDots  of part list
 
     and tyclassseq = (* We don't use the first two for now. *)
-	TyClassSeqOne   of tyclass * Reg.region list * Label.label * next (* The region list is for the unique type that compose the sequence.  It is a list because a type can span over multiple lines. *)
+	TyClassSeqOne   of tyclass * Reg.region list * Label.label * next (* The region list is for the unique type that compose the row.  It is a list because a type can span over multiple lines. *)
       | TyClassSeqEm    of Reg.region * Label.label * next
       | TyClassSeqSeq   of labtyclass list * Reg.region list * Label.label * next
       | TyClassSeqDots  of part list
@@ -412,31 +412,31 @@ signature ASTSML = sig
       | TypeVarSeqDots    of typevar list
 
     (* NO REG.REGION? *)
-    (* Do we need this labtype in a constructor binding or a unique type sequence? *)
+    (* Do we need this labtype in a constructor binding or a unique type row? *)
     (* and that the same for all the lab stuff - maybe we need more and maybe less *)
     and labtype =
 	LabType         of types * Reg.region list * Label.label * next
       | LabTypeDots     of part list
 
-    and tyrow =
-	TyRow           of tylab * labtype * Reg.region * Label.label * next
-      | TyRowDots       of part list
+    and tyfield =
+	TyField           of tylab * labtype * Reg.region * Label.label * next
+      | TyFieldDots       of part list
 
     and types =
 	TypeOneVar      of typevar
       | TypeArrow       of labtype * labtype * Reg.region * Label.label * next
       | TypeTuple       of labtype list * Reg.region list * Label.label * next
-      | TypeRecord      of tyrow list * Reg.region list * Reg.region list * Label.label * next
-      | TypeSlRec       of tyrow list * Reg.region list * Label.label * next
-      | TypeTyCon       of typeSequence * longtycon * Reg.region list * Label.label * next
+      | TypeRecord      of tyfield list * Reg.region list * Reg.region list * Label.label * next
+      | TypeSlRec       of tyfield list * Reg.region list * Label.label * next
+      | TypeTyCon       of typeRow * longtycon * Reg.region list * Label.label * next
       | TypeParen       of labtype * Reg.region * Reg.region * Label.label * next
       | TypeDots        of part list
 
-    and typeSequence =
-	TypeSequenceOne      of types * Reg.region list * Label.label * next (* The region list is for the unique type that compose the sequence.  It is a list because a type can span over multiple lines. *)
-      | TypeSequenceEm       of Reg.region * Label.label * next
-      | TypeSequenceSeq      of labtype list * Reg.region list * Label.label * next
-      | TypeSequenceDots     of part list
+    and typeRow =
+	TypeRowOne      of types * Reg.region list * Label.label * next (* The region list is for the unique type that compose the row.  It is a list because a type can span over multiple lines. *)
+      | TypeRowEm       of Reg.region * Label.label * next
+      | TypeRowSeq      of labtype list * Reg.region list * Label.label * next
+      | TypeRowDots     of part list
 
     and conbind =
 	ConBind         of ident * next
@@ -589,9 +589,9 @@ signature ASTSML = sig
 	LabExp          of exp * Reg.region list * Reg.region list * Label.label * next (* the first list of regions is for the context of the expression and the second one is for the expression itself - it is a list because an expression can be on multiple lines *)
       | LabExpDots      of part list
 
-    and exprow =
-	ExpRow          of tylab * labexp * Reg.region * Reg.region list * Label.label * next (* the region list is for the space between the field name and the equal sign of the row - and similarly for patterns *)
-      | ExpRowDots      of part list
+    and expfield =
+	ExpField          of tylab * labexp * Reg.region * Reg.region list * Label.label * next (* the region list is for the space between the field name and the equal sign of the field - and similarly for patterns *)
+      | ExpFieldDots      of part list
 
     and seqexp =
 	SeqExp          of labexp list * labexp * Reg.region * Reg.region list * Label.label * next (* the first region is for the last semicolumn *)
@@ -602,8 +602,8 @@ signature ASTSML = sig
 	AtExpId         of longid
       | AtExpScon       of scon
       | AtExpTuple      of labexp list * Reg.region list * Label.label * next
-      | AtExpRecord     of exprow list * Reg.region list * Reg.region list * Label.label * next (* the first regions are for the braces and the others are for the commas *)
-      | AtExpSlRec      of exprow list * Reg.region list * Label.label * next  (* for a record after slicing - set: val {x, ...} = {x = 1, y = 1, y = 1}.  Why don't we have that for patterns? *)
+      | AtExpRecord     of expfield list * Reg.region list * Reg.region list * Label.label * next (* the first regions are for the braces and the others are for the commas *)
+      | AtExpSlRec      of expfield list * Reg.region list * Label.label * next  (* for a record after slicing - set: val {x, ...} = {x = 1, y = 1, y = 1}.  Why don't we have that for patterns? *)
       | AtExpLet        of decs * labexp * Reg.region list * Label.label * next
       | AtExpDLet       of decs * seqexp * Reg.region list * Label.label * next
       | AtExpParen      of labexp * Reg.region * Reg.region * Label.label * next
@@ -695,19 +695,19 @@ signature ASTSML = sig
 	LabIdTy         of identty * Reg.region list * Label.label * next
       | LabIdTyDots     of part list
 
-    and patrow =
-	PatRow          of tylab * labpat * Reg.region * Reg.region list * Label.label * next
-      | PatRowId        of identty * next
-      | PatRowAs        of labidty * labpat * Reg.region * Label.label * next
-      | PatRowWild      of Reg.region * Label.label * next
-      | PatRowDots      of part list
+    and patfield =
+	PatField          of tylab * labpat * Reg.region * Reg.region list * Label.label * next
+      | PatFieldId        of identty * next
+      | PatFieldAs        of labidty * labpat * Reg.region * Label.label * next
+      | PatFieldWild      of Reg.region * Label.label * next
+      | PatFieldDots      of part list
 
     and atpat =
 	AtPatWild       of Reg.region * next
       | AtPatId         of longid
       | AtPatScon       of scon
       | AtPatTuple      of labpat list * Reg.region list * Label.label * next (* the list of regions is for the parentheses and commas *)
-      | AtPatRecord     of patrow list * Reg.region list * Reg.region list * Label.label * next (* Why do we separate the two sets of regions? *)
+      | AtPatRecord     of patfield list * Reg.region list * Reg.region list * Label.label * next (* Why do we separate the two sets of regions? *)
       | AtPatParen      of labpat * Reg.region * Reg.region * Label.label * next
       | AtPatList       of labpat list * Reg.region list * Label.label * next
       | AtPatOr         of labpat list * Reg.region list * Label.label * next (* NOT SML SYNTAX BUT SMLNJ *)
@@ -743,9 +743,9 @@ signature ASTSML = sig
     val getTypeVarSeqNext    : typevarseq     -> next option
     val getLabTypeNext     : labtype      -> next option
     val getTypeNext        : types        -> next option
-    val getTyRowNext       : tyrow        -> next option
-    val getExpRowNext      : exprow       -> next option
-    val getPatRowNext      : patrow       -> next option
+    val getTyFieldNext       : tyfield        -> next option
+    val getExpFieldNext      : expfield       -> next option
+    val getPatFieldNext      : patfield       -> next option
     val getDecNext         : dec          -> next option
     val getDecsNext        : decs         -> next option
     val getTopDecNext      : topdec       -> next option
@@ -829,7 +829,7 @@ signature ASTSML = sig
     (* to get the labels associated to to id on the left of the "as" *)
     val getlabelsLabIdTy   : labidty      -> Label.labels
 
-    (* these are used to deal with row patterns *)
+    (* these are used to deal with field patterns *)
     val getlabstLabIdTy    : labidty      -> (Label.label * Label.label * string) option
     val getlabstIdentTy    : identty      -> (Label.label * Label.label * string) option
     val getlabstIdent      : ident        -> (Label.label * Label.label * string) option

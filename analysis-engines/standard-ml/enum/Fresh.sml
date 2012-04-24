@@ -35,8 +35,8 @@ structure OM = SplayMapFn (OrdKey)
 type state = {tv : T.typeVar     option OM.map ref,
 	      tf : T.typeFunctionVar    option OM.map ref,
 	      tn : T.typenameVar option OM.map ref,
-	      sq : T.sequenceVar    option OM.map ref,
-	      rt : T.rowVar    option OM.map ref,
+	      sq : T.rowVar    option OM.map ref,
+	      rt : T.fieldVar    option OM.map ref,
 	      lt : T.labelVar  option OM.map ref,
 	      ev : E.envVar    option OM.map ref,
 	      or : T.idor      option OM.map ref}
@@ -67,8 +67,8 @@ fun freshvargen x onestate ffresh fint =
 fun freshTypeVar         x (state : state) = freshvargen x (#tv state) T.freshTypeVar         T.typeVarToInt
 fun freshTypeFunctionVar x (state : state) = freshvargen x (#tf state) T.freshTypeFunctionVar T.typeFunctionVarToInt
 fun freshTypenameVar  x (state : state) = freshvargen x (#tn state) T.freshTypenameVar T.typenameVarToInt
-fun freshSequenceVar x (state : state) = freshvargen x (#sq state) T.freshSequenceVar    T.sequenceVarToInt
-fun freshRowVar    x (state : state) = freshvargen x (#rt state) T.freshRowVar   T.rowVarToInt
+fun freshRowVar x (state : state) = freshvargen x (#sq state) T.freshRowVar    T.rowVarToInt
+fun freshFieldVar    x (state : state) = freshvargen x (#rt state) T.freshFieldVar   T.fieldVarToInt
 fun freshLabVar    x (state : state) = freshvargen x (#lt state) T.freshLabelVar T.labelVarToInt
 fun freshEnvVar    x (state : state) = freshvargen x (#ev state) E.freshEnvVar   E.envVarToInt
 fun freshIdOr      x (state : state) = freshvargen x (#or state) T.freshidor     T.idorToInt

@@ -1,9 +1,5 @@
 (* Copyright 2010 2011 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (Skalpel) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,18 +17,19 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        18 August 2010
  *  o File name:   ExtendedLabel.sml
- *  o Description: Defines the ExtLab structure to deal with forms
- *    extended with dependencies (labels, value identifiers).
+ *  o Description: Defines the ExtLab (ExtnededLabel) structure to deal with forms
+ *    extended with dependencies (labels, value identeifiers).x
  *)
 
-
-(* ExtLab stands for ExtendedLabel *)
 structure ExtLab :> EXTLAB = struct
 
 structure L  = Label
 structure ContextDependancy = LongId
 
-type 'a extLab = 'a * L.labels * L.labels * ContextDependancy.set
+type 'a extLab = 'a                    *  (* labelled term *)
+		 L.labels              *  (* labels labelling the term *)
+		 L.labels              *  (* distinguished labels : id term *)
+		 ContextDependancy.set    (* context dependencies labelling the term *)
 
 fun printExtLab (term, labs, stats, cdeps) f ascid =
     "(" ^ f term                        ^

@@ -273,7 +273,7 @@ and part =
     PartExp         of exp
   | PartDec         of dec
   | PartType        of types
-  | PartSeq         of typeSequence
+  | PartSeq         of typeRow
   | PartPat         of pat
   | PartIdTy        of identty
   | PartTyCon       of longtycon
@@ -391,25 +391,25 @@ and labtype =
     LabType         of types * R.region list * L.label * next
   | LabTypeDots     of part list
 
-and tyrow =
-    TyRow           of tylab * labtype * R.region * L.label * next
-  | TyRowDots       of part list
+and tyfield =
+    TyField           of tylab * labtype * R.region * L.label * next
+  | TyFieldDots       of part list
 
 and types =
     TypeOneVar      of typevar
   | TypeArrow       of labtype * labtype * R.region * L.label * next
   | TypeTuple       of labtype list * R.region list * L.label * next
-  | TypeRecord      of tyrow list * R.region list * R.region list * L.label * next
-  | TypeSlRec       of tyrow list * R.region list * L.label * next
-  | TypeTyCon       of typeSequence * longtycon * R.region list * L.label * next
+  | TypeRecord      of tyfield list * R.region list * R.region list * L.label * next
+  | TypeSlRec       of tyfield list * R.region list * L.label * next
+  | TypeTyCon       of typeRow * longtycon * R.region list * L.label * next
   | TypeParen       of labtype * R.region * R.region * L.label * next
   | TypeDots        of part list
 
-and typeSequence =
-    TypeSequenceOne      of types * R.region list * L.label * next
-  | TypeSequenceEm       of R.region * L.label * next
-  | TypeSequenceSeq      of labtype list * R.region list * L.label * next
-  | TypeSequenceDots     of part list
+and typeRow =
+    TypeRowOne      of types * R.region list * L.label * next
+  | TypeRowEm       of R.region * L.label * next
+  | TypeRowSeq      of labtype list * R.region list * L.label * next
+  | TypeRowDots     of part list
 
 and conbind =
     ConBind         of ident * next
@@ -538,13 +538,13 @@ and labexp =
     LabExp          of exp * R.region list * R.region list * L.label * next
   | LabExpDots      of part list
 
-and exprow =
-    ExpRow          of tylab * labexp * R.region * R.region list * L.label * next
-  | ExpRowDots      of part list
+and expfield =
+    ExpField          of tylab * labexp * R.region * R.region list * L.label * next
+  | ExpFieldDots      of part list
 
 (*and exprec =
-    ExpRecSeq       of exprow list * R.region list * L.label * next
-  | ExpRecSet       of exprow list
+    ExpRecSeq       of expfield list * R.region list * L.label * next
+  | ExpRecSet       of expfield list
   | ExpRecDots      of part list*)
 
 and seqexp =
@@ -556,8 +556,8 @@ and atexp =
     AtExpId         of longid
   | AtExpScon       of scon
   | AtExpTuple      of labexp list * R.region list * L.label * next
-  | AtExpRecord     of exprow list * R.region list * R.region list * L.label * next
-  | AtExpSlRec      of exprow list * R.region list * L.label * next
+  | AtExpRecord     of expfield list * R.region list * R.region list * L.label * next
+  | AtExpSlRec      of expfield list * R.region list * L.label * next
   | AtExpLet        of decs * labexp * R.region list * L.label * next
   | AtExpDLet       of decs * seqexp * R.region list * L.label * next
   | AtExpParen      of labexp * R.region * R.region * L.label * next
@@ -609,19 +609,19 @@ and labidty =
     LabIdTy         of identty * R.region list * L.label * next
   | LabIdTyDots     of part list
 
-and patrow =
-    PatRow          of tylab * labpat * R.region * R.region list * L.label * next
-  | PatRowId        of identty * next
-  | PatRowAs        of labidty * labpat * R.region * L.label * next
-  | PatRowWild      of R.region * L.label * next
-  | PatRowDots      of part list
+and patfield =
+    PatField          of tylab * labpat * R.region * R.region list * L.label * next
+  | PatFieldId        of identty * next
+  | PatFieldAs        of labidty * labpat * R.region * L.label * next
+  | PatFieldWild      of R.region * L.label * next
+  | PatFieldDots      of part list
 
 and atpat =
     AtPatWild       of R.region * next
   | AtPatId         of longid
   | AtPatScon       of scon
   | AtPatTuple      of labpat list * R.region list * L.label * next
-  | AtPatRecord     of patrow list * R.region list * R.region list * L.label * next
+  | AtPatRecord     of patfield list * R.region list * R.region list * L.label * next
   | AtPatParen      of labpat * R.region * R.region * L.label * next
   | AtPatList       of labpat list * R.region list * L.label * next
   | AtPatOr         of labpat list * R.region list * L.label * next
@@ -1005,7 +1005,7 @@ and printAstExcDesc (ExcDesc (edl, _, _)) = printAstExcDescList edl
 and printAstPart (PartExp   e) = printAstExp            e
   | printAstPart (PartDec   d) = printAstDec            d
   | printAstPart (PartType  t) = printAstType           t
-  | printAstPart (PartSeq   s) = printAstTypeSequence   s
+  | printAstPart (PartSeq   s) = printAstTypeRow   s
   | printAstPart (PartPat   p) = printAstPat            p
   | printAstPart (PartIdTy  i) = printAstIdentTy        i
   | printAstPart (PartTyCon t) = printAstLongTyCon      t
@@ -1125,13 +1125,13 @@ and printAstLabTypeSeq []        = ""
   | printAstLabTypeSeq [ty]      = printAstLabType ty
   | printAstLabTypeSeq (ty::tyl) = printAstLabType ty ^ ", " ^ printAstLabTypeSeq tyl
 
-and printAstTyRow (TyRow (tl, lt, r, l, n)) =
+and printAstTyField (TyField (tl, lt, r, l, n)) =
     ldots () ^ printAstTyLab tl ^ ":" ^ printAstLabType lt ^ rfdots l
-  | printAstTyRow (TyRowDots pl)            = printAstPartList pl
+  | printAstTyField (TyFieldDots pl)            = printAstPartList pl
 
-and printAstTyRowList []        = ""
-  | printAstTyRowList [x]       = printAstTyRow x
-  | printAstTyRowList (x :: xs) = printAstTyRow x ^ "," ^ printAstTyRowList xs
+and printAstTyFieldList []        = ""
+  | printAstTyFieldList [x]       = printAstTyField x
+  | printAstTyFieldList (x :: xs) = printAstTyField x ^ "," ^ printAstTyFieldList xs
 
 and printAstType (TypeOneVar tyv)                  = printAstTypeVar tyv
   | printAstType (TypeArrow (ty1, ty2, _, lab, _)) =
@@ -1139,22 +1139,22 @@ and printAstType (TypeOneVar tyv)                  = printAstTypeVar tyv
   | printAstType (TypeTuple (tyl, _, lab, _))      =
     ldots () ^ printAstLabTypeList tyl ^ rfdots lab
   | printAstType (TypeRecord (trl, _, _, lab, _))  =
-    ldots () ^ "{" ^ printAstTyRowList trl ^ "}" ^ rfdots lab
+    ldots () ^ "{" ^ printAstTyFieldList trl ^ "}" ^ rfdots lab
   | printAstType (TypeSlRec (trl, _, lab, _))      =
-    ldots () ^ "{" ^ printAstTyRowList trl ^ "}" ^ rfdots lab
+    ldots () ^ "{" ^ printAstTyFieldList trl ^ "}" ^ rfdots lab
   | printAstType (TypeTyCon (ts, ltc, _, lab, _))  =
-    ldots () ^ printAstTypeSequence ts ^ " " ^ printAstLongTyCon ltc ^ rfdots lab
+    ldots () ^ printAstTypeRow ts ^ " " ^ printAstLongTyCon ltc ^ rfdots lab
   | printAstType (TypeParen (ty, _, _, lab, _))    =
     ldots () ^ "(" ^ printAstLabType ty ^ ")" ^ rfdots lab
   | printAstType (TypeDots pl)                     = ldots () ^ printAstPartList pl ^ rdots ()
 
-and printAstTypeSequence (TypeSequenceOne (ty, _, lab, _))  =
+and printAstTypeRow (TypeRowOne (ty, _, lab, _))  =
     ldots () ^ printAstType ty ^ rfdots lab
-  | printAstTypeSequence (TypeSequenceEm (_, lab, _))       =
+  | printAstTypeRow (TypeRowEm (_, lab, _))       =
     ldots () ^ rfdots lab
-  | printAstTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) =
+  | printAstTypeRow (TypeRowSeq (tyl, _, lab, _)) =
     ldots () ^ "(" ^ printAstLabTypeSeq tyl ^ ")" ^ rfdots lab
-  | printAstTypeSequence (TypeSequenceDots pl)              =
+  | printAstTypeRow (TypeRowDots pl)              =
     ldots () ^ printAstPartList pl ^ rdots ()
 
 and printAstTyClass (TyClassCl (cl, _, l, _)) =
@@ -1361,19 +1361,19 @@ and printAstLabExpSeq []        = ""
   | printAstLabExpSeq [x]       = printAstLabExp x
   | printAstLabExpSeq (x :: xs) = printAstLabExp x ^ ";" ^ printAstLabExpSeq xs
 
-and printAstExpRow (ExpRow (tl, e, r, rl, l, n)) =
+and printAstExpField (ExpField (tl, e, r, rl, l, n)) =
     ldots () ^ printAstTyLab tl ^ " = " ^ printAstLabExp e ^ rfdots l
-  | printAstExpRow (ExpRowDots pl)           = printAstPartList pl
+  | printAstExpField (ExpFieldDots pl)           = printAstPartList pl
 
-and printAstExpRowList []        = ""
-  | printAstExpRowList [x]       = printAstExpRow x
-  | printAstExpRowList (x :: xs) = printAstExpRow x ^ "," ^ printAstExpRowList xs
+and printAstExpFieldList []        = ""
+  | printAstExpFieldList [x]       = printAstExpField x
+  | printAstExpFieldList (x :: xs) = printAstExpField x ^ "," ^ printAstExpFieldList xs
 
-and printAstExpRowSet []        = dots
-  | printAstExpRowSet (x :: xs) = dots ^ printAstExpRow x ^ printAstExpRowSet xs
+and printAstExpFieldSet []        = dots
+  | printAstExpFieldSet (x :: xs) = dots ^ printAstExpField x ^ printAstExpFieldSet xs
 
-(*and printAstExpRec (ExpRecSeq (erl, _, lab, _)) = ldots () ^ printAstExpRowList erl ^ rfdots lab
-  | printAstExpRec (ExpRecSet erl)              = printAstExpRowSet erl
+(*and printAstExpRec (ExpRecSeq (erl, _, lab, _)) = ldots () ^ printAstExpFieldList erl ^ rfdots lab
+  | printAstExpRec (ExpRecSet erl)              = printAstExpFieldSet erl
   | printAstExpRec (ExpRecDots pl)              = printAstPartList pl*)
 
 and printAstSeqExp (SeqExp (el, e, _, _, l, _))  = ldots () ^ "(" ^ printAstLabExpSeq (el @ [e]) ^ ")" ^ rfdots l
@@ -1383,8 +1383,8 @@ and printAstSeqExp (SeqExp (el, e, _, _, l, _))  = ldots () ^ "(" ^ printAstLabE
 and printAstAtexp (AtExpId id)                    = printAstLongId id
   | printAstAtexp (AtExpScon sc)                  = printAstScon sc
   | printAstAtexp (AtExpTuple (expl, _, lab, _))  = ldots () ^ "(" ^ printAstLabExpList expl ^ ")" ^ rfdots lab
-  | printAstAtexp (AtExpRecord (erl, _, _, l, _)) = ldots () ^ "{" ^ printAstExpRowList erl  ^ "}" ^ rfdots l
-  | printAstAtexp (AtExpSlRec (erl, _, lab, _))   = ldots () ^ "{" ^ printAstExpRowList erl  ^ "}" ^ rfdots lab
+  | printAstAtexp (AtExpRecord (erl, _, _, l, _)) = ldots () ^ "{" ^ printAstExpFieldList erl  ^ "}" ^ rfdots l
+  | printAstAtexp (AtExpSlRec (erl, _, lab, _))   = ldots () ^ "{" ^ printAstExpFieldList erl  ^ "}" ^ rfdots lab
   | printAstAtexp (AtExpLet (d, e, _, lab, _))    = ldots () ^
 						    "let " ^ printAstDecs d   ^
 						    " in " ^ printAstLabExp e ^
@@ -1456,23 +1456,23 @@ and printAstLabPatList []          = ""
 and printAstLabIdTy (LabIdTy (id, _, l, _)) = ldots () ^ printAstIdentTy id ^ rfdots l
   | printAstLabIdTy (LabIdTyDots pl)        = printAstPartList pl
 
-and printAstPatRow (PatRow (tl, p, _, _, l, _))   =
+and printAstPatField (PatField (tl, p, _, _, l, _))   =
     ldots () ^ printAstTyLab tl ^ " = " ^ printAstLabPat p ^ rfdots l
-  | printAstPatRow (PatRowId (id, _))          = printAstIdentTy id
-  | printAstPatRow (PatRowAs (id, p, _, l, _)) =
+  | printAstPatField (PatFieldId (id, _))          = printAstIdentTy id
+  | printAstPatField (PatFieldAs (id, p, _, l, _)) =
     ldots () ^ printAstLabIdTy id ^ " as " ^ printAstLabPat p ^ rfdots l
-  | printAstPatRow (PatRowWild (r, l, n))      = ldots () ^ "..." ^ rfdots l
-  | printAstPatRow (PatRowDots pl)             = printAstPartList pl
+  | printAstPatField (PatFieldWild (r, l, n))      = ldots () ^ "..." ^ rfdots l
+  | printAstPatField (PatFieldDots pl)             = printAstPartList pl
 
-and printAstPatRowList []        = ""
-  | printAstPatRowList [x]       = printAstPatRow x
-  | printAstPatRowList (x :: xs) = printAstPatRow x ^ "," ^ printAstPatRowList xs
+and printAstPatFieldList []        = ""
+  | printAstPatFieldList [x]       = printAstPatField x
+  | printAstPatFieldList (x :: xs) = printAstPatField x ^ "," ^ printAstPatFieldList xs
 
 and printAstAtpat (AtPatWild _)                    = "_"
   | printAstAtpat (AtPatId id)                     = printAstLongId id
   | printAstAtpat (AtPatScon sc)                   = printAstScon sc
   | printAstAtpat (AtPatTuple (patl, _, l, _))     = ldots () ^ "(" ^ printAstLabPatList patl ^ ")" ^ rfdots l
-  | printAstAtpat (AtPatRecord (prl, _, _, l, _))  = ldots () ^ "{" ^ printAstPatRowList prl ^ "}" ^ rfdots l
+  | printAstAtpat (AtPatRecord (prl, _, _, l, _))  = ldots () ^ "{" ^ printAstPatFieldList prl ^ "}" ^ rfdots l
   | printAstAtpat (AtPatParen (pat, _, _, lab, _)) = ldots () ^ "(" ^ printAstLabPat pat ^ ")" ^ rfdots lab
   | printAstAtpat (AtPatList (patl, _, lab, _))    = ldots () ^ "[" ^ printAstLabPatList patl ^ "]" ^ rfdots lab
   | printAstAtpat (AtPatOr (xs, _, l, _))          = ldots () ^ "(" ^ printAstOrPatList xs ^ ")" ^ rfdots l
@@ -1787,20 +1787,20 @@ and getTypeVarLabTypeVar (LabTypeVar (tv, _, _, _)) = [tv]
 and getTypeVarLabType (LabType (t, _, _, _)) = getTypeVarType t
   | getTypeVarLabType (LabTypeDots _)        = []
 
-and getTypeVarTypeSequence (TypeSequenceOne (ty, _, lab, _))  = getTypeVarType ty
-  | getTypeVarTypeSequence (TypeSequenceEm (_, lab, _))       = []
-  | getTypeVarTypeSequence (TypeSequenceSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (getTypeVarLabType x) @ y) [] tyl
-  | getTypeVarTypeSequence (TypeSequenceDots _)               = []
+and getTypeVarTypeRow (TypeRowOne (ty, _, lab, _))  = getTypeVarType ty
+  | getTypeVarTypeRow (TypeRowEm (_, lab, _))       = []
+  | getTypeVarTypeRow (TypeRowSeq (tyl, _, lab, _)) = foldr (fn (x, y) => (getTypeVarLabType x) @ y) [] tyl
+  | getTypeVarTypeRow (TypeRowDots _)               = []
 
-and getTypeVarTyRow (TyRow (_, lt, _, _, _)) = getTypeVarLabType lt
-  | getTypeVarTyRow (TyRowDots p_)           = []
+and getTypeVarTyField (TyField (_, lt, _, _, _)) = getTypeVarLabType lt
+  | getTypeVarTyField (TyFieldDots p_)           = []
 
 and getTypeVarType (TypeOneVar tv)                 = [tv]
   | getTypeVarType (TypeArrow (ty1, ty2, _, _, _)) = (getTypeVarLabType ty1) @ (getTypeVarLabType ty2)
   | getTypeVarType (TypeTuple (tyl, _, _, _))      = foldr (fn (x, y) => (getTypeVarLabType x) @ y) [] tyl
-  | getTypeVarType (TypeRecord (trl, _, _, _, _))  = foldr (fn (x, y) => (getTypeVarTyRow x) @ y) [] trl
-  | getTypeVarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (getTypeVarTyRow x) @ y) [] trl
-  | getTypeVarType (TypeTyCon (ts, _, _, _, _))    = getTypeVarTypeSequence ts
+  | getTypeVarType (TypeRecord (trl, _, _, _, _))  = foldr (fn (x, y) => (getTypeVarTyField x) @ y) [] trl
+  | getTypeVarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (getTypeVarTyField x) @ y) [] trl
+  | getTypeVarType (TypeTyCon (ts, _, _, _, _))    = getTypeVarTypeRow ts
   | getTypeVarType (TypeParen (ty, _, _, _, _))    = getTypeVarLabType ty
   | getTypeVarType (TypeDots _)                    = raise EH.TODO (* TODO: do that for all the other dot nodes! *)
 
@@ -1815,18 +1815,18 @@ and getTypeVarConbindseq (ConBindSeq tycl)  = foldr (fn (x, y) => (getTypeVarCon
 and getTypeVarLabExp (LabExp (e, _, _, _, _)) = getTypeVarExp e
   | getTypeVarLabExp (LabExpDots _)           = []
 
-and getTypeVarExpRow (ExpRow (_, e, _, _, _, _)) = getTypeVarLabExp e
-  | getTypeVarExpRow (ExpRowDots _)              = []
+and getTypeVarExpField (ExpField (_, e, _, _, _, _)) = getTypeVarLabExp e
+  | getTypeVarExpField (ExpFieldDots _)              = []
 
-(*and getTypeVarExpRec (ExpRecSeq (erl, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
-  | getTypeVarExpRec (ExpRecSet erl)            = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+(*and getTypeVarExpRec (ExpRecSeq (erl, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpField x) @ y) [] erl
+  | getTypeVarExpRec (ExpRecSet erl)            = foldr (fn (x, y) => (getTypeVarExpField x) @ y) [] erl
   | getTypeVarExpRec (ExpRecDots _)             = []*)
 
 and getTypeVarAtExp (AtExpId _)                     = []
   | getTypeVarAtExp (AtExpScon _)                   = []
   | getTypeVarAtExp (AtExpTuple (lel, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabExp x) @ y) [] lel
-  | getTypeVarAtExp (AtExpRecord (erl, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
-  | getTypeVarAtExp (AtExpSlRec (erl, _, _, _))     = foldr (fn (x, y) => (getTypeVarExpRow x) @ y) [] erl
+  | getTypeVarAtExp (AtExpRecord (erl, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarExpField x) @ y) [] erl
+  | getTypeVarAtExp (AtExpSlRec (erl, _, _, _))     = foldr (fn (x, y) => (getTypeVarExpField x) @ y) [] erl
   | getTypeVarAtExp (AtExpLet (ds, le, _, _, _))    = (getTypeVarDecs ds) @ (getTypeVarLabExp le)
   | getTypeVarAtExp (AtExpDLet (ds, seq, _, _, _))  = (getTypeVarDecs ds) @ (getTypeVarSeqExp seq)
   | getTypeVarAtExp (AtExpParen (le, _, _, _, _))   = getTypeVarLabExp le
@@ -1877,17 +1877,17 @@ and getTypeVarIdentTy (IdentTyId _)               = []
 and getTypeVarLabIdTy (LabIdTy (id, _, _, _)) = getTypeVarIdentTy id
   | getTypeVarLabIdTy (LabIdTyDots _)         = []
 
-and getTypeVarPatRow (PatRow (_, p, _, _, _, _)) = getTypeVarLabPat p
-  | getTypeVarPatRow (PatRowId (id, _))          = getTypeVarIdentTy id
-  | getTypeVarPatRow (PatRowAs (id, p, _, _, _)) = (getTypeVarLabIdTy id) @ (getTypeVarLabPat p)
-  | getTypeVarPatRow (PatRowWild _)              = []
-  | getTypeVarPatRow (PatRowDots _)              = []
+and getTypeVarPatField (PatField (_, p, _, _, _, _)) = getTypeVarLabPat p
+  | getTypeVarPatField (PatFieldId (id, _))          = getTypeVarIdentTy id
+  | getTypeVarPatField (PatFieldAs (id, p, _, _, _)) = (getTypeVarLabIdTy id) @ (getTypeVarLabPat p)
+  | getTypeVarPatField (PatFieldWild _)              = []
+  | getTypeVarPatField (PatFieldDots _)              = []
 
 and getTypeVarAtPat (AtPatWild _)                 = []
   | getTypeVarAtPat (AtPatId _)                   = []
   | getTypeVarAtPat (AtPatScon _)                 = []
   | getTypeVarAtPat (AtPatTuple (p, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] p
-  | getTypeVarAtPat (AtPatRecord (p, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarPatRow x) @ y) [] p
+  | getTypeVarAtPat (AtPatRecord (p, _, _, _, _)) = foldr (fn (x, y) => (getTypeVarPatField x) @ y) [] p
   | getTypeVarAtPat (AtPatParen (lp, _, _, _, _)) = getTypeVarLabPat lp
   | getTypeVarAtPat (AtPatList (xs, _, _, _))     = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] xs
   | getTypeVarAtPat (AtPatOr (xs, _, _, _))       = foldr (fn (x, y) => (getTypeVarLabPat x) @ y) [] xs
@@ -2320,8 +2320,8 @@ and getTypeVarSeqNext (TypeVarSeqOne (_, _, _, n))       = SOME n
 and getLabTypeNext (LabType (_, _, _, n))            = SOME n
   | getLabTypeNext (LabTypeDots pl)                  = getPartListNext pl
 
-and getTyRowNext (TyRow (_, _, _, _, n))             = SOME n
-  | getTyRowNext (TyRowDots pl)                      = getPartListNext pl
+and getTyFieldNext (TyField (_, _, _, _, n))             = SOME n
+  | getTyFieldNext (TyFieldDots pl)                      = getPartListNext pl
 
 and getTypeNext (TypeOneVar tv)                      = getTypeVarNext tv
   | getTypeNext (TypeArrow (_, _, _, _, n))          = SOME n
@@ -2332,10 +2332,10 @@ and getTypeNext (TypeOneVar tv)                      = getTypeVarNext tv
   | getTypeNext (TypeParen (_, _, _, _, n))          = SOME n
   | getTypeNext (TypeDots pl)                        = getPartListNext pl
 
-and getTypeSequenceNext (TypeSequenceOne (_, _, _, n))    = SOME n
-  | getTypeSequenceNext (TypeSequenceEm (_, _, n))        = SOME n
-  | getTypeSequenceNext (TypeSequenceSeq (_, _, _, n))     = SOME n
-  | getTypeSequenceNext (TypeSequenceDots pl)             = getPartListNext pl
+and getTypeRowNext (TypeRowOne (_, _, _, n))    = SOME n
+  | getTypeRowNext (TypeRowEm (_, _, n))        = SOME n
+  | getTypeRowNext (TypeRowSeq (_, _, _, n))     = SOME n
+  | getTypeRowNext (TypeRowDots pl)             = getPartListNext pl
 
 and getConBindNext (ConBind (_, n))                  = SOME n
   | getConBindNext (ConBindOf (_, _, _, _, n))       = SOME n
@@ -2437,8 +2437,8 @@ and getDecNext (DecVal (_, _, _, n))                 = SOME n
 and getLabExpNext (LabExp (_, _, _, _, n))           = SOME n
   | getLabExpNext (LabExpDots pl)                    = getPartListNext pl
 
-and getExpRowNext (ExpRow (_, _, _, _, _, n))        = SOME n
-  | getExpRowNext (ExpRowDots pl)                    = getPartListNext pl
+and getExpFieldNext (ExpField (_, _, _, _, _, n))        = SOME n
+  | getExpFieldNext (ExpFieldDots pl)                    = getPartListNext pl
 
 and getAtExpNext (AtExpId id)                        = getLongIdNext id
   | getAtExpNext (AtExpScon sc)                      = getSconNext sc
@@ -2486,11 +2486,11 @@ and getLabPatNext (LabPat (_, _, _, _, n))           = SOME n
 and getLabIdTyNext (LabIdTy (_, _, _, n))            = SOME n
   | getLabIdTyNext (LabIdTyDots pl)                  = getPartListNext pl
 
-and getPatRowNext (PatRow (_, _, _, _, _, n))        = SOME n
-  | getPatRowNext (PatRowId (_, n))                  = SOME n
-  | getPatRowNext (PatRowAs (_, _, _, _, n))         = SOME n
-  | getPatRowNext (PatRowWild (_, _, n))             = SOME n
-  | getPatRowNext (PatRowDots pl)                    = getPartListNext pl
+and getPatFieldNext (PatField (_, _, _, _, _, n))        = SOME n
+  | getPatFieldNext (PatFieldId (_, n))                  = SOME n
+  | getPatFieldNext (PatFieldAs (_, _, _, _, n))         = SOME n
+  | getPatFieldNext (PatFieldWild (_, _, n))             = SOME n
+  | getPatFieldNext (PatFieldDots pl)                    = getPartListNext pl
 
 and getAtPatNext (AtPatWild (_, n))                  = SOME n
   | getAtPatNext (AtPatId id)                        = getLongIdNext id
@@ -2521,7 +2521,7 @@ and getPartListNext []                               = NONE
 and getPartNext (PartExp   e)                        = getExpNext       e
   | getPartNext (PartDec   d)                        = getDecNext       d
   | getPartNext (PartType  t)                        = getTypeNext      t
-  | getPartNext (PartSeq   s)                        = getTypeSequenceNext   s
+  | getPartNext (PartSeq   s)                        = getTypeRowNext   s
   | getPartNext (PartPat   p)                        = getPatNext       p
   | getPartNext (PartIdTy  i)                        = getIdentTyNext   i
   | getPartNext (PartTyCon t)                        = getLongTyConNext t
@@ -2719,7 +2719,7 @@ fun getPartListFirst []                               = NONE
 and getPartFirst (PartExp   e)                        = getExpFirst       e
   | getPartFirst (PartDec   d)                        = getDecFirst       d
   | getPartFirst (PartType  t)                        = getTypeFirst      t
-  | getPartFirst (PartSeq   s)                        = getTypeSequenceFirst   s
+  | getPartFirst (PartSeq   s)                        = getTypeRowFirst   s
   | getPartFirst (PartPat   p)                        = getPatFirst       p
   | getPartFirst (PartIdTy  i)                        = getIdentTyFirst   i
   | getPartFirst (PartTyCon t)                        = getLongTyConFirst t
@@ -2830,10 +2830,10 @@ and getStrBOLFirst []                                 = NONE
 and getStrBindFirst (StrBind (s, _, _))               = getStrBOLFirst s
   | getStrBindFirst (StrBindDots pl)                  = getPartListFirst pl
 
-and getTypeSequenceFirst (TypeSequenceOne (_, _, l, _))         = SOME l
-  | getTypeSequenceFirst (TypeSequenceEm (_, l, _))             = SOME l
-  | getTypeSequenceFirst (TypeSequenceSeq (_, _, l, _))         = SOME l
-  | getTypeSequenceFirst (TypeSequenceDots pl)                  = getPartListFirst pl
+and getTypeRowFirst (TypeRowOne (_, _, l, _))         = SOME l
+  | getTypeRowFirst (TypeRowEm (_, l, _))             = SOME l
+  | getTypeRowFirst (TypeRowSeq (_, _, l, _))         = SOME l
+  | getTypeRowFirst (TypeRowDots pl)                  = getPartListFirst pl
 
 and getTyConFirst (TyCon (_, _, _, l, _))             = SOME l
   | getTyConFirst TyConDots                           = NONE
@@ -3179,7 +3179,7 @@ fun isClearBasisProg (Prog xs) =
   | isClearBasisProg _ = false
 
 
-(* Extract the identifier from an identifier sequence.
+(* Extract the identifier from an identifier row.
  * This is used by the parser to record the infix operators.*)
 
 fun getNameIdent (Ident (st, _, _, _, _)) = SOME st

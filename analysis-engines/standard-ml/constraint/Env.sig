@@ -62,8 +62,8 @@ signature ENV = sig
     type typeEnv         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
 
     (* ------ OVERLADINGENV ------ *)
-    type extovc         = Ty.sequenceType bind
-    type overloadingClassesEnv = Ty.sequenceType genericEnv
+    type extovc         = Ty.rowType bind
+    type overloadingClassesEnv = Ty.rowType genericEnv
 
     (* ------ TYPEVARENV ------ *)
     type explicitTypeVar = (Ty.typeVar * bool) bind
@@ -113,7 +113,7 @@ signature ENV = sig
 				       overloadingClasses : overloadingClassesEnv,
 				       info : infoEnv}
 			| ENV_VAR of envVar * Label.label
-			| SEQUENCE_ENV of env * env
+			| ROW_ENV of env * env
 			| LOCAL_ENV of env * env
 			| ENVSHA of env * env
 			| SIGNATURE_ENV of env * env * matchKind
@@ -131,15 +131,15 @@ signature ENV = sig
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accid ExtLab.extLab
 			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accid ExtLab.extLab
 			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accid ExtLab.extLab
-			    | OVERLOADING_CLASSES_ACCESSOR of Ty.sequenceType    accid ExtLab.extLab
+			    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType    accid ExtLab.extLab
 			    | STRUCTURE_ACCESSOR of env         accid ExtLab.extLab
 			    | SIGNATURE_ACCESSOR of env         accid ExtLab.extLab
 			    | FUNCTOR_ACCESSOR of (env * env) accid ExtLab.extLab
 
 	 and oneConstraint       = TYPE_CONSTRAINT of (Ty.ty    * Ty.ty)    ExtLab.extLab
 				 | TYPENAME_CONSTRAINT of (Ty.typenameType  * Ty.typenameType)  ExtLab.extLab
-				 | SEQUENCE_CONSTRAINT of (Ty.sequenceType * Ty.sequenceType) ExtLab.extLab
 				 | ROW_CONSTRAINT of (Ty.rowType * Ty.rowType) ExtLab.extLab
+				 | FIELD_CONSTRAINT of (Ty.fieldType * Ty.fieldType) ExtLab.extLab
 				 | LABEL_CONSTRAINT of (Ty.labelType * Ty.labelType) ExtLab.extLab
 				 | ENV_CONSTRAINT of (env      * env)      ExtLab.extLab
 				 | IDENTIFIER_CLASS_CONSTRAINT of (class    * class)    ExtLab.extLab
@@ -234,17 +234,17 @@ signature ENV = sig
     val getBindL     : 'a bind -> Label.label
     val getBindP     : 'a bind -> Poly.poly
 
-    val getValueIds      : env -> varEnv
-    val getTyps      : env -> typeEnv
-    val getExplicitTypeVars      : env -> typeVarEnv
-    val getStructs      : env -> strenv
-    val getSigs      : env -> sigenv
-    val getFunctors      : env -> funenv
+    val getValueIds           : env -> varEnv
+    val getTypeNameEnv        : env -> typeEnv
+    val getExplicitTypeVars   : env -> typeVarEnv
+    val getStructs            : env -> strenv
+    val getSigs               : env -> sigenv
+    val getFunctors           : env -> funenv
     val getOverloadingClasses      : env -> overloadingClassesEnv
-    val getInfo      : env -> infoEnv
-    val getILab      : env -> Label.label
-    val getIComplete      : env -> bool
-    val getITypeNames      : env -> typeNameMap
+    val getInfo               : env -> infoEnv
+    val getILab               : env -> Label.label
+    val getIComplete          : env -> bool
+    val getITypeNames         : env -> typeNameMap
     val getIArgOfFunctor      : env -> bool
 
     val projValueIds     : varEnv -> env
@@ -312,7 +312,7 @@ signature ENV = sig
     val toDA1ValueIds    : varEnv -> Label.labels -> varEnv
     val toDATValueIds    : varEnv -> Label.labels -> varEnv
     val toCLSValueIds    : varEnv -> ClassId.class -> Label.labels -> varEnv
-    val toTYCONTyps  : typeEnv -> varEnv -> bool -> Label.labels -> typeEnv
+    val toTYCONTypeNameEnv  : typeEnv -> varEnv -> bool -> Label.labels -> typeEnv
 
     val closeValueIds    : varEnv -> Expans.nonexp -> varEnv
 
@@ -352,8 +352,8 @@ signature ENV = sig
     val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstTfAll  : Ty.typeFunction  -> Ty.typeFunction -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstTnAll  : Ty.typenameType   -> Ty.typenameType  -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstSqAll  : Ty.sequenceType  -> Ty.sequenceType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstRtAll  : Ty.rowType  -> Ty.rowType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstSqAll  : Ty.rowType  -> Ty.rowType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstRtAll  : Ty.fieldType  -> Ty.fieldType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstLtAll  : Ty.labelType  -> Ty.labelType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstEvAll  : env       -> env      -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstClAll  : class     -> class    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
@@ -363,8 +363,8 @@ signature ENV = sig
     val initTypeConstraint         : Ty.ty    -> Ty.ty    -> Label.label -> oneConstraint
     val initFunctionTypeConstraint : Ty.typeFunction -> Ty.typeFunction -> Label.label -> oneConstraint
     val initTypenameConstraint     : Ty.typenameType  -> Ty.typenameType  -> Label.label -> oneConstraint
-    val initSequenceConstraint     : Ty.sequenceType -> Ty.sequenceType -> Label.label -> oneConstraint
-    val initRowConstraint          : Ty.rowType -> Ty.rowType -> Label.label -> oneConstraint
+    val initRowConstraint     : Ty.rowType -> Ty.rowType -> Label.label -> oneConstraint
+    val initFieldConstraint          : Ty.fieldType -> Ty.fieldType -> Label.label -> oneConstraint
     val initLabelConstraint        : Ty.labelType -> Ty.labelType -> Label.label -> oneConstraint
     val initEnvConstraint          : env      -> env      -> Label.label -> oneConstraint
     val initClassConstraint        : class    -> class    -> Label.label -> oneConstraint
@@ -372,7 +372,7 @@ signature ENV = sig
     val genAccIvEm   : Ty.ty    accid -> Label.label -> accessor
     val genAccIeEm   : Ty.typeVar accid -> Label.label -> accessor
     val genAccItEm   : Ty.typeFunction accid -> Label.label -> accessor
-    val genAccIoEm   : Ty.sequenceType accid -> Label.label -> accessor
+    val genAccIoEm   : Ty.rowType accid -> Label.label -> accessor
     val genAccIsEm   : env      accid -> Label.label -> accessor
     val genAccIiEm   : env      accid -> Label.label -> accessor
     val genAccIfEm   : funsem   accid -> Label.label -> accessor

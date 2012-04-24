@@ -39,14 +39,14 @@ structure EH = ErrorHandler
 fun genCstTyZero ftycons tf lab =
     E.initFunctionTypeConstraint
 	tf
-	(T.TFC (T.SC ([], T.noflex (), lab), ftycons lab, lab))
+	(T.TFC (T.ROW_C ([], T.noflex (), lab), ftycons lab, lab))
 	lab
 
 fun genCstTyOne ftycons tf lab =
     let val tv = T.freshTypeVar ()
     in E.initFunctionTypeConstraint
 	   tf
-	   (T.TFC (T.SC (T.constuple [tv] lab, T.noflex (), lab), ftycons tv lab, lab))
+	   (T.TFC (T.ROW_C (T.constuple [tv] lab, T.noflex (), lab), ftycons tv lab, lab))
 	   lab
     end
 

@@ -25,15 +25,15 @@
 signature TY = sig
 
     type typeVar
-    type sequenceVar
+    type rowVar
     type typenameVar
     type labelVar
-    type rowVar
+    type fieldVar
     type typeFunctionVar
 
     type typename
     type idor
-    type labcons    = string
+    type fieldName    = string
     type flex       = Label.label option
     type extv       = Id.labelledId option
 
@@ -53,31 +53,31 @@ signature TY = sig
 		    | CONSTANT of string * Id.id * Label.label
 
     datatype labelType = LABEL_VAR  of labelVar
-		       | LC  of labcons * Label.label
+		       | LC  of fieldName * Label.label
 		       | LABEL_DEPENDANCY  of labelType ExtLab.extLab
 
     datatype typenameType = TYPENAME_VAR  of typenameVar
 			  | NC  of typename * constructorKind * Label.label
 			  | TYPENAME_DEPENDANCY  of typenameType ExtLab.extLab
 
-    datatype rowType = ROW_VAR  of rowVar
-		     | RC  of labelType * ty * Label.label
-		     | ROW_DEPENDANCY  of rowType ExtLab.extLab
-		     | ROW_NO_OVERLOAD
+    datatype fieldType = FIELD_VAR  of fieldVar
+		     | FC  of labelType * ty * Label.label
+		     | FIELD_DEPENDANCY  of fieldType ExtLab.extLab
+		     | FIELD_NO_OVERLOAD
 
-	 and sequenceType = SEQUENCE_VAR  of sequenceVar
-			  | SC  of rowType list * flex  * Label.label
-			  | SEQUENCE_DEPENDANCY  of sequenceType ExtLab.extLab
+	 and rowType = ROW_VAR  of rowVar
+		     | ROW_C of fieldType list * flex  * Label.label
+		     | ROW_DEPENDANCY  of rowType ExtLab.extLab
 
 	 and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
-			  | TFC of sequenceType * ty * Label.label
+			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
-		| TYPE_CONSTRUCTOR       of typenameType   * sequenceType * Label.label
-		| APPLICATION            of typeFunction  * sequenceType * Label.label
-		| TYPE_POLY              of sequenceType  * idor  * poly * orKind * Label.label
+		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label
+		| APPLICATION            of typeFunction  * rowType * Label.label
+		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label
 		| GEN                    of ty list ref
 		| TYPE_DEPENDANCY        of ty ExtLab.extLab
 
@@ -89,12 +89,12 @@ signature TY = sig
     val consTypenameVar     : Label.label -> ty
 
     val consTYPE_VAR             : typeVar  -> ty
-    val consSEQUENCE_VAR         : sequenceVar -> sequenceType
+    val consROW_VAR         : rowVar -> rowType
     val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
 
     val newTYPE_VAR           : unit -> ty
-    val newROW_VAR            : unit -> rowType
-    val newSEQUENCE_VAR       : unit -> sequenceType
+    val newFIELD_VAR            : unit -> fieldType
+    val newROW_VAR       : unit -> rowType
     val newTYPE_FUNCTION_VAR  : unit -> typeFunction
 
     val typeVarToInt        : typeVar     -> int
@@ -102,16 +102,16 @@ signature TY = sig
     val typenameVarToInt    : typenameVar -> int
     val typenameToInt       : typename    -> int
     val labelVarToInt       : labelVar    -> int
+    val fieldVarToInt       : fieldVar    -> int
     val rowVarToInt       : rowVar    -> int
-    val sequenceVarToInt       : sequenceVar    -> int
     val idorToInt         : idor      -> int
 
     val typenameFromInt     : int -> typename
 
     val eqTypeVar           : typeVar     -> typeVar     -> bool
-    val eqSequenceVar          : sequenceVar    -> sequenceVar    -> bool
-    val eqLabelVar          : labelVar    -> labelVar    -> bool
     val eqRowVar          : rowVar    -> rowVar    -> bool
+    val eqLabelVar          : labelVar    -> labelVar    -> bool
+    val eqFieldVar          : fieldVar    -> fieldVar    -> bool
     val eqTypename          : typename    -> typename    -> bool
     val eqTypenameVar       : typenameVar -> typenameVar -> bool
     val eqIdor            : idor      -> idor      -> bool
@@ -129,7 +129,7 @@ signature TY = sig
     val DUMMYTYPENAME       : typename
     val CONSREAL          : typename
 
-    val constuple         : typeVar list -> Label.label -> rowType list
+    val constuple         : typeVar list -> Label.label -> fieldType list
 
     val constyint         : Label.label -> ty
     val constyword        : Label.label -> ty
@@ -150,7 +150,7 @@ signature TY = sig
     val constyfrag        : typeVar -> Label.label -> ty
     val constyarrow       : typeVar -> typeVar -> Label.label -> ty
     val constytuple       : typeVar list -> Label.label -> ty
-    val constyrecord      : rowVar list -> Label.label option -> Label.label -> ty
+    val constyrecord      : fieldVar list -> Label.label option -> Label.label -> ty
 
     val constyint'        : Label.label -> constructorKind -> ty
     val constyword'       : Label.label -> constructorKind -> ty
@@ -171,7 +171,7 @@ signature TY = sig
     val constyfrag'       : typeVar -> Label.label -> constructorKind -> ty
     val constyarrow'      : typeVar -> typeVar -> Label.label -> constructorKind -> ty
     val constytuple'      : typeVar list -> Label.label -> constructorKind -> ty
-    val constyrecord'     : rowVar list -> Label.label option -> Label.label -> constructorKind -> ty
+    val constyrecord'     : fieldVar list -> Label.label option -> Label.label -> constructorKind -> ty
 
     val consTyArrowTy     : ty -> ty -> Label.label -> constructorKind -> ty
     val consTyTupleTy     : ty list  -> Label.label -> constructorKind -> ty
@@ -192,31 +192,31 @@ signature TY = sig
     val isDecTy           : typenameType   -> bool
     val isPatTy           : typenameType   -> bool
     val isVarTypename       : typenameType   -> bool
-    val isShallowSeq      : sequenceType  -> bool
+    val isShallowSeq      : rowType  -> bool
 
     val freshTypeVar         : unit -> typeVar
     val freshTypeFunctionVar : unit -> typeFunctionVar
-    val freshSequenceVar     : unit -> sequenceVar
+    val freshRowVar     : unit -> rowVar
     val freshTypenameVar    : unit -> typenameVar
     val freshLabelVar       : unit -> labelVar
-    val freshRowVar       : unit -> rowVar
+    val freshFieldVar       : unit -> fieldVar
     val freshTypename       : unit -> typename
     val freshidor         : unit -> idor
 
     val resetnexts        : unit -> unit
 
     val getTypeVar        : unit -> typeVar
-    val getsequenceVar    : unit -> sequenceVar
-    val getRowVar         : unit -> rowVar
+    val getrowVar    : unit -> rowVar
+    val getFieldVar         : unit -> fieldVar
     val getLabelVar       : unit -> labelVar
-    val getTypenameVar      : unit -> sequenceVar
+    val getTypenameVar      : unit -> rowVar
     val getidor           : unit -> idor
 
     val getTypenameString   : string -> typename
 
     val getTypeVarsTy     : ty -> explicitTypeVar list
 
-    val stripDepsSq       : sequenceType -> sequenceType ExtLab.extLab
+    val stripDepsSq       : rowType -> rowType ExtLab.extLab
 
     val tntyToTyCon       : typenameType -> typename
 
@@ -226,14 +226,14 @@ signature TY = sig
 
     val printTypeVar        : typeVar       -> string
     val printTypeVarList    : typeVar list  -> string
-    val printSequenceVar       : sequenceVar      -> string
-    val printSequenceVarList   : sequenceVar list -> string
+    val printRowVar       : rowVar      -> string
+    val printRowVarList   : rowVar list -> string
     val printTypenameVar    : typenameVar   -> string
     val printTypename       : typename      -> string
     val printTypename'      : typename      -> string
     val printsmltn        : typename      -> string
-    val printseqty        : sequenceType       -> string
-    val printseqty'       : sequenceType       -> string
+    val printseqty        : rowType       -> string
+    val printseqty'       : rowType       -> string
     val printtnty         : typenameType        -> string
     val printtnty'        : typenameType        -> string
     val printtyf         : typeFunction       -> string
@@ -241,12 +241,12 @@ signature TY = sig
     val printty           : ty          -> string
     val printty'          : ty          -> string
     val printtylist       : ty list     -> string
-    val printlabcons      : labcons     -> string
-    val printsmllc        : labcons     -> string
-    val printRowType        : rowType       -> string
-    val printrowty'       : rowType       -> string
-    val printrowtylist    : rowType list  -> string
-    val printRowVar       : rowVar      -> string
+    val printFieldName    : fieldName     -> string
+    val printsmllc        : fieldName     -> string
+    val printFieldType      : fieldType       -> string
+    val printfieldty'       : fieldType       -> string
+    val printfieldtylist    : fieldType list  -> string
+    val printFieldVar       : fieldVar      -> string
     val printlabty        : labelType       -> string
 
 end
