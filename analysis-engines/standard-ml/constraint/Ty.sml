@@ -46,6 +46,7 @@ exception unflex
 (* type and datatype declarations *)
 type typeVar         = int
 type rowVar     = int
+type equalityTypeVar     = int
 type typenameVar     = int
 type labelVar        = int
 type fieldVar          = int
@@ -90,6 +91,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 		    | CONSTANT of string * Id.id * Label.label
 
     (* it is unclear why we need label vars (LABEL_VAR constructor) *)
+    (* change: field name type *)
     datatype labelType = LABEL_VAR  of labelVar
 		       | LC  of fieldName * Label.label
 		       | LABEL_DEPENDANCY  of labelType ExtLab.extLab
@@ -119,6 +121,43 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	 and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
 			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
+
+
+	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [(S1)*, (S2)*], typeConstructor = (T)*, outerType = (U)*} *)
+	 (* EQTYPE_CONSTRAINT (T)* *)
+	 (* NEQTYPE_CONSTRAINT (T)* *)
+
+	 (* NEQTYPE_CONSTRAINT a *)
+	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [a], typeConstructor = c, outerType = b} *)
+	 (* IS_REALLY_DATATYPE_CONSTRAINT c *)
+	 (* ==> NEQTYPE_CONSTRAINT b *)
+
+	 (* EQTYPE_PROPAGATION_CONSTRAINT {..., typeConstructor = c, outerType = b} *)
+	 (* IS_REALLY_REF_CONSTRAINT c *)
+	 (* ==> EQTYPE_CONSTRAINT b *)
+
+	 (* EQTYPE_CONSTRAINT b *)
+	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [a], ..., outerType = b} *)
+
+	 (* do we actually need to track this equalityTypeVar?
+	  * I mean, we don't need to checck that two equality type vars are the same,
+	  * we just have to check that they both are actually equality types
+	  * so for the below, maybe no arguments for EQTYPE_VAR and NOT_EQTYPE_VAR
+	  * would be best?
+	  *
+	  * Addition: don't we need to keep track of the equalityTypeVar for reasons of slicing?
+	  * We would need to hold the labels or something... right?
+	  *)
+
+	 (* a datatype to give the different status that we can be in when checking if something is an equality type
+	  * EQUALITY_TYPE: definitely an equality type
+	  * NOT_EQUALITY_TYPE: definitely not an equality type
+	  *)
+	 and equalityTypeStatus = EQUALITY_TYPE
+				| NOT_EQUALITY_TYPE
+
+ 	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 
 
 	 (*--------------------------------------------------------------------------
@@ -193,24 +232,26 @@ val CONSFRAG           = 17
 val CONSTYPENAMESTART  = 18
 
 val nextTypenameVar        = ref 0 (* next type name variable *)
-val nextTypeVar            = ref 0 (*  *)
-val nextRowVar        = ref 0 (* next row variable *)
+val nextTypeVar            = ref 0 (* next type variable *)
+val nextRowVar             = ref 0 (* next row variable *)
+val nextEqualityTypeVar    = ref 0 (* next equality type variable *)
 val nextLabelVar           = ref 0 (* next label variable *)
-val nextFieldVar             = ref 0 (* next field variable *)
-val nextTypeFunctionVar    = ref 0 (* next ?? *)
+val nextFieldVar           = ref 0 (* next field variable *)
+val nextTypeFunctionVar    = ref 0 (* next type function variable *)
 val nextidor               = ref 0 (* next id variable *)
 val nextTypename           = ref (CONSTYPENAMESTART)
 
 (* sets the above ref values to a value n *)
 fun setnexts n =
-    let val _ = nextTypenameVar := n
-	val _ = nextTypeVar     := n
-	val _ = nextRowVar    := n
-	val _ = nextFieldVar    := n
-	val _ = nextLabelVar    := n
-	val _ = nextTypeFunctionVar    := n
-	val _ = nextidor      := n
-	val _ = nextTypename    := (CONSTYPENAMESTART)
+    let val _ = nextTypenameVar     := n
+	val _ = nextTypeVar         := n
+	val _ = nextRowVar          := n
+	val _ = nextEqualityTypeVar := n
+	val _ = nextFieldVar        := n
+	val _ = nextLabelVar        := n
+	val _ = nextTypeFunctionVar := n
+	val _ = nextidor            := n
+	val _ = nextTypename        := (CONSTYPENAMESTART)
     in ()
     end
 
@@ -218,13 +259,14 @@ fun setnexts n =
 fun resetnexts () = setnexts 0
 
 (* accessor methods *)
-fun getTypeVar     () = !nextTypeVar
-fun getrowVar    () = !nextRowVar
-fun getFieldVar    () = !nextFieldVar
-fun getLabelVar    () = !nextLabelVar
-fun getTypeFunctionVar    () = !nextTypeFunctionVar
-fun getidor      () = !nextidor
-fun getTypenameVar () = !nextTypenameVar
+fun getTypeVar ()         = !nextTypeVar
+fun getrowVar ()          = !nextRowVar
+fun getEqualityTypeVar () = !nextEqualityTypeVar
+fun getFieldVar ()        = !nextFieldVar
+fun getLabelVar ()        = !nextLabelVar
+fun getTypeFunctionVar () = !nextTypeFunctionVar
+fun getidor ()            = !nextidor
+fun getTypenameVar ()     = !nextTypenameVar
 
 (* funtions to cast defined types to integers *)
 fun typeVarToInt          typeVar         = typeVar
@@ -233,7 +275,8 @@ fun labelVarToInt         labelVar        = labelVar
 fun fieldVarToInt           fieldVar          = fieldVar
 fun typenameVarToInt      typenameVar     = typenameVar
 fun typenameToInt         typename          = typename
-fun rowVarToInt      rowVar     = rowVar
+fun rowVarToInt           rowVar     = rowVar
+fun equalityTypeVarToInt  equalityTypeVar     = equalityTypeVar
 fun idorToInt             idor            = idor
 
 fun typenameFromInt typename = typename
@@ -242,6 +285,7 @@ fun typenameFromInt typename = typename
 fun eqTypeVar     tv1 tv2 = (tv1 = (tv2 : typeVar))
 fun eqTypeFunctionVar    fv1 fv2 = (fv1 = (fv2 : typeFunctionVar))
 fun eqRowVar    sv1 sv2 = (sv1 = (sv2 : rowVar))
+fun eqEqualityTypeVar    eqtv1 eqtv2 = (eqtv1 = (eqtv2 : equalityTypeVar))
 fun eqLabelVar    lv1 lv2 = (lv1 = (lv2 : labelVar))
 fun eqFieldVar    rv1 rv2 = (rv1 = (rv2 : fieldVar))
 fun eqIdor      id1 id2 = (id1 = (id2 : idor))
@@ -400,6 +444,18 @@ and eqSeqTy (ROW_VAR sv1) (ROW_VAR sv2) =
   | eqSeqTy (ROW_C (fields1, _, _)) (ROW_C (fields2, _, _)) = eqFieldTys fields1 fields2
   | eqSeqTy _ _ = SOME false
 
+and eqEqualityTy _ _  (* (EQUALITY_TYPE_VAR eqtv1) (EQUALITY_TYPE_VAR eqtv2) *)=
+    true
+  (*   if eqEqualityTypeVar eqtv1 eqtv2 *)
+  (*   then SOME true *)
+  (*   else SOME false *)
+  (* | eqEqualityTy (NOT_EQTYPE_VAR eqtv1) (NOT_EQTYPE_VAR eqtv2) = *)
+  (*   if eqEqualityTypeVar eqtv1 eqtv2 *)
+  (*   then SOME true *)
+  (*   else SOME false *)
+  (* | eqEqualityTy _ _ = SOME false *)
+
+
 and eqFieldTys [] [] = SOME true
   | eqFieldTys (field1 :: fields1) (field2 :: fields2) =
     (case (eqFieldTy field1 field2, eqFieldTys fields1 fields2) of
@@ -442,6 +498,7 @@ fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 (* increments the ref associated with the function name *)
 fun freshTypeVar     () = (D.printDebug 3 D.TY ("generating fresh AVar for typeVar ("^(Int.toString (!nextTypeVar))^")");         freshAVar nextTypeVar)
 fun freshRowVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowVar ("^(Int.toString (!nextRowVar))^")");       freshAVar nextRowVar)
+fun freshEqualityTypeVar () = (D.printDebug 3 D.TY ("generating fresh AVar for equalityTypeVar ("^(Int.toString (!nextEqualityTypeVar))^")");       freshAVar nextEqualityTypeVar)
 fun freshTypenameVar () = (D.printDebug 3 D.TY ("generating fresh AVar for typenameVar ("^(Int.toString (!nextTypenameVar))^")"); freshAVar nextTypenameVar)
 fun freshLabelVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labelVar ("^(Int.toString (!nextLabelVar))^")");       freshAVar nextLabelVar)
 fun freshFieldVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for fieldVar ("^(Int.toString (!nextFieldVar))^")");       freshAVar nextFieldVar)
@@ -479,13 +536,19 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY)
 
 (* constructs a row var *)
-fun consROW_VAR  sv  = ROW_VAR sv
+fun consROW_VAR  rv  = ROW_VAR rv
+
+(* constructs an equality type var *)
+fun consEQ        VAR  eqtv  = EQUALITY_TYPE_VAR eqtv
 
 (* constructs a field variable *)
 fun consFIELD_VAR  fv  = FIELD_VAR fv
 
 (* constructs a function variable *)
 fun consTYPE_FUNCTION_VAR tfv = TYPE_FUNCTION_VAR tfv
+
+(* constructs an equality type variable *)
+fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
 
 fun newTYPE_VAR   () = consTYPE_VAR   (freshTypeVar  ())
 fun newFIELD_VAR  () = consFIELD_VAR  (freshFieldVar ())

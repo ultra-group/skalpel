@@ -434,7 +434,8 @@ fun smlTesStrArgs strArgs =
 	  | parse ("-b"::"1"::file::tail) =
 	    (Tester.myfilebas:=file; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
-	    (Tester.myfilebas:=file; basop:="2"; parse tail)
+	    (* why do we have two filebas here? *)
+	    (Tester.myfilebas:=file; (*filebas:=file;*) basop:="2"; parse tail)
 	  | parse ("-e"::"0"::tail) =
 	    (terminalSlices := NO_DISPLAY; parse tail)
 	  | parse ("-e"::"1"::tail) =

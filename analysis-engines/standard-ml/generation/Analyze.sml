@@ -43,9 +43,6 @@ structure D  = Debug
 (* TODO: true if we want to have recursive types.  This is for the future *)
 val rectype = false
 
-(* Name of the open structure in the basis.  We should get rid of that! *)
-(*val basisopen = "Basis"*)
-
 val notFullySt  = "not been fully implemented yet"
 val poorlySt    = "not been implemented yet"
 val implementSt = "not been implemented yet"
@@ -2496,17 +2493,19 @@ fun generateConstraints' prog pack nenv =
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 
 		   val envVar   = E.freshEnvVar ()
+		   val eqVar    = T.freshEqualityTypeVar ()
 
 		   (* equivalent to ENV_CONSTRAINT (EL.initExtLab (ENVVAR (envVar, lab), env) lab)
 		    * do we really want to generate an environment constraint here? what type of
 		    * constraint would it be best to generate to show that we actually are dealing with
 		    * an equality type?
 		    *)
-		   val c = E.initEnvConstraint (E.consENV_VAR envVar lab) env lab
+		   val c1 = E.initEnvConstraint (E.consENV_VAR envVar lab) env lab
+		   val c2 = E.initEqualityTypeConstraint (Ty.consEQUALITY_TYPE_VAR eqVar) (Ty.EQUALITY_TYPE_STATUS (Ty.EQUALITY_TYPE)) lab
 
-		   val env' = E.ROW_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)),
-					      E.ENVDEP (EL.initExtLab (E.consENV_VAR envVar lab) lab))
-	       in (env', contextSensitiveSyntaxError)
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint (L.dummyLab, c1) (E.singleConstraint (lab, c2)))
+		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR envVar lab) lab))
+	       in (env2, contextSensitiveSyntaxError)
 	       end
 	     | f_specone (A.SpecTdr (tdrdesc, _, lab, _)) =
 	       let val (env, css) = f_tdrdesc tdrdesc
@@ -2514,7 +2513,7 @@ fun generateConstraints' prog pack nenv =
 		   val ev2  = E.freshEnvVar ()
 		   val c1   = E.initEnvConstraint (E.consENV_VAR ev1 L.dummyLab) env L.dummyLab
 		   val c2   = E.initEnvConstraint (E.consENV_VAR ev2 lab) (E.consENV_VAR ev1 lab) lab
-		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(L.dummyLab, c1) (E.singleConstraint (lab, c2)))
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint (L.dummyLab, c1) (E.singleConstraint (lab, c2)))
 		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR ev2 lab) lab))
 	       (* We can't have an ENVDEP here because we can have an error in
 		* the type part that does not need the spec to exist.

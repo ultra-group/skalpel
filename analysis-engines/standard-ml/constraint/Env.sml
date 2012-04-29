@@ -194,7 +194,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
      and accessor        = VALUEID_ACCESSOR of T.ty accid EL.extLab                       (* value identifiers *)
 			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accid EL.extLab         (* explicit type variables *)
 			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accid EL.extLab    (* type constructors *)
-			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accid EL.extLab (* overloading classes *)
+			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accid EL.extLab      (* overloading classes *)
 			 | STRUCTURE_ACCESSOR of env accid EL.extLab                      (* structures *)
 			 | SIGNATURE_ACCESSOR of env accid EL.extLab                      (* signatures *)
 			 | FUNCTOR_ACCESSOR of (env * env) accid EL.extLab                (* functors *)
@@ -223,7 +223,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 			   * constructor below? Or should we try and change the result that we get back from the constraint that we get back when
 			   * defining a normal type? Think about how constraint solving is gonig to work too, that's also part of the job here
 			   *)
-			  (*| EQUALITY_CONSTRAINT of ???      a constraint for equality type checking *)
+			  | EQUALITY_TYPE_CONSTRAINT of (T.equalityType * T.equalityType) EL.extLab  (* a constraint for equality type checking *)
 
 
      and constraints      = CONSTRAINTS of oneConstraint list constraintMap
@@ -946,6 +946,7 @@ fun initFunctionTypeConstraint x1 x2 lab = FUNCTION_TYPE_CONSTRAINT (EL.initExtL
 (* I don't see anywhere where this is used. Why does this exist? *)
 fun initTypenameConstraint x1 x2 lab = TYPENAME_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initRowConstraint x1 x2 lab = ROW_CONSTRAINT (EL.initExtLab (x1, x2) lab)
+fun initEqualityTypeConstraint x1 x2 lab = EQUALITY_TYPE_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initFieldConstraint x1 x2 lab = FIELD_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initLabelConstraint x1 x2 lab = LABEL_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initEnvConstraint x1 x2 lab = ENV_CONSTRAINT (EL.initExtLab (x1, x2) lab)

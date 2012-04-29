@@ -26,6 +26,7 @@ signature TY = sig
 
     type typeVar
     type rowVar
+    type equalityTypeVar
     type typenameVar
     type labelVar
     type fieldVar
@@ -73,6 +74,12 @@ signature TY = sig
 			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
+	 and equalityTypeStatus = EQUALITY_TYPE
+				| NOT_EQUALITY_TYPE
+
+ 	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
+
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
 		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label
@@ -89,7 +96,8 @@ signature TY = sig
     val consTypenameVar     : Label.label -> ty
 
     val consTYPE_VAR             : typeVar  -> ty
-    val consROW_VAR         : rowVar -> rowType
+    val consROW_VAR              : rowVar -> rowType
+    val consEQUALITY_TYPE_VAR    : equalityTypeVar -> equalityType
     val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
 
     val newTYPE_VAR           : unit -> ty
@@ -110,6 +118,7 @@ signature TY = sig
 
     val eqTypeVar           : typeVar     -> typeVar     -> bool
     val eqRowVar          : rowVar    -> rowVar    -> bool
+    val eqEqualityTypeVar   : equalityTypeVar -> equalityTypeVar -> bool
     val eqLabelVar          : labelVar    -> labelVar    -> bool
     val eqFieldVar          : fieldVar    -> fieldVar    -> bool
     val eqTypename          : typename    -> typename    -> bool
@@ -196,7 +205,8 @@ signature TY = sig
 
     val freshTypeVar         : unit -> typeVar
     val freshTypeFunctionVar : unit -> typeFunctionVar
-    val freshRowVar     : unit -> rowVar
+    val freshRowVar          : unit -> rowVar
+    val freshEqualityTypeVar : unit -> equalityTypeVar
     val freshTypenameVar    : unit -> typenameVar
     val freshLabelVar       : unit -> labelVar
     val freshFieldVar       : unit -> fieldVar
