@@ -6229,7 +6229,7 @@ fun slice prog labels =
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
 		  else A.SmlTesDots []
-		| sl_smltes (A.SmlTesQuote _) ll = raise EH.TODO
+		| sl_smltes (A.SmlTesQuote _) ll = raise EH.TODO "no description, raised in the 'sl_smltes' function of Slice.sml"
 		| sl_smltes (A.SmlTesType _)  ll = A.SmlTesDots []
 		| sl_smltes (A.SmlTesDots pl) ll = A.SmlTesDots (sl_partlist pl ll)
 

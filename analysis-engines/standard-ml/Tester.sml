@@ -1372,7 +1372,7 @@ fun checktests listtests =
 			| RegsTest         => (plustest badtests;   outputDB (messageRegs       nb)    stout)
 			| TocheckTest      => (plustest checktests; outputDB (messageTocheck    nb)    stout)
 			| EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch nb st) stout)
-			| EH.TODO          => (plustest todotests;  outputDB (messageTodo       nb)    stout)
+			| EH.TODO _          => (plustest todotests;  outputDB (messageTodo       nb)    stout)
 			| NewerTest        => (plustest newertests; outputDB (messageNewer      nb)    stout));
 		  run (nb + 1) xs)
 	val _ = run firsttest tests

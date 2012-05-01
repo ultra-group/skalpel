@@ -1802,7 +1802,7 @@ and getTypeVarType (TypeOneVar tv)                 = [tv]
   | getTypeVarType (TypeSlRec (trl, _, _, _))      = foldr (fn (x, y) => (getTypeVarTyField x) @ y) [] trl
   | getTypeVarType (TypeTyCon (ts, _, _, _, _))    = getTypeVarTypeRow ts
   | getTypeVarType (TypeParen (ty, _, _, _, _))    = getTypeVarLabType ty
-  | getTypeVarType (TypeDots _)                    = raise EH.TODO (* TODO: do that for all the other dot nodes! *)
+  | getTypeVarType (TypeDots _)                    = raise EH.TODO "no description, raised in the 'getTypeVarType' function of AstSML.sml"
 
 and getTypeVarConbind (ConBind _)                         = []
   | getTypeVarConbind (ConBindOf (id, ty, reg, lab, nxt)) = getTypeVarLabType ty

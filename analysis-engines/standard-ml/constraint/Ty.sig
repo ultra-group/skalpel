@@ -244,6 +244,7 @@ signature TY = sig
     val printsmltn        : typename      -> string
     val printseqty        : rowType       -> string
     val printseqty'       : rowType       -> string
+    val printEqualityType : equalityType       -> string
     val printtnty         : typenameType        -> string
     val printtnty'        : typenameType        -> string
     val printtyf         : typeFunction       -> string

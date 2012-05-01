@@ -52,9 +52,6 @@ val SKALPEL_VERSION = "6b2f80d746a5f3527b02ee1b0735e27e5a38aca4"
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
 
-(* message relayed to the user if they try to use a function which has not yet been implemented *)
-val messageTODO = "a feature has not been implemented yet"
-
 (* Enhance these messages with the messages from EH.DeadBranch (failure of the slicer)
  * and add a message saying if type errors have been discovered (success of the slicer)
  * - this applies to both the finishedLisp* and finishedPerl* functions. *)
@@ -232,10 +229,11 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 
 	(* handle errors depending on the developer option *)
 	val (bfm, msg) = if dev
-			 then run ()
-			 else (run ())
+			 then (D.printDebug 1 D.RUN "running without error handlers in place"; run ())
+			      handle EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
+			 else (D.printDebug 1 D.RUN "running with error handlers in place"; run ())
 			      handle EH.DeadBranch st => (print "the slicer encountered an impossible case\n"; (false, st))
-				   | EH.TODO => (print ("the slicer failed because " ^ messageTODO ^ "\n"); (false, messageTODO))
+				   | EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
 				   | Fail st => (print ("Error: "^st^"\n"); (false, ""))
 				   | _ => (print "the slicer failed for some reason\n"; (false, ""))
 
@@ -435,7 +433,7 @@ fun smlTesStrArgs strArgs =
 	    (Tester.myfilebas:=file; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
 	    (* why do we have two filebas here? *)
-	    (Tester.myfilebas:=file; (*filebas:=file;*) basop:="2"; parse tail)
+	    (Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)
 	  | parse ("-e"::"0"::tail) =
 	    (terminalSlices := NO_DISPLAY; parse tail)
 	  | parse ("-e"::"1"::tail) =
@@ -455,14 +453,12 @@ fun smlTesStrArgs strArgs =
 	     then filelisp:=str
 	     else if option = "-p" (*  *)
 	     then fileperl:=str
-	     else if option = "-x"
-	     then dev:=str
 	     else if option = "-b"
 	     then basop:=str
 	     else if option = "-c"
 	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; checktests [])
 	     else if option = "-d"
-	     then (Debug.setAllDebug (Option.valOf(Int.fromString (str)))
+	     then (dev:="true"; Debug.setAllDebug (Option.valOf(Int.fromString (str)))
 		   handle _ => raise EH.DeadBranch "Debug argument must be an integer";
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
@@ -527,23 +523,5 @@ fun smlTesStrArgs strArgs =
     handle Fail _ => OS.Process.failure
 
 fun smltesstr str = smlTesStrArgs ("--output true -b 1 " ^ str)
-
-(* calculates what the free identifiers are in a given file filein with basis option b *)
-(*fun getFreeIdentifiers filein b =
-    let val _ = Ty.resetnexts ()
-	val stmin = TextIO.openIn filein
-	val (ast, m, ascid) = Parser.parse filein stmin Label.firstLab Id.emAssoc
-	val _ = TextIO.closeIn stmin
-	val proj = Ast.Progs [(ast, filein, false, m)]
-	val (env, _, _) = Analyze.buildin (Analyze.generateConstraints proj 1) ascid b
-	val _ = print (Env.printEnv env "")
-	val _ = print (Id.printAssoc ascid)
-	fun numericIdToIdentifierName numericId1 = Id.lookupId numericId1 ascid
-	fun extractNames l = List.mapPartial numericIdToIdentifierName l
-    in {freeUnknownIdentifiers = (extractNames o Id.toList o Env.dom o Env.getVids) env,
-	maybeFreeConstructors  = (extractNames o Id.toList o Env.dom o Env.getVars) env,
-	freeconstructors       = (extractNames o Id.toList o Env.dom o Env.getCons) env,
-	freeTyNames            = (extractNames o Id.toList o Env.dom o Env.getTyps) env}
-    end*)
 
 end

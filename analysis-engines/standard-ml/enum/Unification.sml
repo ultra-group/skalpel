@@ -139,7 +139,7 @@ and decomptyfieldlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyfield x 
 fun getpairs l1 l2 =
     foldr (fn (x, pairs) => foldr (fn (y, pairs) => (x, y) :: pairs) pairs l2) [] l1
 
-fun comparetypsenv typsenv1 typsenv2 filters ls deps ids = raise EH.TODO
+fun comparetypsenv typsenv1 typsenv2 filters ls deps ids = raise EH.TODO "no description, raised in the 'comparetypsenv' function of Unification.sml"
 
 fun comparevidsenv idenv1 idenv2 filters ls deps ids =
     let val dom1  = E.dom idenv1
@@ -943,7 +943,7 @@ fun getExplicitTyVars vids tyvs state =
 	       else searchSeqTy seqty
 	    end
 	  | searchTy (T.TYPE_POLY (seqty, _, _, _, _)) = searchSeqTy seqty
-	  | searchTy (T.GEN ty) = raise EH.TODO (*(2010-06-23)Should be impossible.*)
+	  | searchTy (T.GEN ty) = raise EH.TODO "no description, raised in the 'searchTy' function of Unification.sml" (*(2010-06-23)Should be impossible.*)
 	  | searchTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
 	    (case searchTy ty of
 		 NONE => NONE
@@ -2032,7 +2032,7 @@ fun renamety (x as T.TYPE_VAR _) _ = x
   | renamety (T.TYPE_CONSTRUCTOR (tn, sq, l))       state = T.TYPE_CONSTRUCTOR (renametypename tn state, renameseqty sq state, l)
   | renamety (T.APPLICATION (tf, sq, l))       state = T.APPLICATION (renametypfun tf state, renameseqty sq state, l)
   | renamety (T.TYPE_POLY (sq, i, p, k, l)) state = T.TYPE_POLY (renameseqty sq state, i, p, k, l)
-  | renamety (T.GEN ty)              state = raise EH.TODO
+  | renamety (T.GEN ty)              state = raise EH.TODO "no description, raised in the 'renamety' function of Unification.sml"
   | renamety (T.TYPE_DEPENDANCY ety)              state = T.TYPE_DEPENDANCY (EL.mapExtLab ety (fn ty => renamety ty state))
 and renametypfun (x as T.TYPE_FUNCTION_VAR _) _ = x
   | renametypfun (T.TFC (sq, ty, lab)) state = T.TFC (renameseqty sq state, renamety ty state, lab)
@@ -2801,8 +2801,8 @@ fun unif env filters user =
 		  | E.TRANSLUCENT => justBuildEnv env1 state true
 	     end
 	     handle errorfound err => handleSolveEnv err envsig)
-	  | solveenv E.TOP_LEVEL_ENV bmon = raise EH.TODO
-	  | solveenv (E.ENVPTY st) bmon = raise EH.TODO
+	  | solveenv E.TOP_LEVEL_ENV bmon = raise EH.TODO "no description, raised in the 'solveenv' function of Unification.sml"
+	  | solveenv (E.ENVPTY st) bmon = raise EH.TODO "no description, raised in the 'solveenv' function of Unification.sml"
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
@@ -3670,26 +3670,26 @@ fun unif env filters user =
 	    in fsimplify (cs @ cs') l
 	    end
 	  (*(2010-04-16)TODO:*)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVOPN x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_CONS y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ROW_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENVOPN y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_VAR tfv, typeFunction), labs, stts, deps)) :: cs') l =
 	    (case S.getValStateTf state tfv of
@@ -3954,10 +3954,10 @@ fun unif env filters user =
 	    else fsimplify cs' l
 	  (**)
 	  | fsimplify ((E.ACCESSOR_CONSTRAINT acc) :: cs') l = (solveacc acc l; fsimplify cs' l)
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_CONSTRUCTOR   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.EXPLICIT_TYPE_VAR   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.APPLICATION   _), _, _, _)) :: cs') l = raise EH.TODO
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_POLY  _), _, _, _)) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_CONSTRUCTOR   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.EXPLICIT_TYPE_VAR   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.APPLICATION   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_POLY  _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
 	  (*(2010-06-23)We keep unifying but we should really chain the GENs.*)
 	  (* otherwise we swap the types of the evaluated constraint *)
@@ -3978,7 +3978,9 @@ fun unif env filters user =
 	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C  x, T.ROW_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR  y, T.ROW_C  x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO
+	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = raise EH.TODO "equality type pattern (VAR, STATUS), raised in the 'f_simplify' function of Unification.sml"
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 
 	and handleSimplify err xs l =
 	    if bcontinue

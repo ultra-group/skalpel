@@ -784,6 +784,11 @@ fun printTypename    tn  = "n"   ^ Int.toString tn
 fun printFieldVar    rv  = "r"   ^ Int.toString rv
 fun printLabelVar    lv  = "f"   ^ Int.toString lv
 fun printTypeFunctionVar    tfv = "tfv" ^ Int.toString tfv
+fun printEqualityTypeVar    eqtv = "eqtv" ^ Int.toString eqtv
+fun printEqualityTypeStatus status =
+    case status of
+	EQUALITY_TYPE => "EQUALITY_TYPE"
+      | NOT_EQUALITY_TYPE => "NOT_EQUALITY_TYPE"
 fun printFieldName   fieldName  = fieldName
 fun printlabel     l   = "l"   ^ L.printLab l
 fun printsmllc     lc  = "\""  ^ lc ^ "\""
@@ -864,6 +869,10 @@ and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
 				    ","    ^ printflex      b  ^
 				    ","    ^ printlabel     l  ^ ")"
   | printseqty (ROW_DEPENDANCY eseq)          = "SD"   ^ EL.printExtLab' eseq printseqty
+
+and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALTY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
+  | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
+
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
   | printtyf (TFC (sq, ty, l))    = "TFC(" ^ printseqty    sq  ^
 				    ","    ^ printty       ty  ^

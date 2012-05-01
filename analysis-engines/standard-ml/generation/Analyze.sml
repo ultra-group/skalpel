@@ -288,7 +288,7 @@ fun generateConstraints' prog pack nenv =
 				      T.getTypenameString s)
 				else T.freshTypename ()
 
-	fun f_partlist _ = raise EH.TODO
+	fun f_partlist _ = raise EH.TODO "no description, raised in the 'f_partlist' function of Analyze.sml"
 
 
 	   and f_scon (A.SconInt (s, v, _, lab, _)) =

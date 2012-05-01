@@ -324,11 +324,11 @@ fun cons lab (labels as {from = mfrom, to = mto, size}) =
 	else {from = S.insert (mfrom, lab, lab), to = S.insert (mto, lab, lab), size = size + 1}
 
 fun add f t labels =
-    S.foldli (fn (f', t', (labels, bf, bt)) => raise EH.TODO)
+    S.foldli (fn (f', t', (labels, bf, bt)) => raise EH.TODO "no description, raised in the 'add' function of Label.sml")
 	     (S.empty, false, false)
 	     labels
 
-fun delete lab (labels as {from = mfrom, to = mto, size}) = raise EH.TODO
+fun delete lab (labels as {from = mfrom, to = mto, size}) = raise EH.TODO "no description, raised in the 'delete' function of Label.sml"
 
 fun isEmpty  {from, to, size} = (size = 0)
 fun isSingle {from, to, size} =
@@ -337,39 +337,39 @@ fun length   {from, to, size} =
     S.foldli (fn (f, t, n) => n + (t - f + 1)) 0 from
 
 fun union labels {from, to, size} =
-    S.foldli (fn (f, t, {from, to, size}) => raise EH.TODO)
+    S.foldli (fn (f, t, {from, to, size}) => raise EH.TODO "no description, raised in the 'union' function of Label.sml")
 	     labels
 	     from
 
 
-fun diff     labels1 labels2 = raise EH.TODO
-fun inter    labels1 labels2 = raise EH.TODO
-fun disjoint labels1 labels2 = raise EH.TODO
-fun subset   labels1 labels2 = raise EH.TODO
-fun subseteq labels1 labels2 = raise EH.TODO
+fun diff     labels1 labels2 = raise EH.TODO "no description, raised in the 'diff' function of Label.sml"
+fun inter    labels1 labels2 = raise EH.TODO "no description, raised in the 'inter' function of Label.sml"
+fun disjoint labels1 labels2 = raise EH.TODO "no description, raised in the 'disjoint' function of Label.sml"
+fun subset   labels1 labels2 = raise EH.TODO "no description, raised in the 'subset' function of Label.sml"
+fun subseteq labels1 labels2 = raise EH.TODO "no description, raised in the 'subseteq' function of Label.sml"
 
-fun split  lab labels = raise EH.TODO
-fun split2 lab1 lab2 labels = raise EH.TODO
-fun splitIn2  labels = raise EH.TODO
-fun splitIn2' labels = raise EH.TODO
+fun split  lab labels = raise EH.TODO "no description, raised in the 'split' function of Label.sml"
+fun split2 lab1 lab2 labels = raise EH.TODO "no description, raised in the 'split2' function of Label.sml"
+fun splitIn2  labels = raise EH.TODO "no description, raised in the 'splitIn2' function of Label.sml"
+fun splitIn2' labels = raise EH.TODO "no description, raised in the 'splitIn2'' function of Label.sml"
 
-fun compareLab (lab1, lab2) = raise EH.TODO
-fun compare (set1, set2) = raise EH.TODO
+fun compareLab (lab1, lab2) = raise EH.TODO "no description, raised in the 'compareLab' function of Label.sml"
+fun compare (set1, set2) = raise EH.TODO "no description, raised in the 'compare' function of Label.sml"
 
-fun ord    labelss = raise EH.TODO
-fun unions labelss = raise EH.TODO
+fun ord    labelss = raise EH.TODO "no description, raised in the 'ord' function of Label.sml"
+fun unions labelss = raise EH.TODO "no description, raised in the 'unions' function of Label.sml"
 
-fun toList labels = raise EH.TODO
+fun toList labels = raise EH.TODO "no description, raised in the 'toList' function of Label.sml"
 
-fun remFirst labels = raise EH.TODO
+fun remFirst labels = raise EH.TODO "no description, raised in the 'remFirst' function of Label.sml"
 
-fun foldr f init labels = raise EH.TODO
+fun foldr f init labels = raise EH.TODO "no description, raised in the 'foldr' function of Label.sml"
 
-fun exsubseteq labels labelss = raise EH.TODO
+fun exsubseteq labels labelss = raise EH.TODO "no description, raised in the 'exsubseteq' function of Label.sml"
 
 fun printLab lab = Int.toString lab
 
-fun toString labels = raise EH.TODO
+fun toString labels = raise EH.TODO "no description, raised in the 'toString' function of Label.sml"
 
 
 end
