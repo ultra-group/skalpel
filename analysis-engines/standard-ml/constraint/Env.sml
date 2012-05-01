@@ -467,6 +467,9 @@ and printcst' (CONSTRAINTS cst) ind ascid =
 	    ^ y) "" cst
 and printcst cst ascid = printcst' cst "" ascid
 
+fun printConstraints cst =
+    printcst cst I.emAssoc (* printocst(List.hd (List.hd(OMC.listItems(cst)))) *)
+
 (* Bindings constructors *)
 
 fun consBind     id bind class lab poly = EL.initExtLab (C.consBind     id bind class lab poly) lab
@@ -791,6 +794,9 @@ fun getcstSemi cst i = case OMC.find (cst, i) of NONE => [] | SOME x => x
 
 fun consConstraint (v, c) (CONSTRAINTS cst) = CONSTRAINTS (OMC.insert (cst, L.toInt v, c :: (getcstSemi cst (L.toInt v))))
 fun conscsss cl css = cl @ css
+
+(* this adds a list of constraints (cs) to cst using the label as the key
+ * if constraints have already been added for a label, these new constraints are added to the original constraints *)
 fun conscsts (v, cs) (CONSTRAINTS cst) = CONSTRAINTS (OMC.insert (cst, L.toInt v, cs @ (getcstSemi cst (L.toInt v))))
 
 fun singcss  c  = [c]
