@@ -92,7 +92,7 @@ then the full test result logs are given at the end of this message.\n" >> $mail
 
 echo -e "The most recent commit message of the skalpel repository is directly below.\n" >> $mailFile
 
-git log | head -n 5 >> $mailFile
+(cd $repoDir; git log | head -n 5 >> $mailFile)
 
 echo -e "******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
 
