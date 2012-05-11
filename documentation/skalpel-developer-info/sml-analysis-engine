@@ -68,7 +68,7 @@ who looks at the code has a fair idea of what is going on. Structure
 names are exempt from all of this (eg structure T = Ty is acceptable).
 
 cons - constructor
-var  - variable
+var(s)  - variable(s)
 poly - polymorphic
 mono - monomorphic
 id   - identifier

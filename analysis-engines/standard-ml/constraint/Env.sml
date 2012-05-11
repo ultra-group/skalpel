@@ -223,7 +223,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 			   * constructor below? Or should we try and change the result that we get back from the constraint that we get back when
 			   * defining a normal type? Think about how constraint solving is gonig to work too, that's also part of the job here
 			   *)
-			  | EQUALITY_TYPE_CONSTRAINT of (T.equalityType * T.equalityType) EL.extLab  (* a constraint for equality type checking *)
+			  | EQUALITY_TYPE_CONSTRAINT of (T.ty * T.ty) EL.extLab  (* a constraint for equality type checking *)
 
 
      and constraints      = CONSTRAINTS of oneConstraint list constraintMap
@@ -438,7 +438,7 @@ and printocst (TYPE_CONSTRAINT x) _ ascid =
   | printocst (ROW_CONSTRAINT x) _ ascid =
     "  ROW_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printseqty') ascid ^ ")"
   | printocst (EQUALITY_TYPE_CONSTRAINT x) _ ascid =
-    "  EQUALITY_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printEqualityType) ascid ^ ")"
+    "  EQUALITY_TYPE_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
   | printocst (FIELD_CONSTRAINT x) _ ascid =
     "  FIELD_CONSTRAINT(" ^ EL.printExtLab x (fn x => printPair x T.printfieldty') ascid ^ ")"
   | printocst (LABEL_CONSTRAINT x) _ ascid =
@@ -451,7 +451,7 @@ and printocst (TYPE_CONSTRAINT x) _ ascid =
   | printocst (FUNCTOR_CONSTRAINT evfbind) ind ascid = "  FUN(" ^ printEvfBind evfbind ^ ")"
   | printocst (SHARING_CONSTRAINT shabind) ind ascid = "  SHA(" ^ printShaBind shabind ^ ")"
   | printocst (LET_CONSTRAINT env)     ind ascid = "  LET(" ^ printEnv env (ind ^ "      ") ^ ")"
-  | printocst (ACCESSOR_CONSTRAINT acc)     ind ascid = "  ACC(" ^ printAcc acc ind ascid ^ ")"
+  | printocst (ACCESSOR_CONSTRAINT acc)     ind ascid = "  ACCESSOR_CONSTRAINT(" ^ printAcc acc ind ascid ^ ")"
 and printocstlist []        ind1 ind2 ind3 ascid = ""
   | printocstlist [x]       ind1 ind2 ind3 ascid = ind2 ^ printocst x ind1 ascid
   | printocstlist (x :: xs) ind1 ind2 ind3 ascid = ind2 ^ printocst x ind1 ascid ^
@@ -469,6 +469,8 @@ and printcst cst ascid = printcst' cst "" ascid
 
 fun printConstraints cst =
     printcst cst I.emAssoc (* printocst(List.hd (List.hd(OMC.listItems(cst)))) *)
+
+fun printOneConstraint cst = printocst cst "" I.emAssoc
 
 (* Bindings constructors *)
 
@@ -1165,6 +1167,40 @@ fun getTypeNames typeNames =
 			     sem)
 	      []
 	      typeNames
+
+fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
+    let
+	(* the list of constraints associated with each key *)
+	val allConstraintValues = OMC.listItems constraints
+
+	(* join all the lists of lists so that it's easier to search through them *)
+	val singleConstraintList = List.foldl (op @) [] allConstraintValues
+
+	fun findEqualityTypeVars [] = []
+	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(tyv, _, _), Ty.TYPE_POLY _),_,_,_)::t) =
+	    tyv::(findEqualityTypeVars t)
+	  | findEqualityTypeVars (h::t) = findEqualityTypeVars t
+    in
+	findEqualityTypeVars singleConstraintList
+    end
+
+fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) =
+    let
+	(* the list of constraints associated with each key *)
+	val allConstraintValues = OMC.listItems constraints
+
+	(* join all the lists of lists so that it's easier to search through them *)
+	val singleConstraintList = List.foldl (op @) [] allConstraintValues
+
+	fun findEqualityTypeVars [] = []
+	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c), Ty.TYPE_POLY (d,e,f,g,h,_)),j,k,l)::t) =
+	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a)));
+	    (TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c), Ty.TYPE_POLY(d,e,f,g,h,Ty.EQUALITY_TYPE)),j,k,l)::(findEqualityTypeVars t)))
+	  | findEqualityTypeVars (h::t) =
+	    findEqualityTypeVars t
+    in
+	findEqualityTypeVars singleConstraintList
+    end
 
 
 

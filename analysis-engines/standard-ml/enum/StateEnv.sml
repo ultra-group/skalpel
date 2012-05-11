@@ -54,6 +54,7 @@ type rcty  = T.fieldType list * T.flex * (L.label * T.fieldName) EL.extLab list
 
 type stTv = T.ty
 type stTf = T.typeFunction
+type stEq = T.equalityType (* the state for equality types (CHANGE THIS NAME) *)
 type stTn = T.typenameType
 type stSq = T.rowType
 type stRt = T.fieldType
@@ -83,6 +84,7 @@ type 'a onestatege = {resp : 'a MS.map, deps : O.ordset} MS.map ref
 
 type statetv = stTv onestatemp
 type statetf = stTf onestatemp
+type stateeq = stEq onestatemp (* for equality types (CHANGE THIS NAME) *)
 type statetn = stTn onestatemp
 type statesq = stSq onestatemp
 type statert = stRt onestatemp
@@ -114,6 +116,7 @@ type statena = NA.set ref
 (* part of the state for the types *)
 type statese = {tv : statetv,
 		tf : statetf,
+		eq : stateeq, (* equality types (CHANGE THIS NAME) *)
 		tn : statetn,
 		sq : statesq,
 		rt : statert,
@@ -230,9 +233,10 @@ fun printStateGe statege =
 	      ""
 	      (!statege)
 
-fun printStateSe {tv, tf, tn, sq, rt, lt, ev, cl} =
+fun printStateSe {tv, tf, eq, tn, sq, rt, lt, ev, cl} =
     "State TV:\n" ^ printStateGen  tv T.printty    ^ "\n" ^
     "State TF:\n" ^ printStateGen  tf T.printtyf   ^ "\n" ^
+    "State EQ:\n" ^ printStateGen  eq T.printEqualityType ^ "\n" ^
     "State TN:\n" ^ printStateGen  tn T.printtnty  ^ "\n" ^
     "State SQ:\n" ^ printStateGen  sq T.printseqty ^ "\n" ^
     "State RT:\n" ^ printStateGen  rt T.printFieldType ^ "\n" ^
@@ -276,6 +280,7 @@ fun getStateFo (x : state) = #fo x
 
 fun getStateTv x = #tv (getStateSe x)
 fun getStateTf x = #tf (getStateSe x)
+fun getStateEq x = #eq (getStateSe x) (* equality types (CHANGE THIS NAME) *)
 fun getStateTn x = #tn (getStateSe x)
 fun getStateSq x = #sq (getStateSe x)
 fun getStateRt x = #rt (getStateSe x)
@@ -298,6 +303,8 @@ fun getStateIdFu x = E.getFunctors x
 fun getValOneState onestate x = MS.find (!onestate, x)
 fun getValStateTv state x = getValOneState (getStateTv state) (T.typeVarToInt     x)
 fun getValStateTf state x = getValOneState (getStateTf state) (T.typeFunctionVarToInt    x)
+(* equality types (CHANGE THIS NAME) *)
+fun getValStateEq state x = getValOneState (getStateEq state) (T.equalityTypeVarToInt    x)
 fun getValStateTn state x = getValOneState (getStateTn state) (T.typenameVarToInt x)
 fun getValStateSq state x = getValOneState (getStateSq state) (T.rowVarToInt    x)
 fun getValStateRt state x = getValOneState (getStateRt state) (T.fieldVarToInt    x)
@@ -435,6 +442,8 @@ fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
 
 fun updateStateTf state key value = updateOneState (getStateTf state) (T.typeFunctionVarToInt    key) value
 fun updateStateTn state key value = updateOneState (getStateTn state) (T.typenameVarToInt key) value
+(* for equality types (CHANGE THIS NAME) *)
+fun updateStateEq state key value = updateOneState (getStateEq state) (T.equalityTypeVarToInt key) value
 fun updateStateSq state key value = updateOneState (getStateSq state) (T.rowVarToInt    key) value
 fun updateStateRt state key value = updateOneState (getStateRt state) (T.fieldVarToInt    key) value
 fun updateStateLt state key value = updateOneState (getStateLt state) (T.labelVarToInt    key) value
@@ -846,6 +855,7 @@ fun initStateId () = ref E.emptyEnv
 fun initStateSe () =
     let val atv = ref MS.empty
 	val atf = ref MS.empty
+	val aeq = ref MS.empty (* equality types (CHANGE THIS NAME) *)
 	val atn = ref MS.empty
 	val asq = ref MS.empty
 	val art = ref MS.empty
@@ -854,6 +864,7 @@ fun initStateSe () =
 	val acl = ref MS.empty
     in {tv = atv,
 	tf = atf,
+	eq = aeq,
 	tn = atn,
 	sq = asq,
 	rt = art,

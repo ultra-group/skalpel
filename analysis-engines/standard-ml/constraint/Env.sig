@@ -149,7 +149,7 @@ signature ENV = sig
 				 | SIGNATURE_CONSTRAINT of evsbind
 				 | FUNCTOR_CONSTRAINT of evfbind
 				 | SHARING_CONSTRAINT of shabind
-				 | EQUALITY_TYPE_CONSTRAINT of (Ty.equalityType * Ty.equalityType) ExtLab.extLab
+				 | EQUALITY_TYPE_CONSTRAINT of (Ty.ty * Ty.ty) ExtLab.extLab
 
 	 and constraints        = CONSTRAINTS of oneConstraint list constraintMap
 
@@ -268,6 +268,7 @@ signature ENV = sig
     val updateIArgOfFunctor   : bool   -> env -> env
 
     val getTypeNames   : typeEnv -> names list
+    val getEqualityTypeVars : constraints -> Ty.typeVar list
 
     val plusEnv            : env -> env -> env
 
@@ -365,7 +366,7 @@ signature ENV = sig
     val initFunctionTypeConstraint : Ty.typeFunction -> Ty.typeFunction -> Label.label -> oneConstraint
     val initTypenameConstraint     : Ty.typenameType  -> Ty.typenameType  -> Label.label -> oneConstraint
     val initRowConstraint          : Ty.rowType -> Ty.rowType -> Label.label -> oneConstraint
-    val initEqualityTypeConstraint : Ty.equalityType -> Ty.equalityType -> Label.label -> oneConstraint
+    val initEqualityTypeConstraint : Ty.ty -> Ty.ty -> Label.label -> oneConstraint
     val initFieldConstraint        : Ty.fieldType -> Ty.fieldType -> Label.label -> oneConstraint
     val initLabelConstraint        : Ty.labelType -> Ty.labelType -> Label.label -> oneConstraint
     val initEnvConstraint          : env      -> env      -> Label.label -> oneConstraint
@@ -381,4 +382,6 @@ signature ENV = sig
 
     val printEnv     : env    -> string -> string
     val printConstraints : constraints -> string
+    val printOneConstraint : oneConstraint -> string
+    val createEqualityTypeConstraints : constraints -> oneConstraint list
 end

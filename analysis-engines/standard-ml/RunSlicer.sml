@@ -427,8 +427,8 @@ fun smlTesStrArgs strArgs =
 	    else
 		filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
-	  | parse ("-b"::"0"::file::tail) =
-	    (Tester.myfilebas:=file; basop:="0"; parse tail)
+	  | parse ("-b"::"0"::tail) =
+	    (basop:="0"; parse tail)
 	  | parse ("-b"::"1"::file::tail) =
 	    (Tester.myfilebas:=file; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
@@ -458,8 +458,12 @@ fun smlTesStrArgs strArgs =
 	     else if option = "-c"
 	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; checktests [])
 	     else if option = "-d"
-	     then (dev:="true"; Debug.setAllDebug (Option.valOf(Int.fromString (str)))
-		   handle _ => raise EH.DeadBranch "Debug argument must be an integer";
+	     then (dev:="true";
+		   case str of
+		       "EQUALITY_TYPES" => D.enableDebugFeature D.EQUALITY_TYPES
+		     | "CONSTRAINT_GENERATION" => D.enableDebugFeature D.CONSTRAINT_GENERATION
+		     | "CONSTRAINT_SOLVING" => D.enableDebugFeature D.CONSTRAINT_SOLVING
+		     | str  => raise EH.DeadBranch ("Unrecognised debugging feature: "^str);
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
 	     then basisoverloading:=str

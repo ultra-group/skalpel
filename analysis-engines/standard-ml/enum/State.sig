@@ -29,6 +29,7 @@ signature STATE = sig
 
     type stTv = Ty.ty
     type stTf = Ty.typeFunction
+    type stEq = Ty.equalityType
     type stTn = Ty.typenameType
     type stSq = Ty.rowType
     type stRt = Ty.fieldType
@@ -54,6 +55,7 @@ signature STATE = sig
     (* ACCESS THE UNIFIERS AND ENVS *)
     val getValStateTv      : state -> Ty.typeVar         -> stTv option
     val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
+    val getValStateEq      : state -> Ty.equalityTypeVar        -> stEq option
     val getValStateTn      : state -> Ty.typenameVar     -> stTn option
     val getValStateSq      : state -> Ty.rowVar        -> stSq option
     val getValStateRt      : state -> Ty.fieldVar        -> stRt option
@@ -68,6 +70,7 @@ signature STATE = sig
     (* The second returned value is for incomplete structures.
      * The third  returned value is true if we successfully went down the lid.
      * In the first option, the bool is true if the binding comes from the parameter of a functor. *)
+    (* idva is IdValue, because it's an an value pair. change this name! *)
     val getValStateIdVa    : state -> Id.lid -> bool -> (Env.extVar * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
     val getValStateIdTv    : state -> Id.lid -> bool -> (Env.explicitTypeVar * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
     val getValStateIdTy    : state -> Id.lid -> bool -> (Env.extType * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
@@ -85,6 +88,7 @@ signature STATE = sig
     (* UPDATE THE UNIFIERS AND ENVS *)
     val updateStateTv      : state -> Ty.typeVar         -> stTv -> unit
     val updateStateTf      : state -> Ty.typeFunctionVar        -> stTf -> unit
+    val updateStateEq      : state -> Ty.equalityTypeVar        -> stEq -> unit
     val updateStateTn      : state -> Ty.typenameVar     -> stTn -> unit
     val updateStateSq      : state -> Ty.rowVar        -> stSq -> unit
     val updateStateRt      : state -> Ty.fieldVar        -> stRt -> unit

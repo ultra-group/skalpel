@@ -25,6 +25,16 @@
 structure Debug :> DEBUG = struct
 
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING
+
+(* below are ansi escape sequences, which can be used to colour
+ * the output of text in terminals. Note that not all terminals
+ * support this feature! *)
+val colors={black="\^[[0;30m",red="\^[[0;31m", green="\^[[0;32m", yellow="\^[[0;33m", blue="\^[[0;34m", purple="\^[[0;35m", cyan="\^[[0;36m", white="\^[[0;37m"}
+val boldColors={black="\^[[1;30m",red="\^[[1;31m", green="\^[[1;32m", yellow="\^[[1;33m", blue="\^[[1;34m", purple="\^[[1;35m", cyan="\^[[1;36m", white="\^[[1;37m"}
+val underlineColors={black="\^[[4;30m",red="\^[[4;31m", green="\^[[4;32m", yellow="\^[[4;33m", blue="\^[[4;34m", purple="\^[[4;35m", cyan="\^[[4;36m", white="\^[[4;37m"}
+val backgroundColors={black="\^[[40m",red="\^[[41m", green="\^[[42m", yellow="\^[[43m", blue="\^[[44m", purple="\^[[45m", cyan="\^[[46m", white="\^[[47m"}
+val textReset="\^[[0m"
 
 (* the greater the depth, the more detail the print statements give *)
 val debugUnif    : int ref = ref 0
@@ -38,17 +48,44 @@ val debugRun     : int ref = ref 0
 val debugEnv     : int ref = ref 0
 val debugTest    : int ref = ref 0
 
+val debugEqualityTypes        : bool ref = ref false
+val debugConstraintGeneration : bool ref = ref false
+val debugConstraintSolving    : bool ref = ref false
+
+fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
+  | enableDebugFeature CONSTRAINT_GENERATION = debugConstraintGeneration := true
+  | enableDebugFeature CONSTRAINT_SOLVING = debugConstraintSolving := true
+
 fun setAllDebug value =
-    (debugUnif := value;
+    (debugUnif   := value;
      debugParser := value;
-     debugJson := value;
-     debugLabel:= value;
-     debugTy   := value;
-     debugGrm  := value;
-     debugAze  := value;
-     debugEnv  := value;
-     debugTest  := value;
-     debugRun  := value)
+     debugJson   := value;
+     debugLabel  := value;
+     debugTy     := value;
+     debugGrm    := value;
+     debugAze    := value;
+     debugEnv    := value;
+     debugTest   := value;
+     debugRun    := value)
+
+fun printFilename JSON   = "JsonParser.sml"
+  | printFilename UNIF   = "Unification.sml"
+  | printFilename LABEL  = "Label.sml"
+  | printFilename TY     = "Ty.sml"
+  | printFilename MLGRM  = "ML.grm"
+  | printFilename AZE    = "Analyze.sml"
+  | printFilename RUN    = "Run.sml"
+  | printFilename ENV    = "Env.sml"
+  | printFilename TEST   = "Tester.sml"
+  | printFilename PARSER = "Parser.sml"
+
+(* this s hould later become printDebug and the old printDebug should go away *)
+fun printDebugFeature file EQUALITY_TYPES str =
+    if (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+  | printDebugFeature file CONSTRAINT_GENERATION str =
+    if (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+  | printDebugFeature file CONSTRAINT_SOLVING str =
+    if (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
 
 (* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =

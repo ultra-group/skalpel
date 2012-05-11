@@ -35,9 +35,18 @@ signature DEBUG = sig
 			| ENV      (* Env.sml *)
 			| PARSER   (* Parser.sml *)
 
+    datatype debugFeature = EQUALITY_TYPES
+			  | CONSTRAINT_GENERATION
+			  | CONSTRAINT_SOLVING
+
+    val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string}
+
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit
 
+    val enableDebugFeature : debugFeature -> unit
+
+    val printDebugFeature : debugFiles -> debugFeature -> string -> unit
     val printDebug       : int -> debugFiles -> string -> unit
     val printDebugFunc   : int -> debugFiles -> (unit -> string) -> unit
 

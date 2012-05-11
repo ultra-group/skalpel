@@ -127,7 +127,7 @@ and decomptyty  (T.TYPE_VAR (tv, _, _))         ll deps ids = ([T (tv, ll, deps,
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
   | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _))         ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.APPLICATION (tyf, sq, _))       ll deps ids = ([], 0) (* NOTE: Can a circularity error go through a type/datatype definition? *)
-  | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
+  | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.GEN ty)               ll deps ids = ([], 0) (*(2010-06-23)Isn'y that risky?*)
   | decomptyty  (T.TYPE_DEPENDANCY (t, x, y, z))      ll deps ids = decomptyty t (L.union x ll) (L.union y deps) (CD.union z ids)
 and decomptyfieldlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyfield x ll deps ids)) @ y) [] xs
@@ -266,7 +266,7 @@ fun collapseTf (T.TYPE_FUNCTION_DEPENDANCY (T.TYPE_FUNCTION_DEPENDANCY (tf, labs
 (* This is used for or types *)
 
 fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = gatherAllTnTn tn
-  | gatherAllTnTy (T.TYPE_POLY (sq, _, _, _, _)) = gatherAllTnSq sq
+  | gatherAllTnTy (T.TYPE_POLY (sq, _, _, _, _, _)) = gatherAllTnSq sq
   | gatherAllTnTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnTy ty
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
@@ -300,7 +300,7 @@ and gatherAllTnTn (T.NC (tn, _, l)) =
     end
   | gatherAllTnTn (T.TYPENAME_VAR _) = ([], L.empty, L.empty, CD.empty)
 
-fun isAllTy (T.TYPE_POLY (sq, _, _, _, _)) = isAllSq sq
+fun isAllTy (T.TYPE_POLY (sq, _, _, _, _, _)) = isAllSq sq
   | isAllTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isAllTn tn
   | isAllTy (T.TYPE_DEPENDANCY ety) = isAllTy (EL.getExtLabT ety)
   | isAllTy _ = false
@@ -330,7 +330,7 @@ fun findInOrTy tn path (t as (T.TYPE_CONSTRUCTOR (tnc, _, _))) =
 	 then ([(t, path)], true, true)
 	 else ([], false, false)
        | NONE => ([], true, false))
-  | findInOrTy tn path (T.TYPE_POLY (sq, _, _, _, _)) = findInOrSq tn path sq
+  | findInOrTy tn path (T.TYPE_POLY (sq, _, _, _, _, _)) = findInOrSq tn path sq
   | findInOrTy _ path (t as (T.TYPE_VAR _)) = ([(t, path)], true, false)
   | findInOrTy tn path (T.TYPE_DEPENDANCY ety) = findInOrTy tn path (EL.getExtLabT ety)
   | findInOrTy _ _ _ = ([], true, false)
@@ -379,7 +379,7 @@ fun gotoInOrTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) =
 	      SOME _ => SOME t
 	    | NONE => NONE
      else NONE)
-  | gotoInOrTy path (T.TYPE_POLY (sq, _, _, _, _)) = gotoInOrSq path sq
+  | gotoInOrTy path (T.TYPE_POLY (sq, _, _, _, _, _)) = gotoInOrSq path sq
   | gotoInOrTy path (t as (T.TYPE_VAR _)) =
     if List.null path then SOME t else NONE
   | gotoInOrTy path (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
@@ -412,10 +412,10 @@ and gotoInOrTn (tn as T.NC (name, _, _)) = SOME tn
 
 (* We build the row variable in a OR because in the case of overloading constants
  * These are not already built when dealing with the binder. *)
-fun buildDirectOr (ty as T.TYPE_POLY (T.ROW_VAR sv, idor, poly, kind, lab)) state =
+fun buildDirectOr (ty as T.TYPE_POLY (T.ROW_VAR sv, idor, poly, kind, lab, eq)) state =
     (case S.getValStateSq state sv of
 	 NONE => ty
-       | SOME sq => T.TYPE_POLY (sq, idor, poly, kind, lab))
+       | SOME sq => T.TYPE_POLY (sq, idor, poly, kind, lab, eq))
   | buildDirectOr ty state = ty
 
 
@@ -465,10 +465,10 @@ and selectPathsTy [] ty = NONE
     if List.exists (fn path => List.null path) paths
     then SOME ty
     else NONE
-  | selectPathsTy paths (T.TYPE_POLY (seq, id, poly, kind, lab)) =
+  | selectPathsTy paths (T.TYPE_POLY (seq, id, poly, kind, lab, eq)) =
     (case selectPathsSeq paths seq of
 	 NONE => NONE
-       | SOME seq' => SOME (T.TYPE_POLY (seq', id, poly, kind, lab)))
+       | SOME seq' => SOME (T.TYPE_POLY (seq', id, poly, kind, lab, eq)))
   | selectPathsTy paths (ty as T.TYPE_VAR _) = SOME ty
   | selectPathsTy paths (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
     (case selectPathsTy paths ty of
@@ -492,7 +492,7 @@ and isFullOrField (T.FIELD_VAR _) = false
   | isFullOrField T.FIELD_NO_OVERLOAD = true
 
 and isFullOrTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isFullOrTn tn
-  | isFullOrTy (T.TYPE_POLY (seq, _, _, _, _)) = isFullOrSeq seq
+  | isFullOrTy (T.TYPE_POLY (seq, _, _, _, _, _)) = isFullOrSeq seq
   | isFullOrTy (T.TYPE_DEPENDANCY ety) = isFullOrTy (EL.getExtLabT ety)
   | isFullOrTy _ = false
 
@@ -547,7 +547,7 @@ and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) sq =
        | (list as (x :: _), false) => raise EH.DeadBranch ""
        | ([], true)                => (([(t, path)], true), ([], false), true)
        | ([], false)               => (([], false), ([], false), false))
-  | tryToMatchOrsTy path (T.TYPE_POLY (sq, _, _, _, _)) sq2 = tryToMatchOrsSq path sq sq2
+  | tryToMatchOrsTy path (T.TYPE_POLY (sq, _, _, _, _, _)) sq2 = tryToMatchOrsSq path sq sq2
   | tryToMatchOrsTy path (t as T.TYPE_VAR _) sq2 = (([], false), ([], true), true)
   | tryToMatchOrsTy path (T.TYPE_DEPENDANCY ety) sq2 =
     tryToMatchOrsTy path (EL.getExtLabT ety) sq2
@@ -605,7 +605,7 @@ and freshty (T.TYPE_VAR (tv, b, p))       tvl state bstr =
     if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY)
   | freshty (T.TYPE_CONSTRUCTOR  (tn, sq,   l))    tvl state bstr = T.TYPE_CONSTRUCTOR   (freshTypename tn     state,      freshseqty sq tvl state bstr, l)
   | freshty (T.APPLICATION  (tf, sq,   l))    tvl state bstr = T.APPLICATION   (freshtypeFunction  tf tvl state bstr, freshseqty sq tvl state bstr, l)
-  | freshty (T.TYPE_POLY (sq, i, p, k, l)) tvl state bstr = T.TYPE_POLY  (freshseqty  sq tvl state bstr, if T.isPoly p then F.freshIdOr i state else i, T.MONO, k, l)
+  | freshty (T.TYPE_POLY (sq, i, p, k, l, eq)) tvl state bstr = T.TYPE_POLY  (freshseqty  sq tvl state bstr, if T.isPoly p then F.freshIdOr i state else i, T.MONO, k, l, eq)
   | freshty (T.GEN tys)             tvl state bstr = T.GEN (ref (map (fn ty => freshty ty tvl state bstr) (!tys)))
   | freshty (T.TYPE_DEPENDANCY  ety)             tvl state bstr = T.TYPE_DEPENDANCY (EL.mapExtLab ety (fn ty => freshty ty tvl state bstr))
 
@@ -767,9 +767,9 @@ fun buildty (T.TYPE_VAR (tv, b, p)) state dom bmon monfun =
 	val seqty' = buildseqty seqty state dom bmon monfun
     in T.APPLICATION (typeFunction', seqty', lab)
     end
-  | buildty (T.TYPE_POLY (sq, i, p, k, l)) state dom bmon monfun =
+  | buildty (T.TYPE_POLY (sq, i, p, k, l, eq)) state dom bmon monfun =
     let val sq' = buildseqty sq state dom bmon monfun
-    in T.TYPE_POLY (sq', i, p, k, l)
+    in T.TYPE_POLY (sq', i, p, k, l, eq)
     end
   | buildty (T.GEN tys) state dom bmon monfun =
     let val tys = map (fn ty => buildty ty state dom bmon monfun) (!tys)
@@ -942,7 +942,7 @@ fun getExplicitTyVars vids tyvs state =
 	       then err
 	       else searchSeqTy seqty
 	    end
-	  | searchTy (T.TYPE_POLY (seqty, _, _, _, _)) = searchSeqTy seqty
+	  | searchTy (T.TYPE_POLY (seqty, _, _, _, _, _)) = searchSeqTy seqty
 	  | searchTy (T.GEN ty) = raise EH.TODO "no description, raised in the 'searchTy' function of Unification.sml" (*(2010-06-23)Should be impossible.*)
 	  | searchTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
 	    (case searchTy ty of
@@ -1007,12 +1007,12 @@ fun getExplicitTyVars vids tyvs state =
 			vids
     end
 
-fun getGenTyvars (T.TYPE_VAR (tv, SOME idl, p)) = [idl]
+fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _)) = [idl]
   | getGenTyvars (T.TYPE_VAR _) = []
   | getGenTyvars (T.EXPLICIT_TYPE_VAR _) = []
   | getGenTyvars (T.TYPE_CONSTRUCTOR (_, seq, _)) = getGenTyvarsSeq seq
   | getGenTyvars (T.APPLICATION _) = []
-  | getGenTyvars (T.TYPE_POLY (seq, _, _, _, _)) = getGenTyvarsSeq seq
+  | getGenTyvars (T.TYPE_POLY (seq, _, _, _, _, _)) = getGenTyvarsSeq seq
   | getGenTyvars (T.GEN tys) =
     foldr (fn (ty, tvlabs) => (getGenTyvars ty) @ tvlabs) [] (!tys)
   | getGenTyvars (T.TYPE_DEPENDANCY ety) = getGenTyvars (EL.getExtLabT ety)
@@ -1555,9 +1555,9 @@ fun genTypeFunctionTy (x as T.TYPE_VAR _) _ _ = ([], x)
 	val (cs2, sq') = genTypeFunctionSeqTy sq tfun btyp
     in (cs1 @ cs2, T.APPLICATION (tf', sq', l))
     end
-  | genTypeFunctionTy (T.TYPE_POLY (sq, i, p, k, l)) tfun btyp =
+  | genTypeFunctionTy (T.TYPE_POLY (sq, i, p, k, l, eq)) tfun btyp =
     let val (cs, sq') = genTypeFunctionSeqTy sq tfun btyp
-    in (cs, T.TYPE_POLY (sq', i, p, k, l))
+    in (cs, T.TYPE_POLY (sq', i, p, k, l, eq))
     end
   | genTypeFunctionTy (T.GEN tys) tfun btyp =
     let val (cs, tys) = ListPair.unzip (map (fn ty => genTypeFunctionTy ty tfun btyp) (!tys))
@@ -1723,9 +1723,9 @@ fun applyTypeFunctionTy (x as (T.TYPE_VAR _)) _ _ = ([], x)
 	val (cs2, sq') = applyTypeFunctionSeqTy sq tfun btyp
     in (cs1 @ cs2, T.APPLICATION (tf', sq', l))
     end
-  | applyTypeFunctionTy (T.TYPE_POLY (sq, i, p, k, l)) tfun btyp =
+  | applyTypeFunctionTy (T.TYPE_POLY (sq, i, p, k, l, eq)) tfun btyp =
     let val (cs, sq') = applyTypeFunctionSeqTy sq tfun btyp
-    in (cs, T.TYPE_POLY (sq', i, p, k, l))
+    in (cs, T.TYPE_POLY (sq', i, p, k, l, eq))
     end
   | applyTypeFunctionTy (T.GEN tys) tfun btyp =
     let val (cs, tys) = ListPair.unzip (map (fn ty => applyTypeFunctionTy ty tfun btyp) (!tys))
@@ -2031,7 +2031,7 @@ fun renamety (x as T.TYPE_VAR _) _ = x
   | renamety (x as T.EXPLICIT_TYPE_VAR _) _ = x
   | renamety (T.TYPE_CONSTRUCTOR (tn, sq, l))       state = T.TYPE_CONSTRUCTOR (renametypename tn state, renameseqty sq state, l)
   | renamety (T.APPLICATION (tf, sq, l))       state = T.APPLICATION (renametypfun tf state, renameseqty sq state, l)
-  | renamety (T.TYPE_POLY (sq, i, p, k, l)) state = T.TYPE_POLY (renameseqty sq state, i, p, k, l)
+  | renamety (T.TYPE_POLY (sq, i, p, k, l, eq)) state = T.TYPE_POLY (renameseqty sq state, i, p, k, l, eq)
   | renamety (T.GEN ty)              state = raise EH.TODO "no description, raised in the 'renamety' function of Unification.sml"
   | renamety (T.TYPE_DEPENDANCY ety)              state = T.TYPE_DEPENDANCY (EL.mapExtLab ety (fn ty => renamety ty state))
 and renametypfun (x as T.TYPE_FUNCTION_VAR _) _ = x
@@ -2917,12 +2917,14 @@ fun unif env filters user =
 	(* ====== ACCESSOR SOLVER ====== *)
 
 	and solveacc (E.VALUEID_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "solving a VALUEID_ACCESSOR accessor...";
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
 		 (case S.getValStateIdVa state lid false of
 		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 1";
 		      (* if: - b    is true (coming from the parameter of a functor)
 		       *     - lid  is a long identifier
 		       *     - bind is a type variable
@@ -2938,29 +2940,35 @@ fun unif env filters user =
 						     * In case of completely forbidding to constraint
 						     * bind we can check if it is GEN and then chain
 						     * the GENs. *)
-		      then let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+		      then let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 1a"
+			       val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			   in updateStateTyGen state bind sem labs1 stts0 deps (* returns a unit *)
 			   end
-		      else let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+		      else let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("case 1b: "^(T.printty bind))
+			       val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			       (*val timer = VT.startTimer ()*)
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c1 = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
-			   (*val _     = D.printdebug2 (S.printState state)*)
+			       (* val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "***** PRINTING THE STATE *******" *)
+			       (* val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (S.printState state) *)
 			   (*val _     = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab l ^ "\n" ^ T.printty sem ^ "\n" ^ T.printty bind ^ "\n" ^ T.printty bind2)*)
   		           (*val _     = D.printdebug2 (CL.toString class ^ "\n" ^ CL.toString cl)*)
 			   in fsimplify [c1, c2] l
-			   end
+			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 2";
+		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
 		    | (NONE, _, false) => (* FREE ID *)
-		      handleFreeIdent lid false
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "in this case, it is suspected we have a free identifier";
+		      handleFreeIdent lid false)
 		    | _ => ())
-	       | SOME (lid', false) => ())
+	       | SOME (lid', false) => ()))
 	  | solveacc (E.EXPLICIT_TYPEVAR_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
@@ -3442,7 +3450,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_DEPENDANCY (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
 	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let fun checkTn tnty labs stts deps seq =
 		    case tnty of
@@ -3500,7 +3508,7 @@ fun unif env filters user =
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
 		   end
 	    end
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1), T.TYPE_POLY (sq, _, poly, orKind, _)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1), T.TYPE_POLY (sq, _, poly, orKind, _, _)), ls, deps, ids)) :: cs') l =
 	    let fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
@@ -3521,10 +3529,12 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.FIELD_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
 	  | fsimplify ((E.LABEL_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_POLY (sq1, i1, poly1, orKind1, lab1),
-				   ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2)),
-				  ls, deps, ids)) :: cs') l =
-	    let fun match seq1 seq2 ls deps ids =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_POLY (sq1, i1, poly1, orKind1, lab1, eq1),
+					    ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
+					   ls, deps, ids)) :: cs') l =
+	    let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("solving type constraint of two TYPE_POLY constructors (lab1="^(Int.toString (L.toInt lab1))^", lab2="^(Int.toString (L.toInt lab2))^")...")
+		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving type constraint of two TYPE_POLY constructors (eq1="^(T.printEqualityTypeStatus eq1)^", eq2="^(T.printEqualityTypeStatus eq2)^")...")
+		fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
 			(case (orKind1, orKind2) of
@@ -3587,7 +3597,17 @@ fun unif env filters user =
 				    else ()
 			in fsimplify cs' l
 			end
-	    in case (S.getValStateOr state i1, S.getValStateOr state i2) of
+	    in
+		(if eq1 = eq2
+		 then ()
+		 else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected";
+	  	       let
+	  		   (* need to figure out how to get the labels to the user *)
+ 	  		   val ek    = EK.EqTypeRequired (L.toInt lab1)
+	  		   val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+	  	       in handleSimplify err cs' l
+	  	       end);
+		 case (S.getValStateOr state i1, S.getValStateOr state i2) of
 		   (SOME ([path1], ls1, deps1, ids1), SOME ([path2], ls2, deps2, ids2)) =>
 		   (case (gotoInOrSq path1 sq1, gotoInOrSq path2 sq2) of
 			(SOME t1, SOME t2) =>
@@ -3638,7 +3658,7 @@ fun unif env filters user =
 		   (* The 2 rows are not set yet to a path (a path set),
 		    * so we don't know yet whether they match on at least a type.
 		    * We've got to check that with 'match'. *)
-		   match sq1 sq2 ls deps ids
+		   match sq1 sq2 ls deps ids)
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
@@ -3979,8 +3999,27 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
-	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = raise EH.TODO "equality type pattern (VAR, STATUS), raised in the 'f_simplify' function of Unification.sml"
-	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+	  (* | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = *)
+	  (*   (D.printDebug 1 D.UNIF "Attempting to print the unification state of the types..."; *)
+	  (*    case S.getValStateEq state eqtv of *)
+	  (* 	 NONE => S.updateStateEq state eqtv (T.EQUALITY_TYPE_STATUS status) *)
+	  (*      | SOME (T.EQUALITY_TYPE_STATUS statusInMap) => (D.printDebug 1 D.UNIF "Status already exists!"; *)
+	  (* 						       D.printDebug 1 D.UNIF ("ls = "^(L.toString ls)); *)
+	  (* 						       if statusInMap = status then () *)
+	  (* 						       else *)
+	  (* 							   let *)
+	  (* 							       (* just throwing in any old label for now, need to figure out how to get the labels to the user *) *)
+ 	  (* 							       val ek    = EK.EqTypeRequired ((List.hd (L.toList ls), T.equalityTypeVarToInt eqtv), (L.toInt l, T.equalityTypeVarToInt eqtv)) *)
+	  (* 							       val err   = ERR.consPreError ERR.dummyId ls ids ek deps l *)
+	  (* 							   in handleSimplify err cs' l *)
+	  (* 							   end; *)
+	  (* 						       (print "Equality type error detected!")) *)
+	  (*      | SOME _ => raise EH.TODO "equality type variable in state map mapped to something that wasn't of type Ty.EQUALITY_TYPE_STATUS"; *)
+	  (*    D.printDebug 1 D.UNIF (S.printState state); *)
+	  (*    fsimplify cs' l) *)
+	  (* (* | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l = *) *)
+	  (* (*   raise EH.TODO "constraint solving for two equality type variables not yet implemented, raised in the 'f_simplify' function of Unification.sml" *) *)
+	  (* | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml" *)
 
 	and handleSimplify err xs l =
 	    if bcontinue

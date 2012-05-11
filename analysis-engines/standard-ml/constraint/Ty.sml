@@ -122,7 +122,6 @@ type explicitTypeVar = typeVar ExtLab.extLab
 			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
-
 	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [(S1)*, (S2)*], typeConstructor = (T)*, outerType = (U)*} *)
 	 (* EQTYPE_CONSTRAINT (T)* *)
 	 (* NEQTYPE_CONSTRAINT (T)* *)
@@ -156,6 +155,10 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	 and equalityTypeStatus = EQUALITY_TYPE
 				| NOT_EQUALITY_TYPE
 
+
+	 (* this was used for equality type constraints
+	  * this is possibly no longer going to be used if we are
+	  * going to integrate the constraints into the ty datatype *)
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 
@@ -175,13 +178,14 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * GEN: intersection type
 	  * TYPE_DEPENDANCY: type annotated with dependancies *)
 
+	 (* we actually don't need the equality type status for the TYPE_VAR constructor? Remove this? *)
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
-		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label
-		| APPLICATION            of typeFunction  * rowType * Label.label
-		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label
-		| GEN                    of ty list ref
-		| TYPE_DEPENDANCY        of ty ExtLab.extLab
+		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label
+		| APPLICATION       of typeFunction  * rowType * Label.label
+		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
+		| GEN               of ty list ref
+		| TYPE_DEPENDANCY   of ty ExtLab.extLab
 
          (*------------------------------------------------------------------------*)
 
@@ -345,9 +349,9 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
     end
-  | stripDepsTy (ty as TYPE_POLY (sq, id, p, k, lab)) =
+  | stripDepsTy (ty as TYPE_POLY (sq, id, p, k, lab, eq)) =
     let val (sq', labs, stts, deps) = stripDepsSq sq
-    in (TYPE_POLY (sq', id, p, k, lab), labs, stts, deps)
+    in (TYPE_POLY (sq', id, p, k, lab, eq), labs, stts, deps)
     end
   | stripDepsTy (ty as GEN tyr) =
     let val (tys, labs, stts, deps) =
@@ -572,7 +576,7 @@ fun getTyLab (TYPE_VAR  _)               = NONE
   | getTyLab (EXPLICIT_TYPE_VAR (_, _, l))       = SOME l
   | getTyLab (TYPE_CONSTRUCTOR  (_, _, l))       = SOME l
   | getTyLab (APPLICATION  (_, _, l))       = SOME l
-  | getTyLab (TYPE_POLY (_, _, _, _, l)) = SOME l
+  | getTyLab (TYPE_POLY (_, _, _, _, l, _)) = SOME l
   | getTyLab (GEN _)              = NONE
   | getTyLab (TYPE_DEPENDANCY  _)              = NONE
 
@@ -749,7 +753,7 @@ and getTypeVarsty    (TYPE_VAR  (v, _, _))               = S.insert (S.empty, v,
   | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _))             = getTypeVarstyseq sq
   | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
-  | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _))        = getTypeVarstyseq sq
+  | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _, _))        = getTypeVarstyseq sq
   | getTypeVarsty    (GEN ty)                     = S.empty
   | getTypeVarsty    (TYPE_DEPENDANCY (ty, labs, stts, deps))  = decorateExtTypeVars (getTypeVarsty ty) labs stts deps
 (*and getTypeVarstylist xs = foldr (fn (x, y) => (getTypeVarsty x) @ y) [] xs
@@ -870,7 +874,7 @@ and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
 				    ","    ^ printlabel     l  ^ ")"
   | printseqty (ROW_DEPENDANCY eseq)          = "SD"   ^ EL.printExtLab' eseq printseqty
 
-and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALTY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
+and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
 
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
@@ -890,11 +894,12 @@ and printty (TYPE_VAR (v, b, p))         = "TYPE_VAR("   ^ printTypeVar    v   ^
   | printty (APPLICATION (tf, sq, l))       = "A("   ^ printtyf      tf  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^ ")"
-  | printty (TYPE_POLY (sq, i, p, k, l)) = "TYPE_POLY("  ^ printseqty    sq  ^
+  | printty (TYPE_POLY (sq, i, p, k, l, eq)) = "TYPE_POLY("  ^ printseqty    sq  ^
 				    ","    ^ printidor     i   ^
 				    ","    ^ printPoly     p   ^
 				    ","    ^ printOrKind   k   ^
-				    ","    ^ printlabel    l   ^ ")"
+				    ","    ^ printlabel    l   ^
+				    ","    ^ printEqualityTypeStatus    eq   ^ ")"
   | printty (GEN tys)             = "GEN(" ^ printTyGen    tys ^ ")"
   | printty (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"   ^ EL.printExtLab' ety printty
 and printtylist    xs = printlistgen xs printty
@@ -940,11 +945,12 @@ and printty' (TYPE_VAR (v, b, p))         = "TYPE_VAR("    ^ printTypeVar    v  
   | printty' (APPLICATION (tf, sq, l))       = "A("    ^ printtyf'     tf  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^ ")"
-  | printty' (TYPE_POLY (sq, i, p, k, l)) = "TYPE_POLY("   ^ printseqty'   sq  ^
+  | printty' (TYPE_POLY (sq, i, p, k, l, eq)) = "TYPE_POLY("   ^ printseqty'   sq  ^
 				     ","     ^ printidor     i   ^
 				     ","     ^ printPoly     p   ^
 				     ","     ^ printOrKind   k   ^
-				     ","     ^ printlabel    l   ^ ")"
+				     ","     ^ printlabel    l   ^
+				     ","     ^ printEqualityTypeStatus    eq   ^ ")"
   | printty' (GEN tys)             = "GEN("  ^ printTyGen'  tys  ^ ")"
   | printty' (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"    ^ EL.printExtLab' ety printty'
 and printtylist' tys = printlistgen tys printty'
