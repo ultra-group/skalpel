@@ -471,6 +471,7 @@ fun printConstraints cst =
     printcst cst I.emAssoc (* printocst(List.hd (List.hd(OMC.listItems(cst)))) *)
 
 fun printOneConstraint cst = printocst cst "" I.emAssoc
+fun printOneAccessor   cst = printAcc cst "" I.emAssoc
 
 (* Bindings constructors *)
 
@@ -964,7 +965,7 @@ fun initLabelConstraint x1 x2 lab = LABEL_CONSTRAINT (EL.initExtLab (x1, x2) lab
 fun initEnvConstraint x1 x2 lab = ENV_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 fun initClassConstraint x1 x2 lab = IDENTIFIER_CLASS_CONSTRAINT (EL.initExtLab (x1, x2) lab)
 
-fun genAccIvEm x lab = VALUEID_ACCESSOR (EL.initExtLab x lab)
+fun initValueIDAccessor x lab = VALUEID_ACCESSOR (EL.initExtLab x lab)
 fun genAccIeEm x lab = EXPLICIT_TYPEVAR_ACCESSOR (EL.initExtLab x lab)
 fun genAccItEm x lab = TYPE_CONSTRUCTOR_ACCESSOR (EL.initExtLab x lab)
 fun genAccIoEm x lab = OVERLOADING_CLASSES_ACCESSOR (EL.initExtLab x lab)
@@ -1177,7 +1178,7 @@ fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
 	val singleConstraintList = List.foldl (op @) [] allConstraintValues
 
 	fun findEqualityTypeVars [] = []
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(tyv, _, _), Ty.TYPE_POLY _),_,_,_)::t) =
+	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(tyv, _, _, _), Ty.TYPE_POLY _),_,_,_)::t) =
 	    tyv::(findEqualityTypeVars t)
 	  | findEqualityTypeVars (h::t) = findEqualityTypeVars t
     in
@@ -1186,20 +1187,32 @@ fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
 
 fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) =
     let
+	(* we shouldn't need allConstraintValues, singleConstraintList or makeTypeVarsEquality
+	 * keeping them during testing (2012-05-16) *)
 	(* the list of constraints associated with each key *)
 	val allConstraintValues = OMC.listItems constraints
 
 	(* join all the lists of lists so that it's easier to search through them *)
 	val singleConstraintList = List.foldl (op @) [] allConstraintValues
 
+	fun makeTypeVarsEquality (Ty.TYPE_VAR (tv,extv,poly,_)) = Ty.TYPE_VAR(tv,extv,poly,Ty.EQUALITY_TYPE)
+	  | makeTypeVarsEquality x = x
+
 	fun findEqualityTypeVars [] = []
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c), Ty.TYPE_POLY (d,e,f,g,h,_)),j,k,l)::t) =
+	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),j,k,l)::t) =
 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a)));
-	    (TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c), Ty.TYPE_POLY(d,e,f,g,h,Ty.EQUALITY_TYPE)),j,k,l)::(findEqualityTypeVars t)))
+	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,Ty.EQUALITY_TYPE)),j,k,l)::(findEqualityTypeVars t))
+	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=lab}, l1, l2, cd))::t) =
+	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for an accessor");
+	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=lab},l1,l2,cd))::(findEqualityTypeVars t))
 	  | findEqualityTypeVars (h::t) =
-	    findEqualityTypeVars t
+	    h::(findEqualityTypeVars t)
     in
-	findEqualityTypeVars singleConstraintList
+	(* an old method, this seems to explode the constraint generator in code126.sml*)
+	(*findEqualityTypeVars singleConstraintList*)
+
+	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs)) constraints)
+
     end
 
 

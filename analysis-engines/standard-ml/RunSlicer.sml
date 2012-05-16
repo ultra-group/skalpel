@@ -460,9 +460,12 @@ fun smlTesStrArgs strArgs =
 	     else if option = "-d"
 	     then (dev:="true";
 		   case str of
-		       "EQUALITY_TYPES" => D.enableDebugFeature D.EQUALITY_TYPES
-		     | "CONSTRAINT_GENERATION" => D.enableDebugFeature D.CONSTRAINT_GENERATION
-		     | "CONSTRAINT_SOLVING" => D.enableDebugFeature D.CONSTRAINT_SOLVING
+		       (* note that at this current time, no debugging information is printed for the basis.
+			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
+			* be able to toggle such an option, but for the moment this is simply disabled *)
+		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
+		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
+		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
 		     | str  => raise EH.DeadBranch ("Unrecognised debugging feature: "^str);
 		   outputFilesNeeded := false)
 	     else if option = "-bo"

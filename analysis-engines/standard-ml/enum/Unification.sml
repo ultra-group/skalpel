@@ -123,7 +123,7 @@ fun decomptyfield (T.FIELD_VAR rv)                ll deps ids = ([R (rv, ll, dep
 and decomptysq  (T.ROW_VAR sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
   | decomptysq  (T.ROW_C (rtl, _, _))       ll deps ids = (decomptyfieldlist rtl ll deps ids, 1)
   | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
-and decomptyty  (T.TYPE_VAR (tv, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
+and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
   | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _))         ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.APPLICATION (tyf, sq, _))       ll deps ids = ([], 0) (* NOTE: Can a circularity error go through a type/datatype definition? *)
@@ -592,17 +592,17 @@ and freshtypeFunction (T.TYPE_FUNCTION_VAR tfv)         _   state _    = T.TYPE_
 and freshseqty (T.ROW_VAR var)          _   state _    = T.ROW_VAR (F.freshRowVar var state)
   | freshseqty (T.ROW_C (trl, b, l))  tvl state bstr = T.ROW_C (map (fn rt => freshfieldType rt tvl state bstr) trl, b, l)
   | freshseqty (T.ROW_DEPENDANCY eseq)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
-and freshty (T.TYPE_VAR (tv, b, p))       tvl state bstr =
+and freshty (T.TYPE_VAR (tv, b, p, _))       tvl state bstr =
     (case (tvl, p) of
-	(NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p)
+	(NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.UNKNOWN)
       | (SOME tvl', T.POLY) =>
 	if O.isin (T.typeVarToInt tv) tvl'
-	then T.TYPE_VAR (tv, if bstr then NONE else b, p)
-	else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p)
-      | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
+	then T.TYPE_VAR (tv, if bstr then NONE else b, p, T.UNKNOWN)
+	else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.UNKNOWN)
+      | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO, T.UNKNOWN)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
   | freshty (T.EXPLICIT_TYPE_VAR   (id, tv,   l))  tvl state bstr =
     (*(2010-06-14)bstr is false when we refresh an env when dealing with SIGNATURE_CONSTRAINT*)
-    if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY)
+    if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY, T.UNKNOWN)
   | freshty (T.TYPE_CONSTRUCTOR  (tn, sq,   l))    tvl state bstr = T.TYPE_CONSTRUCTOR   (freshTypename tn     state,      freshseqty sq tvl state bstr, l)
   | freshty (T.APPLICATION  (tf, sq,   l))    tvl state bstr = T.APPLICATION   (freshtypeFunction  tf tvl state bstr, freshseqty sq tvl state bstr, l)
   | freshty (T.TYPE_POLY (sq, i, p, k, l, eq)) tvl state bstr = T.TYPE_POLY  (freshseqty  sq tvl state bstr, if T.isPoly p then F.freshIdOr i state else i, T.MONO, k, l, eq)
@@ -723,9 +723,9 @@ fun buildlabty (T.LABEL_VAR lv) state =
  * - monfun is true if we want to turn all the variables into monomorphic ones.
  *   This is used when a function turns to be monomoprhic.
  *   false is the default value. *)
-fun buildty (T.TYPE_VAR (tv, b, p)) state dom bmon monfun =
+fun buildty (T.TYPE_VAR (tv, b, p, _)) state dom bmon monfun =
     (case (S.getValStateGe state tv, bmon) of
-	 (SOME (_, labs, sts, asmp), false) => T.TYPE_DEPENDANCY (T.TYPE_VAR (tv, b, T.MONO), labs, sts, asmp)
+	 (SOME (_, labs, sts, asmp), false) => T.TYPE_DEPENDANCY (T.TYPE_VAR (tv, b, T.MONO, T.UNKNOWN), labs, sts, asmp)
        (*(2010-08-18)This should not return labs but put it on the type with T.DEP.*)
        | (x, _) => (case S.getValStateTv state tv of
 			NONE =>
@@ -738,7 +738,7 @@ fun buildty (T.TYPE_VAR (tv, b, p)) state dom bmon monfun =
 			     * in StateEnv when pushing an env we should go down the
 			     * structures as well.  This is the proper way to do it. *)
 			    val poly = (*N*)if monfun then T.MONO else poly
-			    val tv   = T.TYPE_VAR (tv, b, poly)
+			    val tv   = T.TYPE_VAR (tv, b, poly, T.UNKNOWN)
 			in case x of
 			       NONE => tv
 			     | SOME (_, labs, stts, deps) => T.TYPE_DEPENDANCY (tv, labs, stts, deps)
@@ -751,7 +751,7 @@ fun buildty (T.TYPE_VAR (tv, b, p)) state dom bmon monfun =
 			end))
   | buildty (T.EXPLICIT_TYPE_VAR (n, tv, lab)) state dom bmon monfun =
     (case (S.getValStateGe state tv, I.isin n dom) of
-	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY)
+	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY, T.UNKNOWN)
        | (NONE, false) => T.EXPLICIT_TYPE_VAR (n, tv, lab)
        | (SOME (_, labs, stts, deps), _) => T.TYPE_DEPENDANCY (T.EXPLICIT_TYPE_VAR (n, tv, lab), labs, stts, deps))
   (*(case (S.getValStateGe state tv, bmon) of
@@ -1007,7 +1007,7 @@ fun getExplicitTyVars vids tyvs state =
 			vids
     end
 
-fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _)) = [idl]
+fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _, _)) = [idl]
   | getGenTyvars (T.TYPE_VAR _) = []
   | getGenTyvars (T.EXPLICIT_TYPE_VAR _) = []
   | getGenTyvars (T.TYPE_CONSTRUCTOR (_, seq, _)) = getGenTyvarsSeq seq
@@ -2155,12 +2155,12 @@ fun buildTypeFunctionAr state (T.TYPE_FUNCTION_VAR tfv) lab labs stts deps =
 
 
 (* Checks if a type variable is already stored in the 'ge' part of the unification env. *)
-fun isInState (T.TYPE_VAR (tv, _, _)) state =
+fun isInState (T.TYPE_VAR (tv, _, _, _)) state =
     S.isInGe state tv
     (*Option.isSome (S.getValStateTv state tv)*)
   | isInState _ _ = false
 
-fun updateStateTyGen state (T.TYPE_VAR (tv, _, _)) ty labs stts deps =
+fun updateStateTyGen state (T.TYPE_VAR (tv, _, _, _)) ty labs stts deps =
     (case S.getValStateTv state tv of
 	 NONE => S.updateStateTv state tv (T.GEN (ref [T.TYPE_DEPENDANCY (ty, labs, stts, deps)]))
        | SOME typ =>
@@ -2916,8 +2916,8 @@ fun unif env filters user =
 
 	(* ====== ACCESSOR SOLVER ====== *)
 
-	and solveacc (E.VALUEID_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "solving a VALUEID_ACCESSOR accessor...";
+	and solveacc (acc as E.VALUEID_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("solving the following VALUEID_ACCESSOR accessor:\n"^(#purple D.colors)^(E.printOneAccessor acc));
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2945,7 +2945,7 @@ fun unif env filters user =
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			   in updateStateTyGen state bind sem labs1 stts0 deps (* returns a unit *)
 			   end
-		      else let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("case 1b: "^(T.printty bind))
+		      else let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("case 1b: "^(#cyan D.colors)^(T.printty bind))
 			       val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			       (*val timer = VT.startTimer ()*)
@@ -2977,7 +2977,7 @@ fun unif env filters user =
 		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind = (bind, b), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY)
+			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY, T.UNKNOWN)
 			  val ty2 = T.consTYPE_VAR (freshTypeVar' bind poly)
 			  (*(2010-06-29) The order in the constraint actually matters to get the
 			   * 'too general in signature' errors.  This needs to be fixed.
@@ -3258,12 +3258,12 @@ fun unif env filters user =
 		    in handleSimplify err cs' l
 		    end
 	    end
-	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1), ty2 as T.TYPE_VAR (tv2, b2, p2)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
 	     let
 		 fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
-			let val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2)
+			let val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq2)
 			    (*val _ = BI.updateMono state tv1 t ls deps ids*)
 			    val _ = if occurs (CT (tv1, t)) [T (tv2, ls, deps, ids)] 0 l
 				    then S.updateStateTv state tv1 (T.TYPE_DEPENDANCY (t, ls, deps, ids))
@@ -3272,7 +3272,7 @@ fun unif env filters user =
 			end
 		      | SOME ty =>
 			let val bop = if Option.isSome b2 then b2 else b1
-			    val t   = T.TYPE_VAR (tv2, bop, p2)
+			    val t   = T.TYPE_VAR (tv2, bop, p2, eq2)
 			    val c   = E.genCstTyAll ty t ls deps ids
 			in fsimplify (c :: cs') l
 	    		end
@@ -3280,7 +3280,7 @@ fun unif env filters user =
 	    in if T.eqTypeVar tv1 tv2
 	       then fsimplify cs' l
 	       else case (b1, b2) of
-			(SOME _, NONE) => fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR (tv2, b2, p2), T.TYPE_VAR (tv1, b1, p1)), ls, deps, ids)) :: cs') l
+			(SOME _, NONE) => fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR (tv2, b2, p2, eq2), T.TYPE_VAR (tv1, b1, p1, eq1)), ls, deps, ids)) :: cs') l
 		      | (SOME (id1, lab1), SOME (id2, lab2)) =>
 			if I.eqId id1 id2
 			then continue ()
@@ -3330,8 +3330,23 @@ fun unif env filters user =
                       let val c = E.genCstSqAll sq (T.ROW_VAR sqv2) ls deps ids
                       in fsimplify (c :: cs') l
                       end)
-	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p), ty), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
+		fun checkForEqualityErrors ty =
+		    case ty of
+			Ty.TYPE_POLY(_,_,_,_,lab,tyEq) => 
+			if eq = tyEq orelse eq = Ty.UNKNOWN orelse tyEq = Ty.UNKNOWN then ()
+			else
+	  		    let
+				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
+				val ek    = EK.EqTypeRequired (L.toInt lab)
+				val err   = ERR.consPreError ERR.dummyId ls ids ek deps lab
+	  		    in handleSimplify err cs' l
+	  		    end
+		      | _ => ()
+
+		val _ = checkForEqualityErrors ty
+
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
@@ -3348,7 +3363,7 @@ fun unif env filters user =
 			in handleSimplify err cs' l
 			end
 		    else ()
-		fun updateFlex (T.TYPE_VAR (tv, NONE, p)) flex = T.TYPE_VAR (tv, flex, p)
+		fun updateFlex (T.TYPE_VAR (tv, NONE, p, eq)) flex = T.TYPE_VAR (tv, flex, p, eq)
 		  | updateFlex (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) flex =
 		    collapseTy (updateFlex ty flex) labs stts deps
 		  | updateFlex ty _ = ty

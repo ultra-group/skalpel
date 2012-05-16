@@ -65,7 +65,7 @@ fun updClass   {id, bind, class, lab, poly} cl   = consBind id bind cl    lab po
 fun updPoly    {id, bind, class, lab, poly} pol  = consBind id bind class lab pol
 
 (* get the type variables from the record *)
-fun getTypeVar {id, bind = T.TYPE_VAR (tv, _, _), class, lab, poly} = SOME tv
+fun getTypeVar {id, bind = T.TYPE_VAR (tv, _, _, _), class, lab, poly} = SOME tv
   | getTypeVar {id, bind, class, lab, poly} =
     (*(2010-07-02) This is not totally safe, we should really return the
      * list of types in bind. *)
