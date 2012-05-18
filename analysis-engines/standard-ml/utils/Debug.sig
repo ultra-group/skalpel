@@ -35,9 +35,13 @@ signature DEBUG = sig
 			| ENV      (* Env.sml *)
 			| PARSER   (* Parser.sml *)
 
+    val debug : bool ref
     datatype debugFeature = EQUALITY_TYPES
 			  | CONSTRAINT_GENERATION
 			  | CONSTRAINT_SOLVING
+
+    val sep1' : string
+    val sep2' : string
 
     val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string}
 

@@ -154,6 +154,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  *)
 	 and equalityTypeStatus = EQUALITY_TYPE
 				| NOT_EQUALITY_TYPE
+				| UNKNOWN
 
 
 	 (* this was used for equality type constraints
@@ -179,7 +180,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * TYPE_DEPENDANCY: type annotated with dependancies *)
 
 	 (* we actually don't need the equality type status for the TYPE_VAR constructor? Remove this? *)
-	 and ty = TYPE_VAR          of typeVar  * extv  * poly
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
 		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label
 		| APPLICATION       of typeFunction  * rowType * Label.label
@@ -438,7 +439,7 @@ and isTypename' (TFC (sq1, TYPE_CONSTRUCTOR (NC (name, _, _), sq2, _), _)) =
     (case eqSeqTy sq1 sq2 of
 	 SOME _ => MAYTYPENAME
        | NONE   => NOTTYPENAME)
-  | isTypename' (TFC (_, TYPE_VAR (_, SOME _, _), _)) = NOTTYPENAME
+  | isTypename' (TFC (_, TYPE_VAR (_, SOME _, _, _), _)) = NOTTYPENAME
   | isTypename' _ = MAYTYPENAME
 
 and eqSeqTy (ROW_VAR sv1) (ROW_VAR sv2) =
@@ -487,7 +488,7 @@ and eqLabTy (LABEL_VAR lv1) (LABEL_VAR lv2) =
     else NONE
   | eqLabTy _ _ = SOME false
 
-and eqTy (TYPE_VAR (tv1, _, _)) (TYPE_VAR (tv2, _, _)) =
+and eqTy (TYPE_VAR (tv1, _, _, _)) (TYPE_VAR (tv2, _, _, _)) =
     if eqTypeVar tv1 tv2
     then SOME true
     else SOME false
@@ -537,7 +538,7 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 			   lab)
 
 (* constructs an implicit type var *)
-fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY)
+fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, UNKNOWN)
 
 (* constructs a row var *)
 fun consROW_VAR  rv  = ROW_VAR rv
@@ -582,7 +583,7 @@ fun getTyLab (TYPE_VAR  _)               = NONE
 
 
 (* Extract the tyvar from a type.  The type as to be a type variable. *)
-fun tyToTypeVar (TYPE_VAR (tv, _, _)) = tv
+fun tyToTypeVar (TYPE_VAR (tv, _, _, _)) = tv
   | tyToTypeVar _ = raise EH.DeadBranch "the type should a var"
 (* Extract the rowVariable from a type row.  The type row as to be a row variable.*)
 fun seqToRowVar (ROW_VAR sv) = sv
@@ -749,7 +750,7 @@ and getTypeVarstyseq (ROW_VAR _)                       = S.empty
 and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
   | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
   | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
-and getTypeVarsty    (TYPE_VAR  (v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
+and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
   | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _))             = getTypeVarstyseq sq
   | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
@@ -793,6 +794,7 @@ fun printEqualityTypeStatus status =
     case status of
 	EQUALITY_TYPE => "EQUALITY_TYPE"
       | NOT_EQUALITY_TYPE => "NOT_EQUALITY_TYPE"
+      | UNKNOWN => "UNKNOWN"
 fun printFieldName   fieldName  = fieldName
 fun printlabel     l   = "l"   ^ L.printLab l
 fun printsmllc     lc  = "\""  ^ lc ^ "\""
@@ -882,9 +884,10 @@ and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTy
 				    ","    ^ printty       ty  ^
 				    ","    ^ printlabel    l   ^ ")"
   | printtyf (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"  ^ EL.printExtLab' etf printtyf
-and printty (TYPE_VAR (v, b, p))         = "TYPE_VAR("   ^ printTypeVar    v   ^
-				    ","    ^ printExplicit b   ^
-				    ","    ^ printPoly     p   ^ ")"
+and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar    v   ^
+						 ","    ^ printExplicit b   ^
+						 ","    ^ printPoly     p   ^
+						 ","   ^ printEqualityTypeStatus eqtv   ^ ")"
   | printty (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("   ^ I.printId     id  ^
 				    ","    ^ printTypeVar    tv  ^
 				    ","    ^ printlabel    l   ^ ")"
@@ -933,9 +936,10 @@ and printtyf' (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR("  ^ print
 				     ","     ^ printty'      ty  ^
 				     ","     ^ printlabel    l   ^ ")"
   | printtyf' (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"   ^ EL.printExtLab' etf printtyf'
-and printty' (TYPE_VAR (v, b, p))         = "TYPE_VAR("    ^ printTypeVar    v   ^
-				     ","     ^ printExplicit b   ^
-				     ","     ^ printPoly     p   ^ ")"
+and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar    v   ^
+						  ","     ^ printExplicit b   ^
+ 						  ","     ^ printPoly     p   ^
+ 						  ","     ^ printEqualityTypeStatus eqtv   ^ ")"
   | printty' (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("    ^ I.printId     id  ^
 				     ","     ^ printTypeVar    tv  ^
 				     ","     ^ printlabel    l   ^ ")"

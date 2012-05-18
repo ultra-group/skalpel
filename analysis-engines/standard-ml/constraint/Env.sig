@@ -372,7 +372,7 @@ signature ENV = sig
     val initEnvConstraint          : env      -> env      -> Label.label -> oneConstraint
     val initClassConstraint        : class    -> class    -> Label.label -> oneConstraint
 
-    val genAccIvEm   : Ty.ty    accid -> Label.label -> accessor
+    val initValueIDAccessor   : Ty.ty    accid -> Label.label -> accessor
     val genAccIeEm   : Ty.typeVar accid -> Label.label -> accessor
     val genAccItEm   : Ty.typeFunction accid -> Label.label -> accessor
     val genAccIoEm   : Ty.rowType accid -> Label.label -> accessor
@@ -383,5 +383,6 @@ signature ENV = sig
     val printEnv     : env    -> string -> string
     val printConstraints : constraints -> string
     val printOneConstraint : oneConstraint -> string
-    val createEqualityTypeConstraints : constraints -> oneConstraint list
+    val printOneAccessor : accessor -> string
+    val createEqualityTypeConstraints : constraints -> constraints
 end

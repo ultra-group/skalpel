@@ -48,6 +48,7 @@ val debugRun     : int ref = ref 0
 val debugEnv     : int ref = ref 0
 val debugTest    : int ref = ref 0
 
+val debug = ref false
 val debugEqualityTypes        : bool ref = ref false
 val debugConstraintGeneration : bool ref = ref false
 val debugConstraintSolving    : bool ref = ref false
@@ -81,11 +82,11 @@ fun printFilename JSON   = "JsonParser.sml"
 
 (* this s hould later become printDebug and the old printDebug should go away *)
 fun printDebugFeature file EQUALITY_TYPES str =
-    if (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+    if (!debug) andalso (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
   | printDebugFeature file CONSTRAINT_GENERATION str =
-    if (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+    if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
   | printDebugFeature file CONSTRAINT_SOLVING str =
-    if (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+    if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
 
 (* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =

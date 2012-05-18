@@ -732,6 +732,8 @@ signature ASTSML = sig
     val getDecPrint        : unit -> bool
     val setDecPrint        : bool -> unit
     val printAstProgs      : progs -> string
+    val printAstLongId     : longid -> string
+    val printAstDec        : dec -> string
     (*val printNonBasProgs   : progs -> string*)
     (*val getpos_progs       : progs        -> Label.labels -> (Label.label * Reg.region list) list*)
     (*val getpos_slprogs     : progs        -> (Label.label * Reg.region list) list*)

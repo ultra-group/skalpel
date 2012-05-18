@@ -169,7 +169,7 @@ fun freshClVar () = let val x = !nextClVar in nextClVar := x + 1; x end
 fun resetClVar () = setNext 0
 
 (* generates a newclass variable *)
-fun newCl () = CLVAR (freshClVar ())
+fun newClassVar () = CLVAR (freshClVar ())
 
 (* classvar -> int *)
 fun classvarToInt classvar = classvar

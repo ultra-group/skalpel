@@ -135,7 +135,7 @@ signature CLASSID = sig
     val consFUNC          : unit -> class
     val consOC            : unit -> class
 
-    val newCl             : unit -> class
+    val newClassVar             : unit -> class
 
     (*val consDATcons       : cons          -> class
     val consREClabs       : OrdSet.labels -> class

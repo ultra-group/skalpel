@@ -76,11 +76,12 @@ signature TY = sig
 
 	 and equalityTypeStatus = EQUALITY_TYPE
 				| NOT_EQUALITY_TYPE
+				| UNKNOWN
 
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 
-	 and ty = TYPE_VAR          of typeVar  * extv  * poly
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
 		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label
 		| APPLICATION            of typeFunction  * rowType * Label.label
