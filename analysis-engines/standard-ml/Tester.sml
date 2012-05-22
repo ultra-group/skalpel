@@ -1186,13 +1186,15 @@ fun compareErrors2 [] [] (true,  id) = ()
   | compareErrors2 [] [] (false, id) = raise CtxtDepTest (Int.toString id)
   | compareErrors2 [] _  (true,  id) = raise BetterTest
   | compareErrors2 [] _  (false, id) = raise CtxtDepTest (Int.toString id)
-  | compareErrors2 ((id, slice, cds, regs) :: xs) ys bid = (D.printDebug 1 D.TEST ("cannot find slice: "^slice);
+  | compareErrors2 ((id, slice, cds, regs) :: xs) ys bid =
     case removeSlice slice ys of
 	(SOME (id', slice', cds', regs'), ys') =>
 	if compareCDS cds cds'
 	then compareErrors2 xs ys' bid
 	else compareErrors2 xs ys' (false, id)
-      | (NONE, _)  => raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
+      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING ("cannot find slice: "^slice^ " in ["^
+							    (List.foldr (op ^) "" ((List.map (fn (id, slice, cds, regs) => slice) ys)))
+							   ^"]"); raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 
 fun compareErrors1 xs ys =
     let val xs1 = map (fn (i, x, y, z) => (i, String.translate transParen x, y, z)) xs

@@ -370,7 +370,7 @@ fun convertToFull file fop fnames =
 		   then createOneErrFileAlready f fop
 		   else (SOME f, [])
 		end
-		handle OS.SysErr (str,_) => (print ("OS.SysErr was raised with string: "^str^"\n");
+		handle OS.SysErr (str,_) => (print ("OS.SysErr was raised with string: \""^str^"\" on file "^file^"\n");
 					     createOneErrFileAccess file fop))
       | _ => createOneErrFileAccess file fop
 

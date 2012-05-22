@@ -1206,11 +1206,12 @@ fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) =
 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for an accessor");
 	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=lab},l1,l2,cd))::(findEqualityTypeVars t))
 	  | findEqualityTypeVars (h::t) =
-	    h::(findEqualityTypeVars t)
+	    (findEqualityTypeVars t)
     in
 	(* an old method, this seems to explode the constraint generator in code126.sml*)
 	(*findEqualityTypeVars singleConstraintList*)
 
+	(* this seems to leave some labels in the map with no key...? *)
 	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs)) constraints)
 
     end

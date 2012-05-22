@@ -25,7 +25,7 @@
 structure Debug :> DEBUG = struct
 
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING
 
 (* below are ansi escape sequences, which can be used to colour
  * the output of text in terminals. Note that not all terminals
@@ -52,10 +52,12 @@ val debug = ref false
 val debugEqualityTypes        : bool ref = ref false
 val debugConstraintGeneration : bool ref = ref false
 val debugConstraintSolving    : bool ref = ref false
+val debugTesting              : bool ref = ref false
 
 fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature CONSTRAINT_GENERATION = debugConstraintGeneration := true
   | enableDebugFeature CONSTRAINT_SOLVING = debugConstraintSolving := true
+  | enableDebugFeature TESTING = debugTesting := true
 
 fun setAllDebug value =
     (debugUnif   := value;
@@ -87,6 +89,9 @@ fun printDebugFeature file EQUALITY_TYPES str =
     if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
   | printDebugFeature file CONSTRAINT_SOLVING str =
     if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+  | printDebugFeature file TESTING str =
+    if (!debug) andalso (!debugTesting) then print ("(TESTING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
+
 
 (* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =

@@ -39,6 +39,7 @@ signature DEBUG = sig
     datatype debugFeature = EQUALITY_TYPES
 			  | CONSTRAINT_GENERATION
 			  | CONSTRAINT_SOLVING
+			  | TESTING
 
     val sep1' : string
     val sep2' : string

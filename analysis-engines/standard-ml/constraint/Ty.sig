@@ -83,7 +83,7 @@ signature TY = sig
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
-		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label
+		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label * equalityTypeStatus
 		| APPLICATION            of typeFunction  * rowType * Label.label
 		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
 		| GEN                    of ty list ref
@@ -229,6 +229,8 @@ signature TY = sig
     val getTypeVarsTy     : ty -> explicitTypeVar list
 
     val stripDepsSq       : rowType -> rowType ExtLab.extLab
+
+    val stripEqualityStatus : ty -> equalityTypeStatus list
 
     val tntyToTyCon       : typenameType -> typename
 

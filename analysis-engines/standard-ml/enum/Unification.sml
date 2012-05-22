@@ -125,7 +125,7 @@ and decomptysq  (T.ROW_VAR sv)                ll deps ids = ([S (sv, ll, deps, i
   | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
 and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
-  | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _))         ll deps ids = decomptysq sq ll deps ids
+  | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _, _))         ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.APPLICATION (tyf, sq, _))       ll deps ids = ([], 0) (* NOTE: Can a circularity error go through a type/datatype definition? *)
   | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.GEN ty)               ll deps ids = ([], 0) (*(2010-06-23)Isn'y that risky?*)
@@ -265,7 +265,7 @@ fun collapseTf (T.TYPE_FUNCTION_DEPENDANCY (T.TYPE_FUNCTION_DEPENDANCY (tf, labs
 
 (* This is used for or types *)
 
-fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = gatherAllTnTn tn
+fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = gatherAllTnTn tn
   | gatherAllTnTy (T.TYPE_POLY (sq, _, _, _, _, _)) = gatherAllTnSq sq
   | gatherAllTnTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnTy ty
@@ -301,7 +301,7 @@ and gatherAllTnTn (T.NC (tn, _, l)) =
   | gatherAllTnTn (T.TYPENAME_VAR _) = ([], L.empty, L.empty, CD.empty)
 
 fun isAllTy (T.TYPE_POLY (sq, _, _, _, _, _)) = isAllSq sq
-  | isAllTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isAllTn tn
+  | isAllTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = isAllTn tn
   | isAllTy (T.TYPE_DEPENDANCY ety) = isAllTy (EL.getExtLabT ety)
   | isAllTy _ = false
 and isAllSq (T.ROW_VAR _) = false
@@ -323,7 +323,7 @@ fun mergeFindInOrLists [] list = list
   | mergeFindInOrLists [(T.TYPE_VAR _, _)] list = list (* list cannot be empty *)
   | mergeFindInOrLists list1 list2 = list1 @ list2
 
-fun findInOrTy tn path (t as (T.TYPE_CONSTRUCTOR (tnc, _, _))) =
+fun findInOrTy tn path (t as (T.TYPE_CONSTRUCTOR (tnc, _, _, _))) =
     (case findInOrTn tnc of
 	 SOME tn' =>
 	 if T.eqTypename tn tn'
@@ -373,7 +373,7 @@ and findInOrTn (T.NC (tn, _, _)) = SOME tn
   | findInOrTn (T.TYPENAME_VAR _) = NONE
   | findInOrTn (T.TYPENAME_DEPENDANCY etn) = findInOrTn (EL.getExtLabT etn)
 
-fun gotoInOrTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) =
+fun gotoInOrTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _, _))) =
     (if List.null path
      then case gotoInOrTn tn of
 	      SOME _ => SOME t
@@ -461,7 +461,7 @@ and selectPathsField [] field = NONE
   | selectPathsField paths T.FIELD_NO_OVERLOAD = SOME T.FIELD_NO_OVERLOAD
 
 and selectPathsTy [] ty = NONE
-  | selectPathsTy paths (ty as T.TYPE_CONSTRUCTOR (tn, seq, lab)) =
+  | selectPathsTy paths (ty as T.TYPE_CONSTRUCTOR (tn, _, _, _)) =
     if List.exists (fn path => List.null path) paths
     then SOME ty
     else NONE
@@ -491,7 +491,7 @@ and isFullOrField (T.FIELD_VAR _) = false
   | isFullOrField (T.FC (_, ty, _)) = isFullOrTy ty
   | isFullOrField T.FIELD_NO_OVERLOAD = true
 
-and isFullOrTy (T.TYPE_CONSTRUCTOR (tn, _, _)) = isFullOrTn tn
+and isFullOrTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = isFullOrTn tn
   | isFullOrTy (T.TYPE_POLY (seq, _, _, _, _, _)) = isFullOrSeq seq
   | isFullOrTy (T.TYPE_DEPENDANCY ety) = isFullOrTy (EL.getExtLabT ety)
   | isFullOrTy _ = false
@@ -541,7 +541,7 @@ fun tryToMatchOrsSq path (T.ROW_VAR _) sq2 = (([], false), ([], true), true)
   | tryToMatchOrsSq path (T.ROW_DEPENDANCY eseq) sq2 =
     tryToMatchOrsSq path (EL.getExtLabT eseq) sq2
 
-and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _))) sq =
+and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _, _))) sq =
     (case tryToMatchOrsTn path tn sq of
 	 (list as (x :: _), true)  => (([(t, path)], true), (list, true), true)
        | (list as (x :: _), false) => raise EH.DeadBranch ""
@@ -603,7 +603,7 @@ and freshty (T.TYPE_VAR (tv, b, p, _))       tvl state bstr =
   | freshty (T.EXPLICIT_TYPE_VAR   (id, tv,   l))  tvl state bstr =
     (*(2010-06-14)bstr is false when we refresh an env when dealing with SIGNATURE_CONSTRAINT*)
     if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY, T.UNKNOWN)
-  | freshty (T.TYPE_CONSTRUCTOR  (tn, sq,   l))    tvl state bstr = T.TYPE_CONSTRUCTOR   (freshTypename tn     state,      freshseqty sq tvl state bstr, l)
+  | freshty (T.TYPE_CONSTRUCTOR  (tn, sq,   l, eq))    tvl state bstr = T.TYPE_CONSTRUCTOR   (freshTypename tn     state,      freshseqty sq tvl state bstr, l, eq)
   | freshty (T.APPLICATION  (tf, sq,   l))    tvl state bstr = T.APPLICATION   (freshtypeFunction  tf tvl state bstr, freshseqty sq tvl state bstr, l)
   | freshty (T.TYPE_POLY (sq, i, p, k, l, eq)) tvl state bstr = T.TYPE_POLY  (freshseqty  sq tvl state bstr, if T.isPoly p then F.freshIdOr i state else i, T.MONO, k, l, eq)
   | freshty (T.GEN tys)             tvl state bstr = T.GEN (ref (map (fn ty => freshty ty tvl state bstr) (!tys)))
@@ -757,10 +757,10 @@ fun buildty (T.TYPE_VAR (tv, b, p, _)) state dom bmon monfun =
   (*(case (S.getValStateGe state tv, bmon) of
 	 (SOME (_, labs, stts, deps), false) => (D.printdebug2 ("(1)"); (T.EXPLICIT_TYPE_VAR (n, tv, lab), labs, stts, deps))
        | _ => (D.printdebug2 ("(2)"); (T.TYPE_VAR (tv, SOME lab, T.POLY), L.empty, L.empty, CD.empty)))*)
-  | buildty (T.TYPE_CONSTRUCTOR (tn, sq, l)) state dom bmon monfun =
+  | buildty (T.TYPE_CONSTRUCTOR (tn, sq, l, eq)) state dom bmon monfun =
     let val tn' = buildtnty  tn state
 	val sq' = buildseqty sq state dom bmon monfun
-    in T.TYPE_CONSTRUCTOR (tn', sq', l)
+    in T.TYPE_CONSTRUCTOR (tn', sq', l, eq)
     end
   | buildty (T.APPLICATION (typeFunction, seqty, lab)) state dom bmon monfun =
     let val typeFunction' = buildtypeFunction typeFunction state dom bmon monfun
@@ -935,7 +935,7 @@ fun getExplicitTyVars vids tyvs state =
 	    if I.isin id dom
 	    then SOME (id, lab, getLabsTyvs id, L.empty, CD.empty)
 	    else NONE
-	  | searchTy (T.TYPE_CONSTRUCTOR (_, seqty, _)) = searchSeqTy seqty
+	  | searchTy (T.TYPE_CONSTRUCTOR (_, seqty, _, _)) = searchSeqTy seqty
 	  | searchTy (T.APPLICATION (typeFunction, seqty, lab)) =
 	    let val err = searchTypeFunction typeFunction
 	    in if Option.isSome err
@@ -1010,7 +1010,7 @@ fun getExplicitTyVars vids tyvs state =
 fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _, _)) = [idl]
   | getGenTyvars (T.TYPE_VAR _) = []
   | getGenTyvars (T.EXPLICIT_TYPE_VAR _) = []
-  | getGenTyvars (T.TYPE_CONSTRUCTOR (_, seq, _)) = getGenTyvarsSeq seq
+  | getGenTyvars (T.TYPE_CONSTRUCTOR (_, seq, _, _)) = getGenTyvarsSeq seq
   | getGenTyvars (T.APPLICATION _) = []
   | getGenTyvars (T.TYPE_POLY (seq, _, _, _, _, _)) = getGenTyvarsSeq seq
   | getGenTyvars (T.GEN tys) =
@@ -1528,13 +1528,13 @@ and getTypeFunctionShaStrEnv strenv strenv' =
 (****************************************)
 fun genTypeFunctionTy (x as T.TYPE_VAR _) _ _ = ([], x)
   | genTypeFunctionTy (x as T.EXPLICIT_TYPE_VAR _) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
-  | genTypeFunctionTy (x as T.TYPE_CONSTRUCTOR (tnc, sq, l)) tfun btyp =
+  | genTypeFunctionTy (x as T.TYPE_CONSTRUCTOR (tnc, sq, l, eq)) tfun btyp =
     (case collapseTn tnc L.empty L.empty CD.empty of
 	 T.TYPENAME_DEPENDANCY (T.NC (tn, _, _), labs, stts, deps) =>
 	 (case OM.find (tfun, T.typenameToInt tn) of
 	      NONE =>
 	      let val (cs, sq') = genTypeFunctionSeqTy sq tfun btyp
-	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l)) end
+	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l, eq)) end
 	    | SOME tyf =>
 	      (case collapseTf (freshTypeFunction tyf btyp) labs stts deps of
 		   T.TYPE_FUNCTION_DEPENDANCY (T.TFC (sq', ty', l'), labs, stts, deps) =>
@@ -1548,7 +1548,7 @@ fun genTypeFunctionTy (x as T.TYPE_VAR _) _ _ = ([], x)
 		 | _ => raise EH.DeadBranch "not a valid type function"))
        | _ =>
 	 let val (cs, sq') = genTypeFunctionSeqTy sq tfun btyp
-	 in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l))
+	 in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l, eq))
 	 end)
   | genTypeFunctionTy (T.APPLICATION (tf, sq, l)) tfun btyp =
     let val (cs1, tf') = genTypeFunctionFunTy tf tfun btyp
@@ -1698,13 +1698,13 @@ fun genTypeFunctionEnv' env state tfun b =
 (************************************************************************)
 fun applyTypeFunctionTy (x as (T.TYPE_VAR _)) _ _ = ([], x)
   | applyTypeFunctionTy (x as (T.EXPLICIT_TYPE_VAR _)) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
-  | applyTypeFunctionTy (x as (T.TYPE_CONSTRUCTOR (tnc, sq, l))) tfun btyp =
+  | applyTypeFunctionTy (x as (T.TYPE_CONSTRUCTOR (tnc, sq, l, eq))) tfun btyp =
     (case collapseTn tnc L.empty L.empty CD.empty of
 	 T.TYPENAME_DEPENDANCY (T.NC (tn, _, _), labs, stts, deps) =>
 	 (case OM.find (tfun, T.typenameToInt tn) of
 	      NONE =>
 	      let val (cs, sq') = applyTypeFunctionSeqTy sq tfun btyp
-	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l)) end
+	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l, eq)) end
 	    | SOME tyf =>
 	      (case collapseTf (freshTypeFunction tyf btyp) labs stts deps of
 		   T.TYPE_FUNCTION_DEPENDANCY (T.TFC (sq', ty', l'), labs, stts, deps) =>
@@ -1717,7 +1717,7 @@ fun applyTypeFunctionTy (x as (T.TYPE_VAR _)) _ _ = ([], x)
 		   end
 		 | _ => raise EH.DeadBranch "not a valid type function"))
        | _ => let val (cs, sq') = applyTypeFunctionSeqTy sq tfun btyp
-	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l)) end)
+	      in (cs, T.TYPE_CONSTRUCTOR (tnc, sq', l, eq)) end)
   | applyTypeFunctionTy (T.APPLICATION (tf, sq, l)) tfun btyp =
     let val (cs1, tf') = applyTypeFunctionFunTy tf tfun btyp
 	val (cs2, sq') = applyTypeFunctionSeqTy sq tfun btyp
@@ -2029,7 +2029,7 @@ fun renametypename (x as T.TYPENAME_VAR _) _ = x
 
 fun renamety (x as T.TYPE_VAR _) _ = x
   | renamety (x as T.EXPLICIT_TYPE_VAR _) _ = x
-  | renamety (T.TYPE_CONSTRUCTOR (tn, sq, l))       state = T.TYPE_CONSTRUCTOR (renametypename tn state, renameseqty sq state, l)
+  | renamety (T.TYPE_CONSTRUCTOR (tn, sq, l, eq))       state = T.TYPE_CONSTRUCTOR (renametypename tn state, renameseqty sq state, l, eq)
   | renamety (T.APPLICATION (tf, sq, l))       state = T.APPLICATION (renametypfun tf state, renameseqty sq state, l)
   | renamety (T.TYPE_POLY (sq, i, p, k, l, eq)) state = T.TYPE_POLY (renameseqty sq state, i, p, k, l, eq)
   | renamety (T.GEN ty)              state = raise EH.TODO "no description, raised in the 'renamety' function of Unification.sml"
@@ -2955,10 +2955,6 @@ fun unif env filters user =
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c1 = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
-			       (* val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "***** PRINTING THE STATE *******" *)
-			       (* val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (S.printState state) *)
-			   (*val _     = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab l ^ "\n" ^ T.printty sem ^ "\n" ^ T.printty bind ^ "\n" ^ T.printty bind2)*)
-  		           (*val _     = D.printdebug2 (CL.toString class ^ "\n" ^ CL.toString cl)*)
 			   in fsimplify [c1, c2] l
 			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
@@ -3160,55 +3156,68 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR (tn1, sq1, l1), T.TYPE_CONSTRUCTOR (tn2, sq2, l2)), ls, deps, ids)) :: cs') l =
-	    (	    if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
-	       orelse
-	       (T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
-	    (* one is a tnv the other one is a -> or a * *)
-	    then (* a typenamevar can never be an arrow or record *)
-		if (T.isArrowTy tn1 andalso T.isDecTy tn1 andalso T.isVarTypename tn2)
-		   orelse
-		   (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isVarTypename tn1)
-		   orelse
-		   (T.isArrowTy tn1 andalso T.isDecTy tn1 andalso T.isExcTy tn2)
-		   orelse
-		   (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isExcTy tn1)
-		then let val ek  = EK.ConsArgNApp (L.toInt l1, L.toInt l2)
-			 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
-		     in handleSimplify err cs' l
-		     end
-		else if (T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isVarTypename tn2)
-			orelse
-			(T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isVarTypename tn1)
-			orelse
-			(T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isExcTy tn2)
-			orelse
-			(T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isExcTy tn1)
-		then let val ek  = EK.ConsNArgApp (L.toInt l1, L.toInt l2)
-			 val err = ERR.consPreError ERR.dummyId ls ids ek deps l
-		     in handleSimplify err cs' l
-		     end
-		else let val name1 = T.tntyToTyCon tn1
-			 val name2 = T.tntyToTyCon tn2
-			 val ek    = EK.TyConsClash ((L.toInt l1, T.typenameToInt name1), (L.toInt l2, T.typenameToInt name2))
-			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
-		     (*
-		      * (2011-02-17) We don't actually need to try to remove l from the error because it
-		      * has to be in the error.  Is that the only one we're sure about?
-		      * Are we not sure that the end points have to be in the error as well?
-		      *)
-		     (*val _ = if T.isVarTypename tn1 orelse T.isVarTypename tn2
-			       then D.printdebug2 ("foo")
-			       else ()*)
-		     (*val _ = D.printdebug2 (S.printState state)*)
-		     in handleSimplify err cs' l
-		     end
-	    else
-		let
-		    val c1 = E.genCstTnAll tn1 tn2 ls deps ids
-		    val c2 = E.genCstSqAll sq1 sq2 ls deps ids
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
+	    (
+	     (* we check that the equality type status of the two type constructors are the same (so they cannot be both EQUALITY_TYPE and NOT_EQUALITY_TYPE)
+	      * however, if one of both of them are unknown then that's acceptable
+	      *)
+	     if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN)
+	     then
+		 let
+		     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify TYPE_CONSTRAINT of TYPE_CONSTRUCTOR and TYPE_CONSTUCTOR)";
+		     val ek    = EK.EqTypeRequired (L.toInt l)
+		     val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+		 in handleSimplify err cs' l
+		 end
+	     else ();
+	     if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
+		orelse
+		(T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
+	     (* one is a tnv the other one is a -> or a * *)
+	     then (* a typenamevar can never be an arrow or record *)
+		 if (T.isArrowTy tn1 andalso T.isDecTy tn1 andalso T.isVarTypename tn2)
+		    orelse
+		    (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isVarTypename tn1)
+		    orelse
+		    (T.isArrowTy tn1 andalso T.isDecTy tn1 andalso T.isExcTy tn2)
+		    orelse
+		    (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isExcTy tn1)
+		 then let val ek  = EK.ConsArgNApp (L.toInt l1, L.toInt l2)
+			  val err = ERR.consPreError ERR.dummyId ls ids ek deps l
+		      in handleSimplify err cs' l
+		      end
+		 else if (T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isVarTypename tn2)
+			 orelse
+			 (T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isVarTypename tn1)
+			 orelse
+			 (T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isExcTy tn2)
+			 orelse
+			 (T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isExcTy tn1)
+		 then let val ek  = EK.ConsNArgApp (L.toInt l1, L.toInt l2)
+			  val err = ERR.consPreError ERR.dummyId ls ids ek deps l
+		      in handleSimplify err cs' l
+		      end
+		 else let val name1 = T.tntyToTyCon tn1
+			  val name2 = T.tntyToTyCon tn2
+			  val ek    = EK.TyConsClash ((L.toInt l1, T.typenameToInt name1), (L.toInt l2, T.typenameToInt name2))
+			  val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+		      (*
+		       * (2011-02-17) We don't actually need to try to remove l from the error because it
+		       * has to be in the error.  Is that the only one we're sure about?
+		       * Are we not sure that the end points have to be in the error as well?
+		       *)
+		      (*val _ = if T.isVarTypename tn1 orelse T.isVarTypename tn2
+				then D.printdebug2 ("foo")
+				else ()*)
+		      (*val _ = D.printdebug2 (S.printState state)*)
+		      in handleSimplify err cs' l
+		      end
+	     else
+		 let
+		     val c1 = E.genCstTnAll tn1 tn2 ls deps ids
+		     val c2 = E.genCstSqAll sq1 sq2 ls deps ids
 		 in
-		    fsimplify (c1 :: c2 :: cs') l
+		     fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC (tn1, b1, l1), T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    (if T.eqTypename tn1 tn2
@@ -3259,8 +3268,8 @@ fun unif env filters user =
 		    end
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
-	     let
-		 fun continue () =
+	    let
+		fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
 			let val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq2)
@@ -3292,12 +3301,12 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n1, tv1, l1), T.EXPLICIT_TYPE_VAR (n2, tv2, l2)), ls, deps, ids)) :: cs') l =
 	    (if I.eqId n1 n2 (*tv1 = tv2*)
-	    then fsimplify cs' l
-	    else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
-		     val err = ERR.consPreError ERR.dummyId ls ids ek deps l
-		 in handleSimplify err cs' l
-		 end)
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1), T.TYPE_CONSTRUCTOR (tn, sq, l2)), ls, deps, ids)) :: cs') l =
+	     then fsimplify cs' l
+	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
+		      val err = ERR.consPreError ERR.dummyId ls ids ek deps l
+		  in handleSimplify err cs' l
+		  end)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1), T.TYPE_CONSTRUCTOR (tn, _, l2, _)), ls, deps, ids)) :: cs') l =
 	    let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps l
 	    in handleSimplify err cs' l
@@ -3332,20 +3341,56 @@ fun unif env filters user =
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
-		fun checkForEqualityErrors ty =
+		(* here when we call checkForEqualityError we shouldn't just be looking for a single thing like TYPE_POLY
+		 * this can be a whole host of items, a big list. We need to go through the list and get all t
+		 *)
+		fun checkForEqualityErrorsOld ty =
 		    case ty of
 			Ty.TYPE_POLY(_,_,_,_,lab,tyEq) => 
-			if eq = tyEq orelse eq = Ty.UNKNOWN orelse tyEq = Ty.UNKNOWN then ()
+			if eq = tyEq orelse tyEq = Ty.UNKNOWN then ()
 			else
 	  		    let
 				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
+				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (the something else turned out to be TYPE_POLY))";
 				val ek    = EK.EqTypeRequired (L.toInt lab)
 				val err   = ERR.consPreError ERR.dummyId ls ids ek deps lab
 	  		    in handleSimplify err cs' l
 	  		    end
-		      | _ => ()
+		      | _ => D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("Didn't get one of the known cases but got instead "^(T.printty ty));
 
-		val _ = checkForEqualityErrors ty
+		fun checkForEqualityErrors ty =
+		    let
+			(* strip all of the equality type statuses out of ty and put them in a list *)
+			val tyEqStatus = T.stripEqualityStatus ty
+
+			(* look through the list and see if any of them contradict the value of eq *)
+			val findEqClash = List.find (fn x => (if x = eq orelse x = T.UNKNOWN then false else true)) tyEqStatus
+		    in
+			case findEqClash of
+			    (* there are no contradicting values, no equality type error here *)
+			    NONE => ()
+
+			  (* there is a contradicting value, there's an equality type error here *)
+			  | SOME x =>
+	  		    let
+				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
+				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ((#red D.colors)
+										     ^"equality type error detected (the something else turned out to be TYPE_POLY). eq is "
+										     ^T.printEqualityTypeStatus eq ^ " and contradicting value was found in "^(T.printty ty));
+				  (* we should take the label by looking at x really, using l is not right here *)
+				val ek    = EK.EqTypeRequired (L.toInt l)
+				val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+	  		    in handleSimplify err cs' l
+	  		    end
+		    end
+
+		val _ = if eq = T.UNKNOWN
+			(* if the equality type status of eq hasn't been determined yet, then there can't possibly be an equality type error *)
+			then ()
+			(* otherwise check ty to see if it has any contradicting equality type status values *)
+			else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("looking for equality type errors in fsimplify TYPE_CONSTRAINT of TYPE_VAR (equality constraint "^(T.printEqualityTypeStatus eq)^") and something else...");
+			      checkForEqualityErrors ty;
+			      D.printDebugFeature D.UNIF D.EQUALITY_TYPES "done")
 
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
@@ -3465,7 +3510,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_DEPENDANCY (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
 	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq)), ls, deps, ids)) :: cs') l =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let fun checkTn tnty labs stts deps seq =
 		    case tnty of
@@ -3503,7 +3548,24 @@ fun unif env filters user =
 								   (L.union stts stts1)
 								   (CD.union deps deps1)
 								   seq
-	    in case S.getValStateOr state idor of
+
+	    in
+		(
+		 (* check for equality type errors
+		  * if both the type constructor and the type poly have their equality type status
+		  * set (that is, they are not UNKNOWN), then they should be the same
+		  *)
+		 if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN)
+		 then
+		     let
+			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTORY and TYPE_POLY)";
+			 val ek    = EK.EqTypeRequired (L.toInt l)
+			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+		     in handleSimplify err cs' l
+		     end
+		 else ();
+
+		case S.getValStateOr state idor of
 		   NONE => checkTn tnty ls deps ids sq'
 		 | SOME ([], _, _, _) => raise EH.DeadBranch ""
 		 | SOME ([path], ls', deps', ids') =>
@@ -3521,7 +3583,7 @@ fun unif env filters user =
 		       val stts0 = L.union deps deps'
 		       val deps0 = CD.union ids ids'
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
-		   end
+		   end)
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1), T.TYPE_POLY (sq, _, poly, orKind, _, _)), ls, deps, ids)) :: cs') l =
 	    let fun getErr () =
@@ -3613,15 +3675,16 @@ fun unif env filters user =
 			in fsimplify cs' l
 			end
 	    in
-		(if eq1 = eq2
+		(if (eq1 = eq2 orelse eq1 = T.UNKNOWN orelse eq2 = T.UNKNOWN)
 		 then ()
-		 else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected";
-	  	       let
-	  		   (* need to figure out how to get the labels to the user *)
- 	  		   val ek    = EK.EqTypeRequired (L.toInt lab1)
-	  		   val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
-	  	       in handleSimplify err cs' l
-	  	       end);
+		 else
+	  	     (let
+			  val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ((#red D.colors)^"equality type error detected!")
+	  		  (* need to figure out how to get the labels to the user *)
+ 	  		  val ek    = EK.EqTypeRequired (L.toInt lab1)
+	  		  val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
+	  	      in handleSimplify err cs' l
+	  	      end);
 		 case (S.getValStateOr state i1, S.getValStateOr state i2) of
 		   (SOME ([path1], ls1, deps1, ids1), SOME ([path2], ls2, deps2, ids2)) =>
 		   (case (gotoInOrSq path1 sq1, gotoInOrSq path2 sq2) of
@@ -3994,8 +4057,20 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.APPLICATION   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_POLY  _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
+
+
 	  (*(2010-06-23)We keep unifying but we should really chain the GENs.*)
-	  (* otherwise we swap the types of the evaluated constraint *)
+
+	  (* here we swapping the order that the constraints come in
+	   * So for example if we are solving an accessor (which happens above) and we get a form that looks like this:
+	   *
+	   * E.TYPE_CONSTRAINT ((T.TYPE_POLY(...), T.TYPE_VAR(...)...))
+	   *
+	   * we have a case to handle such a constraint, but when pattern matching we check for the T.TYPE_VAR coming
+           * before the TYPE_POLY. In order so that we can get to this case, we simply call the function again
+	   * and flip the arguments around.
+	   *
+	   *)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l

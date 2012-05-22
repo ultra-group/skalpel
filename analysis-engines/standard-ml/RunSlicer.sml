@@ -466,6 +466,7 @@ fun smlTesStrArgs strArgs =
 		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
+		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
 		     | str  => raise EH.DeadBranch ("Unrecognised debugging feature: "^str);
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
