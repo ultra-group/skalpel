@@ -872,9 +872,9 @@ fun generateConstraints' prog pack nenv =
 		   (* val allEqualityTypeVars = equalityTypeVars@equalityTypeVars2 *)
 		   (* val equalityConstraints =  List.map (fn eqtv => E.initEqualityTypeConstraint (Ty.consTYPE_VAR eqtv) (Ty.EQUALITY_TYPE_STATUS (Ty.EQUALITY_TYPE)) lab) allEqualityTypeVars *)
 
-		   val equalityConstraints = E.createEqualityTypeConstraints cst1
+		   val equalityConstraints = E.createEqualityTypeConstraints cst1 lab
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints...\n"^(#red D.colors)^(E.printConstraints equalityConstraints))
-		   val equalityConstraints2 = E.createEqualityTypeConstraints cst2
+		   val equalityConstraints2 = E.createEqualityTypeConstraints cst2 lab
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints2...\n"^(#green D.colors)^(E.printConstraints equalityConstraints2))
 
 		   val allConstraints1 = E.unionConstraintsList [cst1, equalityConstraints]

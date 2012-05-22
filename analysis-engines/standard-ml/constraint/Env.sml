@@ -1185,7 +1185,7 @@ fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
 	findEqualityTypeVars singleConstraintList
     end
 
-fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) =
+fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab =
     let
 	(* we shouldn't need allConstraintValues, singleConstraintList or makeTypeVarsEquality
 	 * keeping them during testing (2012-05-16) *)
@@ -1198,21 +1198,21 @@ fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) =
 	fun makeTypeVarsEquality (Ty.TYPE_VAR (tv,extv,poly,_)) = Ty.TYPE_VAR(tv,extv,poly,Ty.EQUALITY_TYPE)
 	  | makeTypeVarsEquality x = x
 
-	fun findEqualityTypeVars [] = []
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),j,k,l)::t) =
+	fun findEqualityTypeVars [] _ = []
+	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),l1,l2,deps)::t) lab =
 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a)));
-	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,Ty.EQUALITY_TYPE)),j,k,l)::(findEqualityTypeVars t))
-	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=lab}, l1, l2, cd))::t) =
+	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,Ty.EQUALITY_TYPE)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab))
+	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab =
 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for an accessor");
-	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=lab},l1,l2,cd))::(findEqualityTypeVars t))
-	  | findEqualityTypeVars (h::t) =
-	    (findEqualityTypeVars t)
+	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab))
+	  | findEqualityTypeVars (h::t) lab =
+	    (findEqualityTypeVars t lab)
     in
 	(* an old method, this seems to explode the constraint generator in code126.sml*)
 	(*findEqualityTypeVars singleConstraintList*)
 
 	(* this seems to leave some labels in the map with no key...? *)
-	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs)) constraints)
+	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs lab)) constraints)
 
     end
 

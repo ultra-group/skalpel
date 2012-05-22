@@ -384,5 +384,5 @@ signature ENV = sig
     val printConstraints : constraints -> string
     val printOneConstraint : oneConstraint -> string
     val printOneAccessor : accessor -> string
-    val createEqualityTypeConstraints : constraints -> constraints
+    val createEqualityTypeConstraints : constraints -> Label.label -> constraints
 end
