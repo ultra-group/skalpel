@@ -1205,6 +1205,9 @@ fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab =
 	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab =
 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for an accessor");
 	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab))
+	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab =
+	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES ("Creating equality constraint for an accessor");
+	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(makeTypeVarsEquality sem),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab))
 	  | findEqualityTypeVars (h::t) lab =
 	    (findEqualityTypeVars t lab)
     in

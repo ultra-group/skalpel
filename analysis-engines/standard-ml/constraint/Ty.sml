@@ -56,7 +56,7 @@ type eqType          = bool
 (* int for typename but string for labcons because not in any environment *)
 type typename     = int (* 1: arrow, 2: record, ... *)
 type fieldName    = string
-type idor       = int
+type idor       = int (* jpirie: give this a meaningful name *)
 (* if we have ... in a record then that makes it flexible, that's called a
  * flexible record pattern. Sometimes just called flex records, it's equivalent
  * to having all the missing fields there with wildcard for pattern inside the
@@ -87,6 +87,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 
     (* ------------------------------------------------------------------------------*)
 
+    (* jpirie: figure out what the 'or' means in 'orKind' *)
     datatype orKind = VALUE of Id.labelledId
 		    | CONSTANT of string * Id.id * Label.label
 
@@ -176,7 +177,8 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  *                         the generalisation
 	  * TYPE_CONSTRUCTOR: type constructor
 	  * APPLICATION: type scheme instantiation (do we need this?)
-	  * TYPE_POLY: polymorphic type. the idor is so that an or type is unique
+	  * TYPE_POLY: polymorphic type. the idor is so that an
+				   jpirie: HUH? "or type" is unique
 	  *            even after freshening. The id is so that we can in case of
 	  *            an overloading type error, report the overloaded id.
 	  * GEN: intersection type
@@ -204,14 +206,12 @@ datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | 
  * is the occurrence which is affected the internal type name as defined by
  * the getTypenameString function (see below). *)
 val typenames = ["unit"     , "int"  , "word" , "real"  , "char", "string",
-	       "substring", "exn"  , "array", "vector", "ref" , "bool"  ,
-	       "option"   , "order", "list" , "frag"]
+		 "substring", "exn"  , "array", "vector", "ref" , "bool"  ,
+		 "option"   , "order", "list" , "frag"]
 
 (* List of the overloading classes as they are called in the Definition
  * of SML.  These are hard coded in the parser. *)
 val ovClasses = ["Int", "Word", "Real", "Char", "String"]
-
-(*val emAssoc = []*)
 
 fun noflex   _ = NONE
 fun consflex l = SOME l
@@ -976,8 +976,7 @@ and printTyGen'  tys = printtylist' (!tys)
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
 fun stripEqualityStatus_fieldType (FIELD_VAR rv)     = []
-  | stripEqualityStatus_fieldType (FC (_, tv, _))   =
-    stripEqualityStatus tv
+  | stripEqualityStatus_fieldType (FC (_, tv, _))   =  stripEqualityStatus tv
   | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,_,_,_)) = stripEqualityStatus_fieldType term
   | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD = []
 
