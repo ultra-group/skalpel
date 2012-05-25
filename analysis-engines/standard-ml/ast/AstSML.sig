@@ -403,6 +403,7 @@ signature ASTSML = sig
 
     and typevar =
 	TypeVar         of string * Id.id * Reg.region * Label.label * next (* the int is a typevar *)
+      |	EqualityTypeVar of string * Id.id * Reg.region * Label.label * next (* the int is a typevar *)
       | TypeVarDots
 
     and typevarseq =

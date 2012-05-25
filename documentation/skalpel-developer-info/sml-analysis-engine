@@ -17,7 +17,7 @@
 ##
 ## Authors: John Pirie
 ## Date: January 2012
-## Description: Contains information about the analysis engine
+## Description: Contains information about the SML analysis engine
 ##
 ################################################################################
 
@@ -41,15 +41,20 @@ Error: /usr/lib/mlton/sml/smlnj-lib/JSON/json-lib.mlb 19.35 File
   /Users/mtf/devel/smlnj/smlnj-110.72/lib/ml-lpt-lib.cm/ml-lpt-lib.mlb
   does not exist.
 
-This is a bug in the MLton compiler library. First, copy the ml-lpt
-folder provided by SML/NJ into /usr/lib/mlton/sml/smlnj-lib/ folder,
-and then change line 19 of the file with the error in it above to
-$(SML_LIB)/smlnj-lib/ml-lpt/lib/ml-lpt-lib.mlb. Now try compiling again.
+This is a bug in a library. First, copy the ml-lpt folder provided in
+the source repository of the SML/NJ compiler into
+/usr/lib/mlton/sml/smlnj-lib/ folder, and then change line 19 of the
+file with the error in it (json-lib.mlb) above to
+$(SML_LIB)/smlnj-lib/ml-lpt/lib/ml-lpt-lib.mlb. Now try compiling
+again.
 
-
+If you cannot compile the analysis engine, and the documentation here
+does not describe the problem you are having, _please_ write some
+documentation explaining the problem and how it can be fixed (if you
+figure that out!).
 
 ================================================================================
-                                  Abbreviations
+                            Abbreviations
 ================================================================================
 
 As few abbreviations should be used as possible should be used in the

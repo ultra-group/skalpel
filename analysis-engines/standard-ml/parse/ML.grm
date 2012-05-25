@@ -1694,7 +1694,7 @@ typevar :
 	let val reg = R.consReg EQTYPEVARleft EQTYPEVARright
 	    val (t, masc) = gettypevar EQTYPEVAR nasc
 	    val _         = D.printDebug 3 D.MLGRM "pattern detected: EQTYPEVAR"
-	in (A.TypeVar (EQTYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
+	in (A.EqualityTypeVar (EQTYPEVAR, t, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
 
 labtypevar :

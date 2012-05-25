@@ -186,7 +186,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 
 	 (* we actually don't need the equality type status for the TYPE_VAR constructor? Remove this? *)
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
-		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
+		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
 		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityTypeStatus
 		| APPLICATION       of typeFunction  * rowType * Label.label
 		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
@@ -579,7 +579,7 @@ fun getTypenameType (TYPE_CONSTRUCTOR (tn, _, _, _)) = SOME tn
 
 (* returns labels from TyLab*)
 fun getTyLab (TYPE_VAR  _)               = NONE
-  | getTyLab (EXPLICIT_TYPE_VAR (_, _, l))       = SOME l
+  | getTyLab (EXPLICIT_TYPE_VAR (_, _, l, _))       = SOME l
   | getTyLab (TYPE_CONSTRUCTOR  (_, _, l, _))       = SOME l
   | getTyLab (APPLICATION  (_, _, l))       = SOME l
   | getTyLab (TYPE_POLY (_, _, _, _, l, _)) = SOME l
@@ -756,7 +756,7 @@ and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
   | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
   | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
 and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
-  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
+  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _, _))             = getTypeVarstyseq sq
   | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
   | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _, _))        = getTypeVarstyseq sq
@@ -893,9 +893,10 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
 						 ","    ^ printExplicit b   ^
 						 ","    ^ printPoly     p   ^
 						 ","   ^ printEqualityTypeStatus eqtv   ^ ")"
-  | printty (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("   ^ I.printId     id  ^
+  | printty (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("   ^ I.printId     id  ^
 				    ","    ^ printTypeVar    tv  ^
-				    ","    ^ printlabel    l   ^ ")"
+				    ","    ^ printlabel    l   ^
+				    ","    ^ printEqualityTypeStatus    eqtv   ^ ")"
   | printty (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR("   ^ printtnty     tn  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^
@@ -946,9 +947,10 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
 						  ","     ^ printExplicit b   ^
  						  ","     ^ printPoly     p   ^
  						  ","     ^ printEqualityTypeStatus eqtv   ^ ")"
-  | printty' (EXPLICIT_TYPE_VAR (id, tv, l))       = "E("    ^ I.printId     id  ^
-				     ","     ^ printTypeVar    tv  ^
-				     ","     ^ printlabel    l   ^ ")"
+  | printty' (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("    ^ I.printId     id  ^
+							   ","     ^ printTypeVar    tv  ^
+							   ","     ^ printlabel    l ^
+ 							   ","     ^ printEqualityTypeStatus eqtv   ^ ")"
   | printty' (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR (" ^ printtnty'    tn  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^

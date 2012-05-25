@@ -1422,6 +1422,7 @@ and getpos_tycon (A.TyCon (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_tycon A.TyConDots _                = []
 
 and getpos_typevar (A.TypeVar (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
+  | getpos_typevar (A.EqualityTypeVar (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_typevar A.TypeVarDots _                = []
 
 and getpos_typevarlist [] _           = []

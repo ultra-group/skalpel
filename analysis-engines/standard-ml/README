@@ -9,45 +9,6 @@
 ~~
 
 ===================================================================
-         HOW TO RUN THE SLICER ON THE TESTCASE DATABASE
-===================================================================
-
-- (1) Go to the implementation/tes-seq directory.
-- (2) Start an SML/NJ session.
-- (3) Load the sources.cm file:  CM.make "sources.cm".
-- (4) Open the Slicer structure: Open Slicer.
-- (5) Run the slicer on the testcase database:
-    checktests list
-  where list is an integer list: the identifiers of the testcases that
-  one wants to check.
-  NOTE:
-    + If the list is empty, the slicer will run on the whole database.
-    + If the list contains 2 identifiers id1 and id2 and id1 < id2
-    then the slicer will run on the testcases that have an identifier
-    between id1 and id2
-    + Otherwise the slicer will run on the testcases provided in the
-    list passed as argument to checktests.
-
-
-===================================================================
-          HOW TO GENERATE A BINARY COMPILED USING MLTON
-===================================================================
-
-If there is no Makefile in the tes-seq directory, run:
-   ./configure
-Then generate the .mlb files from the .cm files by running:
-   make cmtomlb
-Then generate the binary:
-   make mlton-bin
-
-If one has installed the smltes debian package and wants to replace
-the old binary with the new one, the generated binary (called slicer
-and located in implementation/tes-seq/bin in the git repository)
-should be renamed smltes-bin and copied into the /usr/local/bin
-directory.
-
-
-===================================================================
                 SMLTES SPECIAL COMMANDS/COMMENTS
 ===================================================================
 

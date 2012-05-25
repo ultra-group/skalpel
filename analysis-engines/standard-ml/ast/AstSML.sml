@@ -378,7 +378,18 @@ and labtypevar =
   | LabTypeVarDots    of typevar list
 
 and typevar =
+    (* type variable, eg the "'a" in "datatype 'a mydt = x of 'a" *)
     TypeVar         of string * I.id * R.region * L.label * next
+
+  (* an equality type variable. This is the same as a type variable
+   * in the sense that it means any type can go there, but with the
+   * added restriction that the type that is used there must be an
+   * equality type. This is represented with two or more primes for
+   * example "datatype ''a mydt = firstCons of ''a". In such a datatype
+   * firstCons(5) would be typeable, as integers are equality types, but
+   * firstCons((fn _ => 5)) would not be typable, as functions are _not_
+   * and equality type *)
+  | EqualityTypeVar of string * I.id * R.region * L.label * next
   | TypeVarDots
 
 and typevarseq =
@@ -1082,6 +1093,8 @@ and printAstLongTyCon (LongTyConQual (sid, ltc, _, lab, _)) =
   | printAstLongTyCon (LongTyConDots pl) = printAstPartList pl
 
 and printAstTypeVar (TypeVar (st, n, reg, lab, nxt)) =
+    ldots () ^ st ^ rfdots lab
+  | printAstTypeVar (EqualityTypeVar (st, n, reg, lab, nxt)) =
     ldots () ^ st ^ rfdots lab
   | printAstTypeVar TypeVarDots = ldots () ^ dots ^ rdots ()
 
@@ -2852,6 +2865,7 @@ and getTypeFirst (TypeOneVar tv)                      = getTypeVarFirst tv
   | getTypeFirst (TypeDots pl)                        = getPartListFirst pl
 
 and getTypeVarFirst (TypeVar (_, _, _, l, _))         = SOME l
+  | getTypeVarFirst (EqualityTypeVar (_, _, _, l, _)) = SOME l
   | getTypeVarFirst TypeVarDots                       = NONE
 
 and getTypeVarListFirst []                            = NONE

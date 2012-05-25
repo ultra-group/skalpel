@@ -1055,6 +1055,7 @@ fun printSlice' slprog indent sep =
 	  | printTyCon A.TyConDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printTypeVar (A.TypeVar (s, _, r, _, _))         _   = (getLine [r], getLine [r], getCol [r], s)
+	  | printTypeVar (A.EqualityTypeVar (s, _, r, _, _)) _   = (getLine [r], getLine [r], getCol [r], s)
 	  | printTypeVar (A.TypeVarDots)                     _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printTypeVarList []                                _   = (NONE, NONE, NONE, "")
@@ -2879,6 +2880,14 @@ fun slice prog labels =
 		  else if strictLab
 		  then raise EH.DeadBranch (msgOne l ll)
 		  else A.TypeVarDots
+
+		| sl_typevar (A.EqualityTypeVar (s, v, r, l, n)) ll =
+		  if isinone l ll
+		  then A.TypeVar (s, v, r, l, n)
+		  else if strictLab
+		  then raise EH.DeadBranch (msgOne l ll)
+		  else A.TypeVarDots
+
 		| sl_typevar A.TypeVarDots ll =
 		  if isEmptyL ll
 		  then A.TypeVarDots

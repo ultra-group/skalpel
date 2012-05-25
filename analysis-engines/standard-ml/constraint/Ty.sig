@@ -82,7 +82,7 @@ signature TY = sig
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
-                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label
+                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
 		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label * equalityTypeStatus
 		| APPLICATION            of typeFunction  * rowType * Label.label
 		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
