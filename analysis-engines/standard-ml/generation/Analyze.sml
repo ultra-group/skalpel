@@ -1052,9 +1052,15 @@ fun generateConstraints' prog pack nenv =
 		    * when we get to dealing with the A.ConBindOf constructor in another
 		    * function.
 		    *)
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_VAR(T.freshTypeVar(), NONE, T.POLY, T.EQUALITY_TYPE)) lab
 
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
-	       in (SOME id, tv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
+
+	       (* jpirie: I'm adding in the constraint I created above, but two things are using the same label?
+		* is that right? Or is that wrong? Other examples use dummylab?
+		* Maybe that's actually right, look at the debug output for other examples and labels
+		* do seem to sometimes get bound sometimes to two things (usually one of which is an accessor) *)
+	       in (SOME id, tv, (E.consConstraint (lab, c) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))))
 	       end
 	     | f_typevar A.TypeVarDots =
 	       let val tv = T.freshTypeVar ()
@@ -1461,7 +1467,6 @@ fun generateConstraints' prog pack nenv =
 
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for left hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst1))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for right hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst2))
-
 
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("The constraints generated for the type of the datatype constructor are:\n"^(#red D.colors)^(E.printConstraints cst2))
 
