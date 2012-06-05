@@ -40,8 +40,6 @@ signature TY = sig
 
     type explicitTypeVar   = typeVar ExtLab.extLab
 
-    val eqTypeTyVars : typeVar list ref
-
     datatype poly   = POLY
 		    | MONO
 
@@ -231,6 +229,7 @@ signature TY = sig
     val stripDepsSq       : rowType -> rowType ExtLab.extLab
 
     val stripEqualityStatus : ty -> equalityTypeStatus list
+    val stripEqualityStatusList : ty list -> equalityTypeStatus list
 
     val tntyToTyCon       : typenameType -> typename
 

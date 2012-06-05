@@ -233,6 +233,13 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 (*(2010-03-02)not withtype because it is not SML valid and even though SML/NJ
  * does not complain, MLton does.*)
 
+fun getConstraintItems (CONSTRAINTS(map)) = OMC.listItems map
+
+fun stripEqualityStatusFromConstraints [] = []
+  | stripEqualityStatusFromConstraints ((TYPE_CONSTRAINT ((ty1, ty2), l1, l2, cd))::t) =
+    (T.stripEqualityStatusList [ty1,ty2])@(stripEqualityStatusFromConstraints t)
+  | stripEqualityStatusFromConstraints (_::t) = stripEqualityStatusFromConstraints t
+
 type extstr = env bind
 type strenv = env genericEnv
 
@@ -1210,12 +1217,7 @@ fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab =
 	  | findEqualityTypeVars (h::t) lab =
 	    (findEqualityTypeVars t lab)
     in
-	(* an old method, this seems to explode the constraint generator in code126.sml*)
-	(*findEqualityTypeVars singleConstraintList*)
-
-	(* this seems to leave some labels in the map with no key...? *)
 	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs lab)) constraints)
-
     end
 
 

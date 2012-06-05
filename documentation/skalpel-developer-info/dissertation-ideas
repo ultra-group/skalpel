@@ -1,0 +1,11 @@
+Notes from a meeting with Joe (April 2012):
+
+This is a list of some possible ideas for dissertation students that
+was created during the meeting.
+
+Cleaning up of Emacs Lisp
+Looking into the PolyML debugger
+Compiling Skalpel using PolyML, this used to work but no longer does
+Testing Skalpel, eg by writing an implementation of grep in Standard ML
+Extending the testing framework
+Integrating with Smackage

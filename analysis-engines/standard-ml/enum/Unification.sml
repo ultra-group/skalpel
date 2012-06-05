@@ -2955,6 +2955,7 @@ fun unif env filters user =
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c1 = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c2 = "^(E.printOneConstraint c2))
 			   in fsimplify [c1, c2] l
 			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
@@ -3360,7 +3361,7 @@ fun unif env filters user =
 		 *)
 		fun checkForEqualityErrorsOld ty =
 		    case ty of
-			Ty.TYPE_POLY(_,_,_,_,lab,tyEq) => 
+			Ty.TYPE_POLY(_,_,_,_,lab,tyEq) =>
 			if eq = tyEq orelse tyEq = Ty.UNKNOWN then ()
 			else
 	  		    let

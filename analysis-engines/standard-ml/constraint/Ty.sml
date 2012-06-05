@@ -195,10 +195,6 @@ type explicitTypeVar = typeVar ExtLab.extLab
 
 	 (*------------------------------------------------------------------------*)
 
-(* to hold type variables which are constrained to be equality types *)
-(* maybe we should be using CSTxxx for this....*)
-val eqTypeTyVars : typeVar list ref = ref []
-
 datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | NOTTYPENAME
 
 (* List of top level type constructors (builtin type names).
@@ -969,12 +965,6 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
 and printtylist' tys = printlistgen tys printty'
 and printTyGen'  tys = printtylist' (!tys)
 
-(* jpirie: I don't think we need this any more. There are no equaliy type status values to strip from
- *         typenames right? *)
-(* fun stripEqualityStatus_typeName (TYPENAME_VAR _) = [] *)
-(*   | stripEqualityStatus_typeName (NC (tn, k, l)) = printxxx tn *)
-(*   | stripEqualityStatus_typeName (TYPENAME_DEPENDANCY (term, _, _, _)) = stripEqualityStatus_typeName term *)
-
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
 fun stripEqualityStatus_fieldType (FIELD_VAR rv)     = []
@@ -991,7 +981,7 @@ and stripEqualityStatus_sequenceType (ROW_VAR _) = []
  * status here, we should also be returning the label that
  * we get. This will allow us to track the blame correctly *)
 and stripEqualityStatus (TYPE_VAR (_,_,_,eq)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_VAR ("^(printEqualityTypeStatus eq));
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_VAR ("^(printEqualityTypeStatus eq)^")");
      [eq])
   | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from TYPE_CONSTRUCTOR!";
@@ -1002,12 +992,15 @@ and stripEqualityStatus (TYPE_VAR (_,_,_,eq)) =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from APPLICATION!";
      [])
   | stripEqualityStatus (TYPE_POLY(_,_,_,_,_,eq)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq));
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
      [eq])
   | stripEqualityStatus (GEN _) =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from GEN!";
      [])
   | stripEqualityStatus (TYPE_DEPENDANCY (term, _, _, _)) = stripEqualityStatus term
+
+and stripEqualityStatusList [] = [] |
+    stripEqualityStatusList (h::t) = (stripEqualityStatus h)@(stripEqualityStatusList t)
 
 fun printAssoc  xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ st ^ ")")
 fun printAssoc' xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ "\"" ^ st ^ "\"" ^ ")")

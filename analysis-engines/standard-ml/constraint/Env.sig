@@ -184,6 +184,9 @@ signature ENV = sig
 
     (* ====== FUNCTIONS ====== *)
 
+    val getConstraintItems : constraints -> oneConstraint list list
+    val stripEqualityStatusFromConstraints : oneConstraint list -> Ty.equalityTypeStatus list
+
     val resetEnvVar  : unit  -> unit
 
     val freshEnvVar  : unit -> envVar

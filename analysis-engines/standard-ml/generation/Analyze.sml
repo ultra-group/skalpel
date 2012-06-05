@@ -804,8 +804,24 @@ fun generateConstraints' prog pack nenv =
 	     | f_exp (A.ExpApp (exp, atexp, _, _, _, lab, _)) =
 	       let
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
+			       (*here*)
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of application...")
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_exp exp
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^"right hand side of application...")
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_atexp atexp
+
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for left hand side of application...\n"^(#green D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for right hand side of application...\n"^(#red D.colors)^(E.printConstraints cst2))
+
+		   (* look at the right hand side of the application
+		    * does it contain an equality type?
+		    * If yes, then the left hand side (the accessor) should be an equality type also. It's currently
+		    * of UNKNOWN status, so that will need to be removed and NOT_EQUALITY_TYPE put in its place *)
+
+		   val rhsEqualityStatuses = E.stripEqualityStatusFromConstraints (List.foldr (op @) [] (E.getConstraintItems cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION
+					       ("rhsEqualityStatuses = [" ^ (List.foldr (fn (a,b) => (a^", "^b)) "" (List.map T.printEqualityTypeStatus rhsEqualityStatuses)) ^ "]")
+
 		   val tv  = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
 	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
