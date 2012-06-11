@@ -45,6 +45,7 @@ signature DEBUG = sig
     val sep2' : string
 
     val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string}
+    val textReset : string
 
     (* sets all debugging values to the integer value *)
     val setAllDebug : int -> unit

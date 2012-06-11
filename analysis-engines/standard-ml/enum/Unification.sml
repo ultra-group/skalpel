@@ -48,6 +48,8 @@ structure OM  = SplayMapFn(OrdKey)
 structure ERR = Error
 structure D   = Debug
 
+val analysingBasis : bool ref = ref false
+
 (* error shoud be called state or end_state ad S.state should be called context.
  * An error (end_state) is either a success or an error.  Our constraint solver
  * terminates in one of these states.  It terminates in a success state given
@@ -2806,7 +2808,10 @@ fun unif env filters user =
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
-			ENUM => print ("[Skalpel: analysing " ^ file ^ "]\n")
+			ENUM => (print ("[Skalpel: analysing " ^ file ^ "]\n");
+				 if (String.isSubstring "basis.sml" file)
+				 then analysingBasis := true
+				 else analysingBasis := false)
 		      | _    => ()
 		val env1 = solveenv env bmon
 		val b    = E.isEmptyEnv env1
@@ -3353,6 +3358,13 @@ fun unif env filters user =
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
+		val _ = if (not (!analysingBasis))
+			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving the case of TYPE_VAR, which is this: "^
+									  (#purple D.colors)^(T.printty tyv)^(D.textReset)^
+									  " and something else, namely this: "
+									  ^(#cyan D.colors)^(T.printty ty))
+			else ()
+
 		(* here when we call checkForEqualityError we shouldn't just be looking for a single thing like TYPE_POLY
 		 * this can be a whole host of items, a big list. We need to go through the list and get all t
 		 *)
@@ -3570,7 +3582,7 @@ fun unif env filters user =
 		 if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN)
 		 then
 		     let
-			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTORY and TYPE_POLY)";
+			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTOR and TYPE_POLY)";
 			 val ek    = EK.EqTypeRequired (L.toInt l)
 			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps l
 		     in handleSimplify err cs' l
