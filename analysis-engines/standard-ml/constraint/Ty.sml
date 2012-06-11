@@ -865,17 +865,17 @@ fun printOrKind (VALUE labelledId) = "VALUE(" ^ I.printIdL labelledId ^ ")"
 (* functions to print internal types *)
 
 fun printFieldType (FIELD_VAR rv)            = "FIELD_VAR(" ^ printFieldVar rv ^ ")"
-  | printFieldType (FC (lt, tv, l))   = "FC(" ^ printlabty lt ^
+  | printFieldType (FC (lt, tv, l))   = "FIELD_CONSTRUCTION(" ^ printlabty lt ^
 				    ":"   ^ printty    tv ^
 				    ","   ^ printlabel l  ^ ")"
   | printFieldType (FIELD_DEPENDANCY efield)          = "FIELD_DEPENDANCY"  ^ EL.printExtLab' efield printFieldType
   | printFieldType FIELD_NO_OVERLOAD               = "FIELD_NO_OVERLOAD"
 and printfieldtylist xs             = printlistgen xs printFieldType
 and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
-  | printseqty (ROW_C (rl, b, l))    = "ROW_C("  ^ printfieldtylist rl ^
+  | printseqty (ROW_C (rl, b, l))    = "ROW_CONSTRUCTION("  ^ printfieldtylist rl ^
 				    ","    ^ printflex      b  ^
 				    ","    ^ printlabel     l  ^ ")"
-  | printseqty (ROW_DEPENDANCY eseq)          = "SD"   ^ EL.printExtLab' eseq printseqty
+  | printseqty (ROW_DEPENDANCY eseq)          = "ROW_DEPENDANCY"   ^ EL.printExtLab' eseq printseqty
 
 and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
@@ -897,7 +897,7 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^
 				    ","    ^ printEqualityTypeStatus    eq   ^ ")"
-  | printty (APPLICATION (tf, sq, l))       = "A("   ^ printtyf      tf  ^
+  | printty (APPLICATION (tf, sq, l))       = "APPLICATION("   ^ printtyf      tf  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^ ")"
   | printty (TYPE_POLY (sq, i, p, k, l, eq)) = "TYPE_POLY("  ^ printseqty    sq  ^
@@ -917,25 +917,25 @@ and printTyGen tys = printtylist (!tys)
 
 
 fun printtnty' (TYPENAME_VAR tnv)            = "TYPENAME_VAR(" ^ printTypenameVar tnv ^ ")"
-  | printtnty' (NC (tn, k, l))     = "NC(" ^ printTypename' tn ^
+  | printtnty' (NC (tn, k, l))     = "TYPENAME_CONSTRUCTION(" ^ printTypename' tn ^
 				     ","   ^ printKCons   k  ^
 				     ","   ^ printlabel   l  ^ ")"
   | printtnty' (TYPENAME_DEPENDANCY etn)     = "TYPENAME_DEPENDANCY"  ^ EL.printExtLab' etn printtnty'
 
 fun printfieldty' (FIELD_VAR rv)     = "FIELD_VAR(" ^ printFieldVar rv ^ ")"
-  | printfieldty' (FC (lt, tv, l))   = "FC(" ^ printlabty  lt ^
+  | printfieldty' (FC (lt, tv, l))   = "FIELD_CONSTRUCTION(" ^ printlabty  lt ^
 				     ":"   ^ printty'    tv ^
 				     ","   ^ printlabel  l  ^ ")"
   | printfieldty' (FIELD_DEPENDANCY efield)          = "FIELD_DEPENDANCY"  ^ EL.printExtLab' efield printfieldty'
   | printfieldty' FIELD_NO_OVERLOAD                  = "FIELD_NO_OVERLOAD"
 and printfieldtylist' xs = printlistgen xs printfieldty'
 and printseqty' (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar sv ^ ")"
-  | printseqty' (ROW_C (rtl, b, lab))   = "ROW_C(" ^ printfieldtylist' rtl ^
+  | printseqty' (ROW_C (rtl, b, lab))   = "ROW_CONSTRUCTION(" ^ printfieldtylist' rtl ^
 					  ","   ^ printflex       b   ^
 					  ","   ^ printlabel      lab ^ ")"
-  | printseqty' (ROW_DEPENDANCY eseq)   = "SD"  ^ EL.printExtLab' eseq printseqty'
+  | printseqty' (ROW_DEPENDANCY eseq)   = "ROW_DEPENDANCY"  ^ EL.printExtLab' eseq printseqty'
 and printtyf' (TYPE_FUNCTION_VAR v)     = "TYPE_FUNCTION_VAR("  ^ printTypeFunctionVar   v   ^ ")"
-  | printtyf' (TFC (sq, ty, l))         = "TFC("  ^ printseqty'   sq  ^
+  | printtyf' (TFC (sq, ty, l))         = "TYPE_FUNCTION_CONSTRUCTION("  ^ printseqty'   sq  ^
 					  ","     ^ printty'      ty  ^
 					  ","     ^ printlabel    l   ^ ")"
   | printtyf' (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"   ^ EL.printExtLab' etf printtyf'
@@ -980,11 +980,11 @@ and stripEqualityStatus_sequenceType (ROW_VAR _) = []
 (* NOTE: we shouldn't be just returning the equality type
  * status here, we should also be returning the label that
  * we get. This will allow us to track the blame correctly *)
-and stripEqualityStatus (TYPE_VAR (_,_,_,eq)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_VAR ("^(printEqualityTypeStatus eq)^")");
+and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) =
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityTypeStatus eq)^")");
      [eq])
   | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from TYPE_CONSTRUCTOR!";
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!";
      [])
   | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, l, eq)) =
 			 eq::(stripEqualityStatus_sequenceType sequenceType)

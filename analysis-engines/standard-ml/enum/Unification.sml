@@ -2924,7 +2924,6 @@ fun unif env filters user =
 		 (case S.getValStateIdVa state lid false of
 		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 1";
 		      (* if: - b    is true (coming from the parameter of a functor)
 		       *     - lid  is a long identifier
 		       *     - bind is a type variable
@@ -2940,24 +2939,22 @@ fun unif env filters user =
 						     * In case of completely forbidding to constraint
 						     * bind we can check if it is GEN and then chain
 						     * the GENs. *)
-		      then let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 1a"
-			       val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+		      then let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			   in updateStateTyGen state bind sem labs1 stts0 deps (* returns a unit *)
 			   end
-		      else let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("case 1b: "^(#cyan D.colors)^(T.printty bind))
-			       val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+		      else let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			       (*val timer = VT.startTimer ()*)
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c1 = "^(E.printOneConstraint c1))
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ((#cyan D.colors)^"c1 = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c2 = "^(E.printOneConstraint c2))
 			   in fsimplify [c1, c2] l
-			   end)
+			   end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
 		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 2";
 		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)

@@ -805,7 +805,7 @@ fun generateConstraints' prog pack nenv =
 	       let
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
 			       (*here*)
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of application...")
+ 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of application...")
 		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_exp exp
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^"right hand side of application...")
 		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_atexp atexp
@@ -813,14 +813,19 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for left hand side of application...\n"^(#green D.colors)^(E.printConstraints cst1))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for right hand side of application...\n"^(#red D.colors)^(E.printConstraints cst2))
 
-		   (* look at the right hand side of the application
-		    * does it contain an equality type?
-		    * If yes, then the left hand side (the accessor) should be an equality type also. It's currently
-		    * of UNKNOWN status, so that will need to be removed and NOT_EQUALITY_TYPE put in its place *)
-
+		   (* look at the right hand side of the application - does it contain an equality type? *)
 		   val rhsEqualityStatuses = E.stripEqualityStatusFromConstraints (List.foldr (op @) [] (E.getConstraintItems cst2))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION
-					       ("rhsEqualityStatuses = [" ^ (List.foldr (fn (a,b) => (a^", "^b)) "" (List.map T.printEqualityTypeStatus rhsEqualityStatuses)) ^ "]")
+		   val foundEqualityStatus = List.find (fn x => (if x = T.NOT_EQUALITY_TYPE then true else false)) rhsEqualityStatuses
+
+		   val _ = case foundEqualityStatus of
+			       (* no NOT_EQUALITY_TYPE constructor found in the right hand side, carry on *)
+			       NONE => ()
+
+			     (* If yes, then the left hand side (the accessor) should be constrained to be an equality type also.
+			      * It's currently of UNKNOWN status, so that will need to be removed and NOT_EQUALITY_TYPE put in its place *)
+			     | SOME x =>
+			       D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("something being used in an application is not an equaltiy type, propagating the constraint")
+			       val cst1 = E.createEqualityTypeConstraints cst1 lab T.NOT_EQUALITY_TYPE
 
 		   val tv  = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
@@ -893,9 +898,9 @@ fun generateConstraints' prog pack nenv =
 		   (* val allEqualityTypeVars = equalityTypeVars@equalityTypeVars2 *)
 		   (* val equalityConstraints =  List.map (fn eqtv => E.initEqualityTypeConstraint (Ty.consTYPE_VAR eqtv) (Ty.EQUALITY_TYPE_STATUS (Ty.EQUALITY_TYPE)) lab) allEqualityTypeVars *)
 
-		   val equalityConstraints = E.createEqualityTypeConstraints cst1 lab
+		   val equalityConstraints = E.createEqualityTypeConstraints cst1 lab T.EQUALITY_TYPE
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints...\n"^(#red D.colors)^(E.printConstraints equalityConstraints))
-		   val equalityConstraints2 = E.createEqualityTypeConstraints cst2 lab
+		   val equalityConstraints2 = E.createEqualityTypeConstraints cst2 lab T.EQUALITY_TYPE
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints2...\n"^(#green D.colors)^(E.printConstraints equalityConstraints2))
 
 		   val allConstraints1 = E.unionConstraintsList [cst1, equalityConstraints]
@@ -1477,6 +1482,7 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of 'of'...")
 		   (* this is the code to the left hand side of the 'of' (a constructor name) *)
 		   val (tv1, cons, cst1, css1) = f_labid labid
+
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^"right hand side of 'of'...")
 		   (* this is the code to the right hand side of the 'of' (a type) *)
 		   val (tv2, cst2, css2) = f_labtype labtyp
