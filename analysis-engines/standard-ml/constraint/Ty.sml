@@ -606,7 +606,13 @@ fun consTupleTy tyl lab =
     #1 (foldl (fn (x, (xs, n)) => ((FC (conslabty n lab, x, lab)) :: xs, n+1)) ([], 1) tyl)
 
 (* constructors with kinds *)
+
 fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, UNKNOWN)
+(* ************************************************************************
+ * jpirie: DELETE THIS - FOR TESTING ONLY. This WILL break things
+ * ***********************************************************************)
+(*!*) fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE)
+(* ***********************************************************************)
 fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (map (fn x => FIELD_VAR x) tvl, f, lab), lab, UNKNOWN)
 fun constybool'          lab k = TYPE_CONSTRUCTOR (NC (CONSBOOL, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
 fun constyint'           lab k = TYPE_CONSTRUCTOR (NC (CONSINT, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
@@ -838,7 +844,7 @@ fun printFieldVarlist xs = printlistgen xs printFieldVar
 fun printTypeVarList  xs = printlistgen xs printTypeVar
 fun printRowVarList xs = printlistgen xs printRowVar
 
-fun printKCons (DECLARATION_CONS id) = "DE(" ^ I.printId id ^ ")"
+fun printKCons (DECLARATION_CONS id) = "DECLARATION_CONS(" ^ I.printId id ^ ")"
   | printKCons PATTERN_CONS      = "PATTERN"
   | printKCons OTHER_CONS      = "OTHER_CONS"
   | printKCons BUILTIN_BASIS_CONS      = "BUILTIN_BASIS_CONS"
