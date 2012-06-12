@@ -1496,6 +1496,21 @@ fun generateConstraints' prog pack nenv =
 		   val clv1 = CL.newClassVar ()
 		   val clv2 = CL.newClassVar ()
 		   val tv   = T.freshTypeVar ()
+
+		   (* should I generate an equality constraint here? The labels are going to be wrong if I try to use the type constraint,
+		    * beacuse it won't take the ''a or whatever into account. They would be very similar constraints, but the labels would
+		    * indeed have to be different. Is the best way to do this to create an equality constraint here? Might just be! *)
+		   (* ORIGINAL: *)
+		   val eqtv = T.freshEqualityTypeVar()
+		   (* perhaps what should happen here is that we should use T.constyarrow' again but just have a different label set so that
+		    * we get the right errors? Don't know how the unification process would have to be changed for that but would certainly
+		    * have to deal with the solving of this new kind of constraint. Also, the labels that I need are going to need to come
+		    * from both the left and right hand side of the 'of' expression which tv1 and tv2 currently represent respectively.
+		    * Perhaps the return type of f_labid and f_labtype will have to be edited to return equality type variables as well?
+		    * Is this something that should be done?
+		    *)
+		   val equalityConstraint = E.initEqualityConstraint (eqtv, <what constraint?>);
+
 		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow' tv2 tv lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
