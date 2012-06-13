@@ -1063,6 +1063,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_typevar (A.EqualityTypeVar (str, id, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.EqualityTypeVar (f_typevar; str=\""^str^"\")")
 		   val tv = T.freshTypeVar ()
+		   val eqtv = T.freshEqualityTypeVar ()
 
 		   (* jpirie: perhaps some constraint should be built here for equality types
 		    * At the moment this function just does the same as TypeVar, so we
@@ -1073,7 +1074,7 @@ fun generateConstraints' prog pack nenv =
 		    * when we get to dealing with the A.ConBindOf constructor in another
 		    * function.
 		    *)
-		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_VAR(T.freshTypeVar(), NONE, T.POLY, T.EQUALITY_TYPE)) lab
+		   val c   = E.initEqualityTypeConstraint (T.consTYPE_VAR eqtv) (T.consEQUALIY_TYPE_VAR (T.freshEqualityTypeVar(), T.EQUALITY_TYPE)) lab
 
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 
@@ -1502,14 +1503,15 @@ fun generateConstraints' prog pack nenv =
 		    * indeed have to be different. Is the best way to do this to create an equality constraint here? Might just be! *)
 		   (* ORIGINAL: *)
 		   val eqtv = T.freshEqualityTypeVar()
+		   val eqtv2 = T.freshEqualityTypeVar()
 		   (* perhaps what should happen here is that we should use T.constyarrow' again but just have a different label set so that
 		    * we get the right errors? Don't know how the unification process would have to be changed for that but would certainly
 		    * have to deal with the solving of this new kind of constraint. Also, the labels that I need are going to need to come
 		    * from both the left and right hand side of the 'of' expression which tv1 and tv2 currently represent respectively.
 		    * Perhaps the return type of f_labid and f_labtype will have to be edited to return equality type variables as well?
-		    * Is this something that should be done?
-		    *)
-		   val equalityConstraint = E.initEqualityConstraint (eqtv, <what constraint?>);
+		    * Is this something that should be done? *)
+		   val equalityConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consTYPE_VAR tv1) lab
+		   val equalityConstraint2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv2) (T.consTYPE_VAR tv2) lab
 
 		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow' tv2 tv lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab

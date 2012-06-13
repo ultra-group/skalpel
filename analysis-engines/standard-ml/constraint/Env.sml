@@ -213,17 +213,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 			  | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an env with a switch for opaque and translucent *)
 			  | FUNCTOR_CONSTRAINT of evfbind   (* Transform that into an env *)
 			  | SHARING_CONSTRAINT of shabind   (* Transform that into an env *)
-
-			  (* what about just editing the type_constraint datatype constructor or something?
-			   * So when we see 'eqtype int' we generate a constraint for that anyway right? What type of constraint do we generate?
-			   * When finding out what type of constraint we generate, shouldn't we just extend that constraint type?
-			   * Then again, in Analyse we call the function which handles type declarations from A.SpecEqType when we see an equality
-			   * type being declared. So maybe inside A.SpecEqType we should just add another constraint on to show that this type is
-			   * indeed an equality type. When 'adding on' this constraint, should the constraint we add on be the new datatype
-			   * constructor below? Or should we try and change the result that we get back from the constraint that we get back when
-			   * defining a normal type? Think about how constraint solving is gonig to work too, that's also part of the job here
-			   *)
-			  | EQUALITY_TYPE_CONSTRAINT of (T.ty * T.ty) EL.extLab  (* a constraint for equality type checking *)
+			  | EQUALITY_TYPE_CONSTRAINT of (T.equalityType * T.equalityType) EL.extLab  (* a constraint for equality type checking *)
 
 
      and constraints      = CONSTRAINTS of oneConstraint list constraintMap
@@ -445,7 +435,7 @@ and printocst (TYPE_CONSTRAINT x) _ ascid =
   | printocst (ROW_CONSTRAINT x) _ ascid =
     "  ROW_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printseqty') ascid ^ ")"
   | printocst (EQUALITY_TYPE_CONSTRAINT x) _ ascid =
-    "  EQUALITY_TYPE_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
+    "  EQUALITY_TYPE_CONSTAINT(" ^ EL.printExtLab x (fn x => printPair x T.printEqualityType) ascid ^ ")"
   | printocst (FIELD_CONSTRAINT x) _ ascid =
     "  FIELD_CONSTRAINT(" ^ EL.printExtLab x (fn x => printPair x T.printfieldty') ascid ^ ")"
   | printocst (LABEL_CONSTRAINT x) _ ascid =

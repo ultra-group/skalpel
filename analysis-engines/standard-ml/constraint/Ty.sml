@@ -541,11 +541,11 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 (* constructs an implicit type var *)
 fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, UNKNOWN)
 
+(* constructs an equality type variable *)
+fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
+
 (* constructs a row var *)
 fun consROW_VAR  rv  = ROW_VAR rv
-
-(* constructs an equality type var *)
-fun consEQ        VAR  eqtv  = EQUALITY_TYPE_VAR eqtv
 
 (* constructs a field variable *)
 fun consFIELD_VAR  fv  = FIELD_VAR fv
