@@ -276,7 +276,6 @@ fun unzipSix xs = foldr (fn ((x, y, z, w, v, u), (xs, ys, zs, ws, vs, us)) => (x
 (*           CONSTRAINT GENERATION          *)
 (********************************************)
 
-
 fun generateConstraints' prog pack nenv =
     let
 
@@ -1072,8 +1071,7 @@ fun generateConstraints' prog pack nenv =
 		    * seems to be to generate a constraint, which then becomes part of
 		    * cst, and is passed down that way so we can actually see the costraints
 		    * when we get to dealing with the A.ConBindOf constructor in another
-		    * function.
-		    *)
+		    * function. *)
 		   val c   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 
@@ -1543,6 +1541,9 @@ fun generateConstraints' prog pack nenv =
 		   (*val labs = L.cons lab (A.getLabelLabId labid)*)
 		   (*val cons = E.toDA1ValueIds cons labs*)
 	       (* We actually don't need labs to constrain cons to be a DAT. *)
+
+	       (* NOTE - toCLSValueIds seems to have something to do with creating BINDERS
+		* this might be the key to figuring out how that works *)
 	       in (tv, E.toCLSValueIds cons clv1 L.empty, cst', css)
 	       end
 	     | f_conbind (A.ConBindNoOf (ident, _)) =
@@ -3751,12 +3752,12 @@ fun generateConstraints' prog pack nenv =
  * 2 if we want to use the basis.sml environment *)
 fun generateConstraints prog nenv = generateConstraints' prog (I.emAssoc, false) nenv
 
-
 (**************************************)
 (*           'FULL' ANALYZE           *)
 (**************************************)
 
 (* ths integer is as for generateConstraints *)
+
 fun fullConsGen progs ascid nenv =
     let val benv    = case nenv of 1 => true | 2 => true | _ => false
 	val pack1   = (ascid, true)
@@ -3765,6 +3766,5 @@ fun fullConsGen progs ascid nenv =
 	val envcss2 = buildin envcss1 ascid benv
     in envcss2
     end
-
 
 end

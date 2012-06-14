@@ -844,6 +844,7 @@ fun printFieldVarlist xs = printlistgen xs printFieldVar
 fun printTypeVarList  xs = printlistgen xs printTypeVar
 fun printRowVarList xs = printlistgen xs printRowVar
 
+(* KCons means "Kind of constructor" - this name should be changed. *)
 fun printKCons (DECLARATION_CONS id) = "DECLARATION_CONS(" ^ I.printId id ^ ")"
   | printKCons PATTERN_CONS      = "PATTERN"
   | printKCons OTHER_CONS      = "OTHER_CONS"
