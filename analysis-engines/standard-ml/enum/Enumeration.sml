@@ -396,7 +396,7 @@ fun newFreeErr (free as ((id, lab), b)) timer (ast, _, _) =
 	val time = VT.getMilliTime timer
 	val labs = L.singleton lab
 	val ek   = if b then EK.FreeOpen else EK.FreeIdent
-	val err1 = ERR.consPreError id labs CD.empty ek L.empty L.dummyLab
+	val err1 = ERR.consPreError id labs CD.empty ek L.empty
 	val err2 = ERR.setT (ERR.setReg (ERR.setSlice ast err1) true) time
     in err2
     end

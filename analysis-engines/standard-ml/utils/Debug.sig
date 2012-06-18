@@ -40,6 +40,7 @@ signature DEBUG = sig
 			  | CONSTRAINT_GENERATION
 			  | CONSTRAINT_SOLVING
 			  | TESTING
+			  | PARSING
 
     val sep1' : string
     val sep2' : string

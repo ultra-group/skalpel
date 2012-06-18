@@ -46,10 +46,14 @@ type unmerr   = specerr * specerr list * label
 type synerr   = (int list * int) option
 
 (* in the Overload errors, need to add the labels associated with the overloading classes. *)
-(* WARNING: Changing the names of these constructors will break tests in the test database, so
+
+
+(*************************************************************
+ * WARNING: Changing the names of these constructors will break tests in the test database, so
  *          when making any changes to the names of the constructors, changes MUST be made
  *          there also. Furthermore, changes need to be made in JsonParser.sml, which also
- *          has a list of these type constructors *)
+ *          has a list of these type constructors
+ ************************************************************)
 datatype kind = Circularity
 	      | Overload       of iderr  * tnerr * tnerr list (* value iderr overloaded to tnerrlist used on tnerr     *)
 	      | OverloadCst    of idserr * tnerr * tnerr list (* constant idserr overloaded to tnerrlist used on tnerr *)
@@ -76,7 +80,7 @@ datatype kind = Circularity
 	      | ExcIsDat       of synerr
 	      | ConIsVar       of synerr
 	      | DatIsExc       of synerr
-	      | TypeVarBind      of synerr
+	      | TypeVarBind    of synerr
 	      | Warning        of string
 	      | Parsing        of string
 	      | NonFlexWhere   of iderr * iderr

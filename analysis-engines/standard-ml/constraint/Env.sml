@@ -193,6 +193,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 
      and accessor        = VALUEID_ACCESSOR of T.ty accid EL.extLab                       (* value identifiers *)
 			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accid EL.extLab         (* explicit type variables *)
+			 | EQUALITY_TYPE_ACCESSOR of T.equalityType accid EL.extLab       (* explicit type variables *)
 			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accid EL.extLab    (* type constructors *)
 			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accid EL.extLab      (* overloading classes *)
 			 | STRUCTURE_ACCESSOR of env accid EL.extLab                      (* structures *)
@@ -416,6 +417,8 @@ and printAcc (VALUEID_ACCESSOR x) ind ascid =
     "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printty' ind ascid) ascid ^ ")"
   | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid =
     "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printTypeVar ind ascid) ascid ^ ")"
+  | printAcc (EQUALITY_TYPE_ACCESSOR x) ind ascid =
+    "EQUALITY_TYPE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printEqualityType ind ascid) ascid ^ ")"
   | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid =
     "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyf' ind ascid) ascid ^ ")"
   | printAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid =
@@ -934,6 +937,7 @@ and getbindings env = getlabsenv env
 fun genCstAllGen x1 x2 labs sts cds = EL.consExtLab (x1, x2) labs sts cds
 fun genCstTyAll x1 x2 labs sts cds = TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstTfAll x1 x2 labs sts cds = FUNCTION_TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
+fun genCstEqAll x1 x2 labs sts cds = EQUALITY_TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstTnAll x1 x2 labs sts cds = (D.printDebug 3 D.ENV ("in genCstTnAll - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
 						  TYPENAME_CONSTRAINT (genCstAllGen x1 x2 labs sts cds))
 fun genCstSqAll x1 x2 labs sts cds = ROW_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
@@ -964,6 +968,7 @@ fun initClassConstraint x1 x2 lab = IDENTIFIER_CLASS_CONSTRAINT (EL.initExtLab (
 
 fun initValueIDAccessor x lab = VALUEID_ACCESSOR (EL.initExtLab x lab)
 fun genAccIeEm x lab = EXPLICIT_TYPEVAR_ACCESSOR (EL.initExtLab x lab)
+fun initEqualityTypeAccessor x lab = EQUALITY_TYPE_ACCESSOR (EL.initExtLab x lab)
 fun genAccItEm x lab = TYPE_CONSTRUCTOR_ACCESSOR (EL.initExtLab x lab)
 fun genAccIoEm x lab = OVERLOADING_CLASSES_ACCESSOR (EL.initExtLab x lab)
 fun genAccIsEm x lab = STRUCTURE_ACCESSOR (EL.initExtLab x lab)

@@ -345,7 +345,7 @@ fun consErrorNoRB id labs deps ek        =
     consError id labs deps ek initRf initBB initRem initTime initSlice initRegs initMin
 fun consErrorNoR  id labs deps ek rf     =
     consError id labs deps ek rf     initBB initRem initTime initSlice initRegs initMin
-fun consPreError  id labs deps ek rf lab =
+fun consPreError  id labs deps ek rf =
     consError id labs deps ek rf     initBB initRem initTime initSlice initRegs initMin
 
 (* Delete the dummy label *)

@@ -166,6 +166,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * going to integrate the constraints into the ty datatype *)
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
+			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 
 
 	 (*--------------------------------------------------------------------------
@@ -886,6 +887,7 @@ and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
 
 and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
+  | printEqualityType (EQUALITY_TYPE_DEPENDANCY dep) = "EQUALITY_TYPE_DEPENDANCY("  ^ (EL.printExtLab' dep printEqualityType) ^")"
 
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
   | printtyf (TFC (sq, ty, l))    = "TFC(" ^ printseqty    sq  ^

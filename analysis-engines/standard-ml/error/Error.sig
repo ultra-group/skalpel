@@ -119,7 +119,6 @@ signature ERROR = sig
 			   LongId.set        ->
 			   ErrorKind.kind    ->
 			   Label.labels      ->
-			   Label.label       -> (* This label is not used *)
 			   error
 
 

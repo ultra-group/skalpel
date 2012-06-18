@@ -1241,7 +1241,7 @@ fun messageSlow       nb    = "Test "          ^ Int.toString nb ^ " OK but slow
 fun messageOK         nb    = "Test "          ^ Int.toString nb ^ " OK\n"
 fun messageNewer      nb    = "PROBLEM: test " ^ Int.toString nb ^ ": test recorded with a newer SOL\n"
 fun messageDeadBranch nb st = "PROBLEM: test " ^ Int.toString nb ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
-fun messageTodo       nb    = "PROBLEM: test " ^ Int.toString nb ^ ": ********TODO********\n"
+fun messageTodo       nb    = "PROBLEM: test " ^ Int.toString nb ^ ": TODO: "
 
 fun selectTests listtests =
     let val allTests  = getTests ()
@@ -1374,7 +1374,7 @@ fun checktests listtests =
 			| RegsTest         => (plustest badtests;   outputDB (messageRegs       nb)    stout)
 			| TocheckTest      => (plustest checktests; outputDB (messageTocheck    nb)    stout)
 			| EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch nb st) stout)
-			| EH.TODO _          => (plustest todotests;  outputDB (messageTodo       nb)    stout)
+			| EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       nb)^st^"\n")    stout)
 			| NewerTest        => (plustest newertests; outputDB (messageNewer      nb)    stout));
 		  run (nb + 1) xs)
 	val _ = run firsttest tests

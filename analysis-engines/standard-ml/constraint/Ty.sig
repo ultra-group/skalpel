@@ -78,6 +78,7 @@ signature TY = sig
 
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
+			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus

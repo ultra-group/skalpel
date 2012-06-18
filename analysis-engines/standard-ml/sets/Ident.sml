@@ -94,7 +94,11 @@ val dummyId = 0
 val nextid      = ref 1
 fun setnextid n = nextid := n
 fun getid    () = !nextid
-fun freshId  () = let val x = !nextid in (nextid := !nextid + 1; x) end
+fun freshId  () =
+    let
+	val x = !nextid
+    in (nextid := !nextid + 1; x)
+    end
 fun resetIds () = setnextid 1
 
 (* converts id to and from an integer *)
@@ -132,11 +136,13 @@ val emAssoc = {assocId = IS.empty, assocSt = SI.empty}
 (* updates the association. If it's not present, create an insertion *)
 fun updateAssoc str (assoc as {assocId, assocSt}) =
     case SI.find (assocSt, str) of
-	NONE => let val id       = freshId ()
-		    val assocSt' = SI.insert (assocSt, str, id)
-		    val assocId' = IS.insert (assocId, id, str)
-		in (id, {assocId = assocId', assocSt = assocSt'})
-		end
+	NONE =>
+	let
+	    val id       = freshId ()
+	    val assocSt' = SI.insert (assocSt, str, id)
+	    val assocId' = IS.insert (assocId, id, str)
+	in (id, {assocId = assocId', assocSt = assocSt'})
+	end
       | SOME id => (id, assoc)
 
 (* finds an id in the binary tree *)
