@@ -2922,7 +2922,7 @@ fun unif env filters user =
 	(* ====== ACCESSOR SOLVER ====== *)
 
 	and solveacc (acc as E.VALUEID_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("solving the following VALUEID_ACCESSOR accessor:\n"^(#purple D.colors)^(E.printOneAccessor acc));
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving the following VALUEID_ACCESSOR accessor:\n"^(#purple D.colors)^(E.printOneAccessor acc));
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2955,16 +2955,16 @@ fun unif env filters user =
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ((#cyan D.colors)^"c1 = "^(E.printOneConstraint c1))
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan D.colors)^"c1 = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("c2 = "^(E.printOneConstraint c2))
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "c2 = "^(E.printOneConstraint c2))
 			   in fsimplify [c1, c2] l
 			   end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "case 2";
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "case 2");
 		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
 		    | (NONE, _, false) => (* FREE ID *)
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "in this case, it is suspected we have a free identifier";
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "in this case, it is suspected we have a free identifier");
 		      handleFreeIdent lid false)
 		    | _ => ())
 	       | SOME (lid', false) => ()))
@@ -2989,7 +2989,7 @@ fun unif env filters user =
 	       | SOME (lid', false) => ())
 	  | solveacc (E.EQUALITY_TYPE_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    let
-		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "solving an equality type accessor"
+		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor")
 		(* val _ = print ("the state is: "^(S.printState state)^"\n\n\n"); *)
 	    in
 		case filterLid lid filters of
@@ -3196,7 +3196,7 @@ fun unif env filters user =
 	     if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN)
 	     then
 		 let
-		     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify TYPE_CONSTRAINT of TYPE_CONSTRUCTOR and TYPE_CONSTUCTOR)";
+		     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (fsimplify TYPE_CONSTRAINT of TYPE_CONSTRUCTOR and TYPE_CONSTUCTOR)");
 		     val ek    = EK.EqTypeRequired (L.toInt l)
 		     val err   = ERR.consPreError ERR.dummyId ls ids ek deps
 		 in handleSimplify err cs' l
@@ -3331,13 +3331,13 @@ fun unif env filters user =
 		      | _ => continue ()
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n1, tv1, l1, eqtv1), T.EXPLICIT_TYPE_VAR (n2, tv2, l2, eqtv2)), ls, deps, ids)) :: cs') l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING "solving type constraint of two EXPLICIT_TYPE_VAR values";
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving type constraint of two EXPLICIT_TYPE_VAR values");
 	     if I.eqId n1 n2
 	     then
 		 if eqtv1 <> eqtv2 andalso eqtv1 <> T.UNKNOWN andalso eqtv2 <> T.UNKNOWN
 		 then
 		     let
-			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("equality type error detected (eqtv1="
+			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (eqtv1="
 				 ^(T.printEqualityTypeStatus eqtv1)^", eqtv2="^(T.printEqualityTypeStatus eqtv2)^")");
 			 (* jpirie: shouldn't we include l2 in the error here too *)
 			 val ek    = EK.EqTypeRequired (L.toInt l1)
@@ -3387,7 +3387,7 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
 		val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving the case of TYPE_VAR, which is this: "^
+			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving the case of TYPE_VAR, which is this: "^
 									  (#purple D.colors)^(T.printty tyv)^(D.textReset)^
 									  " and something else, namely this: "
 									  ^(#cyan D.colors)^(T.printty ty))
@@ -3403,12 +3403,12 @@ fun unif env filters user =
 			else
 	  		    let
 				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
-				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (the something else turned out to be TYPE_POLY))";
+				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (the something else turned out to be TYPE_POLY))");
 				val ek    = EK.EqTypeRequired (L.toInt lab)
 				val err   = ERR.consPreError ERR.dummyId ls ids ek deps
 	  		    in handleSimplify err cs' l
 	  		    end
-		      | _ => D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("Didn't get one of the known cases but got instead "^(T.printty ty));
+		      | _ => D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Didn't get one of the known cases but got instead "^(T.printty ty));
 
 		fun checkForEqualityErrors ty =
 		    let
@@ -3426,7 +3426,7 @@ fun unif env filters user =
 			  | SOME x =>
 	  		    let
 				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
-				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ((#red D.colors)
+				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => (#red D.colors)
 										     ^"equality type error detected (the something else turned out to be TYPE_POLY). eq is "
 										     ^T.printEqualityTypeStatus eq ^ " and contradicting value was found in "^(T.printty ty));
 				  (* we should take the label by looking at x really, using l is not right here *)
@@ -3440,9 +3440,9 @@ fun unif env filters user =
 			(* if the equality type status of eq hasn't been determined yet, then there can't possibly be an equality type error *)
 			then ()
 			(* otherwise check ty to see if it has any contradicting equality type status values *)
-			else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("looking for equality type errors in fsimplify TYPE_CONSTRAINT of TYPE_VAR (equality constraint "^(T.printEqualityTypeStatus eq)^") and something else...");
+			else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "looking for equality type errors in fsimplify TYPE_CONSTRAINT of TYPE_VAR (equality constraint "^(T.printEqualityTypeStatus eq)^") and something else...");
 			      checkForEqualityErrors ty;
-			      D.printDebugFeature D.UNIF D.EQUALITY_TYPES "done")
+			      D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "done"))
 
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
@@ -3608,7 +3608,7 @@ fun unif env filters user =
 		 if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN)
 		 then
 		     let
-			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTOR and TYPE_POLY)";
+			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTOR and TYPE_POLY)")
 			 val ek    = EK.EqTypeRequired (L.toInt l)
 			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps
 		     in handleSimplify err cs' l
@@ -3656,7 +3656,7 @@ fun unif env filters user =
 		   if eqtv1 <> eqtv2 andalso eqtv1 <> T.UNKNOWN andalso eqtv2 <> T.UNKNOWN
 		   then
 		       let
-			   val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("equality type error detected (eqtv1="
+			   val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (eqtv1="
 										^(T.printEqualityTypeStatus eqtv1)^", eqtv2="^(T.printEqualityTypeStatus eqtv2)^")");
 			   (* jpirie: shouldn't we include l2 in the error here too *)
 			   val ek    = EK.EqTypeRequired (L.toInt l1)
@@ -3672,8 +3672,8 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_POLY (sq1, i1, poly1, orKind1, lab1, eq1),
 					    ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
 					   ls, deps, ids)) :: cs') l =
-	    let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING ("solving type constraint of two TYPE_POLY constructors (lab1="^(Int.toString (L.toInt lab1))^", lab2="^(Int.toString (L.toInt lab2))^")...")
-		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving type constraint of two TYPE_POLY constructors (eq1="^(T.printEqualityTypeStatus eq1)^", eq2="^(T.printEqualityTypeStatus eq2)^")...")
+	    let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving type constraint of two TYPE_POLY constructors (lab1="^(Int.toString (L.toInt lab1))^", lab2="^(Int.toString (L.toInt lab2))^")...")
+		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving type constraint of two TYPE_POLY constructors (eq1="^(T.printEqualityTypeStatus eq1)^", eq2="^(T.printEqualityTypeStatus eq2)^")...")
 		fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
@@ -3742,7 +3742,7 @@ fun unif env filters user =
 		 then ()
 		 else
 	  	     (let
-			  val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ((#red D.colors)^"equality type error detected!")
+			  val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => (#red D.colors)^"equality type error detected!")
 	  		  (* need to figure out how to get the labels to the user *)
  	  		  val ek    = EK.EqTypeRequired (L.toInt lab1)
 	  		  val err   = ERR.consPreError ERR.dummyId ls ids ek deps
@@ -4152,10 +4152,14 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+
+
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, T.EQUALITY_TYPE_DEPENDANCY  (eq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
 	    let
 		val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving an equality type constraint of "^(#red D.colors)
+			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red D.colors)
 	  								  ^ T.printEqualityType(equalityTypeVar)^D.textReset^" and "^(#green D.colors)
 	  								  ^ T.printEqualityType(equalityTypeStatus))
 			else ()
@@ -4170,19 +4174,27 @@ fun unif env filters user =
 	  	     else
 	  		 let
 	  		     (* just throwing in any old label for now, need to figure out how to get the labels to the user *)
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("Equality type error detected. Label information: l = "^(L.printLab l)^", ls = "^(L.toString ls))
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^", ls = "^(L.toString ls))
  	  		     val ek   = EK.EqTypeRequired (L.toInt l)
 			     val err  = ERR.consPreError ERR.dummyId ls ids ek deps
 	  		 in handleSimplify err cs' l
 	  		 end
 	  	    )
-		  | SOME _ => raise EH.TODO "equality type variable in state map mapped to something that wasn't of type Ty.EQUALITY_TYPE_STATUS"
+		  | SOME (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, labs, stts, cd)) =>
+		    let
+			(* jpirie: what about stts and deps? Should these be combined somehow? *)
+			val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.union labs ls, deps, ids)
+		    (* jpirie: what about putting the new status in the map? *)
+		    in
+			fsimplify (c::cs') l
+		    end
+		  | SOME _ => raise EH.TODO "got something in the equality status map that isn't handled!"
 	    end
 
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, equalityTypeVar2 as T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l =
 	    let
 	  	val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES ("solving an equality type constraint of "^(#red D.colors)
+			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red D.colors)
 	  								  ^ T.printEqualityType(equalityTypeVar1)^D.textReset^" and "^(#green D.colors)
 	  								  ^ T.printEqualityType(equalityTypeVar2))
 			else ()
@@ -4190,14 +4202,32 @@ fun unif env filters user =
 	  	if T.eqEqualityTypeVar eqtv1 eqtv2
 	  	then fsimplify cs' l (* should this actually *ever* happen? *)
 	  	else
-		    case S.getValStateEq state eqtv1 of
+		    case S.getValStateEq state eqtv2 of
+			(* equality type status is not in the map *)
 			NONE =>
 			let
-			    val _ = S.updateStateEq state eqtv1 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar2, ls, deps, ids))
+			    val _ = case S.getValStateEq state eqtv1 of
+					(* we haven't seen either of these equality type variables before. Put the first one in the map here,
+					 * and then we'll create a dependancy from the second to the first *)
+					NONE =>
+					(S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_STATUS T.UNKNOWN);
+					 S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids)))
+
+				      (* the first equality type variable is in the map, we can create a dependancy safely *)
+				      | SOME _ =>
+					S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids))
 			in fsimplify cs' l
 			end
-		      | SOME ty =>
-			raise EH.TODO "an equality type variable A is constrained to be equal to another, but A is already in the equality type variable state map! So now what?"
+
+		      (* the eqaulity type variable already exists in the map...
+		       *
+		       * it is here that we want to go create a constraint to see whether all the constraints are still satisfyable *)
+		      | SOME eq =>
+			let
+			    val _ = ()
+			in
+			    fsimplify cs' l
+			end
 	    end
 
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
@@ -4225,38 +4255,26 @@ fun unif env filters user =
 		     else ())
 		 ()
 		 cs;
-	     (*D.printdebug2 (S.printState state);*)
-	     (*D.printdebug2 ("-+-+-+-+-+-U-+-+-+-+-+-\n");*)
 	     Success state)
-	(*
-	 case cs of
-	     [] => Success state
-	   | ((l, cst) :: xs) =>
-	     let
-		 (*val _ = print ("LAB: " ^ (O.printelt l) ^ "\n")*)
-		 val (state', srec') = simplify state srec (E.extcs l cst) l
-	     in run state' srec' xs
-	     end
-	     handle errorex err => Error err*)
 
-	(*val _ = occurs_time := 0*)
-	(*val _ = temp_time := 0*)
 	val timer = VT.startTimer ()
 	val _ = sigVsStrOFF ()
 	val _ = sigVsStrTypOFF ()
 	val ret = run (E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
 	    handle errorex err =>
-		   ((*D.printdebug2 (L.toString (ERR.getL err));*)
+		   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "handling errorex - an error has been detected during unification");
 		    if L.isin L.builtinLab (ERR.getL err)
 		    then Error (ERR.setB (ERR.stripDummys err) true,  state)
 		    else Error (ERR.setB (ERR.stripDummy  err) false, state))
-	val _ = D.printdebug1 ("[unification] "
-			       ^ VT.milliToString "" timer
-			      (*^ "  ::inst:" ^ LargeInt.toString (!temp_time) ^ ":"*)
-			      (*^ "  ::occurs:" ^ LargeInt.toString (!occurs_time) ^ ":"*)
-			      (*^ " " ^ FI.toString filters*))
-
-    in ret
+    in
+	let
+	    val _ = D.printDebugFeature D.UNIF D.STATE (fn _ => S.printState state)
+	    val _ = case ret of
+			Error _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "returning 'Error' status from the unification algorithm")
+		      | Success _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "returning 'Success' status from the unification algorithm")
+	in
+	    ret
+	end
     end
 
 end

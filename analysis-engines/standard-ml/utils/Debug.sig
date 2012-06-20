@@ -41,6 +41,7 @@ signature DEBUG = sig
 			  | CONSTRAINT_SOLVING
 			  | TESTING
 			  | PARSING
+			  | STATE
 
     val sep1' : string
     val sep2' : string
@@ -53,7 +54,7 @@ signature DEBUG = sig
 
     val enableDebugFeature : debugFeature -> unit
 
-    val printDebugFeature : debugFiles -> debugFeature -> string -> unit
+    val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
     val printDebug       : int -> debugFiles -> string -> unit
     val printDebugFunc   : int -> debugFiles -> (unit -> string) -> unit
 

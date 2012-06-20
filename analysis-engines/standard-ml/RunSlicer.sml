@@ -467,7 +467,9 @@ fun smlTesStrArgs strArgs =
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
 		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
-		     | str  => raise EH.DeadBranch ("Unrecognised debugging feature: "^str);
+		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
+		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
+		     | str  => raise Fail ("Unrecognised debugging feature: "^str);
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
 	     then basisoverloading:=str

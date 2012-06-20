@@ -1192,7 +1192,7 @@ fun compareErrors2 [] [] (true,  id) = ()
 	if compareCDS cds cds'
 	then compareErrors2 xs ys' bid
 	else compareErrors2 xs ys' (false, id)
-      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING ("cannot find slice: "^slice^ " in ["^
+      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find slice: "^slice^ " in ["^
 							    (List.foldr (op ^) "" ((List.map (fn (id, slice, cds, regs) => slice) ys)))
 							   ^"]"); raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 

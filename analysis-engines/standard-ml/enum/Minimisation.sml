@@ -492,11 +492,11 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 	val err      =
 	    case U.unif env filters1 (U.MIN err) of
 		U.Error (err, _) => err
-	      | _ => let val msg = "before minimisation, the error should be an error"
-			 val err = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
-			 val _   = D.printdebug2 (msg ^ "\n" ^ err ^ "\n" ^ L.toString labs)
-		     in raise EH.DeadBranch msg
-		     end
+	      | U.Success _ =>
+		let
+		    val err = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
+		in raise EH.DeadBranch "Error! The unification algorithm terminated in a success state, but an error was generated!"
+		end
 	val labs    = ERR.getL err
 	(*val labs = ERR.getL err*)
 	(*(2010-06-18)We need 'done' because for arity clashes we keep the accessors without their binding

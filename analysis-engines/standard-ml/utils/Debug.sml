@@ -25,7 +25,7 @@
 structure Debug :> DEBUG = struct
 
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE
 
 (* below are ansi escape sequences, which can be used to colour
  * the output of text in terminals. Note that not all terminals
@@ -53,13 +53,15 @@ val debugEqualityTypes        : bool ref = ref false
 val debugConstraintGeneration : bool ref = ref false
 val debugConstraintSolving    : bool ref = ref false
 val debugTesting              : bool ref = ref false
-val debugParsing               : bool ref = ref false
+val debugParsing              : bool ref = ref false
+val debugState                : bool ref = ref false
 
 fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature CONSTRAINT_GENERATION = debugConstraintGeneration := true
   | enableDebugFeature CONSTRAINT_SOLVING = debugConstraintSolving := true
   | enableDebugFeature PARSING = debugParsing := true
   | enableDebugFeature TESTING = debugTesting := true
+  | enableDebugFeature STATE = debugState     := true
 
 fun setAllDebug value =
     (debugUnif   := value;
@@ -85,17 +87,18 @@ fun printFilename JSON   = "JsonParser.sml"
   | printFilename PARSER = "Parser.sml"
 
 (* this s hould later become printDebug and the old printDebug should go away *)
-fun printDebugFeature file EQUALITY_TYPES str =
-    if (!debug) andalso (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
-  | printDebugFeature file CONSTRAINT_GENERATION str =
-    if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
-  | printDebugFeature file CONSTRAINT_SOLVING str =
-    if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
-  | printDebugFeature file TESTING str =
-    if (!debug) andalso (!debugTesting) then print ("(TESTING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
-  | printDebugFeature file PARSING str =
-    if (!debug) andalso (!debugParsing) then print ("(PARSING) "^printFilename file^": " ^ str ^ textReset ^ "\n") else ()
-
+fun printDebugFeature file EQUALITY_TYPES stringFunction =
+    if (!debug) andalso (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ (stringFunction ()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file CONSTRAINT_GENERATION stringFunction =
+    if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file CONSTRAINT_SOLVING stringFunction =
+    if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file TESTING stringFunction =
+    if (!debug) andalso (!debugTesting) then print ("(TESTING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file PARSING stringFunction =
+    if (!debug) andalso (!debugParsing) then print ("(PARSING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file STATE stringFunction =
+    if (!debug) andalso (!debugState) then print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
 
 (* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =

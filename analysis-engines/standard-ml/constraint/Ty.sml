@@ -990,21 +990,21 @@ and stripEqualityStatus_sequenceType (ROW_VAR _) = []
  * status here, we should also be returning the label that
  * we get. This will allow us to track the blame correctly *)
 and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityTypeStatus eq)^")");
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityTypeStatus eq)^")");
      [eq])
   | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!";
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!");
      [])
   | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, l, eq)) =
 			 eq::(stripEqualityStatus_sequenceType sequenceType)
   | stripEqualityStatus (APPLICATION(_)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from APPLICATION!";
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from APPLICATION!");
      [])
   | stripEqualityStatus (TYPE_POLY(_,_,_,_,_,eq)) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION ("Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
      [eq])
   | stripEqualityStatus (GEN _) =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION "WARNING: No code to strip equality type status from GEN!";
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
      [])
   | stripEqualityStatus (TYPE_DEPENDANCY (term, _, _, _)) = stripEqualityStatus term
 

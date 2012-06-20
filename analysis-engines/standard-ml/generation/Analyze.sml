@@ -298,16 +298,16 @@ fun generateConstraints' prog pack nenv =
 
 	   and f_scon (A.SconInt (s, v, _, lab, _)) =
 	       if benv (* We bind the integer to the "Int" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconInt. v = "^(Int.toString (I.toInt v))^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconInt. v = "^(Int.toString (I.toInt v))^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.ROW_VAR sv) (CL.consOC ()) lab) lab
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.EQUALITY_TYPE)) lab
-			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "Equality type constraint (EQUALITY_TYPE) generated for a SconInt"
+			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Equality type constraint (EQUALITY_TYPE) generated for a SconInt")
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconInt. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyint lab) lab
@@ -315,7 +315,7 @@ fun generateConstraints' prog pack nenv =
 		    end
 	     | f_scon (A.SconWord (s, v, _, lab, _)) =
 	       if benv (* We bind the word to the "Word" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
@@ -323,7 +323,7 @@ fun generateConstraints' prog pack nenv =
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.EQUALITY_TYPE)) lab
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconWord. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyword lab) lab
@@ -331,7 +331,7 @@ fun generateConstraints' prog pack nenv =
 		    end
 	     | f_scon (A.SconReal (s, v, _, lab, _)) =
 	       if benv (* We bind the real to the "Real" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
@@ -339,19 +339,20 @@ fun generateConstraints' prog pack nenv =
 			 * or should we just look up the equality constraint in the type constraint somehow? *)
 			val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.ROW_VAR sv) (CL.consOC ()) lab) lab
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.NOT_EQUALITY_TYPE)) lab
-			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "Equality type constraint (NOT_EQUALITY_TYPE) generated for a SconReal"
+			val c  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab
+			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Equality type constraint (NOT_EQUALITY_TYPE) generated for a SconReal")
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconReal (benv = "^Bool.toString(benv)^", s = "^s^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyreal lab) lab
-			val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("A.SconReal constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^")")
+			val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "A.SconReal constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^")")
 		    in (tv, eqTypeVar, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 		    end
 	     | f_scon (A.SconString (s, v, _, lab, _)) =
 	       if benv (* We bind the string to the "String" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
@@ -359,7 +360,7 @@ fun generateConstraints' prog pack nenv =
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.EQUALITY_TYPE)) lab
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconString. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constystring lab) lab
@@ -367,7 +368,7 @@ fun generateConstraints' prog pack nenv =
 		    end
 	     | f_scon (A.SconChar (s, v, _, lab, _)) =
 	       if benv (* We bind the char to the "Char" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
@@ -375,7 +376,7 @@ fun generateConstraints' prog pack nenv =
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.EQUALITY_TYPE)) lab
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconChar. benv = "^Bool.toString(benv)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constychar lab) lab
@@ -392,11 +393,11 @@ fun generateConstraints' prog pack nenv =
 					     else E.singcss (charSizeCs lab)
 		    in (tv, eqTypeVar, E.singleConstraint (lab, c), contextSensitiveSyntaxError)
 		    end
-	     | f_scon A.SconDots = (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SconDots"); (T.freshTypeVar (), T.freshEqualityTypeVar(), E.emptyConstraint, E.emptyContextSensitiveSyntaxError))
+	     | f_scon A.SconDots = (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SconDots"); (T.freshTypeVar (), T.freshEqualityTypeVar(), E.emptyConstraint, E.emptyContextSensitiveSyntaxError))
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_labid (A.LabId (ident, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabId")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabId")
 		   val (tv, vids, cst, contextSensitiveSyntaxError) = f_identpat ident
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
@@ -409,7 +410,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_strid (A.StrId (s, v, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrId");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrId");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.emstr, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       else let val ev1  = E.freshEnvVar ()
@@ -426,7 +427,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.envvar, Env.cst) *)
 	   and f_funid (A.FunId (s, v, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunId (f_funid function)");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunId (f_funid function)");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.freshEnvVar (), E.emptyConstraint)
 	       else let val lid  = I.idToLid v lab
@@ -441,7 +442,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.envvar, Env.funenv, E.emptyConstraint) *)
 	   and f_funidbind (A.FunId (s, v, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunId (f_funidbind function)");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunId (f_funidbind function)");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.freshEnvVar (), E.emfun, E.emptyConstraint)
 	       else let val ev1  = E.freshEnvVar ()
@@ -463,7 +464,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst) *)
 	   and f_sigid (A.SigId (s, v, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigId (f_sigid function)");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigId (f_sigid function)");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.emptyConstraint)
 	       else let val lid = I.idToLid v lab
@@ -475,7 +476,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.sigenv, Env.cst) *)
 	   and f_sigidbind (A.SigId (s, v, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigId (f_sigidbind function)");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigId (f_sigidbind function)");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.emsig, E.emptyConstraint)
 	       else let val ev1  = E.freshEnvVar ()
@@ -491,13 +492,13 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst) *)
 	   and f_longidexp longid =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints inside f_longidexp function (longid="^(A.printAstLongId longid)^")");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints inside f_longidexp function (longid="^(A.printAstLongId longid)^")");
 	       case A.longidToLid longid of
-		   NONE => (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "in f_longidexp - result of `A.longidToLid longid` was NONE";
+		   NONE => (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - result of `A.longidToLid longid` was NONE");
 			    (T.freshTypeVar (), T.freshEqualityTypeVar(), L.dummyLab, CL.newClassVar (), E.emptyConstraint))
 		 | SOME lid =>
 		   let
-		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("in f_longidexp - result of `A.longidToLid longid` was SOME lid - "^(I.printLid lid));
+		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - result of `A.longidToLid longid` was SOME lid - "^(I.printLid lid));
 		       val lab = I.getLabId lid
 		       (* NOTE: We want all the labels from lid *)
 		       val tv  = T.freshTypeVar ()
@@ -514,14 +515,14 @@ fun generateConstraints' prog pack nenv =
 
 		       val accessor   = E.initValueIDAccessor (E.consAccId lid (T.consTYPE_VAR tv) class lab) lab
 		       val accessor2   = E.initEqualityTypeAccessor (E.consAccId lid (T.consEQUALITY_TYPE_VAR eqtv) class lab) lab
-		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("               - lab = "^Int.toString(L.toInt lab)^", tv = "^Int.toString(T.typeVarToInt tv));
+		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "               - lab = "^Int.toString(L.toInt lab)^", tv = "^Int.toString(T.typeVarToInt tv));
 		   (* in (tv, lab, class, E.conscsts (lab, [cst, E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2))) *)
 		   in (tv, eqtv, lab, class, E.conscsts (lab, [E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2)))
 		   end)
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_pconpat (A.PconBool (s, v, reg, lab, nxt)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PconBool");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PconBool");
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv = T.freshTypeVar ()
@@ -529,7 +530,7 @@ fun generateConstraints' prog pack nenv =
 		    in (tv, E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s))
 		    end)
 	     | f_pconpat (A.PconRef (s, v, reg, lab, nxt)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PconRef");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PconRef");
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv  = T.freshTypeVar ()
@@ -538,7 +539,7 @@ fun generateConstraints' prog pack nenv =
 		    in (tv, E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s))
 		    end)
 	     | f_pconpat (A.PconNil (s, v, reg, lab, nxt)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PconNil");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PconNil");
 	       if getBasis ()
 	       then f_identpat (A.Ident (s, v, reg, lab, nxt))
 	       else let val tv  = T.freshTypeVar ()
@@ -549,7 +550,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_identpat (A.Ident (str, id, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Ident (str=\""^str^"\")");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Ident (str=\""^str^"\")");
 	       if String.isPrefix "_" str
 	       then (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       else let val tv1  = T.freshTypeVar ()
@@ -567,7 +568,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.env, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_longidpat (A.LongIdId ident) = f_identpat ident
 	     | f_longidpat longid =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints inside f_longidpat function");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints inside f_longidpat function");
 		   val (tv, eqtv, lab, cl, cst) = f_longidexp longid
 		   val c = E.initClassConstraint cl (CL.consCO0 ()) lab
 	       in (tv, E.emvar, E.consConstraint (lab, c) cst, E.emptyContextSensitiveSyntaxError)
@@ -575,7 +576,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst) *)
 	   and f_longstrid longstrid =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints inside f_longstrid function");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints inside f_longstrid function");
 	       case A.longstridToLid longstrid of
 		   NONE => (E.freshEnvVar (), E.emptyConstraint)
 		 | SOME lid =>
@@ -588,7 +589,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.tyfvar, Env.cst) *)
 	   and f_longtycon longtycon =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints inside f_longtycon function");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints inside f_longtycon function");
 	       case A.longtyconToLid longtycon of
 		   NONE => (T.freshTypeFunctionVar (), E.emptyConstraint)
 		 | SOME lid =>
@@ -601,26 +602,28 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_labexp (A.LabExp (exp, _, _, lab, _)) =
 	       let
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabExp (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabExp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_exp exp
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "*** LabExp constraints ***"
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^(E.printConstraints cst))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "*** LabExp constraints ***")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^(E.printConstraints cst))
 		   val tv' = T.freshTypeVar ()
+		   val eqTypeVar' = T.freshEqualityTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("A.LabExp constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^", "
+		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR eqtv) lab
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "A.LabExp constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^", "
 						   ^"tv' = "^Int.toString(T.typeVarToInt tv')
 						   ^", lab = "^(Int.toString(L.toInt(lab))^")"))
-	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
+	       in (tv', eqTypeVar', E.consConstraint (lab, c2) (E.consConstraint (lab, c) cst), contextSensitiveSyntaxError)
 	       end
 	     | f_labexp (A.LabExpDots pl) =
 	       let val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
-	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
+	       in (tv, T.freshEqualityTypeVar(), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.labvar, (string, Label.label) option, Env.cst) *)
 	   and f_tylab (A.TyLab (s, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyLab");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyLab");
 		   val lv = T.freshLabelVar ()
 		   val c  = E.initLabelConstraint (T.LABEL_VAR lv) (T.LC (s, lab)) lab
 	       in (lv, SOME (s, lab), E.singleConstraint (lab, c))
@@ -630,9 +633,9 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (((string, Label.label) option, Ty.fieldvar), Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_expfield (A.ExpField (tylab, labexp, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpField");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpField");
 		   val (lv, lop, cst1)  = f_tylab tylab
-		   val (tv, cst2, css2) = f_labexp labexp
+		   val (tv, eqtv, cst2, css2) = f_labexp labexp
 		   val rv = T.freshFieldVar ()
 		   val c  = E.initFieldConstraint (T.FIELD_VAR rv) (T.FC (T.LABEL_VAR lv, T.consTYPE_VAR tv, lab)) lab
 	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
@@ -645,9 +648,9 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_seqexp (A.SeqExp (labexps, labexp, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SeqExp");
-		   val (tv2, cst2, css2) = f_labexp labexp
-		   val (_, csts, csss) = unzipThree (map f_labexp labexps)
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SeqExp");
+		   val (tv2, eqtv, cst2, css2) = f_labexp labexp
+		   val (_, eqtvs, csts, csss) = unzipFour (map f_labexp labexps)
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
 		   val tv  = T.freshTypeVar ()
@@ -655,9 +658,9 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.consConstraint (lab, c) (E.unionConstraintsList [cst, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css2])
 	       end
 	     | f_seqexp (A.SeqExpSl (parts, labexp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SeqExpSl");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SeqExpSl");
 		   val env1 = f_partlist parts
-		   val (tv2, cst2, css2) = f_labexp labexp
+		   val (tv2, eqtv, cst2, css2) = f_labexp labexp
 		   val tv = T.freshTypeVar ()
 		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, E.conscsts (lab, [E.LET_CONSTRAINT env1, c]) cst2, css2)
@@ -671,24 +674,24 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_atexp (A.AtExpId id) =
 	       let
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpId (calling f_longidexp with parameter id)")
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpId (calling f_longidexp with parameter id)")
 		   val (tv, eqtv, _, _, cst) = f_longidexp id
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("A.AtExpId constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^"). They are:\n"^((#red D.colors)^(E.printConstraints cst)))
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "A.AtExpId constraints generated (tv = "^Int.toString(T.typeVarToInt tv)^"). They are:\n"^((#red D.colors)^(E.printConstraints cst)))
 	       in (tv, eqtv, cst, E.emptyContextSensitiveSyntaxError)
 	       end
-	     | f_atexp (A.AtExpScon sc) = (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpScon"); f_scon sc)
+	     | f_atexp (A.AtExpScon sc) = (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpScon"); f_scon sc)
 	     | f_atexp (A.AtExpTuple (expl, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpTuple (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpTuple (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (tvl, csts, csss) = unzipThree (map f_labexp expl)
+		   val (tvl, eqtv, csts, csss) = unzipFour (map f_labexp expl)
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpRecord (expfields, _, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpRecord (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpRecord (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val (xs, csts, csss) = unzipThree (map f_expfield expfields)
@@ -700,7 +703,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css'])
 	       end
 	     | f_atexp (A.AtExpSlRec (expfields, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpSlRec (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpSlRec (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv  = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val (xs, csts, csss) = unzipThree (map f_expfield expfields)
@@ -713,17 +716,17 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atexp (A.AtExpLet (decs, labexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpLet (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpLet (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv   = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val (env1, css1) = f_decs decs
-		   val (tv2, cst2, css2) = f_labexp labexp
+		   val (tv2, eqtv, cst2, css2) = f_labexp labexp
 		   val env = E.envsToSeq [env1, E.CONSTRAINT_ENV cst2]
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
 	       in (tv, eqTypeVar, E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c)), E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_atexp (A.AtExpDLet (decs, seqexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpDLet (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpDLet (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv   = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val (env1, contextSensitiveSyntaxError1) = f_decs decs
@@ -733,19 +736,20 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c)), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_atexp (A.AtExpParen (labexp, _, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpParen (lab = "^(Int.toString(L.toInt(lab))^")"))
-		   val (tv, cst, contextSensitiveSyntaxError) = f_labexp labexp
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpParen (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_labexp labexp
 		   val tv' = T.freshTypeVar ()
-		   val eqTypeVar = T.freshEqualityTypeVar ()
+		   val eqtv' = T.freshEqualityTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
-	       in (tv', eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
+		   val c2  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv') (T.consEQUALITY_TYPE_VAR eqtv) lab
+	       in (tv', eqtv', (E.consConstraint (lab, c2) (E.consConstraint (lab, c) cst)), contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpList (labexps, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpList (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpList (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv   = T.freshTypeVar ()
 		   val tv'  = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (tvs, csts, csss) = unzipThree (map f_labexp labexps)
+		   val (tvs, eqtvs, csts, csss) = unzipFour (map f_labexp labexps)
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val cs'  = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
@@ -753,7 +757,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.conscsts (lab, c :: cs') cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpProj (tylab, _, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpProj (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpProj (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (lv, _, cst) = f_tylab tylab
 		   val tv  = T.freshTypeVar ()
 		   val tv' = T.freshTypeVar ()
@@ -765,7 +769,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.conscsts (lab, [c1, c2]) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpSeq (seqseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpSeq (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpSeq (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tv, cst, contextSensitiveSyntaxError) = f_seqexp seqseq
 		   val tv' = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
@@ -773,7 +777,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv', eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpQuote (quotes, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpQuote (lab = "^(Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpQuote (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tvs, csts, csss) = unzipThree (map f_quote quotes)
 		   val tv  = T.freshTypeVar ()
 		   val tv' = T.freshTypeVar ()
@@ -785,7 +789,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.conscsts (lab, c :: cs') cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atexp (A.AtExpDots pl) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtExpDots")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtExpDots")
 		   val tv  = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val env = f_partlist pl
@@ -801,21 +805,21 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_quote (A.Quote (_, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Quote");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Quote");
 		   val tv1 = T.freshTypeVar ()
 		   val tv2 = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyfrag tv2 lab) lab
 	       in (tv1, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_quote (A.Antiquote(exp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Antiquote");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Antiquote");
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_exp exp
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.constyfrag tv lab) lab
 	       in (tv', E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_quote (A.QuoteDots pl) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.QuoteDots");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.QuoteDots");
 		   val tv  = T.freshTypeVar ()
 		   val env = f_partlist pl
 	       in (tv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
@@ -823,11 +827,11 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_exp (A.ExpAtExp atexp) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpAtExp (just returns result of atexp applied to f_atexp)";
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpAtExp (just returns result of atexp applied to f_atexp)");
 		f_atexp atexp)
 	     | f_exp (A.ExpFn (match, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpFn (lab = "^(Int.toString(L.toInt(lab))^")"))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpFn (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val (tvs, cst, contextSensitiveSyntaxError) = f_match match
 		   val tv = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
@@ -836,14 +840,14 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpApp (exp, atexp, _, _, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
- 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of application...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
+ 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^"left hand side of application...")
 		   val (tv1, eqtv, cst1, contextSensitiveSyntaxError1) = f_exp exp
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^"right hand side of application...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^"right hand side of application...")
 		   val (tv2, eqTypeVar, cst2, contextSensitiveSyntaxError2) = f_atexp atexp
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for left hand side of application...\n"^(#green D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for right hand side of application...\n"^(#red D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of application...\n"^(#green D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of application...\n"^(#red D.colors)^(E.printConstraints cst2))
 
 		   (*****************************************************************************************************)
 		   (*** jpirie: this is commented out. It's going to mess with what i'm testing at this moment in time (it shouldn't be done this way anyway?) *)
@@ -859,23 +863,24 @@ fun generateConstraints' prog pack nenv =
 		   (* 	     (* If yes, then the left hand side (the accessor) should be constrained to be an equality type also. *)
 		   (* 	      * It's currently of UNKNOWN status, so that will need to be removed and NOT_EQUALITY_TYPE put in its place *) *)
 		   (* 	     | SOME x => *)
-		   (* 	       D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("something being used in an application is not an equaltiy type, propagating the constraint") *)
+		   (* 	       D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "something being used in an application is not an equaltiy type, propagating the constraint") *)
 		   (* 	       val cst1 = E.createEqualityTypeConstraints cst1 lab T.NOT_EQUALITY_TYPE *)
 		   (*****************************************************************************************************)
 
 		   val tv  = T.freshTypeVar ()
  		   val freshEqTypeVar = T.freshEqualityTypeVar ()
 		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
+		   val c1 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR freshEqTypeVar) lab
 		   val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR freshEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
-	       in (tv, freshEqTypeVar, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2])), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, freshEqTypeVar, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpCase"
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpCase")
 		   val tv  = T.freshTypeVar ()
 		   val tv' = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
+		   val (tv1, eqtv', cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tvs, cst2, contextSensitiveSyntaxError2) = f_match match
 		   val cs  = map (fn x => E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR x) lab) tvs
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.constyarrow tv1 tv lab) lab
@@ -885,9 +890,9 @@ fun generateConstraints' prog pack nenv =
 	       if benv
 	       then f_exp (A.ExpOp ("::", id, labexp1, labexp2, reg, lab, nxt))
 	       else let
-			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpConsList"
-			val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-			val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpConsList")
+			val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+			val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
 			val tv = T.freshTypeVar ()
  			val eqTypeVar = T.freshEqualityTypeVar ()
 			val c1 = E.initTypeConstraint (T.consTYPE_VAR tv)  (T.constylist tv1 lab) lab
@@ -902,14 +907,14 @@ fun generateConstraints' prog pack nenv =
 		    * if, for example, we are dealing with the + operator
 		    *)
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpOp (st = \"" ^ st ^ "\", lab="^Int.toString(L.toInt lab)^")")
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("**********  ExpOp left hand side...  **********")
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION  ("**********  ExpOp right hand side... **********")
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("done left and right of expop\nprinting constraints for cst1 (tv ="^(Int.toString(T.typeVarToInt(tv1)))^")...\n"^(#red D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for cst2...\n"^(#green D.colors)^(E.printConstraints cst2))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("ExpOp type variables are tv1 = "^(Int.toString(T.typeVarToInt(tv1)))^", tv2 = "^(Int.toString(T.typeVarToInt(tv2))))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpOp (st = \"" ^ st ^ "\", lab="^Int.toString(L.toInt lab)^")")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**********  ExpOp left hand side...  **********")
+		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**********  ExpOp right hand side... **********")
+		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "done left and right of expop\nprinting constraints for cst1 (tv ="^(Int.toString(T.typeVarToInt(tv1)))^")...\n"^(#red D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for cst2...\n"^(#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ExpOp type variables are tv1 = "^(Int.toString(T.typeVarToInt(tv1)))^", tv2 = "^(Int.toString(T.typeVarToInt(tv2))))
 		   val ty  = T.newTYPE_VAR ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val ti  = T.constytuple [tv1, tv2] lab
@@ -940,14 +945,14 @@ fun generateConstraints' prog pack nenv =
 		   (* val equalityConstraints =  List.map (fn eqtv => E.initEqualityTypeConstraint (Ty.consTYPE_VAR eqtv) (Ty.EQUALITY_TYPE_STATUS (Ty.EQUALITY_TYPE)) lab) allEqualityTypeVars *)
 
 		   val equalityConstraints = E.createEqualityTypeConstraints cst1 lab T.EQUALITY_TYPE
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints...\n"^(#red D.colors)^(E.printConstraints equalityConstraints))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for equalityConstraints...\n"^(#red D.colors)^(E.printConstraints equalityConstraints))
 		   val equalityConstraints2 = E.createEqualityTypeConstraints cst2 lab T.EQUALITY_TYPE
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for equalityConstraints2...\n"^(#green D.colors)^(E.printConstraints equalityConstraints2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for equalityConstraints2...\n"^(#green D.colors)^(E.printConstraints equalityConstraints2))
 
 		   val allConstraints1 = E.unionConstraintsList [cst1, equalityConstraints]
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for allConstraints1...\n"^(#red D.colors)^(E.printConstraints allConstraints1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints1...\n"^(#red D.colors)^(E.printConstraints allConstraints1))
 		   val allConstraints2 = E.unionConstraintsList [cst2, equalityConstraints2]
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for allConstraints2...\n"^(#red D.colors)^(E.printConstraints allConstraints2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints2...\n"^(#red D.colors)^(E.printConstraints allConstraints2))
 
 		   val a   = E.initValueIDAccessor (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 
@@ -957,7 +962,7 @@ fun generateConstraints' prog pack nenv =
 		   (* this was the method used where everything worked aside from test126. This was before the bugfix where some constraints were getting lost *)
 		   (* val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES ("FINAL EXP OP CONSTRAINTS:\n"^(#yellow D.colors)^ (E.printConstraints (E.conscsts (lab, ([c, E.ACCESSOR_CONSTRAINT a])) (E.unionConstraintsList [cst1, cst2, equalityConstraints2, equalityConstraints])))) *)
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("ExpOp constraints generated\n")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ExpOp constraints generated\n")
 
 	       (* i think we want something like this but it breaks the constraint generator in the case of code1.sml. Why? The constraints should be exactly the same for that case?? *)
 	       in
@@ -969,9 +974,9 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpOr (labexp1, labexp2, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpOr"
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpOr")
+		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
 		   val tvo = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tvo) (T.constybool lab) lab
@@ -981,9 +986,9 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpAnd (labexp1, labexp2, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpAnd"
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpAnd")
+		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
 		   val tvo = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tvo) (T.constybool lab) lab
@@ -993,10 +998,10 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpTyped (labexp, labtyp, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpTyped"
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpTyped")
 		   val tv = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
+		   val (tv1, eqtv, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tv2, eqtv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val c1 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv1) lab
 		   val c2 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv2) lab
@@ -1004,11 +1009,11 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpIte (labexp1, labexp2, labexp3, _, lab, _)) =
 	       let
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExpIte")
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpIte")
 		   (* get the type variables, constraint on types and E.ocss *)
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
-		   val (tv3, cst3, contextSensitiveSyntaxError3) = f_labexp labexp3
+		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+		   val (tv3, eqtv3, cst3, contextSensitiveSyntaxError3) = f_labexp labexp3
 
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 
@@ -1023,24 +1028,24 @@ fun generateConstraints' prog pack nenv =
 
 		   val cst = E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2, cst3])
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2, contextSensitiveSyntaxError3]
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("A.ExpIte constraints generated\n")
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "A.ExpIte constraints generated\n")
 	       in (tv, eqTypeVar, cst, contextSensitiveSyntaxError)
 	       end
 	     | f_exp (A.ExpWhile (labexp1, labexp2, _, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpWhile"
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpWhile")
 		   val tv = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
+		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp1
+		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp2
 		   val c1 = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constybool lab) lab
 		   val c2 = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple [] lab) lab
 	       in (tv, eqTypeVar, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp (A.ExpRaise (labexp, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpRaise"
-		   val (tv, cst, contextSensitiveSyntaxError) = f_labexp labexp
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpRaise")
+		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_labexp labexp
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception lab) lab
@@ -1048,8 +1053,8 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpHandle (labexp, match, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpHandle"
-		   val (tv1, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpHandle")
+		   val (tv1, eqtv, cst1, contextSensitiveSyntaxError1) = f_labexp labexp
 		   val (tvs, cst2, contextSensitiveSyntaxError2) = f_match match
 		   val ty  = T.newTYPE_VAR ()
 		   val tv  = T.freshTypeVar ()
@@ -1061,7 +1066,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_exp (A.ExpDots pl) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ExpDots"
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExpDots")
 		   val tv  = T.freshTypeVar ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val env = f_partlist pl
@@ -1070,7 +1075,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar list, Env.cst, Env.css) *)
 	   and f_match (A.Match (mrules, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Match");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Match");
 		   val (tvs, csts, csss) = unzipThree (map f_mrule mrules)
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
@@ -1083,10 +1088,10 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_mrule (A.Mrule (labpat, labexp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Mrule");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Mrule");
 		   val tv  = T.freshTypeVar ()
 		   val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat labpat
-		   val (tv2, cst2, contextSensitiveSyntaxError2) = f_labexp labexp
+		   val (tv2, eqtv, cst2, contextSensitiveSyntaxError2) = f_labexp labexp
 		   val env = E.ROW_ENV (E.ROW_ENV (E.CONSTRAINT_ENV cst1, E.projValueIds (E.toMonoValueIds vids (L.singleton lab))), E.CONSTRAINT_ENV cst2)
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyarrow tv1 tv2 lab) lab
 		   val cst = E.consConstraint (L.dummyLab, E.LET_CONSTRAINT env) (E.singleConstraint (lab, c))
@@ -1105,14 +1110,14 @@ fun generateConstraints' prog pack nenv =
 	    * "'a" in the code: "datatype 'a t = C of 'a | D of int -> int"
 	    *)
 	   and f_typevar (A.TypeVar (str, id, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVar (str=\""^str^"\")")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVar (str=\""^str^"\")")
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 	       in (SOME id, tv, eqTypeVar, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 	       end
 	     | f_typevar (A.EqualityTypeVar (str, id, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.EqualityTypeVar (f_typevar; str=\""^str^"\")")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.EqualityTypeVar (f_typevar; str=\""^str^"\")")
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 
@@ -1124,7 +1129,7 @@ fun generateConstraints' prog pack nenv =
 		    * cst, and is passed down that way so we can actually see the costraints
 		    * when we get to dealing with the A.ConBindOf constructor in another
 		    * function. *)
-		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES ("constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt eqTypeVar))^" to be of status EQUALITY_TYPE")
+		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES (fn _ => "constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt eqTypeVar))^" to be of status EQUALITY_TYPE")
 		   val c   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 
@@ -1142,7 +1147,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_labtype (A.LabType (typ, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabType");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabType");
 		   val (tv, eqTypeVar, cst, contextSensitiveSyntaxError) = f_type typ
 
 		   (* we create a new type variable tv' and constraint it to be equal to
@@ -1153,7 +1158,7 @@ fun generateConstraints' prog pack nenv =
 
 		   (* same story for the equality type variable - new constraint *)
 		   val newEqTypeVar = T.freshEqualityTypeVar ()
-		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES ("constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt newEqTypeVar))
+		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES (fn _ => "constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt newEqTypeVar))
 								       ^" to be the same as "^(Int.toString(T.equalityTypeVarToInt eqTypeVar)))
 		   val newEqTypeVarConstraint  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR newEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
 
@@ -1168,7 +1173,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (((string, Label.label) option, Ty.fieldvar), Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_tyfield (A.TyField (tylab, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyField");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyField");
 		   val (lv, lop, cst1)  = f_tylab tylab
 		   val (tv, eqtv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val rv = T.freshFieldVar ()
@@ -1183,14 +1188,14 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_type (A.TypeOneVar typeVar) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeOneVar");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeOneVar");
 		   val (_, tv, eqTypeVar, cst) = f_typevar typeVar
 	       (* we don't make a new type variable tv' and constrain it to be equal to tv (and a similar
 		* story for the equality type variable) because there is no new label *)
 	       in (tv, eqTypeVar, cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_type (A.TypeArrow (labtyp1, labtyp2, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeArrow");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeArrow");
 		   val (tv1, eqtv, cst1, contextSensitiveSyntaxError1) = f_labtype labtyp1
 		   val (tv2, eqtv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp2
 		   val tv = T.freshTypeVar ()
@@ -1199,7 +1204,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_type (A.TypeTuple (labtyps, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeTuple");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeTuple");
 		   val (tvs, eqtvs, csts, csss) = unzipFour (map f_labtype labtyps)
 		   val tv  = T.freshTypeVar ()
 		   val eqTypeVar  = T.freshEqualityTypeVar ()
@@ -1209,7 +1214,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_type (A.TypeRecord (tyfields, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeRecord");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeRecord");
 		   val (xs, csts, csss) = unzipThree (map f_tyfield tyfields)
 		   val (lops, rts) = ListPair.unzip xs
 		   val tv   = T.freshTypeVar ()
@@ -1221,7 +1226,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_type (A.TypeSlRec (tyfields, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeSlRec");
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeSlRec");
 		   val (xs, csts, csss) = unzipThree (map f_tyfield tyfields)
 		   val (lops, rts) = ListPair.unzip xs
 		   val tv   = T.freshTypeVar ()
@@ -1233,7 +1238,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_type (A.TypeTyCon (typseq, longtycon, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeTyCon")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeTyCon")
 		   val (sv, cst1, contextSensitiveSyntaxError1) = f_typeRow typseq
 		   val (typeFunctionVar, cst2) = f_longtycon longtycon
 		   val tv  = T.freshTypeVar ()
@@ -1246,7 +1251,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, eqTypeVar, E.conscsts (lab, [c1, c2, c3]) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError1)
 	       end
 	     | f_type (A.TypeParen (labtyp, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeParen")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeParen")
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_labtype labtyp
 		   val tv' = T.freshTypeVar ()
 		   val eqTypeVar  = T.freshEqualityTypeVar ()
@@ -1262,20 +1267,20 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (T.rowVar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_typeRow (A.TypeRowOne (typ, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeRowOne")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeRowOne")
 		   val (tv, eqTypeVar, cst, contextSensitiveSyntaxError) = f_type typ
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_typeRow (A.TypeRowEm (_, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeRowEm")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeRowEm")
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C ([], T.noflex (), lab)) lab
 	       in (sv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_typeRow (A.TypeRowSeq (labtyps, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeRowSeq")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeRowSeq")
 		   val (svs, eqtvs, csts, csss) = unzipFour (map f_labtype labtyps)
 		   val sv  = T.freshRowVar ()
 		   val cst = E.unionConstraintsList csts
@@ -1291,7 +1296,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, Env.css) *)
 	   and f_labpat (A.LabPat (pat, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabPat")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabPat")
 		   val (tv, vids, cst, contextSensitiveSyntaxError) = f_pat pat
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
@@ -1306,7 +1311,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_identty (A.IdentTyId ident) = f_identpat ident
 	     | f_identty (A.IdentTyTy (labid, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.IdentTyTy")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.IdentTyTy")
 		   val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labid labid
 		   val (tv2, eqtv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
 		   val tv = T.freshTypeVar ()
@@ -1322,7 +1327,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_labidty (A.LabIdTy (identty, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabIdTy")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabIdTy")
 		   val (tv, vids, cst, contextSensitiveSyntaxError) = f_identty identty
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
@@ -1336,7 +1341,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (((string, Label.label) option, Ty.fieldvar option, Label.label option), Env.varenv, Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_patfield (A.PatField (tylab, labpat, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatField")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatField")
 		   val (lv, lop, cst1) = f_tylab tylab
 		   val (tv, vids, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
 		   val rv = T.freshFieldVar ()
@@ -1344,7 +1349,7 @@ fun generateConstraints' prog pack nenv =
 	       in ((lop, SOME rv, NONE), vids, E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError2)
 	       end
 	     | f_patfield (A.PatFieldId (identty, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatFieldId")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatFieldId")
 		   val (tv, vids, cst, contextSensitiveSyntaxError) = f_identty identty
 		   val rv   = T.freshFieldVar ()
 		   val llop = A.getlabstIdentTy identty
@@ -1360,7 +1365,7 @@ fun generateConstraints' prog pack nenv =
 	       in ((lop, SOME rv, NONE), vids, E.unionConstraintsList [cst, cst'], contextSensitiveSyntaxError)
 	       end
 	     | f_patfield (A.PatFieldAs (labidty, labpat, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatFieldAs")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatFieldAs")
 		   val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labidty labidty
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
 		   val tv   = T.freshTypeVar ()
@@ -1392,7 +1397,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_atpat (A.AtPatWild _) = (T.freshTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	     | f_atpat (A.AtPatId longid) = f_longidpat longid
 	     | f_atpat (A.AtPatScon scon) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPatScon")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPatScon")
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_scon scon
 		   val contextSensitiveSyntaxError' = case A.isPatScon scon of
 				  NONE     => E.emptyContextSensitiveSyntaxError
@@ -1400,7 +1405,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.emvar, cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atpat (A.AtPatTuple (labpats, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPatTuple")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPatTuple")
 		   val tv   = T.freshTypeVar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
 		   val vids = E.unionEnvList    vidss
@@ -1410,7 +1415,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatRecord (patfields, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPatRecord")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPatRecord")
 		   val tv   = T.freshTypeVar ()
 		   val (xs, vidss, csts, csss) = unzipFour (map f_patfield patfields)
 		   val (lops, rvs, flexs) = unzipThree xs
@@ -1427,14 +1432,14 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atpat (A.AtPatParen (labpat, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPatParan")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPatParan")
 		   val (tv, vids, cst, contextSensitiveSyntaxError) = f_labpat labpat
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatList (labpats, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPAtList")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPAtList")
 		   val tv   = T.freshTypeVar ()
 		   val tv'  = T.freshTypeVar ()
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
@@ -1446,7 +1451,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, E.conscsts (lab, c :: cs) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_atpat (A.AtPatOr (labpats, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AtPatOr")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AtPatOr")
 		   val (tvs, vidss, csts, csss) = unzipFour (map f_labpat labpats)
 		   val vids = E.unionEnvList vidss (* do something else here: treatAtPatOr envs *)
 		   val cst  = E.unionConstraintsList csts
@@ -1464,7 +1469,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_pat (A.PatAtPat atpat) = f_atpat atpat
 	     | f_pat (A.PatApp (longid, atpat, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatApp")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatApp")
 		   val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_atpat atpat
 		   val (tv2, eqtv, lab', cl, cst2) = f_longidexp longid
 		   val tv  = T.freshTypeVar ()
@@ -1476,7 +1481,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids1, E.conscsts (lab, [c1, c2]) (E.unionConstraintsList [cst1, cst2, cst]), contextSensitiveSyntaxError1)
 	       end
 	     | f_pat (A.PatConsList (v, labpat1, labpat2, reg, lab, next)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatConsList");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatConsList");
 	       if benv
 	       then f_pat (A.PatOp ("::", v, labpat1, labpat2, reg, lab, next))
 	       else let val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labpat labpat1
@@ -1489,7 +1494,7 @@ fun generateConstraints' prog pack nenv =
 		    in (tv, E.unionEnvList [vids1, vids2], cst, contextSensitiveSyntaxError)
 		    end)
 	     | f_pat (A.PatOp (st, v, labpat1, labpat2, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatOp")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatOp")
 		   val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labpat labpat1
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat2
 		   val ty  = T.newTYPE_VAR ()
@@ -1502,7 +1507,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tvo, E.unionEnvList [vids1, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatTyped (labpat, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatTyped")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatTyped")
 		   val tv = T.freshTypeVar ()
 		   val (tv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat labpat
 		   val (tv2, eqtv, cst2, contextSensitiveSyntaxError2) = f_labtype labtyp
@@ -1513,7 +1518,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat (A.PatAs (labidty, labpat, _, lab, _)) = (* For this one and PatFieldAs we need to constrain the envs to a value variables. *)
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.PatAs")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.PatAs")
 		   val (tv1, vids1, cst1, contextSensitiveSyntaxError1) = f_labidty labidty
 		   val (tv2, vids2, cst2, contextSensitiveSyntaxError2) = f_labpat labpat
 		   (*val clv  = CL.newClassVar ()*)
@@ -1536,7 +1541,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbind (A.ConBind (ident, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ConBind"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConBind")
 		   val (tv, cons, cst, css) = f_identpat ident
 	       in (tv, E.toDA0ValueIds cons L.empty, cst, css)
 	       end
@@ -1549,20 +1554,20 @@ fun generateConstraints' prog pack nenv =
 	      * for that datatype constructor.
 	      *)
 	     | f_conbind (A.ConBindOf (labid, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ConBindOf"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConBindOf")
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^"left hand side of 'of'...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^"left hand side of 'of'...")
 		   (* this is the code to the left hand side of the 'of' (a constructor name) *)
 		   val (tv1, cons, cst1, css1) = f_labid labid
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^"right hand side of 'of'...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^"right hand side of 'of'...")
 		   (* this is the code to the right hand side of the 'of' (a type) *)
 		   val (tv2, eqtypeVar, cst2, css2) = f_labtype labtyp
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for left hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("printing constraints for right hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst2))
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("The constraints generated for the type of the datatype constructor are:\n"^(#red D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "The constraints generated for the type of the datatype constructor are:\n"^(#red D.colors)^(E.printConstraints cst2))
 
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newClassVar ()
@@ -1584,7 +1589,7 @@ fun generateConstraints' prog pack nenv =
 		   (* val equalityConstraint2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv2) (T.consTYPE_VAR tv2) lab *)
 
 
-		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES ("constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt newEqtypeVar))^" to be the same as "
+		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES (fn _ => "constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt newEqtypeVar))^" to be the same as "
 								       ^(Int.toString(T.equalityTypeVarToInt eqtypeVar)))
 		   val c0   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR newEqtypeVar) (T.consEQUALITY_TYPE_VAR eqtypeVar) lab
 
@@ -1606,7 +1611,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.toCLSValueIds cons clv1 L.empty, cst', css)
 	       end
 	     | f_conbind (A.ConBindNoOf (ident, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ConBindNoOf"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConBindNoOf")
 		   val (tv, cons, cst, css) = f_identpat ident
 		   val tv' = T.freshTypeVar ()
 	       in (tv', E.toDATValueIds cons L.empty, cst, css)
@@ -1619,7 +1624,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbindseq (A.ConBindSeq conbinds) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.ConBindSeq"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConBindSeq")
 		   val (tvs, conss, csts, csss) = unzipFour (map f_conbind conbinds)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
@@ -1652,7 +1657,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
 	   and f_labtypevarbind (A.LabTypeVar (typeVar, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabTypeVar")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabTypeVar")
 		   val (tv, tyvs, cst) = f_typevarbind typeVar
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
@@ -1663,7 +1668,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Ty.tvenv, Env.cst) *)
 	   and f_typevarseq (A.TypeVarSeqOne (typeVar, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVarSeqOne")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVarSeqOne")
 		   val (tv, tyvs, cst) = f_typevarbind typeVar
 		   val sv = T.freshRowVar ()
 		   val sq = T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)
@@ -1671,14 +1676,14 @@ fun generateConstraints' prog pack nenv =
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
 	     | f_typevarseq (A.TypeVarSeqEm (_, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVarSeqEm")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVarSeqEm")
 		   val sv = T.freshRowVar ()
 		   val sq = T.ROW_C ([], T.noflex (), lab)
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) sq lab
 	       in (sv, E.emtv, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarseq (A.TypeVarSeqSeq (typevars, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVarSeqSeq")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVarSeqSeq")
 		   val (tvs, tyvss, csts) = unzipThree (map f_labtypevarbind typevars)
 		   val tyvs = E.unionEnvList tyvss
 		   val cst  = E.unionConstraintsList csts
@@ -1697,7 +1702,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typenv, Ty.varenv * Id.idl option, Env.cst, Env.cst, Env.css) *)
 	   and f_datbind (A.DatBind (datname, conbindseq, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.DatBind"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DatBind")
 		   val (tvs, cons, cst1, css1) = f_conbindseq conbindseq
 		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst2, css2) = f_datname datname
 		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
@@ -1725,7 +1730,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typenv, (Ty.varenv * Id.idl option) list, Env.cst, Env.css) *)
 	   and f_datbindseq (A.DatBindSeq (datbinds, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.DatBindSeq"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DatBindSeq")
 		   val (typeNameEnvs, conss, csts1, csts2, csss) = unzipFive (map f_datbind datbinds)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst1 = E.unionConstraintsList csts1
@@ -1742,18 +1747,18 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.cst, Env.cst, Env.css) *)
 	   and f_valbindcore (A.ValBindCore (labpat, labexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ValBindCore (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ValBindCore (lab = "^Int.toString(L.toInt(lab))^")")
 		   val (tv1, vids, cst1, css1) = f_labpat labpat
-		   val (tv2, cst2, css2) = f_labexp labexp
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "**** constraints for A.ValBindCore - cst1 ***"
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "**** constraints for A.ValBindCore - cst2 ***"
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^(E.printConstraints cst2))
+		   val (tv2, eqtv, cst2, css2) = f_labexp labexp
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindCore - cst1 ***")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindCore - cst2 ***")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^(E.printConstraints cst2))
 		   val vids' = E.closeValueIds vids (V.nonexpLabExp labexp)
 		   val c     = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst   = E.consConstraint (lab, c) (cst2)
 		   val css   = E.unionContextSensitiveSyntaxErrors [clearRebound css1, css2]
-		   val _     = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("A.ValBindCore constraints generated (tv1="^Int.toString(T.typeVarToInt tv1)^", tv2="^Int.toString(T.typeVarToInt tv2)^")\n")
+		   val _     = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "A.ValBindCore constraints generated (tv1="^Int.toString(T.typeVarToInt tv1)^", tv2="^Int.toString(T.typeVarToInt tv2)^")\n")
 	       in (vids', cst1, cst, css)
 	       end
 	     | f_valbindcore (A.ValBindCoreDots pl) =
@@ -1765,15 +1770,15 @@ fun generateConstraints' prog pack nenv =
 	    * this function is called when a variable is defined, for example
 	    * the code 'val x = 1.0' will cause this function to be called *)
 	   and f_valbindseq (A.ValBindSeq (valbindcores, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ValBindSeq (lab = UNKNOWN)")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ValBindSeq (lab = UNKNOWN)")
 		   val (vidss, csts1, csts2, csss) = unzipFour (map f_valbindcore valbindcores)
 		   val vids = E.unionEnvList vidss
 		   val cst1 = E.unionConstraintsList csts1
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "**** constraints for A.ValBindSeq - cst1 ***"
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#red D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindSeq - cst1 ***")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^(E.printConstraints cst1))
 		   val cst2 = E.unionConstraintsList csts2
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "**** constraints for A.ValBindSeq - cst2 ***"
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ((#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindSeq - cst2 ***")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^(E.printConstraints cst2))
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 	       in (vids, cst1, cst2, css)
 	       end
@@ -1784,7 +1789,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.css) *)
 	   and f_valbind (A.ValBindRec (valbindseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ValBindRec (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ValBindRec (lab = "^Int.toString(L.toInt(lab))^")")
 		   val (vids, cst1, cst2, css) = f_valbindseq valbindseq
 		   val labs  = L.singleton lab
 		   val vids' = E.toMonoValueIds (E.toRECValueIds vids labs) labs
@@ -1805,7 +1810,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.cst, Env.css) *)
 	   and f_labatpat (A.LabAtPat (atpat, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabAtPat")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabAtPat")
 		   val (tv, vids, cst, css) = f_atpat atpat
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
@@ -1819,12 +1824,12 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_fmatch (A.FMatchId (ident, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FMatchId")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FMatchId")
 		   val (tv, vids, cst, css) = f_identpat ident
 	       in (tv, vids, E.emvar, cst, css)
 	       end
 	     | f_fmatch (A.FMatchApp (fmatch, labatpat, _, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FMatchApp")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FMatchApp")
 		   val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
 		   val tv  = T.freshTypeVar ()
@@ -1834,7 +1839,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, E.unionEnvList [vids1, vids2], cst, css)
 	       end
 	     | f_fmatch (A.FMatchSlApp (fmatch, labatpat, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FMatchSlApp")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FMatchSlApp")
 		   val (tv1, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val (tv2, vids2, cst2, css2) = f_labatpat labatpat
 		   val tv  = T.freshTypeVar ()
@@ -1843,7 +1848,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, vids, E.unionEnvList [vids1, vids2], cst, css)
 	       end
 	     | f_fmatch (A.FMatchNoApp (fmatch, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FMatchNoApp")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FMatchNoApp")
 		   val (_, vids, vids1, cst1, css1) = f_fmatch fmatch
 		   val tv = T.freshTypeVar ()
 	       in (tv, vids, vids1, cst1, css1)
@@ -1855,14 +1860,14 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_labfmatch (A.LabFMatch (fmatch, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabFMatch")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabFMatch")
 		   val (tv, vids, vids', cst, css) = f_fmatch fmatch
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', vids, vids', E.consConstraint (lab, c) cst, css)
 	       end
 	     | f_labfmatch (A.LabFMatchSl (fmatch, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabFMatchSl")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabFMatchSl")
 		   val (tv, vids, vids', cst, css) = f_fmatch fmatch
 		   val tv' = T.freshTypeVar ()
 	       in (tv', vids, vids', cst, css)
@@ -1875,7 +1880,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.varenv, Env.cst, Env.css) *)
 	   and f_fmatchty (A.FMatchT fmatch) = f_labfmatch fmatch
 	     | f_fmatchty (A.FMatchTTy (fmatch, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FMatchTTy")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FMatchTTy")
 		   val (tv1, vids1, vids1', cst1, css1) = f_labfmatch fmatch
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val tv  = T.freshTypeVar ()
@@ -1892,9 +1897,9 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_fvalbindcore (A.FValBindCore (fmatch, labexp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FValBindCore")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FValBindCore")
 		   val (tv1, vids, vids', cst1, css1) = f_fmatchty fmatch
-		   val (tv2, cst2, css2) = f_labexp labexp
+		   val (tv2, eqtv, cst2, css2) = f_labexp labexp
 		   val labs = L.singleton lab
 		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV cst1, E.projValueIds (E.toMonoValueIds vids' L.empty))
@@ -1912,7 +1917,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_fvalbindone (A.FValBindOne (fvalbindcores, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FValBindOne")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FValBindOne")
 		   val (vidss, csts, csss) = unzipThree (map f_fvalbindcore fvalbindcores)
 		   val vids = E.unionEnvList vidss
 		   val cst  = E.unionConstraintsList csts
@@ -1928,7 +1933,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.css) *)
 	   and f_fvalbind (A.FValBind (fvalbindones, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FValBind")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FValBind")
 		   val (vidss, csts, csss) = unzipThree (map f_fvalbindone fvalbindones)
 		   val vids = E.unionEnvList vidss
 		   val cst  = E.unionConstraintsList csts
@@ -1954,7 +1959,7 @@ fun generateConstraints' prog pack nenv =
 	    *)
 	   and f_tyconbind (A.TyCon (str, id, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyCon (str=\""^str^"\")")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyCon (str=\""^str^"\")")
 		   (* generate new type variable, row variable and type function variable *)
 		   val freshTypeVar   = T.freshTypeVar  ()
 		   val freshRowVar   = T.freshRowVar ()
@@ -1983,7 +1988,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (string, Id.id option, Ty.typeVar, Ty.rowVar, Ty.rowVar, Env.typenv, Env.tvenv, Env.cst, Env.css) *)
 	   and f_datname (A.DatName (typvarseq, tycon, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.DatName"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DatName")
 		   val (sv1, tyvs, cst1) = f_typevarseq typvarseq
 
 		   (* call f_tyconbind, which deals with the new binding of type constructors *)
@@ -2004,7 +2009,7 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
 	   and f_typbind (A.TypBind (datname, labtyp, _, lab, _)) =
 	       let
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.TypBind"
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypBind")
 		   val (_, _, tv1, sv1, sv1', typeNameEnv, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
@@ -2021,7 +2026,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
 	   and f_typbindseq (A.TypBindSeq (typbinds, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for A.TypBindSeq"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypBindSeq")
 		   val (typeNameEnvs, csts, csss) = unzipThree (map f_typbind typbinds)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst  = E.unionConstraintsList csts
@@ -2036,13 +2041,13 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_exbind (A.ExBind (ident, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExBind")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExBind")
 		   val (tv, cons, cst, css) = f_identpat ident
 		   val c = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception' lab (T.DECLARATION_CONS I.dummyId)) lab
 	       in (E.toEX0ValueIds cons (L.singleton lab), E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_exbind (A.ExBindOf (labid, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExBindOf")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExBindOf")
 		   val (tv1, eqtv, cst1, css1) = f_labtype labtyp
 		   val (tv2, cons, cst2, css2) = f_labid labid
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
@@ -2065,7 +2070,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.toCLSValueIds (E.toMonoValueIds cons L.empty) clv1 L.empty, cst', css)
 	       end
 	     | f_exbind (A.ExBindEq (labid, longid, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExBindEq")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExBindEq")
 		   val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, eqtv, _, cl, cst2) = f_longidexp longid
 		   val clv  = CL.newClassVar ()
@@ -2082,7 +2087,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.toCLSValueIds (E.toMonoValueIds cons labs) clv labs, E.singleConstraint (L.dummyLab, c), css1)
 	       end
 	     | f_exbind (A.ExBindNo (ident, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExBindNo")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExBindNo")
 		   val (tv, cons, cst, css) = f_identpat ident
 	       in (E.toEX0ValueIds cons L.empty, cst, css)
 	       end
@@ -2093,7 +2098,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.cst, Env.css) *)
 	   and f_exbindseq (A.ExBindSeq (exbinds, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.EqBindSeq")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.EqBindSeq")
 		   val (conss, csts, csss) = unzipThree (map f_exbind exbinds)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
@@ -2113,7 +2118,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.ocenv, Env.cst) *)
 	   and f_classbind (A.Class (s, v, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Class (f_classbind function)")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Class (f_classbind function)")
 		   val sv1  = T.freshRowVar ()
 		   val sv2  = T.freshRowVar ()
 		   val c    = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
@@ -2130,7 +2135,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.ocenv, Env.cst) *)
 	   and f_labclassbind (A.LabClass (class, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabClass (f_labclassbind function)")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabClass (f_labclassbind function)")
 		   val (sv, ovcs, cst) = f_classbind class
 		   val sv' = T.freshRowVar ()
 		   val c   = E.initRowConstraint (T.ROW_VAR sv') (T.ROW_VAR sv) lab
@@ -2143,7 +2148,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.cst) *)
 	   and f_class (A.Class (s, v, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.Class (f_class function)")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.Class (f_class function)")
 		   val sv = T.freshRowVar ()
 		   val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.ROW_VAR sv) (CL.consOC ()) lab) lab
 	       in (sv, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
@@ -2152,7 +2157,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.cst) *)
 	   and f_labclass (A.LabClass (class, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabClass (f_labclass function)")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabClass (f_labclass function)")
 		   val (sv, cst) = f_class class
 		   val sv' = T.freshRowVar ()
 		   val c   = E.initRowConstraint (T.ROW_VAR sv') (T.ROW_VAR sv) lab
@@ -2165,7 +2170,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
 	   and f_tyclass (A.TyClassCl (labclass, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyClassCl")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyClassCl")
 		   val (sv, cst) = f_labclass labclass
 		   val tv  = T.freshTypeVar ()
 		   val lid = Option.getOpt (A.getlabidLabclass labclass, (I.dummyId, L.dummyLab))
@@ -2173,7 +2178,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclass (A.TyClassTy (typ, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyClassTy")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyClassTy")
 		   val (tv, eqTypeVar, cst, css) = f_type typ
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
@@ -2187,7 +2192,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.cst, Env.css) *)
 	   and f_labtyclass (A.LabTyClass (tyclass, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabTyClass")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabTyClass")
 		   val (tv, cst, css) = f_tyclass tyclass
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
@@ -2200,20 +2205,20 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.rowVar, Env.cst, Env.css) *)
 	   and f_tyclassseq (A.TyClassSeqOne (tyclass, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyClassSeqOne")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyClassSeqOne")
 		   val (tv, cst, css) = f_tyclass tyclass
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclassseq (A.TyClassSeqEm (_, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyClassSeqEm")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyClassSeqEm")
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C ([], T.noflex (), lab)) lab
 	       in (sv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_tyclassseq (A.TyClassSeqSeq (labtyclasss, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TyClassSeqSeq")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TyClassSeqSeq")
 		   val (tvs, csts, csss) = unzipThree (map f_labtyclass labtyclasss)
 		   val sv  = T.freshRowVar ()
 		   val cst = E.unionConstraintsList csts
@@ -2228,7 +2233,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   and f_typevarval (A.TypeVar (_, n, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVar")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVar")
 		   val _   = D.printDebug 2 D.AZE ("in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
@@ -2236,7 +2241,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarval (A.EqualityTypeVar (_, n, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.EqualityTypeVar (f_typevarval)")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.EqualityTypeVar (f_typevarval)")
 		   val _   = D.printDebug 2 D.AZE ("in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
@@ -2256,7 +2261,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.tvenv, Env.cst) *)
 	   and f_labtypevarval (A.LabTypeVar (typeVar, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabTypeVar")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabTypeVar")
 		   val (tyvs, cst) = f_typevarval typeVar
 	       (* NOTE: the label is not used. *)
 	       in (tyvs, cst)
@@ -2267,7 +2272,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_typeVarseqval (A.TypeVarSeqOne (typeVar, _, lab, _)) = f_typevarval typeVar
 	     | f_typeVarseqval (A.TypeVarSeqEm (_, lab, _)) = (E.emtv, E.emptyConstraint)
 	     | f_typeVarseqval (A.TypeVarSeqSeq (typevars, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypeVarSeqSeq (f_typeVarseqval function)")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVarSeqSeq (f_typeVarseqval function)")
 		   val (tyvss, csts) = ListPair.unzip (map f_labtypevarval typevars)
 		   val tyvs = E.unionEnvList tyvss
 		   val cst  = E.unionConstraintsList csts
@@ -2282,7 +2287,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.css) *)
 	   and f_dec (A.DecVal (typeVarseq, valbind, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecVal")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecVal")
 		   val (env, css) = f_valbind valbind
 		   val (tyvs1, cst1) = f_typeVarseqval typeVarseq
 		   val (tyvs2, cst2) = f_typevarvallist (A.getTypeVarValBind valbind)
@@ -2294,11 +2299,11 @@ fun generateConstraints' prog pack nenv =
 		   val tyvs = E.plusenv tyvs2 tyvs1
 		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val env' = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
-		   val _  = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "finished generating constraints for A.DecVal"
+		   val _  = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "finished generating constraints for A.DecVal")
 	       in (env', css)
 	       end
 	     | f_dec (A.DecFVal (typeVarseq, fvalbind, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecFVal")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecFVal")
 		   val (env, css) = f_fvalbind fvalbind
 		   val (tyvs1, cst1) = f_typeVarseqval typeVarseq
 		   val (tyvs2, cst2) = f_typevarvallist (A.getTypeVarFValBind fvalbind)
@@ -2308,7 +2313,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env', css)
 	       end
 	     | f_dec (A.DecDatType (datbinds, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecDatType")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecDatType")
 		   val (typeNameEnv, conss, cst1, cst2, css) = f_datbindseq datbinds
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
@@ -2317,7 +2322,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env2, css)
 	       end
 	     | f_dec (A.DecDatWith (datbind, typbind, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecDatWith")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecDatWith")
 		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbind
 		   val (typeNameEnv2, cst2, css2) = f_typbindseq typbind
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2]
@@ -2330,7 +2335,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env4, css)
 	       end
 	     | f_dec (A.DecDatRep (tycon, longtycon, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecDatRep")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecDatRep")
 		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind tycon
 		   val (typeFunctionVar, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv, T.consTYPE_VAR tv, lab)) lab
@@ -2343,17 +2348,17 @@ fun generateConstraints' prog pack nenv =
 	       in (env2, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_dec (A.DecType (typbindseq, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecType")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecType")
 		   val (typeNameEnv, cst, css) = f_typbindseq typbindseq
 	       in (E.ROW_ENV (E.CONSTRAINT_ENV cst, E.consEnvTypeNames typeNameEnv), css)
 	       end
 	     | f_dec (A.DecEx (exbindseq, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecEx")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecEx")
 		   val (cons, cst, css) = f_exbindseq exbindseq
 	       in (E.ROW_ENV (E.CONSTRAINT_ENV cst, E.projValueIds cons), css)
 	       end
 	     | f_dec (A.DecOpen (longstrseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecOpen")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecOpen")
 		   val opns = foldl (fn (lid, opn) => E.addOEnv (lid, I.getLabId lid (*lab*), E.OPENED_STRUCT) opn)
 				    (* NOTE: We can't use lab for all of then because then we can't
 				     * distinguish between the ones that are IN and OUT during unification. *)
@@ -2362,7 +2367,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.projOpns opns, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_dec (A.DecLocal (decs1, decs2, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecLocal")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecLocal")
 		   val (env1, css1) = f_decs decs1
 		   val (env2, css2) = f_decs decs2
 		   val ev   = E.freshEnvVar ()
@@ -2373,7 +2378,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env5 (*E.LOCAL_ENV (env1, env2)*), E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_dec (A.DecAbsType (datbinds, decs, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecAbsType")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecAbsType")
 		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbinds
 		   val (env2, css2) = f_decs decs
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
@@ -2388,7 +2393,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env5, css)
 	       end
 	     | f_dec (A.DecAbsWith (datbinds, typbinds, decs, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecAbsWith")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecAbsWith")
 		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbinds
 		   val (typeNameEnv2, cst2, css2) = f_typbindseq typbinds
 		   val (env3, css3) = f_decs decs
@@ -2405,7 +2410,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env7, css)
 	       end
 	     | f_dec (A.DecInfix (i, identseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecInfix")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecInfix")
 		   val css1 = if getBasis ()
 			      then E.emptyContextSensitiveSyntaxError
 			      else E.singcss (notFullyCs lab "infix")
@@ -2415,7 +2420,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.emptyEnv, E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_dec (A.DecInfixr (i, identseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecInfixr")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecInfixr")
 		   val css1 = if getBasis ()
 			      then E.emptyContextSensitiveSyntaxError
 			      else E.singcss (notFullyCs lab "infixr")
@@ -2425,14 +2430,14 @@ fun generateConstraints' prog pack nenv =
 	       in (E.emptyEnv, E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_dec (A.DecNonfix (identseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecNonfix")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecNonfix")
 		   val css = if getBasis ()
 			     then E.emptyContextSensitiveSyntaxError
 			     else E.singcss (notFullyCs lab "nonfix")
 	       in (E.emptyEnv, css)
 	       end
 	     | f_dec (A.DecOverload (labid, labtyp, labTypeVar, tyclassseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecOverload")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecOverload")
 		   val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val (tv3, tyvs, cst3) = f_labtypevarbind labTypeVar
@@ -2447,7 +2452,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env2, css)
 	       end
 	     | f_dec (A.DecClass (labclass, tyclassseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DecClass")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DecClass")
 		   val (sv1, ovcs, cst1) = f_labclassbind labclass
 		   val (sv2, cst2, css2) = f_tyclassseq tyclassseq
 		   val c   = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
@@ -2463,14 +2468,14 @@ fun generateConstraints' prog pack nenv =
 	   and f_declist []    = (E.emptyEnv, E.emptyContextSensitiveSyntaxError)
 	     | f_declist [dec] =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (D.sep1'^"generating constraints for a dec:\n"^(A.printAstDec dec)^D.sep1')
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => D.sep1'^"generating constraints for a dec:\n"^(A.printAstDec dec)^D.sep1')
 		   val decResult = f_dec dec
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (D.sep1'^"generated the constraints for the dec"^D.sep1')
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => D.sep1'^"generated the constraints for the dec"^D.sep1')
 	       in
 		   decResult
 	       end
 	     | f_declist (dec :: decs) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION "generating constraints for an element in a last of decs (in f_declist)"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for an element in a last of decs (in f_declist)")
 		   val (env1, css1) = f_dec dec
 		   val (env2, css2) = f_declist decs
 	       in (E.ROW_ENV (env1, env2), E.unionContextSensitiveSyntaxErrors [css1, css2])
@@ -2490,7 +2495,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_valdescone (A.ValDescOne (labid, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ValDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ValDescOne")
 		   val (tv1, vids, cst1, css1) = f_labid labid
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
@@ -2505,7 +2510,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
 	   and f_valdesc (A.ValDesc (valdescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ValDesc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ValDesc")
 		   val (vidss, csts, csss) = unzipThree (map f_valdescone valdescs)
 		   val vids = E.unionEnvList vidss
 		   val cst  = E.unionConstraintsList csts
@@ -2519,7 +2524,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* this is used to represent one single type description, for example the 'int' in 'eqtype int' *)
 	   and f_typdescone (A.TypDescOne (datname, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TypDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypDescOne")
 		   val (str, idLabelPair, tv, sv1, sv2, typeNameEnv, tyvs, cst, css) = f_datname datname
 		   (* NOTE: tyvs is not used *)
 		   val id   = Option.getOpt (Option.map (fn (id, _) => id) idLabelPair, I.dummyId)
@@ -2579,7 +2584,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_tdrdescone (A.TdrDescOne (datname, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.TdrDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TdrDescOne")
 		   val (s, v, tv1, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname datname
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
@@ -2623,13 +2628,13 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_excdescone (A.ExcDescOne (ident, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExcDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExcDescOne")
 		   val (tv, cons, cst, css) = f_identpat ident
 		   val c = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyexception' lab (T.DECLARATION_CONS I.dummyId)) lab
 	       in (E.toEX0ValueIds cons (L.singleton lab), E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_excdescone (A.ExcDescOf (labid, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ExcDescOf")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ExcDescOf")
 		   val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val ty  = T.constyexception' lab (T.DECLARATION_CONS I.dummyId)
@@ -2645,7 +2650,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_excdesc (A.ExcDesc (exdescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.EscDesc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.EscDesc")
 		   val (vidss, csts, csss) = unzipThree (map f_excdescone exdescs)
 		   val vids = E.unionEnvList vidss
 		   val cst  = E.unionConstraintsList csts
@@ -2663,7 +2668,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.toDA0ValueIds cons L.empty, cst, css)
 	       end
 	     | f_condescone (A.ConDescOneOf (labid, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ConDescOneOf")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConDescOneOf")
 		   val (tv1, cons, cst1, css1) = f_labid labid
 		   val (tv2, eqtv, cst2, css2) = f_labtype labtyp
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
@@ -2681,7 +2686,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, E.toCLSValueIds cons clv1 L.empty, cst', css)
 	       end
 	     | f_condescone (A.ConDescOneNoOf (ident, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ConDescOneNoOf")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConDescOneNoOf")
 		   val (tv, cons, cst, css) = f_identpat ident
 		   val tv' = T.freshTypeVar ()
 	       in (tv, E.toDATValueIds cons L.empty, cst, css)
@@ -2694,7 +2699,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_condesc (A.ConDesc (condescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ConDesc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ConDesc")
 		   val (tvs, conss, csts, csss) = unzipFour (map f_condescone condescs)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
@@ -2708,7 +2713,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: ((Id.id, Ty.Typename) option, Env.typenv, E.varenv * Id.idl option, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_datdescone (A.DatDescOne (datname, consdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DatDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DatDescOne")
 		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname datname
 		   val (tvs, cons, cst2, css2) = f_condesc consdesc
 		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
@@ -2732,7 +2737,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, (E.varenv * Id.idl option) list, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_datdesc (A.DatDesc (datdescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.DatDesc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.DatDesc")
 		   val (typenameOption, typeNameEnvs, conss, csts, csts', csss) = unzipSix (map f_datdescone datdescs)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst  = E.unionConstraintsList csts
@@ -2748,7 +2753,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_strdescone (A.StrDescOne (strid, labsigexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrDescOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrDescOne")
 		   val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
@@ -2763,7 +2768,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
 	   and f_strdesc (A.StrDesc (strdescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrDesc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrDesc")
 		   val (strss, csts, csss) = unzipThree (map f_strdescone strdescs)
 		   val strs = E.unionEnvList strss
 		   val cst  = E.unionConstraintsList csts
@@ -2777,7 +2782,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (E.env, E.emptyContextSensitiveSyntaxError) *)
 	   and f_speconesmltes (A.SpecValue (valdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecValue")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecValue")
 		   val (vids, cst1, css) = f_valdesc valdesc
 		   val (tyvs, cst2) = f_typevarvallist (A.getTypeVarValDesc valdesc)
 		   val env1 = E.ENVPOL (tyvs, E.ROW_ENV (E.CONSTRAINT_ENV cst1, E.projValueIds vids))
@@ -2873,7 +2878,7 @@ fun generateConstraints' prog pack nenv =
 
 	     (* type declarations inside a signature *)
 	     | f_specone (A.SpecType (typdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecType")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecType")
 		   val (typenames, typeNameEnv, constraints, css) = f_typdesc typdesc
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()
@@ -2918,7 +2923,7 @@ fun generateConstraints' prog pack nenv =
 
 	       end
 	     | f_specone (A.SpecTdr (tdrdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecTdr")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecTdr")
 		   val (env, css) = f_tdrdesc tdrdesc
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
@@ -2934,7 +2939,7 @@ fun generateConstraints' prog pack nenv =
 
 	     (* exception declaration inside a signature *)
 	     | f_specone (A.SpecException (exdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecException")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecException")
 		   val (cons, cst, css) = f_excdesc exdesc
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.projValueIds cons) lab))
 		   val ev1  = E.freshEnvVar ()
@@ -2964,7 +2969,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env4, css)
 	       end
 	     | f_specone (A.SpecStr (strdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecStr")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecStr")
 		   val (strs, cst, css) = f_strdesc strdesc
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.ENVDEP (EL.initExtLab (E.projStructs strs) lab))
 		   val ev1  = E.freshEnvVar ()
@@ -2978,7 +2983,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env2, css)
 	       end
 	     | f_specone (A.SpecInc (labsigexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecInc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecInc")
 		   val (ev, cst, css) = f_labsigexp labsigexp
 		   val ev'  = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
@@ -2996,7 +3001,7 @@ fun generateConstraints' prog pack nenv =
 	       in (E.emptyEnv, css)
 	       end
 	     | f_specone (A.SpecRep (tycon, longtycon, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecRep")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecRep")
 		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind tycon
 		   val (typeFunctionVar, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv, T.consTYPE_VAR tv, lab)) lab
@@ -3012,7 +3017,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env3, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_specone (A.SpecSha (spec, longtyconeq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecSha")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecSha")
 		   val (env1, css) = f_spec spec
 		   val env2 = f_longtyconeq longtyconeq
 		   (*(2010-07-02)This is not the correct thing to do for sharing.*)
@@ -3031,7 +3036,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env4, E.unionContextSensitiveSyntaxErrors [css, css'])
 	       end
 	     | f_specone (A.SpecSsi (spec, longstrideq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SpecSsi")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecSsi")
 		   val (env, css) = f_spec spec
 		   val css' = if getBasis ()
 			      then E.emptyContextSensitiveSyntaxError
@@ -3046,7 +3051,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: Env.env *)
 	   and f_longtyconeq (A.LongTyConEq (longtycons, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LongTyConEq")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LongTyConEq")
 		   val (typeFunctionVars, envs, csts) = unzipThree (map f_longtyconbind longtycons)
 		   val env = E.unionEnv envs
 		   val cst = E.unionConstraintsList csts
@@ -3107,7 +3112,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.strenv, Env.cst, Env.css) *)
 	   and f_strbindone (A.StrBindOneOp (strid, labsigexp, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrBindOneOp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrBindOneOp")
 		   val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val (ev3, strs, cst3, css3) = f_strid strid
@@ -3119,7 +3124,7 @@ fun generateConstraints' prog pack nenv =
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     | f_strbindone (A.StrBindOneTr (strid, labsigexp, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrBindOneTr")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrBindOneTr")
 		   val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val (ev3, strs, cst3, css3) = f_strid strid
@@ -3131,7 +3136,7 @@ fun generateConstraints' prog pack nenv =
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     | f_strbindone (A.StrBindOne (strid, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrBindOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrBindOne")
 		   val (ev1, strs, cst1, css1) = f_strid strid
 		   val (ev2, cst2, css2) = f_labstrexp labstrexp
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
@@ -3165,7 +3170,7 @@ fun generateConstraints' prog pack nenv =
 	   and f_strdecone (A.StrDecOneDec decs) = f_decs decs
 	     | f_strdecone (A.StrDecOneStr (strbind, _, _)) = f_strbind strbind
 	     | f_strdecone (A.StrDecOneLoc (strdec1, strdec2, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrDecOneLoc")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrDecOneLoc")
 		   val (env1, css1) = f_strdec strdec1
 		   val (env2, css2) = f_strdec strdec2
 		   val ev1  = E.freshEnvVar ()
@@ -3185,7 +3190,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst, Env.css) *)
 	   and f_labstrexp (A.LabStrExp (strexp, _, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabStrExp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabStrExp")
 		   val (ev, cst, css) = f_strexp strexp
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
@@ -3199,7 +3204,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst, Env.css) *)
 	   and f_strexp (A.StrExpBasic (strdec, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpBasic")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpBasic")
 		   val (env, css) = f_strdec strdec
 		   val env = E.updateILab lab env
 		   val ev1 = E.freshEnvVar ()
@@ -3209,14 +3214,14 @@ fun generateConstraints' prog pack nenv =
 	       in (ev1, E.consConstraint(lab, c1) (E.singleConstraint (L.dummyLab, c2)), css)
 	       end
 	     | f_strexp (A.StrExpId (longstrid, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpId")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpId")
 		   val (ev, cst) = f_longstrid longstrid
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
 	       in (ev', E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
 	     | f_strexp (A.StrExpOp (labstrexp, labsigexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpOp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpOp")
 		   val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val ev  = E.freshEnvVar ()
@@ -3227,7 +3232,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), css)
 	       end
 	     | f_strexp (A.StrExpTr (labstrexp, labsigexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpTr")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpTr")
 		   val (ev1, cst1, css1) = f_labstrexp labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val ev  = E.freshEnvVar ()
@@ -3238,7 +3243,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), css)
 	       end
 	     | f_strexp (A.StrExpFExp (funid, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpFExp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpFExp")
 		   val (ev0, ev1, cst1) = f_funid funid
 		   val (ev2, cst2, css) = f_labstrexp labstrexp
 		   val ev  = E.freshEnvVar ()
@@ -3247,7 +3252,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), css)
 	       end
 	     | f_strexp (A.StrExpFDec (funid, strdec, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpFDec")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpFDec")
 		   val (ev1, ev2, cst) = f_funid funid
 		   val (env, css) = f_strdec strdec
 		   val ev   = E.freshEnvVar ()
@@ -3259,7 +3264,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env2), css)
 	       end
 	     | f_strexp (A.StrExpLocal (strdec, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpLocal")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpLocal")
 		   val (env1, css1) = f_strdec strdec
 		   val (ev, cst2, css2) = f_labstrexp labstrexp
 		   val ev' = E.freshEnvVar ()
@@ -3294,7 +3299,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Id.lid option, Ty.rowVar, Env.env, Env.cst) *)
 	   and f_ldatname (A.LDatName (typevarseq, longtycon, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LDatName")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LDatName")
 		   val (sv, tyvs, cst1) = f_typevarseq typevarseq
 		   val lidop = f_longtyconwhere longtycon
 	       in (lidop, sv, tyvs, cst1)
@@ -3306,7 +3311,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Id.lid option, Ty.tyfvar, Env.cst, Env.css) *)
 	   and f_ltreadescone (A.LTReaDOne (ldatname, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LTReaDOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LTReaDOne")
 		   val (lidop, sv, tyvs, cst1) = f_ldatname ldatname
 		   val (tv, eqtv, cst2, css) = f_labtype labtyp
 		   val typeFunctionVar = T.freshTypeFunctionVar ()
@@ -3323,7 +3328,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.longtyp list, Env.cst, Env.css) *)
 	   and f_ltreadesc (A.LTReaDesc (ltreadescs, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LTReaDesc");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LTReaDesc");
 	       foldr (fn (ltreadesc, (reas, cst, css)) =>
 			 case f_ltreadescone ltreadesc of
 			     (SOME lid, typeFunctionVar, cst0, css0) =>
@@ -3342,7 +3347,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst, Env.css) *)
 	   and f_labsigexp (A.LabSigExp (sigexp, _, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.LabSigExp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.LabSigExp")
 		   val (ev, cst, css) = f_sigexp sigexp
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
@@ -3356,7 +3361,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.envvar, Env.cst, Env.css) *)
 	   and f_sigexp (A.SigExpBasic (spec, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpBasic")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpBasic")
 		   val (env, css) = f_spec spec
 		   val env = E.updateILab lab env
 		   val ev1 = E.freshEnvVar ()
@@ -3378,7 +3383,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev2, E.consConstraint(L.dummyLab, c1) (E.singleConstraint (lab, c2)), css)
 	       end
 	     | f_sigexp (A.SigExpId (sigid, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.StrExpId")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.StrExpId")
 		   val (ev, cst) = f_sigid sigid
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
@@ -3398,7 +3403,7 @@ fun generateConstraints' prog pack nenv =
 	       in (ev', E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end*)
 	     | f_sigexp (A.SigExpRea (labsigexp, rea, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigExpRea")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigExpRea")
 		   val (ev1, cst1, css1) = f_labsigexp labsigexp
 		   val (reas, cst2, css2) = f_ltreadesc rea
 		   val ev   = E.freshEnvVar ()
@@ -3419,7 +3424,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.sigenv, Env.cst, Env.css) *)
 	   and f_sigbindone (A.SigBindOne (sigid, labsigexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigBindOne")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigBindOne")
 		   val (ev1, sigs, cst1) = f_sigidbind sigid
 		   val (ev2, cst2, css2) = f_labsigexp labsigexp
 		   val c = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
@@ -3432,7 +3437,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.sigenv, Env.cst, Env.css) *)
 	   and f_sigbind (A.SigBind (sigbinds, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigBind")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigBind")
 		   val (sigss, csts, csss) = unzipThree (map f_sigbindone sigbinds)
 		   val sigs = E.unionEnvList sigss
 		   val cst  = E.unionConstraintsList csts
@@ -3446,7 +3451,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.funenv, Env.cst, Env.css) *)
 	   and f_funbindone (A.FunBindO (funid, strid, labsigexp, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindO")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindO")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (ev2, strs, cst2, css2) = f_strid strid
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp
@@ -3462,7 +3467,7 @@ fun generateConstraints' prog pack nenv =
 	       in (funs, cst, css)
 	       end
 	     | f_funbindone (A.FunBindOO (funid, strid, labsigexp1, labsigexp2, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindOO")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindOO")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (ev2, strs, cst2, css2) = f_strid strid
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp1
@@ -3481,7 +3486,7 @@ fun generateConstraints' prog pack nenv =
 	       in (funs, cst, css)
 	       end
 	     | f_funbindone (A.FunBindOT (funid, strid, labsigexp1, labsigexp2, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindOT")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindOT")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (ev2, strs, cst2, css2) = f_strid strid
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp1
@@ -3500,7 +3505,7 @@ fun generateConstraints' prog pack nenv =
 	       in (funs, cst, css)
 	       end
 	     | f_funbindone (A.FunBindOS (funid, spec, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindOS")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindOS")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (env, css2) = f_spec spec
 		   val (ev3, cst3, css3) = f_labstrexp labstrexp
@@ -3516,7 +3521,7 @@ fun generateConstraints' prog pack nenv =
 	       in (funs, cst, css)
 	       end
 	     | f_funbindone (A.FunBindOSO (funid, spec, labsigexp, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindOSO")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindOSO")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (env, css2) = f_spec spec
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp
@@ -3535,7 +3540,7 @@ fun generateConstraints' prog pack nenv =
 	       in (funs, cst, css)
 	       end
 	     | f_funbindone (A.FunBindOST (funid, spec, labsigexp, labstrexp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBindOST")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBindOST")
 		   val (ev0, ev1, funs, cst1) = f_funidbind funid
 		   val (env, css2) = f_spec spec
 		   val (ev3, cst3, css3) = f_labsigexp labsigexp
@@ -3561,7 +3566,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.funenv, Env.cst, Env.css) *)
 	   and f_funbind (A.FunBind (funbinds, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.FunBind")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.FunBind")
 		   val (funss, csts, csss) = unzipThree (map f_funbindone funbinds)
 		   val funs = E.unionEnvList funss
 		   val cst  = E.unionConstraintsList csts
@@ -3575,7 +3580,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.cst, Env.css) *)
 	   and f_sigdec (A.SigDec (sigbind, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.SigDec")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SigDec")
 		   val (sigs, cst, css) = f_sigbind sigbind
 		   val env = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.projSigs sigs)
 	       in (env, css)
@@ -3587,7 +3592,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.css) *)
 	   and f_afile (A.AFile (file, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.AFile")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.AFile")
 		   val css = if OS.FileSys.access (file, [OS.FileSys.A_READ])
 				andalso
 				not (OS.FileSys.isDir file)
@@ -3649,16 +3654,16 @@ fun generateConstraints' prog pack nenv =
 	   (* RETURNS: (E.env, Env.css) *)
 	   and f_progone (A.ProgOneDec td) = f_topdec td
 	     | f_progone (A.ProgOneExp (exp, v, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("generating constraints for A.ProgOneExp")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.ProgOneExp")
 		   (* this is the type variable that's used in the accessor
 		    * we use this later on when creating a type constraint
 		    * why do we need this later on? How can I use this type variable?
 		    * Is it through this type variable that the accessors know what they are accessing?
 		    *)
 		   val (tv, eqtv, cst1, css) = f_exp exp
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("ProgOneExp cst1 is: \n"^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ProgOneExp cst1 is: \n"^(E.printConstraints cst1))
 		   val (tyvs, cst2) = f_typevarvallist (A.getTypeVarExp exp)
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("ProgOneExp cst2 is: \n"^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ProgOneExp cst2 is: \n"^(E.printConstraints cst2))
 		   val tv'  = T.freshTypeVar ()
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 		   val cst  = E.consConstraint(lab, c) cst1
@@ -3666,7 +3671,7 @@ fun generateConstraints' prog pack nenv =
 								   typeOfId=(T.consTYPE_VAR tv'),
 								   classOfId=(CL.consVAL ()),
 								   labelOfConstraint=lab}])
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION ("ProgOneExp constraints in env1 are: \n"^(E.printConstraints cst))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ProgOneExp constraints in env1 are: \n"^(E.printConstraints cst))
 		   val env1 = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.projValueIds (E.closeValueIds vids (V.nonexpExp exp)))
 		   val env2 = E.ROW_ENV (E.CONSTRAINT_ENV cst2, E.ENVPOL (tyvs, env1))
 	       in (env2, css)
