@@ -126,22 +126,6 @@ type explicitTypeVar = typeVar ExtLab.extLab
 			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
-	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [(S1)*, (S2)*], typeConstructor = (T)*, outerType = (U)*} *)
-	 (* EQTYPE_CONSTRAINT (T)* *)
-	 (* NEQTYPE_CONSTRAINT (T)* *)
-
-	 (* NEQTYPE_CONSTRAINT a *)
-	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [a], typeConstructor = c, outerType = b} *)
-	 (* IS_REALLY_DATATYPE_CONSTRAINT c *)
-	 (* ==> NEQTYPE_CONSTRAINT b *)
-
-	 (* EQTYPE_PROPAGATION_CONSTRAINT {..., typeConstructor = c, outerType = b} *)
-	 (* IS_REALLY_REF_CONSTRAINT c *)
-	 (* ==> EQTYPE_CONSTRAINT b *)
-
-	 (* EQTYPE_CONSTRAINT b *)
-	 (* EQTYPE_PROPAGATION_CONSTRAINT {innerTypes = [a], ..., outerType = b} *)
-
 	 (* do we actually need to track this equalityTypeVar?
 	  * I mean, we don't need to checck that two equality type vars are the same,
 	  * we just have to check that they both are actually equality types
@@ -188,7 +172,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	 (* we actually don't need the equality type status for the TYPE_VAR constructor? Remove this? *)
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
 		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
-		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityTypeStatus
+		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION       of typeFunction  * rowType * Label.label
 		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
 		| GEN               of ty list ref
@@ -337,7 +321,7 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
   | stripDepsTy (ty as TYPE_CONSTRUCTOR(tn, sq, lab, _)) =
     let val (tn', labs1, stts1, deps1) = stripDepsTn tn
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
-    in (TYPE_CONSTRUCTOR (tn', sq', lab, UNKNOWN),
+    in (TYPE_CONSTRUCTOR (tn', sq', lab, EQUALITY_TYPE_STATUS(UNKNOWN)),
 	L.union  labs1 labs2,
 	L.union  stts1 stts2,
 	CD.union deps1 deps2)
@@ -537,7 +521,7 @@ fun getTypenameString "unit"      = CONSRECORD
 fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 					    ROW_VAR (freshRowVar ()),
 					    lab,
-					    UNKNOWN)
+					    EQUALITY_TYPE_STATUS(UNKNOWN))
 
 (* constructs an implicit type var *)
 fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, UNKNOWN)
@@ -608,35 +592,31 @@ fun consTupleTy tyl lab =
 
 (* constructors with kinds *)
 
-fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, UNKNOWN)
-(* ************************************************************************
- * jpirie: DELETE THIS - FOR TESTING ONLY. This WILL break things
- * ***********************************************************************)
-(*!*) fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE)
-(* ***********************************************************************)
-fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (map (fn x => FIELD_VAR x) tvl, f, lab), lab, UNKNOWN)
-fun constybool'          lab k = TYPE_CONSTRUCTOR (NC (CONSBOOL, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyint'           lab k = TYPE_CONSTRUCTOR (NC (CONSINT, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyword'          lab k = TYPE_CONSTRUCTOR (NC (CONSWORD, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyreal'          lab k = TYPE_CONSTRUCTOR (NC (CONSREAL, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constychar'          lab k = TYPE_CONSTRUCTOR (NC (CONSCHAR, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constystring'        lab k = TYPE_CONSTRUCTOR (NC (CONSSTRING, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyexception'     lab k = TYPE_CONSTRUCTOR (NC (CONSEXCEPTION, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyunit'          lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constylist'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSLIST, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constyref'        tv lab k = TYPE_CONSTRUCTOR (NC (CONSREF, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constytuple'     tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, UNKNOWN)
-fun constysubstring'     lab k = TYPE_CONSTRUCTOR (NC (CONSSUBSTRING, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyarray'      tv lab k = TYPE_CONSTRUCTOR (NC (CONSARRAY, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constyvector'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSVECTOR, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constyoption'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSOPTION, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constyorder'         lab k = TYPE_CONSTRUCTOR (NC (CONSORDER, k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN)
-fun constyfrag'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSFRAG, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, UNKNOWN)
-fun constynewcons'       lab k = TYPE_CONSTRUCTOR (NC (freshTypename   (), k, lab), ROW_C ([], noflex (), lab), lab, UNKNOWN) (* a new constant type *)
+fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyarrow'Eq tv1 tv2 lab k eq = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, eq)
+fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (map (fn x => FIELD_VAR x) tvl, f, lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constybool'          lab k = TYPE_CONSTRUCTOR (NC (CONSBOOL, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyint'           lab k = TYPE_CONSTRUCTOR (NC (CONSINT, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyword'          lab k = TYPE_CONSTRUCTOR (NC (CONSWORD, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyreal'          lab k = TYPE_CONSTRUCTOR (NC (CONSREAL, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constychar'          lab k = TYPE_CONSTRUCTOR (NC (CONSCHAR, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constystring'        lab k = TYPE_CONSTRUCTOR (NC (CONSSTRING, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyexception'     lab k = TYPE_CONSTRUCTOR (NC (CONSEXCEPTION, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyunit'          lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constylist'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSLIST, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyref'        tv lab k = TYPE_CONSTRUCTOR (NC (CONSREF, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constytuple'     tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constysubstring'     lab k = TYPE_CONSTRUCTOR (NC (CONSSUBSTRING, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyarray'      tv lab k = TYPE_CONSTRUCTOR (NC (CONSARRAY, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyvector'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSVECTOR, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyoption'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSOPTION, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyorder'         lab k = TYPE_CONSTRUCTOR (NC (CONSORDER, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constyfrag'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSFRAG, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constynewcons'       lab k = TYPE_CONSTRUCTOR (NC (freshTypename   (), k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN)) (* a new constant type *)
 
 (* constructors on types *)
-fun consTyArrowTy ty1 ty2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (consTupleTy [ty1, ty2] lab, noflex (), lab), lab, UNKNOWN)
-fun consTyTupleTy     tyl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (consTupleTy tyl lab, noflex (), lab), lab, UNKNOWN)
+fun consTyArrowTy ty1 ty2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (consTupleTy [ty1, ty2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun consTyTupleTy     tyl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (consTupleTy tyl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 
 (* constructors without kinds *)
 fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OTHER_CONS
@@ -905,7 +885,7 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
   | printty (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR("   ^ printtnty     tn  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^
-				    ","    ^ printEqualityTypeStatus    eq   ^ ")"
+				    ","    ^ printEqualityType    eq   ^ ")"
   | printty (APPLICATION (tf, sq, l))       = "APPLICATION("   ^ printtyf      tf  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^ ")"
@@ -959,7 +939,7 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
   | printty' (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR (" ^ printtnty'    tn  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^
-				    ","    ^ printEqualityTypeStatus    eq   ^ ")"
+				    ","    ^ printEqualityType    eq   ^ ")"
   | printty' (APPLICATION (tf, sq, l))       = "APPLICATION("    ^ printtyf'     tf  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^ ")"
@@ -976,40 +956,53 @@ and printTyGen'  tys = printtylist' (!tys)
 
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
-fun stripEqualityStatus_fieldType (FIELD_VAR rv)     = []
-  | stripEqualityStatus_fieldType (FC (_, tv, _))   =  stripEqualityStatus tv
-  | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,_,_,_)) = stripEqualityStatus_fieldType term
-  | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD = []
+fun stripEqualityStatus_fieldType (FIELD_VAR rv) labels   = ([], labels)
+  | stripEqualityStatus_fieldType (FC (_, tv, label)) labels  = stripEqualityStatus tv (L.cons label labels)
+  | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityStatus_fieldType term (L.union labs labels)
+  | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
 
-and stripEqualityStatus_sequenceType (ROW_VAR _) = []
-  | stripEqualityStatus_sequenceType (ROW_C (rtl,_,_)) = striplistgen rtl stripEqualityStatus_fieldType
-  | stripEqualityStatus_sequenceType (ROW_DEPENDANCY (term, _,_,_)) = stripEqualityStatus_sequenceType term
+and stripEqualityStatus_sequenceType (ROW_VAR _) labels = ([], labels)
+  | stripEqualityStatus_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
+  | stripEqualityStatus_sequenceType (ROW_C ((h::t),x,label)) labels =
+    let
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_fieldType h (L.cons label labels)
+	val (nextEqTypeStatuses, nextEqTypeLabels) = stripEqualityStatus_sequenceType (ROW_C (t,x,label)) (L.cons label labels)
+    in
+	(eqTypeStatuses@nextEqTypeStatuses, L.union eqTypeLabels nextEqTypeLabels)
+    end
+	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityStatus_fieldType (L.cons label labels) *)
+  | stripEqualityStatus_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityStatus_sequenceType term (L.union labs labels)
 
-(* strip the equality status values from ty values *)
-(* NOTE: we shouldn't be just returning the equality type
- * status here, we should also be returning the label that
- * we get. This will allow us to track the blame correctly *)
-and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) =
+and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityTypeStatus eq)^")");
-     [eq])
-  | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) =
+     ([eq], labels))
+  | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!");
-     [])
-  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, l, eq)) =
-			 eq::(stripEqualityStatus_sequenceType sequenceType)
-  | stripEqualityStatus (APPLICATION(_)) =
+     ([], labels))
+  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_STATUS(eq))) labels =
+    let
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_sequenceType sequenceType (L.cons label labels)
+    in
+	(eq::eqTypeStatuses, eqTypeLabels)
+    end
+  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, eq)) labels =
+    let
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_sequenceType sequenceType (L.cons label labels)
+    in
+	(eqTypeStatuses, eqTypeLabels)
+    end
+  | stripEqualityStatus (APPLICATION(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from APPLICATION!");
-     [])
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,_,eq)) =
+     ([], labels))
+  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,eq)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
-     [eq])
-  | stripEqualityStatus (GEN _) =
+     ([eq], L.cons label labels))
+  | stripEqualityStatus (GEN _) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
-     [])
-  | stripEqualityStatus (TYPE_DEPENDANCY (term, _, _, _)) = stripEqualityStatus term
+     ([], labels))
+  | stripEqualityStatus (TYPE_DEPENDANCY (term, _, _, _)) labels = stripEqualityStatus term labels
 
-and stripEqualityStatusList [] = [] |
-    stripEqualityStatusList (h::t) = (stripEqualityStatus h)@(stripEqualityStatusList t)
+and stripEqualityStatusList _ = raise EH.TODO "Not written this function yet"
 
 fun printAssoc  xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ st ^ ")")
 fun printAssoc' xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ "\"" ^ st ^ "\"" ^ ")")

@@ -275,6 +275,7 @@ fun min lab1 lab2 = Int.min (lab1, lab2)
 
 val empty = let val map : map = S.empty in {from = map, to = map, size = 0} end
 
+(* jpirie: remove this, it's no longer needed for this approarch *)
 val eqTypeLabels = ref empty
 val eqTypeWordLabels = ref empty
 

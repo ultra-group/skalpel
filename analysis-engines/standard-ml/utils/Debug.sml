@@ -97,8 +97,12 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
     if (!debug) andalso (!debugTesting) then print ("(TESTING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
   | printDebugFeature file PARSING stringFunction =
     if (!debug) andalso (!debugParsing) then print ("(PARSING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+
+  (* prints out the state
+   * after the state is printed once, the debugState flag is turned off so we only see the state once
+   * if we don't have this it's going to take a longp time to run skalpel *)
   | printDebugFeature file STATE stringFunction =
-    if (!debug) andalso (!debugState) then print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+    if (!debug) andalso (!debugState) then (print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n"); debugState := false)  else ()
 
 (* prints a debug statement, if the depth is <= what debug level is set then we print the string *)
 fun printDebug depth JSON str =
