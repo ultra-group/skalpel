@@ -1,0 +1,374 @@
+* WARNINGS
+
+When I'm doing unioning of labels, say when I'm doing something with
+EQUALITY_TYPE_DEPENDNCIES, I don't touch the other arguments of that
+datatype constructor (the deps, and the ids values). This may cause
+problems later, be aware that there may be work that needs to be done
+here.
+
+As soon as a chance is available, maybe print out these values to see
+what they contain, so that I can figure out how important it is to
+take care of these values.
+
+* TODOs
+*** Uncompleted TODOs
+
+TODO (2012-06-28-16:00): Generating equality constraints for tuples
+
+The case involving tuples doesn't work yet, I'm going to need to think
+of a way to handle code like this: (1, 1.0) = (2, 2.0). The equality
+type variable which represents the tuple should be constrained to be
+equal to.... something. Not sure how this is going to work yet, I'll
+need to have a think about this.
+
+*** Completed TODOs
+
+**** Completed TODO (2012-06-27-01:33) : Seeing a type variable being constrained to be the same as a status
+
+During unification we have the case of equality type variables being
+constrained to equality type statuses. This happens in the function:
+
+fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = |"
+
+If we look up equalityTypeVar in the unification state and it doesn't
+exist, then the process is straight forward, we just add it to the
+unification state, with the constraint of its equality type status.
+
+In the event that the equalityTypeVar does actually already appear in
+the state then we create a new constraint of the equality type
+variable from the dependancy that was existing in the state and the
+equality type status, and then we go off and solve it.
+
+There are two things to still do here. Firstly, the equality type
+status should probably go in the state, replacing the dependancy that
+was there (though we will still need to create the new constraint and
+solve it, to check there aren't any equality type errors), and
+secondly when creating this constraint the labels are joined together
+(shown below with labs@ls), but the deps and the ids remain the
+same. There is something called deps in the dependancy that we see
+already existing in the state, should they be unioned too?
+Possibly. Something to look into.
+
+Relevant code excerpt:
+
+\| SOME (T.EQUALITY_TYPE_DEPENDANCY (eqTypeVarDep, labs, stts, deps) =>
+let
+(* jpirie: what about stts and deps? Should these be combined somehow? *)
+val c = E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), labs@ls, deps, ids)
+(* jpirie: what about putting the new status in the map? *)
+in
+fsimplify (c::cs') l
+end
+
+* Research reports
+*** 2012-06-26
+
+When we see an equality type variable (''a) we generated this:
+
+val c   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
+
+We still get the equality type error when this is constrained to be
+NOT_EQUALITY_TYPE instead of EQUALITY_TYPE. Is the equality type error
+actually really coming from here? If not, that explains the problem
+with the missing label, because that's not where the equality type
+error is coming from! I need to find the location where the equality
+type error is coming from, and fix that (because it's likely wrong),
+then we should get the label that's missing.
+
+*** 2012-06-27
+
+The error was not coming from the equality type variable, and rather
+from a constraint EQUALITY_TYPE value that I had in for testing
+purposes. This has to be updated. This is the reason that I have
+started this research log, because when making quick changes for
+debugging reasons, it's hell on earth to remember which changes in
+which files I've actually made to temporarily aid debugging. It is
+important to remember this information as it leads to problems later
+on.
+
+The problem currently is between the binder and the accessor. When we
+are solving the accessor, we look up the binder, but we do not get all
+the information that we need. We get most of it, but not all.
+
+When we look up the binder we get something like this:
+
+bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n1,DECLARATION_CONS(0),l40154),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40154):TYPE_DEPENDANCY(TYPE_VAR(t31850,-,POLY,UNKNOWN),[40157],[],[]),l40154),FIELD_CONSTRUCTION((2,l40154):TYPE_DEPENDANCY(
+TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n242,DECLARATION_CONS(1692),l40144),[40143,40144],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40145):TYPE_VAR(t31854,-,POLY,UNKNOWN),l40145)],-,l40145),[40143,40144,40145],[],[]),l
+40143,UNKNOWN),[40143],[],[]),l40154)],-,l40154),l40154,UNKNOWN),[40154,40155,40156],[],[])
+
+We see in the last part of the TYPE_CONSTRUCTOR tuple we have an
+UNKNOWN. Perhaps the solution would be to make this an
+EQUALITY_TYPE_DEPENDANCY with an equality type variable which comes
+from the datatype declaration. Then we would be able to use that when
+generating constraints at the point that we solve the accessor.
+
+Perhaps we should really have a different binder altogether for
+equality types, and when we solve the accessor we get an equality type
+dependancy with the equality type variable inside. It's rather
+convenient the way it is though.
+
+(2012-06-27-15:10)
+
+Added warning in the warnings section as am constraining constyarrow
+to always be an EQUALITY_TYPE. I think it's this construction that
+will change the last value in the tuple from UNKNOWN to
+EQUALITY_TYPE. If this is the case then I can look at where
+constyarrow is being constructed and locate where the equality type
+variable should go in.
+
+(2012-06-27-15:17)
+
+It is indeed the case that this is what causes the last part of the
+tuple to change. Going to look through and find out which constyarrow
+construction is generating this new EQUALITY_TYPE tuple value in the
+constraint generator, when I find that I should hopefully be able to
+switch it to an EQUALITY_TYPE_VAR with a variable from the datatype
+definition and we should get the right error.
+
+(2012-06-27-15:28)
+
+There is now a a constyarrow'Eq (these names in Ty.sml really need
+changing) which forces an EQUALITY_TYPE_STATUS given as a parameter
+when generating a type arrow constraint, and constyarrow' has been
+reverted to its normal state.
+
+(2012-06-27-16:09)
+
+There were some places in the code where we were checking the equality
+type status that was in the TYPE_CONSTRUCTOR datatype constructor and
+checking if it was the same as another TYPE_CONSTRUCTOR's value. This
+code will need to be rewritten to handle this, for the moment
+detection of this old kind of error is commented out. Some eq-test
+files which I have will now not detect errors, so I'll have to go back
+and make some of them work.
+
+(2012-06-27-16:34)
+
+So now the equality type variable from the datatype definition is
+available when we solve the equality type accessor, but an error is
+still not detected. The link that is missing is when solving two
+equality type variables. There is enough information in the state now
+for Skalpel to figure out that there is an equality type error, but
+the code which solves the constraint of two equality type variables
+will need to be extended.
+
+(2012-06-27-16:38)
+
+I think it's the case when solving two equality type variables that
+we're not sure what to do when both of them already exist in the
+map...
+
+*** 2012-06-28
+
+(2012-06-28-00:38)
+
+It's not actually the case the analysis engine is stuck because an
+equality type variable is being mapped to two things. Here's what
+happens in a run of eq-test14.sml, which looks like this:
+
+datatype ''a mydt = firstCons of int | secondCons of ''a;
+secondCons(5.0)
+
+We generate equality type variables for anything which can later turn
+out to be an equality type error, and in the constraint generation
+stage we constraint equality type variables to be equal to other
+equality type variables. In some places we generate equality type
+status values (EQUALITY_TYPE, NOT_EQUALITY_TYPE, or UNKNOWN), which
+equality type variables are then constrained to be.
+
+So in the shown code example, the constraint solver does the following
+solving with respect to equality types:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17709) and EQUALITY_TYPE_VAR(eqtv17708). Labels = [40150]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17713) and EQUALITY_TYPE_VAR(eqtv17712). Labels = [40154]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17712) and EQUALITY_TYPE_VAR(eqtv17711). Labels = [40157]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17711) and EQUALITY_TYPE_STATUS(EQUALITY_TYPE). Labels = [40158]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17712) and EQUALITY_TYPE_STATUS(EQUALITY_TYPE). Labels = [40157,40158]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17713) and EQUALITY_TYPE_STATUS(EQUALITY_TYPE). Labels = [40154,40157,40158]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17718) and EQUALITY_TYPE_VAR(eqtv17717). Labels = [40160]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17714) and EQUALITY_TYPE_VAR(eqtv17718). Labels = [40160]
+
+These are the constraints that we need to solve which were generated
+from the first line of the code. When we constrain equality type
+variables to be the same as other equality type variables, this is
+stored in the internal state as an EQUALITY_TYPE_DEPENDANCY, which can
+take as the first argument of its tuple an equality type variable, the
+other arguments being label information, and some other arguments. The
+reason we store these in the state as a dependancy and not directly as
+an equality type variable is so that we can put label information
+along side this information which provide program points WHY an
+equality type variable is constrained to another equality type
+variable.
+
+So we have 17709 constrained to 17708, 17713 constrained to 17712,
+17712 constrained to 17711, and 17711 constrained to
+EQUALITY_TYPE. Aha! If that's the case then both 17712 and 17713 are
+constrained to be equality types also! So when we see an equality type
+variable being constrained to an equality type status, we look in the
+state to see if that equality type variable is dependant on other type
+variables. When we see this constraint:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17711) and EQUALITY_TYPE_STATUS(EQUALITY_TYPE). Labels = [40158]
+
+We look up the state to see if other equality type variables are
+dependancy on equality type variable 17711 and sure enough we see that
+there are, 17712. We then generate a constraint that 17712 have the
+same equality type status that 17711 is currently being constrained
+to, and go to solve that along with the rest of the other
+constraints. This works its way back up the equality type variable
+constraints until it reaches the point where we discover that two type
+variables are constrained to be the same, but both are mapped to
+dependancies on differing EQUALITY_TYPE_STATUS values, at which point
+we generate an equality type error, or we reach the point where we
+encounter the point where we have an equality type variable which
+isn't mapped to anything (as is the case with 17713 in the constraint
+solving process above).
+
+Alright so here things get a little bit more complicated, in the first
+line of the code we generate a binder so that we able to reference
+things in the first line of the code (the datatype constructor names
+for example, in other lines of the code). When we reference datatype
+constructor names for example, as indeed we do in line two of the
+code, we have to solve the accessor. Here's what that looks like.
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type accessor. Labels = [40161]
+sem = EQUALITY_TYPE_VAR(eqtv17714)
+id = 1695
+bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n1,DECLARATION_CONS(0),l40154),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40154):TYPE_DEPENDANCY(TYPE_VAR(t31850,-,POLY,UNKNOWN),[40157],[],[]),l40154),FIELD_CONSTRUCTION((2,l40154):TYPE_DEPENDANCY(
+TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n242,DECLARATION_CONS(1692),l40144),[40143,40144],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40145):TYPE_VAR(t31854,-,POLY,UNKNOWN),l40145)],-,l40145),[40143,40144,40145],[],[]),l
+40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143],[],[]),l40154)],-,l40154),l40154,EQUALITY_TYPE_VAR(eqtv17713)),[40154,40155,40156],[],[])
+
+In the last argument of the top level TYPE_CONSTRUCTOR datatype
+constructor instantiation we see that there is some equality type
+information available: EQUALITY_TYPE_VAR(eqtv17713). This is providing
+us with an equality type variable from the first line which we can use
+to generate constraints with. So when we see as follows:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17714) and EQUALITY_TYPE_VAR(eqtv17713). Labels = [40154,40155,40156,40161]
+
+So here we have two numbers- 17714 and 17713. 17713 has already been
+described, it comes from the first line of the code (specifically, the
+ConBindOf function of Analyze,sml, where we generate the constraints
+for new datatype constructors. The 17714 number comes from the
+f_longidexp function of Analyze.sml, which is the point at which we
+generate the equality type accessor constraint. While generating this
+equality type accessor constraint, we feed this number in, and so we
+end up with the equality type variable 17714 being constrained to be
+the same number as 17713. We go on to solve the following further
+constraints.
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17717) and EQUALITY_TYPE_VAR(eqtv17716). Labels = [40162]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17716) and EQUALITY_TYPE_VAR(eqtv17715). Labels = [40163]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17715) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Labels = [40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17716) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Labels = [40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17717) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Labels = [40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17718) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Labels = [40160,40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv17714) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Labels = [40160,40162,40163,40164]
+
+So something isn't working here. We know that 17714 is of status
+NOT_EQUALITY_TYPE, and that 17714 is constrained to 17713, and that
+17713 is constrained to be of status EQUALITY_TYPE. The analysis
+engine needs to be able to see this and detect this type error.
+
+The problem is likely to do with the state. Part of the problem is
+that it's difficult to know exactly why this problem is happening, and
+this can be solved by acting on the earlier todo note on
+2012-06-27. When we are checking that there are any status values that
+clash, the type variables that we are solving along the way that we
+set to be equal to equality type status values *should get this new
+equality type status added to the map against it*. At the moment, we
+just check that it's alright for the moment, and then we move on to
+solve the rest of the constraints.
+
+(2012-06-28-10:43)
+
+Alright, whenever I see two equality type variables being constrained
+to be equal to each other, but the one on the right hand side is
+already in the map has an equality type status, I'm going to make it
+the case that the left hand side is updated in the map to be also
+constrained to be that status, where it is not mapped to a status
+already. If it is mapped to a status already, then I need to check
+whether there is a clash between the status values.
+
+(2012-06-28-12:50)
+
+AHHH that's got things going, we're getting equality type errors now
+for the code fragment:
+
+datatype ''a mydt = firstCons of int | secondCons of ''a;
+secondCons(5.0)
+
+Excellent. I'm going to go back and fix up some of the other equality
+type error tests which have broken now, then maybe write up some more
+details on how the equality type errors are detected in a given piece
+of code if necessary.
+
+(2012-06-28-13:18)
+
+In the simple case of 5.0 = 5.0, the equality type error has now been
+put back that was broken. This took me all of 60 seconds. It's much
+easier to do things now there's a system in place (huzzah!).
+
+(2012-06-28-15:52)
+
+The case involving tuples doesn't work yet, I'm going to need to think
+of a way to handle code like this: (1, 1.0) = (2, 2.0). The equality
+type variable which represents the tuple should be constrained to be
+equal to.... something. Not sure how this is going to work yet, I'll
+need to have a think about this.
+
+(2012-06-28-17:20)
+
+Just got the analysis engine compiling again. I'm currently fixing up
+the basic example:
+
+val x = 1.0;
+val y = 2.0;
+x = y
+
+The problem with this is that when we generate the NOT_EQUALITY_TYPE
+status for 1.0, that information is not going into the binder when we
+bind x, so subsequently when we solve the accessor in the third line
+and constrain that to be an EQUALITY_TYPE, no error is discovered
+because we by default get an UNKNOWN status put into the binder.
+
+I have changed parts of the analysis engine so that equality type
+variables are now propagated around more parts of the system, but I
+still have to track down where this binder is situated, and put the
+equality type variable representing 1.0 into that binder.
+
+(2012-06-28-17:31)
+
+I should really start using branches when working on this stuff. The
+code broke and I want to commit it to the repository, but I don't want
+to do that if the analysis engine doesn't compile (and I *will not* be
+able to do that soon anyway, once I update the test framework, as if
+the analysis engine cannot be compiled then the daily test e-mails
+will fail, which is a situation I really want to avoid).
+
+On the other hand it has kept me in the office another half hour to
+fix the problem, so not all bad.
+
+Skalpel has been *EXTREMELY* useful in the detection of type errors
+today, in particular arity clash between functions. I was at the point
+where I was about to remove all my changes and start again, because
+the type error messages I was getting from the compiler were just
+useless, and pointing me to silly places. Skalpel definitely saved me
+probably 30-60 minutes in this case, an excellent win!
+
+Irritating points though, when I see an arity clash, I want to see all
+of the places where there are different arity. Skalpel highlights them
+of course, but I have to scroll up and down the file looking for
+them. It would be nice to have a button that executed the function
+'jump to next bit in the file that has highlighting for the currently
+selected slice'. This would be most helpful.
+
+I have found that executing Skalpel on single files to be very
+useful. What would also be nice is a 'Work on this file only' button,
+where Skalpel runs on a file but suppresses any errors about undefined
+identifiers.
+
+Feels good that Skalpel definitely saved me time today. I'd MUCH
+rather spend the time writing about that event here, than spent my
+time stuck in a whirlwind of type errors. I'll maybe work on the first
+year report this evening, it would be good to continue with that.

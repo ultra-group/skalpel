@@ -438,12 +438,17 @@ and gettyvarsty (T.V  (v, _, _)) state labs stts deps =
 
 fun combine x1 x2 = EL.unionExtLab x1 x2 (fn x => x)
 
+(* 'update' here should really be 'insert', because we don't update existing keys, we insert new keys *)
 fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
+fun replaceOneState onestate x y =
+    (MS.remove (!onestate, x) handle NotFound => raise EH.DeadBranch "Trying to replace a key in the equality type state but the key does not exist in the state!";
+    onestate := (MS.insert (!onestate, x, y)))
 
 fun updateStateTf state key value = updateOneState (getStateTf state) (T.typeFunctionVarToInt    key) value
 fun updateStateTn state key value = updateOneState (getStateTn state) (T.typenameVarToInt key) value
 (* for equality types (CHANGE THIS NAME) *)
 fun updateStateEq state key value = updateOneState (getStateEq state) (T.equalityTypeVarToInt key) value
+fun replaceStateEq state key value = replaceOneState (getStateEq state) (T.equalityTypeVarToInt key) value
 fun updateStateSq state key value = updateOneState (getStateSq state) (T.rowVarToInt    key) value
 fun updateStateRt state key value = updateOneState (getStateRt state) (T.fieldVarToInt    key) value
 fun updateStateLt state key value = updateOneState (getStateLt state) (T.labelVarToInt    key) value

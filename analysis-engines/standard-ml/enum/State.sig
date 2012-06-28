@@ -89,6 +89,7 @@ signature STATE = sig
     val updateStateTv      : state -> Ty.typeVar         -> stTv -> unit
     val updateStateTf      : state -> Ty.typeFunctionVar        -> stTf -> unit
     val updateStateEq      : state -> Ty.equalityTypeVar        -> stEq -> unit
+    val replaceStateEq     : state -> Ty.equalityTypeVar        -> stEq -> unit
     val updateStateTn      : state -> Ty.typenameVar     -> stTn -> unit
     val updateStateSq      : state -> Ty.rowVar        -> stSq -> unit
     val updateStateRt      : state -> Ty.fieldVar        -> stRt -> unit
