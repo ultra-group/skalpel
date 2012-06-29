@@ -11,54 +11,83 @@ what they contain, so that I can figure out how important it is to
 take care of these values.
 
 * TODOs
-*** Uncompleted TODOs
+** Test framework [0%]
+*** TODO (2012-06-29-12:59) Test framework fetching and compiling latest binary
 
-TODO (2012-06-28-16:00): Generating equality constraints for tuples
+  I *must* update this aspect to the test framework soon, ideally
+  today. I see this is the currently most important aspect which is
+  missing with respect to testing, as I often don't have time to do
+  this manually (though I am running the binary through the tests we
+  have and diffing the output myself to make sure everything hasn't
+  exploded).
 
-The case involving tuples doesn't work yet, I'm going to need to think
-of a way to handle code like this: (1, 1.0) = (2, 2.0). The equality
-type variable which represents the tuple should be constrained to be
-equal to.... something. Not sure how this is going to work yet, I'll
-need to have a think about this.
+*** TODO (2012-06-29-12:59): Test framework detecting diffs from previous runs
 
-*** Completed TODOs
+  When sending e-mails, the test framework is showing differences
+  between the tests today and the tests the previous day, so if I don't
+  read the results from the test framework on any given day, when I read
+  it the next day I won't see this information.
 
-**** Completed TODO (2012-06-27-01:33) : Seeing a type variable being constrained to be the same as a status
+  We should diff the results against a master copy, which can be
+  updated manually when we're satisfied things are working probably,
+  or better in some way.
 
-During unification we have the case of equality type variables being
-constrained to equality type statuses. This happens in the function:
+** Equality types implementation [16%]
+*** TODO (2012-06-28-16:00) Generating equality constraints for tuples
 
-fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = |"
+    The case involving tuples doesn't work yet, I'm going to need to
+    think of a way to handle code like this: (1, 1.0) = (2, 2.0). The
+    equality type variable which represents the tuple should be
+    constrained to be equal to.... something. Not sure how this is
+    going to work yet, I'll need to have a think about this.
 
-If we look up equalityTypeVar in the unification state and it doesn't
-exist, then the process is straight forward, we just add it to the
-unification state, with the constraint of its equality type status.
+*** TODO other things here
+*** TODO other things here
+*** TODO other things here
+*** TODO other things here
+*** DONE (2012-06-27-01:33) Seeing a type variable being constrained to be the same as a status
 
-In the event that the equalityTypeVar does actually already appear in
-the state then we create a new constraint of the equality type
-variable from the dependancy that was existing in the state and the
-equality type status, and then we go off and solve it.
+  During unification we have the case of equality type variables being
+  constrained to equality type statuses. This happens in the function:
 
-There are two things to still do here. Firstly, the equality type
-status should probably go in the state, replacing the dependancy that
-was there (though we will still need to create the new constraint and
-solve it, to check there aren't any equality type errors), and
-secondly when creating this constraint the labels are joined together
-(shown below with labs@ls), but the deps and the ids remain the
-same. There is something called deps in the dependancy that we see
-already existing in the state, should they be unioned too?
-Possibly. Something to look into.
+  fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = |"
 
-Relevant code excerpt:
+  If we look up equalityTypeVar in the unification state and it doesn't
+  exist, then the process is straight forward, we just add it to the
+  unification state, with the constraint of its equality type status.
 
-\| SOME (T.EQUALITY_TYPE_DEPENDANCY (eqTypeVarDep, labs, stts, deps) =>
-let
-(* jpirie: what about stts and deps? Should these be combined somehow? *)
-val c = E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), labs@ls, deps, ids)
-(* jpirie: what about putting the new status in the map? *)
-in
-fsimplify (c::cs') l
-end
+  In the event that the equalityTypeVar does actually already appear in
+  the state then we create a new constraint of the equality type
+  variable from the dependancy that was existing in the state and the
+  equality type status, and then we go off and solve it.
+
+  There are two things to still do here. Firstly, the equality type
+  status should probably go in the state, replacing the dependancy that
+  was there (though we will still need to create the new constraint and
+  solve it, to check there aren't any equality type errors), and
+  secondly when creating this constraint the labels are joined together
+  (shown below with labs@ls), but the deps and the ids remain the
+  same. There is something called deps in the dependancy that we see
+  already existing in the state, should they be unioned too?
+  Possibly. Something to look into.
+
+  Relevant code excerpt:
+
+  \| SOME (T.EQUALITY_TYPE_DEPENDANCY (eqTypeVarDep, labs, stts, deps) =>
+  let
+  (* jpirie: what about stts and deps? Should these be combined somehow? *)
+  val c = E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), labs@ls, deps, ids)
+  (* jpirie: what about putting the new status in the map? *)
+  in
+  fsimplify (c::cs') l
+  end
+
+** Other
+*** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
+
+  He's currently working on this. The plan at the moment is to commit
+  the paper to the Skalpel repository, so when he has some free time
+  that should pop up in this repository.
 
 * Research reports
 *** 2012-06-26
@@ -372,3 +401,28 @@ Feels good that Skalpel definitely saved me time today. I'd MUCH
 rather spend the time writing about that event here, than spent my
 time stuck in a whirlwind of type errors. I'll maybe work on the first
 year report this evening, it would be good to continue with that.
+
+*** 2012-06-29
+
+(2012-06-29-12:55)
+
+Trying to stay away from developing equality types today and stick to
+the first year report, but I'm writing down while I remember it that
+equality type errors should have two endpoints not one. I guess we'll
+need some kind of endpoint label information in the label sets that
+are generated. We already generate errors that have multiple endpoints
+though I can't remember exactly how this works, I should be able to
+use the same mechanism for equality type error endpoints as type
+constructor clashes...
+
+Adding this as a TODO item also.
+
+(2012-06-29-13:12)
+
+Just found the org-mode guide I had filed away. Will en
+
+* Next meeting with Joe
+
+- Emacs interface calling compiler binary alongside Skalpel?
+- (switch-buffer) defadvice to not create new buffer
+
