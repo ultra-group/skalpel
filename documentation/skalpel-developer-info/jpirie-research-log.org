@@ -12,7 +12,7 @@ take care of these values.
 
 * TODOs
 ** Test framework [0%]
-*** TODO (2012-06-29-12:59) Test framework fetching and compiling latest binary
+*** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
 
   I *must* update this aspect to the test framework soon, ideally
   today. I see this is the currently most important aspect which is
@@ -41,10 +41,34 @@ take care of these values.
     constrained to be equal to.... something. Not sure how this is
     going to work yet, I'll need to have a think about this.
 
-*** TODO other things here
-*** TODO other things here
-*** TODO other things here
-*** TODO other things here
+*** TODO (2012-06-29-21:19) Detection of equality type error where 'eqtype' is in a signature
+
+    In the case where we have 'eqtype x' in a signature (instead of
+    what could be 'type x') an equality status constraint of
+    EQUALITY_TYPE should be generated for x (obviously). Then if the
+    user is to do something like 'val y : x = 5.0' then an equality
+    type error should be output by Skalpel, the EQUALITY_TYPE status
+    of x clashing with the NOT_EQUALITY_TYPE status of the 5.0.
+
+*** TODO (2012-06-29-21:36) Detection of equality type error where ''a is involved in a signature
+
+    If we have a function signature definition such as "val f : ''a ->
+    ''a" we should detect an equality type error if something that
+    isn't an equality type is given as an argument.
+
+    It may be the case that this already works, which would indeed be
+    lovely, but the world often isn't that kind. Check this out, it
+    should only be the constraint generation phase that needs to be
+    changed, and not the constraint solving, though I'm not absolutely
+    certain of that.
+
+*** TODO (2012-06-29-21:46) Add in equality type status constraints for types other than real
+
+    Currently the NOT_EQUALITY_TYPE status is only generated for the
+    real type. This status should be inserted in the constraint
+    generation stage for other types (in functions and exceptions for
+    example).
+
 *** DONE (2012-06-27-01:33) Seeing a type variable being constrained to be the same as a status
 
   During unification we have the case of equality type variables being
@@ -90,7 +114,7 @@ There's quite a lot of information in here, maybe this just isn't
 really an overview any more. Can some of this information be moved to
 other sections of the document? It's a bit all over the place isn't it?
 
-*** TODO (2012-06-29-14:47) Literature review [0%]
+*** TODO (2012-06-29-14:47) Literature review [16%]
 **** TODO (2012-06-29-15:03) Simplifying some of the reviews
 
 Some of the reviews in this document are WAY too big, this needs to be
@@ -101,7 +125,7 @@ taken down a peg or two.
      There's plenty to talk about with respect to this paper, look at
      what I've got there again and clean it up.
 
-**** TODO (2012-06-29-15:35) Variable name completion paper
+**** DONE (2012-06-29-15:35) Variable name completion paper
 
      A literature review on this has still to be written up
 
@@ -533,11 +557,49 @@ Adding this as a TODO item also.
 
 (2012-06-29-13:12)
 
-Just found the org-mode guide I had filed away. Will en
+Just found the org-mode guide I had filed away. Will fix this document
+up to make use of some of the nice org features.
+
+*** 2012-07-01
+
+(2012-07-01-22:12)
+
+I've updated the test framework. Now the repository will actually be
+updated, a fresh binary will be generated from the new sources and the
+tests will be ran on this new binary.
+
+The compilation log has been added to the daily e-mail, so if
+compilation fails we should see this in the e-mail.
+
+Note that from this point, any source code that is pushed to the
+master branch *should compile*. This has not always been the case in
+the past but now it is necessary (and what should happen anyway, in
+case others wish to clone the repository). Any developmental work
+should be done on a branch, and then merged into the master branch
+when it compiles again (it doesn't necessarily need to be stable, but
+it should compile and shouldn't break lots of previous tests.
+
+I'll try to be sure and look at the test framework output tomorrow
+carefully, looking for bugs (for example, an empty e-mail or some big
+error message). Hopefully I won't get some distraction that carts me
+off in another direction, but I'll have the test framework e-mail to
+remind me anyway.
+
+Note that the test framework should still diff results against a
+master, and not against the previous day. This is a change which still
+needs to be made, and should go higher up on the priority list.
+
+The literature review for the paper on variable name completion is
+deemed to be finished, but perhaps I should talk more specifically
+about their type inference algorithm? Does the reader really care?
+Maybe I want to look at their algorithm in much more depth as part of
+the review of other implementations (preferably in another section)?
+Think about this.
 
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
 - (switch-buffer) defadvice to not create new buffer
+- ask about any news on viva date, must be sometime soon?
 
 

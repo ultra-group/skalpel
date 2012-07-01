@@ -57,6 +57,13 @@ outputDir="$repoDir/testing/test-results/$date"
 yesterdayOutputDir="$repoDir/testing/test-results/$yesterday"
 mkdir -p $outputDir
 
+# navigate to the skalpel repository, and pull the latest changes
+(cd $repoDir; git pull http master)
+
+# rebuild the skalpel binary
+compilationLog=`mktemp`
+(cd "$repoDir/analysis-engines/standard-ml"; make mlton-bin-gen > $compilationLog)
+
 # run the analysis engine tests
 $skalpelBin -b 2 $basisFile -c $analysisTestDir > $outputDir/$analysisTestFilename 2> $outputDir/$analysisTestFilename-errors
 
@@ -85,16 +92,23 @@ mailFile=`mktemp`
 # construct the e-mail text
 echo -e "This is an automated message sent from the Skalpel test framework.\n" > $mailFile
 
-echo -e "This message describes the daily Skalpel test results for date $date. In each\n\
-diff, the left hand side (<) represents the results from yesterday and the results\n\
-on the right hand side (>) are the results from today. The diffs are given first,\n\
-then the full test result logs are given at the end of this message.\n" >> $mailFile
+echo -e "This message describes the daily Skalpel test results for date\n\
+$date. In each diff, the left hand side (<) represents the results\n\
+from yesterday and the results on the right hand side (>) are the\n\
+results from today. The compilation log is given first, then the\n\
+diffs, then the full test result logs are given at the end of this\n\
+message.\n" >> $mailFile
+
 
 echo -e "The most recent commit message of the skalpel repository is directly below.\n" >> $mailFile
 
 (cd $repoDir; git log | head -n 5 >> $mailFile)
 
-echo -e "******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
+echo -e "******************************\n        Compilation Log         \n******************************" >> $mailFile
+
+cat $compilationLog >> $mailFile
+
+echo -e "\n\n******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
 
 diff $yesterdayOutputDir/$analysisTestFilenameYesterday $outputDir/$analysisTestFilename >> $mailFile
 
@@ -114,3 +128,4 @@ cat $outputDir/$deadLinksTestFilename >> $mailFile
 cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
 
 rm $mailFile
+rm $compilationLog
