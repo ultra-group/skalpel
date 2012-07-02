@@ -10,8 +10,14 @@ As soon as a chance is available, maybe print out these values to see
 what they contain, so that I can figure out how important it is to
 take care of these values.
 
+Actually, now I think about it, isn't deps a second set of labels?
+Perhaps I can use this to track endpoints properly, as at the moment
+equality type errors are only defined to have one endpoint, and it
+should do something like a type constructor clash where there can be
+multiple.
+
 * TODOs
-** Test framework [0%]
+** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
 
   I *must* update this aspect to the test framework soon, ideally
@@ -21,7 +27,7 @@ take care of these values.
   have and diffing the output myself to make sure everything hasn't
   exploded).
 
-*** TODO (2012-06-29-12:59): Test framework detecting diffs from previous runs
+*** TODO (2012-06-29-12:59) Test framework detecting diffs from previous runs
 
   When sending e-mails, the test framework is showing differences
   between the tests today and the tests the previous day, so if I don't
@@ -32,7 +38,29 @@ take care of these values.
   updated manually when we're satisfied things are working probably,
   or better in some way.
 
-** Equality types implementation [16%]
+*** TODO (2012-07-02-16:45) Daily package building
+
+Packages should be built daily by the test framework, and a report
+should be generated whether it was possible to build the package or
+not. As the test framework runs on a red hat system it is not possible
+to generate say the debian packages, but we are still able to generate
+quite a few of them.
+
+*** TODO (2012-07-02-16:46) Daily package testing
+
+The packages that are built should also be installed and tested, and
+the results of all of this should end up in the e-mail that gets sent
+out in the morning. Wouldn't it be nice just to decide we were going
+to release one day and just do it? :-)
+
+*** TODO (2012-07-02-16:48) Test Emacs front end works
+
+We should test also the Emacs front end. It would somehow need to be
+started with a Standard ML source file open, have the type error slice
+run on that file, and check that Emacs is highlighting things inside
+the file, and that the process terminates.
+
+** Equality types implementation [20%]
 *** TODO (2012-06-28-16:00) Generating equality constraints for tuples
 
     The case involving tuples doesn't work yet, I'm going to need to
@@ -106,7 +134,7 @@ take care of these values.
   fsimplify (c::cs') l
   end
 
-** First year report [0%]
+** First year report [12%]
 *** TODO (2012-06-29-14:47) Overview [0%]
 **** TODO (2012-06-29-14:49) Moving sections around
 
@@ -179,8 +207,8 @@ taken down a peg or two.
      ultimately something that would stay around to be put in my
      thesis? Might need to ask Joe about that. Hmm.)
 
-*** TODO (2012-06-29-14:47) Future Targets [0%]
-**** TODO (2012-06-29-15:12) Equality types future text
+*** DONE (2012-06-29-14:47) Future Targets [100%]
+**** DONE (2012-06-29-15:12) Equality types future text
 
      I expect not to finish equality types before whatever time I am
      asked to submit this document. I need to reach a point where I'm
@@ -196,13 +224,13 @@ taken down a peg or two.
      getting an acceptable level of understanding from that? Think
      about this.
 
-**** TODO (2012-06-29-15:16) Sharing future text
+**** DONE (2012-06-29-15:16) Sharing future text
 
 I'm not working on the sharing feature at the moment, and I won't be
 before handing in this report. Clean this text up so that it covers
 the idea of sharing, and then leave it.
 
-**** TODO (2012-06-29-15:18) Other languages future text
+**** DONE (2012-06-29-15:18) Other languages future text
      The idea of supporting other languages is something that we have
      been thinking about for a while, but we're not at the point that
      we can go off and do this yet. There are many considerations to
@@ -218,14 +246,34 @@ how long I estimate each thing I need to do next will take me (it will
 be ultimately wildly inaccurate irrespective of how long I spend
 thinking about it but it's the kind of thing that should go in the
 report anyway).
-p
+
 *** TODO (2012-06-29-14:48) Referencing
+*** TODO (2012-07-02-11:54) Indentation for lstlisting
+
+At the moment the indentation that lstlisting uses is way off to the
+left. This should not be the case, as it looks quite odd with the text
+indented above it. Perhaps force indentation with \indent? Not
+sure. Look into this.
+
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
 
   He's currently working on this. The plan at the moment is to commit
   the paper to the Skalpel repository, so when he has some free time
   that should pop up in this repository.
+
+*** TODO (2012-07-02-16:37) Add titles to research log entries
+
+If a future developer reads this and is looking for some extra
+information that for some reason doesn't exist anywhere else (though
+this should never be the case for technical information), and this
+file actually gets used for the rest of my PhD, they might actually
+need to read some of these research entries where I throw in musings
+on various bits of information. If they don't have titles, the reader
+will die of boredom as I witter endlessly about things that they don't
+want to hear about, so it might be a good idea to tag them with
+'implementation: equality types' or 'first year report' or
+something. Something to think about in any case.
 
 * Research logs
 *** 2012-06-26
@@ -595,6 +643,99 @@ about their type inference algorithm? Does the reader really care?
 Maybe I want to look at their algorithm in much more depth as part of
 the review of other implementations (preferably in another section)?
 Think about this.
+
+*** 2012-07-02
+
+(2012-07-02-10:48)
+
+The reports from the test framework this morning are a bit strange,
+the compilation output only lists the actions of MLLex. Perhaps this
+is the only thing coming to stdout (the contents of which are added to
+the e-mail). Are the warnings on compilation printed to stderr because
+it would be good to have these too. Fiddling around with the first
+year report so don't have time to look at this at the moment, I'll
+have to come back to it.
+
+(2012-07-02-11:56)
+
+It might be nice to have syntax highlighting in the code that's being
+used in the lstlisting environment but currently that is not the
+case. Is that something which I should have? It is certainly the case
+anyway that I'm going to need some LaTeX code which will highlight the
+background and foreground of text in all the ways that the Skalpel
+output does, but I should be able to get that from the paper perhaps
+when Vincent commits the sources. Something to think about anyway.
+
+In a different note, the indentation for lstlisting is mucked
+up. Added a TODO item to fix that, it looks rather bizarre. Probably
+just a parameter needs to be added to the figure environment or
+something.
+
+(2012-07-02-12:54)
+
+There are new examples of things which aren't working with equality
+types that I've discussed in the future work section. I have chosen
+these examples because they are unlikely to be completed by the time
+this report actually needs to be read by someone sometime soon. Do
+these features last (detecting equality type errors in datatype
+declaration where one constructor in the declaration can never be
+compared for equality (eg int -> int), and eqtype in a signature
+definiton) so that this text is technically accurate for as long as
+possible. There should be other things to fix up with respect to
+equality types if I have the time before this gets handed in anyway,
+so I'll just work on the other things.
+
+I'm going to continue on with the future work section I think and
+finish that off, so that an entire section can be marked as complete
+and I can move on, or review it as a whole with Joe and find things to
+change.
+
+(2012-07-02-16:26)
+
+Hmm, not sure whether to talk about some of this material from the
+Haack and Wells paper or not, namely things like how constraints are
+assigned to program points and how minimized errors are found. If I
+include the proper definitions then the document may increase in size
+as it'll need to cover everything relevant, but I think I'm going to
+have to include at least the definitions for labels and perhaps some
+parts of the constraint system to describe how equality types are
+implemented properly anyway. It would also allow me to talk at more
+depth about the similarities between this paper and the implementation
+of Skalpel, some years on now. Many of the definitions described in
+the paper are still true, even some of the things about how the
+unification algorithm and minimization algorithm work. I'll think
+about that.
+
+Perhaps it would be better not to discuss these details here, but just
+to launch into a big discussion when talking about how equality types
+are implemented, and describe everything there that is necessary. It
+would be a bit strange to have text about how minimal slices are
+found under a section title about equality types though. Perhaps
+instead this information should go in a new chapter called
+'Background' or something, where I could explain how everything works,
+and that would allow me to talk about some of the technical aspects of
+the Haack and Wells paper in the later literature review chapter, by
+which time I'll have already have all the definitions I need.
+
+(2012-07-02-16:58)
+
+Alright, what I think I'm going to do with the overview is to move
+section 1.3, the other approaches to type error slicing, to some other
+chapter which looks at how other systems operate, and then clean the
+overview up and keep it how it is.
+
+Then perhaps after the overview would come a background section where
+I can define how the current system works? Then perhaps extend that in
+the first year work section with information about how the equality
+types constraint generation and unification work?
+
+While I think about it, it would give me an opportunity to look at the
+symbols from the paper and would make me think about them some more,
+as I'd have to extend it a little for equality types. It would perhaps
+allow me to clean up the paper too, which I'm supposed to be doing at
+some very much undefined time, and the paper would eventually be
+updated to include work done on equality types anyway. I'll think some
+more about this anyway.
 
 * Next meeting with Joe
 
