@@ -134,13 +134,22 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [12%]
-*** TODO (2012-06-29-14:47) Overview [0%]
-**** TODO (2012-06-29-14:49) Moving sections around
+** First year report [28%]
+*** DONE (2012-06-29-14:47) Overview [100%]
+**** DONE (2012-06-29-14:49) Moving sections around
 
 There's quite a lot of information in here, maybe this just isn't
 really an overview any more. Can some of this information be moved to
 other sections of the document? It's a bit all over the place isn't it?
+
+**** DONE (2012-07-03-09:31) A simple example
+
+Some of the text under the simple example heading is a bit messy, this
+should really be cleaned up. It would be nice also to get some LaTeX
+code which will display highlighting like it does in the Emacs user
+interface, which would save me some space instead of including lots of
+screenshots. This isn't really a problem for this document but it's
+something that I will need to sort out for the thesis document.
 
 *** TODO (2012-06-29-14:47) Literature review [16%]
 **** TODO (2012-06-29-15:03) Simplifying some of the reviews
@@ -247,13 +256,21 @@ be ultimately wildly inaccurate irrespective of how long I spend
 thinking about it but it's the kind of thing that should go in the
 report anyway).
 
-*** TODO (2012-06-29-14:48) Referencing
-*** TODO (2012-07-02-11:54) Indentation for lstlisting
+*** TODO (2012-07-03-11:35) Other
+**** TODO (2012-06-29-14:48) Referencing
+**** TODO (2012-07-02-11:54) Indentation for lstlisting
 
 At the moment the indentation that lstlisting uses is way off to the
 left. This should not be the case, as it looks quite odd with the text
 indented above it. Perhaps force indentation with \indent? Not
 sure. Look into this.
+
+**** TODO (2012-07-03-11:34) Vincent reference
+
+I haven't put anywhere in the document yet text describing that
+it was Vincent that has written most of the implementation for Skalpel
+so far. That would be good to put in, and there should be references
+made to his thesis, there is a good amount of information in there.
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -736,6 +753,21 @@ allow me to clean up the paper too, which I'm supposed to be doing at
 some very much undefined time, and the paper would eventually be
 updated to include work done on equality types anyway. I'll think some
 more about this anyway.
+
+*** 2012-07-03
+
+(2012-07-03-11:28)
+
+The overview for the first year report is marked done, I'll maybe look
+at bits of that with Joe in the next meeting. I still have a manual
+page break on page 3 of the document, there's warning to this effect
+but it would be good to sort that out. Referencing still needs to be
+done also for the document, I guess I'll do that at the end after I've
+finished writing the body of the text.
+
+Vincent still hasn't been mentioned in this text, the work that he
+did should be pointed out explicitly. A reference to his thesis will
+also be needed. I'll add this to the TODO.
 
 * Next meeting with Joe
 
