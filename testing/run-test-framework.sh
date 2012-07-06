@@ -104,7 +104,7 @@ echo -e "The most recent commit message of the skalpel repository is directly be
 
 (cd $repoDir; git log | head -n 5 >> $mailFile)
 
-echo -e "******************************\n        Compilation Log         \n******************************" >> $mailFile
+echo -e "\n\n******************************\n        Compilation Log         \n******************************" >> $mailFile
 
 cat $compilationLog >> $mailFile
 

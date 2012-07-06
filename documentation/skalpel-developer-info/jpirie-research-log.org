@@ -134,7 +134,7 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [28%]
+** First year report [37%]
 *** DONE (2012-06-29-14:47) Overview [100%]
 **** DONE (2012-06-29-14:49) Moving sections around
 
@@ -200,7 +200,8 @@ taken down a peg or two.
     implementations so perhaps just a couple is the best thing to do
     here.
 
-*** TODO (2012-06-29-14:47) First Year Work [0%]
+*** TODO (2012-06-29-14:47) First Year Work [80%]
+**** DONE (2012-07-04-14:57) Analysis engine cleaning
 **** TODO (2012-06-29-15:05) Equality types text
 
      The text about equality types needs to be updated and cleaned up
@@ -216,6 +217,9 @@ taken down a peg or two.
      ultimately something that would stay around to be put in my
      thesis? Might need to ask Joe about that. Hmm.)
 
+**** DONE (2012-07-04-14:57) Automated testing
+**** DONE (2012-07-04-14:58) Neutral language representation of date
+**** DONE (2012-07-04-14:58) Public repository
 *** DONE (2012-06-29-14:47) Future Targets [100%]
 **** DONE (2012-06-29-15:12) Equality types future text
 
@@ -256,21 +260,26 @@ be ultimately wildly inaccurate irrespective of how long I spend
 thinking about it but it's the kind of thing that should go in the
 report anyway).
 
-*** TODO (2012-07-03-11:35) Other
-**** TODO (2012-06-29-14:48) Referencing
-**** TODO (2012-07-02-11:54) Indentation for lstlisting
+I guess if I'm going to do this then some sort of Gantt chart is
+probably in order.
+
+*** TODO (2012-06-29-14:48) Referencing
+
+General referencing needs to be done for the document.
+
+I haven't put anywhere in the document yet text describing that
+it was Vincent that has written most of the implementation for Skalpel
+so far. That would be good to put in, and there should be references
+made to his thesis, there is a good amount of information in there.
+
+*** DONE (2012-07-03-11:35) Other [100%]
+**** DONE (2012-07-02-11:54) Indentation for lstlisting
 
 At the moment the indentation that lstlisting uses is way off to the
 left. This should not be the case, as it looks quite odd with the text
 indented above it. Perhaps force indentation with \indent? Not
 sure. Look into this.
 
-**** TODO (2012-07-03-11:34) Vincent reference
-
-I haven't put anywhere in the document yet text describing that
-it was Vincent that has written most of the implementation for Skalpel
-so far. That would be good to put in, and there should be references
-made to his thesis, there is a good amount of information in there.
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -769,10 +778,96 @@ Vincent still hasn't been mentioned in this text, the work that he
 did should be pointed out explicitly. A reference to his thesis will
 also be needed. I'll add this to the TODO.
 
+(2012-07-03-22:51)
+
+Good lord, the Goto and Sasano implementation actually worked straight
+away, kudos to them for having a system I can set up and get working
+in under two minutes. It is indeed implemented entirely in Emacs lisp
+though, and I guess the comments in what seems to be Japanese aren't
+going to give me too much help on the matter.
+
+The method that they have for allowing users to choose different
+selections is very intuitive, though I don't think we can use this
+mechanism to our advantage at this current time in Skalpel.
+
+(2012-07-03-23:43)
+
+Their tokenizer suffers from the magic numbers bad smell, I should
+check we don't have the same smells in our grm file.
+
+(2012-07-03-23:55)
+
+I can see why they don't support much of the SML feature set, they're
+in for a fair bit of engineering trouble if the implementation keeps
+heading this way. I assume that they aren't actually wanting to end up
+supporting all of the sml programming language in this way, it would
+be pretty insane.
+
+subst1, subst2, subst3, subst4?? AAAAHHH *flashbacks*. The code looks
+to be pretty well written on the whole though, it's a bracket-fest but
+that's to be expected. This car/cdr/caar/cdar stuff is driving me
+batty, whoever chose those as names must surely be a masochist.
+
+The 'unify' function in lambda-unification.sml is essentially their
+constraint solver. Skimming over it, looks like they have cases for if
+the left hand side and the right hand side are arrow types, if the
+left hand side is a basic type and the right hand side is an arrow
+type, and the same the other way around. I'll need to read over parts
+of the paper again and try and match up what they have in the paper
+with what the have in the implementation, which hopefully will not be
+greatly difficult. I guess it'll depend whether what they have in
+their paper accurately reflects their implementation...
+
+*** 2012-07-04
+
+(2012-07-04-09:41)
+
+Does this implementation by Goto and Sasano have both the W and V type
+inference algorithms? They have something here for the W algorithm but
+I'm not sure this algorithm would stand up on its own, perhaps it's
+there solely to be used with the V algorithm. Trying to figure that
+one out...
+
+(2012-07-04-11:44)
+
+Ok, it looks like they have implementations of both the W and V
+algorithms. During the V algorithm they seem to run the W algorithm
+when it comes to function applications:
+
+;;function application
+((appExpD-p expD)
+ (let* ((result-for-m (type-inference-w env (appExpD-fun expD)))
+ (result-set-for-d (lambda-type-inference-v 
+      (apply-subst-to-env env (w-result-subst result-for-m))
+      (appExpD-argD expD)))
+ (result-set (map-set
+'(lambda (x) 
+   ;;When unification fails, the function unify throws an error with nil, which becomes the value of this catch expression.
+   (catch 'error 
+     (let* 
+	 ((new-tyVar (varTy (freshTyVar)))
+	  (S3 (unify (singleton-set (cons
+				     (apply-subst-to-type (w-result-type result-for-m) (v-result-subst x))
+				     (arrowTy (v-result-type x) new-tyVar))))))
+       (v-result
+	(union-subst S3 (union-subst (v-result-subst x) (w-result-subst result-for-m)))
+	(apply-subst-to-type new-tyVar S3)
+	(v-result-c x)))))
+result-set-for-d)))
+   (set-compact result-set))) ;;remove nil
+
+That's alright. I suppose they don't need much more than the W
+algorithm anyway, if there's a type error you aren't going to want to
+include it in the suggestions list are you (well, we might want to do
+that, but maybe highlight that suggestion in red or something and when
+you hover over it get the slices showing why that choice would make
+the code untypable, who knows).
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
-- (switch-buffer) defadvice to not create new buffer
+- (switch-buffer) defadvice to not create new buffer?
 - ask about any news on viva date, must be sometime soon?
-
-
+- resits for foundations 2 and formal spec?
+- dates on David Corne's website for first year report valid?
+- Asking the user to submit automatically sml code for skalpel database?
