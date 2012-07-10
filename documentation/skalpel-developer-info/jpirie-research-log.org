@@ -141,7 +141,7 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [37%]
+** First year report [50%]
 *** DONE (2012-06-29-14:47) Overview [100%]
 **** DONE (2012-06-29-14:49) Moving sections around
 
@@ -207,9 +207,9 @@ taken down a peg or two.
     implementations so perhaps just a couple is the best thing to do
     here.
 
-*** TODO (2012-06-29-14:47) First Year Work [80%]
+*** DONE (2012-06-29-14:47) First Year Work [100%]
 **** DONE (2012-07-04-14:57) Analysis engine cleaning
-**** TODO (2012-06-29-15:05) Equality types text
+**** DONE (2012-06-29-15:05) Equality types text
 
      The text about equality types needs to be updated and cleaned up
      to the point where I am at the moment. Ideally, the information
@@ -308,7 +308,7 @@ want to hear about, so it might be a good idea to tag them with
 something. Something to think about in any case.
 
 * Research logs
-*** 2012-06-26
+** 2012-06-26
 
 When we see an equality type variable (''a) we generated this:
 
@@ -322,7 +322,7 @@ error is coming from! I need to find the location where the equality
 type error is coming from, and fix that (because it's likely wrong),
 then we should get the label that's missing.
 
-*** 2012-06-27
+** 2012-06-27
 
 The error was not coming from the equality type variable, and rather
 from a constraint EQUALITY_TYPE value that I had in for testing
@@ -405,7 +405,7 @@ I think it's the case when solving two equality type variables that
 we're not sure what to do when both of them already exist in the
 map...
 
-*** 2012-06-28
+** 2012-06-28
 
 (2012-06-28-00:38)
 
@@ -620,7 +620,7 @@ rather spend the time writing about that event here, than spent my
 time stuck in a whirlwind of type errors. I'll maybe work on the first
 year report this evening, it would be good to continue with that.
 
-*** 2012-06-29
+** 2012-06-29
 
 (2012-06-29-12:55)
 
@@ -640,7 +640,7 @@ Adding this as a TODO item also.
 Just found the org-mode guide I had filed away. Will fix this document
 up to make use of some of the nice org features.
 
-*** 2012-07-01
+** 2012-07-01
 
 (2012-07-01-22:12)
 
@@ -676,7 +676,7 @@ Maybe I want to look at their algorithm in much more depth as part of
 the review of other implementations (preferably in another section)?
 Think about this.
 
-*** 2012-07-02
+** 2012-07-02
 
 (2012-07-02-10:48)
 
@@ -769,7 +769,7 @@ some very much undefined time, and the paper would eventually be
 updated to include work done on equality types anyway. I'll think some
 more about this anyway.
 
-*** 2012-07-03
+** 2012-07-03
 
 (2012-07-03-11:28)
 
@@ -824,7 +824,7 @@ with what the have in the implementation, which hopefully will not be
 greatly difficult. I guess it'll depend whether what they have in
 their paper accurately reflects their implementation...
 
-*** 2012-07-04
+** 2012-07-04
 
 (2012-07-04-09:41)
 
@@ -869,7 +869,7 @@ that, but maybe highlight that suggestion in red or something and when
 you hover over it get the slices showing why that choice would make
 the code untypable, who knows).
 
-*** 2012-07-06
+** 2012-07-06
 
 (2012-07-06-10:21)
 
@@ -941,7 +941,7 @@ Forcing the stripEqualityStatus (TYPE_VAR [...]) case to return an
 empty list as its first element, this used to be eq. Adding a warning,
 this should let me figure out where the errors are much more quickly.
 
-*** 2012-07-09
+** 2012-07-09
 
 (2012-07-09-08:16)
 
@@ -1032,7 +1032,7 @@ the second run. The problem is that I don't know what the real error
 is for certain. The initial error was 'The error should be an error'
 which I've changed to the current understanding which I've got now.
 
-*** 2012-07-10
+** 2012-07-10
 
 (2012-07-10-00:08)
 
@@ -1079,6 +1079,65 @@ branches for the work that I'm doing and then pushing the unstable
 changes to those branches, then the latest changes get backed up in
 the repository but the main branch will still compile fine for
 everyone.
+
+(2012-07-10-12:20)
+
+It's worth pointing out that the bug joe pointed out around line 3 in
+the code:
+
+val x = 1.0;
+val y = 2.0;
+if x = y
+[...]
+
+where the spaces in 'x = y' were not getting highlighted is now
+fixed. This must have come from the newer way that things are
+represented. I like it when bugs get fixed for free. I'll update the
+screenshot that's going in the first year report.
+
+(2012-07-10-14:20)
+
+I'm not sure how to describe the way that equality types that have
+been implemented. I don't know if I really want to drag in all the
+definitions from the paper and do a full explanation with that. I
+think I might just explain an overview of how it works without talking
+about how the binders have been extended to hold equality type status
+values, accessor solving has been extended to solve these equality
+type status values, etc.
+
+(2012-07-10-16:26)
+
+The overview has been updated to describe the analysis engine even
+though it was already marked completed. I'm going to use this
+definition in the first year work section, breaking off to describe
+the whole analysis engine there seemed to be a little out of place.
+
+(2012-07-10-18:48)
+
+Alright I've put in some text about the work that's been done on
+equality types. I'm marking that section as 'DONE' and moving on to
+the literature review / review of other type systems. I would ideally
+like to finish one of these sections today but they are things that I
+could spend months working on, so I'll just try to draw a line at a
+sensible place.
+
+I've started placing figures HERE. Not 'here' [h] but HERE [H] using:
+
+\usepackage{float}
+\restylefloat{figure}
+
+in the preamble. Seems to stop latex doing completely silly things
+like filling the rest of the page with text then placing the figure on
+the next page when that is very much not desired.
+
+(2012-07-10-23:00)
+
+I've finished off some text for the conclusion now as well, but I
+still need to think about some dates for a timetable. I guess I'll
+just take two years from now as a thesis submission date, an equality
+types completion date, sharing completion date, and fill in the
+blanks. It's quite hard to guess this kind of thing but I guess it's
+to think more about what's ahead than create anything which is accurate.
 
 * Next meeting with Joe
 
