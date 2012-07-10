@@ -226,11 +226,6 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 
 fun getConstraintItems (CONSTRAINTS(map)) = OMC.listItems map
 
-fun stripEqualityStatusFromConstraints [] = []
-  | stripEqualityStatusFromConstraints ((TYPE_CONSTRAINT ((ty1, ty2), l1, l2, cd))::t) =
-    (T.stripEqualityStatusList [ty1,ty2])@(stripEqualityStatusFromConstraints t)
-  | stripEqualityStatusFromConstraints (_::t) = stripEqualityStatusFromConstraints t
-
 type extstr = env bind
 type strenv = env genericEnv
 
@@ -1187,39 +1182,41 @@ fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
 	findEqualityTypeVars singleConstraintList
     end
 
-fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab equalityValue =
-    let
-	(* we shouldn't need allConstraintValues, singleConstraintList or makeTypeVarsEquality
-	 * keeping them during testing (2012-05-16) *)
-	(* the list of constraints associated with each key *)
-	val allConstraintValues = OMC.listItems constraints
+(* (2012-07-09) jpirie: I don't think that this is needed any more, removing this and the calls to it
+ * in the ExpOp case of the constraint generation process *)
+(* fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab equalityValue = *)
+(*     let *)
+(* 	(* we shouldn't need allConstraintValues, singleConstraintList or makeTypeVarsEquality *)
+(* 	 * keeping them during testing (2012-05-16) *) *)
+(* 	(* the list of constraints associated with each key *) *)
+(* 	val allConstraintValues = OMC.listItems constraints *)
 
-	(* join all the lists of lists so that it's easier to search through them *)
-	val singleConstraintList = List.foldl (op @) [] allConstraintValues
+(* 	(* join all the lists of lists so that it's easier to search through them *) *)
+(* 	val singleConstraintList = List.foldl (op @) [] allConstraintValues *)
 
-	(* makes a TYPE_VAR an equality type but replacing the equality type status field with EQUALITY_TYPE *)
-	fun changeTypeVarsEquality (Ty.TYPE_VAR (tv,extv,poly,_)) equalityValue = Ty.TYPE_VAR(tv,extv,poly,equalityValue)
-	  | changeTypeVarsEquality x equalityValue  = x
+(* 	(* makes a TYPE_VAR an equality type but replacing the equality type status field with EQUALITY_TYPE *) *)
+(* 	fun changeTypeVarsEquality (Ty.TYPE_VAR (tv,extv,poly,_)) equalityValue = Ty.TYPE_VAR(tv,extv,poly,equalityValue) *)
+(* 	  | changeTypeVarsEquality x equalityValue  = x *)
 
-	(* finds equality type variables nested a 'ty' type *)
-	fun findEqualityTypeVars [] _ = []
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),l1,l2,deps)::t) lab =
-	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a)));
-	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab))
+(* 	(* finds equality type variables nested a 'ty' type *) *)
+(* 	fun findEqualityTypeVars [] _ = [] *)
+(* 	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),l1,l2,deps)::t) lab = *)
+(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a))); *)
+(* 	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab)) *)
 
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, _), Ty.TYPE_VAR (a2, b2, c2, _)),l1,l2,deps)::t) lab =
-	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a)));
-	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,equalityValue), Ty.TYPE_VAR(a2,b2,c2,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab))
+(* 	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, _), Ty.TYPE_VAR (a2, b2, c2, _)),l1,l2,deps)::t) lab = *)
+(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a))); *)
+(* 	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,equalityValue), Ty.TYPE_VAR(a2,b2,c2,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab)) *)
 
-	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab =
-	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for an accessor");
-	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(changeTypeVarsEquality sem equalityValue),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab))
-	  | findEqualityTypeVars (h::t) lab =
-	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "WARNING: findEqualityTypeVars got something of a form that is not yet supported");
-	     findEqualityTypeVars t lab)
-    in
-	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs lab)) constraints)
-    end
+(* 	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab = *)
+(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for an accessor"); *)
+(* 	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(changeTypeVarsEquality sem equalityValue),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab)) *)
+(* 	  | findEqualityTypeVars (h::t) lab = *)
+(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "WARNING: findEqualityTypeVars got something of a form that is not yet supported"); *)
+(* 	     findEqualityTypeVars t lab) *)
+(*     in *)
+(* 	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs lab)) constraints) *)
+(*     end *)
 
 
 

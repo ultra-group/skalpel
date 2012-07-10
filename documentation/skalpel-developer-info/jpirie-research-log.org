@@ -16,6 +16,13 @@ equality type errors are only defined to have one endpoint, and it
 should do something like a type constructor clash where there can be
 multiple.
 
+---
+Changed the type constraint that's initialised in SconReal to have a
+NOT_EQUALITY_TYPE attachment, instead of UNKNOWN. But should this be a
+warning, is this not the behavior that we actually want? Think about
+this.
+---
+
 * TODOs
 ** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
@@ -279,7 +286,6 @@ At the moment the indentation that lstlisting uses is way off to the
 left. This should not be the case, as it looks quite odd with the text
 indented above it. Perhaps force indentation with \indent? Not
 sure. Look into this.
-
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -862,6 +868,217 @@ include it in the suggestions list are you (well, we might want to do
 that, but maybe highlight that suggestion in red or something and when
 you hover over it get the slices showing why that choice would make
 the code untypable, who knows).
+
+*** 2012-07-06
+
+(2012-07-06-10:21)
+
+Reading these papers is turning me into a zombie, going start doing
+some more of the equality types implementation, then write up text
+about that in the first year report afterwards.
+
+(2012-07-06-12:16)
+
+Have added a warning in to the warnings section, working on fixing a
+test that broke. Note that in Ty.sml the constyarrow' equality type
+status is fixed to be NOT_EQAULITY_TYPE.
+
+(2012-07-06-12:28)
+
+Warning removed. New warning added for fixing reals to be of
+NOT_EQUALITY_TYPE status when creating the type constraint.
+
+(2012-07-06-14:53)
+
+This is causing the constraint solver to crash, likely because of the
+previous warning about reals constrained to be NOT_EQUALITY_TYPE in
+the last parameter of the type constraint initialization. I didn't
+design this part of the constraint solver to accept this, and rightly
+so, this should be an equality type dependancy if I remember correctly
+(the other log entries and code seem to indicate that this is the case
+also).
+
+I'll make this a dependancy on the equality type variable that is
+created in the SconReal function during constraint generation... that
+should do the trick right?
+
+Note that the endpoints still have to be fixed up. It might be nice
+to finish up fixing the tests that I have to a good point, then start
+looking at getting the endpoints right. Then after this is done I can
+commit the equality type tests I have to the test database and get
+them running daily for breakages.
+
+This might be a nice point to extend the test framework a bit so that
+the equality type tests sit in an equality-types/ folder inside the
+suite of tests, rather than them being given the next point in the
+enumeration sequence, which doesn't tell us much of anything.
+
+Perhaps something like
+
+equality-types/01-just-real-numbers.sml
+equality-types/02-reals-inside-tuple.sml
+equality-types/03-two-reals-with-variales.sml
+equality-types/03-one-real-variable-self-test.sml
+equality-types/04-real-and-variable-in-let.sml
+
+or something, ideally clearer if possible and can be done without a
+stupidly long file name. Just think about it. Oh, at the same time do
+get the test framework working off a master file instead of the one
+yesterday, and don't generate log files for tests which are the same
+as the master. Much less test files in the repository that way. Some
+kind of confirmation that the test suite ran though would be handy.
+
+(2012-07-06-15:25)
+
+I'm changing the TYPE_VAR constructor to take something of
+equalityType in the last element of its tuple rather than an
+equalityTypeStatus, be aware that this is going to affect compilation
+pretty hard...
+
+(2012-07-06-15:35)
+
+Forcing the stripEqualityStatus (TYPE_VAR [...]) case to return an
+empty list as its first element, this used to be eq. Adding a warning,
+this should let me figure out where the errors are much more quickly.
+
+*** 2012-07-09
+
+(2012-07-09-08:16)
+
+Going to continue on with equality types for at least part of today,
+then I'll have to work on the first year report. Most of this should
+be at some sort of standard but the literature review still needs
+work. Need to get the date when this is actually needed to be
+completed, so I can get it out of the way and get on with finishing
+equality types and move on.
+
+(2012-07-09-10:05)
+
+Is stripEqualityStatus actually needed in Ty.sml? We seem to use it in
+the Env.sml file and in Unification, but I'm not totally convinced
+that we actually need that any more...
+
+(2012-07-09-10:40)
+
+Actually, we don't use stripEqualityStatus in Env.sml, we have a
+function which will indirectly use it though, but that function itself
+is actually never called.
+
+I'm going to try and remove this, if all hell breaks loose then I'll
+put it back :o). I'm pretty sure this is something left over from a
+previous way that equality types were represented
+
+(2012-07-09-11:24)
+
+I think the removal of stripEqualityStatusFromConstraints in Env.sml
+went alright, that was one of the dependancies on stripEqualityStatus
+in Ty.sml. There are two other calls to this function if I remember
+correctly in the unification algorithm, if they aren't needed either,
+or are in places where I am fixing the old code, then I can remove
+this section of code.
+
+This is important as it is this location where quite a few of the
+compilation errors are coming from.
+
+(2012-07-09-12:22)
+
+stripEqualityStatus is actually used when solving equality type
+accessors, I'm going to fix up that bit of the code for now, but it
+might be an idea to think about moving it into the unification
+algorithm if it's not needed anywhere else.
+
+(2012-07-09-12:59)
+
+I'm removing all the old equality type checks that we used to do (eg
+in the case of TYPE_VAR and TYPE_VAR check that the eq properties were
+the same, as we should now be checking all this information with
+equality type variables (each constraint to a status).
+
+(2012-07-09-14:43)
+
+I'm suffering this problem again where the unification algorithm says
+"Yes, I see the error!" then runs itself again, doesn't find the error
+the second time around, realise that it should, and dies.
+
+I'm still not quite sure what causes this problem, I thought it was
+when there was a label missing but I don't think that's the case any
+longer....
+
+(2012-07-09-15:04)
+
+It occurs to me that this problem with the repeated unification run
+problem may indicate a problem with the unification algorithm, and
+that it is *not* a problem with the constraint generation
+algorithm. I'm not sure if this is definitely the case, maybe the
+problem may still lie with the constraint generation algorithm, but if
+it detected the equality type error once, then the constraints
+generated are actually correct surely? It's what we take out for the
+repeated runs that's wrong?
+
+(2012-07-09-17:38)
+
+Just had a thought, the second set of labels that I was talking about
+in the warnings... is this the set of labels that I always found to be
+empty about a year ago? It wasn't confirmed to be always empty but
+that was what was suspected, look into confirming this. Perhaps run
+the entire test database with debug output then see if any of the deps
+have values? Note: A script will be needed to do that, the volume of
+the output is far too large to be done by hand.
+
+(2012-07-09-23:44)
+
+Still on this problem with the unification algorithm falling over on
+the second run. The problem is that I don't know what the real error
+is for certain. The initial error was 'The error should be an error'
+which I've changed to the current understanding which I've got now.
+
+*** 2012-07-10
+
+(2012-07-10-00:08)
+
+It looks like the labels are correct, so why is this failing on the
+next run? It looks to me like for some reason the accessors are being
+solved incorrectly on the next run, when we look up the binder we
+don't get the same binding the second time around.
+
+(2012-07-10-00:57)
+
+Got it, it was indeed a missing labels problem, there were labels that
+were available from the TYPE_DEPENDANCY constructor but were not being
+included, so I just unioned those labels with the labels that we had
+already and the unification algorithm seemed perfectly happy to
+continue.
+
+I'm going to change the error that the unification spits out so that
+it recommends that the developer look into missing labels, while I'm
+not certain that this is always the case this is what I suspected
+initially, and what it has turned out to be so it's a pretty good
+guess.
+
+Straight back to the first year report tomorrow, I think I'll try to
+write up how current things work with respect to equality types, at
+least in some shape or form, and try and write the conclusion which
+should just leave me with the literature review to do before I can put
+it aside until I speak to Joe.
+
+Fairouz has offered to read some of the first year report, might be an
+idea to do this as another pair of eyes can't possibly hurt. I might
+do this tomorrow if I think it looks alright.
+
+(2012-07-10-01:06)
+
+Alright I've updated the error message that comes out in the
+minimisation algorithm to give a hint to the developer that the
+problem may be in the propagation of labels in the unification
+algorithm. Hopefully this will help someone else, I'm sure I'll need
+to know it again.
+
+Committing this to the repository, this work wasn't done on a branch
+but it really should have been. It would be good to start using
+branches for the work that I'm doing and then pushing the unstable
+changes to those branches, then the latest changes get backed up in
+the repository but the main branch will still compile fine for
+everyone.
 
 * Next meeting with Joe
 

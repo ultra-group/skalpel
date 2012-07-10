@@ -84,7 +84,7 @@ signature TY = sig
                 | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
 		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION            of typeFunction  * rowType * Label.label
-		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
+		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label * equalityType
 		| GEN                    of ty list ref
 		| TYPE_DEPENDANCY        of ty ExtLab.extLab
 

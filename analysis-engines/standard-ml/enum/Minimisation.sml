@@ -495,7 +495,8 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 	      | U.Success _ =>
 		let
 		    val err = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
-		in raise EH.DeadBranch "Error! The unification algorithm terminated in a success state, but an error was generated!"
+		in raise EH.DeadBranch ("Error! The unification algorithm terminated in a success state, but an error was generated previously! "^
+					"Hint: It has been found previously to be the case that this error is cased by a bug solely in the unification algorithm where some labels are not propagated correctly...")
 		end
 	val labs    = ERR.getL err
 	(*val labs = ERR.getL err*)

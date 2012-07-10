@@ -174,7 +174,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
 		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION       of typeFunction  * rowType * Label.label
-		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityTypeStatus
+		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityType
 		| GEN               of ty list ref
 		| TYPE_DEPENDANCY   of ty ExtLab.extLab
 
@@ -894,7 +894,7 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
 				    ","    ^ printPoly     p   ^
 				    ","    ^ printOrKind   k   ^
 				    ","    ^ printlabel    l   ^
-				    ","    ^ printEqualityTypeStatus    eq   ^ ")"
+				    ","    ^ printEqualityType    eq   ^ ")"
   | printty (GEN tys)             = "GEN(" ^ printTyGen    tys ^ ")"
   | printty (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"   ^ EL.printExtLab' ety printty
 and printtylist    xs = printlistgen xs printty
@@ -948,7 +948,7 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
 				     ","     ^ printPoly     p   ^
 				     ","     ^ printOrKind   k   ^
 				     ","     ^ printlabel    l   ^
-				     ","     ^ printEqualityTypeStatus    eq   ^ ")"
+				     ","     ^ printEqualityType    eq   ^ ")"
   | printty' (GEN tys)             = "GEN("  ^ printTyGen'  tys  ^ ")"
   | printty' (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"    ^ EL.printExtLab' ety printty'
 and printtylist' tys = printlistgen tys printty'
@@ -973,8 +973,11 @@ and stripEqualityStatus_sequenceType (ROW_VAR _) labels = ([], labels)
 	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityStatus_fieldType (L.cons label labels) *)
   | stripEqualityStatus_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityStatus_sequenceType term (L.union labs labels)
 
+(* this is currently used when solving equality constraint accessors, and only equality constraint accessors
+ * (2012-07-09-12:22) jpirie: do we actually need to strip things this way? Want to look into this.
+ *)
 and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityTypeStatus eq)^")");
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityType (EQUALITY_TYPE_STATUS eq))^")");
      ([eq], labels))
   | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!");
@@ -994,9 +997,12 @@ and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) labels =
   | stripEqualityStatus (APPLICATION(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from APPLICATION!");
      ([], labels))
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,eq)) labels =
+  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_STATUS(eq))) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
      ([eq], L.cons label labels))
+  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,eq)) labels =
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "(Not) stripping an equality type from a TYPE_POLY ("^(printEqualityType eq)^")");
+     ([], labels))
   | stripEqualityStatus (GEN _) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
      ([], labels))
