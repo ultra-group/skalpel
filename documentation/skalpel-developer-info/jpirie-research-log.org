@@ -141,7 +141,7 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [50%]
+** First year report [62%]
 *** DONE (2012-06-29-14:47) Overview [100%]
 **** DONE (2012-06-29-14:49) Moving sections around
 
@@ -258,8 +258,8 @@ the idea of sharing, and then leave it.
      we'd face and the kind of changes that Skalpel would need to go
      through to do this.
 
-*** TODO (2012-06-29-14:47) Conclusion [0%]
-**** TODO (2012-06-29-15:20) Time estimates
+*** DONE (2012-06-29-14:47) Conclusion [100%]
+**** DONE (2012-06-29-15:20) Time estimates
 
 It would be nice to give time estimates (in fact, this may be required) of
 how long I estimate each thing I need to do next will take me (it will
@@ -1138,6 +1138,13 @@ just take two years from now as a thesis submission date, an equality
 types completion date, sharing completion date, and fill in the
 blanks. It's quite hard to guess this kind of thing but I guess it's
 to think more about what's ahead than create anything which is accurate.
+
+** 2012-07-11
+
+(2012-07-11-13:46)
+
+I've figured down some rough dates for things to be completed by
+for the first year report, the text has been updated accordingly.
 
 * Next meeting with Joe
 
