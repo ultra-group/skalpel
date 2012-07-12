@@ -141,7 +141,7 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [62%]
+** First year report [75%]
 *** DONE (2012-06-29-14:47) Overview [100%]
 **** DONE (2012-06-29-14:49) Moving sections around
 
@@ -158,13 +158,8 @@ interface, which would save me some space instead of including lots of
 screenshots. This isn't really a problem for this document but it's
 something that I will need to sort out for the thesis document.
 
-*** TODO (2012-06-29-14:47) Literature review [16%]
-**** TODO (2012-06-29-15:03) Simplifying some of the reviews
-
-Some of the reviews in this document are WAY too big, this needs to be
-taken down a peg or two.
-
-**** TODO (2012-06-29-15:39) Haack and Wells
+*** TODO (2012-06-29-14:47) Literature review [28%]
+**** DONE (2012-06-29-15:39) Haack and Wells
 
      There's plenty to talk about with respect to this paper, look at
      what I've got there again and clean it up.
@@ -172,14 +167,6 @@ taken down a peg or two.
 **** DONE (2012-06-29-15:35) Variable name completion paper
 
      A literature review on this has still to be written up
-
-**** TODO (2012-06-29-15:40) Discriminative sum types
-
-     A review on this paper looks like it was started but then I got
-     distracted by something else, probably work on equality
-     types. Extend the explanation that I've got here, there were some
-     interesting ideas in the paper and a description of some of them
-     should end up here
 
 **** TODO (2012-06-29-15:41) An efficient unification algorithm
 
@@ -197,7 +184,9 @@ taken down a peg or two.
      if I can put in there how ideas from the literature can improve
      Skalpel.
 
-*** TODO (2012-06-29-15:55) Review of other implementations
+**** TODO (2012-07-12-13:24) Listening to program slices
+**** TODO (2012-07-12-13:24) Seminal paper
+*** DONE (2012-06-29-15:55) Review of other implementations
 
     A section with this kind of heading is something else that should
     probably go in this review. Why not start with looking at the
@@ -1171,6 +1160,40 @@ it won't cause a type error. I guess that's valid, but isn't it a
 little unlikely that it's what the user actually wished to do?
 
 I think I'll put this example in the first year report.
+
+(2012-07-12-11:03)
+
+Oh I forgot that the comments for this lambda-mode were in
+Japanese. Curses! Plan is to clean the other-implementations.tex text
+up, maybe add something to the text about lambda mode, then send bits
+of text out to be proof read. Must e-mail Joe and ask when he wants
+this report at some point today too, it can really be finished off at
+any time.
+
+Perhaps I should just get it to a finished state today and send that
+out, then if Joe doesn't want it yet then I can just keep extending
+the text, the literature review and so on, until he does want it. That
+might be best actually, it would be good to get back on to the
+implementation and keep pushing on with equality types. Hm.
+
+I guess I should make some viva slides too, that sounds like the kind
+of thing that might be necessary. Should be straight forward to do,
+maybe I should get that done tomorrow if I get the report finished off
+and sent out today...
+
+(2012-07-12-12:54)
+
+I've added some more comments to the text that existed which reviewed
+λ-mode. I'm going to mark that as 'DONE' for now, so I can move on to
+the literature review and get that cleaned up. Hopefully I'll be able
+to look over everything at the end of the day.
+
+Fairouz asked to look at some of the text, so I've sent her what I've
+got at the moment. Hopefully she'll be able to look over the overview
+if she has time.
+
+Going to work on the literature review for the rest of the day and get
+that text cleaned up, it needs much more love than it's currently had...
 
 * Next meeting with Joe
 
