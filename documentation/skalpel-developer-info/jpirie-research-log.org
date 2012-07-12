@@ -1146,6 +1146,32 @@ to think more about what's ahead than create anything which is accurate.
 I've figured down some rough dates for things to be completed by
 for the first year report, the text has been updated accordingly.
 
+** 2012-07-12
+
+(2012-07-12-01:59)
+
+I'm trying to get this implementation for Seminal working so I can
+talk a little bit about it in the first year report, I'm using
+compiler sources from about 6 years ago so I expect there'll be a bit
+of trouble on the way along.
+
+Note that in the sources for the ocamlc compiler configuration script,
+if you want to install to a certain prefix then you have to go in to
+the script and add that in manually, the --prefix parameter is not
+supported (well actually it looks like there is some kind of attempt
+made there to support this, but I'm not going to start trying to fix
+it at this, I just hacked it to make it work for what I need it to do
+right now).
+
+(2012-07-12-02:13)
+
+Hm I seem to have constructed an example where Seminal suggests that a
+function be changed so that it throws away its second argument so that
+it won't cause a type error. I guess that's valid, but isn't it a
+little unlikely that it's what the user actually wished to do?
+
+I think I'll put this example in the first year report.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
