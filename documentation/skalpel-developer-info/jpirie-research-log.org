@@ -141,7 +141,7 @@ the file, and that the process terminates.
   fsimplify (c::cs') l
   end
 
-** First year report [75%]
+** First year report [100%]
 *** DONE (2012-06-29-14:47) Overview [100%]
 **** DONE (2012-06-29-14:49) Moving sections around
 
@@ -158,7 +158,7 @@ interface, which would save me some space instead of including lots of
 screenshots. This isn't really a problem for this document but it's
 something that I will need to sort out for the thesis document.
 
-*** TODO (2012-06-29-14:47) Literature review [28%]
+*** DONE (2012-06-29-14:47) Literature review [100%]
 **** DONE (2012-06-29-15:39) Haack and Wells
 
      There's plenty to talk about with respect to this paper, look at
@@ -168,7 +168,7 @@ something that I will need to sort out for the thesis document.
 
      A literature review on this has still to be written up
 
-**** TODO (2012-06-29-15:41) An efficient unification algorithm
+**** DONE (2012-06-29-15:41) An efficient unification algorithm
 
      That's WAY too much detail, surely. I know this information came
      from a previous report that I'd written, so perhaps I included
@@ -177,15 +177,15 @@ something that I will need to sort out for the thesis document.
      the ideas of this paper could be implemented to improve the way
      that Skalpel handles certain things.
 
-**** TODO (2012-06-29-15:43) Higher order unification and macthing
+**** DONE (2012-06-29-15:43) Higher order unification and macthing
 
      Again, there is probably too much information in here. Some of
      this information can come out most likely. Remember, it's great
      if I can put in there how ideas from the literature can improve
      Skalpel.
 
-**** TODO (2012-07-12-13:24) Listening to program slices
-**** TODO (2012-07-12-13:24) Seminal paper
+**** DONE (2012-07-12-13:24) Listening to program slices
+**** DONE (2012-07-12-13:24) Seminal paper
 *** DONE (2012-06-29-15:55) Review of other implementations
 
     A section with this kind of heading is something else that should
@@ -259,7 +259,7 @@ report anyway).
 I guess if I'm going to do this then some sort of Gantt chart is
 probably in order.
 
-*** TODO (2012-06-29-14:48) Referencing
+*** DONE (2012-06-29-14:48) Referencing
 
 General referencing needs to be done for the document.
 
@@ -295,6 +295,11 @@ will die of boredom as I witter endlessly about things that they don't
 want to hear about, so it might be a good idea to tag them with
 'implementation: equality types' or 'first year report' or
 something. Something to think about in any case.
+
+*** TODO (2012-07-13-14:23) Check Virtualbox gets installed on XP
+
+We should be able to use Virutalbox on XP to test the installation of
+packages daily.
 
 * Research logs
 ** 2012-06-26
@@ -1194,6 +1199,36 @@ if she has time.
 
 Going to work on the literature review for the rest of the day and get
 that text cleaned up, it needs much more love than it's currently had...
+
+** 2012-07-13
+
+(2012-07-13-10:28)
+
+Need to get the first year report to a completed state today to send
+to Joe. Plan is to then take Fairouz' comments on Sunday, add those
+in, then send that to Joe as well in the event that he has time to
+read it. In any event the changes will be useful because that's all
+text that should be going into the thesis document.
+
+(2012-07-13-16:46)
+
+Alright I've updated the literature review and done referencing for
+the document. I'll send off an updated PDF now.
+
+It should be noted that I'm sourcing some of my literature review from
+the paper-reviews folder that I have in the repository. Either they
+should be all integrated into the main document, or all of the
+literature review paper reviews should end up in there, at the moment
+there is some directly .tex file, and some in the paper-review folder,
+which is not optimal.
+
+We should also think about having some sort of shared bibtex file for
+the ULTRA group, that might be a good thing to have available
+somewhere. Something to think about certainly, I know people have
+certain formats that they want to stick to so maybe we can define a
+format for such a bibtex file. There must be formats that people
+already used, maybe there's even a script that will check if a bibtex
+file adheres to a certain format. Something to look into at some point.
 
 * Next meeting with Joe
 
