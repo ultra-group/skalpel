@@ -1230,6 +1230,40 @@ format for such a bibtex file. There must be formats that people
 already used, maybe there's even a script that will check if a bibtex
 file adheres to a certain format. Something to look into at some point.
 
+** 2012-07-17
+
+(2012-07-17-23:41)
+
+First year report is all done and been handed in, been working today
+on a viva presentation which I've finished. It's worth noting a few
+things when using the beamer package.
+
+When including references, the \newblock command needs to be defined
+as it's not defined in the beamer document class. So just do the usual
+bibtex stuff, but the \bibliography command in a \frame, but add the
+following definition at the top of the file:
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+Also, when using lstlisting code in a \frame, define the frame to be
+fragile by doing this:
+
+\begin{frame}[fragile]{Motivation for Skalpel project - type error
+example}
+
+I'm using the lstlisting package to get background highlighting for
+code in .tex files. It can take a bit of fiddling to get the
+background text to highlight exactly the way that it's needed, but
+there's highlighting in the first year viva presentation (including an
+endpoint which has a box), so look there for future reference.
+
+I'm not sure if this is the same mechanism Vincent used, maybe it
+would be nice to find that out.
+
+The viva is scheduled for tomorrow, I guess work on the analysis
+engine will recommence shortly after that and I can continue with
+equality types.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
