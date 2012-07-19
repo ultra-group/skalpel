@@ -3010,33 +3010,28 @@ fun unif env filters user =
 
 			     val _ = case bind of
 					 T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(_,_,_,T.EQUALITY_TYPE_VAR(x)),_,_,_) =>
-					 let
-					     (* need some handling here for the pattern match warnings *)
-					     val E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) = E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab
-					 in
-					     (* jpirie: I unioned some more labels and it worked! Figure out precisely which labels I should be unioning :o) *)
+					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab of
+					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
 					     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)), deps, ids) ] l
-					 end
+					   | _ => raise EH.DeadBranch "Impossible pattern match failure while solving equality type accessors")
 				       | T.TYPE_DEPENDANCY(T.TYPE_POLY(_,_,_,_,typePolyLabel,T.EQUALITY_TYPE_VAR(x)),depLabels,_,_) =>
-					 let
-					     (* need some handling here for the pattern match warnings *)
-					     val E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) = E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab
-					 in
-					     (* jpirie: I unioned some more labels and it worked! Figure out precisely which labels I should be unioning :o) *)
-					     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), L.union depLabels (L.cons typePolyLabel (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))), deps, ids) ] l
-					 end
+					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab of
+					      (* need some handling here for the pattern match warnings *)
+					      E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
+					      fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), L.union depLabels (L.cons typePolyLabel (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))), deps, ids) ] l
+					    | _ => raise EH.DeadBranch ("Impossible pattern match failure while solving equality type accessors")
+					 )
 				       | _ => ()
 
 			 in
 			     case (findStatus) of
 				 SOME(x) =>
-				 let
-				     (* need some handling here for the pattern match warnings *)
-				     val E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids) = E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_STATUS(x)) lab
-				 in
-				     (* jpirie: I unioned some more labels and it worked! Figure out precisely which labels I should be unioning :o) *)
+				 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_STATUS(x)) lab of
+				     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids) =>
 				     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), L.cons (I.getLabId lid) (L.cons l (L.union eqStatusLabels (L.union (L.union labs labs') ls))), deps, ids) ] l
-				 end
+
+				   | _ => raise EH.DeadBranch ("Impossible pattern match failure while solving equality type accessors")
+				 )
 			       | NONE => ()
 			 end
 		       | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
@@ -3425,43 +3420,6 @@ fun unif env filters user =
 									  " and something else, namely this: "
 									  ^(#cyan D.colors)^(T.printty ty))
 			else ()
-
-		fun checkForEqualityErrors ty =
-		    let
-			(* strip all of the equality type statuses out of ty and put them in a list *)
-			val tyEqStatus = T.stripEqualityStatus ty L.empty
-
-			(* look through the list and see if any of them contradict the value of eq *)
-			val findEqClash = NONE (*List.find (fn x => (if x = eq orelse x = T.UNKNOWN then false else true)) tyEqStatus*)
-		    in
-			case findEqClash of
-			    (* there are no contradicting values, no equality type error here *)
-			    NONE => ()
-
-			  (* there is a contradicting value, there's an equality type error here *)
-			  | SOME x =>
-	  		    let
-				(* this should really be the label that comes from the Ty.TYPE_POLY tuple right? *)
-				val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => (#red D.colors)
-										     ^"equality type error detected (the something else turned out to be TYPE_POLY). eq is "
-										     ^T.printEqualityTypeStatus eq ^ " and contradicting value was found in "^(T.printty ty));
-				  (* we should take the label by looking at x really, using l is not right here *)
-				val ek    = EK.EqTypeRequired (L.toInt l)
-				val err   = ERR.consPreError ERR.dummyId ls ids ek deps
-	  		    in handleSimplify err cs' l
-	  		    end
-		    end
-
-		val _ = if eq = T.UNKNOWN
-			(* if the equality type status of eq hasn't been determined yet, then there can't possibly be an equality type error *)
-			then ()
-			(* otherwise check ty to see if it has any contradicting equality type status values *)
-			else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "looking for equality type errors in fsimplify TYPE_CONSTRAINT of TYPE_VAR (equality constraint "^(T.printEqualityTypeStatus eq)^") and something else...");
-			      (* (2012-07-09-12:20) jpirie: I've taken this check out, this is the wrong way to do it
-			       * leaving it in for now because I might come back in a bit and decide I want bits of this
-			       * delete if you're see this in year >= 2013. *)
-			      (* checkForEqualityErrors ty; *)
-			      D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "done"))
 
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
