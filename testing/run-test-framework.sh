@@ -62,7 +62,7 @@ mkdir -p $outputDir
 
 # rebuild the skalpel binary
 compilationLog=`mktemp`
-(cd "$repoDir/analysis-engines/standard-ml"; make mlton-bin-gen > $compilationLog)
+(cd "$repoDir/analysis-engines/standard-ml"; make mlton-bin-gen > $compilationLog 2> $compilationLog-errors)
 
 # run the analysis engine tests
 $skalpelBin -b 2 $basisFile -c $analysisTestDir > $outputDir/$analysisTestFilename 2> $outputDir/$analysisTestFilename-errors
@@ -78,6 +78,12 @@ deadLinksErrors=`cat $outputDir/$deadLinksTestFilename-errors`
 if [ ! -n "$deadLinksErrors" ]
 then
     rm "$outputDir/$deadLinksTestFilename-errors"
+fi
+
+compilationLogErrors=`cat $compilationLog-errors`
+if [ ! -n "$compilationLogErrors" ]
+then
+    rm "$compilationLog-errors"
 fi
 
 
@@ -125,7 +131,7 @@ echo -e "\n\n******************************\n  Website Broken Links Log   \n****
 cat $outputDir/$deadLinksTestFilename >> $mailFile
 
 # apparently you can't send mail to non-HW adresses with this. There's probably a way around that though.
-cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
+# cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
 
-rm $mailFile
-rm $compilationLog
+# rm $mailFile
+# rm $compilationLog
