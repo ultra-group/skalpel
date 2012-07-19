@@ -1704,8 +1704,6 @@ fun generateConstraints' prog pack nenv =
 		   val cst' = E.conscsts (lab, cs) (E.singleConstraint (L.dummyLab, c3))
 		   val css3 = checkTypeVarInc (A.getTypeVarDatName datname) (A.getlabDatName datname) (A.getTypeVarConbindseq conbindseq)
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
-		   val _ = print ("Constraint cst = "^(E.printConstraints cst))
-		   val _ = print ("Constraint cst' = "^(E.printConstraints cst'))
 	       in (E.toTYCONTypeNameEnv typeNameEnv E.emvar false (L.singleton lab), (cons, v), cst, cst', css)
 	       end
 	     | f_datbind (A.DatBindDots pl) =

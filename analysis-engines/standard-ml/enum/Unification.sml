@@ -3000,9 +3000,9 @@ fun unif env filters user =
 			 (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		       | (SOME (({id, bind, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
 			 let
-			     val _ = print ("sem = "^(T.printEqualityType sem)^"\n")
-			     val _ = print ("id = "^(Int.toString (I.toInt id))^"\n")
-			     val _ = print ("bind = "^(T.printty bind)^"\n\n\n")
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("sem = "^(T.printEqualityType sem)^"\n"))
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("id = "^(Int.toString (I.toInt id))^"\n"))
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("bind = "^(T.printty bind)^"\n\n\n"))
 
 			     val (eqStatuses, eqStatusLabels) = T.stripEqualityStatus bind L.empty
 			     (* (2012-06-24) jpirie: is this causing us to loose labels? What LABELS are there for NOT_EQUALITY_TYPE? *)
