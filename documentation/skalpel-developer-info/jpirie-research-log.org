@@ -1212,6 +1212,13 @@ types or reading some papers. I've also still got the notes from Joe
 from the first year report to finish typing up, might do that today as
 well.
 
+(2012-07-20-14:33)
+
+All the viva-related forms are now handed in. Hans and Claire are both
+happy so that should be that all sorted. Apparently they still don't
+need my ethical approval form, so I'll just keep it until they do
+actually want to receive that information from me.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
