@@ -16,13 +16,6 @@ equality type errors are only defined to have one endpoint, and it
 should do something like a type constructor clash where there can be
 multiple.
 
----
-Changed the type constraint that's initialised in SconReal to have a
-NOT_EQUALITY_TYPE attachment, instead of UNKNOWN. But should this be a
-warning, is this not the behavior that we actually want? Think about
-this.
----
-
 * TODOs
 ** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
@@ -33,6 +26,25 @@ this.
   this manually (though I am running the binary through the tests we
   have and diffing the output myself to make sure everything hasn't
   exploded).
+
+*** TODO (2012-07-20-10:50) Running tests from a fresh clone of the repository
+
+The best way for the test framework to work is if it actually ran
+tests from a fresh clone of the repository, then the test framework
+would have to do the same steps that any user would have to do in
+order to run its tests.
+
+It also has the additional advantage that if anyone in the Skalpel
+project wants to know how something has to be built, they can just
+look at the test framework. Naturally, this information should be
+documented anyway, but the test framework will have to contain the
+exact steps needed to build whatever it is going to test. This would
+be quite a good thing for us.
+
+So for example, at the moment the MLB files cannot be generated from
+the CM files if I remember correctly. This is the sort of thing that
+the test framework would pick up on, and have to make the necessary
+changes to the MLB files after an attempt at conversion has been made.
 
 *** TODO (2012-06-29-12:59) Test framework detecting diffs from previous runs
 
@@ -140,141 +152,6 @@ the file, and that the process terminates.
   in
   fsimplify (c::cs') l
   end
-
-** First year report [100%]
-*** DONE (2012-06-29-14:47) Overview [100%]
-**** DONE (2012-06-29-14:49) Moving sections around
-
-There's quite a lot of information in here, maybe this just isn't
-really an overview any more. Can some of this information be moved to
-other sections of the document? It's a bit all over the place isn't it?
-
-**** DONE (2012-07-03-09:31) A simple example
-
-Some of the text under the simple example heading is a bit messy, this
-should really be cleaned up. It would be nice also to get some LaTeX
-code which will display highlighting like it does in the Emacs user
-interface, which would save me some space instead of including lots of
-screenshots. This isn't really a problem for this document but it's
-something that I will need to sort out for the thesis document.
-
-*** DONE (2012-06-29-14:47) Literature review [100%]
-**** DONE (2012-06-29-15:39) Haack and Wells
-
-     There's plenty to talk about with respect to this paper, look at
-     what I've got there again and clean it up.
-
-**** DONE (2012-06-29-15:35) Variable name completion paper
-
-     A literature review on this has still to be written up
-
-**** DONE (2012-06-29-15:41) An efficient unification algorithm
-
-     That's WAY too much detail, surely. I know this information came
-     from a previous report that I'd written, so perhaps I included
-     that verbatim. Nevertheless I need to work out what I can cut out
-     of this explanation and then add some explanation in about how
-     the ideas of this paper could be implemented to improve the way
-     that Skalpel handles certain things.
-
-**** DONE (2012-06-29-15:43) Higher order unification and macthing
-
-     Again, there is probably too much information in here. Some of
-     this information can come out most likely. Remember, it's great
-     if I can put in there how ideas from the literature can improve
-     Skalpel.
-
-**** DONE (2012-07-12-13:24) Listening to program slices
-**** DONE (2012-07-12-13:24) Seminal paper
-*** DONE (2012-06-29-15:55) Review of other implementations
-
-    A section with this kind of heading is something else that should
-    probably go in this review. Why not start with looking at the
-    implementation of Goo and Sasano, who wrote the paper about
-    completing variable names for implicitly typed languages? Could be
-    a nice start. It will be time consuming to look into other
-    implementations so perhaps just a couple is the best thing to do
-    here.
-
-*** DONE (2012-06-29-14:47) First Year Work [100%]
-**** DONE (2012-07-04-14:57) Analysis engine cleaning
-**** DONE (2012-06-29-15:05) Equality types text
-
-     The text about equality types needs to be updated and cleaned up
-     to the point where I am at the moment. Ideally, the information
-     that I'm putting in there should just be an improvement on the
-     work that I was talking about in the research log entries.
-
-     I thought about extending the representation that we have in the
-     paper to put the work that's going on with equality types, but
-     would that be a world of hurt? The amount of definitions I would
-     need to put into this document would be high (although, then it
-     would be something that we could use to update the paper and
-     ultimately something that would stay around to be put in my
-     thesis? Might need to ask Joe about that. Hmm.)
-
-**** DONE (2012-07-04-14:57) Automated testing
-**** DONE (2012-07-04-14:58) Neutral language representation of date
-**** DONE (2012-07-04-14:58) Public repository
-*** DONE (2012-06-29-14:47) Future Targets [100%]
-**** DONE (2012-06-29-15:12) Equality types future text
-
-     I expect not to finish equality types before whatever time I am
-     asked to submit this document. I need to reach a point where I'm
-     going to decide to stop (is that now? Next week?) and write text
-     that I then do not change before handing the document in.
-
-     So this text needs to updated with the list of things that we
-     don't yet handle (which should probably also be present in this
-     document by the way!) and discuss what might be needed to make
-     that happen. It might be best not to talk to technically about
-     what specific changes I'm going to make, as anybody not very
-     familiar with the source code won't stand any real chance of
-     getting an acceptable level of understanding from that? Think
-     about this.
-
-**** DONE (2012-06-29-15:16) Sharing future text
-
-I'm not working on the sharing feature at the moment, and I won't be
-before handing in this report. Clean this text up so that it covers
-the idea of sharing, and then leave it.
-
-**** DONE (2012-06-29-15:18) Other languages future text
-     The idea of supporting other languages is something that we have
-     been thinking about for a while, but we're not at the point that
-     we can go off and do this yet. There are many considerations to
-     be made. In this section give an overview of the challenges that
-     we'd face and the kind of changes that Skalpel would need to go
-     through to do this.
-
-*** DONE (2012-06-29-14:47) Conclusion [100%]
-**** DONE (2012-06-29-15:20) Time estimates
-
-It would be nice to give time estimates (in fact, this may be required) of
-how long I estimate each thing I need to do next will take me (it will
-be ultimately wildly inaccurate irrespective of how long I spend
-thinking about it but it's the kind of thing that should go in the
-report anyway).
-
-I guess if I'm going to do this then some sort of Gantt chart is
-probably in order.
-
-*** DONE (2012-06-29-14:48) Referencing
-
-General referencing needs to be done for the document.
-
-I haven't put anywhere in the document yet text describing that
-it was Vincent that has written most of the implementation for Skalpel
-so far. That would be good to put in, and there should be references
-made to his thesis, there is a good amount of information in there.
-
-*** DONE (2012-07-03-11:35) Other [100%]
-**** DONE (2012-07-02-11:54) Indentation for lstlisting
-
-At the moment the indentation that lstlisting uses is way off to the
-left. This should not be the case, as it looks quite odd with the text
-indented above it. Perhaps force indentation with \indent? Not
-sure. Look into this.
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -1264,11 +1141,80 @@ The viva is scheduled for tomorrow, I guess work on the analysis
 engine will recommence shortly after that and I can continue with
 equality types.
 
+** 2012-07-19
+
+(2012-07-19-09:21)
+
+Started updating the first year report to include Joe's comments. I'll
+do a little on this, then I'd like to get on with updating the test
+framework.
+
+(2012-07-19-12:01)
+
+I have a suspicion that the test framework is not actually rebuilding
+the analysis engine binary correctly after it gets the latest sources
+from the public repository. I've added a change so that the existing
+skalpel analysis engine binary is deleted before the tests are
+performed.
+
+(2012-07-19-12:40)
+
+Moving the 'sem', 'id', and 'bind' variables which contain some
+information (I know enough information about the roles of these to
+change their names now I think) into debug statements. At the moment
+they are just standard print statements, which when running the test
+framework and piping the output to a file runs the /tmp directory out
+of space on lxultra8.
+
+(2012-07-19-13:51)
+
+Put 6 lines of the first part of git log into the e-mail instead of 5,
+when merging branches occur we need 6 lines. I'll look at what results
+come out tomorrow, I suspect there's some kind of path problems, but
+the compilation errors should make their way into the e-mail now.
+
+(2012-07-19-15:15)
+
+It occurs to me that the test framework should really run tests from a
+*fresh clone* of the repository. Then the test framework will have to
+do the same steps that a user has to do in order to build the test
+framework, and can't make use of any existing files that are around.
+
+** 2012-07-20
+
+(2012-07-20-10:33)
+
+There was some incorrect code to the repository committed yesterday
+with respect to removing a file in a bash script, which broke the test
+framework. This should be fixed now.
+
+It's interesting though that the errors file that was generated (which
+comes from the /tmp directory) when trying to compile the analysis
+engine contained the text that you would think would be part of stdout
+(standard mlton based output). Maybe that is for some reason sent to
+stderr, hm. I'll need to look into that.
+
+I'm adding a change so that errors are no longer reported in a
+separate file so instead of doing 1> and 2> for std[out|err]
+redirection I'm now doing &>. It's probably going to be easier to read
+this way in the e-mail anyway, as if stdout and stderr is interleaved
+I might find it a pain to read.
+
+I'm going to probably change the test framework today so that it tests
+from a master file as well, that would be a nice addition. Also, if
+there aren't any differences from the last run test, we shouldn't
+bother creating a test report. That should mean that we don't have
+lots of test logs in the repository and keep only the interesting
+ones.
+
+After I've finished updating that I'll be working on either equality
+types or reading some papers. I've also still got the notes from Joe
+from the first year report to finish typing up, might do that today as
+well.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
 - (switch-buffer) defadvice to not create new buffer?
-- ask about any news on viva date, must be sometime soon?
 - resits for foundations 2 and formal spec?
-- dates on David Corne's website for first year report valid?
 - Asking the user to submit automatically sml code for skalpel database?
