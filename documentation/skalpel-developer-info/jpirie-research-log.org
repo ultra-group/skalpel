@@ -1240,6 +1240,33 @@ symbolic link to this from the testing/ folder of the repository, I'll
 think about that. There needs to be more text of this form, but this
 is all I have time to write at the moment.
 
+** 2012-07-24
+
+(2012-07-23-12:16)
+
+The test framework e-mail reported a series of failures this morning,
+which were a result of me poking it with a sharp stick to see if it
+was actually doing what it was supposed to be doing, which it turns
+out it was not.
+
+The e-mails from the last couple of days have silently failed to build
+the analysis engine, then run tests on whatever version of the skalpel
+analysis engine happens to exist in the repository. As we now remove
+this binary, the test framework *must* generate a new version
+correctly or it will not be able to run the analysis engine tests.
+
+The problem with building the new version of the binary was that the
+$PATH environment variable was not being set when running
+cronjobs. I've updated the cron command that we run to load the file I
+have which declares my $PATH, which allows the test framework to find
+the binaries it needs to build the analysis engine binary such as
+mlton and mllex.
+
+I've also added the analysis engine version hash to the test e-mail,
+just to be doubly sure that we are in fact getting the correct
+version. Hopefully the e-mail that comes through tomorrow morning
+should have everythnig fixed.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?

@@ -113,7 +113,9 @@ mlton-base:
 	mllex  parse/ML.lex
 	mlyacc parse/ML.grm
 	sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
-	mv parse/ML.grm.sml.tmp parse/ML.grm.sml 
+	mv parse/ML.grm.sml.tmp parse/ML.grm.sml
+	sed s/"val SKALPEL_VERSION = .*"/"val SKALPEL_VERSION = \""`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
+	mv RunSlicer.sml.tmp RunSlicer.sml
 	mllex  parse/MLB.lex
 	mlyacc parse/MLB.grm
 	mv parse/ML.lex.sml parse/ML-mlton.lex.sml

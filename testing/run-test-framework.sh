@@ -125,6 +125,10 @@ echo -e "\n\n****************************************\n    Analysis Engine Compi
 
 cat $compilationLog >> $mailFile
 
+echo -e "\n\n****************************************\n      Analysis Engine Version          \n****************************************" >> $mailFile
+
+echo `$skalpelBin -v` >> $mailFile
+
 echo -e "\n\n******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
 
 diff $yesterdayOutputDir/$analysisTestFilenameYesterday $outputDir/$analysisTestFilename >> $mailFile
@@ -142,7 +146,7 @@ echo -e "\n\n******************************\n  Website Broken Links Log   \n****
 cat $outputDir/$deadLinksTestFilename >> $mailFile
 
 # apparently you can't send mail to non-HW adresses with this. There's probably a way around that though.
-cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
+cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk # jbw@macs.hw.ac.uk
 
 # remove the temporary files
 rm -f $mailFile $compilationLog
