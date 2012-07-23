@@ -1219,6 +1219,27 @@ happy so that should be that all sorted. Apparently they still don't
 need my ethical approval form, so I'll just keep it until they do
 actually want to receive that information from me.
 
+** 2012-07-23
+
+I've changed the crontab entry for the test framework so that the
+result of stdout gets placed in my directory, that should help with
+debugging any problems that come up. Previously only stderr was
+directed to a file, but the test framework didn't run today, and no
+errors were output to stderr. I think I have found the cause of this
+and fixed it, but the stdout output would have been nice to help this
+debugging process.
+
+Now the crontab entry looks like this:
+
+0 7 * * * /u1/pg/jp95/repos/skalpel/testing/run-test-framework.sh >/u1/pg/jp95/test-framework-output 2>/u1/pg/jp95/test-framework-errors
+
+I've added a bit of documentation to how the test framework operates,
+which can be found in
+documentation/skalpel-developer-info/test-framework. Maybe I'll make a
+symbolic link to this from the testing/ folder of the repository, I'll
+think about that. There needs to be more text of this form, but this
+is all I have time to write at the moment.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?

@@ -72,7 +72,7 @@ mkdir -p $outputDir
 #         clone of the repository each time, as that's what our users would do
 echo "updating the skalpel repository..."
 pullLog=`mktemp`
-(cd $repoDir; git pull http master &>pullLog)
+(cd $repoDir; git pull http master &>$pullLog)
 
 # remove the old skalpel binary so we's sure we have new results
 echo "removing existing skalpel analysis engine binary..."
