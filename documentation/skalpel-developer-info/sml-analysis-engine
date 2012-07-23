@@ -22,7 +22,7 @@
 ################################################################################
 
 ================================================================================
-                                   Compilation
+                                  Compilation
 ================================================================================
 
 It is assumed that the user is in the analysis-engines/standard-ml/
@@ -54,7 +54,7 @@ documentation explaining the problem and how it can be fixed (if you
 figure that out!).
 
 ================================================================================
-                            Abbreviations
+                                 Abbreviations
 ================================================================================
 
 As few abbreviations should be used as possible should be used in the

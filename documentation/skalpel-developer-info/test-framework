@@ -1,0 +1,71 @@
+################################################################################
+##
+## Copyright 2012 Heriot-Watt University
+##
+## Skalpel is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This file is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+##
+## Authors: John Pirie
+## Date: July 2012
+## Description: Contains information about the Skalpel test framework
+##
+################################################################################
+
+================================================================================
+                                   Structure
+================================================================================
+
+At this time of writing, 2012-07-23-01, the test framework works as
+follows. In the testing/ folder at the root of the Skalpel repository
+there is a shell script named 'run-test-framework.sh'. This file runs
+tests on various aspects of the project, and currently takes no
+parameters. Were one to execute this script, testing would begin and a
+report would be generated in the form of an e-mail, which is then sent
+to e-mail addresses which are currently programmed into this file.
+
+There are three sub-folders in the testing/ folder of the Skalpel
+repository. They are:
+
+analysis-engine-tests/
+scripts/
+test-results/
+
+The folder named 'analysis-engine-tests' contains the analysis engine
+test database. This is nothing more than a collection of target
+language code files (named code[number].sml), accompanied with what
+are deemed to be the 'answers' to these tests (named
+test[number]). The analysis engine takes each of these files in turn
+as input, generates type error slices, then compares its results with
+the associated answer file. The answer files are written in JSON
+format.
+
+The 'scripts' folder contains other shell scripts used for
+testing. Currently, this folder only contains a script which checks
+the Skalpel project website for dead links, but it's very possible
+other scripts will go there in the future.
+
+The 'test-results' folder contains the results of the test framework
+for each day. Currently, this folder contains many subfolders, each
+with a date. Inside each of those folders are files which report the
+test results for that day.
+
+================================================================================
+                                Daily Execution
+================================================================================
+
+The test framework is executed daily on lxultra8. This has been done
+by using a cronjob. The result of the list of crontabs using the
+command 'crontab -l' on lxultra8 is currently this:
+
+0 7 * * * /u1/pg/jp95/repos/skalpel/testing/run-test-framework.sh
+>/u1/pg/jp95/test-framework-output 2>/u1/pg/jp95/test-framework-errors

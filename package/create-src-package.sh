@@ -374,7 +374,6 @@ if [ "$bomCheck" != "mkbom: command not found" ]
 	bomOk=true;
 else
 	echo "mkbom not found. Mac pkg cannot be created";
-	
 fi
 
 paxOk=false;
