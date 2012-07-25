@@ -921,88 +921,10 @@ fun slicergen filebas filesin nenv bprint =
     in SOME (errl10, parse, bmin, times, envContextSensitiveSyntaxPair, initlab)
     end
 
-
-
-(************************************************************)
-(*                MANAGING THE DATABASE                     *)
-(************************************************************)
-
-fun adderror filein nb bforce bfinal name nenv =
-    let val fileout1 = getfileerr  nb
-	val fileout2 = getfilecode nb
-	val fileout3 = getfilehtml nb
-	val a1    = (OS.FileSys.fileSize fileout1; false) handle SysErr => true
-	val a2    = (OS.FileSys.fileSize fileout2; false) handle SysErr => true
-	val a3    = (OS.FileSys.fileSize fileout3; false) handle SysErr => true
-	val _     = if (a1 andalso a2 andalso a3) orelse bforce then () else raise FileEx
-	val b1    = OS.FileSys.access (fileout1, [OS.FileSys.A_WRITE])
-	val b2    = OS.FileSys.access (fileout2, [OS.FileSys.A_WRITE])
-	val b3    = OS.FileSys.access (fileout3, [OS.FileSys.A_WRITE])
-	val _     = if (b1 orelse a1) andalso (b2 orelse a2) andalso (b3 orelse a3) then () else raise NoWrite
-	val stout = TextIO.openOut fileout2
-	val stin  = TextIO.openIn filein
-	val b     = ref true
-	val _     = while !b do case TextIO.inputLine stin of
-				    NONE      => b := false
-				  | SOME line => TextIO.output (stout, line)
-	val _     = TextIO.closeIn stin
-	val _     = TextIO.closeOut stout
-	val tmptm = gettimelimit ()
-	val _     = settimelimit mytimelimit
-	val _     = print "running...\n"
-	val sl    = slicergen (!myfilebas) [fileout2] nenv false
-	val _     = settimelimit tmptm
-	val name' = case name of "" => Int.toString nb | _ => name
-    in case sl of
-	   SOME (errl, parse, bmin, times, envContextSensitiveSyntaxPair, initlab) =>
-	   let val _     = debuggingHTML errl parse bmin times envContextSensitiveSyntaxPair initlab bfinal name' true  nenv 1 removeBasisSlice fileout3 (!myfilebas) true ""
-	       val st    = debuggingSML  errl parse bmin times envContextSensitiveSyntaxPair initlab bfinal name' false nenv 1 "" (* this last argument is not used *)
-	       val stout = TextIO.openOut fileout1
-	       val _     = TextIO.output (stout, st)
-	       val _     = TextIO.closeOut stout
-	   in print ("Test " ^ Int.toString nb ^ " added\n")
-	   end
-	 | NONE => print "No slicing\n"
-    end
-    handle FileEx  => print "A test with the same number has already been recorded\n"
-	 | NoWrite => print "This test cannot be recorded\n"
-
-fun delerror nb =
-    let val fileout1 = getfileerr  nb
-	val fileout2 = getfilecode nb
-	val fileout3 = getfilehtml nb
-	val _        = OS.FileSys.remove fileout1
-	val _        = OS.FileSys.remove fileout2
-	val _        = OS.FileSys.remove fileout3
-    in print ("Test " ^ Int.toString nb ^ " deleted\n")
-    end
-    handle SysErr => print "Cannot delete this test\n"
-
-fun mverror nb1 nb2 bforce =
-    let val fileout1  = getfileerr  nb1
-	val fileout2  = getfilecode nb1
-	val fileout3  = getfilehtml nb1
-	val fileout1' = getfileerr  nb2
-	val fileout2' = getfilecode nb2
-	val fileout3' = getfilehtml nb2
-	val a1        = (OS.FileSys.fileSize fileout1'; false) handle SysErr => true
-	val a2        = (OS.FileSys.fileSize fileout2'; false) handle SysErr => true
-	val a3        = (OS.FileSys.fileSize fileout3'; false) handle SysErr => true
-	val _         = if (a1 andalso a2 andalso a3) orelse bforce then () else raise FileEx
-	val b1        = OS.FileSys.access (fileout1', [OS.FileSys.A_WRITE])
-	val b2        = OS.FileSys.access (fileout2', [OS.FileSys.A_WRITE])
-	val b3        = OS.FileSys.access (fileout3', [OS.FileSys.A_WRITE])
-	val _         = if (b1 orelse a1) andalso (b2 orelse a2) andalso (b3 orelse a3) then () else raise NoWrite
-	val _         = OS.FileSys.rename {old = fileout1, new = fileout1'}
-	val _         = OS.FileSys.rename {old = fileout2, new = fileout2'}
-	val _         = OS.FileSys.rename {old = fileout3, new = fileout3'}
-    in print ("Test " ^ (Int.toString nb1) ^ " moved to test " ^ (Int.toString nb2) ^ "\n")
-    end
-	handle FileEx  => print "A test with the same number has already been recorded\n"
-	     | NoWrite => print "This test cannot be moved\n"
-
 fun getTests _ =
-    let fun stripnb file = String.substring (file, 4, (String.size file) - 4)
+    let
+	(* WARNING! Magic Numbers bad smell! *)
+	fun stripnb file = String.substring (file, 4, (String.size file) - 4)
 	    handle Subscript => raise EH.DeadBranch ""
 	val dir = OS.FileSys.openDir (!testFolder)
 	val b   = ref true
@@ -1459,80 +1381,6 @@ fun printTypables _ =
     in listTests' "Typables:" xs
     end
 
-fun removeRegions ast =
-    let (*val _ = silence_compiler ()*)
-	val st   = PP.prettyPrintAst ast
-	(*val _    = D.printdebug2 ("(C)")*)
-	val stat = OS.Process.system ("echo \"" ^ st ^ "\" | sed 's/from=([0-9]*,[0-9]*),to=([0-9]*,[0-9]*)/from=(0,0),to=(0,0)/g' > " ^ mytempfile)
-	(*val _    = if OS.Process.isSuccess stat
-		     then D.printdebug2 ("(OK)")
-		     else D.printdebug2 ("(BAD)")*)
-	(*val _    = D.printdebug2 ("(D)")*)
-	val stm  = TextIO.openIn mytempfile
-	fun consStr _ =
-	    case TextIO.inputLine stm of
-		NONE => ""
-	      | SOME line => String.concatWith
-				 " "
-				 (String.tokens (fn #" " => true | _ => false) line)
-			     ^ consStr ()
-	val st'  = consStr ()
-	(*val ast' = PP.readAst st'*)
-	val _    = TextIO.closeIn stm
-	(*val _ = unsilence_compiler ()*)
-    in st'
-    end
-
-
-(* filein contains p1,
- * we create ast1 and p1, we now need to create ast2 from p2
- * we need to parse p2 to create an ast ast2 *)
-fun checkAstFile filein =
-    let val nasc = I.emAssoc
-	val _    = resetAll ()
-	val dp   = A.getDecPrint ()
-	val _    = A.setDecPrint false
-	val file = case #1 (P.convertToFull filein NONE []) of
-		       NONE => raise EH.DeadBranch (filein ^ " does not exist")
-		     | SOME f => f
-	val str1 = TextIO.openIn file
-	val (a1, n1, _) = P.parse "file1" str1 L.firstLab nasc
-	    (*handle P.ParsingError (_, y) =>
-		   P.dummyparsing y L.firstlab nasc*)
-	val _    = TextIO.closeIn str1
-	val ast1 = A.Progs [(a1, "", true, n1)]
-	val p2   = A.printAstProgs ast1
-	val _    = resetAll ()
-	val str2 = TextIO.openString p2
-	(*val _    = D.printdebug2 ("(A)" ^ p2)*)
-	(* we can't use p2 because it contains extra stuff such as dots *)
-	val (a2, n2, _) = P.parse "file2" str2 L.firstLab nasc
-	    (*handle P.ParsingError (_, y) =>
-		   P.dummyparsing y L.firstlab nasc*)
-	(*val _    = D.printdebug2 ("(B)")*)
-	val _    = TextIO.closeIn str1
-	val ast2 = A.Progs [(a2, "", true, n2)]
-	val _    = A.setDecPrint dp
-	val stA  = removeRegions ast1
-	val stB  = removeRegions ast1
-    in (true, stA = stB)
-    (* the first one was supposed to be the comparison between the 2 strings *)
-    (* the asts are different because of the regions *)
-    end
-    handle _ => (print "problem"; (false, false))
-
-fun checkAstDB _ =
-    foldl
-	(fn (nb, _) =>
-	    let
-		val file = getfilecode nb
-	    in if #2 (checkAstFile file)
-	       then print (file ^ " OK\n")
-	       else print (file ^ " BAD\n")
-	    end)
-	()
-	(getTests ())
-
 fun vinnie nb =
     (PP.use (getfileerr nb);
      print ("-" ^ (Int.toString (#labels (Option.valOf (!error))) handle Option => "") ^ "\n"))
@@ -1543,7 +1391,5 @@ fun vinnie _ =
 	val _ = print (">>" ^ L.toString set1 ^ "\n>>" ^ L.toString set2)
     in ()
     end
-
-(*fun vinnie _ = print (AstTest.genNewProgs ())*)
 
 end

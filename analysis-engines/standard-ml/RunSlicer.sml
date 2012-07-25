@@ -304,16 +304,6 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
     end
   | slicerFull _ = (print("Incorrect arguments specified. Run with --help to see arguments list"); OS.Process.failure)
 
-fun temp 1 (SOME nb) _ = Tester.vinnie nb
-  | temp 2 _ (SOME file) =
-    let val (b1, b2) = Tester.checkAstFile file
-    in print (Bool.toString b1 ^ " " ^ Bool.toString b2 ^ "\n")
-    end
-  | temp 3 _ _ = Tester.checkAstDB ()
-  | temp 4 _ _ = print (AstTest.genNewProgs ())
-  | temp _ _ _ = ()
-
-
 (* smltes will take in a record constructed by SlicerOptArgs and give
  * the output to slicerFull. The default arguments for this can be
  * found in the SlicerOptArgs file. *)
@@ -469,6 +459,7 @@ fun smlTesStrArgs strArgs =
 		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
 		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
 		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
+		     | "ONE_RUN" => D.oneRunOnly := true
 		     | str  => raise Fail ("Unrecognised debugging feature: "^str);
 		   outputFilesNeeded := false)
 	     else if option = "-bo"

@@ -35,6 +35,7 @@ signature DEBUG = sig
 			| ENV      (* Env.sml *)
 			| PARSER   (* Parser.sml *)
 
+    val oneRunOnly : bool ref
     val debug : bool ref
     datatype debugFeature = EQUALITY_TYPES
 			  | CONSTRAINT_GENERATION
@@ -57,6 +58,8 @@ signature DEBUG = sig
     val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
     val printDebug       : int -> debugFiles -> string -> unit
     val printDebugFunc   : int -> debugFiles -> (unit -> string) -> unit
+
+    val checkOneRunOnly  : unit -> unit
 
     val printdebug1 : string -> unit (* Does not print  *)
     val printdebug2 : string -> unit (* fancy printing  *)

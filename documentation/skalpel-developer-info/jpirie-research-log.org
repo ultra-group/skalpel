@@ -16,6 +16,16 @@ equality type errors are only defined to have one endpoint, and it
 should do something like a type constructor clash where there can be
 multiple.
 
+UPDATE: deps is always empty, though I'm now using it for the equality
+type endpoint labels as it's rather handy. Still don't know about the
+ids values, I'll need to look into that.
+
+(2012-07-25-11:36)
+
+The skalpel help displayed at the command line does not accurately
+reflect the parameters that skalpel takes (debugging parameters need
+to be updated).
+
 * TODOs
 ** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
@@ -79,7 +89,16 @@ started with a Standard ML source file open, have the type error slice
 run on that file, and check that Emacs is highlighting things inside
 the file, and that the process terminates.
 
-** Equality types implementation [20%]
+** Equality types implementation [33%]
+*** DONE (2012-07-23-13:53) End points
+
+    Equality type errors should have at least two endpoints, similar
+    to what happens for the EK.TypeConstructorClash errors. Currently,
+    when an equality type error is detected, we have an endpoint. But
+    we need the endpoint associated with the information at the other
+    end of the line which has an EQUALITY_TYPE_STATUS(EQUALITY_TYPE)
+    constraint.
+
 *** TODO (2012-06-28-16:00) Generating equality constraints for tuples
 
     The case involving tuples doesn't work yet, I'm going to need to
@@ -1219,7 +1238,7 @@ happy so that should be that all sorted. Apparently they still don't
 need my ethical approval form, so I'll just keep it until they do
 actually want to receive that information from me.
 
-** 2012-07-23
+** 2012-07-22
 
 I've changed the crontab entry for the test framework so that the
 result of stdout gets placed in my directory, that should help with
@@ -1240,7 +1259,7 @@ symbolic link to this from the testing/ folder of the repository, I'll
 think about that. There needs to be more text of this form, but this
 is all I have time to write at the moment.
 
-** 2012-07-24
+** 2012-07-23
 
 (2012-07-23-12:16)
 
@@ -1266,6 +1285,174 @@ I've also added the analysis engine version hash to the test e-mail,
 just to be doubly sure that we are in fact getting the correct
 version. Hopefully the e-mail that comes through tomorrow morning
 should have everythnig fixed.
+
+(2012-07-23-14:44)
+
+I think I've worked out a way for equality type errors to get multiple
+endpoints. Essentially, all I want to do here is to report two
+endpoint labels when reporting an equality type error. The first is
+easy to get, as in the function that we're currently in at the point
+that we discover that a type error has occurred we always have that
+label, which is an endpoint.
+
+The other endpoint label could be gained by doing keeping track of a
+label which is responsible for the equality type status that a type
+variable has. So if we have some mapping of equality type variables to
+equality type status values, we have something like this:
+
+eqtv1 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE)
+(eqtv2 -> eqtv1 => eqtv2 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE))
+(eqtv3 -> eqtv2 => eqtv3 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE))
+eqtv3 -> EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE)
+
+and an error is detected, because eqtv3 is constrained to be both
+EQUALITY_TYPE (from eqtv1) and NOT_EQUALITY_TYPE. We have the label
+for NOT_EQUALITY_TYPE, but for the EQUALITY_TYPE we have available to
+us the set of labels that eqtv3 has assigned to it in the map. We need
+the *single* label for eqtv1, because that is the endpoint of the
+error.
+
+I could either carry through the equality type variable that we
+inherit the status from or the label. I think the equality type status
+variable will give more meaning to debuggers and makes more sense than
+a program point location so I'll try something like that. So
+internally we'd have something like this:
+
+eqtv1 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE), inferredFrom=NONE
+(eqtv2 -> eqtv1 => eqtv2 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE), inferredFrom=SOME(eqtv1))
+(eqtv3 -> eqtv2 => eqtv3 -> EQUALITY_TYPE_STATUS(EQUALITY_TYPE), inferredFrom=SOME(eqtv1))
+eqtv3 -> EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE)
+
+So now we'd have the second label because we can look up the existing
+eqtv3 inferredFrom value, then grab the *single* label associated with
+eqtv1 in the state map. If there is more than one label an exception
+should be thrown.
+
+I'm going to try and implement something like this, it seems a
+reasonable way to go and will give is the second endpoint that is
+needed here for little extra analysis engine overhead.
+
+** 2012-07-24
+
+(2012-07-24-14:01)
+
+I've written a few comments in the unification file about how
+constraint solving with respect to equality types works which should
+hopefully help some people to some degree in the future.
+
+The Unification.sml file is far too long, and when working with the
+fsimplify function I feel like I'm working in some sort of
+forest. Perhaps there might be a nice way to split this file up, even
+just taking the fsimplify function and putting it in its own file I
+think might be a help. I'll think about doing that later.
+
+I've just noticed that there are some cases where the equality type
+endpoint isn't correct with the current system where only one endpoint
+is reported.
+
+Perhaps it's the case that this can happen when solving equality type
+accessors, and we end up in the case solving two equality type
+variables which have to be equal to one another, but both of those
+equality type variables turn out to be of conflicting status values
+located after some long chain of constraint solving takes place.
+
+I don't think this is a problem, because the system that I'm working
+on at the minute where the equality type variable number is stored
+where an equality type status was inferred from means we should have
+all the information and are able to report the correct endpoints. I'm
+going to do this stuff on another branch, so that the test framework
+can compile the master branch, then merge whenever I reach the end of
+a day where my changes can be compiled.
+
+Also, perhaps the equality type tests that I have should be integrated
+into the test framework. My current plan was to wait until I get them
+working, then just run skalpel with JSON output and put it straight in
+the test framework, but perhaps it would be better to create the
+answers to tests by actually creating the JSON file by hand. Something
+to think about anyway.
+
+(2012-07-24-14:46)
+
+Aha, I detected a hidden bug in one of my equality type tests, which I
+found when I was documenting the function and noticed something
+odd. It occurs to me that had I not noticed this, it would have been
+extremely difficult to actually find it by trying to debug the program
+I have. I've also been worried for a while about a scenario where
+someone says "Hey, an equality type error isn't detected in my
+program, here it is", because there's so much information that needs
+to be looked at to understand why that doesn't work. I'm going to
+think about this, I really need to improve the debugging print
+features available for knowing which equality type variables are
+defined, which are changing, and what the differences in the state are
+before and after the change.
+
+(2012-07-24-23:39)
+
+The list of labels in the deps field is always empty when solving
+equality type constraints. I've noticed this when other constraints
+are being solved too, so I'm actually going to make use of it to store
+some equality type variables which will result in the user getting the
+correct endpoints.
+
+** 2012-07-25
+
+(2012-07-25-01:06)
+
+I have to note here that I've changed my mind about how endpoint
+labels are going to be tracked. I'd previously thought that I'd pass
+the equality type variables around and we could just look up the
+program locations that are associated with any given equality type
+variable, but in order to use the existing structure I have to pass
+around the labels instead.
+
+I think I'm going to go ahead and just pass around the labels, we
+don't really loose any information so this approach should really be
+fine here and save some development time.
+
+(2012-07-25-11:33)
+
+I've updated the debugging system without updating the text that we
+get when executing ./skalpel with no arguments. Adding a warning, I'll
+fix this up when I get my head out of fixing the current endpoint
+modifications.
+
+Note: I would love to see some of these eq-testXXX.sml files in the
+analysis engine test database today. Actually, I would also like to
+see these files in a separate folder, with sensible names, and not
+stick to the enumeration of tests system that we currently have.
+
+(2012-07-25-13:17)
+
+Great! We now get correct endpoint locations for equality type errors,
+which means I can start putting some of the tests that I have no into
+the test database, and the constraint solving algorithm for equality
+types should be finished.
+
+My plans therefore for the rest of the day are to extend the analysis
+engine test database so that I can put these tests in a subfolder of
+the test database directory with sensible file names, and the analysis
+engine won't care (this would be very useful to me, and for the
+purposes of demonstration of Skalpel). I'll then put the tests I have
+in that folder, run the analysis engine tests to check that works,
+then figure out what still needs to be done with respect to supporting
+equality types. It should be noted that the work that I need to do
+should lie solely in the constraint generator , so I shouldn't need to
+touch the constraint solver now (hopefully).
+
+(2012-07-25-14:35)
+
+There is a Magic Numbers bad smell in the code which deals with the
+analysis engine test database. The number is 4.
+
+This is probably either supposed to represent the length of ".sml" or
+the length of "test" in the filename. I'll figure out which...
+
+(2012-07-25-14:45)
+
+Alright, so the number '4' was used twice so that it actually meant
+".sml" and "test".
+
+Exterminate!
 
 * Next meeting with Joe
 

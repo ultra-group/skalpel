@@ -105,15 +105,6 @@ signature TESTER = sig
     val checktests     : int list -> unit
 
     val runtests      : int list -> LargeInt.int option -> unit
-    val adderror      : string -> (* name of the file that contains the code to store in the database *)
-			int    -> (* identifier of the test *)
-			bool   -> (* true if we want to force the test to have this identifier, it will then erase any previous error with the same id *)
-			bool   -> (* true if the slices for the error are currently OK *)
-			string -> (* name of the test *)
-			int    -> (* basis switch: 0 (no basis), 1 (built-in basis), 2 (file) *)
-			unit
-    val mverror       : int    -> int -> bool -> unit
-    val delerror      : int    -> unit
     val listTests     : unit   -> unit
     val printTypables : unit   -> unit
 
@@ -129,10 +120,6 @@ signature TESTER = sig
 
     (* STYLE OF THE HTML PAGES GENERATED *)
     val setstylecss   : int    -> unit
-
-    (**)
-    val checkAstFile  : string -> bool * bool
-    val checkAstDB    : unit   -> unit
 
     (* TO HANDLE THE TIMELIMIT OF THE SLICER *)
     val gettimelimit  : unit   -> LargeInt.int

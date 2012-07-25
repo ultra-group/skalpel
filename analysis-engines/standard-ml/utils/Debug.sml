@@ -48,6 +48,7 @@ val debugRun     : int ref = ref 0
 val debugEnv     : int ref = ref 0
 val debugTest    : int ref = ref 0
 
+val oneRunOnly = ref false
 val debug = ref false
 val debugEqualityTypes        : bool ref = ref false
 val debugConstraintGeneration : bool ref = ref false
@@ -149,6 +150,10 @@ fun printDebugFunc depth JSON func =
   | printDebugFunc depth TEST func =
     if (!debugTest >= depth) then print ("("^(Int.toString depth)^") Tester.sml: " ^ (func ()) ^ "\n") else ()
 
+fun checkOneRunOnly () =
+    if (!oneRunOnly)
+    then debug := false
+    else ()
 
 (* separator definitions *)
 val sep1  = "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-"

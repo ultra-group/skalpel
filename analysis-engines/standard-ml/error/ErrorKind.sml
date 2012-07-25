@@ -61,7 +61,7 @@ datatype kind = Circularity
 	      | OverloadIdCst  of iderr  * tnerr list * idserr * tnerr list (* value iderr overloaded to tnerrlist used on idserr                      *)
               | ArityClash     of arrerr * arrerr
               | TyConsClash    of tnerr  * tnerr
-	      | EqTypeRequired of label
+	      | EqTypeRequired of label  * label
 	      | NotGenClash    of iderr  * tnerr
 	      | TooGenSig      of iderr  * iderr * label list (* the identifier iderr(1st) is monomorphic because of the label list but its specification contains the variable iderr(2nd) *)
 	      | TyFunClash     of iderr  * tnerr
@@ -360,9 +360,9 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
     "ErrorKind.TyConsClash("
     ^ "(" ^ printLab l1 ^ "," ^ T.printsmltn (T.typenameFromInt tn1) ^ "),"
     ^ "(" ^ printLab l2 ^ "," ^ T.printsmltn (T.typenameFromInt tn2) ^ "))"
-  | printSmlErrKind (EqTypeRequired (l1)) =
+  | printSmlErrKind (EqTypeRequired (l1,l2)) =
     "ErrorKind.EqTypeRequired("
-    ^ "(" ^ printLab l1 ^ "))"
+    ^ "(" ^ printLab l1 ^ "," ^ printLab l2 ^ "))"
   | printSmlErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "ErrorKind.NotGenClash("
     ^ "(" ^ printLab l1 ^ "," ^ Int.toString tv ^ "),"
@@ -465,9 +465,9 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
     "{\"errorKindName\": \"ErrorKind.TyConsClash\", \"errorKindInfo\": {"
     ^ "\"tnerrLabel1\": " ^ printLab l1 ^ ", \"tnerrTypename1\": " ^ T.printsmltn (T.typenameFromInt tn1)
     ^ ", \"tnerrLabel2\": " ^ printLab l2 ^ ", \"tnerrTypename2\": " ^ T.printsmltn (T.typenameFromInt tn2) ^"}}"
-  | printJsonErrKind (EqTypeRequired l1) =
+  | printJsonErrKind (EqTypeRequired (l1, l2)) =
     "{\"errorKindName\": \"ErrorKind.EqTypeRequired\", \"errorKindInfo\": {"
-    ^ "\"tnerrLabel1\": " ^ printLab l1 ^"}}"
+    ^ "\"tnerrLabel1\": " ^ printLab l1 ^", \"tnerrLabel2\": " ^ printLab l2 ^"}}"
   | printJsonErrKind (NotGenClash ((l1, tv), (l2, tn))) =
     "{\"errorKindName\": \"ErrorKind.NotGenClash\", \"errorKindInfo\": {"
     ^ "\"iderrLabel1\": " ^ printLab l1 ^ ", \"iderrId1\": " ^ Int.toString tv

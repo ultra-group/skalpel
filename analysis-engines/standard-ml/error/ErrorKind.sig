@@ -48,7 +48,7 @@ signature ERRORKIND = sig
 		  | OverloadIdCst  of iderr  * tnerr list * idserr * tnerr list
                   | ArityClash     of arrerr * arrerr
                   | TyConsClash    of tnerr  * tnerr
-                  | EqTypeRequired of label
+                  | EqTypeRequired of label  * label
 		  | NotGenClash    of iderr  * tnerr
 		  | TooGenSig      of iderr  * iderr * label list
 		  | TyFunClash     of iderr  * tnerr

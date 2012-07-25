@@ -3193,6 +3193,8 @@ fun unif env filters user =
 	    else ()
 
 
+
+
 	(* ====== EQUALITY CONSTRAINT SOLVER ====== *)
 
 	and fsimplify [] l = ()
@@ -3366,12 +3368,13 @@ fun unif env filters user =
 		 then
 		     let
 			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (eqtv1="
-				 ^(T.printEqualityTypeStatus eqtv1)^", eqtv2="^(T.printEqualityTypeStatus eqtv2)^")");
+				 ^(T.printEqualityTypeStatus eqtv1)^", eqtv2="^(T.printEqualityTypeStatus eqtv2)^")")
+			 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "WARNING: This warning is in unreachable code??")
 			 (* jpirie: shouldn't we include l2 in the error here too *)
-			 val ek    = EK.EqTypeRequired (L.toInt l1)
-			 (* jpirie: I've put l2 here so both l1 and l2 are used. Should we use l2 here? Hmm! *)
-			 val err   = ERR.consPreError ERR.dummyId ls ids ek deps
-		     in handleSimplify err cs' l
+			 (* val ek    = EK.EqTypeRequired (L.toInt l1) *)
+			 (* (* jpirie: I've put l2 here so both l1 and l2 are used. Should we use l2 here? Hmm! *) *)
+			 (* val err   = ERR.consPreError ERR.dummyId ls ids ek deps *)
+		     in (* handleSimplify err cs' l *) ()
 		     end
 		 else
 		     fsimplify cs' l
@@ -3414,6 +3417,7 @@ fun unif env filters user =
                       end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
+		(* display debugging information, but only if we are not currently handling the basis library *)
 		val _ = if (not (!analysingBasis))
 			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving the case of TYPE_VAR, which is this: "^
 									  (#purple D.colors)^(T.printty tyv)^(D.textReset)^
@@ -4133,27 +4137,64 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 
 
-	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, T.EQUALITY_TYPE_DEPENDANCY  (eq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
 
+
+	  (******************************************************************************
+	   *              constraint solving (fsimplify) - equality types               *
+	   ******************************************************************************)
+
+
+	  (*
+	   * constraint solving - equality types
+	   * pattern match: something of type Ty.equalityType constrained to an equality type dependancy
+	   * action: we turn that into an equality type constarint of eq1 to eq2, unifying the labels
+	   *)
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, T.EQUALITY_TYPE_DEPENDANCY  (eq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+	    fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+
+	  (*
+	   * constraint solving - equality types
+	   *
+	   * pattern match: an equality type variable α is being assigned to an
+	   *                equality type status β.
+	   *
+	   * action: we check if the equality type variable already exists in
+	   *         the state map. If it does not, we update the state map. If
+	   *         it is already listed in the state map as being dependant on
+	   *         an equality type status γ, then we check β against γ (if
+	   *         they are different, an error is generated). If instead the
+	   *         equality type variable is listed in the state map as being
+	   *         dependant on another equality type variable δ, we replace
+	   *         the state map entry of α to be of equality type status β,
+	   *         then we generate a constraint where δ is of equaltiy type
+	   *         status β and include that constraint in the recursive
+	   *         constraint solving call.
+	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
 	    let
+		(* print debugging information only if we are not currently handling the basis *)
 		val _ = if (not (!analysingBasis))
 			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red D.colors)
 	  									  ^ T.printEqualityType(equalityTypeVar)^D.textReset^" and "^(#green D.colors)
 	  									  ^ T.printEqualityType(equalityTypeStatus)
-										  ^ ". Labels = " ^ L.toString ls)
+										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
 			else ()
 	    in
+		(* check whether the equality type variable already exists in the state map *)
 		case S.getValStateEq state eqtv of
 
-	  	    (* we haven't seen this equality type variable in the state, so let's put it in *)
+	  	    (* we haven't seen this equality type variable before, so let's put it in *)
 		    NONE =>
 		    let
-			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), deps, ids))
+			val _ = if Label.length ls = 1
+				then S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), L.union ls deps, ids))
+				else S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), deps, ids))
 		    in
 			fsimplify cs' l
 		    end
-		  (* we've seen this equality type variable before, we should check the status values against one another *)
+
+		  (* we've seen this equality type variable before and it's constrained to an equality type status, we need to check these
+		   * stauts values against one another *)
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_STATUS statusInMap), resultLabels, resultDeps, resultIds)) =>
 		    (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "status already exists in the map! Checking for equaliy type error...");
 		     (* if the status assigned to the equality type variable in the map is the same as the status we're constraining
@@ -4162,33 +4203,66 @@ fun unif env filters user =
 	  	     else
 			 (* otherwise, an equality type variable is constrained to be both an EQUALITY_TYPE and NOT_EQUALITY_TYPE. Generate an error! *)
 	  		 let
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^", ls = "^(L.toString (L.union resultLabels ls)))
- 	  		     val ek   = EK.EqTypeRequired (L.toInt l)
-			     val err  = ERR.consPreError ERR.dummyId (L.union resultLabels ls) ids ek deps
-	  		 in handleSimplify err cs' l
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^
+											  ", ls = "^(L.toString (L.union resultLabels ls))^", deps = "^(L.toString (L.union deps resultDeps)))
+
+			     (* jpirie: we are doing the unioning twice, once above and once below, do this only one *)
+			     val endpointLabels =  Label.toList (L.union deps resultDeps)
+
+			     val _ = case endpointLabels of
+					 (l1::l2::[]) =>
+					 let
+					     val errorKind   = EK.EqTypeRequired (l1, l2)
+					     val error  = ERR.consPreError ERR.dummyId (L.union resultLabels ls) ids errorKind deps
+	  				 in handleSimplify error cs' l
+					 end
+				       | _ => raise EH.DeadBranch "Didn't get two endpoint labels for an equality type error"
+			 in
+			     ()
 	  		 end
 	  	    )
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, labs, stts, cd)) =>
 		    let
 			(* here we update the map so that the equality type variable is no longer mapped to a dependancy on an equality type variable,
-			 * but now to the eqaulity type status (status dependancies are more important than equality type variable dependencies). *)
-			val _ = S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.cons l (L.union ls labs), deps, ids))
-
-			(* jpirie: what about stts and deps? Should these be combined somehow? *)
-			val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.cons l (L.union labs ls), deps, ids)
+			 * but now to the eqaulity type status (status dependancies are more important than equality type variable dependencies).
+			 * we check whether the length of the labels is 1, if it is then this is an endpoint label, so we put it in the deps list *)
+			val c = if Label.length ls = 1
+				then (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.cons l (L.union ls labs), L.union ls deps, ids));
+				      E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.cons l (L.union labs ls), L.union ls deps, ids))
+				else (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.cons l (L.union ls labs), deps, ids));
+				      E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.cons l (L.union labs ls), deps, ids))
 		    in
 			fsimplify (c::cs') l
 		    end
 		  | SOME _ => raise EH.TODO "got something in the equality status map that isn't handled!"
 	    end
 
+
+	  (*
+	   * constraint solving - equality types
+	   *
+	   * pattern match: two equality type variables α and β are constrained
+	   * to be equal
+	   *
+	   * action: if the two equality type variables are actually the same
+	   * number, then recurse on the remaining constraints to be solved. If
+	   * β is not in the state map, then update the state so that β is
+	   * dependant on α. If β is in the state map and it's constrained to a
+	   * status γ, then create a constraint where α is constrained to
+	   * equalty type status γ, then recurse to solve this (and all other)
+	   * constraints. In the case where β exists in the state and is
+	   * constrained to some other equality type variable δ, we constrain α
+	   * to be dependant on delta and recurse to solve.
+	   *
+	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, equalityTypeVar2 as T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l =
 	    let
+		(* only print debugging output for files which are not the basis *)
 	  	val _ = if (not (!analysingBasis))
 			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red D.colors)
 	  									  ^ T.printEqualityType(equalityTypeVar1)^D.textReset^" and "^(#green D.colors)
 	  									  ^ T.printEqualityType(equalityTypeVar2)
-										  ^ ". Labels = " ^ L.toString ls)
+										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
 			else ()
 	    in
 	  	if T.eqEqualityTypeVar eqtv1 eqtv2
@@ -4198,16 +4272,8 @@ fun unif env filters user =
 			(* equality type status is not in the map *)
 			NONE =>
 			let
-			    val _ = case S.getValStateEq state eqtv1 of
-					(* we haven't seen either of these equality type variables before. Put the first one in the map here,
-					 * and then we'll create a dependancy from the second to the first *)
-					NONE =>
-					(S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_STATUS T.UNKNOWN);
-					 S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids)))
-
-				      (* the first equality type variable is in the map, we can create a dependancy safely *)
-				      | SOME _ =>
-					S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids))
+			    (* the first equality type variable is in the map, we can create a dependancy safely *)
+			    val _ = S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids))
 			in fsimplify cs' l
 			end
 
@@ -4215,17 +4281,23 @@ fun unif env filters user =
 		       * we want to go create a constraint to see whether all the constraints are still satisfyable *)
 		      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS mapStatus, labs, stts, cd)) =>
 			let
-			    (* jpirie: what about stts and deps? Should these be combined somehow? *)
-			    val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.cons l (L.union labs ls), deps, ids)
+			    val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.cons l (L.union labs ls), L.union stts deps, ids)
 			in
 			    fsimplify (c::cs') l
 			end
 
+		      | SOME(T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR mapEqualityTypeVar, labs, stts, cd)) =>
+			let
+			    val _ = S.updateStateEq state eqtv1 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar2, ls, L.union stts deps, ids))
+			in fsimplify cs' l
+			end
 
-		      | _ => fsimplify cs' l
+		      | _ => raise EH.TODO "Impossible pattern match case occurred"
 	    end
 
-	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
+
+
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT _)::cs') l = raise EH.TODO "unhandled equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 
 	and handleSimplify err xs l =
 	    if bcontinue
@@ -4267,6 +4339,7 @@ fun unif env filters user =
 	    val _ = case ret of
 			Error _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "returning 'Error' status from the unification algorithm")
 		      | Success _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "returning 'Success' status from the unification algorithm")
+	    val _ = D.checkOneRunOnly ()
 	in
 	    ret
 	end

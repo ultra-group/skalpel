@@ -438,8 +438,10 @@ and gettyvarsty (T.V  (v, _, _)) state labs stts deps =
 
 fun combine x1 x2 = EL.unionExtLab x1 x2 (fn x => x)
 
-(* 'update' here should really be 'insert', because we don't update existing keys, we insert new keys *)
 fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
+
+(* jpirie: replace one state here should be removed
+ * updateOneState will remove the old key value pair and replace it with the new one *)
 fun replaceOneState onestate x y =
     (MS.remove (!onestate, x) handle NotFound => raise EH.DeadBranch "Trying to replace a key in the equality type state but the key does not exist in the state!";
     onestate := (MS.insert (!onestate, x, y)))
