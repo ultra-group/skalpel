@@ -1,0 +1,543 @@
+[begin database checking]
+numbered/code1.sml OK
+PROBLEM: numbered/code2.sml: a slice has not been found (Error UID = 3)
+numbered/code3.sml OK
+numbered/code4.sml OK
+numbered/code5.sml OK
+numbered/code6.sml OK
+numbered/code7.sml OK
+numbered/code8.sml OK
+numbered/code9.sml OK
+numbered/code10.sml OK
+numbered/code11.sml OK
+numbered/code12.sml OK
+numbered/code13.sml OK
+numbered/code14.sml OK
+numbered/code15.sml more than OK
+numbered/code16.sml OK
+numbered/code17.sml OK
+numbered/code18.sml OK
+numbered/code19.sml OK
+numbered/code20.sml OK
+numbered/code21.sml OK
+numbered/code22.sml OK
+numbered/code23.sml OK
+numbered/code24.sml OK
+numbered/code25.sml OK
+numbered/code26.sml OK
+numbered/code27.sml OK
+numbered/code28.sml OK
+numbered/code29.sml OK
+numbered/code30.sml OK
+numbered/code31.sml OK
+numbered/code32.sml OK
+numbered/code33.sml OK
+numbered/code34.sml OK
+numbered/code35.sml OK
+PROBLEM: numbered/code36.sml: a slice has not been found (Error UID = 0)
+numbered/code37.sml OK
+numbered/code38.sml OK
+numbered/code39.sml OK
+numbered/code40.sml OK
+numbered/code41.sml OK
+numbered/code42.sml OK
+numbered/code43.sml OK
+numbered/code44.sml OK
+numbered/code45.sml OK
+PROBLEM: numbered/code46.sml: not enough slices
+numbered/code47.sml OK
+numbered/code48.sml OK
+PROBLEM: numbered/code49.sml: not enough slices
+PROBLEM: numbered/code50.sml: not enough slices
+numbered/code51.sml OK
+numbered/code52.sml OK
+numbered/code53.sml OK
+numbered/code54.sml OK
+numbered/code55.sml OK
+numbered/code56.sml OK
+numbered/code57.sml OK
+PROBLEM: numbered/code58.sml: not enough slices
+numbered/code59.sml OK
+numbered/code60.sml OK
+numbered/code61.sml OK
+PROBLEM: numbered/code62.sml: a slice has not been found (Error UID = 2)
+PROBLEM: numbered/code63.sml: a slice has not been found (Error UID = 4)
+numbered/code64.sml OK
+numbered/code65.sml OK
+numbered/code66.sml OK
+numbered/code67.sml OK
+numbered/code68.sml OK
+numbered/code69.sml OK
+PROBLEM: numbered/code70.sml: not enough slices
+numbered/code71.sml OK
+PROBLEM: numbered/code72.sml: a slice has not been found (Error UID = 8)
+numbered/code73.sml more than OK
+numbered/code74.sml OK
+PROBLEM: numbered/code75.sml: a slice has not been found (Error UID = 12)
+numbered/code76.sml OK
+numbered/code77.sml OK
+numbered/code78.sml OK
+numbered/code79.sml OK
+numbered/code80.sml OK
+PROBLEM: numbered/code81.sml: not enough slices
+numbered/code82.sml OK
+numbered/code83.sml OK
+numbered/code84.sml OK
+numbered/code85.sml OK
+numbered/code86.sml OK
+numbered/code87.sml OK
+PROBLEM: numbered/code88.sml: TO CHECK!!!!
+numbered/code89.sml OK
+numbered/code90.sml OK
+PROBLEM: numbered/code91.sml: TO CHECK!!!!
+numbered/code92.sml OK
+numbered/code93.sml OK
+numbered/code94.sml OK
+numbered/code95.sml OK
+numbered/code96.sml OK
+PROBLEM: numbered/code97.sml: TO CHECK!!!!
+numbered/code98.sml OK
+PROBLEM: numbered/code99.sml: TO CHECK!!!!
+PROBLEM: numbered/code100.sml: TO CHECK!!!!
+PROBLEM: numbered/code101.sml: not enough slices
+PROBLEM: numbered/code102.sml: TO CHECK!!!!
+PROBLEM: numbered/code103.sml: TO CHECK!!!!
+numbered/code104.sml OK
+numbered/code105.sml OK
+numbered/code106.sml OK
+numbered/code107.sml OK
+PROBLEM: numbered/code108.sml: not enough slices
+numbered/code109.sml OK
+numbered/code110.sml OK
+PROBLEM: numbered/code111.sml: a slice has not been found (Error UID = 2)
+numbered/code112.sml OK
+numbered/code113.sml more than OK
+numbered/code114.sml more than OK
+numbered/code115.sml OK
+numbered/code116.sml OK
+numbered/code117.sml OK
+numbered/code118.sml OK
+numbered/code119.sml OK
+numbered/code120.sml OK
+numbered/code121.sml OK
+numbered/code122.sml OK
+numbered/code123.sml OK
+numbered/code124.sml OK
+PROBLEM: numbered/code125.sml: TO CHECK!!!!
+numbered/code126.sml OK
+numbered/code127.sml OK
+numbered/code128.sml OK
+numbered/code129.sml OK
+numbered/code130.sml OK
+numbered/code131.sml OK
+PROBLEM: numbered/code132.sml: not enough slices
+numbered/code133.sml OK
+numbered/code134.sml OK
+numbered/code135.sml OK
+numbered/code136.sml OK
+numbered/code137.sml OK
+numbered/code138.sml OK
+numbered/code139.sml OK
+numbered/code140.sml OK
+numbered/code141.sml OK
+PROBLEM: numbered/code142.sml: not enough slices
+numbered/code143.sml OK
+numbered/code144.sml OK
+PROBLEM: numbered/code145.sml: not enough slices
+numbered/code146.sml OK
+PROBLEM: numbered/code147.sml: TO CHECK!!!!
+numbered/code148.sml OK
+numbered/code149.sml OK
+PROBLEM: numbered/code150.sml: TO CHECK!!!!
+numbered/code151.sml OK
+numbered/code152.sml OK
+PROBLEM: numbered/code153.sml: a slice has not been found (Error UID = 2)
+numbered/code154.sml OK
+numbered/code155.sml OK
+PROBLEM: numbered/code156.sml: TO CHECK!!!!
+PROBLEM: numbered/code157.sml: TO CHECK!!!!
+PROBLEM: numbered/code158.sml: TO CHECK!!!!
+PROBLEM: numbered/code159.sml: TO CHECK!!!!
+numbered/code160.sml OK except the dependencies (0)
+numbered/code161.sml OK
+PROBLEM: numbered/code162.sml: TO CHECK!!!!
+PROBLEM: numbered/code163.sml: TO CHECK!!!!
+numbered/code164.sml OK
+numbered/code165.sml OK
+numbered/code166.sml OK
+numbered/code167.sml OK except the dependencies (4)
+numbered/code168.sml OK
+PROBLEM: numbered/code169.sml: TO CHECK!!!!
+PROBLEM: numbered/code170.sml: TO CHECK!!!!
+PROBLEM: numbered/code171.sml: TO CHECK!!!!
+PROBLEM: numbered/code172.sml: TO CHECK!!!!
+numbered/code173.sml OK
+PROBLEM: numbered/code174.sml: TO CHECK!!!!
+numbered/code175.sml OK
+PROBLEM: numbered/code176.sml: TO CHECK!!!!
+numbered/code177.sml OK
+numbered/code178.sml OK
+numbered/code179.sml OK
+numbered/code180.sml OK
+numbered/code181.sml OK
+numbered/code182.sml OK
+numbered/code183.sml OK
+numbered/code184.sml OK
+numbered/code185.sml OK
+numbered/code186.sml OK
+numbered/code187.sml OK
+numbered/code188.sml OK
+numbered/code189.sml OK
+numbered/code190.sml OK
+PROBLEM: numbered/code191.sml: TO CHECK!!!!
+numbered/code192.sml OK
+numbered/code220.sml OK
+PROBLEM: numbered/code221.sml: TO CHECK!!!!
+numbered/code222.sml OK
+numbered/code223.sml OK
+numbered/code224.sml OK
+numbered/code225.sml OK
+numbered/code226.sml OK
+PROBLEM: numbered/code227.sml: TO CHECK!!!!
+numbered/code228.sml more than OK
+numbered/code229.sml OK
+numbered/code230.sml more than OK
+numbered/code231.sml OK
+numbered/code232.sml OK
+PROBLEM: numbered/code233.sml: TO CHECK!!!!
+numbered/code234.sml OK
+numbered/code235.sml OK but slower
+PROBLEM: numbered/code236.sml: TO CHECK!!!!
+numbered/code237.sml OK
+numbered/code238.sml OK
+numbered/code239.sml OK
+numbered/code240.sml more than OK
+numbered/code241.sml OK
+numbered/code242.sml OK
+PROBLEM: numbered/code243.sml: TO CHECK!!!!
+PROBLEM: numbered/code244.sml: TO CHECK!!!!
+PROBLEM: numbered/code245.sml: TO CHECK!!!!
+numbered/code246.sml OK
+numbered/code247.sml OK
+numbered/code248.sml OK
+numbered/code249.sml OK
+numbered/code250.sml OK
+numbered/code251.sml OK
+numbered/code252.sml OK
+PROBLEM: numbered/code253.sml: TO CHECK!!!!
+numbered/code254.sml OK
+PROBLEM: numbered/code255.sml: TO CHECK!!!!
+PROBLEM: numbered/code256.sml: TO CHECK!!!!
+numbered/code257.sml OK
+numbered/code258.sml OK
+numbered/code259.sml OK
+numbered/code260.sml OK
+numbered/code261.sml OK except the dependencies (1)
+numbered/code262.sml OK
+PROBLEM: numbered/code263.sml: TO CHECK!!!!
+PROBLEM: numbered/code264.sml: TO CHECK!!!!
+numbered/code265.sml OK
+PROBLEM: numbered/code267.sml: TO CHECK!!!!
+PROBLEM: numbered/code268.sml: TO CHECK!!!!
+numbered/code269.sml OK
+PROBLEM: numbered/code270.sml: TO CHECK!!!!
+PROBLEM: numbered/code271.sml: TO CHECK!!!!
+numbered/code272.sml OK
+numbered/code273.sml OK
+PROBLEM: numbered/code274.sml: TO CHECK!!!!
+PROBLEM: numbered/code275.sml: TO CHECK!!!!
+PROBLEM: numbered/code276.sml: a slice has not been found (Error UID = 1)
+PROBLEM: numbered/code277.sml: TO CHECK!!!!
+PROBLEM: numbered/code278.sml: TO CHECK!!!!
+PROBLEM: numbered/code279.sml: TO CHECK!!!!
+numbered/code280.sml OK
+PROBLEM: numbered/code281.sml: TO CHECK!!!!
+numbered/code282.sml OK
+PROBLEM: numbered/code283.sml: a slice has not been found (Error UID = 0)
+numbered/code284.sml OK
+PROBLEM: test numbered/code285.sml: ********DEADBRANCH(Error! The unification algorithm terminated in a success state, but an error was generated previously! Hint: It has been found previously to be the case that this error is cased by a bug solely in the unification algorithm where some labels are not propagated correctly...)********
+PROBLEM: numbered/code286.sml: TO CHECK!!!!
+PROBLEM: numbered/code287.sml: a slice has not been found (Error UID = 0)
+numbered/code288.sml OK
+numbered/code290.sml OK
+numbered/code291.sml OK
+PROBLEM: numbered/code292.sml: TO CHECK!!!!
+numbered/code293.sml OK
+PROBLEM: numbered/code294.sml: TO CHECK!!!!
+PROBLEM: numbered/code295.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code297.sml: TO CHECK!!!!
+PROBLEM: numbered/code298.sml: a slice has not been found (Error UID = 2)
+numbered/code299.sml OK
+PROBLEM: numbered/code300.sml: TO CHECK!!!!
+PROBLEM: numbered/code301.sml: TO CHECK!!!!
+numbered/code302.sml OK
+numbered/code303.sml OK
+PROBLEM: numbered/code304.sml: TO CHECK!!!!
+PROBLEM: numbered/code305.sml: TO CHECK!!!!
+PROBLEM: numbered/code306.sml: TO CHECK!!!!
+numbered/code307.sml OK
+numbered/code308.sml OK
+numbered/code309.sml OK
+PROBLEM: numbered/code310.sml: TO CHECK!!!!
+PROBLEM: numbered/code311.sml: not enough slices
+PROBLEM: numbered/code312.sml: TO CHECK!!!!
+PROBLEM: numbered/code313.sml: TO CHECK!!!!
+PROBLEM: numbered/code314.sml: TO CHECK!!!!
+PROBLEM: numbered/code315.sml: a slice has not been found (Error UID = 0)
+numbered/code316.sml OK
+PROBLEM: numbered/code317.sml: TO CHECK!!!!
+numbered/code318.sml OK
+numbered/code319.sml OK
+PROBLEM: numbered/code320.sml: TO CHECK!!!!
+PROBLEM: numbered/code321.sml: TO CHECK!!!!
+PROBLEM: numbered/code322.sml: not enough slices
+numbered/code323.sml OK
+numbered/code324.sml OK
+numbered/code325.sml OK
+numbered/code326.sml OK
+PROBLEM: numbered/code327.sml: TO CHECK!!!!
+PROBLEM: numbered/code328.sml: not enough slices
+numbered/code329.sml OK
+PROBLEM: numbered/code330.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code331.sml: TO CHECK!!!!
+PROBLEM: numbered/code332.sml: TO CHECK!!!!
+numbered/code333.sml OK
+numbered/code334.sml OK
+PROBLEM: numbered/code335.sml: a slice has not been found (Error UID = 0)
+numbered/code336.sml OK
+PROBLEM: numbered/code337.sml: TO CHECK!!!!
+PROBLEM: numbered/code338.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code339.sml: TO CHECK!!!!
+PROBLEM: numbered/code340.sml: TO CHECK!!!!
+numbered/code341.sml OK
+PROBLEM: numbered/code342.sml: TO CHECK!!!!
+PROBLEM: numbered/code343.sml: TO CHECK!!!!
+PROBLEM: numbered/code344.sml: TO CHECK!!!!
+PROBLEM: numbered/code345.sml: TO CHECK!!!!
+PROBLEM: numbered/code346.sml: TO CHECK!!!!
+numbered/code347.sml OK
+numbered/code348.sml OK
+PROBLEM: numbered/code349.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code350.sml: not enough slices
+PROBLEM: numbered/code351.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code352.sml: TO CHECK!!!!
+numbered/code353.sml OK
+numbered/code354.sml OK
+PROBLEM: numbered/code355.sml: not enough slices
+PROBLEM: numbered/code356.sml: not enough slices
+PROBLEM: numbered/code357.sml: a slice has not been found (Error UID = 0)
+numbered/code358.sml OK
+numbered/code359.sml OK
+numbered/code360.sml OK
+numbered/code361.sml OK
+numbered/code362.sml OK
+numbered/code363.sml OK
+PROBLEM: numbered/code364.sml: a slice has not been found (Error UID = 0)
+numbered/code365.sml OK
+PROBLEM: numbered/code366.sml: TO CHECK!!!!
+PROBLEM: numbered/code367.sml: a slice has not been found (Error UID = 0)
+numbered/code368.sml OK
+numbered/code369.sml OK except the dependencies (0)
+numbered/code370.sml OK
+numbered/code371.sml OK
+numbered/code372.sml OK
+numbered/code373.sml OK
+PROBLEM: numbered/code374.sml: TO CHECK!!!!
+PROBLEM: numbered/code375.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code376.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code377.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code378.sml: TO CHECK!!!!
+PROBLEM: numbered/code379.sml: not enough slices
+PROBLEM: numbered/code380.sml: TO CHECK!!!!
+PROBLEM: numbered/code381.sml: TO CHECK!!!!
+numbered/code382.sml OK except the dependencies (0)
+PROBLEM: numbered/code383.sml: TO CHECK!!!!
+PROBLEM: numbered/code384.sml: TO CHECK!!!!
+numbered/code385.sml OK
+PROBLEM: numbered/code386.sml: TO CHECK!!!!
+PROBLEM: numbered/code387.sml: TO CHECK!!!!
+numbered/code388.sml OK
+PROBLEM: numbered/code389.sml: TO CHECK!!!!
+numbered/code390.sml OK
+numbered/code391.sml OK
+PROBLEM: numbered/code392.sml: TO CHECK!!!!
+PROBLEM: numbered/code393.sml: TO CHECK!!!!
+numbered/code394.sml OK
+numbered/code395.sml OK
+numbered/code396.sml OK
+numbered/code397.sml OK
+numbered/code398.sml OK except the dependencies (0)
+numbered/code399.sml OK
+numbered/code400.sml OK
+numbered/code401.sml OK
+numbered/code402.sml OK
+numbered/code403.sml OK
+numbered/code404.sml OK
+numbered/code405.sml OK
+numbered/code406.sml OK
+numbered/code407.sml OK except the dependencies (0)
+numbered/code408.sml OK
+numbered/code409.sml OK
+PROBLEM: numbered/code410.sml: TO CHECK!!!!
+numbered/code411.sml OK
+numbered/code412.sml OK except the dependencies (0)
+numbered/code413.sml OK except the dependencies (0)
+numbered/code414.sml OK except the dependencies (0)
+PROBLEM: numbered/code415.sml: TO CHECK!!!!
+numbered/code416.sml OK
+numbered/code417.sml OK
+numbered/code418.sml OK
+numbered/code419.sml OK
+PROBLEM: numbered/code420.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code421.sml: a slice has not been found (Error UID = 1)
+PROBLEM: numbered/code422.sml: a slice has not been found (Error UID = 0)
+PROBLEM: numbered/code423.sml: a slice has not been found (Error UID = 0)
+numbered/code424.sml OK except the dependencies (1)
+numbered/code425.sml OK except the dependencies (0)
+numbered/code426.sml OK except the dependencies (0)
+numbered/code427.sml OK
+PROBLEM: numbered/code428.sml: TO CHECK!!!!
+PROBLEM: numbered/code429.sml: TO CHECK!!!!
+numbered/code430.sml OK
+numbered/code431.sml OK
+numbered/code432.sml OK
+PROBLEM: numbered/code433.sml: TO CHECK!!!!
+PROBLEM: numbered/code434.sml: TO CHECK!!!!
+PROBLEM: numbered/code435.sml: a slice has not been found (Error UID = 0)
+numbered/code436.sml OK
+PROBLEM: numbered/code437.sml: TO CHECK!!!!
+numbered/code438.sml OK
+numbered/code439.sml OK
+PROBLEM: numbered/code440.sml: TO CHECK!!!!
+numbered/code441.sml OK
+numbered/code442.sml OK
+PROBLEM: numbered/code443.sml: TO CHECK!!!!
+numbered/code444.sml OK
+PROBLEM: numbered/code445.sml: TO CHECK!!!!
+PROBLEM: numbered/code446.sml: TO CHECK!!!!
+numbered/code447.sml OK
+numbered/code448.sml OK
+PROBLEM: numbered/code449.sml: TO CHECK!!!!
+numbered/code450.sml OK
+numbered/code451.sml OK
+numbered/code452.sml OK
+numbered/code453.sml OK
+numbered/code454.sml OK
+numbered/code455.sml OK
+numbered/code456.sml OK
+PROBLEM: numbered/code457.sml: TO CHECK!!!!
+numbered/code458.sml OK
+numbered/code459.sml OK
+numbered/code460.sml OK
+numbered/code461.sml OK
+PROBLEM: numbered/code462.sml: TO CHECK!!!!
+numbered/code463.sml OK
+numbered/code464.sml OK
+numbered/code465.sml OK
+numbered/code466.sml OK
+numbered/code467.sml OK
+numbered/code468.sml OK
+numbered/code469.sml OK
+PROBLEM: numbered/code470.sml: TO CHECK!!!!
+PROBLEM: numbered/code471.sml: TO CHECK!!!!
+numbered/code472.sml OK
+numbered/code473.sml OK
+numbered/code474.sml OK
+numbered/code475.sml OK
+PROBLEM: numbered/code476.sml: TO CHECK!!!!
+PROBLEM: numbered/code477.sml: TO CHECK!!!!
+PROBLEM: numbered/code478.sml: TO CHECK!!!!
+numbered/code479.sml OK except the dependencies (0)
+numbered/code480.sml OK
+numbered/code481.sml OK
+numbered/code482.sml OK
+numbered/code483.sml OK
+numbered/code484.sml OK
+numbered/code485.sml OK
+numbered/code486.sml OK
+PROBLEM: numbered/code487.sml: TO CHECK!!!!
+numbered/code488.sml OK
+numbered/code489.sml OK
+PROBLEM: numbered/code490.sml: TO CHECK!!!!
+numbered/code491.sml OK
+PROBLEM: numbered/code492.sml: TO CHECK!!!!
+numbered/code493.sml OK
+numbered/code494.sml OK
+numbered/code495.sml OK
+numbered/code496.sml OK
+numbered/code497.sml OK
+numbered/code498.sml OK
+numbered/code499.sml OK
+numbered/code500.sml OK
+numbered/code501.sml OK
+PROBLEM: numbered/code504.sml: TO CHECK!!!!
+numbered/code506.sml OK
+numbered/code507.sml OK
+numbered/code508.sml OK
+PROBLEM: numbered/code509.sml: a slice has not been found (Error UID = 0)
+numbered/code510.sml OK
+PROBLEM: numbered/code511.sml: TO CHECK!!!!
+PROBLEM: numbered/code512.sml: TO CHECK!!!!
+PROBLEM: numbered/code513.sml: TO CHECK!!!!
+numbered/code514.sml OK
+numbered/code515.sml OK
+numbered/code516.sml OK
+numbered/code517.sml OK
+numbered/code518.sml OK
+PROBLEM: numbered/code519.sml: TO CHECK!!!!
+numbered/code520.sml OK
+numbered/code521.sml OK
+numbered/code522.sml OK
+numbered/code523.sml OK
+numbered/code524.sml OK
+numbered/code525.sml OK
+numbered/code526.sml OK
+numbered/code527.sml OK
+PROBLEM: numbered/code528.sml: TO CHECK!!!!
+numbered/code529.sml OK
+numbered/code530.sml OK
+numbered/code531.sml OK
+PROBLEM: numbered/code532.sml: TO CHECK!!!!
+PROBLEM: numbered/code533.sml: TO CHECK!!!!
+PROBLEM: numbered/code534.sml: TO CHECK!!!!
+numbered/code535.sml OK
+numbered/code536.sml OK
+PROBLEM: numbered/code537.sml: TO CHECK!!!!
+numbered/code538.sml OK
+numbered/code539.sml OK
+numbered/code540.sml OK
+numbered/code541.sml OK
+PROBLEM: numbered/code542.sml: TO CHECK!!!!
+numbered/code543.sml OK
+PROBLEM: numbered/code544.sml: TO CHECK!!!!
+numbered/code545.sml OK
+numbered/code546.sml OK
+numbered/code547.sml OK
+numbered/code548.sml OK
+PROBLEM: numbered/code549.sml: TO CHECK!!!!
+PROBLEM: numbered/code550.sml: TO CHECK!!!!
+PROBLEM: numbered/code551.sml: a slice has not been found (Error UID = 1)
+numbered/code552.sml OK
+numbered/code553.sml OK
+numbered/code554.sml OK
+numbered/code555.sml OK
+numbered/code556.sml OK
+PROBLEM: numbered/code557.sml: TO CHECK!!!!
+numbered/code558.sml OK
+PROBLEM: numbered/code559.sml: TO CHECK!!!!
+numbered/code560.sml OK
+PROBLEM: numbered/code561.sml: TO CHECK!!!!
+PROBLEM: numbered/code562.sml: TO CHECK!!!!
+numbered/code563.sml OK
+numbered/code564.sml OK
+numbered/code565.sml OK
+[longest test: numbered/code338.sml (5344)]
+[OK      tests: 342]
+[deps    tests: 14]
+[failing tests: 50]
+[tocheck tests: 125]
+[todo    tests: 0]
+[dead    tests: 1]
+[format  tests: 0]
+[sol     tests: 0]
+[end database checking (237785ms)]
