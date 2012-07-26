@@ -53,4 +53,5 @@ sig
 		  name         : string} option ref
 
     val parseTest : string -> error
+    val parseTestControlFile : string -> string list
 end

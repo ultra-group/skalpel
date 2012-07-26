@@ -1149,21 +1149,21 @@ fun compareErrors (_, []) (_, (_ :: _)) = raise TypableTest
     compareErrors1 xs ys (* means we now have to check that the new algo is more efficient *)
 
 (* declare functions which will give delevelopers messagees about the status of tests *)
-fun messageFormat     nb st = "PROBLEM: test " ^ Int.toString nb ^ ": format (" ^ st ^ ")\n"
-fun messageMissing    nb st = "PROBLEM: test " ^ Int.toString nb ^ ": a slice has not been found (Error UID = " ^ st ^ ")\n"
-fun messageCtxtDep    nb st = "Test "          ^ Int.toString nb ^ " OK except the dependencies (" ^ st ^ ")\n"
-fun messageTypable    nb    = "PROBLEM: test " ^ Int.toString nb ^ ": was marked as typable but is not anymore\n"
-fun messageToomuch    nb    = "PROBLEM: test " ^ Int.toString nb ^ ": too many slices\n"
-fun messageNotmuch    nb    = "PROBLEM: test " ^ Int.toString nb ^ ": not enough slices\n"
-fun messageRegs       nb    = "PROBLEM: test " ^ Int.toString nb ^ ": the regions are wrong\n"
-fun messageTocheck    nb    = "PROBLEM: test " ^ Int.toString nb ^ ": TO CHECK!!!!\n"
-fun messageBad        nb    = "PROBLEM: test " ^ Int.toString nb ^ "\n"
-fun messageBetter     nb    = "Test "          ^ Int.toString nb ^ " more than OK\n"
-fun messageSlow       nb    = "Test "          ^ Int.toString nb ^ " OK but slower\n"
-fun messageOK         nb    = "Test "          ^ Int.toString nb ^ " OK\n"
-fun messageNewer      nb    = "PROBLEM: test " ^ Int.toString nb ^ ": test recorded with a newer SOL\n"
-fun messageDeadBranch nb st = "PROBLEM: test " ^ Int.toString nb ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
-fun messageTodo       nb    = "PROBLEM: test " ^ Int.toString nb ^ ": TODO: "
+fun messageFormat     test st = "PROBLEM: " ^  test ^ ": format (" ^ st ^ ")\n"
+fun messageMissing    test st = "PROBLEM: " ^  test ^ ": a slice has not been found (Error UID = " ^ st ^ ")\n"
+fun messageCtxtDep    test st = test ^ " OK except the dependencies (" ^ st ^ ")\n"
+fun messageTypable    test    = "PROBLEM: " ^  test ^ ": was marked as typable but is not anymore\n"
+fun messageToomuch    test    = "PROBLEM: " ^  test ^ ": too many slices\n"
+fun messageNotmuch    test    = "PROBLEM: " ^  test ^ ": not enough slices\n"
+fun messageRegs       test    = "PROBLEM: " ^  test ^ ": the regions are wrong\n"
+fun messageTocheck    test    = "PROBLEM: " ^  test ^ ": TO CHECK!!!!\n"
+fun messageBad        test    = "PROBLEM: " ^  test ^ "\n"
+fun messageBetter     test    = test ^ " more than OK\n"
+fun messageSlow       test    = test ^ " OK but slower\n"
+fun messageOK         test    = test ^ " OK\n"
+fun messageNewer      test    = "PROBLEM: test " ^  test ^ ": test recorded with a newer SOL\n"
+fun messageDeadBranch test st = "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
+fun messageTodo       test    = "PROBLEM: test " ^  test ^ ": TODO: "
 
 fun selectTests listtests =
     let val allTests  = getTests ()
@@ -1204,9 +1204,9 @@ fun checktests listtests =
 	val tmpfile    = generateTmpDBFile ()
 	val stout      = TextIO.openOut tmpfile
 	val _          = outputDB ("[begin database checking]\n") stout
-	val (firsttest, lasttest, tests) = selectTests listtests
+	(* val (firsttest, lasttest, tests) = selectTests listtests *)
 	val localtimelimit = mytimelimit
-	val longest        = ref {test = firsttest, time = 0} (*longest test to check*)
+	val longest        = ref {test = "", time = 0} (*longest test to check*)
 	val tmptm          = gettimelimit ()
 	val _              = settimelimit localtimelimit
 	val oktests        = ref 0
@@ -1230,79 +1230,141 @@ fun checktests listtests =
 	    List.partition
 		(fn x => case ERR.getK x of EK.FreeIdent => false | _ => true)
 		errs
-	fun run nb [] = if nb <= lasttest
-			then (outputDB ("No test " ^ Int.toString nb ^ "\n") stout; run (nb + 1) [])
-			else ()
-	  | run nb (x :: xs) =
-	    if nb < x
-	    then (case listtests of
-		      [] => outputDB ("No test " ^ Int.toString nb ^ "\n") stout
-		    | _  => ();
-		  run (nb + 1) (x :: xs))
-	    else if nb > x
-	    then raise EH.DeadBranch ""
-	    else ((* WordCBTHCSet.reset (); (* reset label set table *) *)
-		  (* run the test *)
-		  error := !(JP.parseTest (getfileerr nb));
-		  (let
+	val testList = JP.parseTestControlFile (!(testFolder)^"test-control")
+	(* fun run nb [] = if nb <= lasttest *)
+	(* 		then (outputDB ("No test " ^ Int.toString nb ^ "\n") stout; run (nb + 1) []) *)
+	(* 		else () *)
+	(*   | run nb (x :: xs) = *)
+	(*     if nb < x *)
+	(*     then (case listtests of *)
+	(* 	      [] => outputDB ("No test " ^ Int.toString nb ^ "\n") stout *)
+	(* 	    | _  => (); *)
+	(* 	  run (nb + 1) (x :: xs)) *)
+	(*     else if nb > x *)
+	(*     then raise EH.DeadBranch "" *)
+	(*     else ((* WordCBTHCSet.reset (); (* reset label set table *) *) *)
+	(* 	  (* run the test *) *)
+	(* 	  error := !(JP.parseTest (getfileerr nb)); *)
+	(* 	  (let *)
 
-		       val errs1  = getErrors   ()
-		       val bfinal = getFinal    ()
-		       val tenum1 = getTimeEnum ()
-		       val tcg1   = getTimeCg   ()
-		       val tlim1  = getTimeLim  ()
-		       val bas    = getBasis    ()
-		       val assoc1 = getAssoc    ()
-		       val sol1   = getSolution ()
-		       val (errs1, warns1) = toErrsAndWarns1 errs1
-		       val sls1   = map (fn x =>
-					    (#identifier x,
-					     #slice x,
-					     CD.toStringList (CD.inSet (#assumptions x)) (I.inAssoc assoc1),
-					     #regions x))
-					errs1
-		       val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *)
-		       val _      = if bfinal then () else raise TocheckTest
-		       val fcode  = getfilecode nb
-		       val comp   = slicergen (!myfilebas) [fcode] bas false
-		   in case comp of
-			  SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) =>
-			  let val (errs2, warns2) = toErrsAndWarns2 errs2
-			      val sls2  = map (fn x =>
-						  (ERR.idToInt (ERR.getI x),
-						   S.printSlice (ERR.getS x) false,
-						   CD.toStringList (ERR.getD x) assoc2,
-						   ERR.getR x))
-					      errs2
-			      val bend2 = tenum2 - tcg2 > localtimelimit
-			      val _     = updLongest nb tenum2
-			      val sol2  = SOL.toInt (SOL.getSol ())
-			      val _     = if sol1 > sol2 then raise NewerTest else ()
-			      (* we want to compare the slices and the context dependencies *)
-			      val  _   = compareErrors (bend1, sls1) (bend2, sls2)
-			  in plustest oktests; outputDB (messageOK nb) stout
-			  end
-			| NONE => raise BadTest
-		   end
-		   handle FormatTest    st => (plustest formtests;  outputDB (messageFormat     nb st) stout)
-			| MissingTest   st => (plustest badtests;   outputDB (messageMissing    nb st) stout)
-			| CtxtDepTest   st => (plustest ctxttests;  outputDB (messageCtxtDep    nb st) stout)
-			| BadTest          => (plustest badtests;   outputDB (messageBad        nb)    stout)
-			| SlowTest         => (plustest oktests;    outputDB (messageSlow       nb)    stout)
-			| BetterTest       => (plustest oktests;    outputDB (messageBetter     nb)    stout)
-			| TypableTest      => (plustest badtests;   outputDB (messageTypable    nb)    stout)
-			| ToomuchTest      => (plustest badtests;   outputDB (messageToomuch    nb)    stout)
-			| NotmuchTest      => (plustest badtests;   outputDB (messageNotmuch    nb)    stout)
-			| RegsTest         => (plustest badtests;   outputDB (messageRegs       nb)    stout)
-			| TocheckTest      => (plustest checktests; outputDB (messageTocheck    nb)    stout)
-			| EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch nb st) stout)
-			| EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       nb)^st^"\n")    stout)
-			| NewerTest        => (plustest newertests; outputDB (messageNewer      nb)    stout));
-		  run (nb + 1) xs)
-	val _ = run firsttest tests
+	(* 	       val errs1  = getErrors   () *)
+	(* 	       val bfinal = getFinal    () *)
+	(* 	       val tenum1 = getTimeEnum () *)
+	(* 	       val tcg1   = getTimeCg   () *)
+	(* 	       val tlim1  = getTimeLim  () *)
+	(* 	       val bas    = getBasis    () *)
+	(* 	       val assoc1 = getAssoc    () *)
+	(* 	       val sol1   = getSolution () *)
+	(* 	       val (errs1, warns1) = toErrsAndWarns1 errs1 *)
+	(* 	       val sls1   = map (fn x => *)
+	(* 				    (#identifier x, *)
+	(* 				     #slice x, *)
+	(* 				     CD.toStringList (CD.inSet (#assumptions x)) (I.inAssoc assoc1), *)
+	(* 				     #regions x)) *)
+	(* 				errs1 *)
+	(* 	       val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *) *)
+	(* 	       val _      = if bfinal then () else raise TocheckTest *)
+	(* 	       val fcode  = getfilecode nb *)
+	(* 	       val comp   = slicergen (!myfilebas) [fcode] bas false *)
+	(* 	   in case comp of *)
+	(* 		  SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) => *)
+	(* 		  let val (errs2, warns2) = toErrsAndWarns2 errs2 *)
+	(* 		      val sls2  = map (fn x => *)
+	(* 					  (ERR.idToInt (ERR.getI x), *)
+	(* 					   S.printSlice (ERR.getS x) false, *)
+	(* 					   CD.toStringList (ERR.getD x) assoc2, *)
+	(* 					   ERR.getR x)) *)
+	(* 				      errs2 *)
+	(* 		      val bend2 = tenum2 - tcg2 > localtimelimit *)
+	(* 		      val _     = updLongest nb tenum2 *)
+	(* 		      val sol2  = SOL.toInt (SOL.getSol ()) *)
+	(* 		      val _     = if sol1 > sol2 then raise NewerTest else () *)
+	(* 		      (* we want to compare the slices and the context dependencies *) *)
+	(* 		      val  _   = compareErrors (bend1, sls1) (bend2, sls2) *)
+	(* 		  in plustest oktests; outputDB (messageOK nb) stout *)
+	(* 		  end *)
+	(* 		| NONE => raise BadTest *)
+	(* 	   end *)
+	(* 	   handle FormatTest    st => (plustest formtests;  outputDB (messageFormat     nb st) stout) *)
+	(* 		| MissingTest   st => (plustest badtests;   outputDB (messageMissing    nb st) stout) *)
+	(* 		| CtxtDepTest   st => (plustest ctxttests;  outputDB (messageCtxtDep    nb st) stout) *)
+	(* 		| BadTest          => (plustest badtests;   outputDB (messageBad        nb)    stout) *)
+	(* 		| SlowTest         => (plustest oktests;    outputDB (messageSlow       nb)    stout) *)
+	(* 		| BetterTest       => (plustest oktests;    outputDB (messageBetter     nb)    stout) *)
+	(* 		| TypableTest      => (plustest badtests;   outputDB (messageTypable    nb)    stout) *)
+	(* 		| ToomuchTest      => (plustest badtests;   outputDB (messageToomuch    nb)    stout) *)
+	(* 		| NotmuchTest      => (plustest badtests;   outputDB (messageNotmuch    nb)    stout) *)
+	(* 		| RegsTest         => (plustest badtests;   outputDB (messageRegs       nb)    stout) *)
+	(* 		| TocheckTest      => (plustest checktests; outputDB (messageTocheck    nb)    stout) *)
+	(* 		| EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch nb st) stout) *)
+	(* 		| EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       nb)^st^"\n")    stout) *)
+	(* 		| NewerTest        => (plustest newertests; outputDB (messageNewer      nb)    stout)); *)
+	(* 	  run (nb + 1) xs) *)
+
+
+	fun run [] = ()
+	  | run (x :: xs) =
+	    (* run the test *)
+	    (error := !(JP.parseTest (!(testFolder)^(String.substring (x, 0, (String.size x) - 4))^"-solution"));
+	    (let
+		 val errs1  = getErrors   ()
+		 val bfinal = getFinal    ()
+		 val tenum1 = getTimeEnum ()
+		 val tcg1   = getTimeCg   ()
+		 val tlim1  = getTimeLim  ()
+		 val bas    = getBasis    ()
+		 val assoc1 = getAssoc    ()
+		 val sol1   = getSolution ()
+		 val (errs1, warns1) = toErrsAndWarns1 errs1
+		 val sls1   = map (fn x =>
+				      (#identifier x,
+				       #slice x,
+				       CD.toStringList (CD.inSet (#assumptions x)) (I.inAssoc assoc1),
+				       #regions x))
+				  errs1
+		 val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *)
+		 val _      = if bfinal then () else raise TocheckTest
+		 val fcode  = !(testFolder)^x
+		 val comp   = slicergen (!myfilebas) [fcode] bas false
+	     in case comp of
+		    SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) =>
+		    let val (errs2, warns2) = toErrsAndWarns2 errs2
+			val sls2  = map (fn x =>
+					    (ERR.idToInt (ERR.getI x),
+					     S.printSlice (ERR.getS x) false,
+					     CD.toStringList (ERR.getD x) assoc2,
+					     ERR.getR x))
+					errs2
+			val bend2 = tenum2 - tcg2 > localtimelimit
+			val _     = updLongest x tenum2
+			val sol2  = SOL.toInt (SOL.getSol ())
+			val _     = if sol1 > sol2 then raise NewerTest else ()
+			(* we want to compare the slices and the context dependencies *)
+			val  _   = compareErrors (bend1, sls1) (bend2, sls2)
+		    in plustest oktests; outputDB (messageOK x) stout
+		    end
+		  | NONE => raise BadTest
+	     end
+	     handle FormatTest    st => (plustest formtests;  outputDB (messageFormat     x st) stout)
+		  | MissingTest   st => (plustest badtests;   outputDB (messageMissing    x st) stout)
+		  | CtxtDepTest   st => (plustest ctxttests;  outputDB (messageCtxtDep    x st) stout)
+		  | BadTest          => (plustest badtests;   outputDB (messageBad        x)    stout)
+		  | SlowTest         => (plustest oktests;    outputDB (messageSlow       x)    stout)
+		  | BetterTest       => (plustest oktests;    outputDB (messageBetter     x)    stout)
+		  | TypableTest      => (plustest badtests;   outputDB (messageTypable    x)    stout)
+		  | ToomuchTest      => (plustest badtests;   outputDB (messageToomuch    x)    stout)
+		  | NotmuchTest      => (plustest badtests;   outputDB (messageNotmuch    x)    stout)
+		  | RegsTest         => (plustest badtests;   outputDB (messageRegs       x)    stout)
+		  | TocheckTest      => (plustest checktests; outputDB (messageTocheck    x)    stout)
+		  | EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch x st) stout)
+		  | EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       x)^st^"\n")    stout)
+		  | NewerTest        => (plustest newertests; outputDB (messageNewer      x)    stout));
+	    run xs)
+
+	val _ = run testList
 	val _ = settimelimit tmptm
 	val endTime  = VT.milliToString "" timerCheck
-	val longTest = Int.toString      (#test (!longest))
+	val longTest = #test (!longest)
 	val longTime = LargeInt.toString (#time (!longest))
 	val _ = outputDB ("[longest test: " ^ longTest ^ " (" ^ longTime ^ ")]\n") stout
 	val _ = outputDB ("[OK      tests: " ^ Int.toString (!oktests)    ^ "]\n") stout
@@ -1315,52 +1377,6 @@ fun checktests listtests =
 	val _ = outputDB ("[sol     tests: " ^ Int.toString (!newertests) ^ "]\n") stout
 	val _ = outputDB ("[end database checking (" ^ endTime ^ ")]\n") stout
 	val _ = TextIO.closeOut stout
-    in ()
-    end
-
-fun runtests listtests time =
-    let val (firsttest, lasttest, tests) = selectTests listtests
-	val localtimelimit = case time of SOME t => t | NONE => mytimelimit
-	val tmptm     = gettimelimit ()
-	val _         = settimelimit localtimelimit
-	val tmst      = LargeInt.toString localtimelimit
-	val timeE     = ref 0
-	val nberr     = ref 0
-	fun run nb [] = if nb <= lasttest
-			then (print ("No test " ^ Int.toString nb ^ "\n"); run (nb + 1) [])
-			else ()
-	  | run nb (x :: xs) =
-	    if nb < x
-	    then (case listtests of
-		      [] => print ("No test " ^ Int.toString nb ^ "\n")
-		    | _  => ();
-		  run (nb + 1) (x :: xs))
-	    else
-		if nb > x
-		then raise EH.DeadBranch ""
-		else (((case slicergen "" [(getfilecode nb)] 1 false of
-			    SOME (errs, _, _, (tcg, tenum, _, _, _), _, _) =>
-			    let val e    = length errs
-				val t    = tenum - tcg
-				val tst  = LargeInt.toString t
-				val nbst = Int.toString nb
-				val est  = Int.toString e
-				val _    = nberr := e + !nberr
-				val _    = timeE := t + !timeE
-				val sbeg = "Test " ^ nbst
-				val send = " - " ^ est ^ "\n"
-			    in if t < localtimelimit
-			       then print (sbeg ^ " < "  ^ tmst ^ " (" ^ tst ^ ")" ^ send)
-			       else print (sbeg ^ " >= " ^ tmst ^ send)
-			    end
-			  | NONE => raise BadTest)
-		       handle FormatTest st => print (messageFormat  nb st)
-			    | BadTest       => print (messageBad     nb));
-		      run (nb + 1) xs)
-	val _ = run firsttest tests
-	val _ = print ("Total:\n - slices: " ^ Int.toString (!nberr) ^
-		       "\n - time:" ^ LargeInt.toString (!timeE) ^ "\n")
-	val _ = settimelimit tmptm
     in ()
     end
 

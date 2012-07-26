@@ -59,20 +59,26 @@ type error = {errors       : oneerror list,
               final        : bool,
 	      name         : string} option ref
 
+
+(* strips out a JSON object name and returns the value and the rest of the JSON object list *)
+fun getObject (JSON.OBJECT objectList) expectedString =
+    let
+	fun getName (name, _)        = name
+	fun getValue (_, value) = value
+	val head = List.hd objectList
+    in
+	if (getName head) = expectedString
+	then (getValue head, (JSON.OBJECT (List.tl objectList)))
+	else raise EH.DeadBranch ("Format error with JSON test file (expected object not found)")
+    end
+  | getObject _ _                    = raise EH.DeadBranch ("Format error with JSON test file (getObject got something other than an object)")
+
+(* changes something of type JSON.STRING to a string *)
+fun getString    (JSON.STRING value) = value
+  | getString      _                 = raise EH.DeadBranch ("Format error with JSON test file (getString got something other than a string)")
+
 fun parseTest testfile =
     let
-	(* accessor methods for the different constructors of JSON.value *)
-	fun getObject (JSON.OBJECT objectList) expectedString =
-	    let
-		fun getName (name, _)        = name
-		fun getValue (_, value) = value
-		val head = List.hd objectList
-	    in
-		if (getName head) = expectedString
-		then (getValue head, (JSON.OBJECT (List.tl objectList)))
-		else raise EH.DeadBranch ("Format error with JSON test file (expected object not found)")
-	    end
-	  | getObject _ _                    = raise EH.DeadBranch ("Format error with JSON test file (getObject got something other than an object)")
 	fun getNull      (JSON.NULL)         = ()
 	  | getNull      _                   = raise EH.DeadBranch ("Format error with JSON test file (getNull got something other than NULL)")
 	fun getBool      (JSON.BOOL value)   = value
@@ -86,8 +92,6 @@ fun parseTest testfile =
 	  | getIntInf      _                 = raise EH.DeadBranch ("Format error with JSON test file (getIntInf got something other than an int)")
 	fun getFloat     (JSON.FLOAT value)  = value
 	  | getFloat      _                  = raise EH.DeadBranch ("Format error with JSON test file (getFloat got something other than a float)")
-	fun getString    (JSON.STRING value) = value
-	  | getString      _                 = raise EH.DeadBranch ("Format error with JSON test file (getString got something other than a string)")
 	fun getStrArray  (JSON.ARRAY [])     = []
 	  | getStrArray  (JSON.ARRAY (h::t)) = (getString h::(getStrArray (JSON.ARRAY t)))
 	  | getStrArray      _               = raise EH.DeadBranch ("Format error with JSON test file (getStrArray got something other than an array)")
@@ -443,5 +447,24 @@ fun parseTest testfile =
 	     minimisation = min, solution =sol , basis = bas, timelimit = tm, labelling = lbing,
 	     final = fin, name = nm
 	    })
+    end
+
+fun parseTestControlFile fileLocation =
+    let
+	fun stripTestPaths (JSON.ARRAY([])) = []
+	  | stripTestPaths (JSON.ARRAY(h::t)) = ((getString h)::(stripTestPaths (JSON.ARRAY t)))
+	  | stripTestPaths _ = raise EH.DeadBranch ("JSON format incorrect for file: "^fileLocation^"\n")
+
+	val testControl = NJJP.parseFile fileLocation handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^fileLocation^"\n")
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'test-list' object...")
+	val (testList, testControl) = getObject testControl "test-list"
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "top level json objects correct!")
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing lower level objects...")
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting test-list...")
+	val testPaths = stripTestPaths testList
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "done!")
+    in
+	testPaths
     end
 end

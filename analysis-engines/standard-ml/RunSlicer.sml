@@ -90,13 +90,6 @@ fun getDebugProblem () =
     in (f, f, f, f, f, f)
     end
 
-(* tests is an integer list, give an empty list to run all test *)
-(*fun checktests  _ = Tester.newchecktests ()*)
-fun checktests tests      = Tester.checktests tests
-
-(* run tests in integer list tests with time restriction time *)
-fun runtests   tests timeLimit = Tester.runtests tests timeLimit
-
 (* remove this when test database is converted to json format *)
 
 fun convertErrors currentError newName = Tester.convertErrors currentError newName
@@ -446,7 +439,7 @@ fun smlTesStrArgs strArgs =
 	     else if option = "-b"
 	     then basop:=str
 	     else if option = "-c"
-	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; checktests [])
+	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; Tester.checktests [])
 	     else if option = "-d"
 	     then (dev:="true";
 		   case str of

@@ -1454,6 +1454,26 @@ Alright, so the number '4' was used twice so that it actually meant
 
 Exterminate!
 
+** 2012-07-26
+
+(2012-07-26-14:26)
+
+I've finished changing the test framework so that it can handle test
+files which aren't named based on enumeration. The way that it works
+now is that there is a new file in the analysis engine test folder
+called "test-control", which has a list of all the files which the
+analysis engine is to test. When adding a new test to the test
+database, a developer should just add a standard ml code file with any
+name (say X.sml) and a solution file written in JSON (which is named
+X-solution) as before to the test directory, then place the filename
+(X.sml) in the test-control file next to the other filenames.
+
+I don't think this code will support sub-directories yet, I'll look
+into that now. Then we could have folders called say 'functors' which
+would contain examples of functors etc. This might come in handy, so
+I'm going to add this feature in once I've finished testing the
+current code.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?

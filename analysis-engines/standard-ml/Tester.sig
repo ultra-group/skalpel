@@ -104,7 +104,6 @@ signature TESTER = sig
     val testFolder     : string ref
     val checktests     : int list -> unit
 
-    val runtests      : int list -> LargeInt.int option -> unit
     val listTests     : unit   -> unit
     val printTypables : unit   -> unit
 
