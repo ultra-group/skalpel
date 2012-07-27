@@ -236,7 +236,7 @@ fun printAssoc' {assocId, assocSt} =
     end
 
 fun printJsonAssoc {assocId, assocSt} =
-    let fun printIdSt id st = "\"" ^ st ^ "\""
+    let fun printIdSt id st = "{\"id\": " ^ (printId id) ^ ", \"str\": \"" ^ st ^ "\"}"
     in "[" ^ #1 (IS.foldri (fn (id, st, (out, c)) =>
 			       (printIdSt id st ^ c ^ out, ","))
 			   ("", "")

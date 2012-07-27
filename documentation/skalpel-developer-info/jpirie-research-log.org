@@ -1546,6 +1546,50 @@ produced by the analysis engine. I don't think this is actually
 produced by the analysis engine, this must be some kind of weird
 bug. I'll look at this later today.
 
+(2012-07-27-14:49)
+
+The above error was fixed just by removing the \n characters in the
+output, I don't have the time to fiddle with even more of this test
+code so I'm going to remove this by hand for now.
+
+Though the equality type tests are now working some of the numbered
+tests are not working with this new format well at all, and are
+complaining about dependancy issues. I don't even know which part of
+the test file that is specifically complaining about, because the word
+'dependancy' can have various meanings in the analysis engine, and
+that word doesn't actually appear in the test output. I'll need to
+figure out what this is supposed to represent before I can fix it.
+
+It would be nice to get this fixed and have all the equality type
+tests committed to the repository today, that's the target at
+least. I'm going to update this code that's output to the developer so
+that it's more useful first. There are still some error messages that
+throw variable names at the developer which aren't helpful and this is
+one of those cases, so it's important that it's fixed up.
+
+(2012-07-27-15:47)
+
+Ok so the dependancies that are being reported as not being found from
+code3.sml are certainly in the test database file. Something strange
+is going on with the code related to testing whether two context
+dependancy lists are in fact the same.
+
+(2012-07-27-16:00)
+
+Right, I have tracked down this problem. There is an inconsistency is
+the test solutions, where sometimes the context dependencies start at
+0 and sometimes they start from 1. I'm just going to track which
+number the context dependancies start at in the JSON file, so I'll
+have to fiddle with the parser and export mechanism a little and then
+hopefully all will be well.
+
+(2012-07-27-18:50)
+
+The Skalpel analysis engine binary now can export JSON correctly for
+use in the test framework apart from the use of the \n separator which
+has to be removed manually. There should really be a command line
+argument option so that this does not have to happen.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?

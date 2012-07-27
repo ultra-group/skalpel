@@ -111,14 +111,9 @@ fun parseTest testfile =
 	    end
 	  | findIdVal _ _ = raise EH.DeadBranch ("Format error with JSON test file (findIdVal got something other than an object)")
 
-	fun getTyvars array =
-	    let
-		fun getTyvarsEnum    (JSON.ARRAY ([]))   num = []
-		  | getTyvarsEnum    (JSON.ARRAY (h::t)) num = ((num, getString(h))::(getTyvarsEnum (JSON.ARRAY t) (num+1)))
-		  | getTyvarsEnum    _                   num = raise EH.DeadBranch ("Format error with JSON test file (getTyvars got something other than an array)")
-	    in
-		getTyvarsEnum array 1
-	    end
+	fun getTyvars    (JSON.ARRAY ([]))   = []
+	  | getTyvars    (JSON.ARRAY (h::t)) = ((getInt(findIdVal h "id"), getString(findIdVal h "str"))::(getTyvars (JSON.ARRAY t)))
+	  | getTyvars    _                   = raise EH.DeadBranch ("Format error with JSON test file (getTyvars got something other than an array)")
 
 	fun parseRegions (JSON.ARRAY []) = []
 	  | parseRegions (JSON.ARRAY(h::t)) =
@@ -394,6 +389,8 @@ fun parseTest testfile =
 	val (timeObj, test) = getObject test "time"
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'tyvar' object...")
 	val (tyvarObj, test) = getObject test "tyvar"
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'ident' object...")
+	val (identObj, test) = getObject test "ident"
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'constraint' object...")
 	val (constraintObj, test) = getObject test "constraint"
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'labels' object...")
@@ -420,7 +417,8 @@ fun parseTest testfile =
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting tyvar...")
 	val tv = (getInt(findIdVal tyvarObj "tyvar"), getTyvars(findIdVal tyvarObj "assoc"))
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting ident...")
-	val idnt = getTyvars(findIdVal tyvarObj "assoc")
+	(* val idnt = getTyvars(findIdVal tyvarObj "assoc") *)
+	val idnt = getTyvars(identObj)
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting constraint...")
 	val cst = {total = getInt((findIdVal constraintObj "total")),
 		   top = getInt((findIdVal constraintObj "top")),

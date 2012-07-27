@@ -56,7 +56,7 @@ deadLinksTestMasterFilename="skalpel-dead-links"
 
 # createt the output directory
 testingDir="$repoDir/testing/test-results"
-outputDir= "$testingDir/$date"
+outputDir="$testingDir/$date"
 masterDir="$repoDir/testing/master-test-files"
 
 ################################################################################

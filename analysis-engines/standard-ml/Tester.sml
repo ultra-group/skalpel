@@ -642,6 +642,7 @@ fun debuggingJSON errl
         val tyvar = newsep ^ "\"tyvar\"        : " ^
 		  "{\"tyvar\": " ^ Int.toString (T.typeVarToInt (T.getTypeVar ()))
 		  ^ ", \"assoc\": " ^ I.printJsonAssoc ascid ^ "}"
+	val ident = newsep ^ "\"ident\"        : " ^ I.printJsonAssoc ascid
 	val constraint = newsep ^ "\"constraint\"   : " ^
 		  "{" ^
 		  "\"total\" : "     ^ Int.toString (EV.getnbcs envContextSensitiveSyntaxPair)      ^ ", " ^
@@ -653,6 +654,7 @@ fun debuggingJSON errl
 			   errors ^ ",\n" ^
 			   time ^ ",\n" ^
 			   tyvar ^ ",\n" ^
+			   ident ^ ",\n" ^
 			   constraint ^ ",\n" ^
 			   labels ^ ",\n" ^
 			   minimisation ^ ",\n" ^
@@ -1102,18 +1104,24 @@ fun removeSlice _ [] = (NONE, [])
 fun compareCDS cd1 cd2 =
     CDS.equal (CDS.addList (CDS.empty, cd1), CDS.addList (CDS.empty, cd2))
 
+fun printCD [] = ""
+  | printCD (h::[]) = ("\""^h^"\"")
+  | printCD (h::t) = ("\""^h^"\","^(printCD t))
+
 (* parameter 1 is the information in the database
  * parameter 2 is the imformation we found during execution *)
 fun compareErrors2 [] [] (true,  id) = ()
-  | compareErrors2 [] [] (false, id) = raise CtxtDepTest (Int.toString id)
   | compareErrors2 [] _  (true,  id) = raise BetterTest
   | compareErrors2 [] _  (false, id) = raise CtxtDepTest (Int.toString id)
   | compareErrors2 ((id, slice, cds, regs) :: xs) ys bid =
     case removeSlice slice ys of
+	(* we found a slice, let's check the context dependancies *)
 	(SOME (id', slice', cds', regs'), ys') =>
 	if compareCDS cds cds'
-	then compareErrors2 xs ys' bid
-	else compareErrors2 xs ys' (false, id)
+	then compareErrors2 xs ys' bid           (* context dependancies are fine *)
+	else (D.printDebugFeature D.TEST D.TESTING (fn _ => "Difference in context dependancies. In database: "^(printCD cds)^". Discovered: "^(printCD cds')^".");
+	      compareErrors2 xs ys' (false, id))   (* context dependancies are different *)
+      (* we didn't find the slice, we failed this test *)
       | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find slice: "^slice^ " in ["^
 							    (List.foldr (op ^) "" ((List.map (fn (id, slice, cds, regs) => slice) ys)))
 							   ^"]"); raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
@@ -1121,14 +1129,8 @@ fun compareErrors2 [] [] (true,  id) = ()
 fun compareErrors1 xs ys =
     let val xs1 = map (fn (i, x, y, z) => (i, String.translate transParen x, y, z)) xs
 	val xs2 = map (fn x => upTos x) xs1
-	(*val _  = map (fn x => D.printdebug2 (x ^ "\n")) xs3*)
-	(*val xs4 = map upToSpaces xs3*)
 	val ys1 = map (fn (i, x, y, z) => (i, String.translate transParen x, y, z)) ys
 	val ys2 = map (fn x => upTos x) ys1
-	(*val ys3 = map (fn (x, y, z) => (upToValTyVarSeq x "fun", y, z)) ys2*)
-	(*val _  = map (fn x => D.printdebug2 (x ^ "\n")) ys3*)
-	(*val _ = D.printdebug2 ("\n")*)
-	(*val ys4 = map upToSpaces ys3*)
     in compareErrors2 xs2 ys2 (true, 0) end
 
 fun compareErrors (_, []) (_, (_ :: _)) = raise TypableTest
