@@ -1590,6 +1590,24 @@ use in the test framework apart from the use of the \n separator which
 has to be removed manually. There should really be a command line
 argument option so that this does not have to happen.
 
+** 2012-07-28
+
+(2012-07-28-00:18)
+
+A few basic equality type tests have been moved into the analysis
+engine test database and now sit under the test control
+file. Hopefully these tests will pass tomorrow morning and I'll add
+probably the rest then.
+
+I noticed there was a problem this morning where the website wasn't
+tested for dead links, this should be fixed now and they should get
+tested tomorrow morning.
+
+I'm aware that the documentation for how to update tests still needs
+to be written, I'll get around to that sometime soon, hopefully
+Saturday afternoon or something. After that the plan will be to push
+forward with equality types and handle more complex cases.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?
