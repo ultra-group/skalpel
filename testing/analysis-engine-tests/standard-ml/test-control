@@ -1,5 +1,6 @@
 {
     "test-list":[
+        "equality-types/datatype-constructor.sml",
         "numbered/code1.sml",
 	"numbered/code2.sml",
 	"numbered/code3.sml",

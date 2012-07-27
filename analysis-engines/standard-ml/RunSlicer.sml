@@ -412,8 +412,8 @@ fun smlTesStrArgs strArgs =
 	  (* have a 0/1/2 case for emacs ui *)
 	  | parse ("-b"::"0"::tail) =
 	    (basop:="0"; parse tail)
-	  | parse ("-b"::"1"::file::tail) =
-	    (Tester.myfilebas:=file; basop:="1"; parse tail)
+	  | parse ("-b"::"1"::tail) =
+	    (basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
 	    (* why do we have two filebas here? *)
 	    (Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)

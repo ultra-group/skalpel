@@ -26,6 +26,16 @@ The skalpel help displayed at the command line does not accurately
 reflect the parameters that skalpel takes (debugging parameters need
 to be updated).
 
+(2012-07-26-19:21)
+
+The documentation for how to add tests to the test database is
+outdated. Update it ASAP.
+
+(2012-07-27-02:05)
+
+Test cases with new names don't contain a comment with new names. Fix
+this.
+
 * TODOs
 ** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
@@ -1473,6 +1483,68 @@ into that now. Then we could have folders called say 'functors' which
 would contain examples of functors etc. This might come in handy, so
 I'm going to add this feature in once I've finished testing the
 current code.
+
+(2012-07-26-16:14)
+
+The analysis engine database can now support sub-directories, and all
+bugs associated with that have been ironed out hopefully. I'll run the
+test framework now on lxultra8 and make sure that still works.
+
+(2012-07-26-17:47)
+
+That didn't still work, but it does now. The mail sent from the test
+framework tomorrow should hopefully contain no errors with any luck,
+everything should run smoothly.
+
+(2012-07-26-18:16)
+
+I have edited the way that the test framework checks its tests so that
+the checking is done against a master copy instead of a copy from the
+day before. This should prevent the problem of a failed test coming up
+one day, no-one noticing it, and then it won't appear in the next diff
+output.
+
+I'll have to remember and update these master files. I've also removed
+the tracking of the test logs in the repository, we have the e-mails
+and I don't think storing the test reports for each day is really
+necessary. We can always look back at our e-mails if we really have
+to.
+
+(2012-07-26-19:18)
+
+The JSON output from the analysis engine when it runs itself on an SML
+code file is of a slightly different format to the JSON that the test
+answers are written in. I remember that I was cleaning up what was
+actually output from Skalpel, as some of the information was no longer
+relevant or duplicated in some basic way (eg, the 'ident' field is
+just an enumeration of the 'tyvar' field, so why store both?).
+
+I'm going to fix this so that these formats are the same. That should
+make it really very easy indeed to add tests to the test database.
+
+The documentation needs to be updated with information how to add
+tests to the test database now as I've changed that procedure. I've
+added a warning to the top of this file and I'll get around to that soon.
+
+** 2012-07-27
+
+(2012-07-27-02:05)
+
+Old code numbers should be added to the top of old code files. Working
+on something else right now so have added a warning and I'll work on
+that later today.
+
+(2012-07-27-02:28)
+
+The following output is produced from the tester when debugging is enabled
+
+(TESTING) Tester.sml: cannot find slice: ⟨..datatype ⟨..⟨..⟩ = ⟨..secondCons of ''a..⟩..⟩\n ..secondCons (5.0)..⟩ in [⟨..datatype ⟨..⟨..⟩ = ⟨..secondCons of ''a..⟩..⟩..secondCons (5.0)..⟩]
+
+This is when checking the equality type test I have just put in. The
+difference is the presence of the "\n" in the slice that is being
+produced by the analysis engine. I don't think this is actually
+produced by the analysis engine, this must be some kind of weird
+bug. I'll look at this later today.
 
 * Next meeting with Joe
 

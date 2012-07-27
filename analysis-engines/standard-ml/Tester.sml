@@ -411,12 +411,12 @@ fun errorsToJSON [] _ _ _ = ""
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
 	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
-		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
+		    begsep ^ " " ^ tm ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
 		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
-		    begsep ^ " " ^ tm ^ ",\n" ^
+		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
     in err
     end
@@ -424,12 +424,12 @@ fun errorsToJSON [] _ _ _ = ""
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
 	val err   = "{"          ^ id ^ ",\n" ^
 		    begsep ^ " " ^ ll ^ ",\n" ^
-		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
+		    begsep ^ " " ^ tm ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
 		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
-		    begsep ^ " " ^ tm ^ ",\n" ^
+		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
     in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading)
     end
@@ -464,26 +464,26 @@ fun convertErrors currentError newName =
 	fun errorsToJSON2 [] = ""
 	  | errorsToJSON2 [x] =
 	    let val begsep = "                              "
-		val (id, ll, sa, sk, tm, sl, re) = printOneJsonErr x
+		val (id, labels, assumptions, kind, time, slice, regions) = printOneJsonErr x
 		val err   = "{"          ^ id ^ ",\n" ^
-			    begsep ^ " " ^ ll ^ ",\n" ^
-			    begsep ^ " " ^ sa ^ ",\n" ^
-			    begsep ^ " " ^ sk ^ ",\n" ^
-			    begsep ^ " " ^ sl ^ ",\n" ^
-			    begsep ^ " " ^ tm ^ ",\n" ^
-			    begsep ^ " " ^ re ^ "}"
+			    begsep ^ " " ^ labels ^ ",\n" ^
+			    begsep ^ " " ^ kind ^ ",\n" ^
+			    begsep ^ " " ^ time ^ ",\n" ^
+			    begsep ^ " " ^ slice ^ ",\n" ^
+			    begsep ^ " " ^ assumptions ^ ",\n" ^
+			    begsep ^ " " ^ regions ^ "}"
 	    in err
 	    end
 	  | errorsToJSON2 (x :: xs) =
 	    let val begsep = "                  "
-		val (id, ll, sa, sk, tm, sl, re) = printOneJsonErr x
+		val (id, labels, assumptions, kind, time, slice, regions) = printOneJsonErr x
 		val err   = "{"          ^ id ^ ",\n" ^
-			    begsep ^ " " ^ ll ^ ",\n" ^
-			    begsep ^ " " ^ sa ^ ",\n" ^
-			    begsep ^ " " ^ sk ^ ",\n" ^
-			    begsep ^ " " ^ sl ^ ",\n" ^
-			    begsep ^ " " ^ tm ^ ",\n" ^
-			    begsep ^ " " ^ re ^ "}"
+			    begsep ^ " " ^ labels ^ ",\n" ^
+			    begsep ^ " " ^ kind ^ ",\n" ^
+			    begsep ^ " " ^ time ^ ",\n" ^
+			    begsep ^ " " ^ slice ^ ",\n" ^
+			    begsep ^ " " ^ assumptions ^ ",\n" ^
+			    begsep ^ " " ^ regions ^ "}"
 	    in err ^ ",\n" ^ begsep ^ (errorsToJSON2 xs)
 	    end
 
@@ -623,15 +623,15 @@ fun debuggingJSON errl
     let val tmpsep = "      "
 	val newsep = emacstab ^ tmpsep
 	val errsep = emacstab ^ emacstab ^ emacstab ^ tmpsep
-	val str = newsep ^ "\"errors\"       : [" ^ errorsToJSON errl errsep bslice basisoverloading ^ "]"
-        val stb = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
-        val std = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
-        val stu = newsep ^ "\"basis\"        : " ^ Int.toString nenv
-	val sts = newsep ^ "\"solution\"     : " ^ Int.toString (SOL.toInt (SOL.getSol ()))
-        val stt = newsep ^ "\"timelimit\"    : " ^ Int.toString (Int.fromLarge (gettimelimit ()))
-        val stj = newsep ^ "\"final\"        : " ^ Bool.toString bfinal
-        val stk = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
-        val stf = newsep ^ "\"time\"         : " ^
+	val errors = newsep ^ "\"errors\"       : [" ^ errorsToJSON errl errsep bslice basisoverloading ^ "]"
+        val labelling = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
+        val minimisation = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
+        val basis = newsep ^ "\"basis\"        : " ^ Int.toString nenv
+	val solution = newsep ^ "\"solution\"     : " ^ Int.toString (SOL.toInt (SOL.getSol ()))
+        val timelimit = newsep ^ "\"timelimit\"    : " ^ Int.toString (Int.fromLarge (gettimelimit ()))
+        val final = newsep ^ "\"final\"        : " ^ Bool.toString bfinal
+        val name = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
+        val time = newsep ^ "\"time\"         : " ^
 		  "{" ^
 		  "\"analysis\": "     ^ Int.toString (Int.fromLarge t1) ^ ", " ^
 		  "\"enumeration\": "  ^ Int.toString (Int.fromLarge t2) ^ ", " ^
@@ -639,31 +639,31 @@ fun debuggingJSON errl
 		  "\"slicing\": "      ^ Int.toString (Int.fromLarge t4) ^ ", " ^
 		  "\"html\": "         ^ Int.toString (Int.fromLarge t5) ^
 		  "}"
-        val stg = newsep ^ "\"tyvar\"        : " ^
+        val tyvar = newsep ^ "\"tyvar\"        : " ^
 		  "{\"tyvar\": " ^ Int.toString (T.typeVarToInt (T.getTypeVar ()))
 		  ^ ", \"assoc\": " ^ I.printJsonAssoc ascid ^ "}"
-	val sti = newsep ^ "\"constraint\"   : " ^
+	val constraint = newsep ^ "\"constraint\"   : " ^
 		  "{" ^
 		  "\"total\" : "     ^ Int.toString (EV.getnbcs envContextSensitiveSyntaxPair)      ^ ", " ^
 		  "\"top\" : "       ^ Int.toString (EV.getnbcsttop envContextSensitiveSyntaxPair)  ^ ", " ^
 		  "\"syntactic\" : " ^ Int.toString (EV.getnbcss envContextSensitiveSyntaxPair)     ^
 		  "}"
-	val stl = newsep ^ "\"labels\"       : " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
-	val st  = "{\n" ^
-		  str ^ ",\n" ^
-		  stf ^ ",\n" ^
-		  stg ^ ",\n" ^
-		  sti ^ ",\n" ^
-		  stl ^ ",\n" ^
-		  std ^ ",\n" ^
-		  sts ^ ",\n" ^
-		  stu ^ ",\n" ^
-		  stt ^ ",\n" ^
-		  stb ^ ",\n" ^
-		  stj ^ ",\n" ^
-		  stk ^ "\n"  ^
-		  newsep ^ "}"
-    in st
+	val labels = newsep ^ "\"labels\"       : " ^ Int.toString ((L.toInt m) - (L.toInt initlab))
+	val errorString  = "{\n" ^
+			   errors ^ ",\n" ^
+			   time ^ ",\n" ^
+			   tyvar ^ ",\n" ^
+			   constraint ^ ",\n" ^
+			   labels ^ ",\n" ^
+			   minimisation ^ ",\n" ^
+			   solution ^ ",\n" ^
+			   basis ^ ",\n" ^
+			   timelimit ^ ",\n" ^
+			   labelling ^ ",\n" ^
+			   final ^ ",\n" ^
+			   name ^ "\n"  ^
+			   newsep ^ "}"
+    in errorString
     end
 
 
@@ -1165,25 +1165,6 @@ fun messageNewer      test    = "PROBLEM: test " ^  test ^ ": test recorded with
 fun messageDeadBranch test st = "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
 fun messageTodo       test    = "PROBLEM: test " ^  test ^ ": TODO: "
 
-fun selectTests listtests =
-    let val allTests  = getTests ()
-	val someTests = IntListSet.listItems (IntListSet.addList (IntListSet.empty, listtests))
-	fun intervTests x y =
-	    let val (min, max) = if x < y then (x, y) else (y, x)
-		val all = IntListSet.addList (IntListSet.empty, allTests)
-		val red = IntListSet.map (fn x => if x > max orelse x < min then ~1 else x) all
-		val dum = IntListSet.delete (red, ~1) handle LibBase.NotFound => red
-	    in IntListSet.listItems dum
-	    end
-	val tests = case listtests of
-			[]     => allTests
-		      | [x, y] => if x <= y then intervTests x y else someTests
-		      | _      => someTests
-	val lastTest  = List.last tests handle Empty => 0
-	val firstTest = List.hd tests   handle Empty => 1
-    in (firstTest, lastTest, tests)
-    end
-
 fun generateTmpDBFile () =
     let val date = Date.toString (Date.fromTimeLocal (Time.now ()))
 	val tr   = fn #" " => "_" | #":" => "-" | x => Char.toString x
@@ -1196,15 +1177,11 @@ fun outputDB str stout =
     in ()
     end
 
-(* if listtests is []     then run all the tests                   *)
-(* if listtests is [x, y] then run tests from min(x,y) to max(x,y) *)
-(* otherwise run on the whole list                                 *)
 fun checktests listtests =
     let val timerCheck = VT.startTimer ()
 	val tmpfile    = generateTmpDBFile ()
 	val stout      = TextIO.openOut tmpfile
 	val _          = outputDB ("[begin database checking]\n") stout
-	(* val (firsttest, lasttest, tests) = selectTests listtests *)
 	val localtimelimit = mytimelimit
 	val longest        = ref {test = "", time = 0} (*longest test to check*)
 	val tmptm          = gettimelimit ()
@@ -1230,82 +1207,13 @@ fun checktests listtests =
 	    List.partition
 		(fn x => case ERR.getK x of EK.FreeIdent => false | _ => true)
 		errs
-	val testList = JP.parseTestControlFile (!(testFolder)^"test-control")
-	(* fun run nb [] = if nb <= lasttest *)
-	(* 		then (outputDB ("No test " ^ Int.toString nb ^ "\n") stout; run (nb + 1) []) *)
-	(* 		else () *)
-	(*   | run nb (x :: xs) = *)
-	(*     if nb < x *)
-	(*     then (case listtests of *)
-	(* 	      [] => outputDB ("No test " ^ Int.toString nb ^ "\n") stout *)
-	(* 	    | _  => (); *)
-	(* 	  run (nb + 1) (x :: xs)) *)
-	(*     else if nb > x *)
-	(*     then raise EH.DeadBranch "" *)
-	(*     else ((* WordCBTHCSet.reset (); (* reset label set table *) *) *)
-	(* 	  (* run the test *) *)
-	(* 	  error := !(JP.parseTest (getfileerr nb)); *)
-	(* 	  (let *)
-
-	(* 	       val errs1  = getErrors   () *)
-	(* 	       val bfinal = getFinal    () *)
-	(* 	       val tenum1 = getTimeEnum () *)
-	(* 	       val tcg1   = getTimeCg   () *)
-	(* 	       val tlim1  = getTimeLim  () *)
-	(* 	       val bas    = getBasis    () *)
-	(* 	       val assoc1 = getAssoc    () *)
-	(* 	       val sol1   = getSolution () *)
-	(* 	       val (errs1, warns1) = toErrsAndWarns1 errs1 *)
-	(* 	       val sls1   = map (fn x => *)
-	(* 				    (#identifier x, *)
-	(* 				     #slice x, *)
-	(* 				     CD.toStringList (CD.inSet (#assumptions x)) (I.inAssoc assoc1), *)
-	(* 				     #regions x)) *)
-	(* 				errs1 *)
-	(* 	       val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *) *)
-	(* 	       val _      = if bfinal then () else raise TocheckTest *)
-	(* 	       val fcode  = getfilecode nb *)
-	(* 	       val comp   = slicergen (!myfilebas) [fcode] bas false *)
-	(* 	   in case comp of *)
-	(* 		  SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) => *)
-	(* 		  let val (errs2, warns2) = toErrsAndWarns2 errs2 *)
-	(* 		      val sls2  = map (fn x => *)
-	(* 					  (ERR.idToInt (ERR.getI x), *)
-	(* 					   S.printSlice (ERR.getS x) false, *)
-	(* 					   CD.toStringList (ERR.getD x) assoc2, *)
-	(* 					   ERR.getR x)) *)
-	(* 				      errs2 *)
-	(* 		      val bend2 = tenum2 - tcg2 > localtimelimit *)
-	(* 		      val _     = updLongest nb tenum2 *)
-	(* 		      val sol2  = SOL.toInt (SOL.getSol ()) *)
-	(* 		      val _     = if sol1 > sol2 then raise NewerTest else () *)
-	(* 		      (* we want to compare the slices and the context dependencies *) *)
-	(* 		      val  _   = compareErrors (bend1, sls1) (bend2, sls2) *)
-	(* 		  in plustest oktests; outputDB (messageOK nb) stout *)
-	(* 		  end *)
-	(* 		| NONE => raise BadTest *)
-	(* 	   end *)
-	(* 	   handle FormatTest    st => (plustest formtests;  outputDB (messageFormat     nb st) stout) *)
-	(* 		| MissingTest   st => (plustest badtests;   outputDB (messageMissing    nb st) stout) *)
-	(* 		| CtxtDepTest   st => (plustest ctxttests;  outputDB (messageCtxtDep    nb st) stout) *)
-	(* 		| BadTest          => (plustest badtests;   outputDB (messageBad        nb)    stout) *)
-	(* 		| SlowTest         => (plustest oktests;    outputDB (messageSlow       nb)    stout) *)
-	(* 		| BetterTest       => (plustest oktests;    outputDB (messageBetter     nb)    stout) *)
-	(* 		| TypableTest      => (plustest badtests;   outputDB (messageTypable    nb)    stout) *)
-	(* 		| ToomuchTest      => (plustest badtests;   outputDB (messageToomuch    nb)    stout) *)
-	(* 		| NotmuchTest      => (plustest badtests;   outputDB (messageNotmuch    nb)    stout) *)
-	(* 		| RegsTest         => (plustest badtests;   outputDB (messageRegs       nb)    stout) *)
-	(* 		| TocheckTest      => (plustest checktests; outputDB (messageTocheck    nb)    stout) *)
-	(* 		| EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch nb st) stout) *)
-	(* 		| EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       nb)^st^"\n")    stout) *)
-	(* 		| NewerTest        => (plustest newertests; outputDB (messageNewer      nb)    stout)); *)
-	(* 	  run (nb + 1) xs) *)
-
+	val testList = JP.parseTestControlFile (!(testFolder)^"/test-control")
 
 	fun run [] = ()
 	  | run (x :: xs) =
 	    (* run the test *)
-	    (error := !(JP.parseTest (!(testFolder)^(String.substring (x, 0, (String.size x) - 4))^"-solution"));
+	    (* we use -4 because the length of the file extension, ".sml", is 4 *)
+	    (error := !(JP.parseTest (!(testFolder)^"/"^(String.substring (x, 0, (String.size x) - 4))^"-solution"));
 	    (let
 		 val errs1  = getErrors   ()
 		 val bfinal = getFinal    ()
@@ -1324,7 +1232,7 @@ fun checktests listtests =
 				  errs1
 		 val bend1  = tenum1 - tcg1 > tlim1 (* true if the timer ran off *)
 		 val _      = if bfinal then () else raise TocheckTest
-		 val fcode  = !(testFolder)^x
+		 val fcode  = (!(testFolder)^"/"^x)
 		 val comp   = slicergen (!myfilebas) [fcode] bas false
 	     in case comp of
 		    SOME (errs2, (_, _, assoc2), _, (tcg2, tenum2, _, _, _), _, _) =>
