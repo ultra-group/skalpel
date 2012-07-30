@@ -1,5 +1,7 @@
 {
     "test-list":[
+	"equality-types/basic-real-equals-real.sml",
+	"equality-types/binding-of-another-binding.sml",
 	"equality-types/datatype-constructor.sml",
 	"equality-types/basic-binding-and-accessors.sml",
 	"equality-types/binding-and-accessors.sml",
