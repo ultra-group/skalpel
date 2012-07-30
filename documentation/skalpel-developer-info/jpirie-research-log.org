@@ -1608,6 +1608,45 @@ to be written, I'll get around to that sometime soon, hopefully
 Saturday afternoon or something. After that the plan will be to push
 forward with equality types and handle more complex cases.
 
+** 2012-07-30
+
+(2012-07-30-01:32)
+
+I've updated the analysis engine test database with a few more
+examples. I'm not adding the solution to this one yet though, as I'm
+not happy with the slice that we get for it:
+
+datatype 'a mydt = firstCons of 'a | secondCons of 'a;
+
+secondCons(5.0) = secondCons(6.0)
+
+I'm not happy with the slice because it led to the discovery of this
+bug:
+
+((fn _ => 0) 5.0) = 0
+
+is reported incorrectly as an equality type error. I see why this is
+the case, but the analysis engine needs to realise that the result of
+the function that is being tested for equality. As the type of the
+anonymous function is of type ''a -> int we should be comparing the
+equality type status of int (EQUALITY_TYPE) against the equals
+operator (EQUALITY_TYPE) and not the 5.0 real number
+(NOT_EQUALITY_TYPE), as this is thrown away.
+
+I have a few tests also which do not report equality type errors (and
+they should not, because the code is typable). I'm going to add these
+to the test database when I find out what the best way is to generate
+that test file when there are no errors (by default, the analysis
+engine will simply produce a blank file, indicating that the process
+has finished (<name-of-output>-finished).
+
+Anyway, it's good to have a few of these test cases in the test
+database. There are a couple of things next on the agenda, fixing up
+the webdemo, adding webdemo tests to the text framework, updates to
+the poster, changes to first year report text, and I'm not sure which
+I'm going to pick yet. Whatever it ends up being I'll document the
+progress in here as per usual.
+
 * Next meeting with Joe
 
 - Emacs interface calling compiler binary alongside Skalpel?

@@ -114,7 +114,8 @@ mlton-base:
 	mlyacc parse/ML.grm
 	sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
 	mv parse/ML.grm.sml.tmp parse/ML.grm.sml
-	sed s/"val SKALPEL_VERSION = .*"/"val SKALPEL_VERSION = \""`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
+	cp RunSlicer.sml RunSlicer.sml.original
+	sed s/"val SKALPEL_VERSION = \"VERSION_HERE\""/"val SKALPEL_VERSION = \""`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 	mllex  parse/MLB.lex
 	mlyacc parse/MLB.grm
@@ -202,6 +203,7 @@ smlnj-bin: ${SOURCESDIR}/bin/slicer-smlnj
 mlton-bin-gen: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 	mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
+	mv RunSlicer.sml.original RunSlicer.sml
 
 # We need mlton-base here ohterwise the ML-mlton-grm.sml and such
 # might not exists and make is going to complain when checking
@@ -224,6 +226,7 @@ mlton-profile: mlton-base
 	mlton -verbose 3 -profile ${MLTONPROFOP} -profile-branch true -profile-stack true -profile-val true sources.mlb
 	./sources -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
 	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-$(date)
+	mv RunSlicer.sml.original RunSlicer.sml
 
 smlnj-profile:
 	# (OS.Process.system "rm -r .cm"; Backend.Profile.setProfMode true; CM.make "sources.cm");
