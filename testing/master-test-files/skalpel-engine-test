@@ -1,4 +1,10 @@
 [begin database checking]
+equality-types/basic-real-equals-real.sml OK
+equality-types/binding-of-another-binding.sml OK but slower
+equality-types/datatype-constructor.sml OK
+equality-types/basic-binding-and-accessors.sml OK
+equality-types/binding-and-accessors.sml OK but slower
+equality-types/datatype-constructor-in-opened-structure.sml OK
 numbered/code1.sml OK
 PROBLEM: numbered/code2.sml: a slice has not been found (Error UID = 3)
 numbered/code3.sml OK
@@ -531,8 +537,8 @@ PROBLEM: numbered/code562.sml: TO CHECK!!!!
 numbered/code563.sml OK
 numbered/code564.sml OK
 numbered/code565.sml OK
-[longest test: numbered/code338.sml (5344)]
-[OK      tests: 342]
+[longest test: numbered/code496.sml (5327)]
+[OK      tests: 348]
 [deps    tests: 14]
 [failing tests: 50]
 [tocheck tests: 125]
@@ -540,4 +546,4 @@ numbered/code565.sml OK
 [dead    tests: 1]
 [format  tests: 0]
 [sol     tests: 0]
-[end database checking (237785ms)]
+[end database checking (257978ms)]
