@@ -1,3 +1,5 @@
+(* old test case name: code24.sml *)
+
 let
     datatype 'a t = T of ('a, 'a, 'a) w
     and 'a u = U of ('a, 'a) t

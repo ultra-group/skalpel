@@ -1,3 +1,5 @@
+(* old test case name: code191.sml *)
+
 (* datatype constructors can be mentioned with val in signatures *)
 structure X = struct datatype t = C end : sig type t val C : t end;
 

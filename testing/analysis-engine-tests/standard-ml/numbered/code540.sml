@@ -1,3 +1,5 @@
+(* old test case name: code540.sml *)
+
 (* Typable *)
 
 signature e = sig

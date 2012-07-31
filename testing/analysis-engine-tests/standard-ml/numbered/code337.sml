@@ -1,3 +1,5 @@
+(* old test case name: code337.sml *)
+
 type xyzzy = int
 type ('a,'b) g = 'a
 type 'a f = ('a,int) g

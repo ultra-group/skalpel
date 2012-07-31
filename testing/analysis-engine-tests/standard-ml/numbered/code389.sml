@@ -1,3 +1,5 @@
+(* old test case name: code389.sml *)
+
 (* untypable *)
 signature s = sig
     type t

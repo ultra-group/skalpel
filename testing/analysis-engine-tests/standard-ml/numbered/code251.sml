@@ -1,3 +1,5 @@
+(* old test case name: code251.sml *)
+
 (* This is typable *)
 signature S1 = sig type t end;
 structure s1 = struct datatype t = T end;

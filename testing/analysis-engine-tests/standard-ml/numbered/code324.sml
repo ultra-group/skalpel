@@ -1,3 +1,5 @@
+(* old test case name: code324.sml *)
+
 (* Typable: *)
 signature s = sig
     exception e of string

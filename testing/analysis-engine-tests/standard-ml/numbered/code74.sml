@@ -1,3 +1,5 @@
+(* old test case name: code74.sml *)
+
 (* not well-typed: value polymorphism
    and more precisely the condition: C(longvid) in {c, e} (the interesting one) *)
 fun g () = let exception e of 'a in ((fn (e y) => y), e) end;

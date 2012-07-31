@@ -1,3 +1,5 @@
+(* old test case name: code126.sml *)
+
 datatype ('a, 'b, 'c) t = Red    of 'a * 'b * 'c
 			| Blue   of 'a * 'b * 'c
 			| Pink   of 'a * 'b * 'c

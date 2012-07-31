@@ -1,3 +1,5 @@
+(* old test case name: code351.sml *)
+
 (* Untypable *)
 signature s = sig type t end where type t = int
 structure S : s = struct type t = bool end

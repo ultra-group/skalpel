@@ -1,3 +1,5 @@
+(* old test case name: code453.sml *)
+
 (* Untypable - Monomorphism and opening *)
 structure S = struct
   structure Y = struct end

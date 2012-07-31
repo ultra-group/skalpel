@@ -1,3 +1,5 @@
+(* old test case name: code25.sml *)
+
 (* There are 2 non-connected sets of constraints in the let binding. *)
 (* We would benefit from checking that. *)
 let

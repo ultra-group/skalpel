@@ -1,3 +1,5 @@
+(* old test case name: code436.sml *)
+
 (* Typable *)
 datatype t = T of string
 datatype u = T of bool

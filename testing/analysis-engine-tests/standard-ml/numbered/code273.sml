@@ -1,3 +1,5 @@
+(* old test case name: code273.sml *)
+
 (* untypable *)
 signature S1 = sig structure s : sig end end
 signature S2 = sig structure s : S1 end

@@ -1,3 +1,5 @@
+(* old test case name: code364.sml *)
+
 (* Untypable under context dependency. *)
 fun f1 () = ()
 structure S1 = struct val g1 = fn () => [] end

@@ -1,3 +1,5 @@
+(* old test case name: code517.sml *)
+
 (* Typable *)
 signature s1 = sig type t end
 structure S1 :> s1 = _S1

@@ -1,3 +1,5 @@
+(* old test case name: code277.sml *)
+
 (* SML/NJ reports:
  * ... Error: datatype t does not match specification
  * constructors in actual only: D *)

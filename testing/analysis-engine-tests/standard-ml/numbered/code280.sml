@@ -1,3 +1,5 @@
+(* old test case name: code280.sml *)
+
 (* Status clash *)
 (* This is not typable, SML/NJ complains that S.C is not a constructor
  * but a variable.

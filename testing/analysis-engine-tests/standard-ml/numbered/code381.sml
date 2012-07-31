@@ -1,3 +1,5 @@
+(* old test case name: code381.sml *)
+
 (* untypable *)
 datatype t = g of unit
 fun g () = []

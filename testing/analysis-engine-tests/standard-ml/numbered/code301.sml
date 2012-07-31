@@ -1,3 +1,5 @@
+(* old test case name: code301.sml *)
+
 (* S1 is untypable, but S2 is typable. *)
 structure S1 = struct
 structure S = struct datatype 'a list2 = nil2 | cons2 of 'a * 'a list2 end;

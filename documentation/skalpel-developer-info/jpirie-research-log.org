@@ -31,11 +31,6 @@ to be updated).
 The documentation for how to add tests to the test database is
 outdated. Update it ASAP.
 
-(2012-07-27-02:05)
-
-Test cases with new names don't contain a comment with new names. Fix
-this.
-
 * TODOs
 ** Test framework [20%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
@@ -46,6 +41,12 @@ this.
   this manually (though I am running the binary through the tests we
   have and diffing the output myself to make sure everything hasn't
   exploded).
+
+*** TODO (2012-07-31-01:46) Web demo
+
+    Currently the web demo is completely untested by the test
+    framework. This is an important thing to test as it will break
+    frequently, so think of a way that this could be done.
 
 *** TODO (2012-07-20-10:50) Running tests from a fresh clone of the repository
 
@@ -1647,9 +1648,85 @@ the poster, changes to first year report text, and I'm not sure which
 I'm going to pick yet. Whatever it ends up being I'll document the
 progress in here as per usual.
 
+(2012-07-30-10:20)
+
+Old filenames are now at the top of the codexxx.sml files in the
+analysis engine test database, so they can be moved to new names
+safely.
+
+(2012-07-30-16:28)
+
+I've updated the poster to include some changes for the meeting
+tomorrow with Joe, we can look at the poster then and decide what
+other things we want to change and possibly just change them on the
+fly.
+
+I'm going to take a look at the webdemo soon, as that's something
+which if I don't look at before tomorrow I might not get the chance
+until the end of the week.
+
+** 2012-07-31
+
+(2012-07-31-01:28)
+
+The skalpel analysis engine *will not run on anubis*. The anubis
+server (www) does not contain the libgmp.so.3 library, which the
+analysis engine depends on.
+
+This means that the skalpel analysis engine *must* be run on the www2
+server.
+
+(2012-07-31-01:33)
+
+Nope, that's not the case either.
+
+Both the www and the www2 servers do not have the libgmp.so.3 library
+available on them, so at the moment it is impossible to run the
+webdemo. The solution to this is for one of these machines to have
+this library installed.
+
+I'll need to contact IT about this, they are really the only people
+who can fix that problem. Unless I were to include this library in
+LD_LIBRARY_PATH... but I'm not sure that would work well at all. There
+might well also be other dependancies.
+
+(2012-07-31-01:37)
+
+Ah, that actually worked. I copied libgmp.so.3 from lxultra8 into the
+binary folder, updating LD_LIBRARY_PATH to include the current
+directory, exported the environment variable, and now the binary will
+at least execute.
+
+Even better, the binary generated type error slices. I shall play
+around with this tomorrow.
+
+The URL that the user gets for type error slices doesn't look right to
+me, as the slice output gets put in /lib (well, not the actual slice
+output, as that currently doesn't even exist, but the output of a
+'tohtml' script places things there) and the URL looks like something
+quite distinct from that.
+
+A solution might be to:
+
+1) update the skalpel binary (because it's pretty old)
+2) make sure libgmp.so.3 is found
+3) get the slices output to the correct location (wherever that might
+   be)
+4) direct the user to this correct location
+
+Hopefully the user will actually get some output after these four
+steps. Once the webdemo is working I need to think about:
+
+-> how to import test cases now with the new analysis engine test
+   database format?
+-> how can the test framework be extended to test the web demo,
+   because mark my words it will break again.
+
 * Next meeting with Joe
 
-- Emacs interface calling compiler binary alongside Skalpel?
 - (switch-buffer) defadvice to not create new buffer?
 - resits for foundations 2 and formal spec?
 - Asking the user to submit automatically sml code for skalpel database?
+- Research open day poster, look at the new version
+- Equality type endpoint locations
+- Correctness of equality type tests in the test framework

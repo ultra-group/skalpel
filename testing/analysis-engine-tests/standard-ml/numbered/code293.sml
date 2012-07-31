@@ -1,3 +1,5 @@
+(* old test case name: code293.sml *)
+
 (* untypable: status clash *)
 structure S = struct fun f () = () end
 exception e

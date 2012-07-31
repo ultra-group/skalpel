@@ -1,3 +1,5 @@
+(* old test case name: code552.sml *)
+
 (* Typable *)
 
 datatype 'a my_list = NIL | !! of 'a * 'a my_list;

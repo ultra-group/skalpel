@@ -1,3 +1,5 @@
+(* old test case name: code532.sml *)
+
 (* Untypable.
  *
  * Same as 523 without the where clause. *)

@@ -1,3 +1,5 @@
+(* old test case name: code33.sml *)
+
 let
     datatype t = T
 in

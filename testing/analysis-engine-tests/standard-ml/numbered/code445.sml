@@ -1,3 +1,5 @@
+(* old test case name: code445.sml *)
+
 (* Untypable *)
 fun f () = ()
 val _ = fn (f x, f) => x

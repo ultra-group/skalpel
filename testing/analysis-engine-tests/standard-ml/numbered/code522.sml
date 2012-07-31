@@ -1,3 +1,5 @@
+(* old test case name: code522.sml *)
+
 (* Type constructor clash involving a twisty chain of openings of structures.
  *)
 

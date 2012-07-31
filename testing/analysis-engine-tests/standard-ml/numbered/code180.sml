@@ -1,3 +1,5 @@
+(* old test case name: code180.sml *)
+
 (* this is OK so far *)
 val x = y
 val _ = (1 :: x, true :: x)

@@ -1,3 +1,5 @@
+(* old test case name: code365.sml *)
+
 (* Untypable but g1 is polymorphic *)
 fun g1 () = []
 datatype t = g1 of unit

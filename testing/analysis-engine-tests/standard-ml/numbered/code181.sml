@@ -1,3 +1,5 @@
+(* old test case name: code181.sml *)
+
 (* nice error report using smlnj *)
 datatype int = zero | succ of int | pred of int;
 fun fromIntToint 0 = zero

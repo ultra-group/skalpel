@@ -1,3 +1,5 @@
+(* old test case name: code490.sml *)
+
 (* Typable *)
 infix f
 fun x f y = (x, y)

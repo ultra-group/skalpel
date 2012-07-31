@@ -1,3 +1,5 @@
+(* old test case name: code44.sml *)
+
 (* example of code where a merging of multi-occurrence errors could be useful *)
 let
     datatype t = f

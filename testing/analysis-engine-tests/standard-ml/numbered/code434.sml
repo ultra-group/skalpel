@@ -1,3 +1,5 @@
+(* old test case name: code434.sml *)
+
 (* Untypable *)
 signature s = sig type t = bool end
 

@@ -1,3 +1,5 @@
+(* old test case name: code555.sml *)
+
 (* Typable *)
 
 structure S =

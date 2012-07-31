@@ -1,3 +1,5 @@
+(* old test case name: code172.sml *)
+
 signature S = sig datatype t = C end;
 structure st1 :> S = struct datatype t = C end;
 structure st2 :  S = struct datatype t = C end;

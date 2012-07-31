@@ -1,3 +1,5 @@
+(* old test case name: code457.sml *)
+
 (* EXAMPLE 1 - Untypable -
  * Recursive functions are value variables *)
 structure S = struct

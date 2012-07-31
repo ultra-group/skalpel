@@ -1,3 +1,5 @@
+(* old test case name: code539.sml *)
+
 (* Untypable.
  *
  * Example where a specification is involved in an error without

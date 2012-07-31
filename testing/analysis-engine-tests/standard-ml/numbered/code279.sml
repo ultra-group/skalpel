@@ -1,3 +1,5 @@
+(* old test case name: code279.sml *)
+
 (* This is typable *)
 structure S = struct val x = true end
 structure T = struct val x = 1 end

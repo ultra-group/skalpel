@@ -1,3 +1,5 @@
+(* old test case name: code76.sml *)
+
 (* value polymorphism error in the 2 following lines: *)
 fun g1 () = let exception e of 'a in ((fn (e y) => y), e) end;
 let val (x, y) = g1 () in (x (y true), x (y 1)) end;

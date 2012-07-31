@@ -1,3 +1,5 @@
+(* old test case name: code456.sml *)
+
 (* EXAMPLE 1 - Typable because S is free *)
 structure S = struct
   open S

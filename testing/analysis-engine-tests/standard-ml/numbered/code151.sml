@@ -1,3 +1,5 @@
+(* old test case name: code151.sml *)
+
 (* These are ill-typed.
  * In the second line 'a can't be generalised because the exp
  * is expansive and the binding of 'a is at "val x" *)

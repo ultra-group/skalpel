@@ -1,3 +1,5 @@
+(* old test case name: code302.sml *)
+
 (* All three expressions are untypable. *)
 fn y =>
 y

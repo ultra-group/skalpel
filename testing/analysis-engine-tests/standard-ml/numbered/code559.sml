@@ -1,3 +1,5 @@
+(* old test case name: code559.sml *)
+
 (* Untypable *)
 
 functor F (val x : bool) = struct val y = x end

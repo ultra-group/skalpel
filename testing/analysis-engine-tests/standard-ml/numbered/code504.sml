@@ -1,3 +1,5 @@
+(* old test case name: code504.sml *)
+
 fun (x + y) z = print (x ^ y ^ z ^ "\n");
 val () = ("hello" + "world") "bye";
 

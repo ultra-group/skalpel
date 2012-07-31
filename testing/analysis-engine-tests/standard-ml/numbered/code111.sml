@@ -1,3 +1,5 @@
+(* old test case name: code111.sml *)
+
 datatype 'a t = Blue   of 'a
               | Green  of 'a
 	      | Red    of 'a

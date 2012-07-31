@@ -1,3 +1,5 @@
+(* old test case name: code75.sml *)
+
 (* multi-occurences errors *)
 val (f, f) = (true, false)
 val ex1 = f + 1

@@ -1,3 +1,5 @@
+(* old test case name: code228.sml *)
+
 (* Here is a standard error report, for comparison:
 
 ex3.sml:48.1-50.18 Error: case object and rules don't agree [tycon mismatch]

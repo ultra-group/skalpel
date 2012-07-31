@@ -1,3 +1,5 @@
+(* old test case name: code124.sml *)
+
 (* this is an error *)
 fn () =>
    let

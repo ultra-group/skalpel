@@ -1,3 +1,5 @@
+(* old test case name: code281.sml *)
+
 (* error under the context dependency that x is not an exception constructor *)
 val x = 2
 exception f = x

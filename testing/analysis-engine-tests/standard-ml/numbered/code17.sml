@@ -1,3 +1,5 @@
+(* old test case name: code17.sml *)
+
 let
     val x = true
     val y = x

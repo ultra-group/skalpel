@@ -1,3 +1,5 @@
+(* old test case name: code13.sml *)
+
 let
     datatype ('a,'b) T = C of ('a * 'b)
     fun f (C (x,_)) (C (y,_)) z = (z x, z y)

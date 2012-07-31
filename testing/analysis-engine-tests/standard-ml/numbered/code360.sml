@@ -1,3 +1,5 @@
+(* old test case name: code360.sml *)
+
 (* Untypable - without basis *)
 datatype 'a option = NONE | SOME of 'a
 fun NONE () = ()

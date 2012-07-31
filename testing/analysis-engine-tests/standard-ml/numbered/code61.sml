@@ -1,3 +1,5 @@
+(* old test case name: code61.sml *)
+
 fun f (x : 'a -> bool) = x 1
 
 fun f x = (x : 'a -> bool) 1

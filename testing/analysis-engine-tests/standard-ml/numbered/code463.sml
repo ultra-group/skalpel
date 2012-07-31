@@ -1,3 +1,5 @@
+(* old test case name: code463.sml *)
+
 (* Untypable - Type constructor clash involving -> *)
 structure S = struct
   datatype 'a t = U of 'a

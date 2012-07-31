@@ -1,3 +1,5 @@
+(* old test case name: code343.sml *)
+
 (* The three first lines are typable. *)
 datatype t = C | D
 signature s = sig datatype u = C end;

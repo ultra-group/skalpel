@@ -1,3 +1,5 @@
+(* old test case name: code500.sml *)
+
 (* Typable *)
 signature s = sig
     structure U : sig type t val x : t         end

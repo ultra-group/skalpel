@@ -1,3 +1,5 @@
+(* old test case name: code562.sml *)
+
 (* Untypable.
  *
  * Similar to 558. *)

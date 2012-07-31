@@ -1,3 +1,5 @@
+(* old test case name: code497.sml *)
+
 (* Untypable *)
 structure X = struct
 structure U = struct type 'a t = bool val x = true end

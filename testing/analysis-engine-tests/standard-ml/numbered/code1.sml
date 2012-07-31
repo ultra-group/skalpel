@@ -1,3 +1,5 @@
+(* old test case name: code1.sml *)
+
 (* Type constructor clash.
  *)
 

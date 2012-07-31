@@ -1,3 +1,5 @@
+(* old test case name: code322.sml *)
+
 (* Untypable. *)
 signature s =
   sig

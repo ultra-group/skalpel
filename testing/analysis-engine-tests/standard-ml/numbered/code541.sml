@@ -1,3 +1,5 @@
+(* old test case name: code541.sml *)
+
 (* Untypable.
  *
  * The specification y included in s is unmatched in S. *)

@@ -1,3 +1,5 @@
+(* old test case name: code406.sml *)
+
 (* Typable *)
 val _ = fn x => let val u = fn v => let val m = v x
 				    in (m, fn z => z) end

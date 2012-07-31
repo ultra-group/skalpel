@@ -1,3 +1,5 @@
+(* old test case name: code399.sml *)
+
 (* Untypable *)
 val y = 1
 signature s = sig type t = bool val x : t end

@@ -1,3 +1,5 @@
+(* old test case name: code58.sml *)
+
 (* untypable - diverse syntactic errors *)
 let
     fun gg (g, g x, g) = g

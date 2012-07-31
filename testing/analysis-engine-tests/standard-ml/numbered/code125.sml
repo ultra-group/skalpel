@@ -1,3 +1,5 @@
+(* old test case name: code125.sml *)
+
 (* this is allowed and well-typed with SML/NJ*)
 (* the same can be obtained with the pair (not, map) for example *)
 let

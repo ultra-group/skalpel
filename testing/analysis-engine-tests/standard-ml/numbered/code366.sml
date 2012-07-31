@@ -1,3 +1,5 @@
+(* old test case name: code366.sml *)
+
 structure S = struct
 val g = let val f = fn _ => [] in f end
 end;

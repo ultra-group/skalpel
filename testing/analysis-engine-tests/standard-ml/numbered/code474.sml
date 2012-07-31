@@ -1,3 +1,5 @@
+(* old test case name: code474.sml *)
+
 (* Untypable - Error going through the parameter of a functor *)
 functor F (S : sig val f : 'a -> 'a end) = struct
 val _ = S.f 1

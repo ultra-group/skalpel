@@ -1,3 +1,5 @@
+(* old test case name: code359.sml *)
+
 (* Typable - with basis. *)
 fun seqWith f (p1, p2) getc strm =
     (case (p1 getc strm)

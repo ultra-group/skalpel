@@ -1,3 +1,5 @@
+(* old test case name: code332.sml *)
+
 (* EXAMPLE1 *)
 fn x => fn a => (x a, x 2, [x, 2]);
 (* EXAMPLE2 *)

@@ -1,3 +1,5 @@
+(* old test case name: code554.sml *)
+
 (* Untypable *)
 
 val x = true

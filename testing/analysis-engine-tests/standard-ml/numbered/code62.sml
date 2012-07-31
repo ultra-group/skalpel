@@ -1,3 +1,5 @@
+(* old test case name: code62.sml *)
+
 datatype ('a, 'b) comb = Node of 'b * ('a, 'b) comb | Leaf of 'a
 and opcomb = TSOME of (bool, int) comb | TNONE
 fun trans1 (Node (x, t)) f = Node (x, trans1 t f)

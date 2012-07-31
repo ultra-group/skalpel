@@ -1,3 +1,5 @@
+(* old test case name: code498.sml *)
+
 (* Typable *)
 signature s = sig type t = int type u sharing type t = u end
 structure S :> s = struct type t = int type u = int end

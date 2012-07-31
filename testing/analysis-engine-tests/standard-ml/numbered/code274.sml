@@ -1,3 +1,5 @@
+(* old test case name: code274.sml *)
+
 (* untypable *)
 structure T = struct val y = false end
 open T

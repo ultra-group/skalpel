@@ -1,3 +1,5 @@
+(* old test case name: code14.sml *)
+
 (* This code generates the same problem as in: fun f x = x and g () = (f 1, f true).
    The functions f and g are not polymorphic while used in their declaration
    (the same declaration because of the use of "and"). *)

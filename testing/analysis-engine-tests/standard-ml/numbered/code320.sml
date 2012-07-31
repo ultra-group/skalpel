@@ -1,3 +1,5 @@
+(* old test case name: code320.sml *)
+
 (* Untypable *)
 fn z => let val x = fn y : 'a => (z y) in () end;
 (* Typable *)

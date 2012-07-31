@@ -1,3 +1,5 @@
+(* old test case name: code29.sml *)
+
 (* We don't care about D, and that z is the only argument of D. *)
 datatype ('a,'b) t = C of ('a * 'b)
      and 'a u = D of 'a

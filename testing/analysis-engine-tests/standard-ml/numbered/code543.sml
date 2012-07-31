@@ -1,3 +1,5 @@
+(* old test case name: code543.sml *)
+
 (* Untypable.
  *
  * The declaration y does not match the type of its specificaiton. *)

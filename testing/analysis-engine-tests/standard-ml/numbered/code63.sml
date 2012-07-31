@@ -1,3 +1,5 @@
+(* old test case name: code63.sml *)
+
 (* untypable *)
 datatype ('a, 'b) comb = Node of 'b * ('a, 'b) comb | Leaf of 'a
 and opcomb = TSOME of (bool, int) comb | TNONE

@@ -1,3 +1,5 @@
+(* old test case name: code152.sml *)
+
 (* EXAMPLE1
  * Intersection condition of rule 15 can fail because of something
  * else than exceptions.  For example in the following piece of code,

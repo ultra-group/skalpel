@@ -1,3 +1,5 @@
+(* old test case name: code118.sml *)
+
 fun g x y z = if z then x + y else y
 fun f [] y = y
   | f [x] y = g x y true

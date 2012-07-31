@@ -1,3 +1,5 @@
+(* old test case name: code387.sml *)
+
 (* untypable *)
 datatype t = f
 local

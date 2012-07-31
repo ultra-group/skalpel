@@ -1,3 +1,5 @@
+(* old test case name: code545.sml *)
+
 (* Untypable.
  *
  * the value y is missing in S.

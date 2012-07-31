@@ -1,3 +1,5 @@
+(* old test case name: code471.sml *)
+
 (* Free identifiers *)
 let val x = fn _ =>
 	       let exception e of 'a

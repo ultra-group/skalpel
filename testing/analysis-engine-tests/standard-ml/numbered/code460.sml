@@ -1,3 +1,5 @@
+(* old test case name: code460.sml *)
+
 (* Untypable - Type constructor clash involving -> and a type function *)
 structure S = struct
   type 'a t = 'a -> 'a

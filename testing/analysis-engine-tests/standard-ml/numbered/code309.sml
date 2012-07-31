@@ -1,3 +1,5 @@
+(* old test case name: code309.sml *)
+
 (* Untypable *)
 fn y =>
    let

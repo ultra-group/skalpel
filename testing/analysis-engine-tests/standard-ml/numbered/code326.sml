@@ -1,3 +1,5 @@
+(* old test case name: code326.sml *)
+
 (* Typable if IntListSet if the SML/NJ structure *)
 signature ORDSET =
 sig

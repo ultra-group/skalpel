@@ -1,3 +1,5 @@
+(* old test case name: code357.sml *)
+
 (* Typable *)
 fun f (x : Int32.int) y = x + y;
 fun f (x : LargeWord.word) y = x + y;

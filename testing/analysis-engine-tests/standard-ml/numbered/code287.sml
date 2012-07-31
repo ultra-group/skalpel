@@ -1,3 +1,5 @@
+(* old test case name: code287.sml *)
+
 (* Untypable: + is not overloaded to true *)
 val x = true
 local

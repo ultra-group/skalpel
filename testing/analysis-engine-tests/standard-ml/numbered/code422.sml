@@ -1,3 +1,5 @@
+(* old test case name: code422.sml *)
+
 (* Untypable *)
 signature s = sig type u type v type w type z end
 structure S :> s = _structS

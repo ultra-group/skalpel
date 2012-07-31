@@ -1,3 +1,5 @@
+(* old test case name: code115.sml *)
+
 let
     datatype ('a,'b) T = C of ('a * 'b)
     val rec f = fn (C (x,_)) => fn (C (y,_)) => fn z => (z x, z y)

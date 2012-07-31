@@ -1,3 +1,5 @@
+(* old test case name: code536.sml *)
+
 (* Untypable *)
 
 datatype t = T1 of t | T2 of int

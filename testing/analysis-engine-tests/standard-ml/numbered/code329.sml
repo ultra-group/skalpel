@@ -1,3 +1,5 @@
+(* old test case name: code329.sml *)
+
 (* Typable *)
 fun newTag () = let exception e of 'a in (e, fn (e x) => SOME x | _ => NONE) end;
 val (aBuild, aCheck) = newTag ();

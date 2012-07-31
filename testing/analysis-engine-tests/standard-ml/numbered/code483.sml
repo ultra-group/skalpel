@@ -1,3 +1,5 @@
+(* old test case name: code483.sml *)
+
 (* Untypable - Because C's signature is opaque, its type s has to be
  * different from the s defined in B which is the type of s in S. *)
 structure B :> sig

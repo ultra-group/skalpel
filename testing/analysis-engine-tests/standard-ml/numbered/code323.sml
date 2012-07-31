@@ -1,3 +1,5 @@
+(* old test case name: code323.sml *)
+
 (* Untypable *)
 signature s = sig
     structure V : sig

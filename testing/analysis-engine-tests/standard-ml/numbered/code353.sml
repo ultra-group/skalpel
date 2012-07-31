@@ -1,3 +1,5 @@
+(* old test case name: code353.sml *)
+
 signature s = sig
     type t
     structure X : sig type t end

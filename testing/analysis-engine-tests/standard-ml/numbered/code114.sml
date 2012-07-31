@@ -1,3 +1,5 @@
+(* old test case name: code114.sml *)
+
 (* Untypable *)
 datatype ('a, 'b, 'c) t = Red    of 'a * 'b * 'c
 			| Blue   of 'a * 'b * 'c

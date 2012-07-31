@@ -1,3 +1,5 @@
+(* old test case name: code284.sml *)
+
 (* Contains a status clash:
  * exception can't be bound to a datatype constructor *)
 datatype t = f

@@ -1,3 +1,5 @@
+(* old test case name: code415.sml *)
+
 (* Untypable *)
 structure K = struct structure P = struct val x = 1.5 end end
 structure A = struct open H I J K L open M N O P end

@@ -1,3 +1,5 @@
+(* old test case name: code169.sml *)
+
 (* this is untypable *)
 datatype t = C of int; val x = C; val (x y) = C 1;
 (* this is typable *)

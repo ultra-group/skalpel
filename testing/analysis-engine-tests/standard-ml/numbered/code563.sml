@@ -1,3 +1,5 @@
+(* old test case name: code563.sml *)
+
 (* Untypable *)
 
 structure S = struct

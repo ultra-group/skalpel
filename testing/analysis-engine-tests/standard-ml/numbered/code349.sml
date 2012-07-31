@@ -1,3 +1,5 @@
+(* old test case name: code349.sml *)
+
 (* Typable *)
 structure S : sig type 'a t end =
 struct type 'a t = int end

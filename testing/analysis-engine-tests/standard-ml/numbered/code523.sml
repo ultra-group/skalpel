@@ -1,3 +1,5 @@
+(* old test case name: code523.sml *)
+
 (* Typable.
  *
  * Functors and signatures.

@@ -1,3 +1,5 @@
+(* old test case name: code80.sml *)
+
 (* type inference should be OK, but semantic error: Bind *)
 (* SML/NJ complains about the types though *)
 datatype t = f

@@ -1,3 +1,5 @@
+(* old test case name: code476.sml *)
+
 (* Example to use with the basis because of the use of 'print' *)
 signature STUDENT = sig
     type name

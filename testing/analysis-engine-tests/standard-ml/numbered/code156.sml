@@ -1,3 +1,5 @@
+(* old test case name: code156.sml *)
+
 (* this seems to be a polymorphic exception *)
 let val x = fn _ : 'a => let exception e of 'a in e end
 in (raise x 1 1; raise x true true; 1) end;

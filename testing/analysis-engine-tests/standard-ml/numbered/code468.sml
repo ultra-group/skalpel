@@ -1,3 +1,5 @@
+(* old test case name: code468.sml *)
+
 (* Typable *)
 signature s = sig
     structure X : sig val f : 'a -> 'a end

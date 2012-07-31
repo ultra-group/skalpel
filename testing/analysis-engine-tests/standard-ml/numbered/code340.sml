@@ -1,3 +1,5 @@
+(* old test case name: code340.sml *)
+
 (* Typable but seems that no structure can have this signature. *)
 signature s = sig datatype t = C type u end where type t = int;
 (* Untypable because C is not declared in the structure. *)

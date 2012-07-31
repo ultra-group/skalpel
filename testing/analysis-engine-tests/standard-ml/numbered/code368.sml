@@ -1,3 +1,5 @@
+(* old test case name: code368.sml *)
+
 signature s = sig
     datatype 'a t = C
     val f : 'a t -> bool

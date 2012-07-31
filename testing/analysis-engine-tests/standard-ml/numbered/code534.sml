@@ -1,3 +1,5 @@
+(* old test case name: code534.sml *)
+
 (* Untypable.
  *
  * Similar to testcase 528, but here f's specification

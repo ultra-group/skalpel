@@ -1,3 +1,5 @@
+(* old test case name: code348.sml *)
+
 (* Untypable *)
 datatype t = T
 datatype u = U

@@ -1,3 +1,5 @@
+(* old test case name: code71.sml *)
+
 (* Untypable: because of, among other things, value polymorphism *)
 let val (e', f) =
 	let exception e of 'a

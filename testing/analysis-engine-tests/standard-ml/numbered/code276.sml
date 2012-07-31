@@ -1,3 +1,5 @@
+(* old test case name: code276.sml *)
+
 (* untypable *)
 fun update (key:int,value,rest) (k,v) =
     if k=key

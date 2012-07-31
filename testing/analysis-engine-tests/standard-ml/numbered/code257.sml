@@ -1,3 +1,5 @@
+(* old test case name: code257.sml *)
+
 (* this is untypable and the two end points are t's first occurrence *)
 signature s = sig type t end
 structure S1 :> s = struct type t = int end

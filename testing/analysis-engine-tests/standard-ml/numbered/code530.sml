@@ -1,3 +1,5 @@
+(* old test case name: code530.sml *)
+
 (* Untypable because of the value polymorphism restriction.
  * The error goes through a structure binding. *)
 

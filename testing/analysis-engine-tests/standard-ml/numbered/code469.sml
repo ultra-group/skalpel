@@ -1,3 +1,5 @@
+(* old test case name: code469.sml *)
+
 (* Untypable *)
 let exception e
     val x = raise e

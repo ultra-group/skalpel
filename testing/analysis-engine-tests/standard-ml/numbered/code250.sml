@@ -1,3 +1,5 @@
+(* old test case name: code250.sml *)
+
 (* Type name arity clash (via structures and signatures).
  *
  * The type function u is declared in the signature as taking zero

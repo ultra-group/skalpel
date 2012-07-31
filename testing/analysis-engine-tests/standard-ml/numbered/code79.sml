@@ -1,3 +1,5 @@
+(* old test case name: code79.sml *)
+
 (* the datatype does not participate to any error because
    the status of f is overridden by the fun declaration *)
 datatype t = f;

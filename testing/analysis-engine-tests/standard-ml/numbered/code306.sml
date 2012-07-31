@@ -1,3 +1,5 @@
+(* old test case name: code306.sml *)
+
 (* untypable *)
 signature s = sig val v : int val g : int end
 structure S : s = struct val w = 1 val g = 1 end

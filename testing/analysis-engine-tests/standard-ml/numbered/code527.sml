@@ -1,3 +1,5 @@
+(* old test case name: code527.sml *)
+
 (* Untypable
  *
  * Type constructor clash within a structure body. *)

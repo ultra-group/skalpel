@@ -1,3 +1,5 @@
+(* old test case name: code528.sml *)
+
 (* Untypable
  *
  * The value identifier f has a monomorphic type and should be

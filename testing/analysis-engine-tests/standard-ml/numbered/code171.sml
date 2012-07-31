@@ -1,3 +1,5 @@
+(* old test case name: code171.sml *)
+
 (* x is a value constructor with argument but is used
    in the structure without any *)
 datatype t = x of int | C of int;

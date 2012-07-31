@@ -1,3 +1,5 @@
+(* old test case name: code182.sml *)
+
 (* closure example *)
 fun f x = let val y = x in y 5 end
 val _ = f 3;

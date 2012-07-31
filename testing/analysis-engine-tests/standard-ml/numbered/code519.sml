@@ -1,3 +1,5 @@
+(* old test case name: code519.sml *)
+
 (* Untypable - S does not define nor*)
 structure S = struct
 fun not true  = false

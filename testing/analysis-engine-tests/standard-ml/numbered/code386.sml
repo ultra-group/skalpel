@@ -1,3 +1,5 @@
+(* old test case name: code386.sml *)
+
 (* untypable *)
 local
     fun f () = ()

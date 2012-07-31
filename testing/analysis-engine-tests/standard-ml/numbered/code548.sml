@@ -1,3 +1,5 @@
+(* old test case name: code548.sml *)
+
 (* Untypable
  *
  * x is declared as an integer but specified as a Boolean. *)

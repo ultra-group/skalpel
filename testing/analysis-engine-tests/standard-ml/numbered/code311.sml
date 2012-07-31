@@ -1,3 +1,5 @@
+(* old test case name: code311.sml *)
+
 (* Unparsable.  A semi column is missing at the end of
  * of the first line. *)
 fn (C x, C y) => (x, y)

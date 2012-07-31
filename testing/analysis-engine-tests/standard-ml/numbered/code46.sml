@@ -1,3 +1,5 @@
+(* old test case name: code46.sml *)
+
 let
     val rec f = fn () => 1
     val g1 = fn (f x) => x

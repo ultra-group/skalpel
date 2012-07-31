@@ -1,3 +1,5 @@
+(* old test case name: code22.sml *)
+
 let
     datatype t = y
     val g = fn x =>

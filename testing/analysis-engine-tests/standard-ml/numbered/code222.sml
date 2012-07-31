@@ -1,3 +1,5 @@
+(* old test case name: code222.sml *)
+
 fun apply2 (f, _) (x, _) = (f x, f x)
 fun apply1 (f1, f2) (x1, x2) b =
     if b

@@ -1,3 +1,5 @@
+(* old test case name: code481.sml *)
+
 (* Untypable because of the type t in X that does not match the
  * specification given by FS. *)
 signature FS = sig type 'a t val f : 'a t -> 'a t end where type 'a t = 'a

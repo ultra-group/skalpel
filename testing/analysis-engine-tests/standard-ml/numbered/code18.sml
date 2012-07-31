@@ -1,3 +1,5 @@
+(* old test case name: code18.sml *)
+
 let
     val rec f = fn _ => true
 in

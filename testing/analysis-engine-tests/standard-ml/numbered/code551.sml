@@ -1,3 +1,5 @@
+(* old test case name: code551.sml *)
+
 (* Untypable.
  * In x's first declaration, `` is an free identifier, while in
  * x's second declaration it's a list of SMLofNJ.quotes.

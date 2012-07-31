@@ -1,3 +1,5 @@
+(* old test case name: code487.sml *)
+
 (* Untypable - This is to use with the basis becaus of the
  * use of map.  The error is that we add 1 to each of the
  * elements in the list x which are in fact SMLofNJ.frag's. *)

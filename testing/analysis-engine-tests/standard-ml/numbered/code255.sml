@@ -1,3 +1,5 @@
+(* old test case name: code255.sml *)
+
 structure Z =
   struct
     structure X =

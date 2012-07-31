@@ -1,3 +1,5 @@
+(* old test case name: code450.sml *)
+
 (* Untypable - Chain of opens *)
 structure S = struct
     structure Y = struct

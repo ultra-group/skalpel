@@ -1,3 +1,5 @@
+(* old test case name: code260.sml *)
+
 (* typable *)
 let
     fun f () = let datatype t = A | B of t in (A, B) end;

@@ -1,3 +1,5 @@
+(* old test case name: code298.sml *)
+
 (* EXAMPLE1:
  * Untypable because the constructor S.C in the pattern is not applied *)
 structure S = struct datatype t = C of int end

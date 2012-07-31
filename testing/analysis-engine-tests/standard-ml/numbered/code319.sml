@@ -1,3 +1,5 @@
+(* old test case name: code319.sml *)
+
 (* Untypable.
  * This example was sent by Brian1978 to the SML/NJ mailing list. *)
 fun two f x = f(f x);

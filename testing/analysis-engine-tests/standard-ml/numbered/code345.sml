@@ -1,3 +1,5 @@
+(* old test case name: code345.sml *)
+
 (* true and false cannot be bound so HaMLet reject that.
  * SML/NJ does not type check it because S.true is of
  * type S.bool which is not bool. *)

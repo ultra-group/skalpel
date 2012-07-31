@@ -1,3 +1,5 @@
+(* old test case name: code220.sml *)
+
 (* Here is a typical error report, for comparison:
 
 ex2.sml:21.1-25.24 Error: operator and operand don't agree [tycon mismatch]

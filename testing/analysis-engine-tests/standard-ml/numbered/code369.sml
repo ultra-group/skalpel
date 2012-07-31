@@ -1,3 +1,5 @@
+(* old test case name: code369.sml *)
+
 (* Typable *)
 signature s = sig type t end where type t = int -> int
 

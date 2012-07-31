@@ -1,3 +1,5 @@
+(* old test case name: code489.sml *)
+
 (* Untypable - The example differs from the typable testcase
  * 488 by the type of x (from X.t to X.u). *)
 signature s = sig

@@ -1,3 +1,5 @@
+(* old test case name: code361.sml *)
+
 (* typable *)
 let
     datatype 'a option = NONE | SOME of 'a

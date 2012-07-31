@@ -1,3 +1,5 @@
+(* old test case name: code328.sml *)
+
 datatype t = T | U of int;
 (* Syntacticly correct: *)
 fun f T x = x | f _ _ = 0;

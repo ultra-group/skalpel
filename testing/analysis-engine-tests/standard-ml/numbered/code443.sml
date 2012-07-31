@@ -1,3 +1,5 @@
+(* old test case name: code443.sml *)
+
 (* Untypable
  * Sum being a strdec, the type of + is set to being:
  *   (int * int) -> int,

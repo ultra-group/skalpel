@@ -1,3 +1,5 @@
+(* old test case name: code49.sml *)
+
 (* untypable *)
 let
     datatype t = f of bool

@@ -1,3 +1,5 @@
+(* old test case name: code65.sml *)
+
 (* untypable *)
 val x : {1 : int, 2 : bool} = {1 = 2, 2 = 2}
 val (x : bool, y, z) = {C = 3, 1 = 1, 2 = 2}

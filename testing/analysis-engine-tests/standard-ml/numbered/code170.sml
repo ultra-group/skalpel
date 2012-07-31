@@ -1,3 +1,5 @@
+(* old test case name: code170.sml *)
+
 (* this is untypable *)
 datatype t = C of int | x of int;
 val _ = fn (x u) => C u | (C u) => C u;

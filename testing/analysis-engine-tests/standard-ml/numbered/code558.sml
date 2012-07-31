@@ -1,3 +1,5 @@
+(* old test case name: code558.sml *)
+
 (* Typable
  *
  * This is the reason why we don't want

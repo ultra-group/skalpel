@@ -1,3 +1,5 @@
+(* old test case name: code109.sml *)
+
 datatype t = xs of int
 exception lkupex
 fun lkup _ [] = raise lkupex

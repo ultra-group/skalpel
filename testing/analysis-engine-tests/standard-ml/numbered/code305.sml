@@ -1,3 +1,5 @@
+(* old test case name: code305.sml *)
+
 datatype t = C of int
 signature foo = sig val x : int end
 (* typable *)

@@ -1,3 +1,5 @@
+(* old test case name: code439.sml *)
+
 (* Typable *)
 signature s = sig type t val e : t end
 structure S1 : s = struct type t = int val e = 1 end

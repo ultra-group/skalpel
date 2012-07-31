@@ -1,3 +1,5 @@
+(* old test case name: code508.sml *)
+
 (* Typable *)
 signature s = sig
     structure U : sig type u val f : u -> u end

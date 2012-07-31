@@ -1,3 +1,5 @@
+(* old test case name: code556.sml *)
+
 (* This example is similar to testcase 525.
  * It doesn't constrain F's body with a signature.
  * It is also untypable. *)

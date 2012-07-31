@@ -1,3 +1,5 @@
+(* old test case name: code380.sml *)
+
 (* untypable *)
 fun f () = ()
 val f = ();

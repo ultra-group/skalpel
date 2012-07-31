@@ -1,3 +1,5 @@
+(* old test case name: code230.sml *)
+
 (* Here is a typical error report, for comparison:
 
 ex5.sml:4.17-5.30 Error: operator is not a function [circularity]

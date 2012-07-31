@@ -1,3 +1,5 @@
+(* old test case name: code521.sml *)
+
 (* Untypable.
  * Type constructor clash through the signature of a functor.
  *

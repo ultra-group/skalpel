@@ -1,3 +1,5 @@
+(* old test case name: code520.sml *)
+
 (* Typable *)
 type t = int
 

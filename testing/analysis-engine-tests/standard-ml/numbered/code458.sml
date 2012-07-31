@@ -1,3 +1,5 @@
+(* old test case name: code458.sml *)
+
 (* Untypable *)
 structure S = struct
   datatype 'a t = T

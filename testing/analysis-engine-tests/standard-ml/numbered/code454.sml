@@ -1,3 +1,5 @@
+(* old test case name: code454.sml *)
+
 (* Untypable - Monomorphic functions *)
 structure S = struct
   datatype 'a t = T

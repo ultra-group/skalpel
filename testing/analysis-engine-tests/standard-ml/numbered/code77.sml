@@ -1,3 +1,5 @@
+(* old test case name: code77.sml *)
+
 (* arity clashes between empty sequence and sequence of length 1 *)
 datatype 'a t = Nil of unit | Cons of 'a * ('a t);
 type 'a int = 'a t;

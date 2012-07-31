@@ -1,3 +1,5 @@
+(* old test case name: code371.sml *)
+
 type v = bool
 datatype t = C of v withtype v = int
 (* typable *)

@@ -1,3 +1,5 @@
+(* old test case name: code272.sml *)
+
 signature s = sig end
 signature t = sig structure S : s end
 (* this is typable *)

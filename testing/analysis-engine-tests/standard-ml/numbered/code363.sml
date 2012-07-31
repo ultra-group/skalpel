@@ -1,3 +1,5 @@
+(* old test case name: code363.sml *)
+
 (* Untypable *)
 structure S = struct fun g () = [] end
 val f = S.g ();

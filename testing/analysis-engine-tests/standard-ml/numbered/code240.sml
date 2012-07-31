@@ -1,3 +1,5 @@
+(* old test case name: code240.sml *)
+
 (* These two lines are typable *)
 datatype 'a t = C of 'a | D
 datatype u = datatype t

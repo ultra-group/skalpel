@@ -1,3 +1,5 @@
+(* old test case name: code73.sml *)
+
 (* Untypable *)
 let exception e of 'a
 in (raise e(5)) handle e(f) => f(7)

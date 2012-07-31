@@ -1,3 +1,5 @@
+(* old test case name: code153.sml *)
+
 (* ISSUES WITH CLOSURE AND EXPLICIT TYPES *)
 
 (* EXAMPLE1

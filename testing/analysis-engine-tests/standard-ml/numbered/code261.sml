@@ -1,3 +1,5 @@
+(* old test case name: code261.sml *)
+
 (* This is untypable *)
 signature S = sig val x : 'a end
 structure st1 :> S = struct val x = true end

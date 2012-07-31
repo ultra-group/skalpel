@@ -1,3 +1,5 @@
+(* old test case name: code162.sml *)
+
 (* this type check *)
 signature S = sig type t end;
 structure st1 :> S = struct type t = int end;

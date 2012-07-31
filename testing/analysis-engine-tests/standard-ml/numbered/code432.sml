@@ -1,3 +1,5 @@
+(* old test case name: code432.sml *)
+
 (* Untypable *)
 structure S = struct structure T = struct datatype t = C of int end end
 datatype t1 = C of bool

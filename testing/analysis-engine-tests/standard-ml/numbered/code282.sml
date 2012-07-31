@@ -1,3 +1,5 @@
+(* old test case name: code282.sml *)
+
 (* untypable *)
 exception f
 val (f x) = 2

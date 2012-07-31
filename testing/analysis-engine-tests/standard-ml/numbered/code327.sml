@@ -1,3 +1,5 @@
+(* old test case name: code327.sml *)
+
 #!/usr/bin/env smlnj-script
 (*-*-SML-*-*)
 

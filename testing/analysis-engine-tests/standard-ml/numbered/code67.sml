@@ -1,3 +1,5 @@
+(* old test case name: code67.sml *)
+
 (* type errors involving records *)
 fun f x y z = (z x, z y)
 val ex1 = (fn {x = x, y = y, ...} => f x y) {x = true, y = 1}

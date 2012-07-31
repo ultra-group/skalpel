@@ -1,3 +1,5 @@
+(* old test case name: code245.sml *)
+
 (* An error reports that t cannot be both:
  * - a datatype in the signature
  * - a type in the structure *)

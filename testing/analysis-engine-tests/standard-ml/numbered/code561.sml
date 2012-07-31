@@ -1,3 +1,5 @@
+(* old test case name: code561.sml *)
+
 (* Untypable *)
 
 functor F (val x : ((int -> int) * bool)) =

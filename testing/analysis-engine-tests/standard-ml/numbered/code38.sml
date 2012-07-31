@@ -1,3 +1,5 @@
+(* old test case name: code38.sml *)
+
 let
     val f = fn x : (int t, bool) t => x
     val rec g = fn x : bool => x

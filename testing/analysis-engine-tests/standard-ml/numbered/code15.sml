@@ -1,3 +1,5 @@
+(* old test case name: code15.sml *)
+
 (* This is a typical example that would benefit from a merging of slices. *)
 let
     val rec constList =

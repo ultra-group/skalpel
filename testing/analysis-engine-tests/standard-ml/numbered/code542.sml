@@ -1,3 +1,5 @@
+(* old test case name: code542.sml *)
+
 (* Typable. *)
 
 signature s1 = sig val x : unit end

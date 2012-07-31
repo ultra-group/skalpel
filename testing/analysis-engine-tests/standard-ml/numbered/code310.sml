@@ -1,3 +1,5 @@
+(* old test case name: code310.sml *)
+
 (* In SML/NJ: *)
 datatype t = T of int | U of int * int | V of int
 fun f1 (true | false) = ()

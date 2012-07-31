@@ -1,3 +1,5 @@
+(* old test case name: code120.sml *)
+
 datatype t = y
 fun g  x y =
     let

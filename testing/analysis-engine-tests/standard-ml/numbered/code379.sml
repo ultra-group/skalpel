@@ -1,3 +1,5 @@
+(* old test case name: code379.sml *)
+
 (* untypable *)
 signature s = sig
     structure X : sig type t end

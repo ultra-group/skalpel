@@ -1,3 +1,5 @@
+(* old test case name: code321.sml *)
+
 (* This does not seem to be allowed in SML *)
 structure S =
 struct

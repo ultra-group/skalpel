@@ -1,3 +1,5 @@
+(* old test case name: code466.sml *)
+
 (* Untypable *)
 functor F (S : sig type t val x : t -> int val y : t end) = struct
   val _ = S.x S.y

@@ -1,3 +1,5 @@
+(* old test case name: code493.sml *)
+
 (* Untypable *)
 signature s = sig structure V : sig type t val x : t end end where type V.t = int
 (*structure S :> s = _S*)

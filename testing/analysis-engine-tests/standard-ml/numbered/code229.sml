@@ -1,3 +1,5 @@
+(* old test case name: code229.sml *)
+
 (* Here is a typical error report, for comparison:
 
 ex4.sml:10.9-10.22 Error: operator and operand don't agree [literal]

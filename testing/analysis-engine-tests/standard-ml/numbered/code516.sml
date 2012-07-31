@@ -1,3 +1,5 @@
+(* old test case name: code516.sml *)
+
 (* Example using abstype *)
 datatype t = T of int
 

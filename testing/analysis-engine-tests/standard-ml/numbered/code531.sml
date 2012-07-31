@@ -1,3 +1,5 @@
+(* old test case name: code531.sml *)
+
 (* Untypable because of the value polymorphism restriction. *)
 (* Similar to 530 but a bit more longer. *)
 

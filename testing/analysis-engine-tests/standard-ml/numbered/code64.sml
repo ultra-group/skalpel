@@ -1,3 +1,5 @@
+(* old test case name: code64.sml *)
+
 datatype 'a t = C
 datatype u = D
 val ex1 = fn z => (z C, z D)

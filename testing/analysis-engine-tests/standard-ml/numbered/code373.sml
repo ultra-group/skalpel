@@ -1,3 +1,5 @@
+(* old test case name: code373.sml *)
+
 (* untypable *)
 val f = let val x = [] in x end
 val g = f;

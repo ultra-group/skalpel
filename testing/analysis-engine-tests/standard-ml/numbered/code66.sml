@@ -1,3 +1,5 @@
+(* old test case name: code66.sml *)
+
 (* unresolved flexible record types *)
 (* polymorphic records is a medium change in Successor ML *)
 (* we don't catch this kind of error yet *)

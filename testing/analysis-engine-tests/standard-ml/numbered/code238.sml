@@ -1,3 +1,5 @@
+(* old test case name: code238.sml *)
+
 (* highlighting of forcing of statuses *)
 fun f () = ()
   | f () = ()

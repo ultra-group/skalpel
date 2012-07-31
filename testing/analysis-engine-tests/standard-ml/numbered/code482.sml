@@ -1,3 +1,5 @@
+(* old test case name: code482.sml *)
+
 (* Untypable - f is the same in S and T and is monomorphic *)
 structure X = struct
   structure S = struct

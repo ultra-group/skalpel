@@ -1,3 +1,5 @@
+(* old test case name: code2.sml *)
+
 (* Type constructor clash involving datatype declarations.
  *
  * The programming error is that we wrote 'c instead of 'b in

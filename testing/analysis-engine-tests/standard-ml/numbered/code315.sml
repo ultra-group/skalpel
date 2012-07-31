@@ -1,3 +1,5 @@
+(* old test case name: code315.sml *)
+
 (* EXAMPLE1
  * We can have hidden specifications as follows: *)
 (**SML-TES-SPEC val x : int*)

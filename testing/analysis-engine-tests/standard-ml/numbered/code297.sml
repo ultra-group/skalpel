@@ -1,3 +1,5 @@
+(* old test case name: code297.sml *)
+
 datatype t = f | g of int
 (* untypable because f is of type t and not unit *)
 val f = ()

@@ -1,3 +1,5 @@
+(* old test case name: code252.sml *)
+
 (* untypable *)
 val x = true
 local

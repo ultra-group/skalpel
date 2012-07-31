@@ -1,3 +1,5 @@
+(* old test case name: code525.sml *)
+
 (* Untypable
  *
  * Error involving a functor, an opaque signature and a where clause. *)

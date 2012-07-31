@@ -1,3 +1,5 @@
+(* old test case name: code446.sml *)
+
 (*EXAMPLE1: Untypable*)
 val _ = fn z => let val x = 1
 		    val _ = let val y = z

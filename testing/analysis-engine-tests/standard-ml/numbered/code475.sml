@@ -1,3 +1,5 @@
+(* old test case name: code475.sml *)
+
 (* Untypable, but typable when replacing true by 1. *)
 functor F (S : sig val f : int -> int end) : sig val g : int -> int end = struct
 val _ = S.f 1

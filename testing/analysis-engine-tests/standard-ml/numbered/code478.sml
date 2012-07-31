@@ -1,3 +1,5 @@
+(* old test case name: code478.sml *)
+
 fun sumList nil z = z
   | sumList (h::t) z = sumList t (h+z);
 

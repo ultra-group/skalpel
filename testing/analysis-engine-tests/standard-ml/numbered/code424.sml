@@ -1,3 +1,5 @@
+(* old test case name: code424.sml *)
+
 (* Untypable *)
 structure S = struct val f = (fn _ => fn _ => 0) () end
 open S

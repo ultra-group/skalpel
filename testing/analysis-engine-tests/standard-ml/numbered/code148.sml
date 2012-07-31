@@ -1,3 +1,5 @@
+(* old test case name: code148.sml *)
+
 val v1 = 1
 val v2 = 2
 val v3 = 3
