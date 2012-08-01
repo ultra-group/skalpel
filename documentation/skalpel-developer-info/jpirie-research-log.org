@@ -32,7 +32,7 @@ The documentation for how to add tests to the test database is
 outdated. Update it ASAP.
 
 * TODOs
-** Test framework [20%]
+** Test framework [28%]
 *** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
 
   I *must* update this aspect to the test framework soon, ideally
@@ -67,7 +67,7 @@ the CM files if I remember correctly. This is the sort of thing that
 the test framework would pick up on, and have to make the necessary
 changes to the MLB files after an attempt at conversion has been made.
 
-*** TODO (2012-06-29-12:59) Test framework detecting diffs from previous runs
+*** DONE (2012-06-29-12:59) Test framework detecting diffs from previous runs
 
   When sending e-mails, the test framework is showing differences
   between the tests today and the tests the previous day, so if I don't
@@ -1722,11 +1722,358 @@ steps. Once the webdemo is working I need to think about:
 -> how can the test framework be extended to test the web demo,
    because mark my words it will break again.
 
+(2012-07-31-13:11)
+
+Right, so after spitting out the errors to the log files that are
+output by slicing.cgi (these appear in /tmp on the www2 server) it is
+indeed complaining about libgmp.so.3. I've included this in
+LD_LIBRARY_PATH.
+
+The skalpel analysis engine binary is complaining that an input file
+is not being specified now so I'm changing slicing.cgi on the fly. I'm
+documenting my changes here so that I can repeat them on the
+slicing.cgi file that sits in the repository and install the website
+and webdemo from scratch. At the moment, I'm changing a temporary
+file and the files will be destroyed.
+
+System call line changed to the following:
+
+system("LD_LIBRARY_PATH=.:./bin/:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; ./bin/slicer -b 2 ./lib/basis.sml -s /tmp/$session.sml -p /tmp/$session.sml.pl &> /tmp/$session.log");
+
+The binary (./bin/slicer) is now the skalpel binary from my bin/
+folder of the repository (so it is not actually the webdemo binary, it
+is the standard binary with the name change). An error is reported
+that an input file is not specified (makes sense, because it isn't
+specified in the system line).
+
+(2012-07-31-13:24)
+
+Huzzah! I got some slices! How nice. Another change to the system
+line, it is now as follows:
+
+system("LD_LIBRARY_PATH=.:./bin/:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; ./bin/slicer -b 2 ./lib/basis.sml -s /tmp/$session.sml -p /tmp/$session.sml.pl &> /tmp/$session.log");
+
+The change is that skalpel no longer thinks the input file is an sml
+that it should be outputting information too. This fixes the actual
+analysis engine process up, and this works fine.
+
+The user is taken automatically to a url like the following:
+
+http://www.macs.hw.ac.uk/ultra/skalpel/tmp/50/5017/5017cf1b6273.html
+
+From the original location of:
+
+http://www2.macs.hw.ac.uk/cgi-bin/cgiwrap/~jp95/slicer/slicing.cgi
+
+This URL they are taken to is incorrect. It should be this:
+
+http://www.macs.hw.ac.uk/~jp95/cgi-bin/slicer/tmp/50/5017/5017cf1b6273.html
+
+If they are taken to that URL then the user will be able to see type
+error slices for the code.
+
+Also, what is going on with the link when the user clicks on 'Online
+demo'. From http://www.macs.hw.ac.uk/ultra/skalpel/index.html the user
+is directed to
+http://www2.macs.hw.ac.uk/cgi-bin/cgiwrap/~jp95/slicer/slicing.cgi,
+but from
+http://www2.macs.hw.ac.uk/cgi-bin/cgiwrap/~jp95/slicer/slicing.cgi the
+user is directed to
+http://www2.macs.hw.ac.uk/cgi-bin/cgiwrap/~jp95/skalpel/slicing.cgi,
+which is a directory that does not exist. The folder I have is called
+'slicer' and not 'skalpel' (it should probably be called
+'skalpel'). The point is that these links are pointing to two
+different locations, this shouldn't be a circumstance that can
+arise. This will need to be fixed also.
+
+(2012-07-31-13:32)
+
+I'm going to dare to apply the changes I have made so far and install
+the website and webdemo. I remember I updated the documentation for
+this so hopefully everything will still be fine.....
+
+(2012-07-31-13:36)
+
+In the webdemo Makefile, I'm updating my location of the webdemoAdr2
+to be:
+
+webdemoAdr2 = ${macs2}"cgi-bin/cgiwrap/~jp95"/skalpel
+
+instead of
+
+webdemoAdr2 = ${macs2}"cgi-bin/cgiwrap/~jp95"/slicer
+
+'slicer' folder in my cgi-bin director has been moved to slicer-old for
+backup. I expect to find a new 'skalpel' directory in its
+place. Skalpel website is also backed up to
+/home/www/macs/ultra/skalpel-backup (from /home/www/macs/ultra/skalpel).
+
+(2012-07-31-13:43)
+
+Yes, this is now a little more complicated. Programs and libraries are
+missing from the webserver that are needed to install the website and
+webdemo (because we do things like compile the analysis engine binary,
+generated documentation using org to html conversion, etc).
+
+For the moment, I'm going to add the relevant libraries to my
+LD_LIBRARY_PATH and try and work round it that way. I'll have to
+e-mail Steve about this.
+
+** 2012-08-01
+
+(2012-08-01-05:53)
+
+Can't sleep, must be the excitement of solving all problems... :-)
+
+I'm trying to get the webdemo working through things that I shouldn't
+have to do, I'll probably e-mail Steve even if I get this working.
+
+The ls command and the cp command don't work due to the following
+missing libraries:
+
+libacl.so.1
+libattr.so.1
+libselinux.so.1
+libsepol.so.1
+
+I have added these to my home directory (copied from lxultra8) and
+used the LD_LIBRARY_PATH environment variable to allow the webserver
+system to find them, and I'm now able to use ls. Huzzah! Hopefully I
+will also be able to use cp.
+
+(2012-08-01-05:57)
+
+Emacs does not work though, missing libgtk-x11-2.0.so.0. Hopefully I
+won't need to fix that problem as I might be able to avoid using it on
+the www server...
+
+(2012-08-01-05:58)
+
+cp works! A luxury indeed! The broken Emacs though is breaking the
+webdemo installation as alas it is needed to convert sml.org into
+sml.html for viewing on the web. Copying this library from lxultra8 in
+the hope that will sort things out...
+
+Also copying some files to get zsh working, that shell is more
+powerful so I prefer it. It's not critical to get this working though
+and other users may not use this shell, but I'll list this here anyway
+in case I need to find it again. Here's the libraries I've taken from
+lxultra8 in total:
+
+For basic shell functionality:
+libacl.so.1
+libattr.so.1
+libselinux.so.1
+libsepol.so.1
+
+For Emacs:
+libgdk-x11-2.0.so.0
+libgtk-x11-2.0.so.0
+libatk-1.0.so.0
+libgdk_pixbuf-2.0.so.0
+libpangocairo-1.0.so.0
+libpango-1.0.so.0
+libcairo.so.2
+libgobject-2.0.so.0
+libgmodule-2.0.so.0
+libglib-2.0.so.0
+libSM.so.6
+libICE.so.6
+libtiff.so.3
+libjpeg.so.62
+libpng12.so.0
+libz.so.1
+libXpm.so.4
+libX11.so.6
+libXrender.so.1
+libXft.so.2
+libfontconfig.so.1
+libfreetype.so.6
+libasound.so.2
+librsvg-2.so.2
+libdbus-1.so.3
+libgpm.so.1
+libncurses.so.5
+libgconf-2.so.4
+libORBit-2.so.0
+libgthread-2.0.so.0
+libXext.so.6
+libXinerama.so.1
+libXi.so.6
+libXrandr.so.2
+libXcursor.so.1
+libXcursor.so.1
+libXcursor.so.1
+libXcursor.so.1
+libXfixes.so.3
+libpangoft2-1.0.so.0
+libXau.so.6
+libXdmcp.so.6
+libexpat.so.0
+libxml2.so.2
+libcap.so.1
+libdbus-glib-1.so.2
+libssl.so.6
+libcrypto.so.6
+libavahi-glib.so.1
+libavahi-common.so.3
+libavahi-client.so.3
+Rlibbz2.so.1
+libgssapi_krb5.so.2
+libkrb5.so.3
+libcom_err.so.2
+libk5crypto.so.3
+libkrb5support.so.0
+libkeyutils.so.1
+
+For zsh shell:
+libgdbm.so.2
+libncursesw.so.5
+
+(2012-08-01-07:17)
+
+Erm, that was more libraries than I thought! Oh well. I used this
+command (which could be improved upon) to copy these files, might come
+in useful:
+
+(error=`ls ~/ > /dev/null; emacs --version 2>&1 | grep "error" | sed s/".*libraries: "// | sed s/": cannot.*"//`
+echo "handling: \"$error\"..."
+ssh lxultra8 "cp /lib/$error ~/ 2>/dev/null; cp /usr/lib/$error ~/ 2>/dev/null"
+)
+
+This just strips the name of the library that has not been found and
+tries to copy it from /lib and /usr/lib on lxultra8, silently failing
+when it doesn't copy the errors. This could be put in a loop to speed
+things up (but if anyone reading this does this, do something when
+silent failures happen otherwise the script will loop forever if a
+library doesn't exist on lxultra8 in either location).
+
+Ok, running the webdemo script again.
+
+(2012-08-01-07:21)
+
+The webdemo script is now failing because it can't find the code*.sml
+files. Ok, this is good, this is one of the errors that I expected to
+fix in the first place.
+
+For the moment I'm just going to tell the webdemo script that the
+files are in the numbered/ folder of the skalpel repository, as it'll
+find all the code files it wants there.
+
+(2012-08-01-07:26)
+
+The webdemo doesn't actually edit the users public_html directory to
+put the webdemo there. Placing the directory manually.
+
+(2012-08-01-07:30)
+
+Great! Some things work, some things don't. All menu bar links to the
+left hand side of the web pages seem to work absolutely fine so that's
+a win. Here's what needs to be changed:
+
+1. code examples don't show up on the example page
+2. when running code examples (tested manually), the user gets sent to
+   the wrong URL to view the slice
+3. webdemo installation should copy install files to the cgi-bin
+   folder of the user executing the install script, otherwise the user
+   will be sent from the www server to a nonexistant cgi-bin
+   directory.
+
+(2012-08-01-09:00)
+
+I notice that the skalpel binary has not been created. The webdemo
+isn't producing any slices, this is probably why. The name of the
+skalpel binary has changed since the last installation, so it's
+probably something to do with that.
+
+(2012-08-01-09:06)
+
+Actually, it doesn't:
+
+make[1]: Entering directory `/u1/pg/jp95/repos/skalpel/analysis-engines/standard-ml'
+mllex  parse/ML.lex
+mllex: error while loading shared libraries: libgmp.so.3: cannot open shared object file: No such file or directory
+make[1]: *** [mlton-base] Error 127
+
+I guess I need to add the limgmp.so.3 library to my nice large list of
+files. It seems to be working for me so far to locate and place
+binaries in my LD_LIBRARY_PATH, so I'll just continue!
+
+(2012-08-01-09:16)
+
+This doesn't work, the web demo fails to create the analysis engine
+binary. I'm going to change it so that the user specifies the location
+of the analysis engine binary, it'll be better than the web demo
+building it anyway because it's slow.
+
+(2012-08-01-09:54)
+
+Alright, the links problem is fixed, the user should be able to get to
+the page showing the slices. Pity there aren't any! No slices are
+showing for any input, which must be some problem involving the
+binary, looking into it now.
+
+(2012-08-01-10:27)
+
+Right so when the webdemo runs I now get this error:
+
+./bin/skalpel: error while loading shared libraries: libgmp.so.3: cannot open shared object file: No such file or dire
+ctory
+
+That's about as far as I can go with this. I can't just provide this
+file, as there are other dependencies that file is linked to which
+don't exist. When Steve installs the gmp library, the webdemo should
+be fully working aside from the code needed to read the new locations
+of the code*.sml files.
+
+(2012-08-01-14:48)
+
+updateexamples is the script responsible for updating the code*.sml
+files. I think it's looping infinitely...
+
+(2012-08-01-15:24)
+
+These webdemo scripts are a bit ruthless on the developer when one
+makes a mistake (sometimes we put a / at the end of directory paths in
+variables, sometimes we don't. If you use the wrong one strange things
+can happen such as a script looping infinitely). Got to look out for
+that!
+
+Anyway, the web demo now detects the code files from the test database
+location (because the numbered code files haven't had their names
+changed. It might indeed be good to have some conversion mechanism so
+that the web demo can still understand it.
+
+So the bottom line is everything looks like it's working, so when the
+gmp library gets installed we should have a working webdemo.
+
+(2012-08-01-16:21)
+
+I've managed to get the dependancy list for the web demo down
+significantly from about 60 packages. I've added another make target
+that will generate files in the repository (such as building the
+analysis engine binary, getting an html file from sml.org and so on),
+with the idea in mind that the developer can run that make target on
+their normal machine (in my case lxultra8), then just run a cut-down
+version of make install-webdemo on the web server. It's much better
+this way anyway, compiling binaries on the web server isn't a great
+idea anyway.
+
+We do certainly need to be able to run the analysis engine binary
+though, no getting away from that. I'll get on to Steve now to install
+the gmp library, but I won't mention the others; we don't need to be
+able to compile the analysis engine on the web server.
+
+(2012-08-01-20:42)
+
+I've made a few updates to the poster, looks like I'm going to get a
+fair amount of space to play with by the time I've made these
+edits.
+
+The test framework should be able to check the website for dead links
+tomorrow, it failed its test this morning to do that because I was
+busy installing and uninstalling it during all this webdemo
+installation.
+
 * Next meeting with Joe
 
-- (switch-buffer) defadvice to not create new buffer?
-- resits for foundations 2 and formal spec?
-- Asking the user to submit automatically sml code for skalpel database?
-- Research open day poster, look at the new version
-- Equality type endpoint locations
-- Correctness of equality type tests in the test framework
