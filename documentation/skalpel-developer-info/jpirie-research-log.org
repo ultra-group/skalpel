@@ -2075,5 +2075,113 @@ tomorrow, it failed its test this morning to do that because I was
 busy installing and uninstalling it during all this webdemo
 installation.
 
+** 2012-08-02
+
+(2012-08-02-12:42)
+
+I'm still working on getting the webdemo working, I realise that the
+gmp errors are coming the fact that web server runs a different
+machine architecture to lxultra8. This means that skalpel needs to be
+compiled on the webserver.
+
+I'm hoping that after re-installing on the web server's 64-bit
+architecture I'll be able to compile skalpel on it. I'm trying to
+compile mlton on it now but I remember that compiling mlton requires
+an SML compiler to be installed which is annoying. I'll have to
+install Poly/ML and try to compile MLton with that. I'm determined to
+get around to working on equality types today, I don't want to loose
+all days installing software and fiddling with libraries.
+
+(2012-08-02-12:48)
+
+Installing Poly/ML now to ~/software-64. I'll make this a publicly
+accessible folder so that anyone can run the binaries inside.
+
+(2012-08-02-12:53)
+
+To install MLton with Poly/ML, use the 'make polyml-mlton' command. I
+couldn't find this information in the installation document on the
+website so I've put it here.
+
+Apparently that only gets you so far through the installation then the
+compiler defaults back to mlton. What seems to happen is that the
+Makefile from the root of the source download heads into the mlton/
+folder of the sources and runs 'make polyml-mlton' which then dies
+because mlton is not installed.
+
+(2012-08-02-13:13)
+
+Okay, so part of the output when compiling MLton with Poly/ML is this:
+
+-bash-4.1$ make polyml-mlton
+[...]
+/bin/sh: mlton: command not found
+make: mlton: Command not found
+make: mlton: Command not found
+make: mlton: Command not found
+make: mlton: Command not found
+make -C front-end ml.lex.sml
+make[1]: Entering directory `/u1/pg/jp95/software-64/mlton-20100608/mlton/front-end'
+rm -f ml.lex.sml
+no-mllex ml.lex
+make[1]: no-mllex: Command not found
+make[1]: *** [ml.lex.sml] Error 127
+make[1]: Leaving directory `/u1/pg/jp95/software-64/mlton-20100608/mlton/front-end'
+make: *** [front-end/ml.lex.sml] Error 2
+
+It seems to proceed on anyway and say that the no-mllex command is not
+found. After looking in the sources, I've found that if the compiler
+can't find ml-lex, then it changes the name of the command to execute
+to 'no-mllex' ending up with the output:
+
+make[1]: no-mllex: Command not found
+
+even though no-mllex is not a command.
+
+It's proceeding with the installation so I'm going to try and install
+PART of the SML/NJ compiler on the web server (the full thing can't be
+installed, because SML/NJ does not run on 64 bit architecture
+machines). Hopefully I can build ml-lex and ml-yacc and that will
+help.
+
+(2012-08-02-13:35)
+
+"Running ./build requires a properly functioning installation of
+SML/NJ."
+
+./build is a script in the SML/NJ sources. So I can't build
+ml-lex. Hmm
+
+(2012-08-02-13:49)
+
+I have managed to copy ml-lex and ml-yacc from a machine I own of the
+same architecture to the web server which just so happens to run
+(usually, there would be library problems with this).
+
+Now I'm getting this: "cc: mlton-polyml.o: No such file or
+directory". Fantastic, that's not useful. There are still mlton errors
+on the previous lines though that are spat out because MLton is not
+installed. How am I supposed to build this software if I don't have it
+already installed? This is just a nightmare. I'm going to try fiddling
+around with a few things but then I'm going to move on to equality
+types, or this is just going to eat all my time.
+
+(2012-08-02-14:17)
+
+Steve e-mailed me to tell me that mlton was installed on a test system
+for me to look at before it was installed system-wide. As a stroke of
+luck, I noticed that mlton was installed on a 64 bit test system
+(osiris). The mlton binary was compiled with that and used to install
+the webdemo, and now we have a working web demo! Thank god for that.
+
+I'm going to test the poly/ml installation that steve has on the test
+system, then if that's fine I'll ask him to roll that out system wide
+along with rlwrap and mlton.
+
+(2012-08-02-16:12)
+
+Going to work on the poster for the rest of the day, and spend
+at least the majority of tomorrow on equality types.
+
 * Next meeting with Joe
 
