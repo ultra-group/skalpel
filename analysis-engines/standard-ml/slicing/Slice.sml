@@ -1004,7 +1004,10 @@ fun printSlice' slprog indent sep =
 	    in (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printIdent (A.Ident (s, _, r, _, _))             _   = (getLine [r], getLine [r], getCol [r], s)
+	and printIdent (A.Ident (s, _, r, label, _))         _   =
+	    if true
+	    then (getLine [r], getLine [r], getCol [r], s^"(LABEL="^L.printLab(label)^")")
+	    else (getLine [r], getLine [r], getCol [r], s)
 	  | printIdent (A.IdentPcon pc)                      ind = printPcon pc ind
 	  | printIdent A.IdentDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
@@ -1364,7 +1367,7 @@ fun printSlice' slprog indent sep =
 	    end
 	  | printLDatName A.LDatNameDots                     _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printDatBind (A.DatBind (dn, tcs, r, _, _))      ind =
+	and printDatBind (A.DatBind (dn, tcs, r, label, _))      ind =
 	    let val (l1, k1, c1, x) = printDatName dn ind
 		val (l2, k2, c2, y) = printConBindSeq tcs ind
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
