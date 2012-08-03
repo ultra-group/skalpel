@@ -361,9 +361,9 @@ fun createOneErrFileAlready file fop =
 fun convertToFull file fop fnames =
     case tokenizeSt file of
 	[x] => (let
-		    val _ = D.printDebugFunc 2 D.PARSER (fn _ => "Getting full path of "^x^"...\n")
+		    val _ = D.printDebugFeature D.PARSER D.PARSING (fn _ => "Getting full path of "^x^"...\n")
 		    val f = OS.FileSys.fullPath x
-		    val _ = D.printDebugFunc 1 D.PARSER (fn _ => "Opening file with full path: "^x)
+		    val _ = D.printDebugFeature D.PARSER D.PARSING (fn _ => "Opening file with full path: "^x)
 		in if OS.FileSys.isDir f orelse OS.FileSys.isLink f
 		   then createOneErrFileAccess file fop
 		   else if Tools.isin f fnames
@@ -473,6 +473,7 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 			 []
 			 webdemo
 	val basisVal' = case (checkABas progs, basisVal) of (false, 2) => 1 | _ => basisVal
+	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => Slicing.printSlice (A.Progs progs) true)
     in (A.Progs progs, m, masc, basisVal')
     end
 

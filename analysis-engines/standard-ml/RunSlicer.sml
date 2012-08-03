@@ -47,7 +47,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "196116a472c1de373ef67288cd2c6a87f3339ffc"
+val SKALPEL_VERSION = "VERSION_HERE"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -124,10 +124,8 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 	     then
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
-		     val _ = D.printDebug 1 D.RUN "executing shell scripts for terminal slice display..."
 		     val execAll = OS.Process.system( ("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
 						       "; for FILE in "^ffile^"*.sh; do ./$FILE; done;") )  handle OS.SysErr (str, opt) => raise Fail str
-		     val _ = D.printDebug 1 D.RUN "finished executing shell scripts for terminal slice display."
 		 in
 		     ()
 		 end
@@ -222,9 +220,9 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 
 	(* handle errors depending on the developer option *)
 	val (bfm, msg) = if dev
-			 then (D.printDebug 1 D.RUN "running without error handlers in place"; run ())
+			 then run ()
 			      handle EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
-			 else (D.printDebug 1 D.RUN "running with error handlers in place"; run ())
+			 else run ()
 			      handle EH.DeadBranch st => (print "the slicer encountered an impossible case\n"; (false, st))
 				   | EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
 				   | Fail st => (print ("Error: "^st^"\n"); (false, ""))
@@ -383,10 +381,17 @@ fun smlTesStrArgs strArgs =
 				    \    -p <file> place output in <file> in perl format\n\
 				    \    -t <timelimet> specify a numerical time limit\n\
 				    \    -x <true/false> suppress exception handling (dev mode)\n\
-				    \    -c <directory> Run analysis-engine on tests in <directory>\n\
+				    \    -c <directory> Run analysis engine on tests in <directory>\n\
 				    \    -e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)\n\
 				    \    -b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
-				    \    -d <0 | 1 | 2 | 3> Set debug print statement depth (higher = more detail)\n\
+				    \    -d PARSING \t shows debugging output during parsing various files\n\
+				    \       ONE_RUN \t give debug output only once (don't show during minimisation process)\n\
+				    \       STATE   \t gives internal state output\n\
+				    \       TESTING \t shows debugging info when running the test database\n\
+				    \       CONSTRAINT_GENERATION \t shows constraint generation debugging information\n\
+				    \       CONSTRAINT_SOLVING \t shows constraint solving debugging information\n\
+				    \       PROGRAM_LABELLING \t gives a labelled program output\n\
+				    \       EQUALITY_TYPES \t debugging information for equality types\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
 				    \    -sol <solution> define solution to use (default 9)\n\
@@ -447,6 +452,7 @@ fun smlTesStrArgs strArgs =
 			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
 			* be able to toggle such an option, but for the moment this is simply disabled *)
 		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
+		     |  "PROGRAM_LABELLING" => (D.enableDebugFeature D.PROGRAM_LABELLING)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
 		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)

@@ -485,15 +485,15 @@ and eqTy (TYPE_VAR (tv1, _, _, _)) (TYPE_VAR (tv2, _, _, _)) =
 fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 
 (* increments the ref associated with the function name *)
-fun freshTypeVar     () = (D.printDebug 3 D.TY ("generating fresh AVar for typeVar ("^(Int.toString (!nextTypeVar))^")");         freshAVar nextTypeVar)
-fun freshRowVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for rowVar ("^(Int.toString (!nextRowVar))^")");       freshAVar nextRowVar)
-fun freshEqualityTypeVar () = (D.printDebug 3 D.TY ("generating fresh AVar for equalityTypeVar ("^(Int.toString (!nextEqualityTypeVar))^")");       freshAVar nextEqualityTypeVar)
-fun freshTypenameVar () = (D.printDebug 3 D.TY ("generating fresh AVar for typenameVar ("^(Int.toString (!nextTypenameVar))^")"); freshAVar nextTypenameVar)
-fun freshLabelVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for labelVar ("^(Int.toString (!nextLabelVar))^")");       freshAVar nextLabelVar)
-fun freshFieldVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for fieldVar ("^(Int.toString (!nextFieldVar))^")");       freshAVar nextFieldVar)
-fun freshTypeFunctionVar    () = (D.printDebug 3 D.TY ("generating fresh AVar for typeFunctionVar ("^(Int.toString (!nextTypeFunctionVar))^")");       freshAVar nextTypeFunctionVar)
-fun freshTypename    () = (D.printDebug 3 D.TY ("generating fresh AVar for name ("^(Int.toString (!nextTypename))^")");         freshAVar nextTypename)
-fun freshidor      () = (D.printDebug 3 D.TY ("generating fresh AVar for idor ("^(Int.toString (!nextidor))^")");           freshAVar nextidor)
+fun freshTypeVar         () = freshAVar nextTypeVar
+fun freshRowVar          () = freshAVar nextRowVar
+fun freshEqualityTypeVar () = freshAVar nextEqualityTypeVar
+fun freshTypenameVar     () = freshAVar nextTypenameVar
+fun freshLabelVar        () = freshAVar nextLabelVar
+fun freshFieldVar        () = freshAVar nextFieldVar
+fun freshTypeFunctionVar () = freshAVar nextTypeFunctionVar
+fun freshTypename        () = freshAVar nextTypename
+fun freshidor            () = freshAVar nextidor
 
 fun getTypenameString "unit"      = CONSRECORD
   | getTypenameString "int"       = CONSINT

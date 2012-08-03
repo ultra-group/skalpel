@@ -20,12 +20,6 @@ UPDATE: deps is always empty, though I'm now using it for the equality
 type endpoint labels as it's rather handy. Still don't know about the
 ids values, I'll need to look into that.
 
-(2012-07-25-11:36)
-
-The skalpel help displayed at the command line does not accurately
-reflect the parameters that skalpel takes (debugging parameters need
-to be updated).
-
 (2012-07-26-19:21)
 
 The documentation for how to add tests to the test database is
@@ -1589,6 +1583,59 @@ The Skalpel analysis engine binary now can export JSON correctly for
 use in the test framework apart from the use of the \n separator which
 has to be removed manually. There should really be a command line
 argument option so that this does not have to happen.
+
+** 2012-08-03
+
+(2012-08-03-11:26)
+
+It occurs to me that being able to print out a program with its label
+information would actually be very useful. I'm getting debug output
+like this:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19686) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40162] and Labels = [40161,40162]
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19691) and EQUALITY_TYPE_STATUS(EQUALITY_TYPE). Deps = [] and Labels = [40164]
+
+There's nothing really wrong with this except that I can see that for
+example equality type variable 19686 is being constrained to be
+NOT_EQUALITY_TYPE which comes from the endpoint label 40162. But what
+is that label? I actually know what it is, because the program is so
+small there's only one location that could actually have come from,
+but in cases where the label output is larger it can be more difficult
+to find out why different constraints are being made at any given
+time.
+
+I don't know how much work this would be (hopefully little work), but
+something to think about.
+
+(2012-08-03-12:36)
+
+In the Slice.sml file we basically have a bunch of functions which
+handle every datatype constructor from the abstract syntax tree and
+print it out. The datatype constructors from this tree basically have
+label information everywhere anyway.
+
+If I could re-use that function to print out a 'slice' of the entire
+file, with with some option enabled to print label information, that
+that would give me what I need.
+
+(2012-08-03-13:09)
+
+There might be something here to do exactly what I want, I was using
+the printSlice function but using the printAstProgs function will
+print the information for me which is exactly what I want.
+
+It would be nice to get the label information output in more readable
+format, ideally in the same format that is presented in the papers,
+automatically. I guess I should just be able to do this by parsing the
+output of printAstProgs and just turning it into latex. Something to
+think about certainly.
+
+(2012-08-03-13:20)
+
+printAstProgs doesn't store things like \n characters and spacial
+information, which isn't actually surprising. Maybe it's best to use
+printSlice after all and just extend that...
 
 * Next meeting with Joe
 

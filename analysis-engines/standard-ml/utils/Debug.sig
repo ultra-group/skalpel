@@ -43,6 +43,7 @@ signature DEBUG = sig
 			  | TESTING
 			  | PARSING
 			  | STATE
+			  | PROGRAM_LABELLING
 
     val sep1' : string
     val sep2' : string
@@ -50,14 +51,9 @@ signature DEBUG = sig
     val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string}
     val textReset : string
 
-    (* sets all debugging values to the integer value *)
-    val setAllDebug : int -> unit
-
     val enableDebugFeature : debugFeature -> unit
 
     val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
-    val printDebug       : int -> debugFiles -> string -> unit
-    val printDebugFunc   : int -> debugFiles -> (unit -> string) -> unit
 
     val checkOneRunOnly  : unit -> unit
 
