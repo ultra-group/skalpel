@@ -1621,7 +1621,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
 	   and f_typevarbind (A.TypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebug 2 D.AZE ("in f_typevarbind - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarbind - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
@@ -1629,7 +1629,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarbind (A.EqualityTypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebug 2 D.AZE ("in f_typevarbind - generating constraints for A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarbind - generating constraints for A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
@@ -2220,16 +2220,14 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   and f_typevarval (A.TypeVar (_, n, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypeVar")
-		   val _   = D.printDebug 2 D.AZE ("in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarval (A.EqualityTypeVar (_, n, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.EqualityTypeVar (f_typevarval)")
-		   val _   = D.printDebug 2 D.AZE ("in f_typevarval - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarval - generating constraints for A.EqualityTypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
@@ -2539,7 +2537,7 @@ fun generateConstraints' prog pack nenv =
 	    *
 	    *)
 	   and f_typdesc (A.TypDesc (typdescs, _, _)) =
-	       let val _ = D.printDebug 2 D.AZE "generating constraints for A.TypDesc"
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.TypDesc")
 
 		   (* we have f_typdescone over the type descriptions, as there might be multiple of them.
 		    * If there are then each type description will be represented by f_typeNameEnvescone via the map.
@@ -2807,7 +2805,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Ty.tvenv, Env.cst) *)
 	   and f_typevarspec (A.TypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebug 2 D.AZE ("in f_typevarspec - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarspec - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
 		   (* generate some fresh type variables *)
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
@@ -2817,7 +2815,7 @@ fun generateConstraints' prog pack nenv =
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarspec (A.EqualityTypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebug 2 D.AZE ("in f_typevarspec - generating constraints for A.EqualityTypeVar (f_typevarspec; lab = "^Int.toString(L.toInt(lab))^")")
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_typevarspec - generating constraints for A.EqualityTypeVar (f_typevarspec; lab = "^Int.toString(L.toInt(lab))^")")
 		   (* generate some fresh type variables *)
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
@@ -2839,7 +2837,7 @@ fun generateConstraints' prog pack nenv =
 
 	   (* value definitions inside a signature *)
 	   and f_specone (A.SpecValue (valdesc, _, lab, _)) =
-	       let val _   = D.printDebugFunc 2 D.AZE (fn _ => ("in f_specone - generating constraints for A.SpecValue (lab = "^Int.toString(L.toInt(lab))^")"))
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => ("in f_specone - generating constraints for A.SpecValue (lab = "^Int.toString(L.toInt(lab))^")"))
 		   val (vids, cst1, css) = f_valdesc valdesc
 		   (*(2010-06-23)Before we were using f_typevarvallist which generates binders
 		    * of explicit type variables, now we use binders of implicit type variables
@@ -2876,7 +2874,7 @@ fun generateConstraints' prog pack nenv =
 
 	     (* equality types declarations inside a signature *)
 	     | f_specone (A.SpecEqtype (typdesc, _, lab, _)) =
-	       let val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecEqtype (lab = "^Int.toString(L.toInt lab)^")")
 
 		   (* we call f_typdesc so that we can (get/generate)? information about the typdesc (type description? what does that mean?)
 		    * the first element of the tuple represents the list of typenames for the new equality type
@@ -2939,7 +2937,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone (A.SpecDat (datdesc, _, lab, _)) =
 	       let
-		   val _ = D.printDebug 2 D.AZE ("generating constraints for A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "generating constraints for A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
 
 		   val (typenames, typeNameEnv, conss, cst1, cst2, css) = f_datdesc datdesc
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))

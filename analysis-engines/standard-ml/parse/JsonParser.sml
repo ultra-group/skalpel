@@ -351,7 +351,7 @@ fun parseTest testfile =
 		  | str => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind: "^str^")")
 	    end
 
-	fun getErrors (JSON.ARRAY []) = (D.printDebug 1 D.JSON "finished parsing errors object!"; [])
+	fun getErrors (JSON.ARRAY []) = (D.printDebugFeature D.JSON D.PARSING (fn _ => "finished parsing errors object!"); [])
 	  | getErrors (JSON.ARRAY(h::t)) =
 	    let
 		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing errors object. Getting a new error...")

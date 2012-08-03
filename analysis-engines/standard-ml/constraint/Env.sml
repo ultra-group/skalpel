@@ -933,8 +933,7 @@ fun genCstAllGen x1 x2 labs sts cds = EL.consExtLab (x1, x2) labs sts cds
 fun genCstTyAll x1 x2 labs sts cds = TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstTfAll x1 x2 labs sts cds = FUNCTION_TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstEqAll x1 x2 labs sts cds = EQUALITY_TYPE_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
-fun genCstTnAll x1 x2 labs sts cds = (D.printDebug 3 D.ENV ("in genCstTnAll - x1 = "^(T.printtnty x1)^", x2 = "^(T.printtnty x2));
-						  TYPENAME_CONSTRAINT (genCstAllGen x1 x2 labs sts cds))
+fun genCstTnAll x1 x2 labs sts cds = TYPENAME_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstSqAll x1 x2 labs sts cds = ROW_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstRtAll x1 x2 labs sts cds = FIELD_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)
 fun genCstLtAll x1 x2 labs sts cds = LABEL_CONSTRAINT (genCstAllGen x1 x2 labs sts cds)

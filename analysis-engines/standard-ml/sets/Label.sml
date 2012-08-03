@@ -69,7 +69,6 @@ fun getlab    () = !nextlab
 (* generates a new label *)
 fun freshlab  () =
     let
-	val _ = D.printDebug 3 D.LABEL "generating fresh label"
 	val x = !nextlab
     in
 	(nextlab := !nextlab + 1; x)
