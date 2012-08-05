@@ -2230,5 +2230,128 @@ printAstProgs doesn't store things like \n characters and spacial
 information, which isn't actually surprising. Maybe it's best to use
 printSlice after all and just extend that...
 
+** 2012-08-04
+
+(2012-08-04-11:17)
+
+I started working yesterday on a more basic equality types problem
+which showed the problem where labels were not being propagated
+correctly, which is now fixed. Today I'm going to try and compile a
+list of the various equality types features which I have yet to work
+on. I'm also going to extend the work I did on getting labelled
+program output,  and need to look at how the web demo analysis engine
+binary is different from the normal binary, I suspect we make this
+distinction without much justification. Perhaps not, but it's good to
+check these things out.
+
+(2012-08-04-14:39)
+
+Oof, this outputting a labelling program is such a pain because of the
+representation of the abstract syntax tree. Oh well.
+
+I'm making quite heavy use of \operatorname for these purposes. It
+would actually be quite good if Skalpel were to output a .tex file
+with all this information in it and then compile it for me to produce
+a .pdf, but I probably won't have time to do that, at least at the
+moment.
+
+For the meantime I'll just use mathbin to parse the output that the
+analysis engine gives me.
+
+(2012-08-04-16:25)
+
+I've extended the print system now to give out \operatorname for
+anything which isn't a label or some form of dots or bracket when
+slices are output with the PROGRAM_LABELLING debug mode (./skalpel -d
+PROGRAM_LABELLING). I still need to add in some code to export the
+labels along with this information.
+
+I'm going to just do this for the program that I'm working on right
+now as I want to push on and get some of this working.
+
+Note to self, make good use of the extra binding keys on the
+keyboard. Holy jesus they are useful.
+
+(2012-08-04-17:51)
+
+Hm, I'm unsure how to display the label information. I'm just
+intending to put it as superscript but the problem with that is that
+it is confusing to see just what that label represents. We need some
+kind of brackets round the whole thing.
+
+We have a shortage of brackets, hm. I'm going to see what they do in
+the Haack and Wells paper.
+
+(2012-08-04-17:57)
+
+There are examples of program labelling in there but all the labels
+aren't shown, probably because it would blown the user away. For now
+I'm going to use big brackets with \Bigg[ around the labelled stuff
+for now, that will look clear in the latex output at least and should
+be easily changeable.
+
+(2012-08-04-18:19)
+
+Hmm, the new line characters aren't showing up in latex (because latex
+ignores \n, something like \\ will work). I'll have a look and see if
+there's an easy way to change that.
+
+Essentially every \n character when exporting to latex should be
+changed. Should be an easy search and replace right?
+
+(2012-08-04-18:21)
+
+Hm, there are a few places where this could be changed:
+
+1. toString
+2. transfun
+3. sepLines
+4. printProgList
+5. printOneSlice
+6. printSlices
+
+I'll check these out.
+
+(2012-08-04-18:34)
+
+It was the sepLines function. It might be worth checking out some of
+these other functions later to check there's going to be no breakage.
+
+(2012-08-04-19:04)
+
+I'm about half way through the exporting labelled program stuff I
+think. Going to try and finish this off later this evening if I can
+find the time. Looking less likely I'll get that equality type passing
+that I wanted to but this labelled program output will really be
+rather useful so I think it's worth it.
+
+** 2012-08-05
+
+(2012-08-05-03:47)
+
+Hm, I'm still working on getting a labelled program output. This has
+taken more time than I thought it was going to.
+
+This probably would have taken less time if there was a better
+representation of the abstract syntax tree, that's probably something
+worth thinking about.
+
+On the other hand, the abstract syntax tree can be easily changed when
+we move to another language, maybe it's just best to stick with it
+until that point, then we can make a better representation for that.
+
+(2012-08-05-04:42)
+
+Ugh, done at last! There may well be breakages in the test e-mail
+that's going to arrive at 7am, this will happen if I've accidentally
+added debug strings into some of the text that comes out to the case
+where the is *not* supposed to be debug output instead of the other
+way around.
+
+It's an easy fix in any case. I'll look at which tests fail (if any),
+take the constraint generation debug rules to see which abstract
+syntax tree nodes are being visited, and then use that information to
+change the text that's output from Slice.sml.
+
 * Next meeting with Joe
 

@@ -35,6 +35,7 @@ signature DEBUG = sig
 			| ENV      (* Env.sml *)
 			| PARSER   (* Parser.sml *)
 
+    val debugProgramLabelling : bool ref
     val oneRunOnly : bool ref
     val debug : bool ref
     datatype debugFeature = EQUALITY_TYPES

@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli, Chrisitan Haack
+ *  o Authors:     Vincent Rahli, Chrisitan Haack, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Parser.sml
@@ -205,132 +205,6 @@ fun parseTes tesfile stin lab nasc =
     in (A.Prog afs, nxt, nasc)
     end
 
-(*fun printmessages messages = app (fn (x, _, _) => print (x ^ "\n")) messages*)
-
-(*fun messagesToErrors messages =
-      foldr
-	  (fn ((_, msg, reg), (errl, slices)) =>
-	      ((O.empty, O.empty, EK.Parsing msg) :: errl,
-	       (A.ProgParse reg) :: slices))
-	  ([], [])
-	  messages*)
-
-(*fun convertToFulls [] = []
-    | convertToFulls (x :: xs) = (convertToFull x) :: (convertToFulls xs)*)
-
-(*fun getFiles [] = []
-    | getFiles (x :: xs) =
-      let
-	  val toks = String.tokens (fn #" "  => true
-				     | #"\t" => true
-				     | #"\n" => true
-				     | _     => false) x
-	  val f1 = case toks of
-		       [x] => convertToFull x
-		     | _   => EH.throw ""
-	  val files =
-	      if String.isSuffix ".tes" f1
-	      then P.parseTes f1 n
-	      else [f1]
-      in files @ (getFiles xs)
-      end*)
-
-(*(* use file*)
- val useStringHead  = "(**SKALPEL-USE-FILE "
- val nUseStringHead = String.size useStringHead
- val useStringTail  = "*)\n"
- val nUseStringTail = String.size useStringTail
- fun minusNUse st   = (String.size st) - nUseStringHead - nUseStringTail
- fun isLineUse st   = String.isPrefix useStringHead st
-		      andalso
-		      String.isSuffix useStringTail st
- fun extractUse st  =
-     let
-	 val prepath  = String.substring (st, nUseStringHead, minusNUse st)
-	 val prepaths = String.tokens (fn #" " => true | _ => false) prepath
-     in case prepaths of
-	    [x] =>
-	    if OS.FileSys.access (x, [OS.FileSys.A_READ])
-	    then USE x
-	    else NCOM
-	  | _ => NCOM
-     end
-     handle _ => NCOM
- (*******)
-
- (* clear basis *)
- val cbasStringHead  = "(**SKALPEL-CLEAR-BASIS"
- val nCbasStringHead = String.size cbasStringHead
- val cbasStringTail  = "*)\n"
- val nCbasStringTail = String.size cbasStringTail
- fun minusNCbas st   = (String.size st) - nCbasStringHead - nCbasStringTail
- fun isLineCbas st   = String.isPrefix cbasStringHead st
-		       andalso
-		       String.isSuffix cbasStringTail st
- fun extractCbas st  =
-     let
-	 val prepath  = String.substring (st, nCbasStringHead, minusNCbas st)
-	 val prepaths = String.tokens (fn #" " => true | _ => false) prepath
-     in case prepaths of
-	    [] => CBAS
-	  | _  => NCOM
-     end
-     handle _ => NCOM
- (*******)
-
- (* set basis *)
- val sbasStringHead  = "(**SKALPEL-SET-BASIS "
- val nSbasStringHead = String.size sbasStringHead
- val sbasStringTail  = "*)\n"
- val nSbasStringTail = String.size sbasStringTail
- fun minusNSbas st   = (String.size st) - nSbasStringHead - nSbasStringTail
- fun isLineSbas st   = String.isPrefix sbasStringHead st
-		       andalso
-		       String.isSuffix sbasStringTail st
- fun extractSbas st  =
-     let
-	 val prepath  = String.substring (st, nSbasStringHead, minusNSbas st)
-	 val prepaths = String.tokens (fn #" " => true | _ => false) prepath
-     in case prepaths of
-	    [x] =>
-	    if OS.FileSys.access (x, [OS.FileSys.A_READ])
-	    then SBAS x
-	    else NCOM
-	  | _ => NCOM
-     end
-     handle _ => NCOM
- (*******)*)
-
-(*fun extractOneCom line =
-      if isLineUse line
-      then extractUse line
-      else
-	  if isLineCbas line
-	  then extractCbas line
-	  else
-	      if isLineSbas line
-	      then extractSbas line
-	      else NCOM*)
-
-(*fun checkSmlTesComments file =
-      let
-	  fun extractSmlnjScriptPath stin =
-	      case TextIO.inputLine stin of
-		  NONE      => []
-		| SOME line =>
-		  case extractOneCom line of
-		      NCOM => extractSmlnjScriptPath stin
-		    | x => x :: (extractSmlnjScriptPath stin)
-	  val stin = TextIO.openIn file
-	  val path = extractSmlnjScriptPath stin
-	  val _    = TextIO.closeIn stin
-      in path
-      end*)
-
-(*fun getUsesSmlTesComment [] = []
-    | getUsesSmlTesComment ((USE f) :: xs) = (f, true) :: (getUsesSmlTesComment xs)
-    | getUsesSmlTesComment (_ :: xs) = getUsesSmlTesComment xs*)
-
 (* gets rid of tabs and newline characters from input string st *)
 (* we need to keep spaces, as we should support file paths with spaces *)
 fun tokenizeSt st =
@@ -374,8 +248,9 @@ fun convertToFull file fop fnames =
 					     createOneErrFileAccess file fop))
       | _ => createOneErrFileAccess file fop
 
-(* returns a list of three-tuples with [(<file>, NONE, bas), ...] *)
-fun newFilesToTreat files bas = map (fn f => (f, NONE, bas)) files
+(* returns a list of three-tuples with [(<file>, NONE, bas), ...]
+ * isBasis is set to true or false depending on whether the file is the basis or not *)
+fun newFilesToTreat files isBasis = map (fn f => (f, NONE, isBasis)) files
 
 (* same as newFilesToTreat, but uses region information as an Option *)
 fun newFilesRegToTreat xs = map (fn (f, r, b) => (f, SOME r, b)) xs
@@ -434,28 +309,6 @@ fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
 	    q,
 	    qasc)
 	end)
-(*handle Io => EH.throw ("cannot access to file: " ^ file) (*consProgsSml files n asctv ascid*)*)
-
-(*(* consProgsBas handles the basis files *)
- fun consProgsBas [] filesin n nasc = consProgsSml filesin n nasc false
-   | consProgsBas (x :: xs) filesin n nasc =
-     let
-	 val file = convertToFull x NONE
-	 val instr = TextIO.openIn file
-	 val (ast, n1, nasc1) = P.parse file instr n nasc
-	     handle P.ParsingError (_, y) => dummyparsing y n nasc (* n and x have to be the same *)
-	 val _ = TextIO.closeIn instr
-	 val prog = (ast, file, true, n1)
-	 val (progs, parses, n2, nasc2) = consProgsBas xs filesin n1 nasc1 true
-     in (prog :: progs, n2, nasc2)
-     end
-     handle Io => EH.throw ("cannot access to file: " ^ x) (*consProgsBas xs filesin n asctv ascid*)*)
-
-
-(*fun consProgsSml filebas filesin n asctv ascid = consProgs' filesin n asctv ascid*)
-
-(*fun consProgs' filebas 2 filesin n asctv ascid = consProgsBas [filebas] filesin n (asctv, ascid)
-    | consProgs' _       _ filesin n asctv ascid = consProgsSml filesin n (asctv, ascid)*)
 
 (* returns the first basisVal that it can find in a given list *)
 fun checkABas [] = false
@@ -473,11 +326,15 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 			 []
 			 webdemo
 	val basisVal' = case (checkABas progs, basisVal) of (false, 2) => 1 | _ => basisVal
-	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => Slicing.printSlice (A.Progs progs) true)
+
+	val nonBasisProgs = List.foldl (fn (x,y) =>
+					   case x of                          (* x comes from newFilesToTreat - a three tuple *)
+					       (_,_,true,_) =>  y               (* true means this file is the basis *)
+					     | (_,_,false,_) => x::y) [] progs  (* false means this file is NOT the basis *)
+
+	(* only print out to debug program laballeling for non-basis files *)
+	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs nonBasisProgs) true)^"\n"))
     in (A.Progs progs, m, masc, basisVal')
     end
 
     end
-
-
-
