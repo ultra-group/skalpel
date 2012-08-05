@@ -92,6 +92,8 @@ $skalpelBin -b 2 $basisFile -c $analysisTestDir &> $analysisTestsLog
 #       therefore for the moment this is done via a web server cron job
 # $testFrameworkDir/scripts/check-webdemo-links.sh > $outputDir/$deadLinksTestFilename 2> $outputDir/$deadLinksTestFilename-errors
 
+# wait 5 minutes for other tests to be completed
+sleep 300
 
 ################################################################################
 #      create the e-mail to send out to the Skalpel project developers
