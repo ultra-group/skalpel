@@ -27,6 +27,8 @@ structure Debug :> DEBUG = struct
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
 datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING
 
+val rand = Random.rand (0,6)
+
 (* below are ansi escape sequences, which can be used to colour
  * the output of text in terminals. Note that not all terminals
  * support this feature! *)
@@ -84,6 +86,15 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
    * if we don't have this it's going to take a longp time to run skalpel *)
   | printDebugFeature file STATE stringFunction =
     if (!debug) andalso (!debugState) then (print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n"); debugState := false)  else ()
+
+fun printLabelledProgramString(x) =
+    let
+	val texColors = ["black", "red", "green", "blue", "cyan", "magenta", "yellow"]
+	val randomNumber = Random.randNat rand
+	val colorChosen = List.nth (texColors, (randomNumber mod (List.length texColors)))
+    in
+	"{\\color{" ^ colorChosen ^ "}\\Bigg[}" ^ x ^ "{\\color{" ^ colorChosen ^ "}\\Bigg]}"
+    end
 
 fun checkOneRunOnly () =
     if (!oneRunOnly)

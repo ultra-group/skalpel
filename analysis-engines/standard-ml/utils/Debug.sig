@@ -56,6 +56,8 @@ signature DEBUG = sig
 
     val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
 
+    val printLabelledProgramString : string -> string
+
     val checkOneRunOnly  : unit -> unit
 
     val printdebug1 : string -> unit (* Does not print  *)

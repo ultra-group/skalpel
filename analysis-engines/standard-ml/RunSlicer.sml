@@ -459,7 +459,8 @@ fun smlTesStrArgs strArgs =
 		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
 		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
 		     | "ONE_RUN" => D.oneRunOnly := true
-		     | str  => raise Fail ("Unrecognised debugging feature: "^str);
+		     | str  => (print ("Unrecognised debugging feature: "^str);
+				raise Fail ("Unrecognised debugging feature: "^str));
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
 	     then basisoverloading:=str

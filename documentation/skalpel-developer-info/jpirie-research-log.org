@@ -2353,5 +2353,75 @@ take the constraint generation debug rules to see which abstract
 syntax tree nodes are being visited, and then use that information to
 change the text that's output from Slice.sml.
 
+(2012-08-05-13:48)
+
+The stuff that I did last early this morning works nicely, but I see
+that when I'm reading the label information from the output that it is
+difficult to see the matching brackets. I'm going to try and use the
+tikz package to fix this, though I haven't used it before it looks
+like the best way to do things.
+
+My current idea is to have each opening and closing big square bracket
+('\Bigg') as a plain node, and then draw a curved line between these
+two nodes. The issue is that all the text in-between also has to be a
+node, and positioning problems comes into play.
+
+Perhaps the best way is to do something like this:
+
+\newlength{\mylabelwidth}
+\begin{document}
+\begin{tikzpicture}
+  \node[draw] (A) {A};
+  \settowidth{\mylabelwidth}{\pgfinterruptpicture some label \endpgfinterruptpicture}
+  \node[draw,right] (B) at ([xshift=\mylabelwidth+10pt]A.east) {B};
+  \draw[->] (A) --(B) node [midway,above] {some label};
+\end{tikzpicture}
+
+So the length is stored appropriately. I'll have to have a think about that.
+
+(2012-08-05-15:09)
+
+Oh hell maybe just assigning colours for the brackets would be
+easier. Or having different sizes and colors of brackets....
+
+Ah, what about having Standard ML generate some latex code which has a
+colour assigned to it at the level where it generates the \Bigg[ and
+\Bigg] brackets, then it would be the Standard ML code that would make
+the brackets have the same colour.
+
+Yeah... that should work... I think. I'll try that out.
+
+(2012-08-05-18:13)
+
+Huh? Calling a random number function randRange with a lower bound x
+and an upper bound y such as with randRange(0,6) should probably
+return a random number. Why does it return a datatype with four
+components, each of which I have to now examine?
+
+Oh well. That's what I'm using from the SML/NJ library to generate the
+random colours for brackets anyway in the labelled program output so
+that I can tell them apart.
+
+(2012-08-05-11:44)
+
+Going to finish off this program labelling stuff before I go to
+bed. The random number generation stuff is a bit poorly documented, so
+I'm just playing around with it. I've managed to get it to actually
+output a number, but it's constant every time. Maybe there's some
+seeding that needs done somewhere...
+
+I must check that the software to be installed system wide is actually
+getting done, I shall do this tomorrow. I intend to spend probably
+most of the day on equality types stuff and a little on the poster
+too. That should really be completed before the end of the week.
+
+** 2012-08-06
+
+(2012-08-06-01:27)
+
+Finished with the output of program labelling. There are other
+improvements that can be made to it but that I intend to do after I
+get a bit of equality types work done.
+
 * Next meeting with Joe
 
