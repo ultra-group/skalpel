@@ -2423,5 +2423,88 @@ Finished with the output of program labelling. There are other
 improvements that can be made to it but that I intend to do after I
 get a bit of equality types work done.
 
+(2012-08-06-10:54)
+
+I see that equality type constraints aren't correctly configured when
+dealing with valbindcore.
+
+If we have something like this:
+
+datatype 'a mydt = firstCons of 'a;
+val x = firstCons(5.0);
+x = x
+
+Then there is no equality type error detected, however if we have
+this:
+
+datatype 'a mydt = firstCons of 'a;
+val x = 5.0;
+x = x
+
+Then the equality type error is correctly detected. I guess there must
+be something funny with the way equality type constraints for datatype
+constructors are getting generated, either that or there is a
+constraint generation rule being fired that I haven't written equality
+type code for yet.
+
+(2012-08-06-12:21)
+
+Hm, I think this is a binder issue. I think when the binder is put in
+for x where x = firstCons(5.0); for some reason the top level label
+someLabelNum [firstCons(5.0)]^{someLabelNum} is not set to be
+NOT_EQUALITY_TYPE status, so when it's put into the state map the
+error isn't detected.
+
+That's the working theory at least.
+
+(2012-08-06-12:48)
+
+Ok I think I see the problem. When we look up the binder for each of
+the x = x values, the equality type information that is present in the
+state map is EQUALITY_TYPE_STATUS(UNKNOWN), which is likely the cause
+of the problem. I see that the label information for this program is
+[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159], which
+is enough information to conclude that this is is of status
+NOT_EQUALITY_TYPE (though the state map should probably contain a
+variable which holds this information, not just a status).
+
+(2012-08-06-13:23)
+
+Hmm, I'm not sure whether to change the way the constraint generation
+algorithm works a little, or whether to change the constraint solving
+algorithm. When looking up a binder such as x is the example I was
+looking at earlier today, this is output by the debugging mechanism:
+
+(EQUALITY_TYPES) Unification.sml: bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n242,DECLARATION_CONS(1692),l40144),[40143,40144],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,
+l40145):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[78
+3,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784)
+,ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11
+138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n302,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(RO
+W_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)
+],-,l39728),[39725,39726,39727,39728,40162],[],[]),51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[]),l40145)],-,l
+40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])                                                                  
+
+If there is an equality type status that isn't at the top level (isn't
+embedded somewhere in TYPE_DEPENDANCY), then we constrain the accessor
+to have that status (and only that status, actually. If there are
+future statuses, then we ignore them).
+
+So the questions posed here are:
+
+-> Should the top level equality type information,
+   EQUALITY_TYPE_STATUS(UNKNOWN), actually be something else and that
+   is there erroneously?
+
+-> Should the constraint solving algorithm take all status values and
+   all equality type variable values inside the binding expression and
+   constrain the accessor to be equal to each one?
+
+Decision to follow. This should result in an equality type error being
+detected without breaking any of the existing tests.
+
+(2012-08-06-13:40)
+
+Just discovered an error on my hard disk. Pushing now just in case. :/
+
 * Next meeting with Joe
 
