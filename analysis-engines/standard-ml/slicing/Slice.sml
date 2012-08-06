@@ -153,7 +153,6 @@ fun printSlice' slprog indent sep =
 	    else (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printABool (A.ABool (b, r, l, _))                ind =
-	    
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^b^"}")^"^{"^L.printLab(l)^"}")
 	    else (getLine [r], getLine [r], getCol [r], b)
@@ -375,7 +374,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val (_, _, _, y) = printSpec      p  ind
 		val (_, _, _, z) = printLabSigExp si ind
 		val (_, j, _, w) = printLabStrExp se ind
-	    in (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :} " ^ z ^ " \\operatorname{=} " ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in
+		if !(D.debugProgramLabelling)
+		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :} " ^ z ^ " \\operatorname{=} " ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, j, c, x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :} " ^ z ^ " \\operatorname{=} " ^ w ^ "")
 	    end
 	  | printFBO (A.FunBindODots pl)                     ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -447,7 +449,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	and printStrDec (A.StrDec (xs, label, _))            ind =
 	    let
 		val (i, j, d, y) = printStrDecOneList xs ind
-	    in (i, j, d, D.printLabelledProgramString( y ^ "")^"^{" ^ L.printLab(label) ^ "}")
+	    in
+		if !(D.debugProgramLabelling)
+		then (i, j, d, D.printLabelledProgramString( y ^ "")^"^{" ^ L.printLab(label) ^ "}")
+		else (i, j, d, y)
 	    end
 	  | printStrDec (A.StrDecDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -702,7 +707,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printSigExp e ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabSigExp (A.LabSigExpDots pl)              ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -732,7 +739,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1,x2,x3,x4) = printSigId id ind
 	    in
-		(x1,x2,x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1,x2,x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1,x2,x3, x4)
 	    end
 	  | printSigExp (A.SigExpRea (se, rea, rs, label, _))    ind =
 	    let val r =
@@ -785,8 +794,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printLongStrId id ind
 	    in 
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
-		 end
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
+	    end
 	  | printStrExp (A.StrExpOp (se, si, _, label, _))       ind =
 	    let val (l, k, c, x) = printLabStrExp se ind
 		val (_, j, _, y) = printLabSigExp si ind
@@ -814,7 +825,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printStrExp (A.StrExpFDec (id, sd, _, label, _))     ind =
 	    let val (l, k, c, x) = printFunId id ind
 		val (_, j, _, y) = printStrDec sd ind
-	    in (l, j, c, D.printLabelledProgramString( x  ^ "(" ^ y ^ ")" ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in
+		if !(D.debugProgramLabelling)
+		then (l, j, c, D.printLabelledProgramString( x  ^ "(" ^ y ^ ")" ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, j, c, x  ^ "(" ^ y ^ ")")
 	    end
 	  | printStrExp (A.StrExpLocal (sd, se, rs, label, _))   ind =
 	    let val (_, _, _, x) = printStrDec    sd ind
@@ -873,7 +887,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 
 	and printLongTyConEq (A.LongTyConEq (xs, rs, label, _))    ind =
 	    let val (l, k, c, x) = printLongTyConEqList xs ind
-	    in (l, k, c, D.printLabelledProgramString( x ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in
+		if !(D.debugProgramLabelling)
+		then (l, k, c, D.printLabelledProgramString( x ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, k, c, x)
 	    end
 	  | printLongTyConEq (A.LongTyConEqDots pl)            ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1226,7 +1243,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printDatName dn ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printTypDescOne (A.TypDescOneDots pl)            ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1290,7 +1309,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printExcDescOne (A.ExcDescOf (id, ty, _, label, _))  ind =
 	    let val (l, k, c, x) = printLabId id ind
@@ -1352,23 +1373,49 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
-	and printScon (A.SconInt    (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printScon (A.SconWord   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printScon (A.SconReal   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printScon (A.SconString (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printScon (A.SconChar   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printScon (A.SconInt    (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
+	  | printScon (A.SconWord   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
+	  | printScon (A.SconReal   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
+	  | printScon (A.SconString (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}"
+									else (String.translate transfun s))
+	  | printScon (A.SconChar   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}"
+									else (String.translate transfun s))
 	  | printScon A.SconDots                             _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printPcon (A.PconBool (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printPcon (A.PconRef  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
-	  | printPcon (A.PconNil  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printPcon (A.PconBool (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
+	  | printPcon (A.PconRef  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
+	  | printPcon (A.PconNil  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printPcon A.PconDots                             _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printLabId (A.LabId (id, _, label, _))           ind =
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabId (A.LabIdDots pl)                      ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1389,7 +1436,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printClass cl ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabClass (A.LabClassDots pl)                ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1399,16 +1448,28 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printClass (A.Class (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printClass (A.Class (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printClass A.ClassDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printStrId (A.StrId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printStrId (A.StrId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printStrId A.StrIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printSigId (A.SigId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printSigId (A.SigId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printSigId A.SigIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printFunId (A.FunId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printFunId (A.FunId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printFunId A.FunIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printLongId (A.LongIdQual (sid, lid, _, label, _))   ind =
@@ -1445,10 +1506,16 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTyLab (A.TyLab (s, r, label, _))                _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printTyLab (A.TyLab (s, r, label, _))                _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printTyLab (A.TyLabDots)                         _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printTyCon (A.TyCon (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}")
+	and printTyCon (A.TyCon (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+									if !(D.debugProgramLabelling)
+									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
+									else s)
 	  | printTyCon A.TyConDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
 	and printTypeVar (A.TypeVar (s, _, r, label, _))         _   = 
@@ -1483,7 +1550,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printTypeVar tv ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabTypeVar (A.LabTypeVarDots tvl)               ind =
 	    let val (l, k, c, x) = printTypeVarDots tvl (pind ind)
@@ -1507,9 +1576,15 @@ else (l, k, c, ldots ^ x ^ rdots)
 
 	and printTypeVarSeq (A.TypeVarSeqOne (tv, _, label, _))      ind =
 	    let val (l, k, c, x) = printTypeVar tv (sind ind)
-	    in (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in 
+		if !(D.debugProgramLabelling)
+		then (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, k, c, splparen ^ x ^ sprparen)
 	    end
-	  | printTypeVarSeq (A.TypeVarSeqEm (_, label, _))           _   = (NONE, NONE, NONE, D.printLabelledProgramString( splparen ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}") (*HACK: before it was empty string*)
+	  | printTypeVarSeq (A.TypeVarSeqEm (_, label, _))           _   = (NONE, NONE, NONE, 
+									    if !(D.debugProgramLabelling)
+									    then D.printLabelledProgramString( splparen ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}"
+									    else splparen ^ sprparen) (*HACK: before it was empty string*)
 	  | printTypeVarSeq (A.TypeVarSeqSeq (tvl, rs, label, _))    ind =
 	    let val (_, _, _, x) = printLabTypeVarList tvl ind
 	    in 
@@ -1577,7 +1652,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printType t ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabType (A.LabTypeDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -1638,7 +1715,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printLabTypeTuple tl ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printType (A.TypeRecord (trl, rs, _, label, _))      ind =
 	    let val (_, _, _, x) = printTyFieldList trl ind
@@ -1723,7 +1802,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printType ty ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printTyClass (A.TyClassDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -1737,7 +1819,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printTyClass t ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabTyClass (A.LabTyClassDots pl)            ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -1764,7 +1848,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 
 	and printTyClassSeq (A.TyClassSeqOne (t, _, label, _))   ind =
 	    let val (l, k, c, x) = printTyClass t (sind ind)
-	    in (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in 
+		if !(D.debugProgramLabelling)
+		then (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, k, c, splparen ^ x ^ sprparen)
 	    end
 	  | printTyClassSeq (A.TyClassSeqEm (r, label, _))       _   =
 	    if !(D.debugProgramLabelling)
@@ -1960,7 +2047,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printAtPat ap ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabAtPat (A.LabAtPatDots pl)                ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -1974,7 +2063,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printFMatch (A.FMatchApp (fm, a, _, _, label, _)) ind =
 	    let val (l, k, c, x) = printFMatch fm ind
 		val (_, j, _, y) = printLabAtPat a ind
-	    in (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in 
+		if !(D.debugProgramLabelling)
+		then (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, j, c, x ^ " " ^ y)
 	    end
 	  | printFMatch (A.FMatchSlApp (fm, lap, _))         ind =
 	    let val (l, k, c, x) = printFMatch fm ind
@@ -1989,7 +2081,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 
 	and printLabFMatch (A.LabFMatch (fm, _, label, _))       ind =
 	    let val (l, k, c, x) = printFMatch fm ind
-	    in (l, k, c, D.printLabelledProgramString( x ^ " " ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in 
+		if !(D.debugProgramLabelling)
+		then (l, k, c, D.printLabelledProgramString( x ^ " " ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, k, c, x ^ " ")
 	    end
 	  | printLabFMatch (A.LabFMatchSl (fm, _))           ind =
 	    let val (l, k, c, x) = printFMatch fm ind
@@ -2014,7 +2109,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k2'  = case k2 of NONE => getLine [r] | _ => k2
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
-	    in (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ "= " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in (l1, k2', c1, 
+		if !(D.debugProgramLabelling)
+		then D.printLabelledProgramString( x ^ sep1 ^ "= " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}"
+		else x ^ sep1 ^ "= " ^ sep2 ^ y)
 	    end
 	  (*| printFVBCore (A.FVBCoreTy (x, t, e, _, _, _, _)) = printLabFMatch x ^ " : " ^ printLabType t ^ "= " ^ printLabExp e*)
 	  | printFVBCore (A.FVBCoreDots pl)                  ind =
@@ -2131,7 +2229,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printExBind (A.ExBindOf (id, t, _, label, _))        ind =
 	    let val (l, k, c, x) = printLabId id ind
@@ -2482,7 +2582,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printExp e ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  (*  | printLabExp (A.LabExpDots [])                    = ldots ^ "exp" ^ rdots*)
 	  | printLabExp (A.LabExpDots pl)                    ind =
@@ -2535,7 +2638,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printLabExpSeq (el @ [e]) ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printSeqExp (A.SeqExpSl (pl, e, _, label, _))        ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -2714,7 +2819,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpApp (e, ae, _, _, _, label, _))       ind =
 	    let val (l, k, c, x) = printExp e ind
 		val (_, j, _, y) = printAtExp ae ind
-	    in (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in 
+		if !(D.debugProgramLabelling)
+		then (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (l, j, c, x ^ " " ^ y)
 	    end
 	  | printExp (A.ExpCase (e, m, r1, r2, label, _))        ind =
 	    let val (l1, k1, c1, x) = printLabExp e ind
@@ -2748,7 +2856,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpOp (s, _, e1, e2, _, label, _))       ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
 		val (_, j, _, y) = printLabExp e2 ind
-	    in (l, j, c, D.printLabelledProgramString( x ^ " " ^ s ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+	    in (l, j, c, 
+		if !(D.debugProgramLabelling)
+		then D.printLabelledProgramString( x ^ " " ^ s ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}"
+		else x ^ " " ^ s ^ " " ^ y)
 	    end
 	  | printExp (A.ExpOr (e1, e2, _, label, _))             ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
@@ -2936,7 +3047,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printPat p ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabPat (A.LabPatDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -3053,7 +3166,9 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printIdentTy id ind
 	    in
-		(x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		if !(D.debugProgramLabelling)
+		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
+		else (x1, x2, x3, x4)
 	    end
 	  | printLabIdTy (A.LabIdTyDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
