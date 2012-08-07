@@ -230,9 +230,6 @@ signature TY = sig
 
     val stripDepsSq       : rowType -> rowType ExtLab.extLab
 
-    val stripEqualityStatus : ty -> Label.labels -> equalityTypeStatus list * Label.labels
-    val stripEqualityStatusList   : ty list -> equalityTypeStatus list
-
     val tntyToTyCon       : typenameType -> typename
 
     val printTypenameAssoc  : typename -> Id.assoc -> string

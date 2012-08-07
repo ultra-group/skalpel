@@ -3003,10 +3003,7 @@ fun unif env filters user =
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("sem = "^(T.printEqualityType sem)^"\n"))
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("id = "^(Int.toString (I.toInt id))^"\n"))
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("bind = "^(T.printty bind)^"\n\n\n"))
-
-			     val (eqStatuses, eqStatusLabels) = T.stripEqualityStatus bind L.empty
-			     (* (2012-06-24) jpirie: is this causing us to loose labels? What LABELS are there for NOT_EQUALITY_TYPE? *)
-			     val findStatus = List.find (fn T.EQUALITY_TYPE => true | T.NOT_EQUALITY_TYPE => true | _ => false) eqStatuses
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("label of accessor = "^(Label.printLab l)^"\n\n\n"))
 
 			     val _ = case bind of
 					 T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(_,_,_,T.EQUALITY_TYPE_VAR(x)),_,_,_) =>
@@ -3024,15 +3021,7 @@ fun unif env filters user =
 				       | _ => ()
 
 			 in
-			     case (findStatus) of
-				 SOME(x) =>
-				 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_STATUS(x)) lab of
-				     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), ls, deps, ids) =>
-				     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), L.cons (I.getLabId lid) (L.cons l (L.union eqStatusLabels (L.union (L.union labs labs') ls))), deps, ids) ] l
-
-				   | _ => raise EH.DeadBranch ("Impossible pattern match failure while solving equality type accessors")
-				 )
-			       | NONE => ()
+			     ()
 			 end
 		       | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
 			 ()

@@ -956,10 +956,10 @@ and printTyGen'  tys = printtylist' (!tys)
 
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
-fun stripEqualityStatus_fieldType (FIELD_VAR rv) labels   = ([], labels)
-  | stripEqualityStatus_fieldType (FC (_, tv, label)) labels  = stripEqualityStatus tv (L.cons label labels)
-  | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityStatus_fieldType term (L.union labs labels)
-  | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
+fun stripEqualityStatus_fieldType (FIELD_VAR rv)        = ([], [])
+  | stripEqualityStatus_fieldType (FC (_, tv, label))   = (stripEqualityStatus tv, [])
+  | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityStatus_fieldType term
+  | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD labels = []
 
 and stripEqualityStatus_sequenceType (ROW_VAR _) labels = ([], labels)
   | stripEqualityStatus_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
@@ -973,42 +973,18 @@ and stripEqualityStatus_sequenceType (ROW_VAR _) labels = ([], labels)
 	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityStatus_fieldType (L.cons label labels) *)
   | stripEqualityStatus_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityStatus_sequenceType term (L.union labs labels)
 
-(* this is currently used when solving equality constraint accessors, and only equality constraint accessors
- * (2012-07-09-12:22) jpirie: do we actually need to strip things this way? Want to look into this.
- *)
-and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_VAR (tv="^(Int.toString(typeVarToInt tv))^", status="^(printEqualityType (EQUALITY_TYPE_STATUS eq))^")");
-     ([eq], labels))
-  | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from EXPLICIT_TYPE_VAR!");
-     ([], labels))
-  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_STATUS(eq))) labels =
+(* this is currently used when solving equality constraint accessors *)
+fun stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_VAR(eq))) labels =
     let
 	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_sequenceType sequenceType (L.cons label labels)
     in
 	(eq::eqTypeStatuses, eqTypeLabels)
     end
-  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, eq)) labels =
-    let
-	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_sequenceType sequenceType (L.cons label labels)
-    in
-	(eqTypeStatuses, eqTypeLabels)
-    end
-  | stripEqualityStatus (APPLICATION(_)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from APPLICATION!");
-     ([], labels))
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_STATUS(eq))) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality status from a TYPE_POLY ("^(printEqualityTypeStatus eq)^")");
+  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_VAR(eq))) labels =
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality type var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");
      ([eq], L.cons label labels))
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,eq)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "(Not) stripping an equality type from a TYPE_POLY ("^(printEqualityType eq)^")");
-     ([], labels))
-  | stripEqualityStatus (GEN _) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
-     ([], labels))
   | stripEqualityStatus (TYPE_DEPENDANCY (term, _, _, _)) labels = stripEqualityStatus term labels
-
-and stripEqualityStatusList _ = raise EH.TODO "Not written this function yet"
+  | stripEqualityStatus _ labels = ([], labels)
 
 fun printAssoc  xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ st ^ ")")
 fun printAssoc' xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ "\"" ^ st ^ "\"" ^ ")")

@@ -2506,5 +2506,242 @@ detected without breaking any of the existing tests.
 
 Just discovered an error on my hard disk. Pushing now just in case. :/
 
+(2012-08-06-14:42)
+
+I have decided to go with option one. Switching to devel and going to
+implement this. I'm hoping that I'll be able to do this today and pick
+some other parts of equality types to start working on. I'm not sure
+exactly what there is to do, so I might start by making a list.
+
+(2012-08-06-16:47)
+
+We no longer strip equality type status values directly from the
+binding occurrence. Instead, I'm going to change the
+stripEqualityStatus in Ty.sml function so that we strip equality type
+variables to create constraints from each of the variables in the
+binder to the accessor.
+
+(2012-08-06-16:56)
+
+Hm, I'd really rather not strip things at all. It would be really
+great if I could get the top level equality type information holder to
+contain all the information that I could need. I'll look into this
+now, and add back in some kind of strip based solution if I do need to
+look at all the information in the binder.
+
+(2012-08-06-17:00)
+
+I've removed the stripping of equality type status values and it
+doesn't affect the tests. Excellent, I didn't like that
+solution. Hopefully I'll be able to get this binder represented nicely
+in the state map and that should fix the current test.
+
+(2012-08-06-17:45)
+
+The controlling of this top level equality type information is either
+done in consTypenameVar or stripDepsTy. I'm randomly changing UNKNOWN
+values to EQUALITY_TYPE to figure out where this information is coming
+from but I think I've tracked it to one of these locations.
+
+consTypenameVar has a comment indicating that it is used in the
+binding of datatypes, which sounds like that could be the cause of the
+issue. Checking it out now.
+
+(2012-08-06-17:50)
+
+consTypenameVar is the source of the issue. It is always returning
+EQUALITY_TYPE_STATUS unknown, most likely because I hadn't got around
+to writing that code yet, but now is the time.
+
+I'll probably parameterise this function and then I'll need to figure
+out what to put in each of the cases that call this
+function. Hopefully it's only called in a limited number of places and
+I have equality type variable information in the functions that call
+them.
+
+(2012-08-06-17:53)
+
+The good news is that it's only being called in one place. The bad
+news is that it's being called from f_datbind, the function which
+handles the binding of datatype constructors.
+
+The reason why this is bad is that it's unknown at that point whether
+there is going to be an equality type error or not. For example:
+
+datatype 'a mydt = firstCons of 'a
+val x = firstCons(5.0)
+val y = firstCons(2)
+y = y
+
+There is no equality type error here. The problem is that changing
+consTypenameVar would mean that we are changing the equality type
+status of mydt as a whole, at line 1, which would make this program
+incorrectly report an equality type error.
+
+The solution to this is to look deeper into the binding. So when the
+analysis engine sees something like this:
+
+(EQUALITY_TYPES) Unification.sml: bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n242,DECLARATION_CONS(1692),l40144),[40143,40144],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,
+l40145):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[78
+3,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784)
+,ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11
+138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n302,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(RO
+W_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)
+],-,l39728),[39725,39726,39727,39728,40162],[],[]),51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[]),l40145)],-,l
+40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])                                                                  
+
+The top-level equality type information is
+EQUALITY_TYPE_STATUS(UNKNOWN). This is coming from
+consTypenameVar. This will always be unknown, we can't possibly know
+equality type information at that point in the program.
+
+Instead, the solution is to look deeper in, where other equality type
+information is present. Above, for example,
+EQUALITY_TYPE_VAR(eqtv19685) is there, so we can create a constraint
+for the equality type variable representing the accessor to be the
+same as that. I just looked up what this is in the state map:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19685) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [] and Labels = [40162]
+
+Label 40162 is the real number '5.0'. This will give an equality type
+error, but will not have all the correct labels. The labels will show
+a) the 5.0, b) the x accessor and c) the 5.0 number. We should see
+much more information including:
+
+-> the binding of firstCons
+-> the accessor of firstCons
+-> the binder of x
+
+(2012-08-06-18:22)
+
+Hmm, at the point where that equality type variable is discovered, it
+is an argument to a TYPE_POLY constructor. The TYPE_POLY constructor
+with just the equality type variable and labels is this:
+
+TYPE_DEPENDANCY(TYPE_POLY(<...>,51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[])
+
+Well, that accounts for most of the labels! The only label this
+doesn't account for is the binding of x at the point in the program
+below:
+
+datatype 'a mydt = firstCons of 'a;
+val x = firstCons(5.0);
+    ^
+  HERE
+x = x
+
+Every other relevant label is however included. If this other last
+label can be accessed then this should be possible...
+
+I should have this label. It should be available when solving the
+accessor as a whole. Checking...
+
+(2012-08-06-18:30)
+
+Yup! That's the final piece of the puzzle. So the plan now is when
+solving equality type accessors:
+
+-> Look through the binding to find equality type variables
+
+-> Constrain the equality type variable in the accessor we are solving
+   to be unifiable with each of these equality type variables
+
+-> When creating the above constraint, take the labels that belong to
+   the datatype constructor which holds an equality type
+   variable. Also take the label from the binder of the accessor that
+   we are looking up, and the labels associated with the equality type
+   variable we find (these should be in the state map)
+
+Questions I need to think about are:
+
+-> What happens if the binding contains multiple equality type
+   variables?
+
+-> Is the top level datatype constructor's equality type information
+   the only important one if it's available?
+
+I don't know the answers to these yet. I'll think about these over
+dinner. Hmmm.....
+
+(2012-08-06-20:41)
+
+I'm going to make the constraints in such a way that the accessor we
+are solving at the time is constrained to be unifiable with all of the
+equality type variables that are present in the binder.
+
+I'm hesitating to do this a little because I'm wondering if the user
+might get extra slices than they should get. Perhaps not. I'm going to
+write up the implementation for this and run it on some examples then
+look at the results. In any case this solution should work fine for
+this test, I'm just concerned that it might produce problems on larger
+tests.
+
+(2012-08-06-20:55)
+
+I've thought about this some more and I don't think that this will
+produce problems.
+
+If we find some binder with three equality type variables α, β, and γ,
+and we are currently solving an accessor constraint with equality type
+variable δ, then the following constraints would be created:
+
+δ -> α
+δ -> β
+δ -> γ
+
+There are various situations that can occur:
+
+1. One equality type variable in the binder causes an equality type
+   error (say β), but the others (α, γ) don't. That's completely fine,
+   the user will only get one relevant error and because we take the
+   labels associated with the constructor that holds β, they will get
+   the correct error. This is the case that the code example I've been
+   looking at falls into.
+
+2. None of the configurations generate an equality type error. The
+   user doesn't get any error, the code for this purpose can be
+   typable.
+
+3. δ -> α and δ -> β both are equality type errors, but β is the
+   equality type variable associated with a datatype constructor,
+   which in one of its field holds a datatype constructor with has α
+   associated with it. In a sense β is "higher up" than α, so it has
+   different labels. If it has labels which are not relevant to the
+   equality type error, and when they are removed we get the same
+   constraint as δ -> α, then this is the same error, and the analysis
+   engine will realise this and remove the duplicate. If δ -> β and δ
+   -> α are both equality type errors, but both have different label
+   sets and none of these labels can be removed, then we have two
+   distinct errors, and the user should be presented with both. The
+   analysis engine should take care of that already.
+
+4. All of the equality type variables in the binder will cause an
+   equality type error when δ is constrained to be unifiable with
+   them. That's alright too, that's just case 3 repeated over and over
+   again.
+
+I'm going ahead and writing this. I think I'm right, but I'll test the
+results just in case.
+
+(2012-08-07-22:02)
+
+Hmm, what to do about the type dependancy case. We have type
+dependancies... inside type dependancies, even in the case that I'm
+currently solving:
+
+bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n242,DECLARATION_CONS(1692),l40144),[40143,40144],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,
+l40145):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[78
+3,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784)
+,ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11
+138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n302,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(RO
+W_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)
+],-,l39728),[39725,39726,39727,39728,40162],[],[]),51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[]),l40145)],-,l
+40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])
+
+These stripping rules need to be written pretty carefully, it's going
+to be quite difficult to debug after they have been written. I'll have
+a think about how exactly the stripping should work and write here
+what the solution is.
+
 * Next meeting with Joe
 
