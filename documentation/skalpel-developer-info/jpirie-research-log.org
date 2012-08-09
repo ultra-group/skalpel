@@ -26,23 +26,14 @@ The documentation for how to add tests to the test database is
 outdated. Update it ASAP.
 
 * TODOs
-** Test framework [28%]
-*** DONE (2012-06-29-12:59) Test framework fetching and compiling latest binary
-
-  I *must* update this aspect to the test framework soon, ideally
-  today. I see this is the currently most important aspect which is
-  missing with respect to testing, as I often don't have time to do
-  this manually (though I am running the binary through the tests we
-  have and diffing the output myself to make sure everything hasn't
-  exploded).
-
-*** TODO (2012-07-31-01:46) Web demo
+** Test framework
+*** (2012-07-31-01:46) Web demo
 
     Currently the web demo is completely untested by the test
     framework. This is an important thing to test as it will break
     frequently, so think of a way that this could be done.
 
-*** TODO (2012-07-20-10:50) Running tests from a fresh clone of the repository
+*** (2012-07-20-10:50) Running tests from a fresh clone of the repository
 
 The best way for the test framework to work is if it actually ran
 tests from a fresh clone of the repository, then the test framework
@@ -61,18 +52,7 @@ the CM files if I remember correctly. This is the sort of thing that
 the test framework would pick up on, and have to make the necessary
 changes to the MLB files after an attempt at conversion has been made.
 
-*** DONE (2012-06-29-12:59) Test framework detecting diffs from previous runs
-
-  When sending e-mails, the test framework is showing differences
-  between the tests today and the tests the previous day, so if I don't
-  read the results from the test framework on any given day, when I read
-  it the next day I won't see this information.
-
-  We should diff the results against a master copy, which can be
-  updated manually when we're satisfied things are working probably,
-  or better in some way.
-
-*** TODO (2012-07-02-16:45) Daily package building
+*** (2012-07-02-16:45) Daily package building
 
 Packages should be built daily by the test framework, and a report
 should be generated whether it was possible to build the package or
@@ -80,31 +60,22 @@ not. As the test framework runs on a red hat system it is not possible
 to generate say the debian packages, but we are still able to generate
 quite a few of them.
 
-*** TODO (2012-07-02-16:46) Daily package testing
+*** (2012-07-02-16:46) Daily package testing
 
 The packages that are built should also be installed and tested, and
 the results of all of this should end up in the e-mail that gets sent
 out in the morning. Wouldn't it be nice just to decide we were going
 to release one day and just do it? :-)
 
-*** TODO (2012-07-02-16:48) Test Emacs front end works
+*** (2012-07-02-16:48) Test Emacs front end works
 
 We should test also the Emacs front end. It would somehow need to be
 started with a Standard ML source file open, have the type error slice
 run on that file, and check that Emacs is highlighting things inside
 the file, and that the process terminates.
 
-** Equality types implementation [33%]
-*** DONE (2012-07-23-13:53) End points
-
-    Equality type errors should have at least two endpoints, similar
-    to what happens for the EK.TypeConstructorClash errors. Currently,
-    when an equality type error is detected, we have an endpoint. But
-    we need the endpoint associated with the information at the other
-    end of the line which has an EQUALITY_TYPE_STATUS(EQUALITY_TYPE)
-    constraint.
-
-*** TODO (2012-06-28-16:00) Generating equality constraints for tuples
+** Equality types implementation
+*** (2012-06-28-16:00) Generating equality constraints for tuples
 
     The case involving tuples doesn't work yet, I'm going to need to
     think of a way to handle code like this: (1, 1.0) = (2, 2.0). The
@@ -112,7 +83,7 @@ the file, and that the process terminates.
     constrained to be equal to.... something. Not sure how this is
     going to work yet, I'll need to have a think about this.
 
-*** TODO (2012-06-29-21:19) Detection of equality type error where 'eqtype' is in a signature
+*** (2012-06-29-21:19) Detection of equality type error where 'eqtype' is in a signature
 
     In the case where we have 'eqtype x' in a signature (instead of
     what could be 'type x') an equality status constraint of
@@ -121,7 +92,7 @@ the file, and that the process terminates.
     type error should be output by Skalpel, the EQUALITY_TYPE status
     of x clashing with the NOT_EQUALITY_TYPE status of the 5.0.
 
-*** TODO (2012-06-29-21:36) Detection of equality type error where ''a is involved in a signature
+*** (2012-06-29-21:36) Detection of equality type error where ''a is involved in a signature
 
     If we have a function signature definition such as "val f : ''a ->
     ''a" we should detect an equality type error if something that
@@ -133,49 +104,25 @@ the file, and that the process terminates.
     changed, and not the constraint solving, though I'm not absolutely
     certain of that.
 
-*** TODO (2012-06-29-21:46) Add in equality type status constraints for types other than real
+*** (2012-06-29-21:46) Add in equality type status constraints for types other than real
 
     Currently the NOT_EQUALITY_TYPE status is only generated for the
     real type. This status should be inserted in the constraint
     generation stage for other types (in functions and exceptions for
     example).
 
-*** DONE (2012-06-27-01:33) Seeing a type variable being constrained to be the same as a status
+*** (2012-08-08-15:42) Records
 
-  During unification we have the case of equality type variables being
-  constrained to equality type statuses. This happens in the function:
+    The solution for the implementation of detecting equality type
+    errors in records should be similar to detecting equality type
+    errors in tuples. A tuple is just a record that has an enumeration
+    sequence on the left hand side.
 
-  fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l = |"
+*** (2012-08-08-16:13) Value declarations with tics
 
-  If we look up equalityTypeVar in the unification state and it doesn't
-  exist, then the process is straight forward, we just add it to the
-  unification state, with the constraint of its equality type status.
+    val 'b f = fn x : 'b => x = x;
 
-  In the event that the equalityTypeVar does actually already appear in
-  the state then we create a new constraint of the equality type
-  variable from the dependancy that was existing in the state and the
-  equality type status, and then we go off and solve it.
-
-  There are two things to still do here. Firstly, the equality type
-  status should probably go in the state, replacing the dependancy that
-  was there (though we will still need to create the new constraint and
-  solve it, to check there aren't any equality type errors), and
-  secondly when creating this constraint the labels are joined together
-  (shown below with labs@ls), but the deps and the ids remain the
-  same. There is something called deps in the dependancy that we see
-  already existing in the state, should they be unioned too?
-  Possibly. Something to look into.
-
-  Relevant code excerpt:
-
-  \| SOME (T.EQUALITY_TYPE_DEPENDANCY (eqTypeVarDep, labs, stts, deps) =>
-  let
-  (* jpirie: what about stts and deps? Should these be combined somehow? *)
-  val c = E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), labs@ls, deps, ids)
-  (* jpirie: what about putting the new status in the map? *)
-  in
-  fsimplify (c::cs') l
-  end
+    Does this apply to things other than value declarations.
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -2743,5 +2690,157 @@ to be quite difficult to debug after they have been written. I'll have
 a think about how exactly the stripping should work and write here
 what the solution is.
 
-* Next meeting with Joe
+** 2012-08-07
 
+(2012-08-07-10:44)
+
+Okay, I think I've got this function working to strip the equality
+type variables values, testing it now.
+
+It would be nice for Skalpel to a have a "consider only this file"
+option, where it will run itself on the current file and ignore all
+undefined identifier errors. I've been thinking this because even
+though I'm working on a fairly big SML program and am working in lots
+of different files, it's rare I care about getting the information
+from the other files.
+
+(2012-08-07-12:12)
+
+Well, if it isn't my old friend:
+
+Error: Error! The unification algorithm terminated in a success state,
+ but an error was generated previously! Hint: It has been found
+ previously to be the case that this error is cased by a bug solely in
+ the unification algorithm where some labels are not propagated
+ correctly...
+
+Joys! At least I know what the problem is. :-)
+
+(2012-08-07-13:11)
+
+Hmm usually this problem is caused by having not enough labels in the
+new error that is created and recursed upon, but I think all the
+labels here must surely be sufficient. I'll print the labels and
+compare them against the labelled program output that I wrote up.
+
+(2012-08-07-14:00)
+
+Indeed, there is a label problem. Two errors are constructed in this
+example I've been working on, one for each of the x accessors, and in
+neither of them do the labels look correct.
+
+I'll play around with them now.
+
+(2012-08-07-14:23)
+
+The problem is coming from the function that strips equality type
+variables from the binding, it's not collecting all the labels along
+the way, I have only a few here.
+
+(2012-08-07-15:01)
+
+Ah excellent, I have an equality type error now! This was indeed a bug
+in the stripping of equality type variables from a binding. I'm going
+to look at this more closely and run the rest of the equality type
+tests to see what happens.
+
+(2012-08-07-15:17)
+
+This test result looks good, and the other test examples didn't
+break. I'm going to form a rough list of features of the sml language
+that can have equality type errors but that aren't yet detected, then
+I'll choose one to work on.
+
+I'm also going to improve the work I did on producing a labelled
+program output in TeX, that's proved to be very useful when debugging.
+
+(2012-08-07-16:30)
+
+I've improved the tex output so that the output can just be pasted
+into a file and then compiled. Really Skalpel should output this
+information to a file, that's the main improvement that could be made
+here. I might do this later, but for the moment I'm happy to just
+paste it into a file.
+
+** 2012-08-08
+
+(2012-08-08-10:08)
+
+I have a rough idea of what work needs to be completed with respect to
+equality types.
+
+I'm moving the examples of programs that I have that don't work into
+the repository, in a not-handled folder of the test database. As the
+database doesn't blindly read in files any more, this should be
+perfectly acceptable.
+
+(2012-08-08-13:06)
+
+WTF? Skalpel is generating equality type errors for the tests I
+haven't even got around to working on yet. Uh, win? Wait, am I
+bi-winning?
+
+I'm going to take the time to look a little more into what Skalpel can
+actually do, it looks like more is working than I thought.
+
+(2012-08-08-13:27)
+
+Er, wow. I'm rather happy with the results that I'm getting. This is
+great, it's doing better than I expected. I'm just sitting here trying
+to break it now. I have saved the output of an interactive session
+from a meeting with joe where equality types are detected involving 'a
+like this:
+
+val 'b f = fn x : 'b => x = x;
+
+This sort of thing still doesn't work. I have some questions about
+this for the next meeting actually, but this sort of case isn't what
+I'll be working on right away (I'll figure that out in a moment...)
+
+(2012-08-08-15:48)
+
+Okay so I'm currently thinking I'll get type error slices for tuples
+first, and then records (or vice versa, as they are really very
+similar indeed). From there I'll get ''a working when it's in the
+signature (I've got some examples of this working already I think, and
+anyway it works with datatype declarations).
+
+From there I'll look at handling the eqtype keyword, I suspect this
+might be quite tricky actually. With the eqtype keyword handled
+correctly though we should handle all type correctly and there
+shouldn't be much to do after this point.
+
+(2012-08-08-16:34)
+
+Err, tuples and records are now working when used with accessors. I
+guess that code I wrote yesterday worked WAY better than I thought it
+was going to. This going to save me so much time, I didn't think the
+solution I wrote yesterday would extend to those.
+
+I have to update the tasks.org file now for Alessio and put it on the
+web. I will look (happily!) more into this matter tomorrow.
+
+(2012-08-09-23:18)
+
+It occurs to me as I'm writing about bugzilla in tasks.org that
+another attempt should be made to fix the CSS style sheets. The
+web server has changed significantly and it's possible that this
+problem is easy to fix now.
+
+I'm tempted to try this myself tomorrow. Perhaps I'll do this, depends
+how time goes.
+
+tasks.org is currently unavailable to people outside the Heriot-Watt
+network. Perhaps I should commit this to the public repository, Alessio
+will be able to clone it easily that way too. We have copyright
+statements secured for that file, so it should probably be in the
+skalpel repository, rather than the tes repository.
+
+* Next meeting with Joe
+- val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
+  datatype constructors allowed to be used with equalop? Other cases
+  of this?
+- equality type propagation with type x : int, where eqtype int, but
+  type y : real, where type real. Functions not specified either?
+  Check and ask.
+- testing of copyright statements

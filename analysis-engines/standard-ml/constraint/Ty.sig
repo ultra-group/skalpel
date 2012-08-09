@@ -229,6 +229,7 @@ signature TY = sig
     val getTypeVarsTy     : ty -> explicitTypeVar list
 
     val stripDepsSq       : rowType -> rowType ExtLab.extLab
+    val stripEqualityStatus : ty -> Label.labels -> equalityTypeVar list * Label.labels
 
     val tntyToTyCon       : typenameType -> typename
 
@@ -248,6 +249,7 @@ signature TY = sig
     val printseqty'       : rowType       -> string
     val printEqualityType : equalityType       -> string
     val printEqualityTypeStatus : equalityTypeStatus       -> string
+    val printEqualityTypeVar : equalityTypeVar       -> string
     val printtnty         : typenameType        -> string
     val printtnty'        : typenameType        -> string
     val printtyf         : typeFunction       -> string

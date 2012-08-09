@@ -1,0 +1,2472 @@
+* COMMENT File metadata and Org configuration.
+
+*** Org configuration settings.
+
+#+STARTUP: odd hidestars
+#-STARTUP defaults: overview noalign nologging
+
+    The option toc:N causes N to be the highest level of outline
+    heading to appear in the Table of Contents.  The option H:N sets N
+    to be the highest level that gets an HTML h* element (h1, h2, h3,
+    etc.).  The levels above N get turned into ul/li elements
+
+    There is a bug in org-version "4.67c" where having options toc:N
+    and H:M where N ≠ M causes all the links in the Table of Contents
+    to be utterly broken, because no attempt is made in the code to
+    keep the link anchors in sync (despite the fact that the code
+    carefully computes matching section numbers which it could easily
+    use).  I presume this has long since been fixed.  Nonetheless, I
+    am avoiding triggering it because many people will still have
+    org-version "4.67c" which is what comes with emacs-version 22.1.
+
+#+OPTIONS: toc:2 H:2
+#-OPTIONS defaults: H:3 num:t toc:t \n:nil @:t ::t |:t ^:t *:t TeX:t LaTeX:nil
+
+*** Org file metadata for exporting.
+
+#+TITLE:  Type Error Slicer Task List
+#+AUTHOR: The Type Error Slicing Team
+
+    The EMAIL setting affects how the author is displayed.  The
+    default is from user-mail-address.  There is no way to turn it off
+    completely with EMAIL, so instead I set user-mail-address to nil
+    in the Emacs file local variables section.
+
+#-EMAIL
+
+    The TEXT setting allows putting some brief text before the table
+    of contents.
+
+#+TEXT: This document lists some (but not all) of the tasks, subtasks,
+#+TEXT: plans, and work allocations for the type error slicing
+#+TEXT: project.
+#
+# To get a paragraph break in the introductory text, do this:
+#
+###+TEXT: @</p> @<p>
+
+    The LANGUAGE setting affects the choice of boilerplate text like
+    “Table of Contents”, “Author”, and “Date”.
+
+#-LANGUAGE: en
+
+*** Org hyperlink abbreviations.
+
+#+LINK: emacswiki http://www.emacswiki.org/emacs/
+
+    WARNING: It is crucial that abbreviation names do not have “info”
+    or “elisp” as a suffix in either uppercase, lowercase, or any
+    mixture.  If they do, a bug in org-cleaned-string-for-export will
+    mess things up.  The same problem happens if you use a link of the
+    form info:elisp:Xyzzy.
+
+    The following link abbreviation works around this problem (and is
+    otherwise currently unneeded).
+
+#+LINK: infoEmacsLisp info:elisp:
+
+    WARNING: If an abbreviation has a function, this function must be
+    prepared to take the link either before or after processing by
+    org-link-unescape (due to a buggy inconsistency between
+    org-open-at-point and org-cleaned-string-for-export).  Currently
+    this does not cause trouble for us (I think).
+
+*** Comments about other possible Org configuration settings.
+
+# default?:  #+CATEGORY:  tasks.org
+# defaults?: #+SEQ_TODO:  TODO DONE
+# template?: #+TYP_TODO:  Xyzzy Plugh DONE
+# defaults?: #+TAGS:
+
+    Places to look for ideas:
+
+    + [[http://orgmode.org/worg/worg-editing.html]]
+    + [[http://orgmode.org/worg/sources/worg-header.org]]
+    + [[http://article.gmane.org/gmane.emacs.orgmode/6701][Manuel Hermenegildo's collaborative Org editing and task
+      assigning setup]] and [[http://article.gmane.org/gmane.emacs.orgmode/6732][more details on Manuel Hermenegildo's setup]]
+
+*** Details on how to edit this file.
+
+    + [[info:org:Link%20abbreviations][(org)Link abbreviations]]
+    + [[info:org:Export%20options][(org)Export options]]
+
+    Links to files in the project Git repository should be written in
+    this document in this form:
+
+    :  file:$TES_GIT/path/within/repository
+
+    Each user is responsible for setting TES_GIT to a path that works
+    for them.
+
+*** Notes for an idea on improving “elisp:” Org links.
+
+    I have in mind doing something better for “elisp:” links
+    that use describe-function.  The Emacs Lisp source files might be
+    found via these variables:
+
+    + data-directory
+    + doc-directory
+    + installation-directory
+    + source-directory
+
+*** Testing junk.
+
+* Purpose and subject of this document.
+
+  + This is a *PARTIAL* list of some of the tasks that it would be good
+    to do as part of the type error slicing project, together with many
+    of the subtasks.  There are significant areas of work that are
+    needed but which are not yet listed here.  Eventually it is hoped to
+    get most tasks listed here, but that will take time, and in the
+    meantime, ask for details.
+
+  + This document is used for project planning.  Work allocation and
+    scheduling details are going to be appearing here.
+
+  + This is a long-term planning document.  Although it might be
+    possible to do some of these tasks right away, it is expected to
+    take years to do all of them, and some might never get done.
+
+* Assemble material (information, software, etc.) to help subprojects.
+*** Help with Emacs.
+
+***** Learning to use Emacs.
+
+******* TODO Find and evaluate pre-existing sources of information.
+
+        + GNU Emacs reference card (add link)
+        + [[http://www.gnu.org/software/emacs/manual/][GNU Emacs Manuals Online]]
+        + [[info:emacs:Top][The Emacs Editor (manual)]]
+        + [[info:efaq:Top][GNU Emacs FAQ]]
+        + [[http://en.wikipedia.org/wiki/Emacs][Emacs @ Wikipedia]]
+        + [[http://www.emacswiki.org/]]
+        + [[http://benjisimon.blogspot.com/2011/04/10-concepts-emacs-newbie-should-master.html]]
+        + [[http://www.masteringemacs.org/]]
+        + [[http://planet.emacsen.org/]]
+        + [[http://emacs-fu.blogspot.com/]]
+
+******* TODO More tasks go here.
+
+***** Learning to program Emacs Lisp.
+
+      + [[info:eintr:Top][An Introduction to Programming in Emacs Lisp]]
+      + [[infoEmacsLisp:Top][GNU Emacs Lisp Reference Manual]]
+
+******* TODO Find/make Emacs Lisp reference card.
+
+******* TODO List here more Emacs Lisp tutorial material.
+
+******* TODO Tasks go here.
+
+***** Make files related to Emacs available on local computers.
+
+******* TODO Create list of precisely which Emacs versions we support
+
+	A previous TODO item was here which stated that the version of
+	Emacs in the Linux labs did not work fully with Skalpel. I
+	have left the text in this TODO task below (1) for reference when
+	deciding which versions of Emacs we choose to support.
+
+	It is no longer the case that the Emacs version in the labs
+	does not work with Skalpel, as this has been upgraded to the
+	latest version. Nevertheless, we should have a list of what
+	Emacs versions we support.
+
+        (1)  Scott reported on 2011-03-10 that “the menu does NOT work
+        properly under the version running in the labs. Emacs
+        complains about some duplicate definition or something”.
+        Scott clarified on 2011-04-30 that “The problem was with the
+        structure of the menu (sml-tes-menu.el) where Emacs
+        complained that some function to do with sub-menu items was
+        a duplicate declaration. It is strange however that this
+        wasn't noticed prior since I believe originally I was using
+        the same version of Emacs. It is possible that the version
+        of Common Lisp we include in the Emacs Lisp UI files is out
+        of date on the lab machines in 250 (where the issue was
+        discovered).”
+
+******* TODO Make available source code for current and latest Emacs versions.
+
+******* Install current and latest SML mode and make source code available.
+
+        The latest version of sml-mode is 4.1 (2010-03-04).  Many
+        distributed versions of Emacs still package sml-mode version
+        4.0 (2004-11-24), the previous version.  As of 2011-04-09,
+        version 4.1 is essentially the same as the files available
+        from the master Subversion repository smlnj-gforge (i.e.,
+        nothing has happened in the year since version 4.1 was
+        released).
+
+********* TODO Consider distributing version 4.1 with the slicer?
+
+          Move this task to a better location.
+
+*** Help with SML.
+
+***** TODO Learning to program in SML.
+
+******* TODO Find/make SML reference card (including for specific compilers).
+
+***** TODO Make available collection of major SML code libraries.
+***** TODO Install current and latest versions of all major SML compilers.
+
+      The compilers we should consider include at least SML/NJ, MLton,
+      MoscowML, HaMLet, HaMLet-S, PolyML, SML#.
+
+******* Special SML/NJ requirements.
+
+        In particular, when installing SML/NJ, it is important to do
+        the following.
+
+        + Request all components, because the standard .deb and .rpm
+          packages from various OS distributions often do /not/
+          contain all optional components.  This involves uncommenting
+          a lot of lines in the config/targets configuration file
+          before installing SML/NJ.  The .deb and .rpm packages from
+          many OS distributions often are missing vital components.
+          We need in particular: heap2asm (which includes heap2exec),
+          NLFFI (ml-nlffi-lib and ml-nlffigen), full source
+          (src-smlnj), ml-lex, ml-yacc, smlnj-lib, pgraph-util,
+          tdp-util, ckit.  We might depend on other components that
+          are not listed here.
+
+        + Arrange that .lex files are handled by default by the older
+          ml-lex program rather than the newer ml-ulex program.  The
+          new ml-ulex program is not completely backward compatible.
+          The default behavior is set by the “request
+          ml-lex-mllex-tool” and “request ml-lex-lex-ext” options at
+          the time SML/NJ is installed (and can not easily be changed
+          later).
+
+***** TODO More tasks go here.
+*** Help with Emacs and SML.
+***** Information.
+
+      + [[info:sml-mode:Top][SML Mode Info (manual)]]
+
+******* TODO Find/make GNU Emacs SML Mode reference card.
+
+*** Help with type-based program analysis.
+
+***** TODO Basic tutorials on types and type inference.
+***** Information about type error explanation.
+
+******* Type error slicing.
+
+********* TODO Papers using.
+
+*********** [[http://www.jstage.jst.go.jp/article/jssst/27/4/27_4_221/_article][Kuwabara. Type Error Slicing for Type-based Information Flow Analysis of Imperative Programs.]]
+
+*********** [[http://www.cs.kent.ac.uk/people/rpg/ts319/][Thomas Schilling]].  Constraint-free Type Error Slicing.  TFP 2011 ([[http://federwin.sip.ucm.es/sic/investigacion/publicaciones/pdfs/SIC-7-11.pdf][draft proceedings]]).
+
+            [2011-05-29]: Finally found paper in draft proceedings for
+            TFP 2011.
+
+            [2011-05-05]: This paper is not on his home
+            page.  I thought he had given up on this work when
+            suddenly out of the blue there was a paper accepted at
+            TFP 2011.  (Note that acceptance for presentation at TFP
+            has historically been fairly easy; it is the
+            post-proceedings that is hard to get into.)  He has not
+            touched [[https://github.com/nominolo/rpl][the code on github]] since [2009-10-08].  He has
+            not written to his [[http://nominolo.blogspot.com/][blog]] since [2010-04-30].  I don't
+            know what the status is here.
+
+************* TODO Read Schilling's Constraint-free Type Error Slicing.
+
+*********** many others (SUPPLY DETAILS)
+
+******* TODO Methods closely related to type error slicing.
+
+********* [[http://shaunhall.co.uk/project/][Hall.  Searching for the Source of Caml Type-Error Messages (student project).]]
+
+*********** Talk: [[http://talks.cam.ac.uk/talk/index/27188][Shaun Hall: Type-Checking and Type-Error Reporting]] [2011-03-08]
+
+            Abstract: Type-inference reduces the need for programmers
+            to annotate programs with types, but can lead to poor
+            quality type-error messages. I will explain how compilers
+            can implement formal type-systems, how type-error messages
+            are produced and evaluate the usefulness of different
+            approaches. I will describe the theory and implementation
+            behind my Part II project, TELE (Type-Error Location
+            Extension), which produces high quality type-error
+            messages for OCaml.
+
+        + many others (SUPPLY DETAILS)
+
+******* TODO Other methods (SUPPLY DETAILS AND LINKS).
+
+********* Olaf Chitil.  [[http://www.cs.kent.ac.uk/people/staff/oc/typeerrors.html][TypeIlluminator]].
+
+          This is the tool corresponding to Olaf's ICFP 2001 paper.
+
+
+********* [[http://www.cs.umd.edu/projects/PL/PP/][Path projection]] (a user interface toolkit for presenting slice-like info)
+
+********* [[http://cristal.inria.fr/attapl/][/The Essence of ML Type Inference/ by Pottier and Regis-Gianas (Chapter 10 of ATTAPL)]], which comes with a prototype implementation
+
+******* TODO [#A] Search for [[http://scholar.google.co.uk/scholar?cites=13289484381172515375][papers citing Yang et al., Improved Type Error Reporting]].
+******* TODO [#A] Investigate “Report on OCaml type debugger” by Kanae Tsushima and Kenichi Asai.
+
+        This work is (will be) reported at ML 2011.  It seems to be
+        based on earlier work by Chitil.  Both authors are at
+        Ochanomizu university.  The best bet seems to be to send them
+        e-mail (asai@is.ocha.ac.jp, tsushima.kanae@is.ocha.ac.jp).
+
+        The abstract of their ML 2011 talk is:
+
+        “There have been many researches on helping programmers to
+        locate and fix type errors. Among them, Chitil proposed an
+        interactive type debugger.  The main idea of his system is to
+        make a type inference tree compositional and move through the
+        tree using programmer's answers to locate type errors.
+        Chitil's system is attractive because we are navigated to the
+        source of an error simply by answering questions.  However, it
+        has not been used in practise so far.  In this paper, we show
+        extension of the type debugger needed to use it for beginners
+        and report on our initial experience of using it in the
+        introductory OCaml course in Ochanomizu University.”
+
+******* TODO [#A] Investigate “A simple and effective method for assigning blame for type errors” by David MacQueen.
+
+        This was a talk at ML 2010.  The abstract was:
+
+        “The Hindley-Milner type system used in ML sometimes produces
+        type errors whose causes are not obvious.  Here we present a
+        simple, pragmatic approach to augmenting type error messages
+        with additional information about the textual origins of
+        conflicting types.  This additional information is, in
+        practice, usually enough to quickly identify the root cause of
+        type errors.”
+
+***** TODO More tasks?
+*** Help with Git
+
+***** Sources of information.
+
+      + [[http://www.kernel.org/pub/software/scm/git/docs/gittutorial.html][the git tutorial]]
+      + Make available and/or improve John's tutorial
+      + [[http://alexott.net/en/writings/emacs-vcs/EmacsGit.html][an evaluation of various packages for using Git from within
+        Emacs]]
+      + [[http://parijatmishra.wordpress.com/2008/09/06/up-and-running-with-emacs-and-git/][a nice blog entry describing the basics of Emacs and Git]]
+      + other stuff
+
+******* TODO Find/make Git reference card.
+
+***** Specific issues to worry about.
+
+      + Learn to use =git pull --rebase=?
+
+      + [[http://help.github.com/dealing-with-lineendings][Deal with line ending problems]]?:
+
+        :  git config --global core.autocrlf input
+
+      + Make sure people know first line of commit message should be
+        summary.
+
+      + Ensure commit messages explain all the changes that have
+        occurred.
+
+        A recommended way to do this is to start by putting the output
+        of “git diff” into a file (e.g., run “git diff >
+        commit-message”), edit the file, and then use that file with
+        “git commit” (i.e., “git commit -F commit-message”).
+
+        This method has many advantages.  Mistakes are often obvious
+        when viewed in this way.  Accidentally deleted files are
+        impossible to miss because they show up in “git diff” output
+        as all their lines prefixed by “-”.  Etc.
+
+      + Anything else?
+
+*** How the information and software should be made available.
+
+***** Pages with brief descriptions and links on project web site.
+
+***** Printed/bound copies of all documentation for ULTRA lab.
+
+***** Make software available on all HWU computers used by CS students.
+
+      Whenever we get software installed on these computers, we should
+      aim for these goals:
+
+      + The software is installed on all computers identically.  Our
+        local computer officers have a tendency to reply to requests
+        by just doing a quick /ad hoc/ one-off installation on the
+        requester's workstation.  So it is important to specify in the
+        e-mail requesting installation that this should not be done
+        but that instead the installation should become part of the
+        standard supported set of software on all computers.
+
+      + The software is installed fully, with all optional components.
+
+        + The full documentation is installed.  For stuff that comes
+          from OS distributions, this is often in extra optional
+          packages.  These extra packages must be installed.
+
+      + The versions installed include the standard version available
+        as part of the OS distribution (if there is one).
+
+        + We will sometimes also request a later version, possibly
+          built from the upstream source distribution, but normally
+          this should be /in addition/ to the standard version that is
+          part of the OS distribution.  In some cases we might not
+          want the standard OS distribution version.
+
+      + The installed software actually works properly.
+
+        + The installed software works with our software.  We should
+          run all our usual tests.
+
+      We should aim to have the software installed on these computers
+      (in priority order):
+
+      + HWU MACS CS Linux computers.
+
+      + HWU MACS CS Macintosh computers.
+
+      + HWU MACS CS Windows computers.
+
+      + HWU PC Caledonia computers.
+
+      + Investigate whether any other computers should be covered.
+
+* Improve management of project and community.
+
+*** Set up a system for managing notes and plans.
+
+***** Set up a [[http://orgmode.org/worg][Worg]]?
+
+      This is a system for managing tasks and notes with web
+      publishing based on [[http://orgmode.org/][Emacs Org Mode]] and some DVCS (e.g., Git).
+      More details:
+
+      + [[http://orgmode.org/worg/worg-about.html]]
+      + [[http://orgmode.org/worg/worg-setup.html]]
+      + [[http://orgmode.org/worg/worg-git.html]]
+
+      This could fill the role of a project Wiki, and also a task
+      management and project planning system.  People could integrate into
+      the task system with Emacs Lisp like this:
+
+      :  (add-to-list 'org-agenda-files "~/tes/documentation/project-plan/tasks.org")
+      :  (org-add-agenda-custom-command '("M" tags "Owner=\"MyName\""))
+
+      People would need to use Emacs, but given that the only good front
+      end we have for our type error slicer is in Emacs, a commitment to
+      Emacs seems like it is probably reasonable to expect.
+
+***** Set up a Wiki instead?
+
+      The main advantage would be ease of opening access to outsiders
+      to edit and a lack of requirement of Emacs skills.  For anyone
+      who has push git access, this is not a big issue.
+
+***** Use project planning software (maybe web app)?
+
+      There is an [[http://www.mediawiki.org/wiki/Tracker/PM_tool][possibly relevant discussion]] at the MediaWiki web
+      site.
+
+*** Maintain an overall project plan.
+
+    You are looking at something along those lines.
+
+*** Maintain web page of project members (currently at [[file:$TES_GIT/webdemo/smltes-in/init/authors.html::0][authors.html]]).
+*** Set up communication channels.
+
+    + a Blog?
+
+      Maybe just an RSS feed pointing into our web pages would be
+      enough?
+
+    + RSS feed?
+
+    + an IRC channel?
+
+
+    + a forum web application?
+
+      Maybe gatewayed with mailing list(s)?
+
+    + Twitter account?
+
+    + etc.?
+
+***** Make a mailing list (or lists) [[https://list-serve.hw.ac.uk/mailman/create][using the HWU list server]]
+
+      Fill in form at: [[https://list-serve.hw.ac.uk/list-request/]]
+
+      The following information and settings were used:
+
+******* Name of list: Skalpel
+
+******* Addresses of list administrators:
+
+        jbw@macs.hw.ac.uk
+        jp95@hw.ac.uk
+
+        not used:
+
+        jpirie23@gmail.com
+        rahli@macs.hw.ac.uk
+
+******* List description:
+
+        Skalpel is software for helping programmers understand errors in their computer programs which currently does this for type errors in Standard ML (SML).  This mailing list is for all Skalpel discussion.
+
+********* Unused text
+
+          As of 2011-10, Skalpel will diagnose type errors in programs
+          written in present the diagnosis in the form of a “type error
+          slice”.  Future plans call for expansion to handle more
+          programming languages and more kinds of errors, and to
+          diagnose errors in more ways.  This mailing list is for
+          discussion of all issues related to Skalpel.
+
+******* Advertise List?: yes
+
+******* Purpose of the list:
+
+        I am confused as to how the text in this form field is supposed to differ from the “list description”?  So I am just putting the same text here:
+
+******* Subscription policy: Confirm
+
+******* Unsubscription policy: Allow
+
+******* Visibility of subscriber list: Administrator only
+
+******* Default moderation: No member moderation
+
+******* Member moderation action: Hold (this does not matter due to above setting?)
+
+******* Non-member action: Hold
+
+******* Reminders: No (default)
+
+******* Archival of messages: Yes
+
+******* Privacy of archives: Public
+
+*** Contact SML developers
+*** Contact SML users (not developers of SML implementations)
+
+***** Places that teach using SML
+
+******* Cornell
+
+******* Carnegie Mellon
+
+******* Edinburgh University
+
+******* [[http://kwarc.info/kohlhase][Michael Kohlhase]] at Jacobs University
+
+        Michael has informally agreed to at least get his teaching
+        assistants (all students) to try out the type error slicer for
+        use with students in teaching in the 2011/-12 academic year.
+
+*** Improve sharing and management of files.
+
+***** Manage file licensing better.
+
+      Under law, everything that is written has a copyright, and
+      someone holds that copyright.  Copying things without the
+      permission of the copyright holder is subject to civil and
+      criminal penalties.  This raises several issues for the project.
+
+******* Need to keep records.
+
+        We need to ensure for every single file we share that:
+
+        + We have a record of which legal entities (whether people or
+          organizations) hold the copyright.
+
+        + We have a record and evidence of what license (if any) the
+          copyright holder has granted to us and/or the general public
+          regarding what kind of copying we can do.
+
+        + The files clearly indicate these things, without these
+          indications being obtrusive or interfering with the usefulness
+          of the files.
+
+        The challenge here is to ensure that these things happen.
+
+******* Need to obtain suitable licenses.
+
+********* For material copyright HWU.
+
+*********** Existing permission to use GPL.
+
+            Derek Brown, the main HWU person authorized to license
+            intellectual property on behalf of HWU, granted on
+            2010-05-12 permission to distribute the type error slicing
+            project stuff under the GNU GPL.
+
+            The permission grant states that “… the university
+            consents to the distribution of the ULTRA SML Type Error
+            Slicer software and any improvements, updates and
+            amendments relating to that software, free of charge,
+            under the GNU General Public License.”
+
+            We have a scanned copy of his letter in the git repository:
+
+            : tes/documentation/license-statements/HW-consent-release-SMLTES.pdf.gz
+
+************* Need to update permission?
+
+              I am assuming the permission to use GPL still applies.  We
+              should check.
+
+*********** Need to use additional licenses.
+
+            The GNU GPL is not necessarily the most suitable license
+            for documentation.
+
+************* Investigate which documentation license(s) we need.
+
+************* Get permission to use those licenses.
+
+********* For material copyright other project members.
+
+*********** Joe Wells.
+
+            Steven checked the law on this issue and came to the
+            conclusion that all of Joe's work was copyright HWU and
+            hence was covered by the permission from HWU.
+
+************* Record details backing this up in a file in =tes/documentation/license-statements=.
+
+*********** Vincent Rahli.
+
+            Vincent apparently signed an agreement with HWU
+            transferring the copyright in all of his work while a PhD
+            student to them.  I think Steven tracked this down, and I
+            think it is documented in Steven's thesis.
+
+************* Track down details and record in a file in =tes/documentation/license-statements=.
+
+*********** Steven Shiells.
+
+            Steven very kindly wrote an e-mail on 2010-06-03 which
+            stated: “I hereby permit redistribution and/or
+            modification of all files I wrote in 2009 and 2010 as part
+            of my work on type error slicing under the terms of the
+            GNU General Public License as published by the Free
+            Software Foundation, either version 3 of the License, or
+            (at your option) any later version.”
+
+            This statement is in this file in the git repository:
+
+            : tes/documentation/license-statements/steven-shiells:GPL-license-for-all-work:2010-06-03.mbox
+
+************* Verify which files are covered by this.
+
+************* See if it is possible to get Steven to allow a license more suitable for documentation.
+
+              We can live with GNU GPL for the documentation Steven
+              wrote, but a different license might be better.  First
+              we should figure out which license we want instead.
+
+*********** Dave Dunsmore, John Pirie, Mark Wyper, Scott Fotheringham.
+
+            For each of these people, we need to do one of these
+            things:
+
+            + verify all files contributed by them contain a statement
+              by them about copyright and licensing and verify the
+              license granted is /libre/, or
+            + get a blanket statement from them on licensing like the
+              one Steven gave, or
+            + delete all their files and redo their work from scratch.
+
+***** Set up a master (Git) repository?
+
+      Currently we just all pull from each other's repositories.
+      Should we have a master repository that we push to and all pull
+      from?
+
+      Where do we host it?:
+
+      + locally?
+      + github.com?
+      + repo.or.cz?
+      + gitorious?
+      + etc.?
+
+***** Set up a public (Git) repository?
+
+      Should this contain everything in our current git repository?  Do
+      we have copying rights for everything in the history, or do we
+      need to filter out some things from the history?  Do we need to
+      filter out big generated files from the history (e.g., on occasion
+      the back end binary got committed, have all such happenings
+      already been removed)?
+
+      What kind of arrangements should we make for push access?  Maybe
+      allow random external contributors to push to private branches
+      and then notify us?
+
+*** Fix CSS and Evaluate Bugzilla.
+
+    The CSS style sheets are currently messed up with bugzilla. An
+    attempt was made to fix this but the web server has changed
+    sufficiently that another attempt should be made in the near
+    future. The functionality works fine, but we should really update
+    these style sheets.
+
+    Is it the right solution?  Do we need another tool to supplement
+    it?  Or should we replace it with a tool that has bug tracking
+    integrated into project management?  See other items as well.
+
+* Find and/or assemble and/or develop autodoc tools for SML.
+
+# This is a meta-bug.  If someone takes any of this on, the
+# individual bits of work should be copied into their own bugs and a
+# dependency on the new bug should be added here.
+
+  Some of the work item listed here are not necessarily directly connected to our type error
+  slicer, but are instead merely about improving SML programming in
+  general.  They are nonetheless relevant to the type error slicer
+  project because they could be joined with it to make an overall
+  package that is more compelling for people to download and start
+  using.
+
+*** Investigate SMLDoc.
+
+    Investigate whether it is a good idea to use SMLDoc, a JavaDoc
+    clone for SML that comes with SML#.  It would need to packaged and
+    delivered independently of SML#.  It might be a good idea to see
+    if it could somehow be integrated with a more powerful autodoc
+    tool like Doxygen, to help in generating more forms of output.
+
+*** Investigate making slicer's back end an autodoc extractor.
+
+    Investigate adapting our type error slicer's back end to generate
+    additional output in a format that can be used by an existing
+    autodoc tool like Doxygen to generate documentation in various
+    formats.  To do this, the back end's SML parser might need changes
+    that might mean taking source comments more seriously.
+
+*** Investigate Reppy's ML-Doc.
+
+    See if ideas and/or code can be usefully gotten from Reppy's
+    ML-Doc tool (which sadly is SGML based).
+
+*** Use SML autodoc tools to document stuff.
+
+    After doing one of the above tasks to obtain a format for SML that
+    works with at least one autodoc tool, this format should be used to
+    document a number of things.
+
+***** Document the slicer's SML basis definition.
+
+      The slicer has an SML basis definition that it uses as a record
+      of the names and types of everything that is in the available
+      SML libraries.  Documenting it would be good.  Open source
+      licenses should be sought for the existing text from various
+      places describing the various library routines, or new text
+      should be written from scratch using techniques that are legally
+      defensible.
+
+***** Document the SML code of the back end of our type error slicer.
+
+      This can be adapted from the documentation and comments written
+      by John as well as the earlier documentation and comments by
+      Vincent.
+
+***** Document smlnj-script's library.
+
+      The smlnj-script intepreter comes with a library of SML
+      functions to make it easier to writing SML/NJ scripts.  It needs
+      documentation.
+
+* Arrange better integration of SML program information into Emacs (or other IDEs).
+
+# This is a meta-bug.  If someone takes any of this on, the
+# individual bits of work should be copied into their own bugs and a
+# dependency on the new bug(s) should be added here.
+
+  Some of these work items are not necessarily connected to our type error
+  slicer, but are instead merely about improving SML programming in
+  Emacs in general.  They are nonetheless relevant to the type error
+  slicer project because they could be joined with it to make an
+  overall package that is more compelling for people to download and
+  start using.
+
+*** Investigate connecting SML information with Emacs IDE tools.
+
+    We should investigate connecting SML information with some
+    Emacs-based IDEs (Integrated Development Environments) and/or code
+    browsers and/or refactoring tools.
+
+    A good starting point is to investigate all parts of [[http://cedet.sourceforge.net/][CEDET
+    (Collection of Emacs Development Environment Tools)]] for
+    integration opportunities.  There are instructions for [[http://cedet.sourceforge.net/addlang.shtml][adding
+    support for a new language to CEDET]] that should be followed for
+    SML.
+
+***** Investigate connecting with sources of syntax information.
+
+      There are various Emacs Lisp packages which handle gathering and
+      making available information about the syntax and structure of
+      program text.  One is CEDET's Semantic Bovinator (yes, the name
+      is bizarre).  We should follow the [[emacswiki:HowToSetUpSemanticBovinatorForANewLanguage][guidelines for adding another
+      language]] to make it work for SML.
+
+      One interesting tool is [[http://code.google.com/p/flyparse-mode/][flyparse-mode]], which can run a
+      parser (which must speak its protocol) and take the resulting syntax
+      tree information and use it to do interesting things with the source
+      code being edited, including various code transformations and
+      information displays about the code.  It supports a simple query
+      language to make it easy to calculate certain kinds of code
+      transformations.  Of particular interest is [[http://code.google.com/p/flyparse-mode/wiki/FlyparseParserProtocol][flyparse-mode's (simple)
+      protocol]] for communicating syntax information from the separate
+      parser to Emacs.
+
+      We can also investigate somehow connecting our type error
+      slicer's back end with Semantic and/or flyparse-mode.
+
+******* Arrange for warnings of syntax style violations
+
+        This might conceivably be a job for SML mode, but it crucially
+        depends on syntax information.
+
+        + This includes identifier capitalization and word-separation
+          conventions (see bug 73).
+
+        + Warning about unneeded parentheses.
+
+        + Warn about misleading indentation.
+
+        + Etc.
+
+***** Investigate code browsers and explorers.
+
+      There are various Emacs Lisp packages which handle following
+      references within code and getting outline-like overviews of
+      code for exploring it.
+
+      A fairly basic explorer is CEDET's [[info:speedbar:Top][speedbar]], which provides tree
+      views of various things.  In its file view, it shows the tree
+      structure of directories of files, and various bits of status
+      information about the files.  It can also show a hierarchical
+      list of Emacs buffers.  In both cases, one can go into a
+      file/buffer and view also the tree structure of contents of
+      files (obtained via Imenu or etags).
+
+      [[emacswiki:EmacsCodeBrowser][ECB (Emacs Code Browser)]] seems to be the most developed and
+      language-independent of the various Emacs-based code browsers.  ECB
+      can use tags, Imenu, the Semantic Bovinator, etc., as its
+      information sources.  It can work with CEDET's speedbar, although it
+      has its own independent (and apparently superior) implementation of
+      most of the same functionality.  ECB is /not/ part of CEDET.  ECB somehow
+      connects with hideshow.el (for code folding?).
+
+      IDE-Skel also supposedly has a good tree explorer.
+
+      (Related to the above, [[http://www.emacswiki.org/emacs/TreeMode][Tree Mode]] provides a nice looking tree
+      widget which might be useful as an alternative basis for an
+      explorer window implementation.)
+
+******* Make speedbar work reasonably well for SML.
+
+********* Configure speedbar so SML files show up in the explorer.
+
+          Speedbar is currently not configured to work with SML
+          program files.  It needs something like one of these to even
+          see SML files in the file explorer:
+
+          + =(speedbar-add-supported-extension ".sml")=
+          + =(setq speedbar-show-unknown-files t)=
+
+********* Make speedbar's tags hierarchy look non-wacky for SML files.
+
+          When opening the tags hierarchy for an SML file, the
+          internal nodes of the hierarchy look completely bizarre,
+          which probably means that Imenu is screwed up for SML files,
+          which needs to be fixed.
+
+********* Make speedbar show internal tags for files without known extensions.
+
+          speedbar refuses to extract tags for a file whose extension
+          it does not know, even when Imenu or etags would work for
+          the file.  (These files show up in the file explorer with a
+          [?] tag, or do not show up at all if
+          speedbar-show-unknown-files is nil.)  This currently
+          prevents speedbar from being used for scripts (like SML/NJ
+          scripts) because their file names normally have no extension
+          at all.  Speedbar needs to be fixed so that it can decide
+          whether to extract tags using other tests than just the file
+          extension.  Like maybe speedbar could just try the file and
+          see if Imenu or etags works.
+
+***** Investigate auto-updating information displays.
+
+      There are other Emacs packages which can continuously update a
+      display of information about the code the cursor is currently in.
+      These include ELDoc mode (originally designed for use with Emacs
+      Lisp code (hence the name ELDoc) but extended by various people to
+      handle also other languages), [[emacswiki:SemanticIdleBreadcrumbsMode][Semantic Idle Breadcrumbs Mode]], and
+      [[emacswiki:WhichFuncMode][Which Function Mode]].
+
+***** Investigate other related IDE-like tools.
+
+      Possibly also of interest for ideas, features, and/or code are
+      these other Emacs packages: JDEE, ebrowse.el, OO-Browser,
+      Emacs-IDE, IDE-Skel.
+
+      Also of interest is [[http://code.google.com/p/scion-lib/][scion-lib]], an IDE for GHC (Haskell) which
+      has an Emacs side that handles highlighting of error messages in
+      source, displaying expression types, automatic background
+      running of type checker, etc.
+
+      Also possibly of interest is cameleon, an Ocaml IDE that is not
+      Emacs based, available as a Debian/Ubuntu package by the name
+      “cameleon”.
+
+*** Investigate integrating SML autodoc information with Emacs IDE tools.
+
+    Somehow, either ECB, some portion of CEDET, and/or sml-mode should
+    be adapted to allow displaying the documentation extracted by
+    autodoc tools from SML libraries.  This should be doable at the
+    point of use, e.g., if you are using the function List.exists in
+    your SML code, then perhaps hovering the mouse over it should
+    bring up a tooltip with its documentation.  This task might (or
+    might not) be independent of the type error slicer.
+
+*** Arrange for SML “tags” files in Emacs format.
+
+    It would be good to make “tags” files for SML code.  Emacs has
+    commands that make use of tags files, e.g., the find-tag and
+    complete-symbol commands.  One way would be for our type error
+    slicer's back end to automatically generate “tags” files at the same
+    time as a side effect of its main work.  Another way would be to
+    somehow adapt [[http://mlton.org/EmacsDefUseMode][MLton's output with the -show-def-use option]],
+    which has similar capabilities to tags (but
+    does not work with Emacs's standard tags commands?) and can also show
+    types.  Another way would be to extend an existing tags
+    generator/source (like Exuberant Ctags or etags or GNU GLOBAL or
+    [[http://code.google.com/p/google-gtags/wiki/GTags][GTags]] (Google Tags) to support SML.
+    (Exuberant Ctags supposedly already supports SML, although no doubt
+    it has restrictions.)  Another way would be to extend an autodoc
+    tool to emit tags files as a side effect.  Another way would be to
+    adapt otags (an Ocaml tags generator) or [[http://jun.furuse.info/hacks/ocamlspotter][OCamlSpotter]].
+
+***** Generate tags files for SML library implementations.
+
+      For all of the SML libraries we use, we have the source code.
+      We might as well generate tags files for these implementations,
+      so that programmers can easily look up the implementations to
+      see what they really do.
+
+*** Link into the new complete-at-point facility.
+
+    Emacs 23.2 and later will have a facility for integrating many
+    possible sources of completion information into a single interface
+    which will be invoked by the command complete-at-point.  We should
+    ensure that information for SML programs is properly available and
+    used by this.
+
+*** Investigate making SML call graphs and showing them in Emacs.
+
+    We should investigate whether it is useful and/or feasible to do
+    something for generating call graphs and similar information.
+    Presumably this would be based on our type error slicer's back end
+    being enhanced to emit the needed information.  CEDET has a
+    component named COGRE which is supposedly for this but seems not
+    well developed.  This task might (or might not) be independent of
+    our slicer's Emacs front end.
+
+    Possibly relevant are: GNU GLOBAL, GNU idutils, Cscope, Cbrowser,
+    Kscope, cflow, Cxref, GTags.
+
+*** Investigate making SML profiling and coverage information available in Emacs.
+
+    The various SML compilers have varying degrees of support for
+    obtaining profiling and coverage information from running
+    instances of compiled programs.  It would be good to provide some
+    way to get this information into Emacs and display it nicely.
+
+*** Make an Org-Babel SML connector.
+
+    You can see that SML is not one of [[http://orgmode.org/worg/org-contrib/babel/languages.html][the languages currently
+    supported]] by [[http://orgmode.org/worg/org-contrib/babel/][Org-Babel]].
+
+***** TODO Write details here.
+
+*** Make same improvements to other IDEs.
+
+    There are many suggestions here for improving Emacs as an SML IDE.
+    Many of the same suggestions apply equally well to any other IDE
+    used for SML.  Our main focus is on Emacs merely because (1) Emacs
+    happens also to be the best IDE that we are aware of for SML and
+    (2) Emacs happens also to be our best developed front end for
+    displaying type error slicing information.
+
+* Improve the back-end/front-end communication protocol.
+
+  Various things need to be cleaned up here.  Ask for details.
+
+*** Document the current protocol and any new improved protocol.
+
+    This is crucial to allow people to work on the back end alone, or
+    on a front end alone, without needing to understand all details of
+    the other side.
+
+    The specification should be precise enough to allow a correct
+    implementation just working from the specification.
+
+    This needs to be an independent document.
+
+*** Use something other than Emacs Lisp syntax for data interchange.
+
+    We probably want to consider switching from Emacs Lisp to some
+    other representation for sending serialized structured data, to
+    make it easier to get new front ends.
+
+    There are a number of candidate [[http://en.wikipedia.org/wiki/Comparison_of_data_serialization_formats][data interchange representations]].
+
+***** S-expressions
+
+      We are already using S-expressions, but what I mean here is
+      merely encoding the data as S-expressions.  Currently, we are
+      sending Emacs Lisp *code*, which the front end *executes* to
+      obtain the data.  We should really be sending data that merely
+      gets parsed and not executed.
+
+      S-expressions are trivially simple to print and parse, but tend
+      to cause a certain percentage of software developers to flee in
+      terror for no good reason.
+
+***** JSON
+
+      In Emacs 23.1, there is a library (json.el) for parsing and
+      generatinge JSON (JavaScript Object Notation).  There is also a
+      module for the same purpose in the SML/NJ library.
+
+      The Skalpel analysis engine is already capable of exporting
+      slice information in JSON format, so that should also be
+      considered.
+
+***** XML
+
+      The XML support situation in SML is a bit more complicated than
+      JSON, merely because you have to use the big and complicated fxp
+      library for parsing, which is much more complicated than the
+      simple JSON support in the SML/NJ library.  This is because XML
+      itself is a much more complicated format.  Printing is however
+      easy.
+
+***** [[http://code.google.com/p/protobuf/][Google's protocol buffers]]
+
+      No known Emacs Lisp or SML implementations.  I think there is an
+      OCaml implementation inside [[http://piqi.org/][Piqi]].
+
+***** [[http://piqi.org/][Piq/Piqi]]
+
+      If I understand correctly, you are actually supposed to convert
+      the Piq format into something else like JSON, Google's protocol
+      buffers, or XML before sending it.  The Piqi implemention comes
+      with code to do this, but only in OCaml or Erlang (I think).
+
+      You could conceivably use the nice human-readable Piq format
+      itself, without converting to another format.
+
+***** [[http://martin.jambon.free.fr/atd-biniou-intro.html][ATD (“adjustable type definitions” for data exchange), including Biniou]]
+
+      ATD is another general solution to the data interchange problem.
+      The only current implementation is in OCaml.  This
+      implementation can convert into XML, JSON, or Biniou for data
+      interchange.  [[http://martin.jambon.free.fr/biniou.html][Biniou]] is a binary format roughly equivalent in
+      expressive power to JSON.  As far as I know, the ATD software is
+      the only implementation of Biniou.
+
+***** [[http://thrift.apache.org/][Facebook's Thrift]]
+
+      No known Emacs Lisp or SML implementations.  There are both
+      Haskell and OCaml implementations.  The standard is
+      underspecified, so different language implementations are not
+      always actually compatible.  ☹
+
+***** [[http://www.itu.int/ITU-T/asn1/][ASN.1]]
+
+      Heavily used in the telecommunication industry.  ASN.1 is very
+      sophisticated and capable, but probably not our best choice.
+      Not very open source friendly due to the extremely complicated
+      (and formerly expensive to purchase) standards documents.  There
+      are open source ASN.1 compilers (i.e., parser generators) that
+      do things like generating [[http://lionet.info/asn1c/compiler.html][C code]], [[http://iiiasn1.sourceforge.net/][C++ code]], [[http://www.semantix.gr/asn1scc/][Ada code]], [[http://sourceforge.net/projects/jac-asn1/][Java code]],
+      or [[http://bnotes.sourceforge.net/][C# code]].  There seem to also be ASN.1 parser libraries (not
+      parser generators) for Java, Erlang (comes with the Erlang
+      implementation), and Python.
+
+*** Investigate similar protocols.
+
+***** Investigate flyparse-mode's protocol.
+
+******* TODO Copy details from above or rearrange to centralize discussion of flyparse-mode.
+
+***** Investigate the protocol of the PolyML IDE via a jEdit plugin.
+
+      [[http://dream.inf.ed.ac.uk/projects/polyml/jedit-plugin]]
+
+******* TODO Add PolyML IDE stuff at other places in task list?
+
+*** TODO Finish writing task details here.
+
+* Improve the Emacs front end of the slicer.
+
+# This is a meta-bug.  If someone takes any of this on, the
+# individual bits of work should be copied into their own bugs and a
+# dependency on the new bug(s) should be added here.
+
+  The following items of work on our type error slicer's Emacs front
+  end need to be done.
+
+*** Document code and design.
+
+    Scott has started on this.
+
+    Due to the need to quickly get new project participants up to
+    speed, it is crucial that the code is well commented and
+    documented.
+
+*** Develop testing procedures and support tools for front end.
+
+    Currently we have basically no automated tests for any of our
+    front ends, and we do not even
+    have testing procedures carried out by a human.
+
+    A good guide to testing support software for Emacs Lisp is the
+    [[http://www.emacswiki.org/emacs/UnitTesting][Emacswiki page on unit testing]].
+
+    Possibly helpful will be ERT, a tool for writing automated Emacs
+    Lisp tests that is likely arriving with Emacs 24 (the git version
+    of Org is using it).  There also appears to
+    be a new package coming called Elint which scans Emacs Lisp source
+    code.
+
+    It may be worthwhile to try to arrange for the test results to be
+    reported in the [[http://testanything.org/][TAP (Test Anything Protocol)]] or [[https://launchpad.net/subunit/][SubUnit]] formats.
+
+*** Improve calling SML compilers from slicer Emacs front end.
+
+    Because our type error slicer does not detect all compile-time
+    errors, sometimes to detect and resolve errors it is necessary to
+    actually try to build the SML code being edited using an SML
+    compiler.  There is currently the beginnings of code to do this
+    from the slicer's Emacs front end, but it needs lots of work.
+
+***** Integrate with comint.el.
+
+      We should integrate with comint.el, which is the standard Emacs
+      facility for interacting with compilers.  Currently, the support
+      in the Emacs front end for invoking a compiler doesn't use this,
+      but it should.  We should make sure to use all comint features
+      where they are appropriate.
+
+***** Provide better way to find how to build software.
+
+      We need a flexible way of specifying how to build the software to
+      harvest compile-time error messages (ideally without having other
+      side effects!).  Different programs might use many different SML
+      compilers, software build systems (e.g., make, SML/NJ's CM,
+      MLton's ML Basis files, etc.), libraries, etc.
+
+******* TODO Detail relevance of EDE here.
+
+******* TODO Move this stuff to SML/Emacs integration and then just refer to it.
+
+***** Investigate doing it automatically.
+
+      We should investigate auto-running of compilers and/or
+      auto-finding of build files, etc.  Ideas and/or code for this
+      might come from [[emacswiki:FlyMake][flymake.el]] ([[info:flymake:Top][manual]]) and/or [[http://mlton.org/EmacsBgBuildMode][the Bg-Build facility]] (BG means
+      background) that is available from the MLton site.
+
+******* TODO Move this stuff to SML/Emacs integration and then just refer to it.
+
+***** Probably lots of other stuff needs to be done.
+
+*** Improve tooltips.
+
+    We currently use tooltips, which pop up a window with explanatory
+    text based on the mouse cursor location.  There are many
+    improvements that could be made to how we handle tooltips.
+
+***** Improve the tooltip mechanisms.
+
+******* Show terminal window tooltip equivalent
+
+        In addition to tooltips, it would be good to integrate support
+        for help-at-pt.el, which supports showing explanatory text in
+        the “echo area” based on the text cursor location (instead of
+        popping up a tooltip window).
+
+******* Show tooltips near text cursor.
+
+        It might be good to investigate using packages like pos-tip.el
+        (and another similar package whose name I do not remember) for
+        positioning tooltips at arbitrary locations (rather than just
+        near the mouse).  This could be used to show the tooltips near
+        the text cursor.
+
+******* Investigate upcoming Emacs support for using GTK tooltips.
+
+        It seems that Emacs 24 (or whatever follows 23.3) might be able to
+        use GTK tooltips instead of the ones built from special Emacs
+        frames.  This is controlled by the variable
+        x-gtk-use-system-tooltips.  It should be investigated whether this
+        makes any difference to our work.
+
+***** Display more useful information in the tooltips.
+
+      One idea is that we could use tooltips to show appropriate bits
+      of the legend when hovering over pieces of slices.  This would
+      be instead of showing the entire legend in the tooltip no matter
+      where it is (which is what we do now).
+
+      There are many other improvements to be made.
+
+*** Improve display of slices with many distant parts.
+
+    Type error slices may be spread across many files and include bits
+    at distant locations in the same file.  Improvements are needed to
+    how entire error slices are shown to users.
+
+***** Clean up hiding of portion of slice in basis.
+
+      We currently show the portion of libraries that are involved in an
+      error slice by describing the libraries in a big text file and
+      hiding the irrelevant portion (which will usually be 99.9% of this
+      file).  There are problems with the way this currently works and
+      it should be improved.  It may be possible to use code and/or
+      ideas from hs-minor-mode (hideshow.el), hideshow-org.el,
+      hide-if.el, hide-region.el, fold-dwim.el, etc.
+      The new macro with-silent-modifications in Emacs 23 (for
+      tweaking text properties without affecting the buffer's
+      modification state) might (or might not) be useful.
+
+***** Investigate doing hiding also in user code and for entire slice.
+
+      We should investigate using hiding for displaying slices in user
+      code also.  One possibility is to use Emacs's “indirect buffer”
+      feature to allow showing a folded view of a buffer while
+      simultaneously working on the buffer normally (with an unfolded
+      view).
+
+***** Improve display of slice chunks in multiple Emacs windows (panes).
+
+      For displaying entire slices, it is sometimes needed to show many
+      Emacs windows (i.e., panes) at once.  Our code for this needs some
+      love.  Possible places for finding ideas and/or code to include
+      pack-windows.el (in Debian emacs-goodies-el package).
+
+***** Display separate slice in another way and document notation.
+
+      We should provide some way to see the entire slice separate from
+      the files it is in.  Currently there is code for showing entire
+      slices in tooltips, but this is impractical (because often the
+      slices do not fit in a tooltip) and we must develop another
+      mechanism.  We should also explain to the user the ⟨⋯⟩ notation we
+      use, and color the separate slice in the same way as the slice
+      highlighted in the source code.
+
+*** Provide better way to navigate through many slices.
+
+    There may be a large number of type error slices for a single
+    program.  Currently, we provide a “next-slice” and “previous-slice”
+    command, but the order that the slices occur in the list is
+    unpredictable and it is difficult to navigate through all of them if
+    there are a large number of slices.  We should provide some kind of
+    directory of error slices to allow easily switching between them.
+    Possibilities include (1) having a dynamic menu that includes the
+    current slices, (2) somehow integrating with the speedbar (or
+    sr-speedbar (speedbar in same frame)) or ECB's equivalent of
+    speedbar, and/or (3) some other mechanism.
+
+*** Utilize Emacs window (pane) “fringes”.
+
+    We should investigate whether some kind of slicer-related
+    information or controls can be usefully put in the window “fringes”.
+    Emacs allows placing icons (or very short text) in narrow areas
+    immediately to the left and right of the text display area which are
+    called the “fringes”.  Sometimes debuggers indicate the line of code
+    currently being executed by placing a small black triangle in the
+    fringe pointing at the line.  The things placed in the fringe can
+    also be active buttons of some sort which can be clicked on to do
+    things.  (The fringe feature is missing when Emacs is running inside
+    a tty terminal window, but 99.9% of our users will not encounter
+    this.)  Possibly relevant is the [[emacswiki:RFringe][Relative Fringe]] display.
+
+*** Improve online help text.
+
+    There is an online help text file named SML-TES-HELP that has
+    various problems that need to be fixed.
+
+***** Improve presentation of online documentation.
+
+      For example, it should not begin with a gigantic copying license.  Currently,
+      when someone invokes the help command, all they are likely to
+      see is the copying license.  They will have to scroll down to
+      see any more.  This is an extremely unpleasant
+      user experience.  If a license is in the file, it should be at
+      the end, preferably after a huge chunk of blank lines.
+
+***** Update online documentation.
+
+      For example, the menu it
+      refers to now has a different name.  The URL it refers to is not
+      the long-term stable URL but a temporary URL.  Etc.  Ideally, it
+      should be arranged that it will be kept up-to-date by making it
+      automatically connected to some master documentation that will be
+      kept up-to-date.
+
+***** Change how fonts/colors are handled so they can be nicely documented.
+
+      Technically, this is not a problem of the documentation, but
+      rather of the code.  But the documentation currently has little
+      choice but to describe things in an awkward way, because things
+      are currently awkward.
+
+      Right now the documentation gives a very long list of Emacs
+      “faces” (named font and color settings) that we use, with some
+      instructions on how they can be changed one-by-one.
+      What we should
+      have instead is instructions on how to bring up the Emacs
+      customization group they all belong to.  (And if the faces don't
+      all belong to a customization group with nothing else in it, then
+      this should be fixed.)
+
+***** Test on real users.
+
+      Every part of this file should be tested on real users to see if
+      it makes sense to them.  Also, real users should be asked what
+      should be in the help text.
+
+***** Put online documentation in better format.
+
+      The online documentation should anyway in “Info” format.  Or it should at least
+      take advantage of some other format Emacs supports for better
+      presentation (like maybe enriched text format to get colors).
+
+******* TODO Update status: apparently there is /also/ an Info file.
+
+*** Provide better display of current slicing status.
+
+    It is important to display the current slicer status somewhere.
+    This information could include:
+
+    + Is slicing actively ongoing?
+    + How many error slices have been found?
+    + Are there syntax or type errors (or possibly both)?
+    + How many files are being (or have been) sliced (user, system)?
+    + Etc.
+
+    Frequently in Emacs the “mode line” contains information about the
+    activity of various subsystems, so this is a good place to put at
+    least some of this information.  (And the new mode-line-emphasis
+    face of Emacs 23 (which is used to highlight ongoing activity)
+    should be used here.)  And there are other possibilities, like the
+    display windows of ECB and/or the speedbar.
+
+*** Utilize Emacs tool bar.
+
+    We should consider whether it would be useful to add one or more
+    active icons to the Emacs tool bar.  (What specific actions would
+    these be for?  Maybe this is one place where some status
+    indicators could go?)
+
+*** Provide a context menu.
+
+    We should arrange for a context menu to show information from the
+    type error slicer.  This could be accessible when clicking the right
+    mouse button while the mouse pointer is over interesting things in
+    the buffer.  (In Emacs by default Control-Mouse-Button brings up
+    various menus depending on which mouse button is used, but I think
+    we don't want to use any of these pre-existing menus.)
+
+    When invoked on a slice, the context menu should offer to do various
+    things with the slice like focus it, rearrange buffers/windows to
+    show as much of the slice as possible, jump to the next/previous
+    chunk of the slice, show the slice separately from the program in
+    another buffer/window/frame, etc.
+
+    When invoked on an identifier, the context menu should offer to
+    show information about it and/or jump to its binding location.
+
+    Code and/or ideas for how to implement a context menu might be
+    found in org-mouse.el (part of Org-mode as of version 4.53).
+
+*** Develop displays of type information other than error slices.
+
+    It would be good to be able to show other kinds of type information
+    than merely type error slices.  This could be done via a context
+    menu and/or tooltips.
+
+    For arbitrary expressions (or at least identifiers), it should be
+    possible to see the inferred type information (which might contain
+    conflicting parts if there is a type error).  PolyML is recently
+    (2010-09) adding support for showing types in an IDE under
+    development.  MLton has some support for this as part of the
+    information you get when using its [[http://mlton.org/EmacsDefUseMode][-show-def-use option]]
+    (see above for tags-like
+    functionality from this).
+
+    It would be interesting to show information about spots which might
+    produce values that can show up there (type-based flow analysis).
+    This would require some adaptations to the back end to emit the
+    information.
+
+*** Create and use hyperlinks in source code.
+
+    Putting hyperlinks into the source code might (or might not) be
+    good.  It might be useful to insert clickable buttons in the buffers
+    to get more information about error slices.  It might also be nice
+    to make identifiers into hyperlinks to their binding sites.
+
+*** Provide recommendations for other helpful supplementary software tools.
+
+    Probably we should have documentation that comes with the type error
+    slicer that recommends what other Emacs packages should be installed
+    with it and what customizations (if any) should be made.  This might
+    include, just for example, recommendations to install CEDET, ECB,
+    version 4.1 of sml-mode, etc.
+
+*** Fix menu over-availability problem.
+
+    The menus related to the type error slicer should probably not show
+    up in every buffer, but only in those somehow related to the SML
+    code being examined.
+
+*** Improve Emacs Lisp code.
+
+***** Follow Emacs Lisp conventions.
+
+      The Emacs Lisp code of the type error slicer's front end should
+      follow Emacs Lisp coding conventions.  The documentation for these
+      conventions can be found in these Info nodes:
+
+      + [[infoEmacsLisp:Key%20Binding%20Conventions][(elisp)Key Binding Conventions]]
+      + [[infoEmacsLisp:Coding%20Conventions][(elisp)Coding Conventions]]
+      + [[infoEmacsLisp:Tips][(elisp)Tips]]
+
+***** Comment every line.
+
+      Because it is difficult to get people to learn enough Emacs Lisp
+      to make progress, it is important that the code is extremely
+      well documented so that people do not have to spend so much time
+      learning Emacs Lisp first.  Things that would normally be left
+      uncommented in Emacs Lisp code should be explained.
+
+*** Port to XEmacs.
+
+    Make the Emacs Lisp code of the slicer's Emacs front end work with
+    XEmacs in addition to GNU Emacs.
+
+*** Script and/or record demonstrations.
+
+    Use Emacs's [[emacswiki:EmacsScreencasts][Screencast Mode]] to make a demo.  Make ordinary videos of
+    demos also.
+
+*** There is lots of other stuff to be done.
+
+* Improve the type error slicer's back end.
+
+*** Document code and design.
+
+    John has made a very thorough start on this, but it still needs
+    more improvement and it will need to be maintained as things
+    change.
+
+    Due to the need to quickly get new project participants up to
+    speed, it is crucial that the code is well commented and
+    documented.
+
+*** Develop more robust tests for all parts of back end (maybe use SMLUnit or QCheck).
+
+    It may be worthwhile to try to arrange for the test results to be
+    reported in the [[http://testanything.org/][TAP (Test Anything Protocol)]] or [[https://launchpad.net/subunit/][SubUnit]] formats.
+
+*** Improve the back end's performance.
+
+***** Gather information about the back end's performance.
+
+******* Carry out accurate and thorough profiling.
+
+********* Find and/or develop better profiling methods.
+
+******* Instrument the back end to gather statistics.
+
+***** Switch to more efficient data structures throughout back end.
+
+***** Develop and use better algorithms.
+
+***** Figure out how to do constraint solving compositionally.
+
+      We currently /generate/ constraints compositionally, but it
+      would be useful to be able to /solve/ them compositionally.
+      This would be an important step toward supporting fast
+      incremental reanalysis while the programmer types.
+
+*** Improve how the back end works with different SML compilers.
+
+    The compilers we might want to consider include at least SML/NJ,
+    MLton, MoscowML, HaMLet, HaMLet-S, PolyML, SML#, and TIL.
+
+***** Handle variations in allowed SML.
+
+      Here we need to consider the SML language standard and also all
+      of the deviations from the standard implemented by various
+      compilers.
+
+******* Ensure parser can handle all allowed syntactic variations.
+
+********* Ensure parser warns about variations not allowed by all versions of SML.
+
+          It is particularly important that the parser should warn
+          about anything not allowed by the standard.
+
+***** Handle variations in available libraries.
+
+      Each SML compiler supplies some non-standard functions.  Also,
+      there are some (mainly version-dependent) variations in the
+      definitions of standard library components.  The slicer back end
+      should be able to adapt to these and should come with
+      configuration information that adapts it for the most widely
+      used compilers.
+
+******* Automated extraction of information about predefined identifiers in library and their types.
+
+********* Automated extraction from a running top-level REPL (read-eval-print loop).
+
+          Some work has been done on figuring out some of how to do
+          this with SML/NJ.  Ask for details.
+
+*********** TODO Write some of these details here.
+
+***** Ensure back end can be built with each SML compiler.
+
+      Currently we support SML/NJ and MLton.  We have at points
+      successfully built with PolyML but we haven't been exercising
+      this recently so it is probably broken now.
+
+      This is important because SML compiler implementers might want
+      to consider integrating the functionality of the slicer back end
+      into their compiler.  They will prefer to compile the slicer
+      back end implementation and directly invoke its internal
+      functions rather than communicating with a separate process.
+      Because all these compilers are built by compiling themselves,
+      this means our code has to be compilable also by each compiler.
+
+      They also will be more likely to ship the slicer with their
+      compiler if it does not require a different SML compiler in
+      order to be built.
+
+*** Generalize to multiple programming languages.
+
+    Currently we only handle SML.  It would be good to handle other
+    languages.
+
+***** Additional languages to consider.
+
+******* Related closely to SML ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=1119&language=SML][HOPL]]).
+
+********* SML/NJ ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=1661][HOPL 1]], [[http://hopl.murdoch.edu.au/showlanguage.prx?exp=6365&language=SML/NJ 1997][HOPL 2]])
+
+          We handle some of SML/NJ's extensions to SML, but we do not
+          handle the trickier ones like higher-order functors.
+
+********* ML (the original) ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=620][HOPL]])
+
+          It is not clear if anyone still uses the original ML
+          language (pre-standardization).
+
+********* Edinburgh ML ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=3645][HOPL]])
+
+          I think this is the original ML implementation, modified to
+          work for the SML language?  It is still used in places, in particular by
+          the NuPrl project centered at Cornell.  If we handled
+          Edinburgh ML, the NuPrl people would be quite likely to use
+          our slicer.
+
+********* SML.NET ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=3732&language=SML.NET][HOPL]])
+
+********* SML# ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=1708&language=SML#][HOPL]])
+
+          This is an extension of SML which hopefully is not too
+          difficult.  The key new feature is row polymorphism for
+          records, which in turn supports a nicely typed SQL interface.
+
+********* Mythryl.
+
+          The Mythryl implementation is basically SML/NJ rewritten to
+          compile a new syntax (and its own code is written in the new
+          syntax).  So the type analysis problem should be nearly the
+          same and this should mainly be an exercise in handling a new
+          syntax.
+
+********* Alice ML.
+
+********* [[http://homepages.inf.ed.ac.uk/dts/eml/][EML (Extended ML)]] ([[http://hopl.murdoch.edu.au/showlanguage.prx?exp=1140][HOPL]])
+
+          Still used in 2011 by Don Sannella at the University of Edinburgh.
+
+******* [[http://www.ats-lang.org/][ATS]]
+
+******* OCaml.
+
+        This one will be tough.
+
+        - The only definition of the type system of OCaml is the
+          implementation.
+
+        - The type system changes from month to month, so it is a
+          moving target.
+
+        - It comes with a widely used syntax preprocessor.
+
+        - The license enabling copying and modification of OCaml is
+          the QPL which requires distributing all changes only in the
+          form of differences.  Only the central controllers of OCaml
+          have the right to distribute in a straightforward format.
+
+        - Etc.
+
+        The main risk here is that, even if we somehow managed to
+        handle the full language, unless we got complete buy-in from
+        the primary OCaml developers, our code would be broken and
+        obsolete within a month and potentially years of work would go
+        down the drain.
+
+        + [[http://www.ocamlpro.com/code/2011-06-03-cheatsheets.html][OCaml Cheat Sheets:]]
+          + The OCaml Language
+          + OCaml Standard Tools
+          + OCaml Standard Library
+          + OCaml Emacs Mode (Tuareg)
+
+******* Haskell.
+
+        This will be tough due to type classes.  Also, no one programs
+        standard Haskell but instead everyone uses GHC extensions.  So
+        Haskell is a moving target, but due to the existence of independent
+        implementations, there is a better chance than OCaml.
+
+******* [[http://opalang.org/][Opa]].
+
+        Opa ([[https://mlstate.com/blog/Group/news/][blog]], [[http://opalang.org/public/book_opa.pdf][manual]]) is an ML-inspired language for web
+        applications (e.g., the language contains SQL-equivalent
+        statements and the compiler will transparently generate
+        JavaScript for sending to client web browsers) which is
+        [[https://mlstate.com/blog/Group/news/article/15][becoming open source]] (sometime soon as of [2011-06-07]).
+
+        + [[http://dutherenverseauborddelatable.wordpress.com/2011/05/30/crowdsourcing-the-syntax/][Proposed changes to Opa syntax]]
+
+******* [[http://www.impredicative.com/ur/][Ur]].
+
+        Ur is an SML-inspired programming language with special
+        extensions for metaprogramming, handling of XML, SQL queries,
+        marshalling/unmarshalling, and client-side Javascript
+        generation for web applications.  Ur somehow avoids needing
+        garbage collection.  Ur excludes assignments.
+
+        Ur is a rewrite of the earlier (and now abandoned?) [[http://smlweb.sourceforge.net/][smlweb]]
+        project which was entirely done in SML/NJ.  Along the way
+        there was the [[http://laconic.sourceforge.net/][Laconic]] project ([[http://sourceforge.net/projects/laconic/][SourceForge]]).
+
+******* Scala.
+
+******* Other languages.
+
+******* Criteria for deciding.
+
+********* Availability of industrial collaborator.
+
+********* Alignment with funding body priorities.
+
+*********** Languages useful for multi/many-core and/or concurrent programming.
+
+            For example, EPSRC is currently (recent change circa
+            2011-06, probably will last a couple of years) focusing
+            money on 5 themes, one of which is “multi/many-core and
+            concurrent programming”.  So a criteria is “can we pitch
+            language X as being highly used and/or promising for
+            many-core and/or concurrent programming”.
+
+***** Enhance slicer back end to be target-language-independent.
+
+******* Separate parser, and define a clean interface for connecting the slicer back end to parser.
+
+******* Define a language for specifying programming-language-specific grammar and type constraint rules.
+
+        This is needed so the back end will know what to do with the
+        parse trees it gets from the parser.
+
+******* Develop, test, and debug rules for SML.
+
+******* Develop, test, and debug rules for additional languages.
+
+********* Add features as needed.
+
+*** Port to additional operating systems.
+
+***** Windows.
+
+      Almost ready?
+
+***** MacOS.
+
+      Having difficulties compiling.  Needs work.
+
+*** Improve support for large projects
+    At the moment we have .tes files which contain a list of files
+    which are to be fed into the analysis engine. Should it be the
+    case that this list of files is picked up automatically from the
+    .cm or the .mlb files? We need to think about this.
+
+* Improve packaging.
+
+*** Package development version regularly.
+
+    Currently, to use the development version, we have to build from
+    source from the git repository.  We should instead regularly
+    package the development version and reinstall it our on computers,
+    because that is a good way to ensure it gets tested in the form
+    that end-users will see it.
+
+*** Package for more operating systems.
+
+***** Windows.
+
+      Almost ready?
+
+***** MacOS.
+
+      Work has been done.  Status?
+
+*** Package with additional software and/or documents.
+
+***** Latest SML mode?
+
+***** Other things as we develop them?
+
+*** Test packaging more rigorously.
+
+*** Find better places to announce packages.
+
+*** Get packages into OS distributions.
+
+***** Ubuntu PPA (personal package archive).
+
+* Work on other front ends.
+
+  Although the Emacs front end is our main locus of development right
+  now, there are many reasons to work on other front ends.
+
+*** Evaluate which front end platforms are best targets.
+
+*** Make Vim front end usable.
+
+    Currently it is unusable.
+
+    The developer will need to learn Vim-script.  (Technically, Vim is
+    scriptable by other languages (e.g., [[http://stevelosh.com/blog/2011/09/writing-vim-plugins/][Python]] and Perl), but it is
+    impossible to depend on Vim at any destination site being compiled
+    with support for any scripting language other than Vim-script, so
+    we pretty much have to use Vim-script.)
+
+*** Improve terminal front end.
+
+    See bug database.
+
+*** Implement an Eclipse front end.
+
+    Possible good starting points for this include:
+
+    + [[http://www.cs.unc.edu/~narain/projects/mldev/][ML-Dev]] (an Eclipse plug-in for SML)
+
+    + [[http://eclipsefp.sourceforge.net/][EclipseFP]] (an Eclipse plug-in for functional languages that
+      currently only supports Haskell) ([[http://eclipsefp.wordpress.com/][Google Summer of Code project
+      blog]])
+
+      Version 2 uses Scion.
+
+*** Implement a jEdit front end.
+
+    This is mainly interesting as a possibility because the Isabelle
+    and PolyML people like to use jEdit.
+
+*** Improve web demo front end.
+
+    See bug database.
+
+* Improve documentation.
+*** Write advertising and/or evangelistic material:
+
+***** Choose good example of type error slices
+
+      Vincent has suggested these:
+
+      + [[file:$TES_GIT/implementation/database/code467.sml][test case #467]]
+      + [[file:$TES_GIT/implementation/database/code465.sml][test case #465]]
+      + [[file:$TES_GIT/implementation/database/code114.sml][test case #114]]
+      + [[file:$TES_GIT/implementation/database/code266.sml][test case #266]]
+
+***** Make poster.
+
+***** Make flyers for use at events.
+
+*** Update user documentation.
+*** Write an FAQ?
+* Carry out scientific and statistical evaluation of effectiveness of type error slicing.
+
+  Progress has been made by Dave and Mark toward designing an
+  experiment.
+
+  There are many things to consider trying to measure:
+
+  + programming speed
+
+  + quality of resulting code
+
+  + happiness of users
+
+  Lots of work is needed.  Ask for details.
+
+  Some (just some! there is lots of other stuff!) related work:
+
+  + [[http://ecs.victoria.ac.nz/Events/PLATEAU/][Workshop on Evaluation and Usability of Programming Languages and Tools (PLATEAU)]]
+    + [[http://ecs.victoria.ac.nz/twiki/pub/Events/PLATEAU/2009Program/plateau09-hanenberg.pdf][Stefan Hanenberg.  What is the Impact of Type Systems on
+      Programming Time? - First Empirical Results, PLATEAU 2009.]]
+  + [[http://www.cs.brown.edu/~sk/Publications/Papers/Published/mfk-measur-effect-error-msg-novice/][Guillaume Marceau, Kathi Fisler, Shriram Krishnamurthi.  Measuring
+    the Effectiveness of Error Messages Designed for Novice
+    Programmers, Scheme and Functional Programming, 2010.]]
+
+*** Determine whether techniques of meta-analysis can help overcome lack of numbers of SML programmers to test.
+
+* Improve and/or fix Emacs's SML mode.
+
+# This is a meta-bug.  If someone takes any of this on, the
+# individual bits of work should be copied into their own bugs and a
+# dependency on the new bug(s) should be added here.
+
+  Anyone using the slicer's Emacs front end will almost certainly be
+  using the SML mode for Emacs.  This is also known as sml-mode,
+  because the function that turns the mode on has that name.
+
+  There are many improvements to be made here that are independent of
+  the type error slicer.  These items are not necessarily connected to
+  our type error slicer, but are instead merely about improving SML
+  programming in Emacs in general.  They are nonetheless relevant to
+  the type error slicer project because (1) we have to use SML mode
+  ourselves, and (2) our users will need to use SML mode.
+
+  (It is worth noting that Stefan Monnier, the maintainer of SML mode
+  (and author of much of it?), has been co-maintainer of GNU Emacs
+  itself since 2008!)
+
+  The following things ought to be done for the Emacs SML mode.
+
+*** Provide better support of SML/NJ's quasiquotes.
+
+    Currently, sml-mode does not recognize quasiquotation at all.  The
+    improved support should include syntax highlighting and
+    indentation.  For example, indentation should line up continuation
+    backslashes (“\”) at the beginning of lines in quasiquoted text in
+    the same way that it lines them up inside ordinary strings.
+
+*** Improve detection of the distinction between text and code.
+
+    It would be good to get a better distinction between text
+    (material inside textual comments, inside strings, inside
+    quasiquotes), and code (material outside textual comments (but
+    commented-out code is included in code) and strings and
+    quasiquotes).
+
+    One reason why this is tricky in SML is that SML comments are used
+    for two distinct purposes, (1) as ordinary program comments, and
+    (2) for disabling code (which works because they can be nested).
+
+    When code is disabled with comments, the disabled code can contain
+    bits of text, just like ordinary code.
+
+    Another reason why this is tricky is that quasiquotes can contain
+    antiquotes which contain code which can contain nested quasiquotes
+    (and this cycle can repeat as many times as you like).
+
+    Methods for doing this are:
+
+    + Use information computed by font-lock (Emacs's syntax highlighting).
+
+      It should be possible to take advantage of the information
+      computed by font-lock (the Emacs facility that does syntax
+      hightlighting).  It might help to set fill-nobreak-predicate to
+      use font-lock results ([[emacswiki:FillingComments]]).
+
+    + Use information from CEDET's Semantic Bovinator.
+
+    + Use information from another parser (e.g., slicer back end).
+
+    The kinds of things that can be done with this distinction are:
+
+    - De-confuse commands for moving by balanced expressions.
+
+      In text, commands for moving by s-expressions (balanced
+      expressions) like C-M-f (forward-sexp) and C-M-b (backward-sexp)
+      should not get confused by SML keywords like “with” and “while”
+      and “if”.  They should also not try to move to the next string,
+      but should stop at string boundaries.
+
+    - Apply spelling checkers accurately.
+
+      Spelling checkers (ispell and flyspell) should restrict their
+      attention to text, where it matters whether spelling matches a
+      dictionary, but should ignore program keywords and identifiers.
+
+    - Use different indentation and line breaking rules for text and code.
+
+*** Fix comment paragraph line breaking and indentation (“filling”).
+
+    This work includes the following tasks.
+
+***** Make better use of information about text/code distinction.
+
+      See above.
+
+***** Handle box comments.
+
+      Check whether [[emacswiki:rebox2][rebox.el]] and/or boxquote.el can be adapted to help
+      with SML comment filling.
+
+***** Investigate whether filladapt.el will be an improvement.
+
+      Investigate whether [[emacswiki:FillAdapt][filladapt.el]]'s difference from Emacs's
+      built-in “adaptive filling” means that it will help solve the SML
+      comment filling problem.  haskell-mode apparently has some good
+      use of filladapt.  The latest version of Kyle Jones's filladapt.el
+      is version 2.12 of 1998-02-28 (which is the version that is
+      included in the Debian emacs-goodies-el package).
+
+***** Ensure comment boundaries are correctly found when filling.
+
+      One of the problems is that filling of comments sometimes ends
+      up also filling code, which is very bad.  This might be made
+      easier in Emacs 23.1 by the new fill-forward-paragraph-function
+      variable which specifies which function the filling code should
+      use to find paragraph boundaries.
+
+***** Many other things.
+
+      Ask for details.
+
+*** Fix many code indentation issues.
+
+    Maybe integration with something like CEDET's Semantic or
+    flyparse-mode (getting syntax information from the slicer) would
+    help.  Some of the code from MLton's site for indenting .mlb files
+    may also be relevant.
+
+    The new SMIE (Simple Minded Indentation Engine, in smie.el)
+    facility in Emacs 23.3 may be helpful here.  SMIE is a generic
+    navigation and indentation facility that takes as input a grammar
+    and some ad hoc rules to tweak the results.
+
+    There is also the older syntax-ppss function from syntax.el which
+    might be relevant.
+
+***** Ask Stefan Monnier for the SMIE rules for SML.
+
+      Apparently SMIE rules must exist for SML, because SMIE was
+      developed from the SML mode parser.  For some reason they have
+      not been released yet.  Ask Stefan Monnier for them.
+
+*** De-confuse commands for moving by balanced expressions.
+
+    It has already been mentioned above that the commands for moving
+    by s-expressions get confused in comments.  They also work poorly
+    outside of comments.  SMIE might help here, or it might be
+    possible to use the Semantic Bovinator, or something like
+    flyparse-mode.
+
+*** Improve how outline mode works for SML.
+
+    SML mode's definition of outline-regexp (sml-outline-regexp) is
+    too simplistic, because it only tries to find code definitions,
+    and does not allow any outline nesting structure to be introduced
+    via comments.
+
+    A solution probably needs not only to improve the outline-level
+    regexp (a poor version of which is currently supplied by SML mode),
+    but also to supply also an outline-level function.  Other code
+    changes may be needed.
+
+    Whatever is done should ideally also work with enhanced outline and
+    folding modes (e.g., allout.el, foldout.el, folding.el, foldingo.el,
+    etc.).  For example, allout.el does not appear to use
+    outline-regexp, so maybe it will need its own customization for SML.
+
+*** Configure minor mode for folding/hiding of code for SML.
+
+    Hideshow minor mode (hs-minor-mode from hideshow.el) is for
+    folding/hiding balanced parts of code.  It needs to be configured
+    to work with SML.  See also hideshow-org.el, hideshowvis.el, and
+    hideshow-state.el.
+
+*** Fix problems with Imenu for SML.
+
+    Imenu is an Emacs facility for finding definitions in files being
+    edited, and there are some issues with using it with SML.  One
+    issue is that the quality of the finding of definitions seems a
+    bit poor.  Another issue is that maybe we should document how to
+    turn on and use facilities based on top of Imenu, like Which
+    Function mode.
+
+*** Fix parentheses matching problem in SML mode.
+
+    There is a bad interaction of paren.el (for showing matching
+    parentheses, brackets, etc.) and SML comment enders.  Right now,
+    if parentheses matching is turned on, you always get a bogus error
+    message when you type the right parenthesis as part of “*)”.
+
+*** Make SML/NJ scripts automatically use SML mode and become executable.
+
+    It would be good if SML/NJ scripts automatically used SML mode
+    (via interpreter-mode-alist, or maybe via magic-mode-alist).
+
+    It would also be good if Emacs automatically made newly created
+    SML/NJ scripts executable.  Information on this can be found at
+    these locations:
+
+    + [[info:autotype:Executables][(autotype)Executables]]
+    + [[elisp:(describe-function 'executable-chmod)]] (which is in lisp/progmodes/executable.el)
+    + [[emacswiki:MakingScriptsExecutableOnSave]]
+
+*** Investigate supporting vertical alignment in SML code.
+
+    It would be good to investigate whether it is useful and/or
+    feasible to automatically line up some things vertically, e.g.,
+    function arguments across clauses of fun dec's and types in
+    signatures.  This could maybe use code from align.el (file by that
+    name inside Emacs, a different one by same name external),
+    delim-col.el, align-let.el, etc.
+
+*** Investigate packages for reading and editing veryLongIdentifiersWithNoWordSeparators.
+
+    SML coding conventions dictate the use of veryLongIdentifiersWithNoWordSeparators in
+    some cases.  It would be good to investigate whether to
+    automatically turn on Glasses Mode to make such identifiers easier
+    to read and edit.  Or maybe whether to recommend turning it on,
+    and if so to document how.  It should also be investigated whether
+    to use the new Emacs 23 packages subword.el or cap-words.el to
+    adjust the word motion and editing commands to make it easier to
+    manipulate such identifiers.
+
+*** Investigate related Emacs modes for for ideas, features and/or code.
+
+    Candidates include ocaml-mode, tuareg-mode (another Ocaml mode),
+    and haskell-mode.
+
+    See the message thread on the emacs-devel@gnu.org mailing list
+    titled “good "modern" example code for a programming-language
+    mode?” which took place during 2011-02-15/---17.  According to
+    this thread, an example of a very modern mode is [[http://code.google.com/p/js2-mode/][a new JavaScript
+    mode]].
+
+*** Do lots of other needed bits of work on SML mode.
+
+* Improve smlnj-script.
+
+*** Develop robust tests for all parts of smlnj-script (maybe use SMLUnit or QCheck).
+
+*** TODO Write lots of items here.
+
+* Project: Make a de-SML/NJ-izing tool.
+
+It would be useful to make a source-to-source de-SML/NJ-izing tool.
+Some SML/NJ extensions, like quasiquotes and or-patterns, are
+extremely useful, especially in scripts.
+
+In particular, it would be useful if PolyML could be made to use such
+a tool as a preprocessor on its input (because it would be nice to be
+able to use PolyML for scripts for quick startup instead of SML/NJ).
+
+This project would need an existing SML parser for SML/NJ syntax.  The
+SML parser that is currently part of our type error slicer's back end
+could be used for this.
+
+This project would involve translating away various SML/NJ-only
+constructs such as the following.
+
++ Or-patterns.
+
+  For example, the translator might replace
+
+  :  fn ((INL x) | (INR x)) => x + x
+
+  by
+
+  :  let val f x = x + x in fn INL x => f x | INR x => f x end
+
+  There would need to be magic =(*#line...*⁠)= comments indicating which
+  parts of the translation come from the original source in order to
+  get error messages right.  See the quasiquotation example below for
+  a detailed example of this.
+
++ Quasiquotation.
+
+  For example, if told that quasiquotes are in use, then the
+  translator might replace
+
+  :  `Abc ^def ghi`
+
+  by:
+
+  :  [Quasi.QUOTE "Abc ", Quasi.ANTIQUOTE (def), Quasi.QUOTE " ghi"]
+
+  (Actually, the replacement would look more like
+
+  :  (*#synth*)[Quasi.QUOTE (*#line L.6*)"Abc "(*#synth*), Quasi.ANTIQUOTE ((*#line L.12*)def(*#synth*)), Quasi.QUOTE (*#line L.14*)" ghi"(*#synth*)](*#line L.20*)
+
+  where L would be the line number and I am imagining =(*#synth*⁠)= as
+  meaning “has no source location at all”.  I am not actually sure
+  what to do for this.  It might be better to use something like
+  =(*#line 0.0 "dummy-file-location-which-does-not-exist"*⁠)= instead of
+  making up a new magic comment.)
+
+  If, for some reason, one wanted to use SML/NJ with de-SML/NJ-ized
+  source code, the Quasi module could be just:
+
+  :  structure Quasi = struct datatype frag = datatype SMLofNJ.frag end;
+
+  For other compilers, we would de-SML/NJ-ize first and use the
+  resulting translation with this definition of Quasi:
+
+  :  structure Quasi = struct datatype 'a frag = ANTIQUOTE of 'a | QUOTE of string end;
+
+  Perhaps instead of the precise details written above, we should
+  instead follow HaMLet-S which implements the Successor-ML
+  recommendation.  The key difference in HaMLet-S's approach is that
+  the constructors get an additional argument which is the file
+  location.  This information serves a similar purpose to the magic
+  =(*#line...*⁠)= comments (which would still be needed), but is
+  accessible /within/ the program.
+
++ Signatures and functors inside =(local ... in ... end)=.
+
+  For example,
+
+  :  local
+  :    signature G = sig
+  :      val x : int
+  :    end
+  :  in
+  :    structure T : G = struct
+  :      val x = 1
+  :    end
+  :  end;
+
+  would be replaced by
+
+  :  signature G1879 = sig
+  :    val x : int
+  :  end
+  :  structure T : G1879 = struct
+  :    val x = 1
+  :  end;
+
+  where the new name =G1879= is chosen in some way that will avoid
+  collisions.
+
++ Vector syntax.
+
+  For example, the translator might replace
+
+  :  #[2, 5, 7, 11, 13, 17, 19]
+
+  by
+
+  :  Vector.fromList [2, 5, 7, 11, 13, 17, 19]
+
+  The pattern matching case is more involved, because in the worst
+  case we would have to implement a pattern compiler.  However, at
+  least simple cases should be doable without too much effort.  For
+  example,
+
+  :  fn #[x, y, z] => x * y + z
+
+  could be replaced by
+
+  :  fn w => if Vector.length w = 3
+  :          then let val x = Vector.sub (w,0)
+  :                   val y = Vector.sub (w,1)
+  :                   val z = Vector.sub (w,2)
+  :               in x * y + z
+  :               end
+  :          else raise Match
+
++ Other minor syntactic issues.
+
+  For example, SML/NJ allows =S . x= to
+  mean =S.x=.  We could simply remove such illegal whitespace.  SML/NJ
+  allows writing =val op + : TYPE= in a signature, which should
+  instead be =val + : TYPE=.  We could simply remove the illegal =op=.
+
+  (Actually, for both of these, it might make more sense to require
+  the use of an extra option to avoid them being fatal errors and
+  recommending strongly in the manual that the user replace them in
+  their master source code.  There is no reason to use either of the
+  above forms, ever.)
+
++ Functors and functor signatures inside structures and signatures.
+
+  I am not sure this one is worth it.  It might be better in this case
+  just to recommend people do this transformation by hand.
+
++ Other issues involved in de-SML/NJ-izing.
+
+  There are other issues involved in de-SML/NJ-izing, but I think all
+  of the other issues require more than just syntactic reasoning to
+  deal with, and many of them are beyond what we can currently
+  automate.
+
+* Other tasks that need to be integrated above.
+
+  Here are many more tasks that need to be integrated into the above
+  sections, but have not had that done yet.
+
+*** features for use by IDEs other than type-error slicing
+***** parsing (make SML parser separately usable)
+***** display of type information for user program points and things in library
+***** lookup of things in library by type
+*** improvement of display of error slice information
+***** display graph of connections between parts of slice
+***** when and how to merge overlapping slices?
+***** choice of colors (including support for kinds of color-blindness)
+***** notation for slices
+*** completion of SML features
+***** core language features (overloading (partly done), equality types, fixity declarations, etc.)
+***** module features (functors, open (mostly working), type sharing (partly working?), etc.)
+***** warnings?
+***** SML/NJ extensions (a bit of work has been done toward this)
+*** publicity and evangelism
+***** publish papers
+***** apply for grant funding
+***** get industrial partners
+***** get more student projects
+*** fix bugs!
+
+    See bugzilla database.
+
+* COMMENT Text to be integrated.
+
+I've been working on a planning document for the type error slicing
+project.  I'm hoping to have something that can be used for helping
+with grant proposals, student projects, and generally figuring out
+what work to do next.  I intend to eventually absorb most of the
+documents currently in the documentation/project-plan git directory,
+although there is still a lot to do in that direction.
+
+I've added the new document as documentation/project-plan/tasks.org.
+
+An HTML version is below.
+
+I would be delighted to get any comments.
+
+Scott, can you please tell me how I am supposed to add a new web page?
+I'm hoping to add it to the project web site, but I do not know where
+the instructions are for how to do this.  Maybe you can point me to
+the instructions (which I naively assume exist).
+
+Feel free to edit the source if you want to record your suggestions.
+(Sorry, Scott, this means you would have to use Emacs because it is in
+Org format.)
+
+*** SML library package system?
+
+* Copyright and license.
+
+  This file is: Copyright © 2011 2012 Heriot-Watt University.
+
+  You can redistribute this file and/or modify it under the terms of
+  the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option)
+  any later version.
+
+  This file is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  If you did not receive a copy of the GNU General Public License
+  along with this file, see <http://www.gnu.org/licenses/>.
+
+* COMMENT Emacs file-local variable settings.
+
+  The setting of user-mail-address prevents the e-mail address of
+  whoever happened to be the last person to format the HTML from
+  showing up in the HTML.  This is (mostly?) safe because it only
+  affects this buffer.
+
+* COMMENT List of Student Projects
+** Integrating with Smackage
+** Extending the test framework (see 'Improving testing procedures' top-level item)
+** Compiling Poly/ML using Skalpel
+** Look into the Poly/ML debugger
+** Our own Integrated Development Environment
+** Clean Emacs code (bugs, dataflow, genaral coding practices)
+** Clean up back-end execution interface (mysterious args to back-end)
+** Vim interface
+** Eclipse plug-in (interact with existing Eclipse ML technology)
+** Visual Studio
+** Collect all ML libraries
+** Experience just using the slicer to find weak-points
+
+   For example, try implementing the 'grep' program in Stadard ML,
+   using Skalpel to debug the code written along the way.
+
+* COMMENT Abstracting Over Targets
+
+We need to be able to abstract some of the implementation that we have
+so that we are able to use the type error slicer on other languages
+without having to make major changes which are secured into the back
+end. For example, if we passed a parser as input to the type error
+slicer, then we wouldn't have to bother creating one from scratch for
+a new language, we can just pass the parser from that new language as
+input to the back-end.
+
+** Compiler
+** Abstract Syntax Tree
+** Use language's own parser as input to the back end?
+** Definition of the language
+** Constraint rules
+** Constraint solver which solves constraints regardless of how they
+   are generated
+
+* COMMENT Picking the Next Target
+
+Note that when we start working towards the next target, we should be
+thinking about abstraction all the time, remembering that there are
+other languages which we will want to support in the future. Keep
+things modular as much as possible.
+
+** Ocaml
+   Advantages: Widely used.
+
+   Disadvantages: Changes frequently, no definition, need to handle
+   caml p4 preprocessor, fancy module systems, need buy-in from
+   developers of the language.
+
+** Mythryl
+   Advantages: Easy to handle, good exercise for us to work on.
+
+   Disadvantages: Another language without much of a user base.
+
+** Haskell
+   Advantages: Big user base!
+
+   Disadvantages: Big frequent changes, definition not precise.
+
+** HaMLet-S
+   Advantages: Easy to handle.
+
+   Disadvantage: Small user base.
+
+* Finish the coverage of the Standard ML Language
+** We need a complete list of what exactly still needs to be completed
+** Find _all_ errors in cases- there are some features which are not fully covered yet
+** Overloading of constants
+** Bad fixity slices (need to check this)
+** Structure sharing not started
+** Equality types still to be handled
+** Non-exhastive and match-redundant warnings for function declarations are not handled
+** Overloading resolution scope (compiler specific boundries)
+** Compiler-specific features
+** Top level read-eval print loop
+
+# Local variables:
+# user-mail-address: nil
+# end:
+* Improve testing procedures
+
+Everything should be tested to the greatest extent possible. The
+importance on testing cannot be stressed enough. There are some
+examples here, but the more that we test the better.
+
+** Emacs front-end
+*** No characters missing in the presented slice
+
+    Joe has indicated that this could be perhaps difficult to do. This
+    is certainly something that should be discussed with Joe before
+    any work on this were to take place.
+
+*** User gets highlighting in the code buffer
+
+    The user should get highlighting in their code buffer if it
+    contains some kind of type error. For an unhandled feature, they
+    will not get highlighting and that's fine. What we should test is
+    that the user gets highlighting in their code buffer when running
+    Skalpel on examples that we *know* pass.
+
+** Analysis engine
+*** Run tests from a fresh clone of the repository
+
+    Currently some tests are run on the analysis engine, but this is
+    done from an existing copy of the repository. (Specifically, the
+    tests are run from lxultra8 by John's username, so it is his
+    repository that the tests are being run on.)
+
+** Daily package building
+
+   Currently packages are built whenever a release of Skalpel is to be
+   made. Time is lost on each release in bringing the package build
+   scripts up to date so that packages can be built. The process of
+   building packages should be tested every day, so that we know that
+   we can build packages quickly when we need them.
+
+** Daily package testing
+
+   Not only should packages be built every day, but they should of
+   course be installed and tested. It should be noted that this is
+   difficult to do, because doing so will require the use of a virtual
+   machine such as VirtualBox. VirtualBox cannot currently be
+   installed on the Linux machines in the MACS department due to
+   security considerations.
+
+   That said, they can be installed on the XP computers. Perhaps an XP
+   computer can be scripted to test packages. This needs to be looked
+   into.
+
+** Web demo
+
+   There are currently no tests for the web demo at all. This should
+   not be the case, it is very important that tests are run daily on
+   this front-end because it has been found to be prone to failure
+   (due to changes in the web server for example).
+
+** Documentation
+
+   It is alas not possible to test that the documentation for Skalpel
+   is up to date, but it is possible to test that the documentation
+   for Skalpel can be read by the user (so for example, that .tex
+   files contain no errors, and so on)
+
+** Copyright statements
+
+   It is possible to test the copyright statements are correct to some
+   degree. The test framework should look through all files of the
+   public repository, find the year that they were last changed in,
+   and look inside the file for a copyright statement for that year.
+
+** Webdemo automatic test case extraction
+
+   When users are using the webdemo we should look at the code that is fed in and generate test cases from the input
+
+** More rigorous and methodical testing
+***** Testing on large real systems.
+
+******* Testing of type error slicer on Isabelle source code.
+
+        + [[http://www.nicta.com.au/people/norrishm][Michael Norrish]] supplied a big archive of Isabelle source
+          code for this purpose.  He seems likely to be willing to
+          interact with us on this.
+
+***** Coverage analysis.

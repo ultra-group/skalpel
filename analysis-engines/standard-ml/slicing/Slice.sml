@@ -121,12 +121,23 @@ fun printSlice' slprog indent sep =
 
 	fun printProgs (A.Progs xs)                          ind = 
 	    if !(D.debugProgramLabelling)
-	    then ("\\noindent " ^ printProgList xs ind)
+	    then ("\\documentclass[border=5pt]{article}\n " ^ 
+		  "\\usepackage{amsmath}\n " ^
+		  "\\usepackage{color}\n " ^
+		  "\\usepackage{graphicx}\n " ^
+		  "\\begin{document}\n " ^
+		  "\\noindent " ^ printProgList xs ind)
 	    else printProgList xs ind
 
 	and printProgList []                                   _   = ""
-	  | printProgList [(x, _, _, _)]                       ind = ind ^ printProg x ind
-	  | printProgList ((x, _, _, _) :: xs)                 ind = ind ^ printProg x ind ^ "\n" ^ printProgList xs ind
+	  | printProgList [(x, _, _, _)]                       ind = 
+	    if !(D.debugProgramLabelling)
+	    then ind ^ printProg x ind ^ "\n \\end{document}"
+	    else ind ^ printProg x ind
+	  | printProgList ((x, _, _, _) :: xs)                 ind = 
+	    if !(D.debugProgramLabelling)
+	    then ind ^ printProg x ind ^ "\n" ^ printProgList xs ind
+	    else ind ^ printProg x ind ^ "\n" ^ printProgList xs ind
 
 	and printProg (A.Prog xs)                            ind = #4 (printProgOneList xs ind)
 	  | printProg (A.ProgDots pl)                        ind =
@@ -140,7 +151,7 @@ fun printSlice' slprog indent sep =
 		val (l, k, c, x) = printProgOne x ind
 		val (i, j, d, y) = printProgOneList xs ind
 		val sep = sepLines k i d ind
-	    in (l, j, c, x ^ sep ^ y)
+	    in (l, j, c, "\\scalebox{0.5}{$ "^ x ^ "$}" ^ sep ^ y )
 	    end
 
 	and printAFile (A.AFile (f, r, l, _))                ind =

@@ -3020,6 +3020,23 @@ fun unif env filters user =
 					 )
 				       | _ => ()
 
+			     fun printVars [] labels = ()
+			       | printVars (h::t) labels =
+					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(h)) lab of
+					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
+					     let
+						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripEqualityStatus = " ^ L.toString labels))
+						 val newConstraintLabels = L.union labels (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))
+						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString newConstraintLabels))
+					     in
+						 fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), newConstraintLabels, deps, ids) ] l
+					     end
+					   | _ => raise EH.DeadBranch "Impossible pattern match failure while solving equality type accessors")
+
+			     val (vars,labels) = T.stripEqualityStatus bind L.empty
+			     val _ = printVars vars labels
+
+
 			 in
 			     ()
 			 end
