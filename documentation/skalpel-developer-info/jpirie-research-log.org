@@ -75,13 +75,18 @@ run on that file, and check that Emacs is highlighting things inside
 the file, and that the process terminates.
 
 ** Equality types implementation
-*** (2012-06-28-16:00) Generating equality constraints for tuples
+*** (2012-06-28-16:00) Generating equality constraints for non-accessor based code
 
-    The case involving tuples doesn't work yet, I'm going to need to
-    think of a way to handle code like this: (1, 1.0) = (2, 2.0). The
-    equality type variable which represents the tuple should be
-    constrained to be equal to.... something. Not sure how this is
-    going to work yet, I'll need to have a think about this.
+    This code will generate an equality type error:
+
+    val x = (1.0, 2);
+    x=x;
+
+    But this code will not:
+
+    (1.0, 2) = (1.0, 2);
+
+    And similarly for records.
 
 *** (2012-06-29-21:19) Detection of equality type error where 'eqtype' is in a signature
 
@@ -111,18 +116,11 @@ the file, and that the process terminates.
     generation stage for other types (in functions and exceptions for
     example).
 
-*** (2012-08-08-15:42) Records
-
-    The solution for the implementation of detecting equality type
-    errors in records should be similar to detecting equality type
-    errors in tuples. A tuple is just a record that has an enumeration
-    sequence on the left hand side.
-
-*** (2012-08-08-16:13) Value declarations with tics
+*** (2012-08-08-16:13) Value declarations with ticks
 
     val 'b f = fn x : 'b => x = x;
 
-    Does this apply to things other than value declarations.
+    Does this apply to things other than value declarations?
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -2835,6 +2833,183 @@ network. Perhaps I should commit this to the public repository, Alessio
 will be able to clone it easily that way too. We have copyright
 statements secured for that file, so it should probably be in the
 skalpel repository, rather than the tes repository.
+
+** 2012-08-09
+
+(2012-08-09-09:39)
+
+Hm, test framework still broken this morning, forgot to merge the
+master branch with the devel branch. Might add a check in my scripts
+so that I don't do that.
+
+(2012-08-09-10:15)
+
+Right, I need to figure out a certain irregularity. It does seem that
+equality types are further along than I thought, but there is one
+problem.
+
+An error here is not detected:
+
+(1,2.0)=(1,2.0)
+
+but, here, it is:
+
+val x = (1,2.0);
+x = x
+
+The plan is to make this work (I think this is because when solving an
+equality type error including an accessor the new solution is being
+used of stripping out equality type variables from the binding), and
+then create a bunch more tests and put them in to the analysis engine
+test database.
+
+If all this happens quite quickly, I'll deem myself happy with this
+and will stop work on equality types for the day, and sort out some
+things that are hanging around on the back burner, which will probably
+include items from this list:
+
+- making rest of changes joe recommended to the first year report
+- finishing the poster
+- fixing tasks.org html generation
+- updating documentation
+- looking at bugzilla
+
+Perhaps this problem will take me all day, but I'd rather like to
+tackle some of the problems on that list today if I can get the
+chance.
+
+(2012-08-09-11:00)
+
+It looks like the reason that this doesn't work is because in the
+unification steps printed out, we are never solving anything with more
+than one equality type variable inside. We need at least two equality
+type variables to get a conflict (because the conflict is always
+between a NOT_EQUALITY_TYPE status and an EQUALITY_TYPE status).
+
+Perhaps I need to do something in the constraint generator. I think
+somehow reusing the function that I wrote which strips equality type
+variables seems to be a good way to go, as it's working really well on
+the other tests.
+
+(2012-08-09-11:24)
+
+It's worth noting that this function which I wrote which strips
+equality type variables is only called when solving accessors. Maybe I
+just need to make this function call somewhere else if I can see
+another equality type variable for me to create the constraint with...
+
+(2012-08-09-12:38)
+
+Okay, I think I see what needs to be done here. The reason this works
+with accessors, is because in code like this:
+
+val x = (1, 2.0);
+
+x = x;
+
+We generate constraints for (1, 2.0), including equality type
+constraints. So inside the binder for x we have an equality type
+variable.
+
+When we see x = x, an equality constraint accessor is created, which
+has an equality type variable attached to it.
+
+So we have the equality type variable from the x accessor, and the one
+nested inside the x binding. The equality type variable from the x
+accessor has to be EQUALITY_TYPE (because the '=' operator makes that
+constraint), and the other turns out to be NOT_EQUALITY_TYPE, due to
+the presence of a real number in the tuple.
+
+Now instead with code like this:
+
+(1, 2.0) = (1, 2.0);
+
+The equality type variable for the (1, 2.0) section of the code is
+instead no longer located in a binder, because there isn't one. It's
+located on the right hand side of a standard type variable constraint,
+like this:
+
+TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((
+1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,3
+9731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(
+UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39
+728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),
+[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l39728),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l401
+49,EQUALITY_TYPE_VAR(eqtv19682))
+
+Alright, so we have one equality type variable there. Where's the
+other one? Well that was in the accessor before, so where is it now?
+
+It doesn't exist. The accessor here was essentially the 'left hand
+side'. The left hand side now however is this:
+
+TYPE_VAR(t31849,-,POLY,UNKNOWN)
+
+A type variable with UNKNOWN equality type information. The solution
+to this is probably to attach the equality type variable that's
+generated when we see the '=' operator comes up and attach it to the
+type variable that is generated. My thought is that then we will have
+something like this on the left hand side:
+
+TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_VAR(α))
+
+Then something like this on the right hand side:
+
+TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((
+1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,3
+9731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(
+UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39
+728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),
+[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l39728),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l401
+49,EQUALITY_TYPE_VAR(β))
+
+and then when solving type vars we also run stripEqualityVariables on
+the right hand side, which will return β, and then make the constraint
+α -> β. This constraint would then in this case be unsatisfiable, and
+an equality type error would be generated.
+
+That's the current working theory anyway. The TYPE_VAR constructor
+already has slots for equality type information, so I guess this
+information can be used here. I'll think about this over lunch and
+then start implementation.
+
+(2012-08-09-14:16)
+
+I'm changing the call to constytuple so that it takes an equality type
+variable and created about 5 new functions so that this equality type
+variable gets propagated right through to the point where consTYPE_VAR
+is called, where I can attach equality type information.
+
+This might result in this information showing up in the right place
+when doing constraint solving. If it does then I'll make this work in
+a nicer way, otherwise I'll need to find another solution.
+
+(2012-08-09-14:25)
+
+No, wrong place. I'll remove these calls. I need to find out where
+type variable number 31849 is generated, but there is no debugging
+mechanism for this (mainly because creating a system for finding where
+precisely a type variable is generated could be time consuming, and
+after it's done there will be so much information it'll be like
+looking for a needle in a haystack).
+
+I'll keep hunting around.
+
+(2012-08-09-15:30)
+
+I've made a list at the top of things that still need to be handled
+with respect to equality types. I'm just going to work through that.
+
+(2012-08-09-16:18)
+
+Hmm still can't find the point where the type variable is created
+which is constrained to the TYPE_POLY term that I want to strip the
+equality type variable out of, it doesn't seem to be done in any of
+the obvious places. It must be being done somewhere else, or something
+is happening in the unification phase where a new type variable is
+created for some reason and the information hasn't been propagated
+through.
+
 
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in

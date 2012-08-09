@@ -169,8 +169,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * GEN: intersection type
 	  * TYPE_DEPENDANCY: type annotated with dependancies *)
 
-	 (* we actually don't need the equality type status for the TYPE_VAR constructor? Remove this? *)
-	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityTypeStatus
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
 		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
 		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION       of typeFunction  * rowType * Label.label
@@ -524,7 +523,11 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 					    EQUALITY_TYPE_STATUS(UNKNOWN))
 
 (* constructs an implicit type var *)
-fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, UNKNOWN)
+fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN))
+
+(* constructs an implicit type var *)
+fun consTYPE_VARwithEQ   tv eqtv = TYPE_VAR (tv, NONE, POLY, eqtv)
+
 
 (* constructs an equality type variable *)
 fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
@@ -877,7 +880,7 @@ and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTy
 and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar    v   ^
 						 ","    ^ printExplicit b   ^
 						 ","    ^ printPoly     p   ^
-						 ","   ^ printEqualityTypeStatus eqtv   ^ ")"
+						 ","   ^ printEqualityType eqtv   ^ ")"
   | printty (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("   ^ I.printId     id  ^
 				    ","    ^ printTypeVar    tv  ^
 				    ","    ^ printlabel    l   ^
@@ -931,7 +934,7 @@ and printtyf' (TYPE_FUNCTION_VAR v)     = "TYPE_FUNCTION_VAR("  ^ printTypeFunct
 and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar    v   ^
 						  ","     ^ printExplicit b   ^
  						  ","     ^ printPoly     p   ^
- 						  ","     ^ printEqualityTypeStatus eqtv   ^ ")"
+ 						  ","     ^ printEqualityType eqtv   ^ ")"
   | printty' (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("    ^ I.printId     id  ^
 							   ","     ^ printTypeVar    tv  ^
 							   ","     ^ printlabel    l ^
@@ -957,56 +960,56 @@ and printTyGen'  tys = printtylist' (!tys)
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
 
-fun stripEqualityStatus_fieldType (FIELD_VAR rv) labels   = ([], labels)
-  | stripEqualityStatus_fieldType (FC (_, tv, label)) labels  = stripEqualityStatus tv (L.cons label labels)
-  | stripEqualityStatus_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityStatus_fieldType term (L.union labs labels)
-  | stripEqualityStatus_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
+fun stripEqualityVariables_fieldType (FIELD_VAR rv) labels   = ([], labels)
+  | stripEqualityVariables_fieldType (FC (_, tv, label)) labels  = stripEqualityVariables tv (L.cons label labels)
+  | stripEqualityVariables_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityVariables_fieldType term (L.union labs labels)
+  | stripEqualityVariables_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
 
-and stripEqualityStatus_sequenceType (ROW_VAR _) labels = ([], labels)
-  | stripEqualityStatus_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
-  | stripEqualityStatus_sequenceType (ROW_C ((h::t),x,label)) labels =
+and stripEqualityVariables_sequenceType (ROW_VAR _) labels = ([], labels)
+  | stripEqualityVariables_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
+  | stripEqualityVariables_sequenceType (ROW_C ((h::t),x,label)) labels =
     let
-	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_fieldType h (L.cons label labels)
-	val (nextEqTypeStatuses, nextEqTypeLabels) = stripEqualityStatus_sequenceType (ROW_C (t,x,label)) (L.cons label labels)
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_fieldType h (L.cons label labels)
+	val (nextEqTypeStatuses, nextEqTypeLabels) = stripEqualityVariables_sequenceType (ROW_C (t,x,label)) (L.cons label labels)
     in
 	(eqTypeStatuses@nextEqTypeStatuses, L.union eqTypeLabels nextEqTypeLabels)
     end
-	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityStatus_fieldType (L.cons label labels) *)
-  | stripEqualityStatus_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityStatus_sequenceType term (L.union labs labels)
+	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityVariables_fieldType (L.cons label labels) *)
+  | stripEqualityVariables_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityVariables_sequenceType term (L.union labs labels)
 
 (* this is currently used when solving equality constraint accessors, and only equality constraint accessors
  * (2012-07-09-12:22) jpirie: do we actually need to strip things this way? Want to look into this.
  *)
-and stripEqualityStatus (TYPE_VAR (tv,_,_,eq)) labels =
+and stripEqualityVariables (TYPE_VAR (tv,_,_,eq)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from EXPLICIT_TYPE_VAR!");
      ([], labels))
-  | stripEqualityStatus (EXPLICIT_TYPE_VAR(_)) labels =
+  | stripEqualityVariables (EXPLICIT_TYPE_VAR(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from EXPLICIT_TYPE_VAR!");
      ([], labels))
-  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_VAR(eq))) labels =
+  | stripEqualityVariables (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_VAR(eq))) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality type var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");
      ([eq], L.cons label labels))
-  | stripEqualityStatus (TYPE_CONSTRUCTOR (typename, sequenceType, label, eq)) labels =
+  | stripEqualityVariables (TYPE_CONSTRUCTOR (typename, sequenceType, label, eq)) labels =
     let
-	val (eqTypeStatuses, eqTypeLabels) = stripEqualityStatus_sequenceType sequenceType (L.cons label labels)
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_sequenceType sequenceType (L.cons label labels)
     in
 	(eqTypeStatuses, eqTypeLabels)
     end
-  | stripEqualityStatus (APPLICATION(_)) labels =
+  | stripEqualityVariables (APPLICATION(_)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from APPLICATION!");
      ([], labels))
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_VAR(eq))) labels =
+  | stripEqualityVariables (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_VAR(eq))) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");
      ([eq], L.cons label labels))
-  | stripEqualityStatus (TYPE_POLY(_,_,_,_,label,eq)) labels =
+  | stripEqualityVariables (TYPE_POLY(_,_,_,_,label,eq)) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "(Not) stripping an equality type from a TYPE_POLY ("^(printEqualityType eq)^")");
      ([], labels))
-  | stripEqualityStatus (GEN _) labels =
+  | stripEqualityVariables (GEN _) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
      ([], labels))
-  | stripEqualityStatus (TYPE_DEPENDANCY (term, depLabels, _, _)) labels = stripEqualityStatus term (L.union depLabels labels)
+  | stripEqualityVariables (TYPE_DEPENDANCY (term, depLabels, _, _)) labels = stripEqualityVariables term (L.union depLabels labels)
 
-and stripEqualityStatusList _ = raise EH.TODO "Not written this function yet"
+and stripEqualityVariablesList _ = raise EH.TODO "Not written this function yet"
 
 fun printAssoc  xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ st ^ ")")
 fun printAssoc' xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ "\"" ^ st ^ "\"" ^ ")")

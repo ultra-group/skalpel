@@ -596,15 +596,15 @@ and freshseqty (T.ROW_VAR var)          _   state _    = T.ROW_VAR (F.freshRowVa
   | freshseqty (T.ROW_DEPENDANCY eseq)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
 and freshty (T.TYPE_VAR (tv, b, p, _))       tvl state bstr =
     (case (tvl, p) of
-	(NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.UNKNOWN)
+	(NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
       | (SOME tvl', T.POLY) =>
 	if O.isin (T.typeVarToInt tv) tvl'
-	then T.TYPE_VAR (tv, if bstr then NONE else b, p, T.UNKNOWN)
-	else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.UNKNOWN)
-      | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO, T.UNKNOWN)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
+	then T.TYPE_VAR (tv, if bstr then NONE else b, p, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
+	else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
+      | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
   | freshty (T.EXPLICIT_TYPE_VAR   (id, tv,   l, eqtv))  tvl state bstr =
     (*(2010-06-14)bstr is false when we refresh an env when dealing with SIGNATURE_CONSTRAINT*)
-    if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l, eqtv) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY, T.UNKNOWN)
+    if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l, eqtv) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
   | freshty (T.TYPE_CONSTRUCTOR  (tn, sq,   l, eq))    tvl state bstr = T.TYPE_CONSTRUCTOR   (freshTypename tn     state,      freshseqty sq tvl state bstr, l, eq)
   | freshty (T.APPLICATION  (tf, sq,   l))    tvl state bstr = T.APPLICATION   (freshtypeFunction  tf tvl state bstr, freshseqty sq tvl state bstr, l)
   | freshty (T.TYPE_POLY (sq, i, p, k, l, eq)) tvl state bstr = T.TYPE_POLY  (freshseqty  sq tvl state bstr, if T.isPoly p then F.freshIdOr i state else i, T.MONO, k, l, eq)
@@ -727,7 +727,7 @@ fun buildlabty (T.LABEL_VAR lv) state =
  *   false is the default value. *)
 fun buildty (T.TYPE_VAR (tv, b, p, _)) state dom bmon monfun =
     (case (S.getValStateGe state tv, bmon) of
-	 (SOME (_, labs, sts, asmp), false) => T.TYPE_DEPENDANCY (T.TYPE_VAR (tv, b, T.MONO, T.UNKNOWN), labs, sts, asmp)
+	 (SOME (_, labs, sts, asmp), false) => T.TYPE_DEPENDANCY (T.TYPE_VAR (tv, b, T.MONO, T.EQUALITY_TYPE_STATUS(T.UNKNOWN)), labs, sts, asmp)
        (*(2010-08-18)This should not return labs but put it on the type with T.DEP.*)
        | (x, _) => (case S.getValStateTv state tv of
 			NONE =>
@@ -740,7 +740,7 @@ fun buildty (T.TYPE_VAR (tv, b, p, _)) state dom bmon monfun =
 			     * in StateEnv when pushing an env we should go down the
 			     * structures as well.  This is the proper way to do it. *)
 			    val poly = (*N*)if monfun then T.MONO else poly
-			    val tv   = T.TYPE_VAR (tv, b, poly, T.UNKNOWN)
+			    val tv   = T.TYPE_VAR (tv, b, poly, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
 			in case x of
 			       NONE => tv
 			     | SOME (_, labs, stts, deps) => T.TYPE_DEPENDANCY (tv, labs, stts, deps)
@@ -753,7 +753,7 @@ fun buildty (T.TYPE_VAR (tv, b, p, _)) state dom bmon monfun =
 			end))
   | buildty (T.EXPLICIT_TYPE_VAR (n, tv, lab, eqtv)) state dom bmon monfun =
     (case (S.getValStateGe state tv, I.isin n dom) of
-	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY, T.UNKNOWN)
+	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
        | (NONE, false) => T.EXPLICIT_TYPE_VAR (n, tv, lab, T.UNKNOWN)
        | (SOME (_, labs, stts, deps), _) => T.TYPE_DEPENDANCY (T.EXPLICIT_TYPE_VAR (n, tv, lab, T.UNKNOWN), labs, stts, deps))
   (*(case (S.getValStateGe state tv, bmon) of
@@ -2976,7 +2976,7 @@ fun unif env filters user =
 		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind = (bind, b), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY, T.UNKNOWN)
+			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
 			  val ty2 = T.consTYPE_VAR (freshTypeVar' bind poly)
 			  (*(2010-06-29) The order in the constraint actually matters to get the
 			   * 'too general in signature' errors.  This needs to be fixed.
@@ -3020,12 +3020,12 @@ fun unif env filters user =
 					 )
 				       | _ => ()
 
-			     fun printVars [] labels = ()
-			       | printVars (h::t) labels =
+			     fun createConstraintsFromBinding [] labels = ()
+			       | createConstraintsFromBinding (h::t) labels =
 					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(h)) lab of
 					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
 					     let
-						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripEqualityStatus = " ^ L.toString labels))
+						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripEqualityVariables = " ^ L.toString labels))
 						 val newConstraintLabels = L.union labels (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))
 						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString newConstraintLabels))
 					     in
@@ -3033,8 +3033,8 @@ fun unif env filters user =
 					     end
 					   | _ => raise EH.DeadBranch "Impossible pattern match failure while solving equality type accessors")
 
-			     val (vars,labels) = T.stripEqualityStatus bind L.empty
-			     val _ = printVars vars labels
+			     val (vars,labels) = T.stripEqualityVariables bind L.empty
+			     val _ = createConstraintsFromBinding vars labels
 
 
 			 in
