@@ -1,0 +1,203 @@
+##############################################################
+#
+# Copyright 2011 2012 Heriot-Watt University
+#
+# Skalpel is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: Scott Fotheringham, John Pirie
+# Description: This file describes how to install Bugzilla.
+#
+###############################################################
+
+
+================================================================================
+                                  Installation
+================================================================================
+
+This file documents getting, installing and configuring a fresh
+Bugzilla installation up until the point where it is working with a
+default configuration.
+
+For the purposes of this document, the current stable version of
+Bugzilla is 4.0.2 and will be used throughout. This document should be
+fairly future-proof but may need to be updated.
+
+
+================================================================================
+                                Getting Bugzilla
+================================================================================
+
+Log into the www2 server (ssh <username>@www2.macs.hw.ac.uk) and
+navigate to this directory, or create it if it doesn't exist:
+
+~/public_html/cgi-bin/
+
+Using the command 'wget', download the latest version of Bugzilla:
+
+wget http://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-4.0.2.tar.gz
+
+Now Extract the compressed package.
+
+
+================================================================================
+                                 Initial Setup
+================================================================================
+
+Navigate to the root of the extracted directory and run this command:
+
+./checksetup.pl --check-modules
+
+This will check for Perl module dependencies. Now tell the perl script
+to install as many modules as it can with:
+
+perl install-module.pl --all
+
+Have a nap because this takes a long time. There might be some errors
+during this process, this is fine if these errors are for
+non-critical perl modules (which ones are optional can be seen by
+running ./checksetup.pl --check-modules)
+
+Once this completes, run this command again:
+
+./checksetup.pl --check-modules
+
+This is just to ensure everything is cushty and finally, run\\
+
+./checksetup.pl
+
+A file, \emph{localconfig}, is created. This file links the database
+to the new Bugzilla installation. The variables in this file should be
+set to the following:
+
+create_htaccess = 0
+webservergroup = `www'
+use_suexec = 1
+db_driver = `mysql'
+db_host = `mysql-server-1'
+db_name = `ultra'
+db_user = `ultra'
+db_pass = `ultra'
+db_port = 0
+db_check = 1
+index_html = 0
+All other variables should be left at their default values.
+
+
+================================================================================
+                          Backing up the Bug Database
+================================================================================
+
+Before proceeding, ensure the existing database is backed up using
+this command:
+
+mysqldump -h mysql-server-1 -u ultra -pultra ultra > database-backup-[date].sql
+
+
+================================================================================
+                             Finishing Installation
+================================================================================
+
+Run this command one last time to propagate changes made to the
+'localconfig' file:
+
+./checksetup.pl
+
+
+================================================================================
+                              Making Bugzilla Work
+================================================================================
+
+Run the commands:
+
+setfacl -R -m www:rwx bugzilla-4.0.2
+
+and:
+
+chmod -R 775 bugzilla-4.0.2
+
+to allow permissions to the web server to write to the files it needs
+to and create temporary files as it needs.
+
+There are problems getting Bugzilla to read its style sheets and
+allowing the user to reach the home page due to the way the web server
+is configured. Firstly, remove the .htaccess file in the root
+directory of the Bugzilla installation. Secondly, in this file:
+
+bugzilla-4.0.2/template/en/default/global/common-links.html.tmpl
+
+Change this:
+
+  <li><a href="./">Home</a></li>
+
+to this:
+
+  <li><a href="index.cgi">Home</a></li>
+
+This will make sure the the user gets to the right page.
+
+To get the CSS style sheets working in the file:
+
+bugzilla-4.0.2/Bugzilla/Template.pm
+
+Change the @requested_css variable to this:
+
+my @requested_css = ('http://www.macs.hw.ac.uk/~<username>/cgi-bin/bugzilla-4.0.2/skins/standard/global.css', @$style_urls,'skins/standard/IE-fixes.css');
+
+
+================================================================================
+                                  Finish Setup
+================================================================================
+
+Now you can go to the HTTP URL for the Bugzilla installation. This will be something like:
+
+www2.macs.hw.ac.uk/~<username>/cgi-bin/cgiwrap/bugzilla-4.0.2/
+
+Log in as the admin user (or any user with admin privileges), and set
+the HTTP URL base path in the administration area to be::
+
+http://www2.macs.hw.ac.uk/cgi-bin/cgiwrap/~<username>/bugzilla-4.0.2/
+
+Also, set the cookiepath to be:
+
+~<username>/cgi-bin/bugzilla-4.2.2/
+
+
+================================================================================
+                              Customizing Bugzilla
+================================================================================
+
+Navigate (from the root directory) to 'templates/en/default/global'
+and open 'variables.none.tmpl'.
+
+Change the phrase "Zaroo Boogs Found" to "No bugs found matching search criteria".
+
+In the same file, change the line:
+
+"Bugzilla" => "Bugzilla"
+
+to:
+
+"Bugzilla" => "Skalpel Bug Tracker"
+
+After any changes to template files, it is necessary to run
+./checksetup.pl in the root directory to propagate changes made.
+
+
+================================================================================
+                              Update Website Link
+================================================================================
+
+In the webdemo/ directory of the tes repository, see the README file
+on how to add links and re-install the webdemo so that the correct URL
+is linked from the Skalpel web pages.

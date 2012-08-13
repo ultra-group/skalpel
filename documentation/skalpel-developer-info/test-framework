@@ -42,12 +42,11 @@ test-results/
 
 The folder named 'analysis-engine-tests' contains the analysis engine
 test database. This is nothing more than a collection of target
-language code files (named code[number].sml), accompanied with what
-are deemed to be the 'answers' to these tests (named
-test[number]). The analysis engine takes each of these files in turn
-as input, generates type error slices, then compares its results with
-the associated answer file. The answer files are written in JSON
-format.
+language code files, accompanied with what are deemed to be the
+'answers' to these tests. The analysis engine takes each of these
+files in turn as input, generates type error slices, then compares its
+results with the associated answer file. The answer files are written
+in JSON format.
 
 The 'scripts' folder contains other shell scripts used for
 testing. Currently, this folder only contains a script which checks
@@ -69,3 +68,80 @@ command 'crontab -l' on lxultra8 is currently this:
 
 0 7 * * * /u1/pg/jp95/repos/skalpel/testing/run-test-framework.sh
 >/u1/pg/jp95/test-framework-output 2>/u1/pg/jp95/test-framework-errors
+
+================================================================================
+                          Adding Analysis Engine Tests
+================================================================================
+
+To add a test for the analysis engine, two things are needed:
+
+1. The code that the analysis engine is to be tested on
+2. A solution file for that code.
+
+The solution file can be generated from the analysis engine with the
+command line option to output information in JSON format (-j
+<filename> parameter), or by hand (to do this, it's probably easiest
+to adapt existing solution files). Note that if the analysis engine
+outputs multiple JSON files each with a slice in them, these must be
+combined by putting all of the information in the 'errors' object into
+one JSON file. For example, a file with this error object:
+
+"errors"       : [{"identifier"  : 0,
+                   "labels"      : {"count": 8, "labelNumbers": [1,2,3]}
+		   [other objects here]
+		   }],
+
+and another file with this error object:
+
+"errors"       : [{"identifier"  : 1,
+                   "labels"      : {"count": 8, "labelNumbers": [4,6,7]}
+		   [other objects here]
+		   }],
+
+Would become this:
+
+"errors"       : [{"identifier"  : 0,
+                   "labels"      : {"count": 8, "labelNumbers": [1,2,3]}
+		   [other objects here]
+		   },
+		   {"identifier"  : 1,
+                   "labels"      : {"count": 8, "labelNumbers": [4,6,7]}
+		   [other objects here]
+		   }],
+
+Once the solution file has been composed, code files and solutions for
+the analysis engine can be placed anywhere (including sub-directories)
+in the analysis-engine-tests/standard-ml folder (the code file and the
+solution file must be in the same directory, and the solution file
+should have the file suffix "-solution" instead of ".sml". For
+example, tests for equality types sit in the equality-types/ folder of
+this directory and look like this
+
+-rw-r--r-- 1 jpirie users     21 Aug  2 12:33 basic-binding-and-accessors.sml
+-rw-r--r-- 1 jpirie users 106255 Aug  2 12:33 basic-binding-and-accessors-solution
+-rw-r--r-- 1 jpirie users      8 Aug  2 12:33 basic-real-equals-real.sml
+-rw-r--r-- 1 jpirie users 105280 Aug  2 12:33 basic-real-equals-real-solution
+...
+
+Finally, the code test must be added to the test control file. This
+file sits in the following location:
+
+analysis-engine-tests/standard-ml/test-control
+
+This contains a list of files to load, for example:
+
+"test-list":["equality-types/basic-real-equals-real.sml",
+	     "equality-types/binding-of-another-binding.sml",
+	     "equality-types/datatype-constructor.sml",
+	     [...]
+	     ]
+
+Simply add the location of the test code file to this comma separated
+string array.
+
+Note that the tests are run in order that they are stated in this
+file. It is recommended that new tests are put at the top, so that
+it's easy to check that they made their way into the test framework
+successfully by running the analysis engine tests (skalpel -c
+<directory_of_test_control_file>), and looking at the top result that
+is output.

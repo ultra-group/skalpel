@@ -151,7 +151,10 @@ fun printSlice' slprog indent sep =
 		val (l, k, c, x) = printProgOne x ind
 		val (i, j, d, y) = printProgOneList xs ind
 		val sep = sepLines k i d ind
-	    in (l, j, c, "\\scalebox{0.5}{$ "^ x ^ "$}" ^ sep ^ y )
+	    in
+		if !(D.debugProgramLabelling)
+		then (l, j, c, "\\scalebox{0.5}{$ "^ x ^ "$}" ^ sep ^ y )
+		else (l, j, c,  x ^ sep ^ y )
 	    end
 
 	and printAFile (A.AFile (f, r, l, _))                ind =
@@ -311,7 +314,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, ldotsLatex ^ x ^ rdotsLatex)
-		else (l, k, c, ldots ^ x ^ rdotsLatex)
+		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printFunBind (A.FunBindDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -320,7 +323,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		then (l, k, c, ldotsLatex ^ x ^ rdotsLatex)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
-		
+
 	and printFunBindOneList []                             _   = (NONE, NONE, NONE, dots)
 	  | printFunBindOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printFBO x (dind ind)
@@ -3125,7 +3128,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in 
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("{" ^ x ^ "}" ^ "")^"^{" ^ L.printLab(label)^"}")
-		else (getLine rs, getLine (rev rs), getCol rs, "\\operatorname{\\{}" ^ x ^ "\\operatorname{\\}}")
+		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtPat (A.AtPatParen (p, r1, r2, label, _))      ind =
 	    let val (_, _, _, x) = printLabPat p ind

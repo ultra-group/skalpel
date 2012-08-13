@@ -1,3 +1,14 @@
+* Schedule
+
+August 2012 - Finishing equality types
+September 2012 - Release, work on sharing
+October 2012 - Sharing
+November 2012 - Sharing
+December 2012 - Sharing and release
+March 2013 - PPDP/ICFP ?
+July 2013 - Popl ?
+October 2013 - ESOP ?
+
 * WARNINGS
 
 When I'm doing unioning of labels, say when I'm doing something with
@@ -19,11 +30,6 @@ multiple.
 UPDATE: deps is always empty, though I'm now using it for the equality
 type endpoint labels as it's rather handy. Still don't know about the
 ids values, I'll need to look into that.
-
-(2012-07-26-19:21)
-
-The documentation for how to add tests to the test database is
-outdated. Update it ASAP.
 
 * TODOs
 ** Test framework
@@ -121,6 +127,14 @@ the file, and that the process terminates.
     val 'b f = fn x : 'b => x = x;
 
     Does this apply to things other than value declarations?
+
+    fun 'b f (x:'b) = x = x
+
+    (same as above)
+
+    I don't get generate NOT_EQUALITY_TYPE for 'a for example,
+    although EQUALITY_TYPE is generated for ''b we need the constraint
+    for 'a.
 
 ** Other
 *** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
@@ -3010,6 +3024,98 @@ is happening in the unification phase where a new type variable is
 created for some reason and the information hasn't been propagated
 through.
 
+** 2012-08-10
+
+(2012-08-10-08:13)
+
+Starting with poster work today and going to try and take a look at
+some of the things that are on backlog, going to come back to equality
+types perhaps today if things go well but probably at the start of
+next week.
+
+(2012-08-10-09:06)
+
+Hmm, I think I fixed the bugzilla. The fix is rather outlandish, and
+involves installing two bugzilla versions currently and hacking of a
+perl file.
+
+We will probably need to always hack this perl file but we shouldn't
+need the additional bugzilla installation (of a different
+version). I'll see if I can get rid of the need for this now.
+
+(2012-08-10-09:24)
+
+In Template.pm I've changed the relative path of style sheets to be an
+absolute path. This is an absolute hack, which happens to work for
+reasons probably to do with the funky prefixes that we have to put on
+URLs for cgi scripts.
+
+At the moment I've changed the @requested_css field in Template.pm on
+line 416 of Template.pm and changed the .htaccess file in the root of
+the bugzilla-4.2.2 folder. I've also put the installation in my user
+account.
+
+There is still a problem with going to the homepage of the bugzilla
+installation, as the web server throws errors. I'll try to fix them now.
+
+(2012-08-10-09:28)
+
+To hell with this .htaccess file, I'm just deleting it as it's causing
+problems. It stops my edit to Template.pm from working too, as it
+blocks access to the style sheets.
+
+(2012-08-10-09:35)
+
+I have made a change to common-links.html.tmpl file so that when
+clicking home the user is directed straight to the index.cgi file
+instead of just the directory, as the server doesn't redirect the user
+to the index.cgi file (Scott mentioned that this was a pain as well).
+
+This looks fine now, I'll update the documentation then reinstall the
+website so that we get a link to the new bugzilla version.
+
+(2012-08-10-10:55)
+
+Documentation has been updated, and the website has been re-installed.
+
+I've also added a link to the tasks.html file generated from
+tasks.org. It should be noted that this file was copied to my $HOME,
+and then installed that way. This file is not generated from tasks.org
+yet due to issues with the convert-org-to-html script, but when this
+is fixed then this file should be auto-generated.
+
+It should be noted that these HTML pages that are generated need to be
+changed, there is no link back to the Skalpel website which will
+decrease our Google visibility. Something that should be thought
+about for later.
+
+(2012-08-10-11:49)
+
+Updated the documentation for how to add tests to the analysis engine
+test database. This can be found in:
+
+documentation/skalpel-developer-info/test-framework
+
+Removing the warning that I have in this document.
+
+(2012-08-10-13:34)
+
+Before this meting with Joe I'm going to try to add in any comments he
+made on the poster that haven't been added in already. Then we can
+look at again today and if he's happy with it I can put it to
+printing. We still have time before the research open day.
+
+(2012-08-10-16:15)
+
+Having a go at fixing the errors that were reported in the test
+framework this morning, I think I have found of most of them. Running
+again now to test.
+
+(2012-08-10-16:56)
+
+Mm, no I didn't find most of them! There are still quite a few left,
+probably going to spend the rest of the time doing this and meeting
+Joe.
 
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
