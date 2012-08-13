@@ -391,7 +391,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :} " ^ z ^ " \\operatorname{=} " ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
-		else (l, j, c, x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :} " ^ z ^ " \\operatorname{=} " ^ w ^ "")
+		else (l, j, c, x ^ " (" ^ y ^ ") : " ^ z ^ " = " ^ w ^ "")
 	    end
 	  | printFBO (A.FunBindODots pl)                     ind =
 	    let val (l, k, c, x) = printPartDots pl ind
