@@ -2778,7 +2778,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in 
 		if !(D.debugProgramLabelling)
 		then (getLine regs, getLine (rev regs), getCol regs, D.printLabelledProgramString("\\operatorname{`}" ^ x ^ "\\operatorname{`}" ^ "")^"^{" ^ L.printLab(label)^"}")
-		else (getLine regs, getLine (rev regs), getCol regs, "\\operatorname{`}" ^ x ^ "\\operatorname{`}" )
+		else (getLine regs, getLine (rev regs), getCol regs, "`" ^ x ^ "`" )
 	    end
 	  | printAtExp (A.AtExpDots pl)                      ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
