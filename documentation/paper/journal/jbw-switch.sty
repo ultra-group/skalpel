@@ -1,0 +1,25 @@
+% Usage: 
+%
+%   \DeclareSwitch{XXX}
+%
+% If \ifXXX is undefined, this is equivalent to:
+%
+%   \newif\ifXXX
+%   \XXXfalse
+%
+% Otherwise it does nothing.
+
+% This file may be loaded many times.  On the first time, we want to
+% use \newcommand.  On subsequent occasions, we want to use
+% \CheckCommand.
+
+\@ifundefined{DeclareSwitch}{\newcommand}{\CheckCommand}
+  {\DeclareSwitch}[1]
+  {\@ifundefined{if#1}%
+    {% First, allocate the new boolean switch.
+     \expandafter\newif\csname if#1\endcsname
+     % Then initialize it to false.
+     \csname #1false\endcsname}%
+    {% We should check here that it is a proper boolean, but that is difficult.
+    }%
+   \message{(if#1=if\csname if#1\endcsname true\else false\fi)}}

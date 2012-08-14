@@ -1,0 +1,18 @@
+\RequirePackage{ifthen}
+\RequirePackage{jbw-switch}
+
+\DeclareSwitch{llncs}
+\DeclareSwitch{jfp}
+
+\newcommand{\ifclass}[1]
+  {\@ifundefined{currentclass}
+     {% New method.
+      % This only detects if the class file has been loaded, but does not
+      % distinguish between the final class loaded by \documentclass and
+      % superclasses loaded by \LoadClass.
+      \@ifclassloaded{#1}}
+     {% Old method.
+      \ifthenelse{\equal{\currentclass}{#1}}}}
+
+\ifclass{llncs}{\llncstrue}{\llncsfalse}
+\ifclass{jfp}{\jfptrue}{\jfpfalse}

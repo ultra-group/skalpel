@@ -1,0 +1,985 @@
+% -*-LaTeX-*-
+
+\begin{\sizeintables}
+
+%% In this figure only, let
+%% $\mytuple{x,y,z}$ be of the form
+%% $\mytuple{\METAtyvar,\METAlabty,\METAlabty'}$,
+%% $\mytuple{\METAtynamevar,\METAnamety,\METAnamety'}$ or
+%% $\mytuple{\METAenvvar,\METAcsenv,\METAcsenv'}$ such that $x\not=y$,
+%% $\METAvarset=\MEMvarset{\METAunifterm}$
+%% if $\METAunifterm\fra\METAunifterm'$\\
+%% and
+%% $\mytuple{u,v,w,w'}$ be of the form
+%% $\mytuple{\METAid,\CONSsemv{\METAid}{\METAstatus},\METAlabty,\METAlabty'}$,
+%% $\mytuple{\METAtypevar,\CONSsemp{\METAtypevar},\METAlabty,\METAlabty'}$,
+%% $\mytuple{\METAtypename,\CONSsemt{\METAtypename}{\METAseqvar},\METAnamety,\METAnamety'}$,
+%% $\mytuple{\METAstrid,\CONSsems{\METAstrid}{\METAlab},\METAcsenv,\METAcsenv'}$ or
+%% $\mytuple{\METAid,\CONSsemc{\METAid},\METAstatus,\METAstatus'}$.
+
+%% $\mytuple{u,v,w,x,y}
+%% \in
+%% \{
+%% \mytuple{\METAid,\CONSsemv{\METAid}{\METAstatus},\METAtyvar,\METAlabty,\METAlabty'},
+%% \mytuple{\METAtypename,\CONSsemt{\METAtypename}{\METAseqvar},\METAtynamevar,\METAnamety,\METAnamety'},
+%% \mytuple{\METAstrid,\CONSsems{\METAstrid}{\METAlab},\METAenvvar,\METAcsenv,\METAcsenv'},
+%% \mytuple{\METAid,\CONSsemc{\METAid},\METAstatus,\METAstatus,\METAstatus},
+%% \mytuple{\METAtypename,\CONSsema{\METAtypename},\METAseqvar,\METAseqty,\METAseqty'}
+%% \}$,
+
+
+%% %%\vspace{0.05in}
+%% \begin{tabular}[t]{ l l l l }
+%%   \multicolumn{4}{l}{\mytitle{driver rules}}
+%%   \\
+
+%%   %% $\unifrulezero$
+%%   %% &
+%%   %% $\CONSunifstart{\METAcsset}$
+%%   %% &
+%%   %% $\fra$
+%%   %% &
+%%   %% $\CONSunifunify{\MEMconsStateEnvp{\emptyset}{\emptyset}{\emptyset}}{\METAcsset}$
+%%   %% \\
+
+%%   $\unifrulezero$
+%%   &
+%%   $\CONSunifenv{\METAunifstate}{\METAcdepset}{\emptyset}$
+%%   &
+%%   $\fra$
+%%   &
+%%   $\CONSunifsuccess{\METAunifstate}{\emptyset}$
+%% \end{tabular}
+%% \hspace*{0.4in}
+
+
+
+
+
+
+
+%\hspace*{2.7in}
+\begin{tabular}[t]{ l l l l l }
+  \multicolumn{5}{l}{\mytitle{equality constraint reversing}}
+  \\
+  $\unifrulecrone$
+  &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\csou{\METAcsterm}{\METAcsterm'}}
+  {\METAcsenv}$
+  &
+  $\fra$
+  &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\csou{\METAcsterm'}{\METAcsterm}}
+  {\METAcsenv}$,
+  &
+  if $s=\SETvar\cup\SETdependent$
+  $\wedge$
+  $\METAcsterm'\in{s}$
+  $\wedge$
+  $\METAcsterm\not\in{s}$
+\end{tabular}
+
+
+%\vspace*{-0.35in}
+
+
+\begin{\unifalgotab}{l l l l l }
+
+\multicolumn{5}{l}{
+  \mytitle{equality simplification}
+}
+\\
+
+
+$\unifruleten$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAcsterm}{\METAcsterm}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifsuccess
+{\METAunifstate}
+{\METAcsenv}$
+&
+%if $x\in\SETvar\cup\SETtycon$
+\\
+
+
+$\unifrulestattwo$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\CONSdepss{\METAcsterm}{\METAcdepset'}}{\METAcsterm'}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset\cup\METAcdepset'}
+{\csou{\METAcsterm}{\METAcsterm'}}
+{\METAcsenv}$
+&
+\\
+
+
+$\unifrulefour$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou
+  {\METAlabty}
+  {\METAlabty'}
+}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\CONSenvenv
+  {(\csou{\METAlabty_1}{\METAlabty_2})}
+  {(\csou{\METAnamety_1}{\METAnamety_2})}
+}
+{\METAcsenv}$,
+& if
+$\METAlabty=\CONSconsty{\METAnamety_1}{\METAlabty_1}$
+$\wedge$
+$\METAlabty'=\CONSconsty{\METAnamety_2}{\METAlabty_2}$
+\\
+
+
+%%%%% MARK
+
+$\unifruleeight$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAlabty}{\METAlabty'}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\CONSenvenv
+  {(\csou{\METAlabty_2}{\METAlabty_4})}
+  {(\csou{\METAlabty_1}{\METAlabty_3})}
+}
+{\METAcsenv}$,
+&
+if
+$\METAlabty=\CONSarrowty{\METAlabty_1}{\METAlabty_2}$
+$\wedge$
+$\METAlabty=\CONSarrowty{\METAlabty_3}{\METAlabty_4}$
+%for some $\METAlabty_1$, $\METAlabty_2$, $\METAlabty_3$ and $\METAlabty_4$
+\\
+
+
+$\unifrulesix$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAlabty}{\METAlabty'}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAnamety}{\CONStyconnamearrow}}
+{\METAcsenv}$,
+%$\CONSuniferror{\CONSerror{\CONSuniferrortyconsclash{\METAnamety}{\MEMtyarrow}}{\METAcdepset}}$,
+&
+if $\{\METAlabty,\METAlabty'\}=\{\CONSconsty{\METAnamety}{\METAlabty_1},\METAlabtyarrowp{\METAlabty_2}{\METAlabty_3}{}\}$
+%for some $\METAnamety$, $\METAlabty$, $\METAlabty_3$ and $\METAlabty_4$
+\\
+
+
+
+$\unifruleeleven$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAnamety_1}{\METAnamety_2}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSuniferror
+{\CONSerror{\CONSuniferrortyconsclashp{\METAnamety_1}{\METAnamety_2}}{\METAcdepset}}$,
+&
+if
+$\{\METAnamety_1,\METAnamety_2\}\in\{\{\METAtyname,\METAtyname'\},\{\METAtyname,\CONStyconnamearrow\}\}$
+$\wedge$
+$\METAtyname\not=\METAtyname'$
+\\
+
+
+%% $\unifrulesix$
+%% &
+%% $\CONSunifrun
+%% {\METAunifstate}
+%% {\METAcsset}
+%% {\MEMdunion
+%%   {\METAcsset}
+%%   {\{\cso{\METAtynamevar}{\MEMtyarrow}{\METAlabset}{}{\METAidset}\}}
+%% }
+%% {\METAlab}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSuniferror{\CONSerror{\CONSuniferrortyconsclash{\METAtynamevar}{\MEMtyarrow}}{\METAlabset}{}{\METAidset}}$
+%% &
+%% \\
+
+
+%% $\unifrulefive$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{\METAtyname_1}{\METAtyname_2}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSuniferror{\CONSerror{\CONSuniferrortyconsclash{\METAtyname_1}{\METAtyname_2}}{\METAcdepset}}$,
+%% &
+%% if $\METAtyname_1\not=\METAtyname_2$
+%% \\
+
+
+%% $\unifruleeight$
+%% &
+%% $\CONSunifrun
+%% {\METAunifstate}
+%% {\METAcsset}
+%% {\MEMdunion
+%%   {\METAcsset}
+%%   {\{\cso{\METAlabtyseq_1}{\METAlabtyseq_2}{\METAlabset}{}{\METAidset}\}}
+%% }
+%% {\METAlab}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSuniferror{\CONSerror{\CONSuniferrorarityclash{\MEMsize{\METAlabtyseq_1}}{\MEMsize{\METAlabtyseq_2}}}{\METAlabset}{}{\METAidset}}$,
+%% &
+%% if $\MEMsize{\METAlabtyseq_1} \not = \MEMsize{\METAlabtyseq_2}$
+%% \\
+
+
+
+%% $\unifrulenine$
+%% &
+%% $\CONSunifrun
+%% {\METAunifstate}
+%% {\METAcsset}
+%% {\MEMdunion
+%%   {\METAcsset}
+%%   {\{\cso{\METAlabtyseq_1}{\METAlabtyseq_2}{\METAlabset}{}{\METAidset}\}}
+%% }
+%% {\METAlab}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifrun
+%% {\METAunifstate}
+%% {\METAcsset}
+%% {
+%%   \METAcsset
+%%   \cup
+%%   \MEMucup{i}{0}{n-1}
+%%   \{
+%%   \cso{\afunc{\METAlabtyseq_1}{i}}{\afunc{\METAlabtyseq_2}{i}}{\METAlabset}{}{\METAidset}
+%%   \}
+%% }
+%% {\METAlab}$,
+%% &
+%% if $n=\MEMsize{\METAlabtyseq_1}=\MEMsize{\METAlabtyseq_2}$
+%% \\
+
+
+%% $\unifrulenine$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{\METAvar}{x}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{y}{x}}$,
+%% &
+%% if $\METAvar\not=x$
+%% and $\afunc{\METAunifstate}{\METAvar}=y$
+%% \\
+
+
+%% $\unifruleeleven$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{\METAvar}{x}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifoccurs{\METAunifstate}{\METAcdepset}{\csou{\METAvar}{x}}$,
+%% &
+%% if $\METAvar\not\in\MEMdom{\afunc{\METAunifstate}{0}}\cup\SETenvvar\cup\{x\}$
+%% %and $\MEMoccurs{x}{\METAvar}{\METAunifstate}=\METAcdepset'$
+%% \\
+
+
+%% $\unifruletwelve$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\MEMdunion{\METAcsset}{\{\csou{\METAvar}{x}\}}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifenv
+%% {\MEMupdateuni{\METAunifstate}{\mytuple{\METAvar,\CONSdepss{x}{\METAcdepset}}}}
+%% {\METAcdepset}
+%% {\METAcsset}$,
+%% &
+%% if $\METAvar\not\in\MEMdom{\afunc{\METAunifstate}{0}}\cup\SETcsenv\cup\{x\}$
+%% and $\MEMoccurs{x}{\METAvar}{\METAunifstate}$ undefined
+%% \\
+
+
+%% $\unifrulethirteen$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{\METAstatus_1}{\METAstatus_2}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSuniferror{\CONSerror{\CONSuniferrorstatusclash{\METAstatus_1}{\METAstatus_2}}{\METAcdepset}}$,
+%% &
+%% if $\neg\MEMcompStatus{\METAstatus_1}{\METAstatus_2}$
+%% \\
+
+
+%% $\unifrulestatone$
+%% &
+%% $\CONSunifenv
+%% {\METAunifstate}
+%% {\METAcdepset}
+%% {\csou{\METAstatus_1}{\METAstatus_2}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifsuccess{\METAunifstate}{}$,
+%% &
+%% if $\MEMcompStatus{\METAstatus_1}{\METAstatus_2}$
+%% and $\METAstatus_1,\METAstatus_2\in\SETrawstatus$
+%% \\
+\end{\unifalgotab}
+
+
+
+%\vspace{0.03in}
+\begin{\unifalgotab}{ l l l l l }
+  \multicolumn{5}{l}{
+    \mytitle{unifier access}%/updating
+    \hspace{-0.03in}
+  }
+  \\
+  \multicolumn{5}{l}{
+    Rules $\unifruleuacca$ through $\unifruleuaccd$
+    have also the common side condition
+    $\METAvar\not\in\{\METAcsterm\}\cup\MEMdom{\METAunifstate}$
+    % and $y=\MEMbuildty{\CONSdepss{x}{\METAcdepset}}{\METAunifstatety}$.
+    \vspace{0.01in}
+  }
+  \\
+
+
+%% $\unifrulenineteen$
+%% &
+%% $\CONSunifenv
+%% {\MEMconsStateEnvp{\METAunifstatety}{\METAcsenv}{}}
+%% {\METAcdepset}
+%% {\csou{\METAvar}{x}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSuniferror{\CONSerror{\CONSuniferrorcircularityp}{\MEMdepset{y}}}$,
+%% &
+%% if $\METAvar\in\MEMvarset{y}\setminus(\MEMdom{\METAunifstatety}\cup\SETcsenv\cup\SETfreshvar\cup\{\MEMundep{y}\})$
+%% \\
+
+
+
+%% $\unifruletwenty$
+%% &
+%% $\CONSunifenv
+%% {\MEMconsStateEnvp{\METAunifstatety}{\METAcsenv}{}}
+%% {\METAcdepset}
+%% {\csou{\METAvar}{x}}$
+%% &
+%% $\fra$
+%% &
+%% $\CONSunifsuccess{\MEMconsStateEnvp{\METAunifstatety}{\METAcsenv}{}}{}$,
+%% &
+%% if $\METAvar\in\{\MEMundep{y}\}\setminus(\MEMdom{\METAunifstatety}\cup\SETcsenv)$
+%% \\
+
+
+
+$\unifruleuacca$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAvar}{\METAcsterm}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifsuccess
+{\METAunifstate\cup\{\asgn{\METAvar}{\CONSdepss{\METAcsterm}{\METAcdepset}}\}}
+{\METAcsenv}$,
+&
+if $\METAvar\not\in\SETcsenv$
+%if $\METAvar\not\in(\MEMvarset{y}\setminus\SETfreshvar)\cup\MEMdom{\METAunifstatety}\cup\SETcsenv$
+\\
+%% \end{\unifalgotab}
+
+
+%% \vspace{0.05in}
+%% \begin{\unifalgotab}{ l l l l l }
+%%   \multicolumn{5}{l}{\mytitle{environment solving}}\\
+
+
+
+$\unifruleesone$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAvar}{\METAcsterm}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifsuccess
+{\METAunifstate'\cup\{\asgn{\METAvar}{\METAcsenv'}\}}
+{\METAcsenv}$,
+&
+%% $\CONSunifrun
+%% {\MEMpushenvid{\METAunifstate}{\MEMgetunifty{\METAunifstate'}\cup\{\asgn{\METAenvvar}{\MEMupdatelabs{\METAbinds}{\METAlabset}{\METAidset}}\}}}
+%% {\METAcsset}
+%% {\METAcsset}
+%% {\METAlab}$,
+%% &
+if $\METAvar\in\SETcsenv$
+$\wedge$
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\METAcsterm}
+{\CONSenvnul}
+\ffra
+\CONSunifsuccess{\METAunifstate'}{\METAcsenv'}$
+\\
+
+
+
+$\unifruleestwo$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAvar}{\METAcsterm}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSuniferror{\METAerror}$,
+&
+if $\METAvar\in\SETcsenv$
+$\wedge$
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\METAcsterm}
+{\CONSenvnul}
+\ffra
+\CONSuniferror{\METAerror}$
+\\
+
+
+
+$\unifrulenine$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAvar'}{\METAcsterm}}
+{\METAcsenv}$
+&
+$\fra$
+&
+$\CONSunifenv
+{\METAunifstate}
+{\METAcdepset}
+{\csou{\METAcsterm'}{\METAcsterm}}
+{\METAcsenv}$,
+&
+if $\afunc{\METAunifstate}{\METAvar'}=\METAcsterm'$
+\end{\unifalgotab}
+
+
+%% \vspace*{0.03in}
+%% %\hspace*{2.5in}
+%%   \begin{tabular}{ l l l l }
+%%     \multicolumn{4}{l}{\mytitle{binders}}
+%%     \vspace{-0.03in}
+%%     \\
+%%   \end{tabular}
+%% %\vspace*{-0.5in}
+
+
+
+%% \vspace*{0.03in}
+%% %\hspace*{2.5in}
+%%   \begin{tabular}{ l l l l l }
+%%     \multicolumn{5}{l}{\mytitle{existentials}}
+%%     %\vspace{-0.01in}
+%%     \\
+%%   \end{tabular}
+%% %\vspace*{-0.5in}
+
+
+  \vspace{0.03in}
+  \begin{tabular}{ l l l l l }
+    \multicolumn{5}{l}{\mytitle{binders/existentials/empty/dependent/variables}}
+    \\
+
+    $\unifrulebinde$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\METAbind}
+    {\METAcsenv}$
+    & $\fra$
+    & $\CONSunifsuccess
+    {\METAunifstate}
+    {\CONSenvenv{\CONSdepss{\METAbind}{\METAcdepset}}{\METAcsenv}}$
+    %% & $\CONSunifsuccess
+    %% {\MEMconsStateEnvp
+    %%   {\METAunifstatety}
+    %%   {\CONSenvenv
+    %%     {(\CONSbindl{\METAgenid}{\MEMbuildty{x}{\METAunifstatety}}{\METAcdepset})}
+    %%     {\METAcsenv}
+    %%   }
+    %%   {}
+    %% }
+    %% {}$
+    &
+    \\
+
+    $\unifruleexists$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\CONSexistsenv{\METAatom}{\METAcsenv'}}
+    {\METAcsenv}$
+    & $\fra$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\MEMsubstitution{\{\asgn{\METAatom}{\METAatom'}\}}{\METAcsenv'}}
+    {\METAcsenv}$,
+    & if $\METAatom'\not\in\MEMatoms{\mytuple{\METAunifstate,\METAcsenv'}}$
+    %% & $\CONSunifsuccess
+    %% {\MEMconsStateEnvp
+    %%   {\METAunifstatety}
+    %%   {\CONSenvenv
+    %%     {(\CONSbindl{\METAgenid}{\MEMbuildty{x}{\METAunifstatety}}{\METAcdepset})}
+    %%     {\METAcsenv}
+    %%   }
+    %%   {}
+    %% }
+    %% {}$
+    \\
+
+    $\unifrulenula$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\CONSenvnul}
+    {\METAcsenv}$
+    & $\fra$
+    & $\CONSunifsuccess{\METAunifstate}{\METAcsenv}$
+    &
+    \\
+
+    $\unifruledepa$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\CONSdepss{\METAcsenv'}{\METAcdepset'}}
+    {\METAcsenv}$
+    & $\fra$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset\cup\METAcdepset'}
+    {\METAcsenv'}
+    {\METAcsenv}$
+    &
+    \\
+
+    $\unifrulevara$
+    & $\CONSunifenv
+    {\METAunifstate}
+    {\METAcdepset}
+    {\METAenvvar}
+    {\METAcsenv}$
+    & $\fra$
+    & $\CONSunifsuccess
+    {\METAunifstate}
+    {\CONSenvenv{\CONSdepss{\METAenvvar}{\METAcdepset}}{\METAcsenv}}$
+    &
+    %% & $\CONSunifsuccess
+    %% {\MEMconsStateEnvp
+    %%   {\METAunifstatety}
+    %%   {\CONSenvenv
+    %%     {\CONSdepss{\MEMbuildty{\METAenvvar}{\METAunifstatety}}{\METAcdepset}}
+    %%     {\METAcsenv}
+    %%   }
+    %%   {}
+    %% }
+    %% {}$
+\end{tabular}
+
+
+
+
+
+  \vspace{0.03in}
+  \begin{tabular}{ l l l l l }
+  \multicolumn{5}{l}{\mytitle{\COMPENVS}}
+  \\
+
+  $\unifruleconsa$ &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSenvenv{\METAcsenv_2}{\METAcsenv_1}}
+  {\METAcsenv}$
+  & $\fra$
+  & $\CONSunifsuccess
+  {\METAunifstate_2}
+  {\CONSenvenv{\CONSenvenv{\METAcsenv'_2}{\METAcsenv'_1}}{\METAcsenv}}$,
+  & if
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\METAcsenv_1}
+  {\CONSenvnul}
+  \ffra
+  \CONSunifsuccess{\METAunifstate_1}{\METAcsenv'_1}$
+  $\wedge$
+  $\CONSunifenv
+  {\CONSenvenv{\METAcsenv'_1}{\METAunifstate_1}}
+  {\METAcdepset}
+  {\METAcsenv_2}
+  {\CONSenvnul}
+  \ffra
+  \CONSunifsuccess{\CONSenvenv{\METAcsenv'_1}{\METAunifstate_2}}{\METAcsenv'_2}$
+  \\
+
+  $\unifruleconsb$ &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSenvenv{\METAcsenv_2}{\METAcsenv_1}}
+  {\METAcsenv}$
+  & $\fra$
+  & $\CONSuniferror{\METAerror}$,
+  & if
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\METAcsenv_1}
+  {\CONSenvnul}
+  \ffra
+  \CONSunifsuccess{\METAunifstate_1}{\METAcsenv'_1}$
+  $\wedge$
+  $\CONSunifenv
+  {\CONSenvenv{\METAcsenv'_1}{\METAunifstate_1}}
+  {\METAcdepset}
+  {\METAcsenv_2}
+  {\CONSenvnul}
+  \ffra
+  \CONSuniferror{\METAerror}$
+  \\
+
+  $\unifruleconsc$ &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSenvenv{\METAcsenv_2}{\METAcsenv_1}}
+  {\METAcsenv}$
+  & $\fra$
+  & $\CONSuniferror{\METAerror}$,
+  & if
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\METAcsenv_1}
+  {\CONSenvnul}
+  \ffra
+  \CONSuniferror{\METAerror}$
+
+    %% $\CONSbuildcsenv{\METAcsset}{\METAunifstate}$
+    %% & $\fra$
+    %% & $\left\{
+    %% \begin{array}{ll}
+    %%   \CONSenvtermsucc{\MEMbindss{\emptyset}{\emptyset}}{\METAunifstate'}
+    %%   &
+    %%   \mbox{if }\MEMgetunifsuccess{\CONSunifunify{\METAunifstate}{\METAcsset}}{\METAunifstate'}
+    %%   \\
+    %%   \CONSenvtermerr{\METAerror}
+    %%   &
+    %%   \mbox{if }\MEMgetuniferror{\CONSunifunify{\METAunifstate}{\METAcsset}}{\METAerror}
+    %% \end{array}
+    %% \right.$
+    %% \\
+\end{tabular}
+
+
+
+%  \vspace*{-0.21in}
+
+
+
+
+
+
+
+
+  %% \begin{tabular}{ l l l l l }
+  %% \end{tabular}
+
+
+  \vspace{0.01in}
+  \begin{\unifalgotab}{ l l l l l }
+  \multicolumn{5}{l}{
+    \mytitle{accessors}
+    \vspace{-0.02in}
+  }
+  \\
+  %% \multicolumn{5}{l}{
+  %%   %\hspace{0.1in}
+  %%   Rules $\unifruleacca$ through $\unifruleaccd$
+  %%   have the same left-hand-side:
+  %%   $\METAunifterm=\CONSunifenv
+  %%   {\METAunifstate}
+  %%   {\METAcdepset}
+  %%   {\CONSacc{\METAgenid}{\METAvar}}$.
+  %% }
+  %% %\vspace{-0.03in}
+  %% \\
+
+  $\unifruleacca$
+  & $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSacc{\METAgenid}{\METAvar}}
+  {\METAcsenv'}$
+  & $\fra$
+  & $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSenvenv
+    {(\csou
+      {\METAvar}
+      {\METAcsterm})
+    }
+    {\METAcsenv}
+  }
+  {\METAcsenv'}$,
+  & if
+  $\MEMcsinsp{\afunc{\METAunifstate}{\METAgenid}}{\METAren}{\METAcsenv}{\METAcsterm}$
+  $\wedge$
+  $\MEMdisj{\MEMvarset{\mytuple{\METAunifstate,\METAvar}},\MEMran{\METAren}}$
+  \\
+
+  %% $\unifruleaccb$ &
+  %% $\CONSunifenv{\METAunifstate}{\METAcdepset}{\CONSacc{\METAid}{\METArawstatus}}$
+  %% & $\fra$
+  %% & $\CONSunifenv
+  %% {\METAunifstate}
+  %% {\METAcdepset}
+  %% {\csou{\METArawstatus}{\METAstatus}}$,
+  %% & if $\afuncst{\METAunifstate}{\METAid}=\METAstatus$
+  %% \\
+
+  %% $\unifruleaccc$
+  %% & $\CONSunifenv
+  %% {\METAunifstate}
+  %% {\METAcdepset}
+  %% {\CONSacc{\METAgenid}{\METAvar}}$
+  %% & $\fra$
+  %% & $\CONSunifenv{\METAunifstate}{\METAcdepset}{\csou{\METAvar}{x}}$,
+  %% & if $\afunc{\METAunifstate}{\METAgenid}=x$
+  %% $\wedge$
+  %% $\MEMundep{x}$ is not of the form $\CONSscheme{\METAtyvarset}{\METAlabty}$
+  %% \\
+
+  $\unifruleaccd$ &
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONSacc{\METAgenid}{\METAvar}}
+  {\METAcsenv'}$
+  & $\fra$
+  & $\CONSunifsuccess{\METAunifstate}{\METAcsenv'}$,
+  & if $\afunc{\METAunifstate}{\METAgenid}$ undefined
+\end{\unifalgotab}
+
+
+    %% $\CONSunifenv{\METAunifstate}{\METAcdepset}{\METAbind}$
+    %% & $\fra$
+    %% %% & $\MEMconseeid{\METAbind_2}{\MEMgetlabsenv{\METAbind_2}}{}{\MEMgetvidsenv{\METAbind_2}}$
+    %% & $\left\{
+    %% \begin{array}{ll}
+    %%   \CONSbuildbind{\METAunifstate}{\METAcdepset}{\METAbind'}
+    %%   &
+    %%   \mbox{if }\MEMtrimreboundenv{\METAbind}{\METAunifstate}=\METAbind'
+    %%   \\
+    %%   \CONSunifenv{\METAunifstate}{\METAcdepset}{\METAcs}
+    %%   &
+    %%   \mbox{if }\MEMtrimreboundenv{\METAbind}{\METAunifstate}=\METAcs
+    %% \end{array}
+    %% \right.$
+    %% \\
+
+    %% & & \hspace{0.12in}and
+    %% $\METAbind=
+    %% \{\asgn{\METAgenid}{\CONSbuildbind{x}{\METAunifstate}}
+    %% \mid
+    %% \afunc{\METAbind_1}{\METAgenid}=x\wedge\METAgenid\not\in\SETstrid\}$
+    %% \\
+    %% & & \hspace{0.12in}and
+    %% $\METAfun=
+    %% \{\asgn{\METAstrid}{\CONSbuildbind{x}{\METAunifstate}}
+    %% \mid
+    %% \afunc{\METAbind_1}{\METAstrid}=x\}$
+    %% \\
+    %% & & \hspace{0.12in}and if
+    %% $\existsexp{\METAstrid}{\afunc{\METAfun}{\METAstrid}=\CONSenvtermerr{\METAerror}}$
+    %% \\
+    %% & & \hspace{0.40in}then
+    %% $\METAenvterm=\CONSenvtermerr{\METAerror}$
+    %% \\
+    %% & & \hspace{0.40in}else
+    %% $\METAbind'=\METAbind\cup
+    %% \{\asgn{\METAstrid}{\METAbinds}\mid\afunc{\METAfun}{\METAstrid}=\CONSenvtermsucc{\METAbinds}{\METAunifstate'}\}$
+    %% \\
+    %% & & \hspace{0.67in}and
+    %% $\METAunifstatety
+    %% =\cup_{\CONSenvtermsucc{\METAbinds}{\METAunifstate_0}\in\MEMran{\METAfun}}\MEMrestrictout{\MEMgetunifty{\METAunifstate_0}}{\MEMdom{\MEMgetunifty{\METAunifstate}}}$
+    %% \\
+    %% & & \hspace{0.67in}and
+    %% $\METAenvterm=\CONSenvtermsucc{\METAbind'}{\MEMpushenvid{\MEMpushenvid{\METAunifstate}{\METAunifstatety}}{\MEMgetmonobind{\METAbind'}}}$
+    %% \\
+
+    %% $\CONSbuildcsenv{\CONSsems{\METAstrid}{\METAlab}}{\METAunifstate}$
+    %% & $\fra$
+    %% & $\left\{
+    %% \begin{array}{ll}
+    %%   \CONSenvtermsucc{\afunc{\METAunifstate}{\METAstrid}}{\METAunifstate}
+    %%   &
+    %%   \mbox{if }\METAstrid\in\MEMdomid{\METAunifstate}
+    %%   \\
+    %%   \CONSenvtermsucc{\MEMbindss{\CONSsems{\METAstrid}{\METAlab}}{\emptyset}}{\METAunifstate}
+    %%   &
+    %%   \mbox{otherwise}
+    %% \end{array}
+    %% \right.$
+    %% \\
+
+
+  \vspace{0.03in}
+  \begin{tabular}{ l l l l l }
+  \multicolumn{5}{l}{\mytitle{polymorphic environments}}
+  \\
+
+  $\unifrulepolya$
+  & $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONStopoly{\METAcsenv}}
+  {\METAcsenv_1}$
+  & $\fra$
+  & $\CONSunifsuccess
+  {\METAunifstate'}
+  {\CONSenvenv{\MEMtopolyu{\METAunifstate'}{\METAcsenv_2}}{\METAcsenv_1}}$,
+  & if
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\METAcsenv}
+  {\CONSenvnul}
+  \ffra
+  \CONSunifsuccess{\METAunifstate'}{\METAcsenv_2}$
+  \\
+
+  %% $\unifrulepolyb$ &
+  %% $\CONSunifenv{\MEMconsStateEnvp{\METAunifstatety_1}{\METAcsenv_1}{}}{\METAcdepset}{\CONStopoly{\METAcsenv}}$
+  %% & $\fra$
+  %% & $\CONSunifsuccess{\MEMconsStateEnvp{\METAunifstatety_2}{\METAcsenv_2}{}}{}$,
+  %% & if $\CONSunifenv{\MEMconsStateEnvp{\METAunifstatety_1}{\METAcsenv_1}{}}{\METAcdepset}{\METAcsenv}\ffra\CONSunifsuccess{\MEMconsStateEnvp{\METAunifstatety_2}{\METAcsenv_2}{}}{}$
+  %% and $\MEMsolvedenv{\METAcsenv_1}{\METAcsenv_2}=\CONSenvnul$
+  %% \\
+
+  $\unifrulepolyc$
+  & $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\CONStopoly{\METAcsenv}}
+  {\METAcsenv_1}$
+  & $\fra$
+  & $\CONSuniferror{\METAerror}$,
+  & if
+  $\CONSunifenv
+  {\METAunifstate}
+  {\METAcdepset}
+  {\METAcsenv}
+  {\CONSenvnul}
+  \ffra
+  \CONSuniferror{\METAerror}$
+  \end{tabular}
+
+
+\end{\sizeintables}

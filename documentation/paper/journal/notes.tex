@@ -1,0 +1,113 @@
+% -*-LaTeX-*-
+
+\newcommand{\hidden}[1]{}
+\newcommand{\personal}[1]{}
+\newcommand{\paper}[1]{}
+% the 3 previous ones are the same really
+
+\ifnew
+  \newcommand{\newtext}[1]{\textcolor{mybluetext}{#1}}
+\else
+  \newcommand{\newtext}[1]{#1}
+\fi
+
+\ifnnew
+  \newcommand{\nnewtext}[1]{\textcolor{mybluetext}{#1}}
+\else
+  \newcommand{\nnewtext}[1]{#1}
+\fi
+
+\iffinal
+  \newcommand{\tocheck}[1]{#1}
+  \newcommand{\tocheckk}[1]{}
+\else
+  \newcommand{\tocheck}[1]{\textcolor{mybluetext}{#1}}
+  \newcommand{\tocheckk}[1]{\textcolor{myredtext}{#1}}
+\fi
+
+\ifcomm
+  \ifincolor
+    \newcommand{\mynote}[2]{
+      \noindent
+      \begin{footnotesize}
+        \textcolor{red}{
+          \textbf{
+            [\begin{tiny}(#1)\end{tiny}: #2]}
+        }
+      \end{footnotesize}
+    }
+    \newenvironment{spnote}[1]{
+      \noindent
+      \color{red}
+      \footnotesize
+      \bf
+         [\begin{tiny}(#1)\end{tiny}:
+    }
+    {]}
+    \newcommand{\mycomm}[2]{
+      \noindent
+      \begin{footnotesize}
+        \textcolor{blue}{
+          \textbf{
+            //% \begin{tiny}(#1)\end{tiny}
+            #2}
+        }
+      \end{footnotesize}
+    }
+    \newcommand{\FK}[1]{
+      \noindent\begin{footnotesize}
+      \textcolor{magenta}{\textsf{\textbf{#1}}}
+      \end{footnotesize}
+    }
+  \else
+    \newcommand{\mynote}[2]{
+      \noindent
+      \begin{footnotesize}
+        \textcolor{mygray}{
+          \textbf{
+            [\begin{tiny}(#1)\end{tiny}: #2]}
+        }
+      \end{footnotesize}
+    }
+    \newenvironment{spnote}[1]{
+      \noindent
+      \color{mygray}
+      \footnotesize
+      \bf
+         [\begin{tiny}(#1)\end{tiny}:
+    }
+    {]}
+    \newcommand{\mycomm}[2]{
+      \noindent
+      \begin{footnotesize}
+        \textcolor{mygray}{
+          \textbf{
+            //% \begin{tiny}(#1)\end{tiny}
+            #2}
+        }
+      \end{footnotesize}
+    }
+    \newcommand{\FK}[1]{
+      \noindent\begin{footnotesize}
+      \textcolor{fkgray}{\textsf{\textbf{#1}}}
+      \end{footnotesize}
+    }
+  \fi
+\else
+  \newcommand{\mynote}[2]{}
+  \newenvironment{spnote}[1]{}{}
+  \newcommand{\mycomm}[2]{}
+  \ifincolor
+    \newcommand{\FK}[1]{
+      \noindent\begin{footnotesize}
+      \textcolor{magenta}{\textsf{\textbf{#1}}}
+      \end{footnotesize}
+    }
+  \else
+    \newcommand{\FK}[1]{
+      \noindent\begin{footnotesize}
+      \textcolor{fkgray}{\textsf{\textbf{#1}}}
+      \end{footnotesize}
+    }
+  \fi
+\fi

@@ -1,0 +1,197 @@
+% This material was inspired by the "proof" environment of amsthm.sty.
+% Some fragments are derived therefrom.
+%
+% Usage:
+% 
+%   1. Make sure this package has been loaded.
+%   2. Make sure the environments you want to modify are loaded.
+%   3. For each environment XXX you want to give an end marker, do
+%      \GiveEnvEndMark{XXX}, unless XXX is the "proof" environment 
+%      from amsthm.sty, in which case you should do instead
+%      \FixAMSProof.
+%   4. If the placement of the end marker could be improved by putting
+%      it inside a math display or a list, you can place it by hand
+%      with \EEM.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{jbw-env-end-mark}[1998/10/28 mark ends of environments]
+
+\newcommand{\EEM}{\jbweem@EnvEndMark}
+
+\newcommand{\jbweem@EnvEndMarkInit}
+  {\global\let\jbweem@EnvEndMark=\jbweem@EnvEndMark@Master
+   \global\let\jbweem@BeginEndTrivList=\jbweem@BeginEndTrivList@Master
+   \global\let\jbweem@EndEndTrivList=\jbweem@EndEndTrivList@Master}
+
+\newcommand{\jbweem@EnvEndMarkCancel}
+  {\global\let\jbweem@EnvEndMark=\relax
+   \global\let\jbweem@BeginEndTrivList=\relax
+   \global\let\jbweem@EndEndTrivList=\relax}
+
+\jbweem@EnvEndMarkCancel
+
+\newcommand{\jbweem@EnvEndMark@Master}
+  {\global\let\jbweem@EnvEndMark=\relax
+   \jbweem@TraceLoc{begin EnvEndMark}%
+   % jbw: The code here for placing the symbol is originally
+   % derived from amsthm.sty, but has since mutated.
+   \ifmmode
+     % This case can only happen when the user is placing the
+     % environment end mark by hand.  So we just draw the mark.
+     \quad\hbox{\EnvEndSymbol}%
+   \else
+     \leavevmode \unskip \penalty9999 \hbox{}\nobreak
+     \hskip 0pt plus 5filll%
+     \quad\hbox{\EnvEndSymbol}%
+     \par % added so that we can trace the results
+     \jbweem@TraceLoc{EnvEndMark after par}%
+   \fi}
+
+% This checks if the environment is already defined.
+% Previously, without the check, _somehow_ it silently succeeded on
+% undefined environments, without warning of the mistake.
+\newcommand*{\GiveEnvEndMark}[1]{%
+  \@ifundefined{#1}
+    {\PackageError{jbw-env-end-mark}
+       {Environment #1 undefined}
+       {GiveEnvEndMark was invoked on an undefined environment.
+       Strange typesetting will result.}}
+    {\@ifundefined{end#1}
+       {\PackageError{jbw-env-end-mark}
+          {#1 not an environment}
+          {GiveEnvEndMark was invoked on a name which has not been
+          defined as an environment.  Bizarre disaster awaits.}}
+       {}}%
+  \expandafter
+  \GiveEnvEndMarkAux
+    \expandafter
+    {\csname #1\expandafter\endcsname\expandafter}\expandafter
+    {\csname EnvEndMark#1\expandafter\endcsname\expandafter}\expandafter
+    {\csname end#1\expandafter\endcsname\expandafter}\expandafter
+    {\csname EnvEndMarkend#1\endcsname}}
+\newcommand*{\GiveEnvEndMarkAux}[4]
+  {% #1 is \THEOREM
+   % #2 is \EnvEndMarkTHEOREM
+   % #3 is \endTHEOREM
+   % #4 is \EnvEndMarkendTHEOREM
+   \let#2=#1%
+   \let#4=#3%
+   \def#1{\jbweem@EnvEndMarkInit#2}%
+   \def#3{\jbweem@TraceLoc{begin \string#3}%
+          \ifvmode
+            \jbweem@MarkEndEnvLoc
+          \fi
+          \jbweem@EnvEndMark
+          \jbweem@EnvEndMarkCancel
+          #4%
+          \ignorespaces
+         }}
+
+\newcommand{\jbweem@MarkEndEnvLoc}
+  {% Even though we expect this to be invoked in vertical mode, we
+   % must run \par again to ensure that any ``recent contributions''
+   % (namely, glue items) are moved to the ``current page'' where they
+   % will contribute to the value of \pagetotal.
+   \jbweem@TraceLoc{MarkEndEnvLoc before par}%
+   \par
+   \jbweem@TraceLoc{MarkEndEnvLoc after par}%
+   \immediate\write\@auxout
+     % Using \inputlineno helps in debugging this code.  Otherwise
+     % the definition can even be empty.
+     {\global\string\@namedef{jbweem@EndEnvLoc@\the\c@page,\the\pagetotal}{\the\inputlineno}}}
+
+\newcommand{\jbweem@BeginEndTrivList@Master}
+  {\jbweem@TraceLoc{begin \string\endtrivlist}%
+   % Now we test whether in previous LaTeX runs this list ending
+   % coincided with the end of a theorem-like environment.
+   \@ifundefined{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}
+     {\jbweem@Trace{\@percentchar undefined: jbweem@EndListLoc@\the\jbweem@EndTrivListCount}}
+     {\jbweem@Trace{\@percentchar defined: jbweem@EndListLoc@\the\jbweem@EndTrivListCount -> \@nameuse{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}}%
+      \@ifundefined{\@nameuse{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}}
+        {\jbweem@Trace{\@percentchar undefined: \@nameuse{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}}}
+        {\jbweem@Trace
+           {\@percentchar defined: \@nameuse{jbweem@EndListLoc@\the\jbweem@EndTrivListCount} -> \@nameuse{\@nameuse{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}}}%
+         \jbweem@Trace{\@percentchar LIST END MATCHES THEOREM-LIKE ENVIRONMENT END!}%
+         \jbweem@EnvEndMark}}}
+
+\newcommand{\jbweem@EndEndTrivList@Master}
+  {% Even though \endtrivlist will have ended horizontal mode, we must
+   % run \par again to ensure that any ``recent contributions''
+   % (namely, glue items) are moved to the ``current page'' where they
+   % will contribute to the value of \pagetotal.
+   \par
+   \jbweem@TraceLoc{after par \string\endtrivlist}%
+   \immediate\write\@auxout
+     {\global\string\@namedef{jbweem@EndListLoc@\the\jbweem@EndTrivListCount}{jbweem@EndEnvLoc@\the\c@page,\the\pagetotal}}}
+
+\newcount\jbweem@EndTrivListCount
+\global\jbweem@EndTrivListCount=0
+
+\let\jbweem@original@endtrivlist=\endtrivlist
+\def\endtrivlist%
+  {\global\advance\jbweem@EndTrivListCount by 1\relax
+   \jbweem@BeginEndTrivList
+   \jbweem@original@endtrivlist
+   \jbweem@EndEndTrivList
+   \ignorespaces}
+
+% Whether tracing is on.
+\iffalse
+
+  \IfFileExists{\jobname.jbweemtrace}
+    {\input{\jobname.jbweemtrace}}
+    {}
+
+  \newwrite\jbweem@tracefile
+  \immediate\openout\jbweem@tracefile\jobname.jbweemtrace
+  \newcommand{\jbweem@Trace}{\immediate\write\jbweem@tracefile}
+
+\else
+
+  \newcommand{\jbweem@Trace}[1]{}
+
+\fi
+
+\jbweem@Trace{\relax}%
+\jbweem@Trace{\@percentchar date: \today}%
+
+\newcommand{\jbweem@TraceLoc}[1]
+  {\jbweem@Trace
+     {\@percentchar
+      #1: %
+      c@page=\the\c@page,%
+      %thepage=\thepage,%
+      inputlineno=\the\inputlineno,%
+      pagetotal=\the\pagetotal,%
+      %prevgraf=\the\prevgraf,%
+      %pagegoal=\the\pagegoal,%
+      %pagestretch=\the\pagestretch,%
+      %pageshrink=\the\pageshrink,%
+      %pagedepth=\the\pagedepth,%
+      %insertpenalties=\the\insertpenalties,%
+      %spacefactor=\the\spacefactor,% horizontal mode only
+      %prevdepth=\the\prevdepth,% vertical mode only
+     }}
+
+% jbw: This was \openbox in amsthm.sty.
+\newcommand{\EnvEndSymbol}{%
+  \leavevmode
+  \hbox to.77778em{%
+    \hfil\vrule
+    \vbox to.675em{\hrule width.6em\vfil\hrule}%
+    \vrule\hfil}}
+
+\newcommand{\FixAMSProof}{%
+  \def\qed{\jbweem@EnvEndMark}%
+  \GiveEnvEndMark{proof}}
+
+\DeclareOption{fleqn}{\let\equationEEM=\equationEEMfleqn}
+
+\newcommand*{\equationEEM}[1]{$$#1\eqno\EEM$$}
+%\newcommand*{\equationEEMfleqn}[1]{\[#1\egroup$\EEM$\m@th\bgroup\]}
+\newcommand*{\equationEEMfleqn}[1]{%
+  \begin{itemize}%
+  \item[\ ]$\m@th\displaystyle#1$\EEM
+  \end{itemize}}
+
+\ProcessOptions\relax

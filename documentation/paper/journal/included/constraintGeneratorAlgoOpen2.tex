@@ -1,0 +1,475 @@
+% -*-LaTeX-*-
+
+
+\begin{\sizeintables}
+
+%% All rules of the form $\MEMinferarrgen{P}{Q}$ have to be read as
+%% $\MEMinferarrgen{P}{(Q\MEMboldand\MEMdisjvs{\METAcsenv,\METAcsenv_1,\METAcsenv_2,\METAtyvar,\METAtyvar',\METAenvvar,\METAenvvar'})}$
+%% \vspace{0.05in}
+
+\begin{\consgentab}{ll}
+
+
+%% \multicolumn{1}{l}{
+%%   \myboxedtitlep{Expressions}{($\typingCS{\METAexp}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulea}
+  {
+    \MEMgenb{\LABexpId{\METAid}{\METAlab}}{\METAtyvar}
+    =\CONSaccl{\METAid}{\METAtyvar}{\METAlab}
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruleb}
+  {
+    \MEMgenb{\LABexpLet{\METAdec}{\METAexp}{\METAlab}}{\METAtyvar}
+    =\csbind
+    {\CONSexistsenv
+      {\METAtyvar_2}
+      {\CONSenvenv
+        {\CONSenvenv{(\cso{\METAtyvar}{\METAtyvar_2}{\METAlab})}{\MEMgenb{\METAexp}{\METAtyvar_2}}}
+        {\MEMgena{\METAdec}}
+      }
+    }
+  }$
+}
+
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulec}
+  {
+    \MEMgenb{\LABexpApp{\METAexp}{\METAatexp}{\METAlab}}{\METAtyvar}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar_1\METAtyvar_2}}
+    {\CONSenvenv
+      {\CONSenvenv
+        {(\cso{\METAtyvar_1}{\METAlabtyarrowp{\METAtyvar_2}{\METAtyvar}{}}{\METAlab})}
+        {\MEMgenb{\METAatexp}{\METAtyvar_2}}
+      }
+      {\MEMgenb{\METAexp}{\METAtyvar_1}}
+    }
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruled}
+  {
+    \MEMgenb{\LABexpFnp{\LABmrule{\METApat}{\METAexp}{\METAlab}}{\METAlab}}{\METAtyvar}
+    =\csbind
+    {\CONSexistsenv
+      {\mytuple{\METAtyvar_1,\METAtyvar_2,\METAenvvar}}
+      {\CONSenvenv
+        {\CONSenvenv
+          {\CONSenvenv
+            {(\cso{\METAtyvar}{\METAlabtyarrowp{\METAtyvar_1}{\METAtyvar_2}{}}{\METAlab})}
+            {\MEMgenb{\METAexp}{\METAtyvar_1}}
+          }
+          {\CONSdepss{\METAenvvar}{\METAlab}}
+        }
+        {(\csou{\METAenvvar}{\MEMgenb{\METApat}{\METAtyvar_1}})}
+      }
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l@{\hspace{0.2in}}}{
+%%   \myboxedtitlep{Labelled datatype constructors}{($\typingPCS{\METAlabdcon}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulebd}
+  {
+    \MEMgenb{\LABlabgen{\METAdcon}{\METAlab}}{\METAtyvar}
+    =\CONSaccl{\METAdcon}{\METAtyvar}{\METAlab}
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Patterns}{($\typingPCS{\METApat}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{1}{l@{\hspace{0.2in}}}{
+  $\MEMgenrule
+  {\MEMgencgrulee}
+  {
+    \MEMgenb{\LABpatId{\METAvvar}{\METAlab}}{\METAtyvar}
+    =\CONSbindl{\METAvvar}{\METAtyvar}{\METAlab}
+  }$
+}
+
+&
+
+\multicolumn{1}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulef}
+  {
+    \MEMgenb{\LABpatId{\METAdcon}{\METAlab}}{\METAtyvar}
+    =\CONSaccl{\METAdcon}{\METAtyvar}{\METAlab}
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulebf}
+  {
+    \MEMgenb{\LABpatAppSp{\METAlabdcon}{\METAatpat}{\METAlab}}{\METAtyvar}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar_1,\METAtyvar_2}}
+    {\CONSenvenv
+      {(\cso{\METAtyvar_1}{\CONSarrowty{\METAtyvar_2}{\METAtyvar}}{\METAlab})}
+      {\CONSenvenv
+        {\MEMgenb{\METAatpat}{\METAtyvar_2}}
+        {\MEMgenb{\METAlabdcon}{\METAtyvar_1}}
+      }
+    }
+  }$
+  \vspace{0.1in}
+}
+
+%% &
+
+%% \multicolumn{4}{@{\hspace{0.1in}}l}{
+%%   $\MEMinferaa
+%%   {\typingPCS
+%%     {\LABpatId{\METAdcon}{\METAlab}}
+%%     {\METAtyvar}
+%%     {\CONSaccl{\METAdcon}{\METAtyvar}{\METAlab}}
+%%   }
+%%   {\MEMgencgrulee}$
+%% }
+
+
+%% \multicolumn{5}{l}{
+%%   $\MEMinfercc
+%%   {\typingSCS
+%%     {\LABpatAppSpp{\METAid}{\METAatpat}{\METAlab}}
+%%     {\mytuple{
+%%         \METAtyvar',
+%%         \CONSenvenv
+%%             {\CONSenvenv
+%%               {\METAcsenv}
+%%               {(\cso{\CONSsemv{\METAid}{\CONSstatusc}}{\METAlabtyarrowp{\METAtyvar}{\METAtyvar'}{}}{\METAlab})}
+%%             }
+%%             {(\cso{\CONSsemc{\METAid}}{\CONSstatusc}{\METAlab})}
+%%       }
+%%     }
+%%   }
+%%   {\typingSCS{\METAatpat}{\mytuple{\METAtyvar,\METAcsenv}}}
+%%   {\MEMdisjvs{\METAcsenv,\METAtyvar'}}
+%%   {\MEMgencgrulef}$
+%% }
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Labelled type constructors}{($\typingPCS{\METAlabtypename}{\METAtynamevar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{1}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulebe}
+  {
+    \MEMgenb{\LABlabgen{\METAtypename}{\METAlab}}{\METAtynamevar}
+    =\CONSaccl{\METAtypename}{\METAtynamevar}{\METAlab}
+  }$
+  \vspace{0.12in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Types}{($\typingCS{\METAtype}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruleg}
+  {
+    \MEMgenb{\LABtypeTypevar{\METAtypevar}{\METAlab}}{\METAtyvar}
+    =\CONSaccl{\METAtypevar}{\METAtyvar}{\METAlab}
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruleh}
+  {
+    \MEMgenb{\LABsptypeTypename{\METAtype}{\METAlabtypename}{\METAlab}}{\METAtyvar'}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar,\METAtynamevar}}
+    {\CONSenvenv
+      {(\cso{\METAtyvar'}{\CONSconsty{\METAtynamevar}{\METAtyvar}}{\METAlab})}
+      {\CONSenvenv
+        {\MEMgenb{\METAlabtypename}{\METAtynamevar}}
+        {\MEMgenb{\METAtype}{\METAtyvar}}
+      }
+    }
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulei}
+  {
+    \MEMgenb{\LABtypeArrow{\METAtype_1}{\METAtype_2}{\METAlab}}{\METAtyvar}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar_1,\METAtyvar_2}}
+    {\CONSenvenv
+      {\CONSenvenv
+        {(\cso{\METAtyvar}{\METAlabtyarrowp{\METAtyvar_1}{\METAtyvar_2}{\METAlab}}{\METAlab})}
+        {\MEMgenb{\METAtype_2}{\METAtyvar_2}}
+      }
+      {\MEMgenb{\METAtype_1}{\METAtyvar_1}}
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Datatype names}{($\typingCS{\METAdatname}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruleo}
+  {
+    \MEMgenb{\LABdatnamep{\METAtypevar}{\METAtypename}{\METAlab}}{\METAtyvar'}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar,\METAtyname}}
+    {\CONSenvenv
+      {\CONSenvenv
+        {(\CONSbindl{\METAtypevar}{\METAtyvar}{\METAlab})}
+        {(\CONSbindl{\METAtypename}{\METAtyname}{\METAlab})}
+      }
+      {(\cso{\METAtyvar'}{\CONSconsty{\METAtyname}{\METAtyvar}}{\METAlab})}
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Constructor bindings}{($\typingDCS{\METAtypecon}{\METAtyvar}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulej}
+  {
+    \MEMgenb{\LABtypeconId{\METAdcon}{\METAlab}}{\METAtyvar}
+    =\CONSbindl{\METAdcon}{\METAtyvar}{\METAlab}
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulek}
+  {
+    \MEMgenb{\LABtypeconCompp{\METAdcon}{\METAlab_1}{\METAtype}{\METAlab}}{\METAtyvar}
+    =\CONSexistsenv
+    {\mytuple{\METAtyvar',\METAtyvar_1}}
+    {\CONSenvenv
+      {\CONSenvenv
+        {(\CONSbindl{\METAdcon}{\METAtyvar'}{\METAlab})}
+        {(\cso{\METAtyvar'}{\METAlabtyarrowp{\METAtyvar_1}{\METAtyvar}{\METAlab}}{\METAlab})}
+      }
+      {\MEMgenb{\METAtype}{\METAtyvar_1}}
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Declarations}{($\typingSCS{\METAdec}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulel}
+  {
+    \MEMgena{\LABdecVal{\LABvalbind{\METApat}{\METAexp}{\METAlab}}}
+    =\CONSenvenv
+    {\CONSdepss{\METAenvvar}{\METAlab}}
+    {\CONSexistsenv
+      {\mytuple{\METAtyvar_1,\METAtyvar_2,\METAenvvar}}
+      {(\csou
+        {\METAenvvar}
+        {\CONStopoly
+          {\CONSenvenv
+            {\CONSenvenv
+              {(\cso{\METAtyvar_1}{\METAtyvar_2}{\METAlab})}
+              {\MEMgenb{\METAexp}{\METAtyvar_2}}
+            }
+            {\MEMgenb{\METApat}{\METAtyvar_1}}
+          }
+        })
+      }
+    }
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulen}
+  {
+    \MEMgena{\LABdecDat{\LABspdatbind{\METAdatname}{\METAtypecon}{\METAlab}}}
+    =\CONSenvenv
+    {\CONSdepss{\METAenvvar}{\METAlab}}
+    {\CONSexistsenv
+      {\mytuple{\METAtyvar_1,\METAtyvar_2,\METAenvvar}}
+      {(\csou
+        {\METAenvvar}
+        {(\CONSenvenv
+          {\CONSenvenv
+            {\CONStopoly{\MEMgenb{\METAtypecon}{\METAtyvar_2}}}
+            {\MEMgenb{\METAdatname}{\METAtyvar_1}}
+          }
+          {(\cso{\METAtyvar_1}{\METAtyvar_2}{\METAlab})})
+        })
+      }
+    }
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulem}
+  {
+    \MEMgena{\LABdecOpen{\METAstrid}{\METAlab}}
+    =\CONSexistsenv
+    {\METAenvvar}
+    {\CONSenvenv
+      {\CONSdepss{\METAenvvar}{\METAlab}}
+      {(\CONSaccl{\METAstrid}{\METAenvvar}{\METAlab})}
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%   \myboxedtitlep{Structure declarations}{($\typingSCS{\METAstrdec}{\METAcsenv}$)}
+%%   \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgrulep}
+  {
+    \MEMgena{\LABstrdecStr{\LABstrbindBas{\METAstrid}{\METAstrexp}{\METAlab}}}
+    =\CONSexistsenv
+    {\mytuple{\METAenvvar,\METAenvvar'}}
+    {\CONSenvenv
+      {\CONSdepss{\METAenvvar'}{\METAlab}}
+      {\CONSenvenv
+        {(\csou
+          {\METAenvvar'}
+          {(\CONSbindl{\METAstrid}{\METAenvvar}{\METAlab})})
+        }
+        {\csbind{\MEMgenb{\METAstrexp}{\METAenvvar}}}
+      }
+    }
+  }$
+  \vspace{0.1in}
+}
+
+\\
+
+%% \multicolumn{2}{l}{
+%%     \myboxedtitlep{Structure expressions}{($\typingCS{\METAstrexp}{\METAenvvar}{\METAcsenv}$)}
+%%     \vspace{0.02in}
+%% }
+
+%% \\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruleq}
+  {
+    \MEMgenb{\LABstrexpId{\METAstrid}{\METAlab}}{\METAenvvar}
+    =\CONSaccl{\METAstrid}{\METAenvvar}{\METAlab}
+  }$
+}
+
+\\
+
+\multicolumn{2}{l}{
+  $\MEMgenrule
+  {\MEMgencgruler}
+  {
+    \MEMgenb{\LABstrexpMul{\METAstrdec_1}{\METAstrdec_n}{\METAlab}}{\METAenvvar}
+    =\CONSexistsenv
+    {\METAenvvar'}
+    {\CONSenvenv
+      {(\csou{\METAenvvar'}{(\CONSenvenvn{\MEMgena{\METAstrdec_n}}{}{\MEMgena{\METAstrdec_1}})})}
+      {(\cso{\METAenvvar}{\METAenvvar'}{\METAlab})}
+    }
+  }$
+}
+
+\end{\consgentab}
+\end{\sizeintables}

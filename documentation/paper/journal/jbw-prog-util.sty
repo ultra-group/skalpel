@@ -1,0 +1,799 @@
+% Dependencies: \@gobble, \@firstoftwo, \@secondoftwo
+
+% I've thought about using \toks@ too, but for now I prefer the
+% clarity of the raw TeX (even though it requires careful use of
+% spaces).  When this stuff starts to stabilize, I will consider
+% optimizations like that.
+
+% ----------------------------------------------------------------------
+
+% Idea taken from docstrip.dtx.
+% *** Deal with conflict vs. docstrip.dtx.
+% \def\afterfi#1#2\fi{\fi#1}
+% \def\afterfifi#1#2\fi#3\fi{\fi#1}
+% \def\afterfififi#1#2\fi#3\fi#4\fi{\fi#1}
+
+% Another approach:
+\newcommand{\IfBool}[1]
+  {\csname if#1\endcsname\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\newcommand{\IfChar}[1]
+  {\if#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\newcommand{\IfCat}[1]
+  {\ifcat#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\newcommand{\IfX}[1]
+  {\ifx#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\newcommand{\IfNum}[1]
+  {\ifnum#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\newcommand{\IfDim}[1]
+  {\ifdim#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\usetemplate}[2]
+  %
+  % Invoke as follows:
+  %
+  %   \usetemplate{{VAL_1}...{VAL_n}}{BODY}
+  %
+  % BODY is allowed to contain #1, ..., #8 (which will often
+  % have to be written as ##1, ... ##8 in the invocation).
+  % 
+  % VAL_i is nothing where i > n
+  %
+  % The behavior is as follows:
+  %
+  %   \usetemplate{{VAL_1}...{VAL_n}}{BODY} -> BODY(VAL_1,...,VAL_8)
+  %
+  {% #1 is VALUES
+   % #2 is BODY
+   % Force an error if BODY mentions #9.
+   \def\jbwpu@UT@Temp##1##2##3##4##5##6##7##8{#2}%
+   % Define scratch macro to parse VALUES and substitute them in BODY.
+   \def\jbwpu@UT@Temp##1##2##3##4##5##6##7##8##9\jbwpu@UT@Mark{#2}%
+   % Jump to BODY with parameters replaced by VALUES.
+   \jbwpu@UT@Temp#1{}{}{}{}{}{}{}{}\jbwpu@UT@Mark}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\ExpandAfter}[1]
+  % \ExpandAfter{STUFF_A}STUFF_B expands the first token in STUFF_B,
+  % possibly consuming more tokens from STUFF_B, and then prepends
+  % STUFF_A.  Does its work in the stomach.  Must be careful not to
+  % allow a space token after {STUFF_A}.
+  {\begingroup
+     \toks0={#1}%
+     \expandafter
+     \jbwpu@ExpandAfterAux}
+\newcommand{\jbwpu@ExpandAfterAux}
+  {%
+     \expandafter
+   \endgroup
+   \the\toks0 }% <--- space significant
+
+\newcommand{\ExpandFirst}[1]
+  % \ExpandFirst{{STUFF_1}{STUFF_2}...{STUFF_n}}{TEMPLATE} expands the
+  % first token in STUFF_1 to get EXPANDED_STUFF and then yields
+  % TEMPLATE(EXPANDED_STUFF,STUFF_2,...,STUFF_k) where k = max(n,8).
+  {\expandafter\usetemplate\expandafter{\expandafter#1}}
+
+\newcommand{\Expand}[1]
+  % \Expand{STUFF}{TEMPLATE} expands the first token in
+  % STUFF to get EXPANDED_STUFF and then yields TEMPLATE with #1
+  % replaced by EXPANDED_STUFF.
+  {\ExpandFirst{{#1}}}
+
+\newcommand{\expandarg}[2]
+  % expands to #1{#2}, but the first token in #2 is expanded.
+  {\expandafter\jbwpu@expandargaux\expandafter{#2}{#1}}
+\newcommand{\jbwpu@expandargaux}[2]
+  {#2{#1}}
+
+% ----------------------------------------------------------------------
+% If we didn't care about making sure \escapechar has a sane value
+% when \string is expanded, and we didn't use \usetemplate to handle
+% the result, then \MakeOtherCharTokens could have been designed to work
+% entirely at expansion time.
+\DeclareRobustCommand{\MakeOtherCharTokens}[1]
+  % \MakeOtherCharTokens{CHAR_TOKS}{TEMPLATE} first makes
+  % OTHER_CHAR_TOKS from CHAR_TOKS by changing the category code of
+  % every character to 12 (other) and then replaces #1 in TEMPLATE by
+  % OTHER_CHAR_TOKS.
+  {\Expand{\csname:#1\endcsname}
+     {% ##1 is CONTROL_SEQ whose name is ":CHAR_TOKS"
+      % The purpose of the : is to prevent the name from being of
+      % length zero.  This avoids the possibility of the use of
+      % \string later expanding to "\csname\endcsname".
+      % I could test first if CHAR_TOKS is empty, but this is just as
+      % much work especially since I don't know whether # appears in
+      % CHAR_TOKS and hence can not safely store CHAR_TOKS in a macro.
+      \begingroup
+      % We have to set \escapechar (can't trust the environment), so we
+      % might as well set it to the value which produces nothing.
+      \escapechar=-1 % <--- space significant
+      \Expand{\string##1}
+        {% ####1 is :OTHER_CHAR_TOKS
+         \endgroup
+         \Expand{\@gobble####1}
+           {% ########1 is OTHER_CHAR_TOKS
+            \usetemplate{{########1}}}}}}
+
+% \newcommand{\jbwpu@MakeOtherCharTokensAuxA}[1]
+%   {{% We have to set \escapechar (can't trust the environment), so we
+%     % might as well set it to the value which produces nothing.
+%     \escapechar=-1 % <--- space significant
+%     \expandafter}%
+%    \expandafter
+%    \jbwpu@MakeOtherCharTokensAuxB
+%    \expandafter
+%    {\string#1}}
+% \newcommand{\jbwpu@MakeOtherCharTokensAuxB}[1]
+%   {\expandafter
+%    \usetemplate
+%    \expandafter
+%    % The \@gobble eats the colon (there is no escape character).
+%    {\expandafter{\@gobble#1}}}
+
+% Backward compatibility with old macro.
+\newcommand{\InvokeOnCleanedCharTokens}[2]
+  {%\TraceOn
+   \MakeOtherCharTokens{#2}{#1{##1}}}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\UndefineActive}[1]
+  {% #1 is X, a character token (category code irrelevant?)
+   {\uccode`\~=`#1%
+    \uccode`\==`\=% ensure sanity
+    \uccode`\0=`\0% ensure sanity
+    \uppercase{\toks0={\let~=\@undefined}}%
+    \expandafter}%
+   \the\toks0 }% <--- space is significant
+\DeclareRobustCommand{\WrapFunnyBraces}[3]
+  {% #1 is LEFT, a character token (category code irrelevant?)
+   % #2 is RIGHT, a character token (category code irrelevant?)
+   % #3 is TOKS
+   % Remaining input prefix: {TEMPLATE}
+   {\uccode`\{=`#1%
+    \uccode`\}=`#2%
+    \uccode`\#=`\#% ensure sanity
+    \uccode`\1=`\1% ensure sanity
+    \uccode`\0=`\0% ensure sanity
+    \uppercase
+      {\toks0={\def\jbwpu@WrapBracesFinalize##1{\usetemplate{{{##1}}}}}}%
+    \expandafter}%
+   \the\toks0 % <--- space is significant
+   \jbwpu@WrapBracesFinalize{#3}}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\Peek}[2]
+  {% #1 is CS (the token to become \let-equal to the beginning of the input)
+   % #2 is CMDS
+   \begingroup
+     %              V--- space vital when \jbwpu@PeekTok \let-equal to space
+     \toks0={\let#1= \jbwpu@PeekTok#2}%
+     \global\futurelet\jbwpu@PeekTok\jbwpu@PeekAux}
+\newcommand{\jbwpu@PeekAux}
+  {%
+     %\show\jbwpu@PeekTok
+     \expandafter
+   \endgroup
+   \the\toks0 }% <--- space is significant
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\Grab}[2]
+  {% #1 is CS (the token to become \let-equal to the beginning of the input)
+   % #2 is CMDS
+   \begingroup
+     %              V--- space vital when \jbwpu@GrabTok \let-equal to space
+     \toks0={\let#1= \jbwpu@GrabTok#2}%
+     \afterassignment\jbwpu@GrabAux
+     \global\let\jbwpu@GrabTok= }% <--- space vital for {im,ex}plicit space
+\newcommand{\jbwpu@GrabAux}
+  {%
+     %\show\jbwpu@GrabTok
+     \expandafter
+   \endgroup
+   \the\toks0 }% <--- space is significant
+
+\DeclareRobustCommand{\ParseArgs}[3]
+  {% #1 is VALUES
+   % #2 is PARAMS
+   % #3 is TEMPLATE
+   \def\jbwpu@ParseArgsMacro#2{#3}%
+   \jbwpu@ParseArgsMacro#1}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\EatTokens}[2]
+  {% #1 is NUM_TO_EAT
+   % #2 is CMDS
+   \bgroup
+   \toks0={#2}%
+   \count0=#1 % <--- space significant
+   \jbwpu@EatTokensLoop}
+\newcommand{\jbwpu@EatTokensLoop}
+  {\IfNum{\count0>0 }% <--- space significant
+     {\advance\count0 by -1%
+      \afterassignment\jbwpu@EatTokensLoop
+      \let\token= }% <--- space significant
+     {% Yippee, we're done.
+      \expandafter\egroup\the\toks0 }}% <--- space significant
+
+% ----------------------------------------------------------------------
+
+\newcommand{\jbwpu@CountTokensMark}{\jbwpu@CountTokensMark:}
+\DeclareRobustCommand{\CountTokens}[1]
+  {% #1 is TOKENS
+   \bgroup
+   \count0=0 % <--- space significant
+   \jbwpu@CountTokensLoop
+   #1\jbwpu@CountTokensMark
+   \Expand{\the\count0}
+     {% ##1 is NUM_TOKS
+      \egroup
+      \usetemplate{{##1}}}}
+\newcommand{\jbwpu@CountTokensLoop}
+  {\Grab{\token}
+     {\IfX{\token\jbwpu@CountTokensMark}
+        {}% We are done!
+        {\advance\count0 by 1%
+         \jbwpu@CountTokensLoop}}}
+
+% ----------------------------------------------------------------------
+
+% % \InvokeOnCleanedCharTokens{CMD}{TOKS}
+% %
+% % Equivalent to CMD{TOKS}, except that TOKS must consist only of
+% % character tokens and they are all converted to have category code 12
+% % (other) first.
+% %
+% \newcommand{\InvokeOnCleanedCharTokens}[2]%{CMD}{TOKS}
+%   {\expandafter
+%    \jbwpu@InvokeOnCleanedCharTokensAuxA
+%      \expandafter
+%      % We put TOKS into a control sequence name and then take it back
+%      % out to make all of the tokens have character category code 12
+%      % (other).
+%      {\csname#2\endcsname}%
+%      {#1}}
+% 
+% \newcommand{\jbwpu@InvokeOnCleanedCharTokensAuxA}[2]%{\TOKS}{CMD}
+%   {\expandafter
+%    \jbwpu@InvokeOnCleanedCharTokensAuxB
+%      \string#1\jbwpu@Nil
+%      {#2}}
+% 
+% % The #1 parameter gets the initial "\" character returned by \string
+% % in \jbwpu@InvokeOnCleanedCharTokensAuxA.
+% % The #2 then gets the rest of the name name of the control sequence
+% % \TOKS passed to \jbwpu@InvokeOnCleanedCharTokensAuxA.
+% %
+% \def\jbwpu@InvokeOnCleanedCharTokensAuxB#1#2\jbwpu@Nil#3{%
+%   #3{#2}}
+
+% ----------------------------------------------------------------------
+
+\def\jbwpu@makespacetokenmacro/{\let\jbwpu@SpaceToken= }% space significant!
+\jbwpu@makespacetokenmacro/ % space on this line is significant!
+
+\newcommand{\jbwpu@Space}{ }
+\edef\jbwpu@TwoSpaces{\jbwpu@Space\jbwpu@Space}
+
+\let\jbwpu@LeftBraceToken={
+\iffalse}\fi % Fool Emacs
+
+% ----------------------------------------------------------------------
+
+\def\jbwpu@MarkA{\jbwpu@MarkA:}
+\def\jbwpu@MarkB{\jbwpu@MarkB:}
+
+\newcommand{\IfBeginsWithStar}[2]
+  {% #1 is STUFF
+   % #2 is STAR_CASE_TEMPLATE
+   % Remaining input: {OTHER_CASE}
+   \Grab{\jbwpu@Token}
+     {\IfX{\jbwpu@Token*}
+        {\ParseArgs{}{##1\jbwpu@MarkA\jbwpu@MarkB##2}
+           {% ##1 is STUFF with * removed from front
+            % ##2 is OTHER_CASE
+            #2}}
+        {\ParseArgs{}{##1\jbwpu@MarkB##2}
+           {% ##1 is junk (remainder of STUFF plus \jbwpu@MarkA
+            % ##2 is OTHER_CASE
+            ##2}}}%
+   #1\jbwpu@MarkA\jbwpu@MarkB}
+
+% ----------------------------------------------------------------------
+
+% \show\token output:
+% category  1: "begin-group character {"
+% category  2: "end-group character }"
+% category 10: "blank space  "
+% category 11: "the letter x"
+% category 12: "the character *"
+% category ??: "macro parameter character #"
+
+% ----------------------------------------------------------------------
+
+% Using \toks@ can help prevent digits after \toks0 from changing its
+% meaning.  Otherwise one must put a space after \toks0.  To put a
+% single space after the expansion of \the\toks0, one must in fact put
+% _two_ spaces there.
+
+\DeclareRobustCommand{\DoubleHashes}[1]
+  % #1 is TOKS
+  % Remaining input prefix: TEMPLATE
+  {%\TraceOn
+   \bgroup
+   \toks0={}%
+   \jbwpu@DH@Loop
+   #1\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC% space significant!
+   %\showthe\toks0 % <--- space significant
+   \Expand{\the\toks0}
+     {% ##1 is DOUBLED_TOKS
+      \egroup
+      \usetemplate{{##1}}}}
+\newcommand{\jbwpu@DH@MarkA}{\jbwpu@DH@MarkA:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkB}{\jbwpu@DH@MarkB:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkC}{\jbwpu@DH@MarkC:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkD}{\jbwpu@DH@MarkD:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkE}{\jbwpu@DH@MarkE:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkF}{\jbwpu@DH@MarkF:} % should compare uniquely
+\newcommand{\jbwpu@DH@MarkG}{\jbwpu@DH@MarkG:} % should compare uniquely
+\newcommand{\jbwpu@DH@Loop}
+  {\Peek{\token}
+     {%\show\token
+      \IfX{\token\jbwpu@SpaceToken}
+        % It is correct that we test with \ifx rather than with
+        % \ifcat.  TeX only skips regular spaces (explicit character
+        % token, category code 10, character code 32) when looking for
+        % unterminated macro arguments.  Any other kind of space is not
+        % skipped.  Testing confirms that explicit character tokens with
+        % (character code, category code) = (ch,cat) are not skipped
+        % when looking for unterminated macro arguments when (ch,cat) =
+        % (42,10) and when (ch,cat) = (32,12).
+        {\jbwpu@DH@HandleSpace}
+        {\IfCat{\noexpand\token\jbwpu@LeftBraceToken}
+           {\jbwpu@DH@HandleBraceGroup}
+           {\IfCat{\noexpand\token##}
+              {\jbwpu@DH@HandleHash}
+              {\IfX{\token\jbwpu@DH@MarkA}
+                 {\jbwpu@DH@HandleMark}
+                 {\jbwpu@DH@HandleToken}}}}}}
+% \newcommand{\OLDjbwpu@DH@Loop}
+%   {\futurelet\token\jbwpu@DH@CheckToken}
+% \newcommand{\jbwpu@DH@CheckToken}
+%   {%
+%    %\show\token
+%    \ifx\token\jbwpu@SpaceToken
+%      % It is correct that we tested with \ifx rather than with
+%      % \ifcat.  TeX only skips regular spaces (explicit character
+%      % token, category code 10, character code 32) when looking for
+%      % unterminated macro arguments.  Any other kind of space is not
+%      % skipped.  Testing confirms that explicit character tokens with
+%      % (character code, category code) = (ch,cat) are not skipped
+%      % when looking for unterminated macro arguments when (ch,cat) =
+%      % (42,10) and when (ch,cat) = (32,12).
+%      \let\jbwpu@DH@Next=\jbwpu@DH@HandleSpace
+%    \else
+%      \ifcat\noexpand\token\jbwpu@LeftBraceToken%
+%        \let\jbwpu@DH@Next=\jbwpu@DH@HandleBraceGroup
+%      \else
+%        \ifcat\noexpand\token##%
+%          \let\jbwpu@DH@Next=\jbwpu@DH@HandleHash
+%        \else
+%          \ifx\token\jbwpu@DH@MarkA
+%            \let\jbwpu@DH@Next=\jbwpu@DH@HandleMark
+%          \else
+%            \let\jbwpu@DH@Next=\jbwpu@DH@HandleToken
+%          \fi
+%        \fi
+%      \fi
+%    \fi
+%    \jbwpu@DH@Next}
+\def\jbwpu@DH@HandleSpace#1 % <--- space is significant!
+  {% #1 is SKIPPED_STUFF
+   % SKIPPED_STUFF contains everything up to the first explicit space
+   % token, which may not have been the token we were looking at!
+   % We first check if the following token is \jbwpu@DH@MarkC to see
+   % if the explicit space token was supplied by the user.
+   \Peek{\token}
+     {\IfX{\token\jbwpu@DH@MarkC}
+        {% The explicit space token was not supplied by the user.
+         % Thus:
+         %   #1 is TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB}
+         %   Remaining input prefix: \jbwpu@DH@MarkC RESULT_CODE
+         \jbwpu@DH@HandleToken#1 }% <--- must restore space
+        {% The explicit space token was supplied by the user.
+         % #1 still might contain some material beginning with an
+         % implicit space token, so we handle this recursively.
+         \DoubleHashes{#1}
+           {% ##1 is DOUBLED_SKIPPED_STUFF
+            % This does not convert funny spaces to ordinary spaces
+            % because \jbwpu@DH@HandleSpace always grabs all material
+            % up to a real non-funny space.
+            \toks0=\expandafter{\the\toks0 ##1 }% <--- both spaces significant!
+            \jbwpu@DH@Loop}}}}
+% \def\OLDjbwpu@DH@HandleSpace#1 % <--- space is significant!
+%   {% #1 contains everything up to the first explicit space token, which
+%    % may not have been the token we were looking at!
+%    % Save the material in #1 for later processing.  We don't know how
+%    % to handle it until we know whether the explicit space token was
+%    % supplied by the user.
+%    \toks1={#1}%
+%    % We first check if the following token is \jbwpu@DH@MarkC to see if the
+%    % explicit space token was supplied by the user.
+%    \futurelet\token\jbwpu@DH@DecideHowToHandleSpace}
+% \newcommand{\jbwpu@DH@DecideHowToHandleSpace}
+%   {\ifx\token\jbwpu@DH@MarkC
+%      \expandafter\jbwpu@DH@RestoreTokensAndHandleImplicitChar
+%    \else
+%      \expandafter\jbwpu@DH@HandleExplicitSpace
+%    \fi}
+% \newcommand{\jbwpu@DH@HandleExplicitSpace}
+%   {% \toks1 contains material gathered up to an explicit space token.
+%    % We have confirmed that the explicit space token was supplied by
+%    % the user.  We still have to handle the stuff in \toks1.  We do
+%    % this recursively.
+%    \expandafter
+%  \DoubleHashes\expandafter{\the\toks1}{\jbwpu@DH@SpaceSkippedMaterialAppend}}
+% \newcommand{\jbwpu@DH@SpaceSkippedMaterialAppend}[1]
+%   {% #1 is DOUBLED_SKIPPED_STUFF
+%    % This does not convert funny spaces to ordinary spaces because the
+%    % macro \jbwpu@DH@HandleSpace above always grabs all material up to
+%    % a real non-funny space.
+%    \toks0=\expandafter{\the\toks0 #1 }% <--- both spaces significant!
+%    \jbwpu@DH@Loop}
+\newcommand{\jbwpu@DH@HandleBraceGroup}
+  {% At this point, we are looking at a "begin-group" token.  In this
+   % comment, let (j,k) stand for a character token with character
+   % code j and category code k.  There are several possible case of
+   % what the next token might be:
+   %
+   % 1. It is (j,1) for some j.  Usually (but not always!) j will be
+   %    123, the ASCII code of the left brace.
+   % 2. It is (k,13) (an active character) and the active character k
+   %    has been given a \let-definition of (j,1) for some j.
+   % 3. It is a control sequence \cs which has been given a
+   %    \let-definition of (j,1) for some j.  An example is the usual
+   %    definition of \bgroup to be (123,1).
+   %
+   % It is only in case 1 that TeX will grab an entire brace group
+   % when trying to find an argument.  I have verified by testing that
+   % TeX treats cases 2 and 3 as ordinary tokens when parsing arguments.
+   %\TraceOn
+   \expandafter
+   \jbwpu@DH@GetLeftBraceCharCode
+   \meaning\token
+   \jbwpu@DH@MarkD% this mark is really only for paranoia
+  }
+\MakeOtherCharTokens{begin-group character}
+  {% #1 is "begin-group character", except the non-spaces have been
+   % converted to have category code 12 (other) rather than 11
+   % (letter).
+   \def\jbwpu@DH@GetLeftBraceCharCode#1 ##1\jbwpu@DH@MarkD
+     {% ##1 is the "left brace" character (of category code 12 though)
+      % Remaining input prefix:
+      %  TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC RESULT_CODE
+      % Where ##1 is the character of code j, we want to disable any
+      % definition of (j,13) (i.e., j as an active character) to help
+      % in ruling out the case that we are looking at (j,13) which has
+      % been made \let-equal to (j,1)!
+      \UndefineActive{##1}%
+      \def\BeginGroupCharAsOther{##1}%
+      \futurelet\tokenB\jbwpu@DH@TestImplicitBeginGroupA}}
+\def\jbwpu@DH@TestImplicitBeginGroupA#1\jbwpu@DH@MarkC
+  {% #1 is TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB}<SPACE>
+   % Remaining input prefix: RESULT_CODE
+   % Here \token is \let-equal to a character token.
+   %\show\token
+   %\show\tokenB
+   % *** We might as well have done the assignment to \token rather
+   % than \tokenB and then repeat the
+   % \IfCat{\noexpand\token\jbwpu@LeftBraceToken} test.
+   \IfX{\token\tokenB}
+     {% Was not (j,13) \let-equal to (j,1).
+      \bgroup
+      \Expand{\BeginGroupCharAsOther}
+        {% ##1 is the expansion of \BeginGroupCharAsOther
+         \IfChar{##1*}
+           {\escapechar=`+}
+           {\escapechar=`*}}% ensure different
+      % We limit the dynamic scope of the \escapechar assignment to
+      % make reading debugging traces easier.
+      \ExpandAfter
+        {\egroup
+         \futurelet\tokenB\jbwpu@DH@TestImplicitBeginGroupB}%
+      \string#1\jbwpu@DH@MarkE}
+     {% Was merely (j,13) \let-equal to (j,1).  Handle as ordinary token.
+      \jbwpu@DH@HandleToken}%
+   #1\jbwpu@DH@MarkC}
+\newcommand{\jbwpu@DH@TestImplicitBeginGroupB}
+  {% If the token is a control sequence:
+   %   \tokenB is ESCAPECHAR (which has been arranged to be distinct)
+   % If the token is an active character:
+   %   \tokenB is ACTIVECHARCODE (guaranteed distinct code by above test)
+   % If the token is an explicit begin group character:
+   %   \tokenB is CHARCODE (which will have same code as \token and \tokenB)
+   % Remaining input prefix:
+   %   POSSIBLY_UNBALANCED_JUNK\jbwpu@DH@MarkE
+   %   TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC
+   %   RESULT_CODE
+   \IfChar{\token\tokenB}
+     {% It was a genuine explicit begin-group character token.
+      % Because we destroyed it (\string changes it into a category 12
+      % character token), the stuff to the right is now unbalanced.
+      % Compensate before skipping.
+      \expandafter
+      \jbwpu@DH@TestImplicitBeginGroupC\expandafter
+      {% An extra brace to make the tokens to the right balanced.
+      \iffalse}\fi}
+     {% No need to rebalance before skipping junk.
+      \jbwpu@DH@TestImplicitBeginGroupC}}
+\def\jbwpu@DH@TestImplicitBeginGroupC#1\jbwpu@DH@MarkE
+  {% Same comments about \tokenB as in previous macro.
+   % #1 is JUNK
+   % Remaining input prefix:
+   %   TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC RESULT_CODE
+   % Here \token and \tokenB are \let-equal to character tokens.
+   \IfChar{\token\tokenB}
+     {% We are looking at a genuine explicit begin group character token!
+      \jbwpu@DH@HandleExplicitBeginGroup}
+     {% We are looking at an implicit character token.  Consume normally.
+      \jbwpu@DH@HandleToken}}
+\def\jbwpu@DH@HandleExplicitBeginGroup#1\jbwpu@DH@MarkC
+  {% #1 is TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} 
+   % Remaining input prefix: RESULT_CODE
+   \jbwpu@DH@HandleGroupContents
+   #1\jbwpu@DH@MarkF#1\jbwpu@DH@MarkC}
+\def\jbwpu@DH@HandleGroupContents#1#2\jbwpu@DH@MarkF
+  {% #1 is STUFF_IN_BRACES
+   % #2 is junk
+   % Remaining input prefix:
+   %   TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC RESULT_CODE
+   % The brace group is still at the beginning of TOKS.
+   %\TraceOn
+   \CountTokens{#1}{\count0=##1\relax}%
+   % It is necessary to skip NUM_TOKENS+1 tokens at the beginning of
+   % TOKS to expose the end-group character.
+   \advance\count0 by 1 % <--- space significant
+   %\showthe\count0\relax
+   \Expand{\the\count0}
+     {\EatTokens{##1}}
+        % The following is indented because it is the 2nd arg to
+        % \EatTokens, even though it is not an arg of \Expand.  I
+        % can't include it in the 2nd arg of \Expand because #'s in #1
+        % would be smashed.
+        {%\TraceOn
+         \Grab{\token}
+           {% \token is now the end-group character.
+            % The group has now been removed from the front of TOKS.
+            %\show\token
+            \DoubleHashes{#1}
+              {% ##1 is DOUBLED_STUFF_IN_BRACES
+               \expandafter
+               \jbwpu@DH@GetEndGroupCharCode
+               \meaning\token
+               \jbwpu@DH@MarkG% paranoia (we know what \meaning will yield)
+               {##1}}}}}
+% \newcommand{\jbwpu@DH@GroupFinalize}[1]
+%   {% #1 is DOUBLED_STUFF_IN_BRACES
+%    % Remaining input prefix:
+%    %   TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC RESULT_CODE
+%    % The brace group has been removed from the front of TOKS.
+%    \expandafter
+%    \jbwpu@DH@GetEndGroupCharCode
+%    \meaning\token
+%    \jbwpu@DH@MarkG% paranoia (we know how many tokens \meaning will yield)
+%    {#1}}
+\MakeOtherCharTokens{end-group character}
+  {% #1 is "end-group character", except the non-spaces have been
+   % converted to have category code 12 (other) rather than 11
+   % (letter).
+   \def\jbwpu@DH@GetEndGroupCharCode#1 ##1\jbwpu@DH@MarkG##2%
+     {% ##1 is the "right brace" character (of category code 12 though)
+      % ##2 is DOUBLED_STUFF_IN_BRACES
+      % Remaining input prefix:
+      %   TOKS\jbwpu@DH@MarkA{\jbwpu@DH@MarkB} \jbwpu@DH@MarkC RESULT_CODE
+      % We now have all information we need!
+      \expandafter
+      \WrapFunnyBraces\BeginGroupCharAsOther{##1}{##2}
+        {% ####1 is ##2 with the proper braces around it.
+         \toks0=\expandafter{\the\toks0####1}}%
+         %\showthe\toks0 %
+         \jbwpu@DH@Loop}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A possible solution to deciding whether a left brace is explicit is
+% by counting.
+% Specifically, count the number of tokens.
+% Then, grab an argument and count the number of tokens.
+% The difference will be 1 if the left brace is implicit.
+% If the left brace is explicit, the difference will be 2 or greater.
+% In any case, it seems necessary to do some sort of counting to deal
+% with getting the right brace characters correct (although this
+% counting does not seem to require the same expense).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newcommand{\OLDjbwpu@DH@HandleBraceGroup}
+%   {% *** BUG.  This will do the wrong thing for implicit braces like \bgroup.
+%    % *** bug has been fixed, update comments.
+%    % *** BUG: still does the wrong thing for funny braces, i.e.,
+%    % explicit character tokens of category code 1 and 2 which are not
+%    % the ASCII characters { and }.
+%    % Need to use \if\noexpand\token{ here and jump to expensive
+%    % routine if false.  Insufficient, won't handle case of regular
+%    % left brace paired with funny right brace.   **********
+%    % Instead, change above test to \ifcat\noexpand\token{
+%    % and then augment code to figure out which braces are used.
+%    % 
+%    % IDEA: Put {\jbwpu@DH@MarkB} to the right of the \jbwpu@DH@MarkA.
+%    % Jump to \eatbrace where \def\eatbrace#1#{...}.
+%    % Test if the next token is \jbwpu@DH@MarkB.
+%    % If so:
+%    %   Push {\iffalse}\fi on the input.
+%    %   Expand the \iffalse.
+%    %   Eat the brace group.
+%    %   Push #1{\jbwpu@DH@MarkB} on the input.
+%    %   Process the next token with \jbwpu@DH@HandleToken.
+%    % If not:
+%    %   Push {\iffalse}\fi on the input.
+%    %   Expand the \iffalse.
+%    %   Read the brace group.
+%    \jbwpu@DH@ReadThroughLeftBrace}
+% \def\jbwpu@DH@ReadThroughLeftBrace#1#%
+%   % This will only match against ordinary left braces, not against
+%   % funny ones.
+%   {\toks1={#1}%
+%    \afterassignment\jbwpu@DH@CheckImplicitOrExplicit
+%    % Eat the extra brace inserted by TeX at the right of this macro's
+%    % expansion.
+%    \let\token=}
+% \newcommand{\jbwpu@DH@CheckImplicitOrExplicit}
+%   {\futurelet\token\jbwpu@DH@PrepareToReadBraceGroup}
+% \newcommand{\jbwpu@DH@PrepareToReadBraceGroup}
+%   {%
+%    %\show\token
+%    \ifx\token\jbwpu@DH@MarkB
+%      \let\jbwpu@DH@Next=\jbwpu@DH@RestoreTokensAndHandleImplicitChar
+%    \else
+%      \let\jbwpu@DH@Next=\jbwpu@DH@HandleExplicitBrace
+%    \fi
+%    \expandafter
+%    \jbwpu@DH@Next
+%    \expandafter
+%    {\iffalse}\fi}
+% \newcommand{\jbwpu@DH@RestoreTokensAndHandleImplicitChar}
+%   {\expandafter
+%    \jbwpu@DH@HandleToken
+%    \the\toks1 }% <--- space is significant
+% \newcommand{\jbwpu@DH@HandleExplicitBrace}
+%   {% \toks1 will contain material just gathered up to an explicit
+%    % brace token.  We have confirmed that the explicit brace token is
+%    % part of the tokens we were given, not the token we put on the
+%    % input ourselves.  However, it may not have been the token we were
+%    % looking at before we grabbed the stuff that is now in \toks1.  So
+%    % we need to recursively process the contents of \toks1 and append
+%    % it to \toks0.
+%    \expandafter
+%  \DoubleHashes\expandafter{\the\toks1}{\jbwpu@DH@BraceSkippedMaterialAppend}}
+% \newcommand{\jbwpu@DH@BraceSkippedMaterialAppend}[2]
+%   {% #1 is DOUBLED_SKIPPED_STUFF
+%    % #2 is STUFF_IN_BRACES
+%    \toks0=\expandafter{\the\toks0 #1}%
+%    % Now we are looking at a genuine brace group, so handle it.
+%    \DoubleHashes{#2}{\jbwpu@DH@BraceGroupFinalize}}
+% \newcommand{\jbwpu@DH@BraceGroupFinalize}[1]
+%   {% #1 is DOUBLED_STUFF_IN_BRACES
+%    % BUG: This may replace funny braces with ordinary braces.
+%    \toks0=\expandafter{\the\toks0{#1}}%
+%    \jbwpu@DH@Loop}
+\newcommand{\jbwpu@DH@HandleHash}[1]
+  {\toks0=\expandafter{\the\toks0 #1#1}%
+   \jbwpu@DH@Loop}
+\newcommand{\jbwpu@DH@HandleMark}[3]
+  {% #1 is \jbwpu@DH@MarkA
+   % #2 is \jbwpu@DH@MarkB  (braces were stripped)
+   % #3 is \jbwpu@DH@MarkC
+  }
+\newcommand{\jbwpu@DH@HandleToken}[1]
+  {\toks0=\expandafter{\the\toks0 #1}% <--- space significant
+   \jbwpu@DH@Loop}
+
+% ----------------------------------------------------------------------
+
+% This does not need \DeclareRobustCommand because \DoubleHashes was
+% declared that way.
+\newcommand{\store}[2]
+  % #1 is CS
+  % #2 is TOKS
+  {\DoubleHashes{#2}
+     {% ##1 is DOUBLED_TOKS
+      \def#1{##1}}}
+
+% ----------------------------------------------------------------------
+
+\DeclareRobustCommand{\ifequal}[2]
+  {\store{\jbwpu@IE@MacroA}{#1}%
+   \store{\jbwpu@IE@MacroB}{#2}%
+   \ifx\jbwpu@IE@MacroA\jbwpu@IE@MacroB
+     \expandafter\@firstoftwo
+   \else
+     \expandafter\@secondoftwo
+   \fi}
+
+% ----------------------------------------------------------------------
+
+%\newcommand{\rebind}[2]
+%  % #1 is ARGUMENT
+%  % #2 is a nameless macro of form PARAMETER_TEXT{BODY}
+%  {\def\jbwpu@rebindtemp#2%
+%   \jbwpu@rebindtemp#1}
+
+% I don't think \rebindexpand is used anymore, and I think it is
+% obsolete due to \Expand above.
+%\newcommand{\rebindexpand}[2]
+%  % #1 is ARGUMENT
+%  % #2 is BODY, in which ##1 becomes ARGUMENT with first token expanded
+%  {\expandafter\usetemplate\expandafter{\expandafter{#1}}{#2}}
+
+% ----------------------------------------------------------------------
+
+\def\jbwpu@emptymacro/{}
+\newtoks\jbwpu@spacesremoved
+% \stripleadingspaces is fragile.
+\newcommand{\stripleadingspaces}[2]
+  % #1 is the continuation, to be applied to ARG with leading spaces stripped
+  % #2 is ARG
+  {\def\jbwpu@arg{#2}% Save the entire value of ARG for later comparison.
+   \def\jbwpu@cont{#1}% Save the continuation for later use.
+   \jbwpu@spacesremoved={}% Initialize list of spaces removed so far.
+   % Push a marker on input, push argument on input, then jump.
+   \jbwpu@stripleadingspacesA#2\jbwpu@endmarker}
+\newcommand{\jbwpu@stripleadingspacesA}
+  {% Peek at the first token of ARG, then jump.
+   \futurelet\jbwpu@nexttoken\jbwpu@stripleadingspacesB}
+\newcommand{\jbwpu@stripleadingspacesB}
+  {% Test first token of ARG, jump to C or D depending on whether it is space.
+   % *** Consider doing: Fix this to only accept explicit space tokens, not
+   % implicit ones (control sequences that are made spaces via \let).
+   % This requires reading it as a parameter "#1 ".  This will result
+   % in #1 being empty if the space token is explicit and otherwise will
+   % capture the implicit space token (control sequence) plus lots of
+   % junk up to a real space.
+   % See footnote on p. 377 of the TeXbook.
+   \ifx\jbwpu@nexttoken\jbwpu@SpaceToken
+     \let\jbwpu@next=\jbwpu@stripleadingspacesC
+   \else
+     \let\jbwpu@next=\jbwpu@stripleadingspacesD
+   \fi
+   \jbwpu@next}
+\newcommand{\jbwpu@stripleadingspacesC}
+  {% Keep track of how many spaces have been removed.
+   %\showthe\jbwpu@spacesremoved
+   \jbwpu@spacesremoved=% space on next line is significant!
+     \expandafter{\the\expandafter\jbwpu@spacesremoved\jbwpu@emptymacro/ }%
+   %\showthe\jbwpu@spacesremoved
+   % Remove first token of ARG, then jump.  Last space is significant!
+   \afterassignment\jbwpu@stripleadingspacesA\let\jbwpu@nexttoken= }
+\def\jbwpu@stripleadingspacesD#1\jbwpu@endmarker{%
+  % The parameter grabs everything remaining in ARG and removes the
+  % marker.  Unfortunately, if the remaining value of ARG is of the
+  % shape {...}, then the braces will have been stripped.  So we do a
+  % comparison to see if we need to restore the braces.
+  % Put result in macro to allow comparison.
+  \expandafter\def\expandafter\jbwpu@temp\expandafter
+    {\the\jbwpu@spacesremoved#1}%
+  \ifx\jbwpu@arg\jbwpu@temp
+    % No braces were stripped, wrap continuation appropriately.
+    \def\jbwpu@next{\jbwpu@cont{#1}}%
+  \else
+    % Braces were stripped, wrap continuation appropriately.    
+    \def\jbwpu@next{\jbwpu@cont{{#1}}}%
+  \fi
+  % Call the wrapped continuation with the result of stripping ARG.
+  \jbwpu@next}
+
+% Local variables:
+% tex-main-file: "jbw-prog-util-test.tex"
+% end:

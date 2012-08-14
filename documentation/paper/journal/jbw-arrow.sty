@@ -1,0 +1,504 @@
+% jbw-arrow.sty:
+%
+%   Generic extensible arrows with nice superscript/subscript
+%   positioning.
+
+% This was originally inspired by \xrightarrow from amsmath.dtx, but
+% it has gone far beyond that.  Features include:
+%
+%   * Many different arrowheads possible on each end.
+%   * Arrows can be 1, 2, or 3 lines thick.
+%   * Superscripts and subscripts can be placed above and below the
+%     arrow and they are moved close to the arrow (by lying to TeX
+%     about the depth and height of the arrow's central component).
+%   * Allows line breaking before the arrows (which is important
+%     because they can become arbitrarily long).
+%
+% Remaining weaknesses include:
+%
+%   * Doesn't resize properly in script style (i.e., there is no use
+%     of \mathchoice in the code below).
+
+\RequirePackage{ifthen}
+\RequirePackage{amssymb}
+\RequirePackage{stmaryrd}
+\RequirePackage{jbw-prog-util}
+
+% to get \@ifnotempty
+\RequirePackage{amsgen}
+
+% For debugging.  (PSTricks is also used by the dotted lines.)
+%\RequirePackage{pstricks}
+%\psset{framesep=0pt,linecolor=red,linewidth=0.2pt}
+
+%%%%% PUBLIC INTERFACE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \arrow{SPEC}
+%
+% Makes an arrow (a math Rel atom) whose appearance is specified by
+% SPEC.  SPEC is of the form LCR where C is one of:
+%
+%   -  (single line)
+%   =  (double line)
+%   == (triple line)
+%   .  (dotted line)
+%   -- (dashed line)
+%
+% and LC is one of:
+%
+%     - (no head)               = (no head)         == (no head)        . (no head)      -- (no head)
+%    <- (\leftarrow)           <= (\Leftarrow)     <== (\Lleftarrow)   <. (\leftarrow)  <-- (\leftarrow)
+%    |- (\mapstochar)          |= (\Mapstochar)
+%   <<- (\twoheadleftarrow)
+%   <|- (\leftarrowtriangle)
+%    >- (\Yright)
+%    V- (\leftharpoondown)
+%    ^- (\leftharpoonup)
+%    o- (\circ,-)
+%
+% to add:
+%
+%   |||- \Vvdash          (AMS)
+%   |=   \vDash           (AMS) (taller than \Mapstochar?)
+%   ||-  \Vdash           (AMS) (taller than \mmapstochar?)
+%   ||-  \mmapstochar     (txfonts)
+%   ||=  \Mmapstochar     (txfonts)
+%   o-   \multimapinv     (txfonts) (better than kludge already implemented)
+%   *-   \multimapdotinv  (txfonts)
+%   E-   \strictfi        (txfonts)
+%   |||= \VvDash          (txfonts)
+%   :-   \coloneq         (txfonts)
+%   ::-  \Coloneq         (txfonts)
+%   :=   \coloneqq        (txfonts)
+%   ::=  \Coloneqq        (txfonts)
+%
+% and RC is one of:
+%
+%   -   (no head)              =  (no head)        ==  (no head)       .  (no head)      --  (no head)
+%   ->  (\rightarrow)          => (\Rightarrow)    ==> (\Rrightarrow)  .> (\rightarrow)  --> (\rightarrow)
+%   -|  (\mapsfromchar)        =| (\Mapsfromchar)
+%   ->> (\twoheadrightarrow)
+%   -|> (\rightarrowtriangle)
+%   -<  (\Yleft)
+%   -V  (\rightharpoondown)
+%   -^  (\rightharpoonup)
+%   -o  (\multimap)
+%
+% to add:
+%
+%   -|   \mappedfromchar  (txfonts) (compare vs. \mapsfromchar?)
+%   =|   \Mappedfromchar  (txfonts) (compare vs. \Mapsfromchar?)
+%   -||  \mmappedfromchar (txfonts)
+%   =||  \Mmappedfromchar (txfonts)
+%   -*   \multimapdot     (txfonts)
+%   -E   \strictif        (txfonts)
+%   -:   \eqcolon         (txfonts)
+%   -::  \Eqcolon         (txfonts)
+%   =:   \eqqcolon        (txfonts)
+%   =::  \Eqqcolon        (txfonts)
+%
+\DeclareRobustCommand{\arrow}[1]%{SPEC}
+  {\jbwa@Arrow{#1}{}{}}
+
+% \sarrow{SPEC}[BELOW]{ABOVE}
+%
+% Makes an extensible arrow (a math Rel atom) whose appearance is
+% specified by SPEC.  See documentation for \arrow above for details
+% on SPEC.
+%
+% The "s" in the name "sarrow" stands for "script" as in "superscript"
+% and "subscript".  If ABOVE or (the optional argument) BELOW are
+% non-empty, they are used respectively as superscript and subscript
+% and placed above and below the arrow's line.  The arrow is stretched
+% as necessary so that ABOVE and BELOW appear between the arrow heads.
+%
+\DeclareRobustCommand{\sarrow}[1]%{SPEC}[BELOW]{ABOVE}
+  {% Can't use \renewcommand here as it somehow inserts space.
+   \def\jbwa@ScriptArrowSpec{#1}%
+   \jbwa@ScriptArrowAux}
+\newcommand{\jbwa@ScriptArrowAux}[2][]%[BELOW]{ABOVE}
+  {\expandafter\jbwa@Arrow\expandafter{\jbwa@ScriptArrowSpec}{#2}{#1}}
+
+% This implementation of \sarrow was abandoned due to trouble with
+% \renewcommand somehow inserting space.
+%
+%\DeclareRobustCommand{\sarrow}[1]%{SPEC}[BELOW]{ABOVE}
+%  {\renewcommand{\jbwa@ScriptArrowAux}[2][]%[BELOW]{ABOVE}
+%     {\jbwa@Arrow{#1}{##2}{##1}}%
+%   \jbwa@ScriptArrowAux}
+%
+%\newcommand{\jbwa@ScriptArrowAux}
+%  {\PackageError{jbw-arrow}{Impossible error}{No additional help.}}
+
+% \formatarrowspec{SPEC}
+%
+% Makes an hbox containing SPEC typeset.  See documentation for \arrow
+% above for details on SPEC.
+%
+% This is only necessary because SPEC can contain characters like "<"
+% and "^" which are otherwise difficult to typeset.
+%
+\newcommand{\formatarrowspec}[1]%{SPEC}
+  {\InvokeOnCleanedCharTokens{\jbwa@FormatArrowSpecAux}{#1}}
+\newcommand{\jbwa@FormatArrowSpecAux}[1]%{SPEC}
+  % We have to use \texttt to show some characters such as "<".
+  {\mbox{\texttt{#1}}}
+
+% Backwards compatibility with old version of this package.
+\newcommand{\myxrightarrow}{\sarrow{->}}
+\newcommand{\myxmapsto}{\sarrow{|->}}
+\newcommand{\myxrightdoublearrow}{\sarrow{->>}}
+\newcommand{\myxRightarrow}{\sarrow{=>}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Two bugs in other packages were discovered while writing this one.
+%
+% 1. When its argument has negative depth, \psframebox draws the
+%    bottom line at depth 0 instead.
+% 2. \renewcommand used in math mode somehow inserts space.  (How?)
+
+\newsavebox{\jbwa@BoxTemp}
+\newsavebox{\jbwa@BoxL}
+\newsavebox{\jbwa@BoxC}
+\newsavebox{\jbwa@BoxR}
+
+\newcommand{\jbwa@Arrow}[3]%{SPEC}{ABOVE}{BELOW}
+  {% Allow line breaking before an arrow, but discourage it relative
+   % to breaking after the arrow.
+   \penalty 1000% why can't I write 2\relpenalty here?
+   \mathrel % \mathrel starts a new group
+     {\setlength{\mathsurround}{0pt}%
+      \def\jbwa@minCwidth{0pt}%
+      \jbwa@ProcessArrowSpec{#1}%
+      \sbox{\jbwa@BoxTemp}
+           {\vbox{\hbox{$\scriptstyle #2$}%
+                  \hbox{$\scriptstyle #3$}}}%
+      % Record in \wd\jbwa@BoxTemp the desired width.
+      \ifthenelse{\lengthtest{\wd\jbwa@BoxC>\wd\jbwa@BoxTemp}}
+        {\setlength{\wd\jbwa@BoxTemp}{\wd\jbwa@BoxC}}
+        {}%
+      \ifthenelse{\lengthtest{\jbwa@minCwidth>\wd\jbwa@BoxTemp}}
+        {\setlength{\wd\jbwa@BoxTemp}{\jbwa@minCwidth}}
+        {}%
+      % Save \dp\jbwa@BoxC in \dp\jbwa@BoxTemp, because \cleaders
+      % seems to lose this.
+      \setlength{\dp\jbwa@BoxTemp}{\dp\jbwa@BoxC}%
+      \sbox{\jbwa@BoxC}
+           {\xleaders\copy\jbwa@BoxC\hskip\wd\jbwa@BoxTemp}%
+      \setlength{\dp\jbwa@BoxC}{\dp\jbwa@BoxTemp}%
+      %\savebox{\jbwa@BoxC}{\psframebox{\copy\jbwa@BoxC}}%
+      %\vrule height\ht\jbwa@BoxC depth\dp\jbwa@BoxC width 2pt%
+      %\hskip 2pt%
+      \copy\jbwa@BoxL
+      \mathord{\mathop{\copy\jbwa@BoxC}%
+                 \limits
+                 % avoid \ifthenelse because it expands its argument
+                 %\ifthenelse{\equal{#2}{}}{}{^{#2}}%
+                 %\ifthenelse{\equal{#3}{}}{}{_{#3}}%
+                 \@ifnotempty{#2}{^{#2}}%
+                 \@ifnotempty{#3}{_{#3}}
+              }%
+      \copy\jbwa@BoxR}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\jbwa@Empty}{}
+
+\newcommand{\jbwa@ProcessArrowSpec}[1]
+  {\InvokeOnCleanedCharTokens{\jbwa@ProcessArrowSpecAuxH}{#1}}
+
+\newcommand{\jbwa@ProcessArrowSpecAuxH}[1]
+  {\jbwa@ProcessArrowSpecAuxA#1\jbwa@Empty==\jbwa@Empty\jbwa@Nil{#1}}
+
+\def\jbwa@ProcessArrowSpecAuxA#1==#2\jbwa@Empty#3\jbwa@Nil#4{%
+  \ifthenelse{\equal{#3}{==}}
+    % \jbwa@Empty matched the first occurrence, so the string had a ==.
+    {\jbwa@ProcessArrowSpecAuxF{#1}{==}{#2}}
+    {\jbwa@ProcessArrowSpecAuxB#4\jbwa@Empty=\jbwa@Empty\jbwa@Nil{#4}}}
+
+\def\jbwa@ProcessArrowSpecAuxB#1=#2\jbwa@Empty#3\jbwa@Nil#4{%
+  \ifthenelse{\equal{#3}{=}}
+    % \jbwa@Empty matched the first occurrence, so the string had an =.
+    {\jbwa@ProcessArrowSpecAuxF{#1}{=}{#2}}
+    {\jbwa@ProcessArrowSpecAuxC#4\jbwa@Empty--\jbwa@Empty\jbwa@Nil{#4}}}
+
+\newcommand{\jbwa@needclipbox}
+  {\@ifundefined{clipbox}
+     {\PackageError{jbw-arrow}
+        {The PSTricks package is needed for "--" and "." arrow line specifications}
+        {No additional help.}}
+     {}}
+
+\def\jbwa@ProcessArrowSpecAuxC#1--#2\jbwa@Empty#3\jbwa@Nil#4{%
+  \ifthenelse{\equal{#3}{--}}
+    % \jbwa@Empty matched the first occurrence, so the string had a --.
+    {\jbwa@needclipbox
+     \jbwa@ProcessArrowSpecAuxF{#1}{--}{#2}}
+    {\jbwa@ProcessArrowSpecAuxD#4\jbwa@Empty-\jbwa@Empty\jbwa@Nil{#4}}}
+
+\def\jbwa@ProcessArrowSpecAuxD#1-#2\jbwa@Empty#3\jbwa@Nil#4{%
+  \ifthenelse{\equal{#3}{-}}
+    % \jbwa@Empty matched the first occurrence, so the string had a -.
+    {\jbwa@ProcessArrowSpecAuxF{#1}{-}{#2}}
+    {\jbwa@ProcessArrowSpecAuxE#4\jbwa@Empty.\jbwa@Empty\jbwa@Nil{#4}}}
+
+\def\jbwa@ProcessArrowSpecAuxE#1.#2\jbwa@Empty#3\jbwa@Nil#4{%
+  \ifthenelse{\equal{#3}{.}}
+    % \jbwa@Empty matched the first occurrence, so the string had a “.”
+    {\jbwa@needclipbox
+     \jbwa@ProcessArrowSpecAuxF{#1}{.}{#2}}
+    {\PackageError{jbw-arrow}
+       {Arrow specification "#4" must contain "-", "--", "=", "==", or "."}
+       {No additional help.}}}
+
+\newcommand{\jbwa@ProcessArrowSpecAuxF}[3]
+  {\@ifundefined{jbwa@L#1#2}%
+     {\PackageError{jbw-arrow}
+       {Unimplemented left arrow type "#1#2"}
+       {No additional help.}}
+     {}%
+   \@ifundefined{jbwa@C#2}%
+     {\PackageError{jbw-arrow}{Impossible error.}{No additional help.}}
+     {}%
+   \@ifundefined{jbwa@R#2#3}%
+     {\PackageError{jbw-arrow}
+       {Unimplemented right arrow type "#2#3"}
+       {No additional help.}}
+     {}%
+   \@nameuse{jbwa@L#1#2}%
+   \@nameuse{jbwa@C#2}%
+   \@nameuse{jbwa@R#2#3}}
+
+\newcommand{\jbwa@C}[4]%{MIDSYM}{HGAP}{HTPCT}{DPPCT}
+  {\sbox{\jbwa@BoxC}{$\mkern#2mu\mathord{#1}\mkern#2mu$}%
+   \setlength{\ht\jbwa@BoxC}{#3\ht\jbwa@BoxC}%
+   \setlength{\dp\jbwa@BoxC}{#4\ht\jbwa@BoxC}}
+
+\newcommand{\jbwa@L}[4]%{SYM}{HGAP}{TXTOVERLAP}{MIDOVERLAP}
+  {\sbox{\jbwa@BoxL}{$\mathord{#1}\mkern#2mu$}%
+   \sbox{\jbwa@BoxL}{$\mathord{#1}\kern-#3\wd\jbwa@BoxL\mkern#2mu$}%
+   %\savebox{\jbwa@BoxL}
+   %        {%\vrule width\wd\jbwa@BoxL depth\dp\jbwa@BoxL height\ht\jbwa@BoxL
+   %         \psframebox{\copy\jbwa@BoxL}}
+  }
+
+\newcommand{\jbwa@R}[4]%{SYM}{HGAP}{TXTOVERLAP}{MIDOVERLAP}
+  {\sbox{\jbwa@BoxR}{$\mkern#2mu\mathord{#1}$}%
+   \sbox{\jbwa@BoxR}{$\mkern#2mu\kern-#3\wd\jbwa@BoxR\mathord{#1}$}%
+   %\savebox{\jbwa@BoxR}
+   %        {\vrule width\wd\jbwa@BoxR depth\dp\jbwa@BoxR height\ht\jbwa@BoxR}
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \@namedef does the wrong thing for us when there are spaces between
+% its arguments, so we need this.
+\newcommand{\jbwa@NameDef}[2]{\@namedef{#1}{#2}}
+
+% \jbwa@C{MIDSYM}{HGAP}{HTFAC}{DPFAC}
+%
+% When using MIDSYM as the filler for the middle portion of an arrow,
+% horizontal space of HGAP mu on each side (usually negative) should
+% be added, its height should be multiplied by HTFAC, and then its
+% depth should be set to its height times DPFAC.
+%
+%\jbwa@NameDef{jbwa@C-}  {\jbwa@C{-}{-1.8}{0.38}{-1.5}}%negative space!!!
+\jbwa@NameDef{jbwa@C-}  {\jbwa@C{-}{-2.4}{0.38}{-1.5}}%negative space!!!
+%\jbwa@NameDef{jbwa@C=}  {\jbwa@C{=}{-1.4}{1.1}{-0.5}}
+\jbwa@NameDef{jbwa@C=}  {\jbwa@C{=}{-1.8}{1.1}{-0.5}}
+\jbwa@NameDef{jbwa@C==} {\jbwa@C{\equiv}{-1.4}{1.05}{-0.2}}
+
+% for the best results with xdvi, xpdf/poppler: vrule height 0.635ex depth -0.54ex
+% for the best results with gv: vrule height 0.61ex depth -0.53ex
+% not sure yet which yields the best printed output
+\jbwa@NameDef{jbwa@C.}  {\jbwa@C{\hbox{}\hskip 0.25pt\hbox{}\vrule height 0.635ex depth -0.54ex width 0.4pt\hbox{}\hskip 0.25pt\hbox{}%
+                                 %\raise 0.45ex\hbox{\hskip-0.5pt.\hskip-0.5pt}
+                                }
+                                {0.0}{0.82}{-1.45}%
+                         \def\jbwa@minCwidth{7.2pt}}
+\jbwa@NameDef{jbwa@C--} {\jbwa@C{\hbox{}\hskip 0.25pt\hbox{}\vrule height 0.635ex depth -0.54ex width 1.3pt\hbox{}\hskip 0.25pt\hbox{}}
+                                {0.0}{0.82}{-1.45}%
+                         \def\jbwa@minCwidth{7.2pt}}
+
+% \jbwa@L{SYM}{HGAP}{TXTOVERLAP}{MIDOVERLAP}
+% \jbwa@R{SYM}{HGAP}{TXTOVERLAP}{MIDOVERLAP}
+%
+% When using SYM as either a left or right end symbol, horizontal
+% space of HGAP mu (usually negative) should be added on the side
+% which will connect with the other parts, the text above or below the
+% arrow should be allowed to overlap with TXTOVERLAP times its width,
+% and the middle filler symbol should be allowed to overlap with
+% MIDOVERLAP times its width.
+%
+\jbwa@NameDef{jbwa@R-}  {\jbwa@R{-}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@L-}  {\jbwa@L{-}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@R=}  {\jbwa@R{=}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@L=}  {\jbwa@L{=}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@R==} {\jbwa@R{\equiv}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@L==} {\jbwa@L{\equiv}{-1}{0.7}{0.9}}
+\jbwa@NameDef{jbwa@R.}  {\jbwa@R{\hbox{}}{0.0}{0.0}{0.0}}
+\jbwa@NameDef{jbwa@L.}  {\jbwa@L{\hbox{}}{0.0}{0.0}{0.0}}
+\jbwa@NameDef{jbwa@R--} {\jbwa@R{\hbox{}}{0.0}{0.0}{0.0}}
+\jbwa@NameDef{jbwa@L--} {\jbwa@L{\hbox{}}{0.0}{0.0}{0.0}}
+
+\jbwa@NameDef{jbwa@R->} {\jbwa@R{\rightarrow}{-1}{0.6}{1}}
+\jbwa@NameDef{jbwa@L<-} {\jbwa@L{\leftarrow}{-1}{0.6}{1}}
+
+\jbwa@NameDef{jbwa@R=>} {\jbwa@R{\Rightarrow}{-1}{0.5}{0.7}}
+\jbwa@NameDef{jbwa@L<=} {\jbwa@L{\Leftarrow}{-1}{0.5}{0.7}}
+
+\jbwa@NameDef{jbwa@R==>}{\jbwa@R{\Rrightarrow}{-1}{0.45}{0.7}} % AMS
+\jbwa@NameDef{jbwa@L<==}{\jbwa@L{\Lleftarrow}{-1}{0.45}{0.7}} % AMS
+
+% the \vrule is needed when using \clipbox with \leftarrow and \right
+% arrow because the heights of these symbols are recorded wrong in the
+% font.
+
+\newcommand{\jbwa@clippedrightarrow}
+  {\jbwa@R{\clipbox{\vrule height 1.02ex width 0pt depth 0pt%
+                    \hskip-0.73em\rightarrow}}
+          {0.0}{0.0}{0.0}}
+\newcommand{\jbwa@clippedleftarrow}
+  {\jbwa@L{\clipbox{\vrule height 1.02ex width 0pt depth 0pt%
+                    \leftarrow\hskip-0.73em}}
+          {0.0}{0.0}{0.0}}
+
+\jbwa@NameDef{jbwa@R.>} {\jbwa@clippedrightarrow}
+\jbwa@NameDef{jbwa@L<.} {\jbwa@clippedleftarrow}
+\jbwa@NameDef{jbwa@R-->}{\jbwa@clippedrightarrow}
+\jbwa@NameDef{jbwa@L<--}{\jbwa@clippedleftarrow}
+
+\jbwa@NameDef{jbwa@L^-} {\jbwa@L{\leftharpoonup}{-1}{0.6}{1}}
+\jbwa@NameDef{jbwa@LV-} {\jbwa@L{\leftharpoondown}{-1}{0.6}{1}}
+\jbwa@NameDef{jbwa@R-^} {\jbwa@R{\rightharpoonup}{-1}{0.6}{1}}
+\jbwa@NameDef{jbwa@R-V} {\jbwa@R{\rightharpoondown}{-1}{0.6}{1}}
+
+\jbwa@NameDef{jbwa@R->>}{\jbwa@R{\twoheadrightarrow}{-1}{0.5}{1}} % AMS
+\jbwa@NameDef{jbwa@L<<-}{\jbwa@L{\twoheadleftarrow}{-1}{0.5}{1}} % AMS
+
+\jbwa@NameDef{jbwa@R-o} {\jbwa@R{\multimap}{-1}{0.6}{0.6}} % AMS
+
+% crude hack, unreliable at other sizes
+\jbwa@NameDef{jbwa@Lo-} {\jbwa@L{\mathord{\circ}\mkern-3mu\mathord{-}}{-0.7}{0.55}{0.55}}
+
+\jbwa@NameDef{jbwa@L|-} {\jbwa@L{\mathord{\mapstochar}\mathord{-}}{-1}{0.8}{0.8}}
+\jbwa@NameDef{jbwa@R-|} {\jbwa@R{\mathord{-}\mathord{\mapsfromchar}}{-1}{0.8}{0.8}} % stmaryrd
+
+\jbwa@NameDef{jbwa@L|=} {\jbwa@L{\mathord{\Mapstochar}\mathord{=}}{-1}{0.8}{0}} % stmaryrd
+\jbwa@NameDef{jbwa@R=|} {\jbwa@R{\mathord{=}\mathord{\Mapsfromchar}}{-1}{0.8}{0}} % stmaryrd
+
+\jbwa@NameDef{jbwa@L<|-}{\jbwa@L{\leftarrowtriangle}{-1}{0.6}{0.6}} % stmaryrd
+\jbwa@NameDef{jbwa@R-|>}{\jbwa@R{\rightarrowtriangle}{-1}{0.6}{0.6}} % stmaryrd
+
+\jbwa@NameDef{jbwa@L>-} {\jbwa@L{\Yright}{-1}{0.5}{0.5}} % stmaryrd
+\jbwa@NameDef{jbwa@R-<} {\jbwa@R{\Yleft}{-1}{0.5}{0.5}} % stmaryrd
+
+% \leftleftarrows % AMS
+% \rightrightarrows % AMS
+% \dashbar % AMS, dashed like "-"
+% \shortrightarrow % AMS
+% \shortleftarrow % AMS
+
+% \DeclareMathSymbol{\dashbar}{\mathord}{AMSa}{"39}
+% \DeclareMathSymbol{\shortrightarrow}{\mathord}{AMSa}{"4B}
+% \DeclareMathSymbol{\shortleftarrow}{\mathord}{AMSa}{"4C}
+
+% \shortrightarrow % stmaryrd
+% \shortleftarrow % stmaryrd
+% \leftrightarrowtriangle % stmaryrd (use for an optimized version?)
+
+\endinput
+%----------------------------------------------------------------------
+
+% Hacked version of \xrightarrow from amsmath.sty (from amsmath.dtx,
+% version = "1.2b", date = "1995/02/23", time = "10:06:07 EST") which has
+% been changed to put the subscript and superscript closer to the arrow by
+% lying to TeX about the depth and height of the arrow.
+
+% the following are from amsmath:
+%\def\setboxz@h{\setbox\z@\hbox}
+%\def\rightarrowfill@#1{\m@th\setboxz@h{$#1\relbar$}\ht\z@\z@
+%  $#1\copy\z@\mkern-6mu\cleaders
+%  \hbox{$#1\mkern-2mu\box\z@\mkern-2mu$}\hfill
+%  \mkern-6mu\mathord\rightarrow$}
+
+% \z@ == 0pt or 0                   (it is a dimen register)
+% \m@th == \mathsurround=0pt
+% \setboxz@h == \setbox 0 = \hbox
+% \dimen@ == \dimen 0               (better to use the name \dimen@?)
+
+\newcommand{\myxrightarrow}[2][]{%
+  \myxrightarrowinternal{#1}{#2}{\rightarrowfill@}{\minaw@}{-1.5pt}{-3pt}}
+% jbw: fix the value of \minaw@ to the correct minimum size of the
+% \rightarrowfill@ macro, which is *not* 11pt, the default value of
+% \minaw@.  This prevents bogus "overfull \hbox" messages.
+\setbox0=\hbox{\rightarrowfill@\displaystyle}%
+\minaw@=\wd0%
+
+\newcommand{\myxmapsto}[2][]{%
+  \myxrightarrowinternal{#1}{#2}{\mapstofill@}{\minmapstofillwidth@}{-1.5pt}{-3pt}}%
+\def\mapstofill@#1{%
+  \mathsurround=0pt%
+  \setbox0\hbox{$#1\relbar$}%
+  \ht0=0pt%
+  $#1
+   \mathord{\mapstochar}%
+   \copy0%
+   \mkern-6mu\cleaders\hbox{$#1\mkern-2mu\box0\mkern-2mu$}\hfill
+   \mkern-6mu\mathord{\rightarrow}%
+  $}%
+\newdimen\minmapstofillwidth@
+\setbox0=\hbox{\mapstofill@\displaystyle}%
+\minmapstofillwidth@=\wd0%
+
+\newcommand{\myxrightdoublearrow}[2][]{%
+  \myxrightarrowinternal{#1}{#2}{\rightdoublearrowfill@}{\mindaw@}{-1.5pt}{-3pt}}
+% Maybe use \twoheadrightarrow for this?
+\def\rightdoublearrowfill@#1{\m@th\setboxz@h{$#1\relbar$}\ht\z@\z@
+  $#1\copy\z@\mkern-6mu\cleaders
+  \hbox{$#1\mkern-2mu\box\z@\mkern-2mu$}\hfill
+  \mkern-6mu\mathord\rightarrow
+  \mkern-15mu\mathord\rightarrow$}
+\newdimen\mindaw@
+\setbox0=\hbox{\rightdoublearrowfill@\displaystyle}%
+\mindaw@=\wd0%
+
+\newcommand{\myxRightarrow}[2][]{%
+  \myxrightarrowinternal{#1}{#2}{\Rightarrowfill@}{\minRaw@}{-1pt}{-2pt}}
+\def\Rightarrowfill@#1{\m@th\setboxz@h{$#1\Relbar$}\ht\z@\z@
+  $#1\copy\z@\mkern-6mu\cleaders
+  \hbox{$#1\mkern-2mu\box\z@\mkern-2mu$}\hfill
+  \mkern-6mu\mathord\Rightarrow$}
+\newdimen\minRaw@
+\setbox0=\hbox{\Rightarrowfill@\displaystyle}%
+\minRaw@=\wd0%
+
+%\myxrightarrowinternal{ABOVE}{BELOW}{FILLCMD}{S1}{S2}{S3}
+\newcommand{\myxrightarrowinternal}[6]{%
+  \mathrel{%
+    \mathop{%
+      \setbox\z@\vbox{\m@th
+        \hbox{$\scriptstyle\;{#1}\;\;$}%
+        \hbox{$\m@th\scriptstyle\;{#2}\;\;$}%
+      }%
+      % jbw: changed this to put the arrow into a temporary holding box.
+      % jbw: parameterized this over rightarrowfill and minaw macros.
+      \setbox\z@\hbox to\ifdim\wd\z@>#4\wd\z@\else#4\fi{#3\displaystyle}%
+      % jbw: change the height and depth of the box.
+      \dimen@=\ht0%
+      \advance\dimen@ by #5%
+      \ht0=\dimen@
+      \dimen@=\dp0%
+      \advance\dimen@ by #6%
+      \dp0=\dimen@
+      % jbw: set the arrow free.
+      \box0%
+    }%
+    \limits^{#2}\@ifnotempty{#1}{_{#1}}%
+  }%
+}
+
+% Local variables:
+% tex-main-file: "jbw-arrow-test.tex"
+% end:

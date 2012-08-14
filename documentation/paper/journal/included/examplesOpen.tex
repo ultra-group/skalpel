@@ -1,0 +1,564 @@
+% -*-LaTeX-*-
+
+%% In this section we present three examples.  The first one
+%% (Section~\ref{sec:complexExample}) presents an error involving
+%% datatypes and context dependencies that shows the usefulness of our
+%% type error slicer when type errors get complicated.
+%% %
+%% The second one (Section~\ref{sec:mergerrors}) presents a type error
+%% report that is intentionally not minimal.
+%% %
+%% The third one (Section~\ref{sec:openerrorexample}) presents a type
+%% error involving ``open''.
+%% %
+
+
+This section gives examples extracted from our testcase database
+motivating \TES.
+%
+\tocheck{Our testcase database is distributed with the packages and
+archives we provide~\cite{TypeErrorSlicingProject:2010}.}
+%
+Type error slices are highlighted with \ifincolor
+red\else very light grey\fi.  \ifincolor Purple and blue highlight
+\else Dark grey highlights \fi error \emph{end points} (sources of
+conflict).
+%
+%End points are discussed in Sec.~\ref{sec:endpoints}.
+%
+%% A
+%% \ifincolor black and white \else color \fi version has been made
+%% available.
+
+
+\subsubsection{Conditionals, pattern matching, records}
+\label{sec:simpleexample}
+
+
+\begin{figure}[t]
+\examplebody{
+\Bl
+\boxR{fun} g x \boxR{y} \boxR{=}
+\\
+    \Bi
+    let \Bl \boxR{val} \boxR{f =}\Bl\boxR{ }\boxG{if}\boxR{ y }
+                    \pscircle[linewidth=0.01,framesep=0.01](-0.4,0.08){0.17}
+                     \\
+                     \boxR{ }\boxG{then}\boxR{ fn} \_ \boxR{=> fn} z \boxB{=>} z
+                     \\
+                     \boxR{ }\boxG{else}\boxR{ fn} \boxR{z => z}
+                     \El
+        \\
+	\boxR{val} \boxR{u = (f,} true\boxR{)}
+        \El
+    \\
+    in \boxR{(\#1 u) y}
+    \psellipse[linewidth=0.01,framesep=0.01](-0.74,0.06)(0.7,0.2)
+    \\
+    end
+    \Ei
+\El
+}
+  \caption{Conditionals, pattern matching, tuples \nnewtext{(testcase 121)}}
+  \label{fig:simpleexample}
+\end{figure}
+
+Fig.~\ref{fig:simpleexample} shows an untypable piece of code
+involving, among other things, the following derived forms: a
+conditional, a record selector (\inexamplebody{\# u}).
+%
+Derived forms are syntactic sugar for core of module forms.  For
+example,
+% the conditional expression
+the conditional
+\inexamplebody{if exp1 then exp2 else exp3},
+%% where \inexamplebody{exp1}, \inexamplebody{exp2}, and
+%% \inexamplebody{exp3} are expressions,
+is a derived form equivalent to the core
+expression \inexamplebody{case exp1 of true => exp2 | false => exp3}.
+%
+Suppose the programming error in the code presented in
+Fig.~\ref{fig:simpleexample} is that we wrote \inexamplebody{y} (the
+circled one in Fig.~\ref{fig:simpleexample}) instead of
+\inexamplebody{x}.
+%
+We call the programming error location, the real error location.
+%
+The function \inexamplebody{g} can be used to
+perform computations on integers.  For example
+\inexamplebody{(g true (fn x => x + 1) 2)} evaluates to
+\inexamplebody{2}
+and
+\inexamplebody{(g false (fn x => x + 1) 2)} evaluates to
+\inexamplebody{3}.
+%
+This piece of code is untypable because of the following reasons
+(highlighted in Fig.~\ref{fig:simpleexample}): \inexamplebody{y},
+being a parameter of a function, has a monomorphic type;
+\inexamplebody{y} is constrained to be a Boolean via the conditional;
+and finally, \inexamplebody{u}'s first component is applied to
+\inexamplebody{y}, where \inexamplebody{u}'s first component is the
+function \inexamplebody{f} which is constrained by the two branches of
+the conditional to take a function as argument.
+%
+\SML's compiler \SMLNJ\ (version 110.72) reports a type constructor
+clash in line~6 (more precisely, the circled portion of code
+\inexamplebody{(\#1 u) y} in Fig.~\ref{fig:simpleexample} is blamed)
+as follows:
+
+\examplebody{
+\Bl
+Error: operator and operand don't agree [tycon mismatch]
+\\
+  \Bi
+  operator domain:\ 'Z -> 'Z
+  \\
+  operand:\ \ \ \ \ \ \ \ \ bool
+  \\
+  in expression:
+  \\
+    \Bi
+    ((fn \{1=<pat>,...\} => 1) u) y
+    \Ei
+  \Ei
+\El
+}
+
+
+In the above example, because of the small size of the piece of code,
+the programmer's error is not too far away from the location reported
+by \SMLNJ.  It is not always the case.  The real error location might
+even be in another file.  Nonetheless, note that \SMLNJ\ reports only
+one location which is far from the real error location w.r.t.\ the
+size of the piece of code.  Also, the type \inexamplebody{'Z -> 'Z}
+reported by \SMLNJ\ is an internal type made up during type inference.
+Finally, the reported expression does not match the source
+code\footnote{\SMLNJ\ has transformed the code because the derived
+  form \inexamplebody{\#1} is equivalent to the function
+  \inexamplebody{(fn \{1=y,...\} => y)} in \SML.  Note also that
+  \inexamplebody{(fn \{1=<pat>,...\} => 1)} is \SMLNJ's pretty
+  printing of \inexamplebody{\#1}, but the two functions are different
+  because \inexamplebody{(fn \{1=<pat>,...\} => 1)} returns always
+  \inexamplebody{1} while \inexamplebody{\#1} takes a record and
+  returns the field of field name \inexamplebody{1} in the record,
+  which is confusing.  \SML's compilers \MLTON\ and \POLYML\ do not
+  transform the code.}.
+
+Fig.~\ref{fig:simpleexample} highlights a slice for the type error
+described above.  This highlighting contains the minimal amount of
+information necessary to understand and fix the type error.  Also, it
+highlights the real error location.  Note that the fact that most of
+the piece of code is highlighted is due to the small size of the piece
+of code.  We present below larger examples where a smaller percentage
+of the pieces of code is highlighted\footnote{ A slice for a type
+  error will always contain exactly the portion of the program
+  required to explain the error.  We have no choice on how much or how
+  little of a piece of code is included in a type error slice.  The
+  choice is made by the type error itself.
+  %
+  In our experience in using \TES, the size of slices does not vary
+  much depending on the size of the program but it varies mainly
+  depending on the kind of error.  }.
+
+
+
+
+\subsubsection{Datatypes, pattern matching, type functions}
+\label{sec:complexExample}
+
+
+
+\begin{figure}[t]
+\examplebody{
+\Bl
+\boxR{datatype} \boxR{('a,}'b\boxR{,'c) t} \Bl
+                        \boxR{=} Red\ \ \ \ of 'a * 'b * 'c
+                        \\
+                        | Blue\ \ \ of 'a * 'b * 'c
+                        \\
+			| Pink\ \ \ of 'a * 'b * 'c
+                        \\
+                        | \boxR{Green\ \ of }'a \boxR{* 'b * 'b}
+                        \cput[linewidth=0.01,framesep=0.01](0,0.2){1}
+                        \\
+			| \boxR{Yellow of 'a *} 'b \boxR{* 'c}\ \ \hbox{}%
+                        \\
+			| Orange of 'a * 'b * 'c
+                        \El
+\\
+\boxR{fun} trans (Red\ \ \ (x, y, z)) = Blue\ \ (y, x, z)
+  \\
+  \Bi
+  \boxR{|} trans (Blue\ \ (x, y, z)) = Pink\ \ (y, x, z)
+  \\
+  \boxR{|} trans (Pink\ \ (x, y, z)) = Green\ (y, x, z)
+  \\
+  \boxR{|} \boxR{trans }\fboxR{(\boxR{Green\ (}x\boxR{, y, z)})}\boxR{ = Yellow(y,} x\boxR{, z)}
+  \cput[linewidth=0.01,framesep=0.01](-3.8,0.25){2}
+  \cput[linewidth=0.01,framesep=0.01](-0.05,0.25){3}
+  \\
+  \boxR{|} trans (Yellow(x, y, z)) = Orange(y, x, z)
+  \\
+  \boxR{|} trans (Orange(x, y, z)) = Red\ \ \ (y, x, z)
+  \Ei
+\\
+\boxR{type} \boxR{('a, 'b) u = ('a,} 'a\boxR{, 'b) t *} 'b
+  \cput[linewidth=0.01,framesep=0.01](-0.6,-0.1){5}
+\\
+val x = (Red (2, 2, false), true)
+\\
+\boxR{val} y \boxR{:\ (}\boxB{int}\boxR{, }\boxG{bool}\boxR{) u = (trans }\fboxR{(\#1 x)}\boxR{,} \#2 x\boxR{)}
+\cput[linewidth=0.01,framesep=0.01](-1.5,-0.15){4}
+\El
+}
+\caption{Datatypes, pattern matching, type functions \nnewtext{(testcase 114)}}
+  \label{fig:exampledatatype}
+\end{figure}
+
+Fig.~\ref{fig:exampledatatype} shows how \TES\ helps for intricate
+errors.  The code declares the datatype \inexamplebody{t} and the
+function \inexamplebody{trans} to deal with user defined colours.
+This function is then applied to an instance of a colour (the first
+element in the pair \inexamplebody{x}).  Suppose the programming error
+is that we wrote \inexamplebody{'b} instead of \inexamplebody{'c} in
+\inexamplebody{Green}'s definition at location~\textcircled{1}.
+%
+\SMLNJ\ (version 110.72) reports a type constructor clash
+at~\textcircled{4} as follows:
+
+
+\examplebody{
+  \Bl
+  operator domain:\ (int,int,int) t
+  \\
+  operand:\ \ \ \ \ \ \ \ \ (int,int,bool) t
+  \\
+  in expression:
+  \\
+    \Bi
+    trans ((fn \{1=<pat>,...\} => 1) x)
+    \Ei
+  \El
+}
+
+
+%
+%\vspace{-0.02in}
+%\vspace{-0.05in}
+%
+%\noindent
+The reported code is far from the actual error and does not match the
+source code.
+% It is then hard to find the error site, e.g.,
+\SMLNJ\ gives the same error message if, instead of the error described
+above, one writes \inexamplebody{x} instead of \inexamplebody{z} in
+the right-hand-side of any branch of \inexamplebody{trans}.
+Thus, one might need to inspect the entire program to find the error.
+
+\hidden{
+\MLTON\ reports is as follows:
+\inexamplebody{
+\Bl
+Error: test-prog.sml 28.26.
+\\
+  \Bi
+  Function applied to incorrect argument.
+  \\
+    \Bi
+    expects: (\_, \_, [int]) t
+    \\
+    but got: (\_, \_, [bool]) t
+    \\
+    in: trans (\#1 x)
+    \Ei
+  \Ei
+\\
+Error: test-prog.sml 28.5.
+\\
+  \Bi
+  Pattern and expression disagree.
+  \\
+    \Bi
+    pattern:    (\_, \_, [bool]) t * \_
+    \\
+    expression: (\_, \_, [int]) t * \_
+    \\
+    in: (y): (int, bool) u = (trans (\#1 x), \#2 x)
+    \Ei
+  \Ei
+\El
+}
+}
+
+
+Fig.~\ref{fig:exampledatatype} highlights a slice for this error.
+\hidden{This error is context-dependent: it assumes
+that \inexamplebody{y} and \inexamplebody{z} are value variables and
+not datatype constructors.}%
+The programming error location being in the slice, we track it down by
+considering only the highlighted code,
+starting from the clashing types on the last line.  The type annotation
+\inexamplebody{(int, bool) u} constrains the result type of
+\inexamplebody{trans}'s application.
+The part of the \inexamplebody{trans} function in the slice is the
+case handling a \inexamplebody{Green} object.
+At~\textcircled{1},
+\inexamplebody{Green}'s second and third arguments are constrained to
+be of the same type.
+At~\textcircled{2}, \inexamplebody{y} is therefore
+constrained to be of the same type as \inexamplebody{z}.
+At~\textcircled{3}, because \inexamplebody{y} and \inexamplebody{z}
+are respectively \inexamplebody{Yellow}'s first and third arguments
+and using \inexamplebody{Yellow}'s definition, we infer that
+the type of \inexamplebody{Yellow}'s application to its three
+arguments (returned by \inexamplebody{trans}) is
+\inexamplebody{t} where its first
+% (\inexamplebody{'a})
+and third
+% (\inexamplebody{'c})
+parameters have to be equal.
+%
+At~\textcircled{4} and \textcircled{5} we can see that
+\inexamplebody{trans} is constrained to return a \inexamplebody{t}
+where its first (\inexamplebody{int}) and third (\inexamplebody{bool})
+parameters differ.
+
+%%% Without the highlighting it would be harder to
+%%% see why \SMLNJ\ reports a conflict between \inexamplebody{(int,int,int) t}
+%%% and \inexamplebody{(int,int,bool) t}.
+
+
+
+\subsubsection{Chained \emph{open}s and nested structures}
+\label{sec:openerrorexample}
+
+
+
+\begin{\myfigure}[t]
+%\begin{\sizeintables}
+\examplebody{
+\Bl
+\boxR{structure} \boxR{S = struct}
+\\
+    \Bi
+    \boxR{structure} \boxR{Y = struct}
+    \\
+        \Bi
+        structure A = struct val x = false end
+        \\
+        \boxR{structure} \boxR{X = struct} \boxR{val} \boxR{x = }\boxB{false} \boxR{end}
+        \\
+	structure M = struct val x = true  end
+        \Ei
+    \\
+    \boxR{end}
+    \\
+    \boxR{open} \boxR{Y}
+    \\
+    val m = M.x
+    \\
+    val x = if m then true else false
+    \Ei
+\\
+\boxR{end}
+\\
+structure T = struct
+\\
+    \Bi
+    structure X = struct val x = 1 end
+    \\
+    \boxR{open} \boxR{S}
+    \\
+    \boxR{open} \boxR{X}
+    \\
+    val y = \boxR{if} m \boxR{then }\boxG{1}\boxR{ else x}
+    \Ei
+\\
+end
+\El
+}
+%\end{\sizeintables}
+  \caption{Chained \emph{open}s and nested structures \nnewtext{(testcase 450)}}
+  \label{fig:examplenestopens}
+\end{\myfigure}
+
+Fig.~\ref{fig:examplenestopens} has an intricate type error
+with chained \inexamplebody{open}s.
+Let us describe what the code was meant to do.
+Structure \inexamplebody{T} declares structure \inexamplebody{X}
+declaring integer \inexamplebody{x}.
+Structure \inexamplebody{S} is opened to access the Boolean \inexamplebody{m}.
+Then, \inexamplebody{X} is opened to access the integer
+\inexamplebody{x}.  Finally, if \inexamplebody{m} is true
+then we return \inexamplebody{1} otherwise we return
+\inexamplebody{x}.
+This is untypable and \SMLNJ\ blames \inexamplebody{y}'s body
+as follows:
+
+\examplebody{
+\Bl
+Error: types of if branches do not agree [literal]
+\\
+  \Bi
+  then branch: int
+  \\
+  else branch: bool
+  \\
+  in expression:
+  \\
+    \Bi
+    if m then 1 else x
+    \Ei
+  \Ei
+\El
+}
+
+
+The programming error, as our type error slice shows,
+is that opening \inexamplebody{S} causes \inexamplebody{S}'s
+declarations to shadow the current typing environment.
+Because
+\inexamplebody{Y} is opened in \inexamplebody{S}, the structures
+\inexamplebody{A}, \inexamplebody{X} and \inexamplebody{M} are part of
+\inexamplebody{S}'s declarations.  Hence, when opening
+\inexamplebody{S} in \inexamplebody{T}, the structure
+\inexamplebody{X} which was in our current typing environment is
+shadowed by the one defined in \inexamplebody{Y}.
+If the programmer's intent is as described above (and only then), this
+error can be solved by replacing ``\inexamplebody{open S open X}'' by
+``\inexamplebody{open S X}'', which opens \inexamplebody{X} and
+\inexamplebody{Y} simultaneously (opening \inexamplebody{X} results
+then to the opening of the structure \inexamplebody{X} declared in
+\inexamplebody{T} because it is then not shadowed by the one declared
+in \inexamplebody{Y}).
+
+Our type error slice rules out \inexamplebody{x}'s declarations in
+\inexamplebody{X} and \inexamplebody{S} and clearly shows why
+\inexamplebody{x} does not have the expected type.  Traditional reports
+leave us to track down
+\inexamplebody{x}'s binding by hand.
+
+
+
+%% \subsubsection{Error involving \textit{open}}
+%% \label{sec:openerrorexample2}
+
+
+
+
+%% \hidden{
+%% \examplebody{
+%% \Bl
+%% structure S = struct
+%%   \\
+%%   \Bi
+%%   \boxR{structure} \boxR{S = struct}
+%%     \\
+%%     \Bi
+%%     \boxR{datatype} t \boxR{=} \boxR{C of }\boxB{bool}
+%%     \Ei
+%%     \\
+%%   end
+%%   \\
+%%   structure S = struct
+%%     \\
+%%     \Bi
+%%     datatype t = C of int
+%%     \\
+%%     \boxR{open} \boxR{S}
+%%     \\
+%%     val rec f = \boxR{fn} (\boxR{C x}) \boxR{=>} \boxR{x }\boxG{+} 1
+%%     \Ei
+%%     \\
+%%   end
+%%   \Ei
+%%   \\
+%% end
+%% \El
+%% }
+%% }
+
+%% The type error presented in this section involves nested ``open''s
+%% that lead to type errors hard to solve.
+%% In the piece of code displayed below, before declaring the function
+%% \inexamplebody{f}, we open the structure \inexamplebody{S} in order to
+%% have access to the value \inexamplebody{v}.  The problem is that when
+%% opening \inexamplebody{S}, all of \inexamplebody{S}'s declarations are
+%% pushed to the current typing environment.  Because
+%% \inexamplebody{T} is opened inside \inexamplebody{S},
+%% \inexamplebody{C}'s declaration from \inexamplebody{T} gets pushed to
+%% the typing environment and hides \inexamplebody{C}'s previous
+%% declaration (the one in \inexamplebody{X}).
+
+%% \examplebody{
+%% \Bl
+%% structure Y = struct
+%% \\
+%%   \Bi
+%%   \boxR{structure} \boxR{S = struct}
+%%   \\
+%%     \Bi
+%%     \boxR{structure} \boxR{T = struct} \boxR{datatype} t \boxR{=} \boxR{C of }\boxB{bool} \boxR{end}
+%%     \\
+%%     \boxR{open} \boxR{T}
+%%     \\
+%%     val g = fn (C x) => if x then 1 else 0
+%%     \\
+%%     val v = g (C true)
+%%     \Ei
+%%   \\
+%%   \boxR{end}
+%%   \\
+%%   structure X = struct
+%%   \\
+%%     \Bi
+%%     datatype t = C of int
+%%     \\
+%%     \boxR{open} \boxR{S}
+%%     \\
+%%     val rec f = \boxR{fn} (\boxR{C x}) \boxR{=>} \boxR{x }\boxG{+} v
+%%     \Ei
+%%   \\
+%%   end
+%%   \Ei
+%% \\
+%% end
+%% \El
+%% }
+
+
+%% \SMLNJ\ reports the error messages displayed below, where none of the
+%% ``open''s is reported.
+%% \examplebody{
+%% \Bl
+%% open.sml:10.29-10.34 Error: operator and operand don't agree [literal]
+%% \\
+%%   \Bi
+%%   operator domain: bool * bool
+%%   \\
+%%   operand:\ \ \ \ \ \ \ \ \ bool * int
+%%   \\
+%%   in expression:
+%%   \\
+%%     \Bi
+%%     x + 1
+%%     \Ei
+%%   \Ei
+%% \\
+%% open.sml:10.31 Error: overloaded variable not defined at type
+%% \\
+%%   \Bi
+%%   symbol: +
+%%   \\
+%%   type: bool
+%%   \Ei
+%% \El
+%% }
+
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../tes-open"
+%%% End: 

@@ -1,0 +1,34 @@
+% LaTeX (and TeX) do not provide any easy way to pass parameters to a
+% document from the command line.  This file sets up switches to
+% easily allow formatting different versions of document from the
+% command line.  The idea is that the main document main.tex begins
+% with:
+%
+%   \input{jbw-switch}
+%   \DeclareSwitch{XXX}
+%
+% Following this, the TeX conditional \ifXXX can be used.  It will
+% default to \iffalse, if it has not already been created
+% To get per-person formatting, create a file main-XXX.tex containing:
+%
+%   \newif\ifXXX
+%   \XXXtrue
+%   \input main.tex
+%
+% Then you can run latex on the document with \ifXXX set to \iftrue
+% by:
+%
+%   latex main-XXX
+%
+% You can run latex on the document with \ifXXX set to \iffalse by:
+%
+%   latex main
+
+% This can not be a package because \usepackage barfs and dies if you
+% try to use it before \documentclass.  We need to load this file
+% before invoking \documentclass because we often need the features of
+% this file to decide what arguments to feed to \documentclass.
+
+\makeatletter
+  \input{jbw-switch.sty}
+\makeatother

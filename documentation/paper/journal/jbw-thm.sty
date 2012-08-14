@@ -1,0 +1,177 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{jbw-thm}%[YYYY/MM/DD Description]
+
+\RequirePackage{jbw-env-end-mark}
+\RequirePackage{jbw-which-class}
+
+% Smash any definition of \proof ... \endproof already provided.  Too
+% many god-damned stupid packages and classes have decided they need to
+% provide yet another proof environment.  God damn them all to hell.
+\let\proof=\relax
+\let\endproof=\relax
+\let\proofname=\relax
+
+\def\jbwthm@GiveThmEnvEndMark{\GiveEnvEndMark}
+\DeclareOption{notheoremboxes}{\let\jbwthm@GiveThmEnvEndMark=\@gobble}
+\ProcessOptions
+
+\ifllncs
+  \RequirePackage{jbw-proof}
+  \newcommand{\jbwthm@NotInLLNCS}[1]{}
+  \newcommand{\jbwthm@maybenewtheorem}[1]
+    {\@ifundefined{#1}
+       {\newtheorem{#1}}
+       {\jbwthm@EatOptAndArgAndOpt}}
+  \newcommand{\jbwthm@EatOptAndArgAndOpt}[2][]
+    {\jbwthm@EatOpt}
+  \newcommand{\jbwthm@EatOpt}[1][]{}
+  \newcommand{\jbwthm@maybetheoremstyle}[1]{}
+  \newcommand{\jbwthm@maybenewtheoremstyle}[9]{}
+\else
+  \RequirePackage{amsthm}
+  \newcommand{\jbwthm@NotInLLNCS}[1]{#1}
+  \newcommand{\jbwthm@maybenewtheorem}{\newtheorem}
+  \newcommand{\jbwthm@maybetheoremstyle}{\theoremstyle}
+  \newcommand{\jbwthm@maybenewtheoremstyle}{\newtheoremstyle}
+\fi
+
+% Both amsthm and jbw-proof supply a "proof" environment which uses
+% \qed as its end mark.
+% We alter it to work with the end mark of the jbw-env-end-mark
+% package.
+\let\qedinit=\relax
+\FixAMSProof
+%\def\qed{\EnvEndMark}
+%\GiveEnvEndMark{proof}
+
+% make \begin{proofsketch}...\end{proofsketch} act exactly like
+% \begin{proof}[Proof Sketch]...\end{proof}.
+\newenvironment{proofsketch}{\begin{proof}[Proof Sketch]}{\end{proof}}
+
+\let\jbwthm@origlist=\list
+\renewcommand{\list}
+  {\if@inlabel
+     % We are just after an \item command (or perhaps the equivalent
+     % done by an amsthm theorem-like environment).  This \item
+     % command may have been issued by the beginning of a theorem-like
+     % environment.
+     \ifnum\@listdepth=0\relax
+       % The outer list is not done with \list, so it is done by
+       % \trivlist (or equivalent code in amsthm).
+       \ifdim 0pt=\leftmargin
+         % The ``list'' we are inside does not indent its contents, so
+         % it might be a theorem-like environment.
+         \ifdim 0pt<\wd\@labels
+           % The ``item'' we are inside has a non-trivial label, a
+           % further hint that we are probably just inside a
+           % theorem-like environment.
+           \if@nobreak
+             % Avoid running \theoremlistbeginkludge if the user has
+             % already done so.
+           \else
+             % We are guessing that the list we are starting is the
+             % first thing inside a theorem-like environment, so we
+             % adapt accordingly.
+             \jbwthm@TheoremListBeginKludge
+           \fi
+         \fi
+       \fi
+     \fi
+   \fi
+   \jbwthm@origlist}
+
+% A command to use as the first thing inside a theorem just before a
+% list to get the list to start on a fresh line properly.
+\newcommand{\jbwthm@TheoremListBeginKludge}
+  {% Theorem-like environments are generally implemented with
+   % \trivlist, which means that all of the code to generate the
+   % header is not triggered until a paragraph inside the theorem
+   % body occurs.  We must not start a new list until triggering
+   % this code, because otherwise it accumulates (on the same line)
+   % the label of the first item of the new list with the header
+   % (actually a list item label) of the theorem.
+   \noindent
+   % Now we want to return to vertical mode so we can insert
+   % penalties and glue in the vertical list.
+   \par
+   % We are about to insert glue and don't want this glue to become
+   % a valid breakpoint.
+   \nobreak
+   % We insert glue to undo some stupidity done by \item when
+   % @nobreak is true.
+   \addvspace{-\@outerparskip}%
+   \addvspace{\@topsep}%
+   % We set @nobreak to tell the next occurrence of \item not to
+   % insert a penalty (which would allow page breaking).  It also
+   % causes \item to insert different vertical glue which we
+   % compensate for above.
+   \@nobreaktrue}
+
+% All theorems, lemmas, etc. are numbered in the same sequence.
+
+\jbwthm@maybetheoremstyle{plain}
+
+\jbwthm@maybenewtheorem{theorem}{Theorem}[section]%*llncs
+\jbwthm@GiveThmEnvEndMark{theorem}
+%\@addtoreset{theorem}{chapter}
+
+\jbwthm@maybenewtheorem{lemma}[theorem]{Lemma}%*llncs
+\jbwthm@GiveThmEnvEndMark{lemma}
+\jbwthm@maybenewtheorem{claim}[theorem]{Claim}%*llncs
+\jbwthm@GiveThmEnvEndMark{claim}
+\jbwthm@maybenewtheorem{proposition}[theorem]{Proposition}%*llncs
+\jbwthm@GiveThmEnvEndMark{proposition}
+\jbwthm@maybenewtheorem{corollary}[theorem]{Corollary}%*llncs
+\jbwthm@GiveThmEnvEndMark{corollary}
+\newtheorem{fact}[theorem]{Fact}
+\jbwthm@GiveThmEnvEndMark{fact}
+\jbwthm@maybenewtheorem{conjecture}[theorem]{Conjecture}%*llncs
+\jbwthm@GiveThmEnvEndMark{conjecture}
+\newtheorem{open-problem}[theorem]{Open Problem}
+\jbwthm@GiveThmEnvEndMark{open-problem}
+\jbwthm@maybenewtheorem{property}[theorem]{Property}%*llncs
+\jbwthm@GiveThmEnvEndMark{property}
+\newtheorem{warning}[theorem]{Warning}
+\jbwthm@GiveThmEnvEndMark{warning}
+
+\jbwthm@maybetheoremstyle{definition}
+
+\jbwthm@maybenewtheorem{definition}[theorem]{Definition}%*llncs
+\jbwthm@GiveThmEnvEndMark{definition}
+\newtheorem{notation}[theorem]{Notation}
+\jbwthm@GiveThmEnvEndMark{notation}
+\newtheorem{convention}[theorem]{Convention}
+\jbwthm@GiveThmEnvEndMark{convention}
+\newtheorem{conventions}[theorem]{Conventions}
+\jbwthm@GiveThmEnvEndMark{conventions}
+\newtheorem{axiom}[theorem]{Axiom}
+\jbwthm@GiveThmEnvEndMark{axiom}
+\newtheorem{assumption}[theorem]{Assumption}
+\jbwthm@GiveThmEnvEndMark{assumption}
+\newtheorem{observation}[theorem]{Observation}
+\jbwthm@GiveThmEnvEndMark{observation}
+
+\jbwthm@maybenewtheoremstyle
+  {jbwremark}%  NAME
+  {0.5\topsep}% ABOVESPACE       (\topsep default, must give param)
+  {0.5\topsep}% BELOWSPACE       (\topsep default, must give param)
+  {}%           BODYFONT         \normalfont
+  {}%           INDENT           0pt
+  % *** next line only change from ``remark'' which uses \itshape
+  {\scshape}%   HEADFONT         (\bfseries default, must give param)
+  {.}%          HEADPUNCT        (. default, must give param)
+  {0.5em}%      HEADSPACE        (0.5em default, must give param)
+  {}%           CUSTOM-HEAD-SPEC \thmhead@plain, param is replacement body
+
+\jbwthm@maybetheoremstyle{jbwremark}
+
+\jbwthm@maybenewtheorem{remark}[theorem]{Remark}%*llncs
+\jbwthm@GiveThmEnvEndMark{remark}
+\jbwthm@maybenewtheorem{exercise}[theorem]{Exercise}%*llncs
+\jbwthm@GiveThmEnvEndMark{exercise}
+\jbwthm@maybenewtheorem{example}[theorem]{Example}%*llncs
+\jbwthm@GiveThmEnvEndMark{example}
+
+\jbwthm@maybetheoremstyle{plain}
+
+% LLNCS supplies also: case, note, problem, question, solution
