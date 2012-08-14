@@ -3117,6 +3117,57 @@ Mm, no I didn't find most of them! There are still quite a few left,
 probably going to spend the rest of the time doing this and meeting
 Joe.
 
+** 2012-08-13
+
+(2012-08-13-09:58)
+
+Going to start today working on the poster, there are still some
+things that need to be cleaned up there.
+
+(2012-08-13-10:43)
+
+Trying to get this label pointing to where a standard compiler reports
+the error locating is not proving that easy, tikz is definitely the
+way to do this kind of thing but I haven't used this package
+before. Might look into this later as it looks like a pretty powerful
+package.
+
+(2012-08-13-11:10)
+
+Think I've managed to squeeze at that text in on the left hand side
+adequately without it looking too crushed.
+
+There's quite a lot of space on the left hand side now that I've
+merged the two boxes together (not the 'Future Work' box).
+
+There's enough space to extend the future work section but also to add
+in another section of text if that would be suitable. Hm.
+
+(2012-08-13-14:35)
+
+I think this poster is more or less finished up now. I want to fiddle
+a bit more with it because the system structure section could be
+extended a bit. After that I'll get on with fixing two tests that were
+reported broken this morning.
+
+(2012-08-13-15:02)
+
+Hm. There's extra space here but I'm not really sure what to do with
+it, everything is covered.
+
+(2012-08-13-15:20)
+
+Can't think of anything to put in this space right now, will come back
+to it later. The poster already has about as much text on it. Hm, will
+think about it later.
+
+I'm going to fix up the tests that broke as it needs to be done.
+
+(2012-08-13-17:16)
+
+Fixed those bugs up, they should work great tomorrow. I'll do some
+more on the equality types stuff this evening.
+
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
   datatype constructors allowed to be used with equalop? Other cases
