@@ -1,5 +1,7 @@
 {
     "test-list":[
+        "equality-types/function-return-types.sml",
+        "equality-types/basic-real-greater-than-real.sml",
 	"equality-types/basic-real-equals-real.sml",
 	"equality-types/binding-of-another-binding.sml",
 	"equality-types/datatype-constructor.sml",

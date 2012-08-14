@@ -144,7 +144,7 @@ fun genFinished (bfile, ffile) suff msg =
 	     val _     = TextIO.closeOut stout
 	     val _     = OS.FileSys.rename {old = fin', new = fin}
 	 in () end
-	 handle IO.Io {name, function, cause} => (print "cannot open or close one of the output file\n") (* cannot open or close *)
+	 handle IO.Io {name, function, cause} => print ("Input/Output error. Cannot open or close the following file: "^ffile^"\n")
     else ()
 
 (* prints the integer value of iderror *)

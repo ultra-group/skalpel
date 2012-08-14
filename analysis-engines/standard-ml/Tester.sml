@@ -339,10 +339,6 @@ fun debuggingXML errl
     in st
     end
 
-fun testXML fdebug =
-    let val head = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    in head ^ "\n<example>\n" ^ fdebug sep ^ "</example>\n" end
-
 fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair initlab bfinal name bslice nenv _ =
     let fun toerrors [] = []
 	  | toerrors (err :: xs) =
@@ -757,6 +753,18 @@ fun exportErrors [] _ _ _ _ counter = counter
     (funout [error] parse cs counter time;
      exportErrors errors funout time parse cs (counter + 1))
 
+(* slicing function - a function to run the slicer. Arguments are as follows:
+ * filebas: file containing the basis
+ * filesin: list containing input files
+ * funout: ?
+ * nenv: see Analyze.sig for this integer - related to the basis
+ * webdemo: true if building a webdemo binary
+ * bmin: true if we want to report non-minimal errors
+ * badmin true if we want to output errors in an html default file and in xml format in stdout
+ * bcs: true to print constraints in stdout (deprecated)
+ * searchspace: 1 for the default searchspace, 2 for the searchspace' and 3 for the rbs one, the default is 1
+ * basisoverloading: ?
+ *)
 fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basisoverloading =
 
     let fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
@@ -835,11 +843,9 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
        then let val (nenv, filebas) = getFileBasAndNum nenv filebas
 		val name    = "dummy"
 		val times   = (timeCG, timeEN, timeEN, timeEN, timeEN)
-		val dbgxml  = debuggingXML  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading
-		val dbghtml = debuggingHTML errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading removeBasisSlice
+		val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
 		val berr    = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
-		val _       = dbghtml myfilehtml filebas true ""
-		val _       = print (testXML dbgxml)
+		val _       = print jsonOutput
 		val _       = if bcs then print (Env.printEnv env "" ^ "\n") else ()
 		val _       = assignError (berr "")
 	    in counter

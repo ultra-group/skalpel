@@ -3168,6 +3168,51 @@ I'm going to fix up the tests that broke as it needs to be done.
 Fixed those bugs up, they should work great tomorrow. I'll do some
 more on the equality types stuff this evening.
 
+(2012-08-14-10:19)
+
+Equality types today. I've made up a bunch of equality type tests and
+am putting them into the Skalpel repository now.
+
+I'll also get the typable tests into the repository today, then I'll
+work through the test cases I've got and try to get some of those passing.
+
+(2012-08-14-11:22)
+
+Typable tests at the moment are put into the repository by mocking up
+a JSON file from the default XML that's spat out of the analysis
+engine when skalpel-debug is used. Maybe I should change that to JSON
+by default. Hm I'll think about that.
+
+(2012-08-14-11:40)
+
+Ahh, this res.html file is always exported whether the user wants it
+or not. I thought I'd seen this file cropping up all over the
+place. I'm going to look into this, this will confuse everyone.
+
+(2012-08-14-12:00)
+
+This seems to get output only when I run skalpel-debug. I might remove
+this option altogether as it isn't useful, if the user wants HTML
+output they should use the command line option to get that, not the
+debug option.
+
+Yeah, I'm going to remove this option.
+
+(2012-08-14-12:37)
+
+I've changed that option so that we get JSON output by default from
+skalpel with debugging mode enabled, so the errors output can be just
+put straight into their own file in the test database.
+
+Creating solutions for the typable tests now.
+
+(2012-08-14-13:36)
+
+Okay, all of the tests that weren't under test control because they
+didn't have solution files are now in the test database. I'm removing
+that whole folder, as it should be easy to generate solutions in test
+database for any code file now.
+
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
   datatype constructors allowed to be used with equalop? Other cases
