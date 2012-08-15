@@ -3213,6 +3213,102 @@ didn't have solution files are now in the test database. I'm removing
 that whole folder, as it should be easy to generate solutions in test
 database for any code file now.
 
+(2012-08-14-14:20)
+
+Closing bug 136, fixed that up. That was a pain for me today also.
+
+(2012-08-14-14:41)
+
+Aha, got in touch with Vincent. He's been working on a paper of his
+own and then had a few weeks off. Vincent is kindly going to commit
+the paper to the Skalpel repository just now. Might change my plan of
+action for today to work on something like this.
+
+He is getting 'Permission denied' when trying to log in to
+lxultra8. I'll e-mail Joe about this.
+
+(2012-08-14-15:15)
+
+The sources for the paper are in the Skalpel repository, Vincent just
+pushed them. I'll take a look at this at some point today, I don't
+have some dependancies so I'll get those installed.
+
+(2012-08-14-19:07)
+
+I've been looking into the reason why an equality type error is not
+detected in the following code fragment:
+
+let
+    val id : ''a -> ''a = fn x => x
+in
+    id 5.0
+end;
+
+I haven't handled the case where we have val <something> : <something
+else>, so I suspect that this is a special case in the constraint
+generator and doesn't fall into the same constraint generation as the
+standard value declaration does.
+
+I'd really like to at least build the pdf of the paper this evening
+though, so I'll put this on the back burner. I'd also like the output
+for these constraints to be more clearly readable, fix the display of
+slices in the terminal and such things.
+
+(2012-08-14-23:16)
+
+Not looking like I'm going to get the chance to get around to the
+paper this evening, I'm still looking at this equality types test. I'm
+tweaking the way that the program flow through the constraint
+generator is depicted when printed to the debugging output, it's a bit
+hard to understand in its current form. Hoping to finish that up
+tonight and push the changes.
+
+** 2012-08-15
+
+(2012-08-15-01:18)
+
+Gah, I always forget how to do a empty character in SML. #"" never
+does the trick, to do this #"\000" is needed. #"\0" won't do either,
+it must be three 0 characters.
+
+EDIT: Nope, \000 is "\^@" (of course, what else would it be!). See log
+at last early morning hour.
+
+(2012-08-15-01:59)
+
+God this is time consuming. I know it'll be worth the effort, but
+this is the second change that I've made to something which is related
+to the abstract syntax tree, and it really does eat up a lot of time
+having so many different cases. It actually causes problems with the
+equality type tests as well, as it's bugs in individual cases which
+result in the failure of some of the tests.
+
+(2012-08-15-02:06)
+
+Argh! \000 isn't working as the termination character:
+
+> String.implode [#"\000"];
+val it = "\^@": string
+
+Aaarrgh. Now I understand why the tabbing is messed up.
+
+(2012-08-15-02:21)
+
+Oh. You can't do the empty character in ML apparently. Nice. I won't
+be forgetting that in a hurry this time, what a pain. I'll just have
+to work around it.
+
+(2012-08-15-03:28)
+
+Ahh, this is starting to look much nicer now, though I'm going to stop
+now as I do actually want to get on to other things (such as the paper)
+when I wake up.
+
+This code to print out the program flow is about 50% completed. I'm
+hoping it's going to be enough to work with for the moment, it looks
+like I'll certainly be able to debug these test cases much
+easier. Hm, fingers crossed.
+
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
   datatype constructors allowed to be used with equalop? Other cases
