@@ -41,6 +41,12 @@ val splparen = "\227\128\154"
 (* right white square bracket- 〛 *)
 val sprparen = "\227\128\155"
 
+(* box drawing characters *)
+
+val bottomLeftCurve = "\226\149\176"
+val straightLine = "\226\148\128"
+val verticalFork = "\226\148\156"
+
 val unitT1 = "ms"
 
 (* mu - µ *)
