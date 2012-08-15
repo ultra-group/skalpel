@@ -5,6 +5,7 @@
 ##
 ## Copyright 2010 Vincent Rahli
 ## Copyright 2009, 2010 Steven Shiells
+## Copyright 2012 Heriot-Watt University
 ##
 ## Skalpel is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -30,7 +31,6 @@
 ###############################################################
 
 use warnings;
-use Switch;
 use File::Basename;
 
 
@@ -115,14 +115,12 @@ sub getRegsLine {
 ############################################################
 sub fromColToClash {
     my ($col) = @_;
-    switch ($col) {
-	case "R" {return $red}
-	case "P" {return $cyan}
-	case "B" {return $blue}
-	case "G" {return $green}
-	case "Y" {return $yellow}
-	case "O" {return $purple}
-    }
+    if ($col eq "R") {return $red}
+    elsif ($col eq "P") {return $cyan}
+    elsif ($col eq "B") {return $blue}
+    elsif ($col eq "G") {return $green}
+    elsif ($col eq "Y") {return $yellow}
+    elsif ($col eq "O") {return $purple}
 }
 ###########################################################
 ## A function which gets the appropriate highlighting code
@@ -130,14 +128,12 @@ sub fromColToClash {
 ###########################################################
 sub fromColToClashBox {
     my ($col) = @_;
-    switch ($col) {
-	case "R" {return $boxRed}
-	case "P" {return $boxCyan}
-	case "B" {return $boxBlue}
-	case "G" {return $boxGreen}
-	case "Y" {return $boxYellow}
-	case "O" {return $boxPurple}
-    }
+    if ($col eq "R") {return $boxRed}
+    elsif ($col eq "P") {return $boxCyan}
+    elsif ($col eq "B") {return $boxBlue}
+    elsif ($col eq "G") {return $boxGreen}
+    elsif ($col eq "Y") {return $boxYellow}
+    elsif ($col eq "O") {return $boxPurple}
 }
 ##########################################################
 ## A function which gets the appropriate highlighting code
@@ -145,14 +141,12 @@ sub fromColToClashBox {
 ##########################################################
 sub fromColToClashNestedBox {
     my ($col) = @_;
-    switch ($col) {
-	case "R" {return $nestedBoxRed}
-	case "P" {return $nestedBoxCyan}
-	case "B" {return $nestedBoxBlue}
-	case "G" {return $nestedBoxGreen}
-	case "Y" {return $nestedBoxYellow}
-	case "O" {return $nestedBoxPurple}
-    }
+    if ($col eq "R") {return $nestedBoxRed}
+    elsif ($col eq "P") {return $nestedBoxCyan}
+    elsif ($col eq "B") {return $nestedBoxBlue}
+    elsif ($col eq "G") {return $nestedBoxGreen}
+    elsif ($col eq "Y") {return $nestedBoxYellow}
+    elsif ($col eq "O") {return $nestedBoxPurple}
 }
 
 ##########################################
@@ -188,42 +182,40 @@ sub treatLine {
 	my $c2 = $reg->{'c2'};
 	my $co = $reg->{'col'};
 	my $re = $reg->{'reg'};
-	switch ($nd) {
+	if ($nd eq "L") {
 	    ## If the region is a leaf (Normal Highlighting)
-	    case "L" {
-		my $st1 = substr ($line, $pos, $c1 - $pos - 1);
-		my $st2 = substr ($line, $c1 - 1, $c2 - $c1 + 1);
-		my $clashb = (fromColToClash $co);
-		my $clashe = "\e[40m";
-		$pos = $c2;
-		$newline .= $st1 . $clashb . $st2 . $clashe;
+	    my $st1 = substr ($line, $pos, $c1 - $pos - 1);
+	    my $st2 = substr ($line, $c1 - 1, $c2 - $c1 + 1);
+	    my $clashb = (fromColToClash $co);
+	    my $clashe = "\e[40m";
+	    $pos = $c2;
+	    $newline .= $st1 . $clashb . $st2 . $clashe;
+	}
+	## If the region is a node (Box)
+	elsif ($nd eq "N") {
+	    my $st1 = substr ($line, $pos, $c1 - $pos - 1);
+	    my $st2 = treatLine (substr ($line, 0, $c2), $re, $c1 - 1, 1);
+	    $boxCount++;
+	    my $clashb;
+	    ## Keep track of whether or not the current box is within a box
+	    if ($boxCount == 1){
+		$clashb = (fromColToClashBox $co);
+	    }else{
+		$clashb = (fromColToClashNestedBox $co);
 	    }
-	    ## If the region is a node (Box)
-	    case "N" {
-		my $st1 = substr ($line, $pos, $c1 - $pos - 1);
-		my $st2 = treatLine (substr ($line, 0, $c2), $re, $c1 - 1, 1);
-		$boxCount++;
-		my $clashb;
-		## Keep track of whether or not the current box is within a box
-		if ($boxCount == 1){
-		    $clashb = (fromColToClashBox $co);
-		}else{
-		    $clashb = (fromColToClashNestedBox $co);
-		}
-		$boxCount--;
-		my $clashe = $resetCol;
-		$pos = $c2;
-		$newline .= $st1 . $clashb . $st2 . "echo -en \"" . $clashe;
-	    }
+	    $boxCount--;
+	    my $clashe = $resetCol;
+	    $pos = $c2;
+	    $newline .= $st1 . $clashb . $st2 . "echo -en \"" . $clashe;
+	}
 	    ## If the region is a head (pipe)
-	    case "H" {
-		if ($c1 == $c2) {} else {die ("DeadBranch");} # for such a region the end and beginning have to be equal
-		my $st = substr ($line, $pos, $c1 - $pos - 1);
-		my $clashb = (fromColToClash $co);
-		my $clashe = $resetCol;
-		$pos = $c2 - 1;
-		$newline .= $st . $clashb . $clashe;
-	    }
+	elsif ($nd eq "H") {
+	    if ($c1 == $c2) {} else {die ("DeadBranch");} # for such a region the end and beginning have to be equal
+	    my $st = substr ($line, $pos, $c1 - $pos - 1);
+	    my $clashb = (fromColToClash $co);
+	    my $clashe = $resetCol;
+	    $pos = $c2 - 1;
+	    $newline .= $st . $clashb . $clashe;
 	}
     }
     if ($pos < (length $line)){
@@ -337,28 +329,26 @@ sub treatError {
 	my $dependTitle="\necho -e \"" . $title . "Context Dependencies:" . $resetCol . " ";
 	my $numOfCds = "";
 	$numOfCds = scalar(@cds);
-	switch ($numOfCds){
-	    ## There are no context dependencies.
-	    case 0 {
-		$ret .= "$endCol";
+	if ($numOfCds == 0) {
+	    $ret .= "$endCol";
+	}
+	## There is one context dependencies.
+	elsif ($numOfCds == 1) {
+	    my $dependTitle="\necho -e \"" . $title . "Context Dependency:" . $resetCol . " ";
+	    $ret .= $dependTitle;
+	    $ret .= "$cds[0] is neither a datatype nor an exception constructor.\"\n";
+	    $ret .= "echo -e $endCol";
+	}
+	## There are more than one context dependencies
+	else
+	{
+	    $ret .= $dependTitle;
+	    foreach my $cd (@cds){
+		$ret .= $cd . ", ";
 	    }
-	    ## There is one context dependencies.
-	    case 1 {
-		my $dependTitle="\necho -e \"" . $title . "Context Dependency:" . $resetCol . " ";
-		$ret .= $dependTitle;
-		$ret .= "$cds[0] is neither a datatype nor an exception constructor.\"\n";
-	     	$ret .= "echo -e $endCol";
-	    }
-	    ## There are more than one context dependencies
-	    {
-		$ret .= $dependTitle;
-		foreach my $cd (@cds){
-		    $ret .= $cd . ", ";
-		}
-		$ret = substr ($ret, 0, -2);
-		$ret .= " are neither datatype nor exception constructors.\"\n";
-		$ret .= "echo -e $endCol";
-	    }
+	    $ret = substr ($ret, 0, -2);
+	    $ret .= " are neither datatype nor exception constructors.\"\n";
+	    $ret .= "echo -e $endCol";
 	}
     }
     ## Return the formatted output.

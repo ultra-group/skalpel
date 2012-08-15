@@ -821,6 +821,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 		val (parse, envcs, errs, filters, counter) = preSlicing funout' filebas filesin nenv webdemo (preEnum, initEnum, runEnum)
 		val timeCG    = VT.getMilliTime timer
 		val timerEnum = VT.startTimer ()
+		val _ = print ("[Skalpel: unification...]\n")
 		val (counter'', errors) =
 		    case initSlicing funout' counter parse envcs errs filters timerEnum (preEnum, initEnum, runEnum) of
 			(found', filters', counter', false) => (counter', found')

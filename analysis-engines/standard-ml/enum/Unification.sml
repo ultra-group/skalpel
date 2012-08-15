@@ -2808,7 +2808,7 @@ fun unif env filters user =
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
-			ENUM => (print ("[Skalpel: analysing " ^ file ^ "]\n");
+			ENUM => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("[Skalpel: analysing " ^ file ^ "]\n"));
 				 if (String.isSubstring "basis.sml" file)
 				 then analysingBasis := true
 				 else analysingBasis := false)

@@ -3309,6 +3309,96 @@ hoping it's going to be enough to work with for the moment, it looks
 like I'll certainly be able to debug these test cases much
 easier. Hm, fingers crossed.
 
+(2012-08-15-10:21)
+
+I've decided to start today by looking at getting the terminal slices
+working. This shouldn't be that difficult, and it's going to need to
+be done so that students can use skalpel in an easier way.
+
+(2012-08-15-11:12)
+
+I have fixed the terminal front end interface. Apparently the 'switch'
+keyword is now available when another perl package is installed. I
+don't want the dependancy, so I've just replaced the switch statements
+with if statements and that should work just fine for us.
+
+I have noticed a few things that I'm going to change
+
+1) This is what Skalpel outputs for code1.sml
+
+% skalpel -e 1 -p output.pl -b 2 lib/basis.sml ~/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml
+[Skalpel: parsing...]
+[Skalpel: constraint generation...]
+[Skalpel: enumeration...]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing
+/home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+<<<<< [ the slice goes here ] >>>>>
+[Skalpel: found counter=1 time=575 errors=[0[]]]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml]
+[Skalpel: analysing /home/jpirie/repos/skalpel/lib/basis.sml]
+
+This is far too much output. It might be useful to see all of these
+things, so I'm going to keep this kind of output style in place, but
+it's going to be been moved to the debug output.
+
+2) The command line parameters could be a bit long for students, let's
+   make it easier for them. I'm going to change it so that when
+   running merely:
+
+   skalpel code1.sml
+
+   It uses basis option 2 with lib/basis.sml and outputs slices in the
+   terminal window. That should make it very easy for them to
+   understand.
+
+3) The command line interface does not specify the file where a slice
+   has come from. I don't want to fix this right now, it's not urgent
+   and there are other things to attend to so I'm going to file a
+   bug in the bugzilla database.
+
+(2012-08-15-11:58)
+
+Item 1 in the previous log entry has been implemented. Enable
+constraint generation debugging to see this output. Now we get this
+output from Skalpel:
+
+% skalpel -bo 0 -e 1 -p output.pl -b 2 lib/basis.sml ~/repos/skalpel/testing/analysis-engine-tests/standard-ml/numbered/code1.sml
+[Skalpel: parsing...]
+[Skalpel: constraint generation...]
+[Skalpel: enumeration...]
+[Skalpel: unification...]
+<<<<< [ slice goes here ] >>>>>
+[Skalpel: found counter=1 time=579 errors=[0[]]]
+[Skalpel: finished time=5089]
+
+That's much better.
+
 * Next meeting with Joe
 - val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
   datatype constructors allowed to be used with equalop? Other cases
