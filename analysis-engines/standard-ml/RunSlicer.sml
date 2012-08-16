@@ -124,8 +124,8 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 	     then
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
-		     val execAll = OS.Process.system( ("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
-						       "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done; rm -f "^ffile^"*;") )  handle OS.SysErr (str, opt) => raise Fail str
+		     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
+						     "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done; rm -f "^ffile^"*;")  handle OS.SysErr (str, opt) => raise Fail str
 		 in
 		     ()
 		 end
