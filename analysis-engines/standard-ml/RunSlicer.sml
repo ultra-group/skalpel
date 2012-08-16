@@ -125,7 +125,7 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
 		     val execAll = OS.Process.system( ("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
-						       "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done;") )  handle OS.SysErr (str, opt) => raise Fail str
+						       "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done; rm -f "^ffile^"*;") )  handle OS.SysErr (str, opt) => raise Fail str
 		 in
 		     ()
 		 end
@@ -240,7 +240,10 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val _ = genFinished bfxml  ".xml"  ""
 	val _ = genFinished bfsml  ".sml"  ""
 	val _ = genFinished bflisp ".el"   fmlisp
-	val _ = genFinished bfperl ".pl"   fmperl
+	(* we remove the perl files if we are using the terminal front-end, and we don't need a finished perl file for that *)
+	val _ = if (!terminalSlices) = NO_DISPLAY
+		then genFinished bfperl ".pl"   fmperl
+		else ()
 	val _ = genFinished bfjson "" ""
 
     in ()

@@ -299,9 +299,9 @@ sub treatError {
 	    ## Determine whether the region belongs in the basis file or not and
 	    ## add an appropriate title to the section of the output.
 	    if ($bname eq "/usr/share/skalpel/basis.sml"){
-		push (@lines, "\necho -e \"" . $title . "Basis:" . $resetCol . "\"\n")
+		push (@lines, "\necho -e \"" . $title . "Basis slice:" . $resetCol . "\"\n")
 	    }else{
-		push (@lines, "\necho -e \"" . $title . "Code:" . $resetCol . "\"\n")
+		push (@lines, "\necho -e \"" . $title . "Slice in context:" . $resetCol . "\"\n")
 	    }
 	    ## Treat the region
 	    @lines = (@lines, treatRegions ($filein, $bname, $regs));
@@ -322,7 +322,7 @@ sub treatError {
 	$ret .= "@lines";
 	$ret .= "echo\n";
 	#### Slice ####
-	$ret .= "\necho -e \"" . $title . "Slice:\n" . $resetCol;
+	$ret .= "\necho -e \"" . $title . "Slice on its own:\n" . $resetCol;
 	$ret .= $slice;
 	$ret .= "\"\necho -e \"" . $resetCol . "\"";
 	#### Context Dependencies ####
