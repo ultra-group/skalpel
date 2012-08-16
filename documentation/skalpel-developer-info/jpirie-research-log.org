@@ -31,6 +31,12 @@ UPDATE: deps is always empty, though I'm now using it for the equality
 type endpoint labels as it's rather handy. Still don't know about the
 ids values, I'll need to look into that.
 
+(2012-08-15-17:47)
+
+Terminal front end: Some errors might be reported that do not actually
+exist because old shell scripts are getting executed. This front end
+must clear up after itself, fix this bug soon.
+
 * TODOs
 ** Test framework
 *** (2012-07-31-01:46) Web demo
@@ -3399,11 +3405,100 @@ output from Skalpel:
 
 That's much better.
 
+(2012-08-15-13:21)
+
+Hm, I'm not sure what to do about the default basis option. I think
+that by default, we should use the full basis, but how do we know what
+location that is in? The problem is that we don't know.
+
+I guess we could store it in an environment variable, and if it's not
+there default back to the -b 0 option. That sounds alright.
+
+(2012-08-15-14:10)
+
+Argh! There's a bug in the terminal slice viewing script. If the
+output directory is absolute, and not relative, it explodes. I'm going
+to fix this now, this is required.
+
+(2012-08-15-14:21)
+
+Ok, I think I've fixed most of this up. The only issue is that if the
+user specifies a perl file that is not the default then they don't get
+the slices in the terminal for some reason. I think this should be
+easy to fix so I'll just go ahead and do that...
+
+(2012-08-15-15:50)
+
+Done. Also fixed that bug (not reported) where if no prefix is
+specified for Perl, HTML files etc, then it just went ahead but didn't
+make any output files.
+
+(2012-08-15-16:20)
+
+I've changed things a little so that if the user doesn't specify a
+basis option and they don't have an environment variable set then we
+just throw an error. Falling back to the no basis option is not really
+acceptable.
+
+There aren't any major bugs regarding the front end terminal interface
+that I know of, so I'm ceasing work on this part for now.
+
+(2012-08-15-17:36)
+
+.. apart from it's unclear when Skalpel doesn't find any errors. I've
+added that in now so the user is presented with how many errors
+Skalpel has found, otherwise it's not that clear when a program is
+deemed typable.
+
+Oh and I just noticed that the output files don't get cleaned up after
+each run. They should be, if they are to be kept then some kind of
+debug option is needed, otherwise Skalpel executes old files. Filing a
+bug for now.
+
+(2012-08-15-17:46)
+
+Actually, this bug is going to confuse me sometimes and might lead to
+time loss. I'm going to add a warning at the top of this file too.
+
+(2012-08-16-20:12)
+
+Having a quick look at the state of the documentation. It's actually
+in not too bad a shape, better than I expected. It would be good to
+clean some of this up though, it will need to be done before a release
+happens at any rate.
+
+(2012-08-16-00:02)
+
+Had a few e-mails from Joe pointing some useful things out. I've
+added a bunch of bugs against various components and I've changed the
+default mail format that Bugzilla uses from HTML to plain text which
+might be for the best anyway.
+
+I also mentioned that I want to start doing 30 minutes of
+documentation a day, which sounds like a good thing to aim for, so
+long as I remember to stop working after the 30 allocated minutes and
+don't go off for hours updating things. Eventually I'll run out of
+documentation to update and maybe then I can use the time to fix bugs
+or give aid to other neglected areas of the project. I'll see how it
+goes, maybe this will be too difficult to keep up.
+
+Right, I'm going to sort out the building of the paper, it must be
+looked at. Joe mentioned that maybe this should sit somewhere that
+isn't public, and maybe this should indeed be the case. Something to
+talk about at our next meeting I guess, added it to the list.
+
+(2012-08-16-00:49)
+
+Okay, I can now build the paper. Question is, what now? Maybe I should
+just go through the whole thing and build up suggestions to change, or
+maybe I should go straight ahead and look at how equality types could
+be built in to this.
+
+(2012-08-16-02:58)
+
+I've had a quick look at the paper this evening but ended up tweaking
+the bugzilla error reports and the like. I'll have to read over this
+tomorrow and take a good look at it.
+
 * Next meeting with Joe
-- val 'b f = fn x : 'b => x = x; fragment untypable, but 'a in
-  datatype constructors allowed to be used with equalop? Other cases
-  of this?
-- equality type propagation with type x : int, where eqtype int, but
-  type y : real, where type real. Functions not specified either?
-  Check and ask.
-- testing of copyright statements
+- public access to paper sources

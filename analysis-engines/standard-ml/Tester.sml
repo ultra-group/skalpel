@@ -829,6 +829,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 			runSlicing funout' counter' parse envcs found' filters' timerEnum (preEnum, initEnum, runEnum)
 		val timeEN = VT.getMilliTime timer
 		val time   = Int.fromLarge (VT.getMilliTime timerEnum)
+		val _ = print ("Errors found: " ^ (Int.toString (List.length errors))^"\n")
 		val _      = print ("[Skalpel: finished time=" ^ Int.toString time ^ "]\n")
 	    in (counter'', errors, parse, envcs, timeCG, timeEN)
 	    end
