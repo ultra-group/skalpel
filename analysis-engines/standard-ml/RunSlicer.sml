@@ -125,7 +125,7 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
 		     val execAll = OS.Process.system( ("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
-						       "; for FILE in "^ffile^"*.sh; do ./$FILE; done;") )  handle OS.SysErr (str, opt) => raise Fail str
+						       "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done;") )  handle OS.SysErr (str, opt) => raise Fail str
 		 in
 		     ()
 		 end
@@ -367,6 +367,7 @@ fun smlTesStrArgs strArgs =
 	val search   = ref ""
 	val runtests = ref false
 	val filesNeeded = ref true
+	val basisSpecified = ref false
 	val outputFilesNeeded = ref true
 	val basisoverloading = ref "1"
 
@@ -404,6 +405,27 @@ fun smlTesStrArgs strArgs =
         (* split into tokens to allow for easy parsing *)
 	val split = String.tokens Char.isSpace strArgs
 
+	fun checkFileSuffix () =
+	    let
+		val _ = if (String.isSuffix ".html" (!filehtml) orelse (!filehtml = ""))
+			then ()
+			else filehtml := (!filehtml) ^ ".html"
+		val _ = if (String.isSuffix ".xml" (!filexml) orelse (!filexml = ""))
+			then ()
+			else filexml := (!filexml) ^ ".xml"
+		val _ = if (String.isSuffix ".sml" (!filesml) orelse (!filesml = ""))
+			then ()
+			else filesml := (!filesml) ^ ".sml"
+		val _ = if (String.isSuffix ".el" (!filelisp) orelse (!filelisp = ""))
+			then ()
+			else filelisp := (!filelisp) ^ ".el"
+		val _ = if (String.isSuffix ".pl" (!fileperl) orelse (!fileperl = ""))
+			then ()
+			else fileperl := (!fileperl) ^ ".pl"
+	    in
+		()
+	    end
+
 	fun parse [] = ()
  	  | parse [option] =
 	    if option = "--help" then
@@ -411,17 +433,16 @@ fun smlTesStrArgs strArgs =
 	    else if option = "-v"
 	    then (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
 	    else if option = "--show-legend"
-	    then (filesNeeded:=false; OS.Process.system("../../front-ends/terminal-window/skalpel-legend"); ())
-	    else
-		filein:=option
+	    then (filesNeeded:=false; OS.Process.system("skalpel-legend"); ())
+	    else filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
 	  | parse ("-b"::"0"::tail) =
-	    (basop:="0"; parse tail)
+	    (basisSpecified := true; basop:="0"; parse tail)
 	  | parse ("-b"::"1"::tail) =
-	    (basop:="1"; parse tail)
+	    (basisSpecified := true; basop:="1"; parse tail)
 	  | parse ("-b"::"2"::file::tail) =
 	    (* why do we have two filebas here? *)
-	    (Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)
+	    (basisSpecified := true; Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)
 	  | parse ("-e"::"0"::tail) =
 	    (terminalSlices := NO_DISPLAY; parse tail)
 	  | parse ("-e"::"1"::tail) =
@@ -494,11 +515,23 @@ fun smlTesStrArgs strArgs =
 		 if (!filein = "")
 		 then OS.Process.success (* the user was checking tests *)
 		 else (
-		     (* check that the user specified an output file, or they are in debug mode *)
-		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!fileperl)^(!filejson) = ""
+		     (* display slices in the terminal by default *)
+		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!filejson) = ""
 			 andalso !runtests = false andalso !outputFilesNeeded = true)
-		     then (print ("Error: No output files specified.");
-			   raise Fail("No output files specified"))
+		     then if (!fileperl) = ""
+			  then (fileperl := "/tmp/output.pl"; terminalSlices := NON_INTERACTIVE)
+			  else (terminalSlices := NON_INTERACTIVE)
+		     else ();
+
+		     checkFileSuffix();
+
+		     (* if a basis option hasn't been stated, then look for the SKALPEL_BASIS environment variable
+		      * if we find one, use its contents
+		      * if we do not, print a warning and default to -b 0 *)
+		     if (!basisSpecified = false)
+		     then case OS.Process.getEnv "SKALPEL_BASIS" of
+			      NONE => (print "Error: Couldn't find basis file location in command line argument or environment variable (SKALPEL_BASIS).\n"; raise Fail("No basis option specified"))
+			    | SOME file => (Tester.myfilebas:=file; filebas:=file; basop:="2")
 		     else ();
 
 		     (* now all arguments are dereferenced and passed to slicerFull *)
