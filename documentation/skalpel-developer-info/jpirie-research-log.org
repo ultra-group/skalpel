@@ -3174,6 +3174,8 @@ I'm going to fix up the tests that broke as it needs to be done.
 Fixed those bugs up, they should work great tomorrow. I'll do some
 more on the equality types stuff this evening.
 
+** 2012-08-14
+
 (2012-08-14-10:19)
 
 Equality types today. I've made up a bunch of equality type tests and
@@ -3499,6 +3501,20 @@ be built in to this.
 I've had a quick look at the paper this evening but ended up tweaking
 the bugzilla error reports and the like. I'll have to read over this
 tomorrow and take a good look at it.
+
+** 2012-08-16
+
+(2012-08-16-11:46)
+
+Going to tidy up the poster before this meeting with Joe today, it
+would be good to get that to printing some time soon so I'll focus on that.
+
+(2012-08-16-10:38)
+
+I've made a few edits to the poster, and fixed some of the serious
+bugs that existed for the terminal front end. I'll aim to finish this
+the poster tomorrow and get it to Joe to glance over and suggest any
+changes before I get it sent for printing.
 
 * Next meeting with Joe
 - public access to paper sources
