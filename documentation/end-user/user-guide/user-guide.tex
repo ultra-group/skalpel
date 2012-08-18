@@ -17,6 +17,7 @@
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{a4}
+\setlength{\parskip}{10pt}
 
 \DeclareSwitch{incolor} % true to have colors such as comments in color
 \DeclareSwitch{comm}    % true to print display the comments
@@ -51,17 +52,43 @@ be found at the Skalpel downloads page below:
 
 \begin{center}\texttt{http://www.macs.hw.ac.uk/ultra/skalpel/downloads.html}\end{center}
 
-
 \section {Linux}
 
 Packages have been prepared for Debian and Red Hat based systems, and
 can be found on the Skalpel downloads page (section
-\ref{skalpel-downloads-page}). There are two software different
-packages available, one is \texttt{skalpel}, and the other is
-\texttt{skalpel-emacs}.
+\ref{skalpel-downloads-page}). Readers who do not wish to install the
+pre-prepared packages (for example those with other Linux
+distributions or those who do not have root access will not be able to
+use these packages) should skip to section \ref{archive-installation},
+which discusses how to install different Skalpel components from a
+tarball archive).
 
 \subsection {Packages}
 
+There are two different software packages available, the first is
+\texttt{skalpel}, and the second is \texttt{skalpel-emacs}.
+
+The \texttt{skalpel} package will install some crucial files (for
+example the \texttt{skalpel} binary) and some documentation. This
+package contains everything the user will need in order to run Skalpel
+from a terminal window.
+
+The \texttt{skalpel-emacs} package is an optional package that is
+available for those that wish to use Emacs as a front-end to the
+Skalpel program.
+
+Installation of the Red Hat based (.rpm) packages can be achieved by
+running the below command as root:
+
+\texttt{\# rpm -ivh $<$package\_name$>$}
+
+Installation of the Debian packages can be achieved by running the
+below command as root:
+
+\texttt{\# dpkg -i $<$package\_name$>$}
+
+\subsection {Archive Installation}
+\label{archive-installation}
 
 \chapter{Using Skalpel in Emacs}
 
