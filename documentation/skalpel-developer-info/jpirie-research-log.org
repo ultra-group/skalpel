@@ -3516,5 +3516,55 @@ bugs that existed for the terminal front end. I'll aim to finish this
 the poster tomorrow and get it to Joe to glance over and suggest any
 changes before I get it sent for printing.
 
+** 2012-08-17
+
+(2012-08-17-09:28)
+
+Poster today, needs to be finished. Paper will be neglected for yet
+another day.
+
+(2012-08-17-15:08)
+
+I've been working on this poster all day, and most of it has been
+spent trying to reduce some space that tikz creates by about a few
+millimeters. It's unbelievable how much time it can take preparing
+this stuff properly, in the meeting with Joe yesterday we spent most
+of the time trying to get our heads around tikz. The time cost has
+certainly not to be underestimated. Hmm.
+
+Whenever I draw anything around some text, it moves. Not much, but
+just enough to be noticeable. I've tried rather a number of different
+arguments which should move the position, but they don't in this case,
+probably because they are being overridden. I'll keep reading through
+the documentation and trying the things that are recommended, but the
+deadline for this is the end of today. It should be in printing on
+Monday really.
+
+(2012-08-17-15:35)
+
+A warning for the future, tikz doesn't always draw the arrow between
+nodes that you want, but rather the one that is defined first. So I
+have a definition
+
+NODE A
+NODE B
+NODE C
+
+DRAW B C
+
+Which is supposed to draw a node between B and C. But it drawws it
+between B and A, because A was defined first. Maybe this has something
+to do with the remember picture argument, who knows. I don't have time
+to chase that down today.
+
+(2012-08-17-15:55)
+
+These positioning parameters just aren't affecting this node in any
+way whatsoever. 
+
+(2012-08-17-15:58)
+
+Out of time for this. Oh well, never mind.
+
 * Next meeting with Joe
 - public access to paper sources
