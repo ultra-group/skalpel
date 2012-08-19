@@ -3566,5 +3566,12 @@ way whatsoever.
 
 Out of time for this. Oh well, never mind.
 
+** 2012-08-18
+
+(2012-08-18-15:06)
+
+Fixed the alignment of that text by adjusting the baseline manually,
+poster should be fine on that side of things now.
+
 * Next meeting with Joe
 - public access to paper sources
