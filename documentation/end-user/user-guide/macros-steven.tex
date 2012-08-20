@@ -76,91 +76,6 @@
 
 % commands for comments
 
-\ifcomm
-  \newcommand{\personal}[1]{}
-  \ifincolor
-  \newcommand{\todo}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{blue}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
-  \newcommand{\done}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{mygreen}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
-  \newcommand{\urgent}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{red}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
- \newcommand{\comment}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{myorange}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
-  \else
-  \newcommand{\todo}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{mygray}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
- \newcommand{\done}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{fkgray}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
-  \newcommand{\urgent}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{dkgray}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-      \end{footnotesize}
-  }
-  \newcommand{\comment}[2]{
-    \noindent
-    \begin{footnotesize}
-      \textcolor{dkgray}{
-        \textbf{
-          [\begin{tiny}(#1)\end{tiny}: #2]}
-      }
-    \end{footnotesize}
-  }
-  \fi
-\else
-\newcommand{\personal}[1]{}
-\newcommand{\todo}[2]{}
-\newcommand{\done}[2]{}
-\newcommand{\urgent}[2]{}
-\newcommand{\comment}[2]{}
-\fi
-
 \newcommand{\codebody}[1]{{\tt\small\renewcommand{\arraystretch}{1}$$#1$$}}
 \newcommand{\incodebody}[1]{{\tt\small\renewcommand{\arraystretch}{0.8}$\Bl#1\El$}}
 \newcommand{\Bl}{\begin{tabular}[t]{@{}l@{}}}
@@ -264,8 +179,6 @@
 \newcommand{\instruction}[1]{\incodebody{<{#1}>}}
 
 \newcommand{\tesEndPointOne}[0]{gray }
-
-\newcommand{\note}[1]{\medskip\textbf{NOTE:} {#1}}
 
 \newcommand{\tesDownloadURL}[0]{\codebody{\Bl http://www2.macs.hw.ac.uk/{\textasciitilde}rahli/cgi-bin/slicer/downloads.html \El}}
 \newcommand{\tes}[0]{type error slicer}

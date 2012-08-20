@@ -3573,5 +3573,83 @@ Out of time for this. Oh well, never mind.
 Fixed the alignment of that text by adjusting the baseline manually,
 poster should be fine on that side of things now.
 
-* Next meeting with Joe
-- public access to paper sources
+** 2012-08-20
+
+(2012-08-20-13:57)
+
+Trying to print this PGF manual, but there seems to be something
+strange happening with the print server as I can't print anything of
+length greater than 2 pages from my printer (aside from the the linux
+labs, which will print 4 pages, and the ground floor labs which will
+print 0 pages). I have printed the TES paper however and that was
+fine, so perhaps it has something to do with the size of the pgfmanual
+document? Anyway, moving on.
+
+I still haven't received any e-mail confirming the poster size for the
+displays on Thursday. I should probably however get the poster to
+graphics and printing today, so I'll try to find Christine and get all
+the paperwork sorted out involving that and printing when they need
+the poster by at the latest.
+
+I must look at the TES paper today though at some point, there should
+be time for this.
+
+(2012-08-20-14:46)
+
+A future note: for the printing of poster, they need the poster 48
+hours in advance. So for example if I want to pick up the poster on
+Thursday morning (which in this case I do) then I need to give it to
+them first thing tomorrow. It would really be better to give it to
+them today but I guess I'll wait until tomorrow in the hope that the
+poster size will be confirmed.
+
+(2012-08-20-15:14)
+
+Nick does need to confirm the printing of these posters, although
+there isn't a form that he has to sign. I'll have to catch him later
+today as I can't find him at the moment.
+
+(2012-08-20-15:31)
+
+Alright, I'm going to work a bit on passing some more equality type
+cases.
+
+(2012-08-20-15:55)
+
+Right, so this doesn't work:
+
+structure S : sig datatype ''a mydt = firstCons of ''a end =
+struct
+datatype ''a mydt = firstCons of ''a
+end;
+
+S.firstCons(5.0)
+
+But when taking the signature definition away, it does work! This is
+because when a signature is present a rather different route is taken
+through the abstract syntax tree. I might not delve into this example
+right now, this looks like it will take several hours to go through
+and I don't want to stop half way through.
+
+Some notes for when I come back to this:
+
+Without the signature the abstract syntax tree goes through LabSigExp
+-> StrExpBasic -> SpecDat -> DatDesc -> DatDescOne -> [...]
+
+With the signature the path is:
+
+StrBindOne -> StrId -> LabStrExp -> StrExpBasic
+
+I'll need to do something clever with the signatures, because the
+eqtype keyword can be used there. Perhaps my time would be best spent
+looking at that first.
+
+I'll take a look at the paper instead for the moment, and do equality
+types either after the poster printing tomorrow or this evening if I
+get some time.
+
+(2012-08-20-16:09)
+
+Managed to find Nick, he's approved the printing of the poster. I'll
+head in first thing tomorrow and get it to them so that I can pick it
+up first thing on Thursday morning.
