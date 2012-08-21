@@ -980,11 +980,11 @@ and stripEqualityVariables_sequenceType (ROW_VAR _) labels = ([], labels)
 (* this is currently used when solving equality constraint accessors, and only equality constraint accessors
  * (2012-07-09-12:22) jpirie: do we actually need to strip things this way? Want to look into this.
  *)
-and stripEqualityVariables (TYPE_VAR (tv,_,_,eq)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from EXPLICIT_TYPE_VAR!");
+and stripEqualityVariables (TYPE_VAR (typeVar)) labels =
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from TYPE_VAR: " ^ (printty (TYPE_VAR(typeVar))));
      ([], labels))
-  | stripEqualityVariables (EXPLICIT_TYPE_VAR(_)) labels =
-    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from EXPLICIT_TYPE_VAR!");
+  | stripEqualityVariables (EXPLICIT_TYPE_VAR(explicitTypeVar)) labels =
+    (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type var from EXPLICIT_TYPE_VAR: " ^ (printty (EXPLICIT_TYPE_VAR(explicitTypeVar))));
      ([], labels))
   | stripEqualityVariables (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_VAR(eq))) labels =
     (D.printDebugFeature D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality type var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");

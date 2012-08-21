@@ -79,7 +79,17 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
   | printDebugFeature file PARSING stringFunction =
     if (!debug) andalso (!debugParsing) then print ("(PARSING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
   | printDebugFeature file PROGRAM_LABELLING stringFunction =
-    if (!debug) andalso (!debugProgramLabelling) then print ("(PROGRAM_LABELLING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+    if (!debug) andalso (!debugProgramLabelling) then
+	let
+	    val filename = (case OS.Process.getEnv "SKALPEL_LABELLED_PROGRAM" of
+			      NONE => (print "Warning: Environment variable SKALPEL_LABELLED_PROGRAM not set! Defaulting to: /tmp/skalpel-labelled-program.tex"; "/tmp/skalpel-labelled-program.tex")
+			    | SOME file => file)
+	    val outputStream = TextIO.openOut filename
+	in
+	    (TextIO.output (outputStream, stringFunction());
+	     TextIO.closeOut outputStream)
+	end
+    else ()
 
   (* prints out the state
    * after the state is printed once, the debugState flag is turned off so we only see the state once

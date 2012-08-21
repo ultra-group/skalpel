@@ -847,7 +847,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 		val times   = (timeCG, timeEN, timeEN, timeEN, timeEN)
 		val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
 		val berr    = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
-		val _       = print jsonOutput
+		val _       = D.printDebugFeature D.TEST D.TESTING (fn _ => jsonOutput)
 		val _       = if bcs then print (Env.printEnv env "" ^ "\n") else ()
 		val _       = assignError (berr "")
 	    in counter

@@ -105,15 +105,15 @@ fun printSlice' slprog indent sep =
 	  | sepLines (SOME l) (SOME k) NONE     ind = 
 	    if !(D.debugProgramLabelling)
 	    then if l < k andalso sep
-		 then "\\\\\n" ^ ind
+		 then "$}\\\\\n" ^ ind ^ "\\scalebox{0.5}{$ "
 		 else ""
 	    else if l < k andalso sep
 	    then "\n" ^ ind
 	    else ""
-	  | sepLines (SOME l) (SOME k) (SOME c) ind = 
+	  | sepLines (SOME l) (SOME k) (SOME c) ind =
 	    if !(D.debugProgramLabelling)
 	    then if l < k andalso sep
-		 then "\\\\\n" ^ ind ^ lengthToString c
+		 then "$}\\\\\n" ^ ind ^ "\\scalebox{0.5}{$ "^ lengthToString c
 		 else ""
 	    else if l < k andalso sep
 	    then "\n" ^ ind ^ lengthToString c
@@ -132,7 +132,7 @@ fun printSlice' slprog indent sep =
 	and printProgList []                                   _   = ""
 	  | printProgList [(x, _, _, _)]                       ind = 
 	    if !(D.debugProgramLabelling)
-	    then ind ^ printProg x ind ^ "\n \\end{document}"
+	    then ind ^ "\\scalebox{0.5}{$" ^ printProg x ind ^ "$}\n \\end{document}"
 	    else ind ^ printProg x ind
 	  | printProgList ((x, _, _, _) :: xs)                 ind = 
 	    if !(D.debugProgramLabelling)
@@ -153,7 +153,7 @@ fun printSlice' slprog indent sep =
 		val sep = sepLines k i d ind
 	    in
 		if !(D.debugProgramLabelling)
-		then (l, j, c, "\\scalebox{0.5}{$ "^ x ^ "$}" ^ sep ^ y )
+		then (l, j, c, x ^ sep ^ y )
 		else (l, j, c,  x ^ sep ^ y )
 	    end
 

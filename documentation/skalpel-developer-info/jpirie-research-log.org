@@ -3653,3 +3653,162 @@ get some time.
 Managed to find Nick, he's approved the printing of the poster. I'll
 head in first thing tomorrow and get it to them so that I can pick it
 up first thing on Thursday morning.
+
+** 2012-08-21
+
+(2012-08-21-09:51)
+
+The poster has been sent to graphics and printing and will be ready
+for pickup on Thursday morning. The poster that has been sent is the
+PDF that was generated from the .tex source in the tes/ repository,
+git commit hash ba356c778adec28352f35dfaa27accfc68a88412.
+
+The codes used to print the poster have been stored in the tes/
+repository in the commit after the hash above for future reference, as
+these could be used to print further posters.
+
+(2012-08-21-10:08)
+
+I just remembered there's a windows lab next to the Linux lab, going
+to quickly try printing the TikZ documentation from there and hope
+that printer can manage more successfully. Plan for today is equality
+types though, and looking at the paper. I'm hoping to work with
+equality types first to familiarise myself with the structure again,
+then read the paper and if I read far enough try to integrate into
+that the way equality types are represented.
+
+(2012-08-21-10:41)
+
+Something strange is happening with the skalpel configure script, I
+noticed this yesterday too while writing some documentation. The
+configure file which is present in the Skalpel repository is actually
+old. We should be generating the configure script by running autoconf
+on configure.ac, but this file is not present.
+
+This problem is really best averted by having the test framework clone
+and compile the skalpel binary from scratch.
+
+I'll look into fixing this up later, this is not what I want to be
+working on today. I'll file a bug.
+
+(2012-08-21-11:21)
+
+Printers seem to be fixed as TikZ docs are printing now, moving on to
+equality types. Looking at the
+struct-with-sig-including-tick-tick-a.sml example.
+
+This doesn't seem to work because I haven't written code to strip out
+equality type information from an explicit type variable. I will most
+likely have to do so now.
+
+(2012-08-21-12:15)
+
+Hmm, the path through the ast is somewhat complex. Going to have to
+figure this out first.
+
+(2012-08-21-13:34)
+
+Still trawling through the ast, but I think I see where changes need
+to be made in this example.
+
+There is something that I have decided I would like, is for some small
+GUI which will allow me to see what constraints are generated at which
+parts of the constraint generation process.
+
+I made some kind of start with this earlier, so output comes out like
+this:
+
+[...] A.ValDescOne
+[...] |- A.LabId
+[...] |-   |-A.Ident (str="x")
+[...] |-A.LabType
+[...]       |-A.TypeArrow
+[...]             |-A.LabType
+[...]             |   ╰─A.TypeOneVar
+[...]             |         |-A.EqualityTypeVar (f_typevar; str="''a")
+[...]             |-A.LabType
+[...]                   |-A.TypeOneVar
+[...]                         |-A.EqualityTypeVar (f_typevar; str="''a")
+
+Except that I've used box drawing characters rather than the flimsy
+ascii symbols (edited for the purposes of this document). I would love
+for:
+
+a) abstract syntax tree path printing in this way
+b) to be able to see the constraints that are generated at each stage
+by clicking on each node in the tree
+
+If I had this I would just die with how nice it would be. I don't
+really want to do that now because I've spent a fair bit of time
+fiddling with this sort of thing and I want to get at least this test
+passing quickly. I might look at doing something like this perhaps
+this evening or whatever. Something like that would be unbelievably
+useful. Perhaps I could try out the SML GTK bindings which I have
+heard on the IRC channel are actually very up to date...
+
+(2012-08-21-14:05)
+
+Right, I think this issue is coming about because this example uses
+explicit type variable accessors, which are something I haven't looked
+at yet.
+
+(2012-08-21-14:34)
+
+Argh, there is no debugging print out for any of this stuff yet,
+signatures and structures are a complete mystery at the
+moment. Basically, in the example I've been working on, the answer to
+the question "what constraints are generated for the binding of 'x' in
+"sig val x : ''a -> ''a end"? I have no idea, I'll need to print out
+this information.
+
+(2012-08-21-14:40)
+
+Actually, as a quick method which will let me see this constraint
+information quickly, I could prefix the output with stars and then
+save it in a .org file.
+
+That way I would be able to just see the output that I want with very
+little effort. I feel bad about doing this though, because it's a
+debugging feature which is tied to Emacs, which is a route that should
+generally be avoided. It's such little effort though for such great a
+gain I'm going to do it that way and code it up immediately, as the
+amount of output for even small programs is making my head explode and
+this should help that situation without costing me a lot of time.
+
+(2012-08-21-16:13)
+
+Hm, this isn't as straight forward as I thought. Due to the nature of
+the tree traversal constraints will get printed AFTER the children are
+traversed and printed, which means the tab expansion on nodes won't
+work. Hmm.
+
+(2012-08-21-16:31)
+
+I don't see an easy way to do this now. I shall think about this again
+later at some point. Going back to working on this example for now.
+
+(2012-08-21-17:41)
+
+Haven't changed any of the underlying code today, it's all just
+debugging improvements. I'm going to work on this some more this
+evening to make up for that, there needs to be progress made on the
+actual test case itself, ideally it should pass by the end of today
+but I'm aware that might not happen. Nevertheless I want to do some
+more on this in the evening.
+
+I'm happier with the debugging output now though, it's easier to
+understand what the analysis engine is actually doing when it looks at
+a program.
+
+(2012-08-21-18:04)
+
+Aha, time to sneak some 30 minutes to update documentation. As I
+mentioned earlier there is some kind of issue with the configuration
+script that we currently have in the Skalpel repository, I'll look at
+that a little if I can get a gap of time inside this 30 minutes.
+
+(2012-08-21-19:01)
+
+Hm, didn't quite get time to look at the configure script, I shall
+leave that until another day. Documentation is getting better though,
+which is a win.
