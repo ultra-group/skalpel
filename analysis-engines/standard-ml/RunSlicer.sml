@@ -47,7 +47,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "b69fd8452aef316ee16211f40fb8bc989f71bd75"
+val SKALPEL_VERSION = "f03eafe1f21d89668fe73d242e5065928a745dc4"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -394,7 +394,7 @@ fun smlTesStrArgs strArgs =
 				    \       TESTING \t shows debugging info when running the test database\n\
 				    \       CONSTRAINT_GENERATION \t shows constraint generation debugging information\n\
 				    \       CONSTRAINT_SOLVING \t shows constraint solving debugging information\n\
-				    \       PROGRAM_LABELLING \t gives a labelled program output\n\
+				    \       PROGRAM_LABELLING <filename> \t gives a labelled program output in latex to file specified in environment variable $SKALPEL_LABELLED_PROGRAM\n\
 				    \       EQUALITY_TYPES \t debugging information for equality types\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
@@ -476,7 +476,7 @@ fun smlTesStrArgs strArgs =
 			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
 			* be able to toggle such an option, but for the moment this is simply disabled *)
 		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
-		     |  "PROGRAM_LABELLING" => (D.enableDebugFeature D.PROGRAM_LABELLING)
+		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
 		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)

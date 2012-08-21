@@ -33,7 +33,7 @@ val ldotsLatex = "\\langle"
 
 (* mathematical right angle bracket- ⟩ *)
 val rdots    = "\226\159\169"
-val rdotsLatex = "\rangle"
+val rdotsLatex = "\\rangle"
 
 (* left white square bracket- 〚 *)
 val splparen = "\227\128\154"

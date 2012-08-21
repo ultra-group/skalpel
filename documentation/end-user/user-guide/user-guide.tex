@@ -49,6 +49,10 @@
 \newpage
 
 \chapter {Installation}
+\label{skalpel-installation}
+
+This chapter will provide information on how the Skalpel packages and
+archives can be installed.
 
 \section {Skalpel Downloads Page}
 \label{skalpel-downloads-page}
@@ -81,7 +85,8 @@ from a terminal window.
 
 The \texttt{skalpel-emacs} package is an optional package that is
 available for those that wish to use Emacs as a front-end to the
-Skalpel program.
+Skalpel program. Having the \texttt{skalpel} package installed is a
+dependancy of this package.
 
 Installation of the Red Hat based (.rpm) packages can be achieved by
 running the below command as root:
@@ -130,13 +135,60 @@ $<$location$>$ with a directory path where Skalpel is to be installed:
 
 If the configure script fails, either the prefix directory doesn't
 already exist or the system does not have the necessary dependancies
-to build Skalpel. Install all dependancies and then run the configure
-script again. Otherwise, if the configure script has succeeded, run
+to build Skalpel. Install all dependancies that were listed as missing
+by the configure script and then run the configure script
+again. Otherwise, if the configure script has succeeded, run
 \texttt{make} (which will build the \texttt{skalpel} binary), followed
 by \texttt{make install}, which will install the binary to the desired
 location.
 
 \todo[inline]{Windows section to be written here}
+
+\chapter{Configuration of Front-Ends}
+
+This chapter gives information on how to configure a system to use
+Skalpel. Installation of Skalpel is covered in section
+\ref{skalpel-installation}, and should be completed prior to reading
+this section.
+
+\section{Linux}
+
+\subsection{Configuration of the Terminal Front-End}
+
+To use Skapel in a terminal, the analysis engine binary (named
+\texttt{skalpel}), should be called directly. There are a number of
+command-line options available, and full list of these and an
+explanation for each can be found in section
+\ref{command-line-arguments}, but the most important command line
+arguments are as follows:
+
+\begin{itemize}
+\item \texttt{skalpel -b 2 $<$filename$>$:} This command line option
+  specifies a file that Skalpel should choose to use as its basis
+  file. A file is supplied with Skalpel in the likely event that the
+  user does not wish to use their own, and the path to the
+  \texttt{basis.sml} file supplied with Skalpel should go in place of
+  $<$filename$>$ here.
+
+  For users who are using the basis file that is supplied in the
+  \texttt{skalpel} package/archive, it is recommended that the
+  environment variable \$SKALPEL\_BASIS is set, which will allow the
+  user to omit this argument. This can be done with similar lines to
+  the below specified in the $~$/.bashrc file\footnote{users of shells
+    other than bash should consult the documentation for their shell
+    to discover how to set environment variables}:\\
+
+  \texttt{SKALPEL\_BASIS="\$HOME/path/to/basis.sml"}\\
+  \texttt{export SKALPEL\_BASIS}xs
+
+\item \texttt{skalpel -e <0 | 1>} Setting the -e parameter to 0 or 1
+  toggles whether or not Skalpel should display the errors it finds in
+  the terminal. This should always be set to 1. \todo{maybe there
+    should be an environment variable for this?}
+\end{itemize}
+
+\todo[inline]{An example should go here of the Skalpel terminal front
+  end being executed}
 
 \chapter{Using Skalpel in Emacs}
 
