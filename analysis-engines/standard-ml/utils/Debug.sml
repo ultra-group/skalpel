@@ -25,7 +25,7 @@
 structure Debug :> DEBUG = struct
 
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING
 
 val rand = Random.rand (0,6)
 
@@ -41,6 +41,7 @@ val textReset="\^[[0m"
 val oneRunOnly = ref false
 val debug = ref false
 val debugEqualityTypes        : bool ref = ref false
+val debugConstraintPath       : bool ref = ref false
 val debugConstraintGeneration : bool ref = ref false
 val debugConstraintSolving    : bool ref = ref false
 val debugTesting              : bool ref = ref false
@@ -49,6 +50,7 @@ val debugState                : bool ref = ref false
 val debugProgramLabelling     : bool ref = ref false
 
 fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
+  | enableDebugFeature CONSTRAINT_PATH = debugConstraintPath := true
   | enableDebugFeature CONSTRAINT_GENERATION = debugConstraintGeneration := true
   | enableDebugFeature CONSTRAINT_SOLVING = debugConstraintSolving := true
   | enableDebugFeature PARSING = debugParsing := true
@@ -72,6 +74,8 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
     if (!debug) andalso (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ (stringFunction ()) ^ textReset ^ "\n") else ()
   | printDebugFeature file CONSTRAINT_GENERATION stringFunction =
     if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
+  | printDebugFeature file CONSTRAINT_PATH stringFunction =
+    if (!debug) andalso (!debugConstraintPath) then print ("(CONSTRAINT_PATH) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
   | printDebugFeature file CONSTRAINT_SOLVING stringFunction =
     if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ (stringFunction()) ^ textReset ^ "\n") else ()
   | printDebugFeature file TESTING stringFunction =
