@@ -392,6 +392,7 @@ fun smlTesStrArgs strArgs =
 				    \       ONE_RUN \t give debug output only once (don't show during minimisation process)\n\
 				    \       STATE   \t gives internal state output\n\
 				    \       TESTING \t shows debugging info when running the test database\n\
+				    \       CONSTRAINT_PATH \t shows path taken through the constraint generator\n\
 				    \       CONSTRAINT_GENERATION \t shows constraint generation debugging information\n\
 				    \       CONSTRAINT_SOLVING \t shows constraint solving debugging information\n\
 				    \       PROGRAM_LABELLING <filename> \t gives a labelled program output in latex to file specified in environment variable $SKALPEL_LABELLED_PROGRAM\n\
@@ -477,6 +478,7 @@ fun smlTesStrArgs strArgs =
 			* be able to toggle such an option, but for the moment this is simply disabled *)
 		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
 		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
+		     | "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
 		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
