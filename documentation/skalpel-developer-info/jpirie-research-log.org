@@ -3827,6 +3827,8 @@ mechanism and do the example tomorrow, this is alas probably going to
 take most of the rest of the evening. A good use of an evening though
 if it saves me pain tomorrow I guess!
 
+** 2012-08-22
+
 (2012-08-22-00:22)
 
 Hmm it's still hard to see some of the constraints that are generated
@@ -3842,3 +3844,55 @@ with it despite the time cost this evening. This should help me figure
 out what is going on with this equality type test tomorrow, and
 hopefully I can get that passing before the industry day on Thursday
 and then come back to equality types on Friday.
+
+(2012-08-22-11:22)
+
+I see from the work yesterday that the simple example I'm working on:
+
+structure S : sig val x : ''a -> ''a end =
+struct
+fun x y = y
+end;
+
+S.x 5.0
+
+results in over 50 constraint generation function calls. I can see now
+why this example doesn't work yet, I haven't written equality
+type information for all of these cases yet. I've started to add that
+functionality now.
+
+I think that the best way to do this is to work backwards, so I'm
+going to try that, starting by looking at the constraints that are
+available when S.x 5.0 is being handled. What should be happening is
+S.x should be an accessor to the x value inside the structure S, and
+when we look up that accessor we should see that x has EQUALITY_TYPE
+constraints attached to it, which will cause an error with the 5.0
+argument given to x.
+
+The text that I wrote earlier about not handling explicit type
+variable accessors is accurate, and may be the direct reason why this
+doesn't work at the moment.
+
+(2012-08-22-13:48)
+
+I decided to look at the paper, I haven't read this version through
+thoroughly yet and just skipped to the part where information where
+external labelled syntax and the syntax of constraint terms are shown
+(figures 5 and 6). I'm wondering where the other kinds of variables
+that we have fit into this, for example the row variables, the type
+function variables, the field variables, the typename variables
+etc. The equality type variables are essentially currently an extension
+of these. There is always type constructor names variable γ, but that
+is not the same as a typename variable. Hm.
+
+(2012-08-22-15:43)
+
+I want to try a little experiment involving the way some equality
+types are represented. I'm going to until 9pm at the very latest and
+see if my idea works out, if I don't see it going anywhere then I'll
+scrap it and get the test passing mentioned earlier with the rest of
+the evening. I'll document the ideas here only if they work out,
+otherwise I won't as they'll take time to write up.
+
+This will unfortunately take over the documentation 30 minutes alas,
+but I shall be sure and do some of that tomorrow! :-)
