@@ -3174,7 +3174,9 @@ fun generateConstraints' prog pack nenv =
 		   val (ev, cst, css) = f_strexp (indent^SS.bottomLeftCurve^SS.straightLine) strexp
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
-	       in (ev', E.consConstraint(lab, c) cst, css)
+		   val newConstraints = E.consConstraint(lab, c) cst
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => ("constraints for A.LabStrExp are as follows:\n\n"^E.printConstraints newConstraints))
+	       in (ev', newConstraints, css)
 	       end
 	     | f_labstrexp indent (A.LabStrExpDots pl) =
 	       let val ev  = E.freshEnvVar ()

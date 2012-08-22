@@ -3896,3 +3896,153 @@ otherwise I won't as they'll take time to write up.
 
 This will unfortunately take over the documentation 30 minutes alas,
 but I shall be sure and do some of that tomorrow! :-)
+
+(2012-08-22-17:10)
+
+Aha, I had it in my head that the type variables being passed around
+the constraint generator were TYPE_VAR constructions, where as in fact
+they are just numbers, like the equality type variables that are being
+passed around. I was hoping that I could just put the equality type
+variable information in the TYPE_VAR construction, then that would be
+one less thing to pass around, but as we are only passing type
+variables numbers, this isn't so practical. We can't really constrain
+these type variables to be equal to one another with equality type
+constraint construction functions because the code would get very
+messy with the type of the equality type constraint generation
+function being Ty.ty -> Ty.ty -> Label.label -> oneConstraint, and
+from that point another constraint would be needed to assign variables
+to status values (unless there was a dummy Ty form constructed with a
+status in it or something), and the whole thing becomes less
+modular. If I remember correctly issues with labels arose when I tried
+this method too, but this wouldn't have been the case now anyway
+because equality type constraints take labels carefully into account
+when generating constraints. I'm not happy though that we have
+equality type accessors, which basically do the same things as a
+normal accessor except they carry the equality type variable that is
+needed for the generation of constraints.
+
+I'm going to look at the way that accessors are done now, I'm not
+convinced that we can't just wrap the equality type variable
+information in the standard accessor that was being used before. If I
+can make this happen then it should lead to clearer code in the way
+that accessors are solved, which will actually help with the example
+that I have been working on anyway.
+
+(2012-08-22-17:40)
+
+I am pretty sure I can sort out these accessors so that they nice,
+going to do that now and then continue development on this test
+case. Didn't take nearly as long as I thought it would to look into
+that stuff, great.
+
+I've just to look at the differences between the relevant functions in
+the constraint solver.
+
+(2012-08-22-17:51)
+
+Actually, the more I look at it, the more the current system actually
+looks like a good design. Without an accessor specifically for
+equality types, the constraint generation functions would have lines
+to put equality type information into the 'sem' portion of the each
+binder, for example:
+
+val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR()) lab) lab
+val a  = E.genAccIoEm (E.consAccId (I.ID (v, lab)) (T.ROW_VAR sv) (CL.consOC ()) lab) lab
+val a  = E.genAccIfEm (E.consAccId lid (env1, env2) (CL.consFUNC ())lab) lab
+val a  = E.genAccIiEm (E.consAccId lid (E.consENV_VAR ev lab) (CL.consSIG ()) lab) lab
+
+Equality type information would need to be wrapped into the row
+variables, environment variables and whatever on earth CL.consTYVAR
+returns, which would be nasty to debug later, because wrapping
+equality type information in these types would mean that dummy values
+would need to be put in (eg EQUALITY_TYPE_STATUS(UNKNOWN)) which would
+be printed out when debugging.
+
+It wouldn't make it any faster to have two accessors instead of one
+anyway, because the work done by solving the equality type accessors
+is not duplicated in other types of accessors. I'm just going to keep
+this as it is and continue working on the current equality type test.
+
+I wrote something about accessors before when I was looking at this
+test, now I have re-familiarised myself with the accessor solving
+process things should go smoothly I hope. :-)
+
+(2012-08-22-20:25)
+
+Alright from the debugging output I think an equality type error is
+not detected in this case because the equality type variables aren't
+propagated correctly for signatures (which makes sense, as I haven't
+done anything with signatures yet). I'm going to tell the analysis
+engine that something of the form
+
+val x : [some EQUALITY_TYPE] -> [some EQUALITY_TYPE]
+
+means that x also has attached to it some information that it too
+should be have an EQUALITY_TYPE which is passed to it. The constraints
+for the term
+
+S.x 5.0
+
+Look alright, so I'll put the right information in the binding of x
+and it should work fine.
+
+(2012-08-22-22:03)
+
+Aww, that alone didn't quite fix everything. This must have something
+to do with the signature element. I wrote something about explicit
+type variables before, I'm going to go back and read that because I'm
+not seeing these come up in the debugging output.
+
+(2012-08-22-22:32)
+
+Ah, I didn't have some debugging switches on, silly me. There are some
+explicit type variable accessors being solved, I'm not sure what they
+are doing though. I'm noticing something suspicious which help me. The
+label 40175, which is this example is the label attributed to "5.0",
+is being used in this accessor constraint:
+
+ACCESSOR_CONSTRAINT(OVERLOADING_CLASSES_ACCESSOR(({ID(373,40175),ROW_VAR(s10541),OC,40175},[40175],[],)))
+
+Perhaps this looks up the signature in some way and gets ''a out. Now
+THAT would be great, because then I can just pass the equality type
+variables through and that should solve this problem. Checking now.
+
+(2012-08-22-22:49)
+
+Oh god, I didn't realise how many of these kinds of constraints we
+actually solve. There are 40 occurrences of this kind of constraint
+being solved in just this one example. Oh this isn't going to be nice
+is it.
+
+Ah, some of them are coming from the basis, these label numbers aren't
+assigned anywhere in this program. Maybe if I filter out the ones from
+the basis I'll be left with a reasonable amount to look at.
+
+(2012-08-22-22:53)
+
+Just one fits that description. Hmm this might be a dead end, I think
+it's checking out the real number as an accessor against some binder
+in the basis and judging from these label numbers, the binder comes
+from somewhere in the basis. I might be wrong. Hmmm....
+
+(2012-08-22-22:57)
+
+Nope, I'm right, the binder comes from the basis. Whatever the
+solution is to this problem it doesn't have anything to do with the
+accessors for overloading classes. I'll take a look at some of the
+other types of constraints that are generated.
+
+(2012-08-22-23:09)
+
+I don't see any constraints that I can look into on the side from the
+code 'S.x 5.0' or from the signature expression. I'm going to print
+out the constraints for the structure. Maybe something is happening
+like S.x looks up x in the structure S, then the type information for
+x is deemed by solving an accessor to the signature binding or
+something.
+
+(2012-08-23-00:19)
+
+Haven't been able to find any problems so far, I'm not sure why this
+test is not working. I'll take another look at it tomorrow after the
+business with the industry people is sorted out.

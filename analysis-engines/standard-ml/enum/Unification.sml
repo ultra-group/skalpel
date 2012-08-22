@@ -3003,7 +3003,7 @@ fun unif env filters user =
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("sem = "^(T.printEqualityType sem)^"\n"))
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("id = "^(Int.toString (I.toInt id))^"\n"))
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("bind = "^(T.printty bind)^"\n\n\n"))
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("label of accessor = "^(Label.printLab l)^"\n\n\n"))
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("label of binder = "^(Label.printLab l)^"\n\n\n"))
 
 			     val _ = case bind of
 					 T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(_,_,_,T.EQUALITY_TYPE_VAR(x)),_,_,_) =>
@@ -3101,24 +3101,25 @@ fun unif env filters user =
 	       | SOME (lid', false) => ())
 	  | solveacc (E.OVERLOADING_CLASSES_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
-		 NONE => ()
-	       | SOME (_, true) =>
-		 (case S.getValStateIdOc state lid false of
-		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
-		    | (SOME (({id, bind, lab, poly, class}, labs', stts', deps'), _), _, _) =>
-		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val labs1 = L.union labs0 (I.getLabs lid)
-			  val c     = E.genCstSqAll sem bind labs1 stts0 deps0
-		      (*val _     = D.printdebug2 (S.printState state)*)
-		      (*val _     = D.printdebug2 (T.printseqty sem ^ "\n" ^ T.printseqty bind)*)
-		      in fsimplify [c] l
-		      end
-		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
-		    | (NONE, _, false) => (* FREE ID *)
-		      handleFreeIdent lid false
-		    | _ => ())
-	       | SOME (lid', false) => ())
+		NONE => ()
+	      | SOME (_, true) =>
+		(case S.getValStateIdOc state lid false of
+		     (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
+		   | (SOME (({id, bind, lab = binderLabel, poly, class}, labs', stts', deps'), _), _, _) =>
+		     let
+			 val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+			 val labs1 = L.union labs0 (I.getLabs lid)
+			 val c     = E.genCstSqAll sem bind labs1 stts0 deps0
+		     (*val _     = D.printdebug2 (S.printState state)*)
+		     (*val _     = D.printdebug2 (T.printseqty sem ^ "\n" ^ T.printseqty bind)*)
+		     in fsimplify [c] l
+		     end
+		   | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
+		     handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		   | (NONE, _, false) => (* FREE ID *)
+		     handleFreeIdent lid false
+		   | _ => ())
+	      | SOME (lid', false) => ())
 	  | solveacc (E.STRUCTURE_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		 NONE => ()
