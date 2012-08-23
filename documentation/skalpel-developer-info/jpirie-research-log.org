@@ -4085,3 +4085,11 @@ I see that there is a type constructor accessor being used in this
 case, perhaps I need to look into the use of this accessor. I need to
 head in to uni to make sure this poster is ready, I'll pick this up
 when I next get a moment.
+
+(2012-08-23-10:11)
+
+Got the poster and attached the appropriate sticky yellow dots on the
+pack. I'll head there in about a half hour or something. It seems the
+poster session lasts for two hours and a half, and then it's demos
+after that.
+
