@@ -2475,7 +2475,6 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, eqtv, cst2, css2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for f_valdescone...\n" ^ (#green D.colors)^(E.printConstraints cst2))
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (E.toRECValueIds vids (L.singleton lab), cst, css)
 	       end
@@ -3335,6 +3334,8 @@ fun generateConstraints' prog pack nenv =
 		   val (ev, cst, css) = f_sigexp (indent^SS.bottomLeftCurve^SS.straightLine) sigexp
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
+		   val newConstraints = E.consConstraint(lab, c) cst
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for f_labsigexp:\n"^E.printConstraints(newConstraints))
 	       in (ev', E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_labsigexp indent (A.LabSigExpDots pl) =
