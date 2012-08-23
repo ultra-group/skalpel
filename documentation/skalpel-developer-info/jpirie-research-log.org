@@ -4041,8 +4041,47 @@ like S.x looks up x in the structure S, then the type information for
 x is deemed by solving an accessor to the signature binding or
 something.
 
+** 2012-08-23
+
 (2012-08-23-00:19)
 
 Haven't been able to find any problems so far, I'm not sure why this
 test is not working. I'll take another look at it tomorrow after the
 business with the industry people is sorted out.
+
+
+(2012-08-23-06:57)
+
+I think I see a gap in the constraints that are getting printed out so
+perhaps some are being generated that I'm not seeing. When I find the
+constraint I'm looking for I'm hoping that it should be easy to make
+this test pass.
+
+(2012-08-23-07:34)
+
+The binder for x in the signature expressing is this:
+
+(EQUALITY_TYPES) Unification.sml: bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n1,OTHER_CONS,l40152),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40152):TYPE_DEPENDANCY(TYPE_VAR(t46157,-,POLY,EQUALITY_TYPE_STATUS(UN
+KNOWN)),[40147,40153,40154],[],[]),l40152),FIELD_CONSTRUCTION((2,l40152):TYPE_DEPENDANCY(TYPE_VAR(t46157,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40147,40154,40155,40156],[],[]),l40152)],-,l40152),l40152,EQUAL
+ITY_TYPE_STATUS(UNKNOWN)),[40148,40149,40150,40151,40152],[],[])
+
+I tried editing this before to contain an equality type status of
+EQUALITY_TYPE to see what it would do but the unification algorithm
+still did not reach the conclusion that an equality type error was
+present. Hm.
+
+The problem is that what I really want is to look at the equality type
+information not on x itself but for the arguments of x, and make the
+error at that point, but I'm not sure which constraints.
+
+(2012-08-23-07:53)
+
+I have changed the signature from val x : ''a -> ''a to val x : string
+-> ''a in the hope of taking the label associated with the string type
+and looking for that in the error that comes up, because this problem
+is currently handled.
+
+I see that there is a type constructor accessor being used in this
+case, perhaps I need to look into the use of this accessor. I need to
+head in to uni to make sure this poster is ready, I'll pick this up
+when I next get a moment.
