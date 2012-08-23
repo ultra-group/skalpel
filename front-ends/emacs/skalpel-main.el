@@ -107,7 +107,7 @@
 (defface skalpel-end-point-one-focus
   '((((class color) (background dark))
      (:background "Blue"))
-    (t (:background "#5e76c1" :foreground "ffffff")))
+    (t (:background "#5e76c1" :foreground "#ffffff")))
   "Used to highlight a section of code that is an end point of a type constructor clash, an arity clash, or a record clash (in focus).")
 
 (defface skalpel-end-point-one-non-focus
