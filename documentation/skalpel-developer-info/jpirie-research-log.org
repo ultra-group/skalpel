@@ -143,12 +143,6 @@ the file, and that the process terminates.
     for 'a.
 
 ** Other
-*** TODO (2012-06-29-13:04) Get access to paper sources from Vincent
-
-  He's currently working on this. The plan at the moment is to commit
-  the paper to the Skalpel repository, so when he has some free time
-  that should pop up in this repository.
-
 *** TODO (2012-07-02-16:37) Add titles to research log entries
 
 If a future developer reads this and is looking for some extra
@@ -161,11 +155,6 @@ will die of boredom as I witter endlessly about things that they don't
 want to hear about, so it might be a good idea to tag them with
 'implementation: equality types' or 'first year report' or
 something. Something to think about in any case.
-
-*** TODO (2012-07-13-14:23) Check Virtualbox gets installed on XP
-
-We should be able to use Virutalbox on XP to test the installation of
-packages daily.
 
 * Research logs
 ** 2012-06-26
@@ -4093,3 +4082,251 @@ pack. I'll head there in about a half hour or something. It seems the
 poster session lasts for two hours and a half, and then it's demos
 after that.
 
+** 2012-08-24
+
+(2012-08-24-10:12)
+
+Alright, a week from today I want to be getting pretty damn close to
+finishing equality types. I'm going to see how much I can get done in
+the next seven days, and hopefully power through a lot of the tasks
+that are left.
+
+I'm going to start by updating the list of the things which aren't
+handled yet if necessary, then I'll most likely go back to that
+example that I've been working on and get that passing today. I really
+wanted to get that passing at the end of Wednesday but I couldn't find
+the constraints that I needed to change in time, hopefully I will be
+able to do that today.
+
+(2012-08-24-11:48)
+
+I'm pasting the example here again so I can refer to it without
+looking back
+
+structure S : sig val x : ''a -> ''a end =
+struct
+fun x y = y
+end;
+
+S.x 5.0
+
+
+I can't find any constraints linking the binding of y in the structure
+to the ''a type variable in the signature whatsoever. In the program,
+the signature comes first, but during constraint generation, we create
+the constraints for the signature after generating the constraints for
+the structure. I'm going to look at the constraints generated for the
+signature and I hope to find a link there between those and the
+structure.
+
+What I expect to find is that the binding of x in the signature is
+some kind of accessor to the binding x in the structure, but we'll
+see.
+
+I changed the first ''a in the signature to 'string' because that's an
+error which already works which has the same kind of idea attached to
+it. The problem is there is no debugging output associated with that
+in the unification algorithm at all, so I have no idea what process
+causes that to be an error.
+
+Perhaps the solution is to add lots more print statements throughout
+the unification algorithm, then search though the output for the
+labels 40153-40155 which are the labels associated with the 'string'
+usage in the signature.
+
+(2012-08-24-12:13)
+
+I have discovered something, a function called 'matchSigStr' in
+Unification.sml. It had a nice comment written above it which Vincent
+wrote so I found it nice and quickly, huzzah! ;-)
+
+This function has the comment:
+
+(* Generalises the structure env2 so that it is equal to
+ * the signature env1.
+ * For functors, b is always true and bfun will be false. *)
+fun matchSigStr env1 env2 l filters labs stts deps bfun err =
+
+This function is only called in three locations (ignoring recursive
+calls, that doesn't help me here). I'm hoping somewhere around these
+locations lies information that I can use to understand where exactly
+structures are matched up with their signatures, perhaps the error
+will be generated somewhere around there.
+
+One of these locations is when solving functor constraints, I don't
+care about that right now. Another of these locations is when solving
+signature constraints (this sounds like something that I want to
+figure out), and the final location is when solving a signature
+environment. I will look into both of these locations (not the functor
+one, there is no functor in this example) and see what I can find.
+
+(2012-08-24-12:23)
+
+I added in debug print statements to tell me when the unification
+algorithm is solving a signature constraints and signature
+environments. I see in the output that there are 84 occurrences where
+the unification algorithm tries to solve a signature constraint, but
+there are no cases where the algorithm tries to solve a signature
+environment.
+
+I shall turn my attention to the solving of signature constraints.
+
+(2012-08-24-13:02)
+
+There are no errors generated when solving signature constraints, the
+error must be generated elsewhere. I'm going to make the unification
+algorithm print to debug whenever it generates any kind of error and
+where that error came from. That will tell me at least where the error
+is generated, then I can follow the label flow or something.
+
+(2012-08-24-13:38)
+
+Alright, an error is generated when fsimplifying a type constraint of
+a type variable. That's not quite the level of specificity that I was
+after, but I'll take it. I'll print out the labels, and try to figure
+out how the labels are built up. More importantly, I want to know how
+the labels from the signature and the structure come together.
+
+(2012-08-24-13:53)
+
+I have changed the example because I didn't get the error that I
+wanted to test against, it's now this:
+
+structure S : sig val x : string -> string end =
+struct
+fun x y = y
+end;
+
+S.x 5.0
+
+
+Now I get this error:
+
+(CONSTRAINT_SOLVING) Unification.sml: Error detected while
+fsimplifying a type constraint of a type constructor and a type poly
+
+This might be something that I can work with to help me figure out
+what I need to do in order to detect equality type errors. I'm going
+to look at the label sets now and try and follow things through.
+
+(2012-08-24-13:56)
+
+Using the built-in basis, this is the error that I get:
+
+Type constructor clash between string and real:
+
+Slice in context:
+Line 1: structure S : sig val x : string -> string end =
+Lines 2-5:       ...
+Line 6: S.x 5.0
+
+Slice on its own:
+⟨..structure ⟨..S : sig ⟨..val x : ⟨..⟩ string -> ⟨..⟩..⟩ end = ⟨..⟩..⟩;
+ ..S.x 5.0..⟩
+
+That's very similar to what I want for the equality type error,
+hopefully I can make something rather similar to this.
+
+(2012-08-24-13:57)
+
+Oh wait, the error is between a type constructor and a type poly!
+That's great, that's exactly what I want isn't it? I can just annotate
+the TYPE_POLY and the TYPE_CONSTRUCTOR with equality type variable
+information (well it's won't be a TYPE_CONSTRUCTOR because I'll be
+using ''a instead of string, but it should be a similar
+method). Here's the constraint that results in an error:
+
+TYPE_CONSTRAINT(((TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(string,DECLARATION_CONS(39),l548),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l549),[547,549],[],[]),l548,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_POLY(ROW_DEP
+ENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l78
+4,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(61
+),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,1
+1137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(a user type,DECLARATIO
+N_CONS(61),l10090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,397
+43,39744,39745,39746],[],[]),l39728)],-,l39728),[39725,39726,39727,39728,40179],[],[]),51,POLY,CONSTANT(5.0,373,40179),l40179,EQUALITY_TYPE_VAR(eqtv19691))),[0,3,4,5,6,546,548,1032,40143,40144,40145,40146,40
+147,40148,40149,40150,40151,40152,40153,40154,40155,40175,40176,40177,40178,40179],[],))
+
+
+Well would you look at that. There's an equality type variable already
+in there, because I already store equality type variable information
+in the TYPE_POLY term.
+
+I'm guessing that there will be another constraint that instead of
+solving a TYPE_CONSTRUCTOR and a TYPE_POLY will solve a TYPE_VARIABLE
+and a TYPE_POLY (or something), then I can create a constraint between
+the two equality type variables that are in the type variable and the
+type poly term and I should get an equality type error. This could
+work.... so long as I can find such a function! :-)
+
+(2012-08-24-14:11)
+
+There are 45 occurrences of "TYPE_POLY" in Unification.sml. Once I
+whittle that down to just pattern match lines there should be maybe 15
+or so. From there I'm going to print out the constraints that I'm
+getting, and then reset the code example to what I actually WANT to
+pass, and examine all constraints for something that looks like a
+unification of ''a and 5.0. From there, edit that point to include the
+unification of the equality type variables involved.
+
+(2012-08-24-14:22)
+
+I am getting something out now, there are constraints being unified
+between a TYPE_VAR and a TYPE_POLY. I think this might be the case
+that I have been looking for, but the TYPE_VAR constructor currently
+doesn't contain equality type information, even though there is a slot
+to support such a thing. This might be the time where I now have to
+use that slot. It would be REALLY useful if I had the label for the
+TYPE_VAR at the moment, because if that was the same label as the ''a
+then that would confirm that this is the right location. But type
+variables do not have labels attached to them, so I must have to use
+something else.
+
+(2012-08-24-15:58)
+
+Finding this constraint is proving to be pretty fiddly, it's like
+looking for a needle in a haystack. I have this constraint which looks
+like what I want:
+
+TYPE_VAR(t46158,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something
+else, namely this: TYPE_POLY(..........EQUALITY_TYPE_VAR(eqtv19691))
+
+The question is where the type variable 46158 coming from? Type
+variables are generated all over the analysis engine so it's anybody's
+guess where that was generated. Looking at the places in the
+constraint generator where the relevant constraints are generated is
+not a good move either, as this type variable is most likely created
+at unification time, which is to be derived from some other type
+variable, which is derived from some other type variable and so on.
+
+I'm not sure what the best option is in terms of how to find out how
+to get equality type information into that type variable.
+
+(2012-08-24-16:06)
+
+Alright, I'm going to have to use the debug method I used before, and
+place fake information inside type variables when they are constructed
+in different places around the analysis engine and find the
+construction that passes the fake information through to this
+point. To do this I'll need to add such information in every type
+variable construction in the constraint generation phase and the
+constraint solving phase (or at least, keep going until I see the data
+show up), and then figure out what to do next from that point.
+
+(2012-08-24-16:10)
+
+I've changed the consTYPE_VAR function to always put 9999999 in the
+equality type variable field of the type variable. If it shows up in
+this constraint, then some function which calls consTYPE_VAR is
+responsible (I know it doesn't help much, pretty much everything
+calls TYPE_VAR, I'll have to break it down best I can).
+
+(2012-08-24-16:13)
+
+Oh, it didn't show up in this constraint. It did show up in most of
+the others, but not in this one. That's good news I think, that should
+give me a shorter list to work with.
+
+(2012-08-24-16:20)
+
+I'm about to really do some crazy things which I don't want kept
+later, so I'm going to commit now on the devel branch, and revert back
+when I figure out where to make the change.

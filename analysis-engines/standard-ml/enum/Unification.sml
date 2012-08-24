@@ -2786,7 +2786,8 @@ fun unif env filters user =
 	     end
 	     handle errorfound err => handleSolveEnv err envsha)
 	  | solveenv (envsig as E.SIGNATURE_ENV (e1, e2, kind)) bmon =
-	    (let val env0 = buildFEnv e1 state false
+	    (let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("solving a signature environment"));
+		 val env0 = buildFEnv e1 state false
 		 val env2 = buildFEnv e2 state true
 		 val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")
 		 val (tfnD, tfnT) = getTypeFunctionEnv env0 env2 L.empty L.empty CD.empty
@@ -3187,7 +3188,9 @@ fun unif env filters user =
 		     val (labs0, stts0, deps0) = unionLabs (labs2, stts, deps) (labs', stts', deps')
 		     val lab2  = E.getLabEnv env
 		     val ek    = EK.Unmatched ((L.toInt lab1, I.toInt id1), idlabs, L.toInt lab2)
-		 in handleSimplify (ERR.consPreError ERR.dummyId labs0 deps0 ek stts0) [] l
+		 in
+		     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected - long identifier not found in structure");
+		     handleSimplify (ERR.consPreError ERR.dummyId labs0 deps0 ek stts0) [] l)
 		 end
 	    else ()
 
@@ -3253,7 +3256,9 @@ fun unif env filters user =
 		    (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isExcTy tn1)
 		 then let val ek  = EK.ConsArgNApp (L.toInt l1, L.toInt l2)
 			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		      in handleSimplify err cs' l
+		      in
+			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type constructors (1)");
+			   handleSimplify err cs' l)
 		      end
 		 else if (T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isVarTypename tn2)
 			 orelse
@@ -3264,7 +3269,9 @@ fun unif env filters user =
 			 (T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isExcTy tn1)
 		 then let val ek  = EK.ConsNArgApp (L.toInt l1, L.toInt l2)
 			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		      in handleSimplify err cs' l
+		      in
+			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type constructors (2)");
+			   handleSimplify err cs' l)
 		      end
 		 else let val name1 = T.tntyToTyCon tn1
 			  val name2 = T.tntyToTyCon tn2
@@ -3279,7 +3286,9 @@ fun unif env filters user =
 				then D.printdebug2 ("foo")
 				else ()*)
 		      (*val _ = D.printdebug2 (S.printState state)*)
-		      in handleSimplify err cs' l
+		      in
+			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type constructors (3)");
+			  handleSimplify err cs' l)
 		      end
 	     else
 		 let
@@ -3293,7 +3302,9 @@ fun unif env filters user =
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt tn1), (L.toInt l2, T.typenameToInt tn2))
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		  in handleSimplify err cs' l
+		  in
+		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a typename constraint of two T.NC constructors");
+		       handleSimplify err cs' l)
 		  end)
 	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C (rtl1, b1, l1), T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let val n1 = length rtl1
@@ -3321,18 +3332,21 @@ fun unif env filters user =
 		    in case err of
 			   [] => fsimplify (cs'' @ cs') l
 			 | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] =>
+			   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a row constraint of two row constructions (1)");
 			   handleSimplify (ERR.consPreError ERR.dummyId
 							    ell
 							    eids
 							    (EK.LabTyClash (ek1, ek2, ek3, ek4))
 							    edeps)
 					  cs'
-					  l
+					  l)
 			 | _ => raise EH.DeadBranch ""
 		    end
                else let val ek  = EK.ArityClash ((L.toInt l1, n1), (L.toInt l2, n2))
 			val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		    in handleSimplify err cs' l
+		    in
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a row constraint of two row constructions (2)");
+			 handleSimplify err cs' l)
 		    end
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
@@ -3363,7 +3377,9 @@ fun unif env filters user =
 			then continue ()
 			else let val ek  = EK.TyConsClash ((L.toInt lab1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt lab2, T.typenameToInt (T.DUMMYTYPENAME)))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps
-			     in handleSimplify err cs' l
+			     in
+				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type variables");
+				  handleSimplify err cs' l)
 			     end
 		      | _ => continue ()
 	    end
@@ -3387,12 +3403,15 @@ fun unif env filters user =
 		     fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		  in handleSimplify err cs' l
+		  in (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two explicit type variables");
+		      handleSimplify err cs' l)
 		  end)
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, _), T.TYPE_CONSTRUCTOR (tn, _, l2, _)), ls, deps, ids)) :: cs') l =
 	    let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps
-	    in handleSimplify err cs' l
+	    in
+		(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of an explicit type variable and a type constructor");
+		handleSimplify err cs' l)
 	    end
 	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, T.TYPENAME_VAR tnv2), ls, deps, ids)) :: cs') l =
 	    if T.eqTypenameVar tnv1 tnv2
@@ -3445,7 +3464,9 @@ fun unif env filters user =
 			    val err = ERR.consPreError ERR.dummyId ls ids ek deps
 			(* We should raise another error here:
 			 * something like, signature too general. *)
-			in handleSimplify err cs' l
+			in
+			    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of a type variable");
+			     handleSimplify err cs' l)
 			end
 		    else ()
 		fun updateFlex (T.TYPE_VAR (tv, NONE, p, eq)) flex = T.TYPE_VAR (tv, flex, p, eq)
@@ -3453,8 +3474,11 @@ fun unif env filters user =
 		    collapseTy (updateFlex ty flex) labs stts deps
 		  | updateFlex ty _ = ty
 		val ty = buildDirectOr ty state
-	    in case S.getValStateTv state tv of
+	    in
+		(* check whether we have this type variable already existing in the state *)
+		case S.getValStateTv state tv of
 		   NONE =>
+		   (* we don't have it in the state, let's put it in the state map *)
 		   let (* here we have to update statege (we know that ty is not a variable) *)
 		       (*val _ = BI.updateMono state tv ty ls deps ids*)
 		       val _ = reportGenError ()
@@ -3465,7 +3489,9 @@ fun unif env filters user =
 		   in fsimplify cs' l
 		   end
 		 | SOME ty' =>
-		   let val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
+ 		   (* we have seen this type variable before *)
+		   let
+		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
 		   in fsimplify (c :: cs') l
 		   end
 	    end
@@ -3502,13 +3528,14 @@ fun unif env filters user =
 		 in case err of
 			[] => fsimplify (cs'' @ cs') l
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
-			handleSimplify (ERR.consPreError ERR.dummyId
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a field constraint of a field variable and a field construction");
+			 handleSimplify (ERR.consPreError ERR.dummyId
 							 ell
 							 eids
 							 (EK.LabTyClash (ek1, ek2, ek3, ek4))
 							 edeps)
 				       cs'
-				       l
+				       l)
 		      | _  => raise EH.DeadBranch ""
 		 end
                | SOME rt' => raise EH.DeadBranch "")
@@ -3522,13 +3549,14 @@ fun unif env filters user =
 		 in case err of
 			[] => fsimplify (cs'' @ cs') l
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
-			handleSimplify (ERR.consPreError ERR.dummyId
-							 ell
-							 eids
-							 (EK.LabTyClash (ek1, ek2, ek3, ek4))
-							 edeps)
-				       cs'
-				       l
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a label constraint of a label variable and a label construction");
+			 handleSimplify (ERR.consPreError ERR.dummyId
+							  ell
+							  eids
+							  (EK.LabTyClash (ek1, ek2, ek3, ek4))
+							  edeps)
+					cs'
+					l)
 		      | _  => raise EH.DeadBranch ""
 		 end
                | SOME lt' => raise EH.DeadBranch "")
@@ -3550,7 +3578,10 @@ fun unif env filters user =
 	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
 	  | fsimplify ((E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
-	    let fun checkTn tnty labs stts deps seq =
+	    let
+		val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint:\n"^(#green D.colors)^
+										 E.printOneConstraint((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1), T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)))^"\n\n");
+		fun checkTn tnty labs stts deps seq =
 		    case tnty of
 			T.TYPENAME_VAR _ => fsimplify cs' l
 		      | T.NC (tn, _, l') =>
@@ -3572,7 +3603,9 @@ fun unif env filters user =
 				   val stts' = L.union  stts stts2
 				   val deps' = CD.union deps deps2
 				   val err   = ERR.consPreError ERR.dummyId labs' deps' kind stts'
-			       in handleSimplify err cs' l
+			       in
+				   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of a type constructor and a type poly");
+				    handleSimplify err cs' l)
 			       end
 			     | ([], true, _) => fsimplify cs' l
 			     | (((t, path) :: _), true, _) =>
@@ -3625,8 +3658,12 @@ fun unif env filters user =
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
 		   end)
 	    end
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, _, poly, orKind, l2, eqtv2)), ls, deps, ids)) :: cs') l =
-	    let fun getErr () =
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, x, poly, orKind, l2, eqtv2)), ls, deps, ids)) :: cs') l =
+	    let
+
+		val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint:\n"^(#green D.colors)^
+										 E.printOneConstraint((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, x, poly, orKind, l2, eqtv2)), ls, deps, ids))))
+		fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
 			val kind =
@@ -3640,7 +3677,9 @@ fun unif env filters user =
 			val labs' = L.union  labs1 ls
 			val stts' = L.union  stts1 deps
 			val deps' = CD.union deps1 ids
-		    in handleSimplify (ERR.consPreError ERR.dummyId labs' deps' kind stts') cs' l
+		    in
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of an explicit type variable and a type poly");
+			 handleSimplify (ERR.consPreError ERR.dummyId labs' deps' kind stts') cs' l)
 		    end
 	       else
 		   (* if eqtv1 <> eqtv2 andalso eqtv1 <> T.UNKNOWN andalso eqtv2 <> T.UNKNOWN *)
@@ -3678,7 +3717,9 @@ fun unif env filters user =
 							    tnerrs1,
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
-			     in handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l
+			     in
+				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type poly constructors (1)");
+				  handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | (T.CONSTANT (st1, id1, lab1), T.VALUE (id2, lab2)) =>
 			     let val (tnerrs1, labs1, stts1, deps1) = gatherAllTnSq seq1
@@ -3690,7 +3731,8 @@ fun unif env filters user =
 							    tnerrs2,
 							    (L.toInt lab1, I.toInt id1, st1),
 							    tnerrs1)
-			     in handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l
+			     in (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type poly constructors (2)");
+				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | (T.VALUE (id1, lab1), T.CONSTANT (st2, id2, lab2)) =>
 			     let val (tnerrs1, labs1, stts1, deps1) = gatherAllTnSq seq1
@@ -3702,7 +3744,9 @@ fun unif env filters user =
 							    tnerrs1,
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
-			     in handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l
+			     in
+				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a type constraint of two type poly constructors (3)");
+				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | _ => fsimplify cs' l)
 		      | ((typaths1, f1), (typaths2, f2), true) =>
@@ -3876,7 +3920,9 @@ fun unif env filters user =
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
 	    let fun genError kind =
 		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts
-		    in handleSimplify err cs' l
+		    in
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying an identifier class constraint of two CL.VID constructors");
+			 handleSimplify err cs' l)
 		    end
 	    in case (vid1, vid2) of
 		   (* REC vs CON (CON/DAT/EXC) *)
@@ -3990,7 +4036,7 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((E.SIGNATURE_CONSTRAINT (ev0, ev1, ev2, ev3, lab)) :: cs') l =
 	    (* 0: signature, 2: structure, 1: translucent, 3: opaque *)
-	    let val btest = FI.testtodo filters lab
+	    let	val btest = FI.testtodo filters lab
 
 	    in if btest
 	       then let val env0 = buildFEnv (E.consENV_VAR ev0 lab) state false
@@ -4045,7 +4091,9 @@ fun unif env filters user =
 				    end
 		    in fsimplify cs' l
 		    end
-		    handle errorfound err => handleSimplify err cs' l
+		    handle errorfound err =>
+			   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while solving a signature constraint");
+			    handleSimplify err cs' l)
 	       else fsimplify cs' l
 	    end
 	  (**)
@@ -4071,7 +4119,9 @@ fun unif env filters user =
 		     val _ = S.updateStateEv state ev4 (E.pushExtEnv env2'' (L.singleton lab) L.empty CD.empty)
 		 in fsimplify cs' l
 		 end
-		 handle errorfound err => handleSimplify err cs' l
+		 handle errorfound err =>
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a functor constraint");
+			 handleSimplify err cs' l)
 	    else fsimplify cs' l
 	  | fsimplify ((E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in env as I've done for WHR. *)
@@ -4101,7 +4151,9 @@ fun unif env filters user =
 		     val _ = S.updateStateEv state ev1 (E.pushExtEnv env1 (L.singleton lab) L.empty CD.empty)
 		 in fsimplify cs' l
 		 end
-		 handle errorfound err => handleSimplify err cs' l
+		 handle errorfound err =>
+			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying a sharing constraint");
+			 handleSimplify err cs' l)
 	    else fsimplify cs' l
 	  (**)
 	  | fsimplify ((E.ACCESSOR_CONSTRAINT acc) :: cs') l = (solveacc acc l; fsimplify cs' l)
@@ -4221,7 +4273,9 @@ fun unif env filters user =
 					 let
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
 					     val error  = ERR.consPreError ERR.dummyId (L.union resultLabels ls) ids errorKind deps
-	  				 in handleSimplify error cs' l
+	  				 in
+					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red D.colors)^"Error detected while fsimplifying an equality type constraint of a variable and a status");
+					      handleSimplify error cs' l)
 					 end
 				       | _ => raise EH.DeadBranch "Didn't get two endpoint labels for an equality type error"
 			 in

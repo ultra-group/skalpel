@@ -525,6 +525,7 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 (* constructs an implicit type var *)
 fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN))
 
+
 (* constructs an implicit type var *)
 fun consTYPE_VARwithEQ   tv eqtv = TYPE_VAR (tv, NONE, POLY, eqtv)
 
