@@ -425,7 +425,9 @@ fun generateConstraints' prog pack nenv =
 	       in (T.freshTypeVar (), E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Env.envvar, Env.strenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
+	   (* f_strid
+	    * creates a binding for the name of a structure (done with E.consBindPoly)
+	    *)
 	   and f_strid indent (A.StrId (s, v, _, lab, _)) =
 	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.StrId");
 	       if String.isPrefix "_" s
@@ -507,15 +509,19 @@ fun generateConstraints' prog pack nenv =
 		    end)
 	     | f_sigidbind A.SigIdDots = (E.freshEnvVar (), E.emsig, E.emptyConstraint)
 
-	   (* RETURNS: (Ty.typeVar, Env.cst) *)
+	   (*
+	    * f_longidexp
+	    * This creates an accessor constraint. It will take a longid as input, then convert that to find the numeric
+            * ID of the binder (this can be found by looking on the left hand side of the (I.printLid lid) output
+	    *)
 	   and f_longidexp indent longid =
 	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^" f_longidexp function (longid="^(#red D.colors)^(A.printAstLongId longid)^D.textReset^")");
 	       case A.longidToLid longid of
-		   NONE => (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - result of `A.longidToLid longid` was NONE");
+		   NONE => (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - couldn't find the numeric ID of a binder for this accessor ");
 			    (T.freshTypeVar (), T.freshEqualityTypeVar(), L.dummyLab, CL.newClassVar (), E.emptyConstraint))
 		 | SOME lid =>
 		   let
-		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - result of `A.longidToLid longid` was SOME lid - "^(I.printLid lid));
+		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - found binder. Converted variable to numeric binder ID to give: "^(I.printLid lid));
 		       val lab = I.getLabId lid
 		       (* NOTE: We want all the labels from lid *)
 		       val tv  = T.freshTypeVar ()
@@ -524,7 +530,6 @@ fun generateConstraints' prog pack nenv =
 
 		       val accessor   = E.initValueIDAccessor (E.consAccId lid (T.consTYPE_VAR tv) class lab) lab
 		       val accessor2   = E.initEqualityTypeAccessor (E.consAccId lid (T.consEQUALITY_TYPE_VAR eqtv) class lab) lab
-		       val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "               - lab = "^Int.toString(L.toInt lab)^", tv = "^Int.toString(T.typeVarToInt tv));
 		   in (tv, eqtv, lab, class, E.conscsts (lab, [E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2)))
 		   end)
 
@@ -556,7 +561,9 @@ fun generateConstraints' prog pack nenv =
 		    in (tv, T.freshEqualityTypeVar (), E.emvar, E.singleConstraint (lab, c), E.singcss (reboundCs lab s)) end)
 	     | f_pconpat A.PconDots = (T.freshTypeVar (), T.freshEqualityTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 
-	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, Env.emptyContextSensitiveSyntaxError) *)
+	   (* f_identpat
+	    * handles the binding of a new identifier (constructs a binder using E.consBindPoly)
+	    *)
 	   and f_identpat indent (A.Ident (str, id, _, lab, _)) =
 	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.Ident (str=\""^(#red D.colors)^str^D.textReset^"\")");
 	       if String.isPrefix "_" str
@@ -1084,12 +1091,14 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.EQUALITY_TYPES (fn _ => "constraining equality type variable "^(Int.toString(T.equalityTypeVarToInt eqTypeVar))^" to be of status EQUALITY_TYPE")
 		   val c   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
+		   val newConstraints = (E.consConstraint (lab, c) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a)))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "printing constraints for f_typevar:\n"^E.printConstraints(newConstraints))
 
 	       (* jpirie: I'm adding in the constraint I created above, but two things are using the same label?
 		* is that right? Or is that wrong? Other examples use dummylab?
 		* Maybe that's actually right, look at the debug output for other examples and labels
 		* do seem to sometimes get bound sometimes to two things (usually one of which is an accessor) *)
-	       in (SOME id, tv, eqTypeVar, (E.consConstraint (lab, c) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))))
+	       in (SOME id, tv, eqTypeVar, newConstraints)
 	       end
 	     | f_typevar _ A.TypeVarDots =
 	       let val tv = T.freshTypeVar ()
@@ -1808,6 +1817,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv  = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
 		   val cst = E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2])
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for A.FMatchApp:\n\n"^(E.printConstraints cst))
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, clearRebound css2]
 	       in (tv, vids, E.unionEnvList [vids1, vids2], cst, css)
 	       end
