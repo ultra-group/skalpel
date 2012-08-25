@@ -263,7 +263,6 @@ fun printState {se, id(*, ub*), na, rc, ge(*, cl*), or, ar, fr, fo} =
     "State FR:\n" ^ printStateFr   fr              ^ "\n" ^
     "State FO:\n" ^ printStateFr   fo
 
-
 (* ACCESS TO THE UNIFIER *)
 
 fun getStateSe (x : state) = #se x
@@ -287,6 +286,9 @@ fun getStateRt x = #rt (getStateSe x)
 fun getStateLt x = #lt (getStateSe x)
 fun getStateEv x = #ev (getStateSe x)
 fun getStateCl x = #cl (getStateSe x)
+
+fun printStateEq state =
+    "State EQ:\n" ^ printStateGen  (getStateEq state) T.printEqualityType ^ "\n"
 
 (*fun getStateTc x = #tc (getStateUb x)
 fun getStateAp x = #ap (getStateUb x)*)
