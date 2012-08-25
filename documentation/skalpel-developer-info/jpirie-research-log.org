@@ -4330,3 +4330,208 @@ give me a shorter list to work with.
 I'm about to really do some crazy things which I don't want kept
 later, so I'm going to commit now on the devel branch, and revert back
 when I figure out where to make the change.
+
+(2012-08-24-16:33)
+
+There are approximately 40 cases here, one of them must construct the
+type variable I'm looking for. I'm going to work through the
+constraint generator first, then go through the constraint solver.
+
+(2012-08-24-16:46)
+
+Alright I found it, but it's in the unification 'freshty' function
+which means the root of the problem could be coming from anywhere in
+the unification algorithm which calls freshty, and there are 42
+occurrences of that. Hm.
+
+(2012-08-24-17:29)
+
+I've decided to change freshty so that the equality type information
+is carried over between freshening of type variables, which is really
+something that would have to be done for this to work anyway. The only
+problem with this is that I might loose the information that I have at
+the moment. We'll see...
+
+(2012-08-24-17:31)
+
+Alright, now that's happened the equality type information in the
+type variable which is inside the type constraint is T.UNKNOWN. I'll
+have to keep going through the cases where T.UNKNOWN is generated I
+guess. I've changed quite a few of those so there shouldn't be that
+many left I hope...
+
+(2012-08-24-18:09)
+
+Got it, I'm getting an equality type error now. I need to play with
+the labels a bit, because I'm not sure I have the right labels yet,
+hrm. I have only one endpoint label too, so I need to look into that.
+
+(2012-08-24-18:11)
+
+Wait, I can do this better. I'm putting in an equality type status
+when I see ''a but what I should do is put in a variable which has
+been constructed with label information.
+
+And I hope that works because currently there is no region
+information for the current error that is found... ^^
+
+(2012-08-24-18:17)
+
+Ok, I made that change but the slice has wildly incorrect labels, this
+is the slice:
+
+Equality type required:
+
+Slice in context:
+Lines 1-3335:    ...
+Line 3336: overload <=  : 'a * 'a -> bool with 'a in (in Int, in Word, in Real, in Char, in String)
+Lines 3337-3347:         ...
+
+Slice on its own:
+⟨..overload ⟨..⟩ : ⟨..⟩ with ⟨..⟩ in ⟨..⟩..⟩
+
+which is clearly nonsense. I'm not sure how the labels could be so
+clearly wrong here. Hmm wait... further errors are found. Oh dear, all
+these slices are the same and they're all nonsense. I'll look at the
+labels now.
+
+(2012-08-24-18:27)
+
+Ah I see, I think equality type errors are being detected in the
+basis, and that's why there aren't any regions in the users code
+file. I'm going to make a hack for the moment so that I can look at
+the slice I get for the users code to see what that's doing as that
+might provide some indication of what's going on, and then come back
+and fix this problem, clean up, commit, and test.
+
+(2012-08-24-18:44)
+
+Aha:
+
+TODO raised: unhandled equality type discovered in the constraint
+solver, raised in the 'f_simplify' function of Unification.sml
+
+Boy am I glad I made that exception. Looks like it's trying to solve a
+(STATUS, VARIABLE) combination which isn't handled. I'll do what
+Vincent did and just flip the terms around.
+
+(2012-08-25-11:44)
+
+Something weird is going on. There is an equality type variable which
+is mapped to by two different equality type variables. The question is
+what to put in the state map with the equality type variable that's
+being mapped to twice. Maybe I should just keep the same variable in
+the map and update the labels. The unification algorithm should remove
+any labels which become irrelevant...
+
+** 2012-08-25
+
+(2012-08-25-02:23)
+
+I have edited the constraint solving algorithm so that if we see
+something of form (VAR, STATUS), then we do not blindly update the VAR
+in the map to be constrained to STATUS if STATUS is unknown and the
+right hand side of the map is currently another equality type
+variable. This will stop the equality type variable information
+getting over-ridden by UNKNOWN status values, which will hopefully
+solve this problem.
+
+(2012-08-25-11:35)
+
+Hm, this problem must come from either the way that the constraint
+solving algorithm handles having an equality type variable mapped to
+by two different equality type variables, or possible from not having
+built up the correct labels along the way when generating this
+constraint. From what I can see the labels look correct though...
+
+(2012-08-25-11:49)
+
+Right from what I see here the initial pass of the unification
+algorithm works correctly, the right labels are generated and an error
+is detected. When the unification algorithm is run a few more times,
+it eventually gets to the point where it blows up because it hasn't
+got two endpoint labels, and that's because it seems to have removed
+all the labels from the error except the label for 5.0.
+
+How can an error be detected with only one label? This is pretty
+crazy, it must be because the same constraints aren't being generated
+each time for the TYPE_VAR constructor responsible for holding the
+blame for ''a, as the ''a doesn't even appear in the last slice the
+minimisation algorithm tries.
+
+(2012-08-25-11:53)
+
+I think I see a bug in the code that's here for solving equality type
+status values:
+
+| fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
+
+When looking up the state of eqtv, if we a status value, then we do
+this:
+
+| SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_STATUS statusInMap), resultLabels, resultDeps, resultIds)) => |
+
+if (statusInMap = status andalso statusInMap <> T.UNKNOWN) then fsimplify cs' l
+else
+(* Generate an error! *)
+
+
+This is surely incorrect. What happens if status is UNKNOWN, but the
+one in the map is EQUALITY_TYPE or NOT_EQUALITY_TYPE? It looks to me
+like an error is generated. The code checks if the status in the map
+is unknown, then we can replace it, but it doesn't handle the case if
+the status we're currently getting is UNKNOWN and the map has
+NOT_EQUALITY_TYPE or EQUALITY_TYPE in it. This might be the cause for
+the problem. I'm not sure what labels to take here either, I'll think
+about it.
+
+At the moment I'm going to change it so that if we see an equality
+type variable constrained to UNKNOWN when it already has a status of
+EQUALITY_TYPE or NOT_EQUALITY_TYPE in the map then it will just ignore
+it. We might actually need to take the labels from that constraint,
+hmm.
+
+(2012-08-25-12:14)
+
+Unification algorithm is still blowing up. I'm going to try taking the
+labels from the UNKNOWN equality type status constraint and putting
+those in the map, keeping whatever status is there already the same.
+
+Oh. Doing that broke everything, and it didn't even detect an
+error. How can adding more labels to an error cause the analysis
+engine to not find an error?
+
+(2012-08-25-12:43)
+
+Well, I have added a function to just print out the equality type
+state when the analysis engine reaches the point where it doesn't have
+an error but it believes it should have because it encountered one on
+a previous unification algorithm run:
+
+19684 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19685 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19688 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_VAR(eqtv19689),[40151],[],[]))
+19690 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40154],[40154],[]))
+19693 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(UNKNOWN),[40175],[40175],[]))
+
+Well.... yes. I can see why that would cause problems, as there's
+hardly anything in there! 40153 and 40154 are the ''a type
+variable. 40151 is x : ''a -> ''a and 40175 is the 5.0 floating point
+number.
+
+What I don't understand is that the state for equality types at the
+end of the first pass, where it correctly detects an equality type
+error, is this:
+
+
+State EQ:
+19684 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19685 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19688 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_VAR(eqtv19689),[40151],[],[]))
+19690 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40154],[40154],[]))
+19692 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[0,40143,40144,40145,40146,40147,40148,40149,40150,40151,40152,40153,40154,40171,40172,40173,40174,40175],[40154,40175],[]))
+19693 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[0,40143,40144,40145,40146,40147,40148,40149,40150,40151,40152,40153,40154,40171,40172,40173,40174,40175],[40154,40175],[]))
+19694 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[0,40143,40144,40145,40146,40147,40148,40149,40150,40151,40152,40153,40154,40171,40172,40173,40174,40175],[40154,40175],[]))
+
+There is lots of label information in this state, certainly enough to
+show that there is a type error in the program. Hm.

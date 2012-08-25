@@ -149,6 +149,7 @@ signature STATE = sig
 
     (* PRINT THE UNIFIERS AND ENVS *)
     val printState         : state -> string
+    val printStateEq       : state -> string
 
     (*val combineStates      : state -> state -> Env.csext list*)
     (*val generalise         : state -> Label.ordset -> unit*)
