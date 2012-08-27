@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/basic-equality-type-in-signature.sml",
         "equality-types/function-return-types.sml",
         "equality-types/basic-real-greater-than-real.sml",
 	"equality-types/basic-real-equals-real.sml",

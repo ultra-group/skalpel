@@ -456,11 +456,12 @@ fun parseTest testfile =
 
 fun parseTestControlFile fileLocation =
     let
+	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing test control file...")
 	fun stripTestPaths (JSON.ARRAY([])) = []
 	  | stripTestPaths (JSON.ARRAY(h::t)) = ((getString h)::(stripTestPaths (JSON.ARRAY t)))
 	  | stripTestPaths _ = raise EH.DeadBranch ("JSON format incorrect for file: "^fileLocation^"\n")
 
-	val testControl = NJJP.parseFile fileLocation handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^fileLocation^"\n")
+	val testControl = NJJP.parseFile fileLocation handle _ => raise EH.DeadBranch ("Cannot parse test control JSON file: "^fileLocation^"\n")
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
 	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'test-list' object...")
 	val (testList, testControl) = getObject testControl "test-list"

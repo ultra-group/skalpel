@@ -100,7 +100,7 @@ the file, and that the process terminates.
 
     And similarly for records.
 
-*** (2012-06-29-21:19) Detection of equality type error where 'eqtype' is in a signature
+*** (2012-06-29-21:19) Detection of equality type errors with the eqtype keyword
 
     In the case where we have 'eqtype x' in a signature (instead of
     what could be 'type x') an equality status constraint of
@@ -108,25 +108,6 @@ the file, and that the process terminates.
     user is to do something like 'val y : x = 5.0' then an equality
     type error should be output by Skalpel, the EQUALITY_TYPE status
     of x clashing with the NOT_EQUALITY_TYPE status of the 5.0.
-
-*** (2012-06-29-21:36) Detection of equality type error where ''a is involved in a signature
-
-    If we have a function signature definition such as "val f : ''a ->
-    ''a" we should detect an equality type error if something that
-    isn't an equality type is given as an argument.
-
-    It may be the case that this already works, which would indeed be
-    lovely, but the world often isn't that kind. Check this out, it
-    should only be the constraint generation phase that needs to be
-    changed, and not the constraint solving, though I'm not absolutely
-    certain of that.
-
-*** (2012-06-29-21:46) Add in equality type status constraints for types other than real
-
-    Currently the NOT_EQUALITY_TYPE status is only generated for the
-    real type. This status should be inserted in the constraint
-    generation stage for other types (in functions and exceptions for
-    example).
 
 *** (2012-08-08-16:13) Value declarations with ticks
 
@@ -4535,3 +4516,97 @@ State EQ:
 
 There is lots of label information in this state, certainly enough to
 show that there is a type error in the program. Hm.
+
+** 2012-08-27
+
+(2012-08-27-10:16)
+
+Going to work on the same example I've been working on for the last
+few days and try to get this label problem sorted out. What I might do
+is give the error every label in the program at constraint generation
+time just to see what the constraint generation algorithm would do
+with that information. If it fails then something else is wrong,
+because if it has all of the labels in the program then it can't
+possibly be a problem with labels.
+
+(2012-08-27-11:40)
+
+I'm almost certain that this has to be a label problem, I've been
+constructing artificial label sets to use for this program and that
+seems to generate equality type errors perfectly fine. When the
+initial equality type error is generated though before minimisation it
+looks like all the labels are there, I can't see any that are
+missing.
+
+(2012-08-27-13:02)
+
+Then again, I just gave created an error with every single label in
+the entire program, and the minimisation algorithm still failed.
+
+(2012-08-27-15:20)
+
+One thing I'm noticing is that the state gets reset half way through
+for some reason. I assume this is something to do with the
+minimisation algorithm, but I might have to look into it and check
+that later.
+
+(2012-08-27-15:39)
+
+Alright, I've made some kind of headway, there was an equality type
+variable not being stripped correctly, and now that it is the state
+looks like a lot better (just before unification fails):
+
+State EQ:
+19684 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19685 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40153,40154],[40154],[]))
+19688 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_VAR(eqtv19689),[40151],[],[]))
+19690 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[40154],[40154],[]))
+19692 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[0,40143,40144,40145,40146,40147,40148,40149,40150,40151,40152,40153,40154,40172,40173,40174],[40154],[]))
+19693 : EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(UNKNOWN),[40175],[40175],[]))
+
+The current problem I'm having right now might actually be quite
+simple. An equality type error is generated because there aren't two
+endpoint labels for the error it's currently working on, but I think
+that the error that it's working on is actually not an equality type
+error, and is being incorrectly generated because the code to put
+equality type status values into the state is not correct in all
+instances. Hopefully this is indeed the case, as that would be quick
+to fix.
+
+(2012-08-27-16:14)
+
+Great, this example works now, and the slice looks fine. I'm going to
+prod at it until it falls apart so I can find out if anything more
+needs to be done in this respect.
+
+(2012-08-27-16:37)
+
+Yeah, I'm happy with this. I've added this example to the analysis
+engine test database, but I think it's affected something in
+code2.sml. I'll have to run through the tests and check for
+breakage.
+
+(2012-08-27-17:09)
+
+Ah yes there is a bit of breakage here but it shouldn't be too tough
+to fix, it's the case where two equality type variables are
+constrained to be equal to one another which I changed while I was
+debugging. I'll fix that up before merging and pushing.
+
+(2012-08-27-18:47)
+
+Fixed the couple of tests that failed, it was due to a trivial
+bug. Going to commit and merge.
+
+As far as I see it there are four items with respect to equality types
+remaining.
+
+-> Generating equality constraints for non-accessor based code
+-> Detection of equality type error where 'eqtype' is in a signature
+-> Value declarations with ticks
+
+I'll look at another one of these tonight, I'm hoping that value
+declarations with ticks and generating equality constraints for
+non-accessor based code will not be too complex, I think handling the
+eqtype keyword might be a little more work in the sense of getting the
+slices right. I'll play around with these a little more this evening.
