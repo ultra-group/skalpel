@@ -3,4 +3,4 @@ struct
 fun x y = y
 end;
 
-S.x 5.0
+S.x 5.0;
