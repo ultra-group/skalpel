@@ -1,42 +1,45 @@
 * Schedule
+** 2011
 
-August 2012 - Finishing equality types
-September 2012 - Release, work on sharing
-October 2012 - Sharing
-November 2012 - Sharing
-December 2012 - Sharing and release
-March 2013 - PPDP/ICFP ?
+October 2011: repo, copyright
+November 2011: JSON test database
+December 2011 Overloading bug, command-line interface, nuke wrapper
+
+** 2012
+
+January 2012: SML/NJ -> MLton, massive renaming, equality types?
+February 2012: renaming, code cleaning
+March 2012: AST exploration, code documentation, renaming
+April 2012: Automatic test framework, bug fixes, renaming, equality types, user guide
+May 2012: equality types, bugzilla
+June 2012: equality types, first year report
+July 2012: equality types, first year report, test framework, web demo
+August 2012 - poster, debugging output, finishing equality types
+September 2012 - equality types, Debugging output, new release, displaying separate slice
+October 2012 - overloding resolution?, ESOP?
+November 2012 - ?
+December 2012 - ?
+
+** 2013
+
+January 2013 - ?
+February 2013 - ?
+March 2013 - PPDP/ICFP?
+April 2013 - ?
+May 2013 - ?
+June 2013 - ?
 July 2013 - Popl ?
-October 2013 - ESOP ?
+August 2013 - ?
+September 2013 - ?
+October 2013 - ESOP?
 
+* Paper targets
+** Measure programming improvement
+** Algorithm speed / engineering
+** Graphical slice presentation
+** Generalising to other languages
+** Whatever is needed to make Skalpel work on itself
 * WARNINGS
-
-When I'm doing unioning of labels, say when I'm doing something with
-EQUALITY_TYPE_DEPENDNCIES, I don't touch the other arguments of that
-datatype constructor (the deps, and the ids values). This may cause
-problems later, be aware that there may be work that needs to be done
-here.
-
-As soon as a chance is available, maybe print out these values to see
-what they contain, so that I can figure out how important it is to
-take care of these values.
-
-Actually, now I think about it, isn't deps a second set of labels?
-Perhaps I can use this to track endpoints properly, as at the moment
-equality type errors are only defined to have one endpoint, and it
-should do something like a type constructor clash where there can be
-multiple.
-
-UPDATE: deps is always empty, though I'm now using it for the equality
-type endpoint labels as it's rather handy. Still don't know about the
-ids values, I'll need to look into that.
-
-(2012-08-15-17:47)
-
-Terminal front end: Some errors might be reported that do not actually
-exist because old shell scripts are getting executed. This front end
-must clear up after itself, fix this bug soon.
-
 * TODOs
 ** Test framework
 *** (2012-07-31-01:46) Web demo
@@ -4610,3 +4613,258 @@ declarations with ticks and generating equality constraints for
 non-accessor based code will not be too complex, I think handling the
 eqtype keyword might be a little more work in the sense of getting the
 slices right. I'll play around with these a little more this evening.
+
+** 2012-08-28
+
+(2012-08-28-10:55)
+
+I've moved the text from the whiteboard into this research log file, I
+need it to work on.
+
+(2012-08-28-11:49)
+
+Did some more printing of the pgfmanual by binary chopping away to
+find the pages which the printer silently fails on. The pages are
+239,340,645,646. These pages fail to print both from G47 and from my
+office. I'll maybe just print these at home or something. Anyway,
+on to other things.
+
+(2012-08-28-12:03)
+
+I'm going to take a quick look at the
+function-type-specified-as-equality.sml test file. It looks like this:
+
+let
+    val id : ''a -> ''a = fn x => x
+in
+    id 5.0
+end;
+
+What currently happens is EQUALITY_TYPE constraint values are
+generated for the ''a terms, and the NOT_EQUALITY_TYPE constraint is
+assigned correctly to the 5.0 term, but there is nothing linking the
+two up.
+
+There are a few strange equality type variable constraints which are
+coming from the basis, I'm not sure where they are coming from
+precisely. The code is probably starting to include labels correctly
+from the basis, that's something that I'll be looking at soon anyway.
+
+(2012-08-28-12:57)
+
+Ok this doesn't look a million miles away from the
+solution. Currently, when solving the id accessor to the binder
+located in the declarations section of the let expression, these
+constraints are generated:
+
+(EQUALITY_TYPES) Unification.sml: solving an equality type accessor. Labels = [40165]
+(EQUALITY_TYPES) Unification.sml: sem = EQUALITY_TYPE_VAR(eqtv19693)
+
+(EQUALITY_TYPES) Unification.sml: id = 1693
+
+(EQUALITY_TYPES) Unification.sml: bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n1,OTHER_CONS,l40151),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40151):TYPE_DEPENDANCY(TYPE_VAR(t31861,(1694,40153),POLY,EQUALITY_TYPE_VAR(eqtv2233)),[40152,40153]
+,[],[]),l40151),FIELD_CONSTRUCTION((2,l40151):TYPE_DEPENDANCY(TYPE_VAR(t31861,(1694,40153),POLY,EQUALITY_TYPE_VAR(eqtv2233)),[40153,40154,40155],[],[]),l40151)],-,l40151),l40151,EQUALITY_TYPE_STATUS(UNKNOWN)),[40147,40148,40149,40150,401
+51],[],[])
+
+(EQUALITY_TYPES) Unification.sml: label of binder = 40149
+
+Inside there is type variable 31861 which has label 40153, which is
+the ''a expression, but it has equality type variable 2233, which is
+an equality type variable which is generated from somewhere within the
+basis. There's quite a few of the pieces floating around here, I think
+I'll go through the constraint generation algorithm for each stage and
+check that all equality type variables are being propagated correctly.
+
+(2012-08-28-13:21)
+
+Ok yes I think I see the current problem here, these constraints show
+the problem:
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31855,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31853,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31854,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31857,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31856,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31854,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: EXPLICIT_TYPE_VAR(1694,t31861,l40153,UNKNOWN)
+
+The EXPLICIT_TYPE_VAR here has an equality type status of UNKNOWN,
+which would be fine except fro the fact that its label is 40153, which
+is the first ''a type variable. Put short, equality type constraints
+have not been written for explicit type variables yet, so I'll have to
+tweak the constraint generator for that.
+
+(2012-08-28-14:00)
+
+Note that explicit type variable accessors are only generated for 'a
+and ''a terms. I'm adding in code now for the ''a term.
+
+(2012-08-28-14:26)
+
+This equality type variable 2233 that's reared its head is proving to
+be confusing. I know it's been generated inside the basis but where or
+why is a mystery. The labels associated with it are labels solely
+inside the user file that I'm sending in, so why is the variable
+generated inside the basis? It's a bit strange.
+
+(2012-08-28-15:02)
+
+I don't know what this label refers to, I tried to print out a
+labelled basis file, but pdflatex exploded which isn't actually that
+surprising as the file is huge.
+
+(2012-08-28-17:19)
+
+I noticed something in Ty.sml which might explain why basic tuple
+examples don't work yet, going to have a little look at that
+(specifically, the constytuple construction in Ty.sml). It's odd that
+this works when using any accessor though, though I'm happy that
+solution fell out of whatever I was working on at the time.
+
+I'm changing constytuple to have status EQUALITY_TYPE, just to see
+what happens. Perhaps this status will propagate through to where I
+want it to go, and I can just set up a constraint to the tuple
+components that way. Maybe the best solution is to analyse how the
+process works with accessors and try and change that solution to work
+for tuples without the use of accessors.
+
+(2012-08-28-17:49)
+
+Changing constytuple was a dead end, there's not really any solution
+available there. I'm going to look at how the code with accessors
+works, and see if that can be tweaked a little to accommodate code
+examples without accessors.
+
+(2012-08-28-18:06)
+
+In this simple example:
+
+val x = (1, 2.0); x=x
+
+An equality type error is detected because when we look up the binding
+of x, we strip all equality type variables that are present inside the
+binding. In this case, the equality type variable that is there is
+assigned to NOT_EQUALITY_TYPE, which clashes with the equality type
+variable passed through when solving the accessor, which is mapped to
+EQUALITY_TYPE in the state.
+
+Well in the case that I'm working on there aren't any accessors to
+look up. But the accessor is equivalent to making an equality type
+variable for the tuple as a whole, right? Or perhaps having that
+equality type variable stored in the type variable that represents the
+whole term (where then equality type variables inside the tuple should
+be stripped).
+
+This is the binding of x for the basic example above.
+
+(EQUALITY_TYPES) Unification.sml: bind = TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n2,OTHER_CONS,l40148),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40148):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39624):TYP
+E_DEPENDANCY(TYPE_CONSTRUCTOR((n3,DECLARATION_CONS(6),l29),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l30),[28,30],[],[]),l29,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,27,29,1032,39625,39626,39627,39628],[],[]),l39624),FIELD_CONSTRUCTION((2,l3
+9624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n3,DECLARATION_CONS(6),l29),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l30),[28,30],[],[]),l29,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,27,29,1032,6043,6044,6045,6046,6047,6048,6049,6050,6586,6587,6588,
+6589,6590,6591,6592,6593,6594,6595,6597,6598,6599,39630,39631,39632,39633,39634,39635],[],[]),l39624),FIELD_CONSTRUCTION((3,l39624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n272,DECLARATION_CONS(6),l6049),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l6
+050),[6048,6050],[],[]),l6049,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,6043,6044,6045,6046,6047,6049,6605,6606,6607,6608,6609,39637,39638,39639,39640,39641,39642],[],[]),l39624),FIELD_CONSTRUCTION((4,l39624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n2
+73,DECLARATION_CONS(6),l6049),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l6050),[6048,6050],[],[]),l6049,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,6043,6044,6045,6046,6047,6049,6614,6615,6616,6617,6618,39644,39645,39646,39647,39648,39649],[],[]),l3962
+4),FIELD_CONSTRUCTION((5,l39624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n275,DECLARATION_CONS(6),l6049),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l6050),[6048,6050],[],[]),l6049,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,6043,6044,6045,6046,6047,6049,6632,
+6633,6634,6635,6636,39651,39652,39653,39654,39655,39656],[],[]),l39624),FIELD_CONSTRUCTION((6,l39624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n270,DECLARATION_CONS(6),l5298),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l5299),[5297,5299],[],[]),l5298,
+EQUALITY_TYPE_STATUS(UNKNOWN)),[0,5292,5293,5294,5295,5296,5298,6035,6036,6037,6038,6039,39658,39659,39660,39661,39662,39663],[],[]),l39624),FIELD_CONSTRUCTION((7,l39624):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n270,DECLARATION_CONS(6),l5298),
+ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l5299),[5297,5299],[],[]),l5298,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,5292,5293,5294,5295,5296,5298,6035,6036,6037,6038,6039,6043,6044,6045,6046,6047,6048,6049,6050,6641,6642,6643,6644,6645,6646,6647,6648
+,6649,6650,6652,6653,6654,6655,6656,39665,39666,39667,39668,39669,39670],[],[]),l39624)],-,l39624),[39621,39622,39623,39624,40150],[],[]),51,POLY,CONSTANT(1,210,40150),l40150,EQUALITY_TYPE_STATUS(UNKNOWN)),[40149,40150],[],[]),l40148),FI
+ELD_CONSTRUCTION((2,l40148):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],
+[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONSTRUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l7
+85),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,10089,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,
+39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,1008
+5,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l39728),[39725,39726,39727,39728,40152],[],[]),52,POLY,CONSTANT(2.0,373,40152),l40152,EQUALITY_TYPE_VAR(eqtv19683)),[40151,401
+52],[],[]),l40148)],-,l40148),l40148,EQUALITY_TYPE_STATUS(EQUALITY_TYPE)),[40144,40145,40146,40147,40148],[],[])
+
+The closest thing that we have here is an standard equality constraint
+between a TYPE_VAR and a TYPE_POLY:
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728
+):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONST
+RUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,1008
+9,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10
+090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l397
+28),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l40149,EQUALITY_TYPE_VAR(eqtv19682))
+
+Equality type variable 19682 turns out to be mapped to
+NOT_EQUALITY_TYPE in the state, so if I can track where the generation
+of type variable 31849 comes from, perhaps I can track it to a place
+where I can insert an equality type variable which is mapped in the
+state as an EQUALITY_TYPE, causing an equality type error. That should
+do the trick. This depends on where this type variable is generated,
+if it's generated in some far away abstract place with no link to
+ExpOp then it's a dead end.
+
+I see however in the constraint generation output there is this:
+
+TYPE_CONSTRAINT(((TYPE_VAR(t31850,-,POLY,EQUALITY_TYPE_VAR(eqtv19689)),TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN))),[40154],[],))
+
+The problem here is that eqtv19689 is mapped as follows:
+
+40154:  EQUALITY_TYPE_CONSTAINT(((EQUALITY_TYPE_VAR(eqtv19689),EQUALITY_TYPE_VAR(eqtv19688)),[40154],[],))
+
+Where eqtv19688 is mapped to:
+
+EQUALITY_TYPE_CONSTAINT(((EQUALITY_TYPE_VAR(eqtv19688),EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE)),[40155],[],))
+
+Label 40155 is the label of the second 2.0 term in the example, where the
+example is: (1, 2.0) = (1, 2.0)
+
+(2012-08-28-18:25)
+
+The equality type variables which are mapped in the state to
+NOT_EQUALITY_TYPE include eqtv19688, eqtv19689, eqtv19682 and
+eqtv19683.
+
+If I'm to look for a similar solution to how it's done with accessors,
+the only unification constraints to look at are those with those
+numbers in them, as they are the values which are going to be
+stripped.
+
+Equality type variables 19682 and 19683 are very closely related, as
+the labels are right beside each other in the program. I'll just
+consider these labels, as the other two equality type variables are on
+the left hand side of the term, and a solution would be easily just
+extended to cover those.
+
+Equality type variable 19683 is actually just inferred from 19682 and
+there are no real constraints there, so I'm just going to look at the
+19682 equality type variable number.
+
+There aren't many constraints including that equality type variable
+number, so here they are:
+
+1. (EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19683) and EQUALITY_TYPE_VAR(eqtv19682). Deps = [] and Labels = [40148]
+
+2. (EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31843,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_VAR(s10542),52,POLY,CONSTANT(2.0,373,40149),l40149,EQUALI
+TY_TYPE_VAR(eqtv19682))
+
+3. (EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19682) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [] and Labels = [40149]
+
+4. (EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31850,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728
+):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONST
+RUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,1008
+9,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10
+090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l397
+28),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l40149,EQUALITY_TYPE_VAR(eqtv19682))
+
+5. (EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728
+):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONST
+RUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,1008
+9,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10
+090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l397
+28),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l40149,EQUALITY_TYPE_VAR(eqtv19682))
+
+6. (EQUALITY_TYPES) Unification.sml: solving type constraint of two TYPE_POLY constructors (eq1=EQUALITY_TYPE_VAR(eqtv19682), eq2=EQUALITY_TYPE_VAR(eqtv19688))...
+
+Right, constraints 1 and 3 are not what I want, as they just bind that
+variable to a status, which is well handled now. Constraint 2 isn't
+much use to me either, that's just extending the equality type status
+to eqtv19683.
+
+Constraints 4, 5 and 6 are the ones with my focus.
+
+Constraint 6 is making sure that the two real numbers are of the same
+type so that there isn't a type error in the comparison of the
+tuple. The function which creates this constraint must know somehow
+it's dealing with a tuple, so perhaps something simple could be added
+to also check that each component also has a top level EQUALITY_TYPE
+constraint. This might be a good area to look at.
