@@ -4282,8 +4282,7 @@ fun unif env filters user =
 			 (* otherwise, an equality type variable is constrained to be both an EQUALITY_TYPE and NOT_EQUALITY_TYPE. Generate an error! *)
 	  		 let
 			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^
-											  ", ls = "^(L.toString (L.union resultLabels ls))^", deps = "^(L.toString (L.union deps resultDeps))^"\n"^
-											  (S.printStateEq state))
+											  ", ls = "^(L.toString (L.union resultLabels ls))^", deps = "^(L.toString (L.union deps resultDeps))^"\n")
 
 			     (* jpirie: we are doing the unioning twice, once above and once below, do this only one *)
 			     val endpointLabels =  Label.toList (L.union deps resultDeps)
@@ -4376,12 +4375,9 @@ fun unif env filters user =
 			let
 			    (* should this EVER happen? *)
 			    val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
-											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR mapEqualityTypeVar)))
+											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR mapEqualityTypeVar))^". Replacing entry in map and unioning labels and deps.")
 
-			    (* jpirie: breaks my equality type test *)
 			    val _ = S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR eqtv1, L.union labs ls, L.union deps stts, cd))
-			    (* jpirie: breaks test 2 *)
-			    (* val _ = fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar2, equalityTypeVar1), L.union labs ls, L.union deps stts, ids)):: cs') l *)
 			in  fsimplify cs' l
 			end
 
