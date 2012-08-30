@@ -127,21 +127,23 @@ the file, and that the process terminates.
     for 'a.
 
 ** Other
-*** TODO (2012-07-02-16:37) Add titles to research log entries
-
-If a future developer reads this and is looking for some extra
-information that for some reason doesn't exist anywhere else (though
-this should never be the case for technical information), and this
-file actually gets used for the rest of my PhD, they might actually
-need to read some of these research entries where I throw in musings
-on various bits of information. If they don't have titles, the reader
-will die of boredom as I witter endlessly about things that they don't
-want to hear about, so it might be a good idea to tag them with
-'implementation: equality types' or 'first year report' or
-something. Something to think about in any case.
-
+*** TODO (2012-08-30-15:16) Add tags to research log entries for August
 * Research logs
+** Tags available
+   equality-types
+   labels
+   binders
+   accessors
+   write-up
+   first-year-report
+   test-framework
+   other-implementations
+   papers
+   latex
+   website
+   poster
 ** 2012-06-26
+tags: {equality-types, labels}
 
 When we see an equality type variable (''a) we generated this:
 
@@ -156,6 +158,7 @@ type error is coming from, and fix that (because it's likely wrong),
 then we should get the label that's missing.
 
 ** 2012-06-27
+tags: {equality-types, binders, accessors, labels}
 
 The error was not coming from the equality type variable, and rather
 from a constraint EQUALITY_TYPE value that I had in for testing
@@ -239,6 +242,7 @@ we're not sure what to do when both of them already exist in the
 map...
 
 ** 2012-06-28
+tags: {equality-types}
 
 (2012-06-28-00:38)
 
@@ -454,6 +458,7 @@ time stuck in a whirlwind of type errors. I'll maybe work on the first
 year report this evening, it would be good to continue with that.
 
 ** 2012-06-29
+tags: {first-year-report, labels}
 
 (2012-06-29-12:55)
 
@@ -474,7 +479,7 @@ Just found the org-mode guide I had filed away. Will fix this document
 up to make use of some of the nice org features.
 
 ** 2012-07-01
-
+tags: {test-framework, first-year-report}
 (2012-07-01-22:12)
 
 I've updated the test framework. Now the repository will actually be
@@ -510,6 +515,7 @@ the review of other implementations (preferably in another section)?
 Think about this.
 
 ** 2012-07-02
+tags: {test-framework, first-year-report}
 
 (2012-07-02-10:48)
 
@@ -603,6 +609,7 @@ updated to include work done on equality types anyway. I'll think some
 more about this anyway.
 
 ** 2012-07-03
+tags: {first-year-report, other-implementations}
 
 (2012-07-03-11:28)
 
@@ -658,6 +665,7 @@ greatly difficult. I guess it'll depend whether what they have in
 their paper accurately reflects their implementation...
 
 ** 2012-07-04
+tags: {other-implementations}
 
 (2012-07-04-09:41)
 
@@ -703,6 +711,7 @@ you hover over it get the slices showing why that choice would make
 the code untypable, who knows).
 
 ** 2012-07-06
+tags: {papers, equality-types}
 
 (2012-07-06-10:21)
 
@@ -775,7 +784,7 @@ empty list as its first element, this used to be eq. Adding a warning,
 this should let me figure out where the errors are much more quickly.
 
 ** 2012-07-09
-
+tags: {equality-types, labels}
 (2012-07-09-08:16)
 
 Going to continue on with equality types for at least part of today,
@@ -866,7 +875,7 @@ is for certain. The initial error was 'The error should be an error'
 which I've changed to the current understanding which I've got now.
 
 ** 2012-07-10
-
+tags: {equality-types, labels, first-year-report, latex}
 (2012-07-10-00:08)
 
 It looks like the labels are correct, so why is this failing on the
@@ -973,6 +982,7 @@ blanks. It's quite hard to guess this kind of thing but I guess it's
 to think more about what's ahead than create anything which is accurate.
 
 ** 2012-07-11
+tags: {first-year-report}
 
 (2012-07-11-13:46)
 
@@ -980,6 +990,7 @@ I've figured down some rough dates for things to be completed by
 for the first year report, the text has been updated accordingly.
 
 ** 2012-07-12
+tags: {other-implementations, first-year-report}
 
 (2012-07-12-01:59)
 
@@ -1070,6 +1081,7 @@ already used, maybe there's even a script that will check if a bibtex
 file adheres to a certain format. Something to look into at some point.
 
 ** 2012-07-17
+tags: {first-year-report, latex}
 
 (2012-07-17-23:41)
 
@@ -1104,6 +1116,7 @@ engine will recommence shortly after that and I can continue with
 equality types.
 
 ** 2012-07-19
+tags: {first-year-report, test-framework}
 
 (2012-07-19-09:21)
 
@@ -1143,6 +1156,7 @@ do the same steps that a user has to do in order to build the test
 framework, and can't make use of any existing files that are around.
 
 ** 2012-07-20
+tags: {test-framework}
 
 (2012-07-20-10:33)
 
@@ -1182,6 +1196,7 @@ need my ethical approval form, so I'll just keep it until they do
 actually want to receive that information from me.
 
 ** 2012-07-22
+tags: {test-framework}
 
 I've changed the crontab entry for the test framework so that the
 result of stdout gets placed in my directory, that should help with
@@ -1203,6 +1218,7 @@ think about that. There needs to be more text of this form, but this
 is all I have time to write at the moment.
 
 ** 2012-07-23
+tags: {test-framework, equality-types}
 
 (2012-07-23-12:16)
 
@@ -1276,6 +1292,7 @@ reasonable way to go and will give is the second endpoint that is
 needed here for little extra analysis engine overhead.
 
 ** 2012-07-24
+tags: {equality-types, labels}
 
 (2012-07-24-14:01)
 
@@ -1338,6 +1355,7 @@ some equality type variables which will result in the user getting the
 correct endpoints.
 
 ** 2012-07-25
+tags: {equality-types, labels}
 
 (2012-07-25-01:06)
 
@@ -1398,6 +1416,7 @@ Alright, so the number '4' was used twice so that it actually meant
 Exterminate!
 
 ** 2012-07-26
+tags: {test-framework}
 
 (2012-07-26-14:26)
 
@@ -1460,6 +1479,7 @@ tests to the test database now as I've changed that procedure. I've
 added a warning to the top of this file and I'll get around to that soon.
 
 ** 2012-07-27
+tags: {test-framework}
 
 (2012-07-27-02:05)
 
@@ -1524,6 +1544,7 @@ has to be removed manually. There should really be a command line
 argument option so that this does not have to happen.
 
 ** 2012-07-28
+tags: {test-framework, website}
 
 (2012-07-28-00:18)
 
@@ -1542,6 +1563,7 @@ Saturday afternoon or something. After that the plan will be to push
 forward with equality types and handle more complex cases.
 
 ** 2012-07-30
+tags: {equality-types, poster}
 
 (2012-07-30-01:32)
 
@@ -1598,6 +1620,7 @@ which if I don't look at before tomorrow I might not get the chance
 until the end of the week.
 
 ** 2012-07-31
+tags: {test-framework, website}
 
 (2012-07-31-01:28)
 
@@ -1752,6 +1775,7 @@ LD_LIBRARY_PATH and try and work round it that way. I'll have to
 e-mail Steve about this.
 
 ** 2012-08-01
+tags: {test-framework,
 
 (2012-08-01-05:53)
 
@@ -4868,3 +4892,214 @@ tuple. The function which creates this constraint must know somehow
 it's dealing with a tuple, so perhaps something simple could be added
 to also check that each component also has a top level EQUALITY_TYPE
 constraint. This might be a good area to look at.
+
+** 2012-08-29
+
+(2012-08-29-09:58)
+
+I'm going to work on the SML equality types code tests for a while,
+and then try to write something up about the way that equality types
+work. I need to think some more about the constraints that I was
+getting yesterday, it would be nice to be finding errors in that test
+today.
+
+(2012-08-29-10:31)
+
+I still like the idea of looking to see where constraint 6 at the end
+of yesterday's log comes from. I'm going to look into that, as that
+should work well. Essentially, when creating the (TYPE_POLY_1,TYPE_POLY_2)
+constraint, make some constraints (eqtv, TYPE_POLY) and (eqtv,
+TYPE_POLY_2) and check that they are satisfiable. I'll need to find
+the point where these constraints are generated, that might take a
+little time but the solution would be quite nice, so I'll take a look
+at it.
+
+(2012-08-29-13:30)
+
+It looks like we have use the same type variable for each element in a
+tuple, so if we have:
+
+(1,2) = (3, 4)
+
+Then the type variable used to represent 1 also represents 3. I'm
+getting this from the constraints below.
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l39728
+):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,39729,39730,39731,39732],[],[]),l39728),FIELD_CONST
+RUCTION((2,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(61),l784),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l785),[783,785],[],[]),l784,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,3,4,5,6,782,784,1032,10084,10085,10086,10087,10088,1008
+9,10090,10091,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n301,DECLARATION_CONS(61),l10
+090),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)],-,l397
+28),[39725,39726,39727,39728,40149],[],[]),52,POLY,CONSTANT(2.0,373,40149),l40149,EQUALITY_TYPE_VAR(eqtv19682))
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31849,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_VAR(s10544),54,POLY,CONSTANT(2.0,373,40155),l40155,EQUALI
+TY_TYPE_VAR(eqtv19688))
+
+Both of these type variable numbers are the same but the labels are
+different, as I've already described. This is quite strange. This
+might also be used for things other than the equality of row
+variables, so I wouldn't be able to input extra constraints here to
+handle this example.
+
+(2012-08-29-14:29)
+
+Right, I see where that is happening, it's in the case where a type
+variable is being constrained to a TYPE_POLY, but the type variable
+already exists in the type variable state. In that case, the right
+hand side of the state entry is constrained to the aforementioned
+TYPE_POLY, which is this case leaves us with the constraint TYPE_POLY
+and TYPE_POLY when we recurse to solve.
+
+The best plan might be to track down the type variable which is
+constrained to be both of the TYPE_POLY terms (tv31849) and make the
+constraint there. I'll need to find out where that type variable is
+created.
+
+Some notes on this type variable:
+
+-> A constraint is made earlier using this type variable (t31850,
+   t31849). Note that t31850 has eqtv19689 (NOT_EQUALITY_TYPE) attached to it.
+-> A constraint is made from this type variable to a row variable
+   (s10544), which has the 4.0 constant attached to it and
+   eqtv19688 (NOT_EQUALITY_TYPE)
+-> This type variable appears in the cst2 variable of expop which
+   holds the constraints for the right hand side. The label it's
+   attached to is the 40154 label (the right hand side real number, 4.0)
+-> Type variable t31850 appears in the type constructor constraint
+   below. I might need to look at this:
+
+40151:  TYPE_CONSTRAINT(((TYPE_VAR(t31846,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(record,OTHER_CONS,l40151),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40151):TYPE_VAR(t31848,-,POLY,EQUALITY_TYPE_STATUS
+(UNKNOWN)),l40151),FIELD_CONSTRUCTION((2,l40151):TYPE_VAR(t31850,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),l40151)],-,l40151),l40151,EQUALITY_TYPE_STATUS(EQUALITY_TYPE))),[40151],[],))
+
+Label 40151 here is the tuple on the right hand side as a whole. I see
+that the top level status, that is the tuple as a whole, has
+EQUALITY_TYPE status, this is correct. But each top level element in
+the tuple should also have this status. It does however know that we
+are dealing with a record (a tuple is just a record is disguise).
+
+There are two field constructions, and each have equality type
+variables. tv31848 and tv31850 which I've talked about already.
+
+tv31848 should refer to the integer argument on the left hand side,
+the first element of the tuple. I've checked and this is indeed the
+case.
+
+So what I should do then is when a record construction is seen on the
+left or right hand sides of ExpOp, go through all the field
+constructions and constrain each of the type variables in the field
+constructions to equality type status EQUALITY_TYPE.
+
+** 2012-08-30
+tags: {equality-types, write-up}
+
+(2012-08-30-11:05)
+
+I had a bit of a thought this morning that there would be something in
+the constraint path which would help me solve this example, but
+unfortunately it doesn't look like that is the case. I see that
+AtExpTuple is called, which then maps over all its components:
+
+val (tvl, eqtvs, csts, csss) = unzipFour (map (f_labexp "X") expl)
+
+The equality type variables here are the equality type variables that
+are at the top level that I wanted aren't they? These haven't been
+programmed quite right yet, so this information is actually thrown
+away. Maybe just finding a way to create the constraints for this
+function correctly will be enough to make these tests pass.
+
+(2012-08-30-12:53)
+
+I'm going to stop working on this example for a little while as I want
+to look at how equality types could be written up (what is essentially
+an extension of chapter 14 of Vincent's thesis).
+
+(2012-08-30-13:13)
+
+It looks like I need to write possibly these sections:
+
+External Syntax
+Constraint Syntax
+Constraint Generation
+Constraint Solving
+Constraint Filtering
+Slicing
+
+The external syntax section describes to the reader how the SML syntax
+that we are handling has changed. So for example the section on
+local declarations has a section 14.2.1 in Vincent's thesis which
+describes the change to the external syntax:
+
+dec ::= local^l dec_1 in dec_2 end
+
+So the external syntax changes that are relevant to describe for
+equality types would be the addition of the eqtype keyword to
+signature declarations. Signatures are discussed in section 14.7, and
+an extension to the external syntax is given there. I essentially just
+want to extend this extension.
+
+In section 14.7.1 (which shows the external syntax for signatures),
+this is shown:
+
+sigid  ∈ SigId      (signature identifiers)
+
+sigdec ∈ SigDec ::= signature sigid \overset{l}{=} sigexp
+                  | dot-d ( \overset{--->}{term} )
+
+sigexp ∈ SigExp ::= sigid^l | sig^l spec_1 .... spec_n end
+                  | dot-s ( \overset{--->}{term} )
+
+spec   ∈ Spec   ::= val vid :^l ty
+                  | type dn^l
+                  | datatype dn \overset{l}{=} cd
+                  | structure strid :^l sigexp
+                  | dot-d ( \overset{--->}{term} )
+
+It looks like I would just extend 'spec' to be something like this:
+
+spec   ∈ Spec   ::= .... | eqtype dn^l
+
+I can't think of any other external syntax changes apart from the
+specification of the eqtype keyword. I need to check to see if ''a
+appears in the external syntax as well, as it's possible that it may
+have been omitted.
+
+(2012-08-30-13:53)
+
+Ok, it doesn't look like ''a is mentioned anywhere in the thesis, so
+I'll need to extend any external syntax a little further than that.
+
+(2012-08-30-14:14)
+
+The 'a definition seems to fall under this text:
+
+An internal type τ μ is a type construction and is built from an internal type
+constructor μ and its argument τ (such as the polymorphic list type ’a list, where
+’a is an explicit type variable in SML). To simplify the formalisation of Core-TES,
+external (tc) and internal (μ) type constructors both take exactly one argument.
+
+Perhaps I would need to point out that τ can now take the form ''a as
+well as just 'a.
+
+(2012-08-30-14:29)
+
+Actually, I don't think I would have to extend the external syntax for
+this. In figure 11.3, we have the definitions:
+
+τ ∈ ITy ::= α | τ μ | τ_1 -> τ_2 | <τ, \overset{-}{d} >
+
+where α is defined as α ∈ ITyVar  (internal type variables)
+
+That should be sufficient to use ''a in the external syntax. That
+said, I will need to be able to distinguish between ''a and
+'a. Perhaps something like this might be good to do?
+
+α ∈ ITyVar   (internal non-equality type variables)
+β ∈ IEqTyVar (internal equality type variables)
+τ ∈ ITy ::= α | β | τ μ | τ_1 -> τ_2 | <τ, \overset{-}{d} >
+
+Something like that might come in handy.
+
+(2012-08-30-15:17)
+
+Updated this document to have tags. It's about time that was
+done. Still need to do the rest of this month at some point because
+sometimes searching backwards for things is awkward.

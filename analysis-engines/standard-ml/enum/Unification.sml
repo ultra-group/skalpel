@@ -596,10 +596,10 @@ and freshseqty (T.ROW_VAR var)          _   state _    = T.ROW_VAR (F.freshRowVa
   | freshseqty (T.ROW_DEPENDANCY eseq)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
 and freshty (T.TYPE_VAR (tv, b, p, equalityTypeInfo))       tvl state bstr =
     (case (tvl, p) of
-	 (NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, T.consTest(3333))
+	 (NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, equalityTypeInfo)
        | (SOME tvl', T.POLY) =>
 	 if O.isin (T.typeVarToInt tv) tvl'
-	 then T.TYPE_VAR (tv, if bstr then NONE else b, p, T.consTest(2222))
+	 then T.TYPE_VAR (tv, if bstr then NONE else b, p, equalityTypeInfo)
 	 else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, equalityTypeInfo)
        | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO, equalityTypeInfo)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
   | freshty (T.EXPLICIT_TYPE_VAR   (id, tv,   l, eqtv))  tvl state bstr =
@@ -753,7 +753,7 @@ fun buildty (T.TYPE_VAR (tv, b, p, equalityTypeInfo)) state dom bmon monfun =
 			end))
   | buildty (T.EXPLICIT_TYPE_VAR (n, tv, lab, eqtv)) state dom bmon monfun =
     (case (S.getValStateGe state tv, I.isin n dom) of
-	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY, T.consTest(2233))
+	 (NONE, true) => T.TYPE_VAR (tv, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(eqtv))
        | (NONE, false) => T.EXPLICIT_TYPE_VAR (n, tv, lab, T.UNKNOWN)
        | (SOME (_, labs, stts, deps), _) => T.TYPE_DEPENDANCY (T.EXPLICIT_TYPE_VAR (n, tv, lab, T.UNKNOWN), labs, stts, deps))
   (*(case (S.getValStateGe state tv, bmon) of
@@ -2977,7 +2977,7 @@ fun unif env filters user =
 		      (SOME (({id, bind, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind = (bind, b), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY, T.consTest(3344))
+			  val ty1 = T.TYPE_VAR (sem, NONE, T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
 			  val ty2 = T.consTYPE_VAR (freshTypeVar' bind poly)
 			  (*(2010-06-29) The order in the constraint actually matters to get the
 			   * 'too general in signature' errors.  This needs to be fixed.
@@ -3631,22 +3631,6 @@ fun unif env filters user =
 
 	    in
 		(
-		 (* check for equality type errors
-		  * if both the type constructor and the type poly have their equality type status
-		  * set (that is, they are not UNKNOWN), then they should be the same
-		  *)
-		 (* this was code that used to be here when eq was an EQUALITY_TYPE_STATUS. Now it's more than that
-		  * because we can have type variables there. *)
-		 (* if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN) *)
-		 (* then *)
-		 (*     let *)
-		 (* 	 val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (fsimplify with TYPE_CONSTRAINT of a TYPE_CONSTRUCTOR and TYPE_POLY)") *)
-		 (* 	 val ek    = EK.EqTypeRequired (L.toInt l) *)
-		 (* 	 val err   = ERR.consPreError ERR.dummyId ls ids ek deps *)
-		 (*     in handleSimplify err cs' l *)
-		 (*     end *)
-		 (* else (); *)
-
 		case S.getValStateOr state idor of
 		   NONE => checkTn tnty ls deps ids sq'
 		 | SOME ([], _, _, _) => raise EH.DeadBranch ""
@@ -3691,18 +3675,6 @@ fun unif env filters user =
 			 handleSimplify (ERR.consPreError ERR.dummyId labs' deps' kind stts') cs' l)
 		    end
 	       else
-		   (* if eqtv1 <> eqtv2 andalso eqtv1 <> T.1UNKNOWN andalso eqtv2 <> T.UNKNOWN *)
-		   (* then *)
-		   (*     let *)
-		   (* 	   val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (eqtv1=" *)
-		   (* 								^(T.printEqualityTypeStatus eqtv1)^", eqtv2="^(T.printEqualityTypeStatus eqtv2)^")"); *)
-		   (* 	   (* jpirie: shouldn't we include l2 in the error here too *) *)
-		   (* 	   val ek    = EK.EqTypeRequired (L.toInt l1) *)
-		   (* 	   (* jpirie: I've put l2 here so both l1 and l2 are used. Should we use l2 here? Hmm! *) *)
-		   (* 	   val err   = ERR.consPreError ERR.dummyId ls ids ek deps *)
-		   (*     in handleSimplify err cs' l *)
-		   (*     end *)
-		   (* else *)
 		   fsimplify cs' l
 	    end
 	  | fsimplify ((E.FIELD_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""

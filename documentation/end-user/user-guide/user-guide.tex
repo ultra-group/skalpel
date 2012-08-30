@@ -155,17 +155,18 @@ this section.
 
 \subsection{Configuration of the Terminal Front-End}
 
-To use Skapel in a terminal, the analysis engine binary (named
-\texttt{skalpel}), should be called directly. There are a number of
-command-line options available, and full list of these and an
-explanation for each can be found in section
+To use Skapel in a terminal, the analysis engine binary (the binary
+installed to the system called \texttt{skalpel}), should be called
+directly. There are a number of command-line options available, and
+full list of these and an explanation for each can be found in section
 \ref{command-line-arguments}, but the most important command line
 arguments are as follows:
 
 \begin{itemize}
 \item \texttt{skalpel -b 2 $<$filename$>$:} This command line option
-  specifies a file that Skalpel should choose to use as its basis
-  file. A file is supplied with Skalpel in the likely event that the
+  specifies a file that Skalpel should choose to use as its
+  basis file (this file contains definitions, such as the definition of the
+  type list). A file is supplied with Skalpel in the likely event that the
   user does not wish to use their own, and the path to the
   \texttt{basis.sml} file supplied with Skalpel should go in place of
   $<$filename$>$ here.
@@ -174,11 +175,11 @@ arguments are as follows:
   \texttt{skalpel} package/archive, it is recommended that the
   environment variable \$SKALPEL\_BASIS is set, which will allow the
   user to omit this argument. This can be done with similar lines to
-  the below specified in the $~$/.bashrc file\footnote{users of shells
+  the below specified in the \texttt{{\textasciitilde}/.bashrc} file\footnote{users of shells
     other than bash should consult the documentation for their shell
     to discover how to set environment variables}:\\
 
-  \texttt{SKALPEL\_BASIS="\$HOME/path/to/basis.sml"}\\
+  \texttt{SKALPEL\_BASIS="/path/to/basis.sml"}\\
   \texttt{export SKALPEL\_BASIS}
 
 \item \texttt{skalpel -e <0 | 1>} Setting the -e parameter to 0 or 1
@@ -192,16 +193,28 @@ arguments are as follows:
 
 \subsection{Configuration of the Emacs Front-End}
 
-\note[inline] Check precisely which Emacs versions we support, and put
-this information here.
+\note[inline] {Check precisely which Emacs versions we support, and put
+this information here.}
 
 If the \texttt{skalpel-emacs} package (.rpm or .deb format) has been
 installed then no configuration should be necessary. Otherwise, if the
 Skalpel archive was downloaded from the downloads page (see
 \ref{skalpel-downloads-page} for URL) then Emacs needs to be
-configured to load an Emacs lisp file present inside the archive.
+configured to load an Emacs lisp file present inside the archive which
+can be done by inserting the following lines into an Emacs startup
+file\footnote{examples of startup files Emacs looks for include
+  \texttt{{\textasciitilde}/.emacs} and
+  \texttt{{\textasciitilde}/.emacs.el}}, replacing
+/path/to/extracted/archive/ as appropriate:
 
-To configure Emacs to load this Emacs lisp file
+\noindent \texttt{(add-to-list 'load-path (file-truename "/path/to/extracted/archive/EmacsUI/"))}
+\texttt{(defvar skalpel-emacs-directory "/path/to/extracted/archive/EmacsUI/")}
+\texttt{(defvar skalpel-bin-directory "/path/to/extracted/archive/analysis-engines/standard-ml/bin")}
+\texttt{(defvar skalpel-lib-directory "/path/to/extracted/archive/lib/")}
+\texttt{(defvar skalpel-sources-directory "/path/to/extracted/archive/analysis-engines/standard-ml/")}
+\texttt{(load "skalpel-config.el")}
+
+Emacs should now be configured to use Skalpel on Standard ML programs.
 
 \chapter{Using Skalpel in Emacs}
 

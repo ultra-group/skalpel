@@ -533,9 +533,6 @@ fun consTYPE_VARwithEQ   tv eqtv = TYPE_VAR (tv, NONE, POLY, eqtv)
 (* constructs an equality type variable *)
 fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
 
-fun consTest eqtv = EQUALITY_TYPE_VAR eqtv
-
-
 (* constructs a row var *)
 fun consROW_VAR  rv  = ROW_VAR rv
 
