@@ -99,7 +99,6 @@ signature TY = sig
     val consTYPE_VARwithEQ             : typeVar  -> equalityType -> ty
     val consROW_VAR              : rowVar -> rowType
      val consEQUALITY_TYPE_VAR    : equalityTypeVar -> equalityType
-     val consTest    : int -> equalityType
     val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
 
     val newTYPE_VAR           : unit -> ty
