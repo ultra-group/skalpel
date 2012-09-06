@@ -389,7 +389,4 @@ signature ENV = sig
     val printConstraints : constraints -> string
     val printOneConstraint : oneConstraint -> string
     val printOneAccessor : accessor -> string
-
-    (* (2012-07-09) jpirie: I don't think we need this any more *)
-    (* val createEqualityTypeConstraints : constraints -> Label.label -> Ty.equalityTypeStatus -> constraints *)
 end

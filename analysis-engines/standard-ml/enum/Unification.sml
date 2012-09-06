@@ -4275,9 +4275,7 @@ fun unif env filters user =
 	  	    )
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, labs, stts, cd)) =>
 		    if status = T.UNKNOWN
-		    then
-		    (* fsimplify cs' l *)
-			S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, L.union ls labs, L.union deps stts, cd))
+		    then S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, L.union ls labs, L.union deps stts, cd))
 		    else
 			let
 			    (* here we update the map so that the equality type variable is no longer mapped to a dependancy on an equality type variable,

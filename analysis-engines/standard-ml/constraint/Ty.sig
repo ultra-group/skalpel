@@ -77,6 +77,7 @@ signature TY = sig
 				| UNKNOWN
 
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 
@@ -98,7 +99,8 @@ signature TY = sig
     val consTYPE_VAR             : typeVar  -> ty
     val consTYPE_VARwithEQ             : typeVar  -> equalityType -> ty
     val consROW_VAR              : rowVar -> rowType
-     val consEQUALITY_TYPE_VAR    : equalityTypeVar -> equalityType
+    val consEQUALITY_TYPE_VAR    : equalityTypeVar -> equalityType
+    val consEQUALITY_TYPE_VAR_LIST    : equalityTypeVar list -> equalityType
     val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
 
     val newTYPE_VAR           : unit -> ty

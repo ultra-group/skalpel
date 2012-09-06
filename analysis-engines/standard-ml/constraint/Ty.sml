@@ -149,6 +149,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * this is possibly no longer going to be used if we are
 	  * going to integrate the constraints into the ty datatype *)
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 
@@ -530,9 +531,6 @@ fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun consTYPE_VARwithEQ   tv eqtv = TYPE_VAR (tv, NONE, POLY, eqtv)
 
 
-(* constructs an equality type variable *)
-fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
-
 (* constructs a row var *)
 fun consROW_VAR  rv  = ROW_VAR rv
 
@@ -544,6 +542,9 @@ fun consTYPE_FUNCTION_VAR tfv = TYPE_FUNCTION_VAR tfv
 
 (* constructs an equality type variable *)
 fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
+
+(* constructs an equality type variable list *)
+fun consEQUALITY_TYPE_VAR_LIST eqtvs = EQUALITY_TYPE_VAR_LIST eqtvs
 
 fun newTYPE_VAR   () = consTYPE_VAR   (freshTypeVar  ())
 fun newFIELD_VAR  () = consFIELD_VAR  (freshFieldVar ())
@@ -781,7 +782,10 @@ fun printTypename    tn  = "n"   ^ Int.toString tn
 fun printFieldVar    rv  = "r"   ^ Int.toString rv
 fun printLabelVar    lv  = "f"   ^ Int.toString lv
 fun printTypeFunctionVar    tfv = "tfv" ^ Int.toString tfv
-fun printEqualityTypeVar    eqtv = "eqtv" ^ Int.toString eqtv
+fun printEqualityTypeVar        eqtv = "eqtv" ^ Int.toString eqtv
+fun printEqualityTypeVarList       [] = ""
+  | printEqualityTypeVarList      [h] = "eqtv" ^ Int.toString h
+  | printEqualityTypeVarList   (h::t) = ("eqtv" ^ Int.toString h ^ ", ")^(printEqualityTypeVarList t)
 fun printEqualityTypeStatus status =
     case status of
 	EQUALITY_TYPE => "EQUALITY_TYPE"
@@ -870,6 +874,7 @@ and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
   | printseqty (ROW_DEPENDANCY eseq)          = "ROW_DEPENDANCY"   ^ EL.printExtLab' eseq printseqty
 
 and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
+  | printEqualityType (EQUALITY_TYPE_VAR_LIST eqtvs)    = "EQUALITY_TYPE_LIST(" ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
   | printEqualityType (EQUALITY_TYPE_DEPENDANCY dep) = "EQUALITY_TYPE_DEPENDANCY("  ^ (EL.printExtLab' dep printEqualityType) ^")"
 

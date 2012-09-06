@@ -40,6 +40,30 @@ October 2013 - ESOP?
 ** Generalising to other languages
 ** Whatever is needed to make Skalpel work on itself
 * WARNINGS
+** Equality types
+   In constraint generation, case f_exp of A.ExpFn doesn't have any
+   equality type constraints
+
+   A.ExpCase has equality type variables which should have constraints
+   generated out of it but it currently throws them away (I guess
+   that's just not been implemented yet). Similarly for A.ExpConsList,
+   A.ExpOr, A.ExpAnd, A.ExpIte, A.ExpWhile (what is that anyway?),
+   A.ExpRaise, and A.ExpHandle.
+
+   A.ExpOp generates a fresh equality type variable and returns that
+   as its list. Should this equality type variable have any kind of
+   constraint on it?
+
+   f_progone throws away the equality type variables it gets back from
+   f_exp. Is this correct? Probably it is because I can't think of any
+   constraints off the top of my head that we would want to do at the
+   f_progone level.
+
+   f_labexp has something worrying where we take the first element in
+   the list of new equality type variables and put that into a type
+   constraint with a type variable. Will this cause a problem later?
+   Do we need multiple type constraints.
+
 * TODOs
 ** Test framework
 *** (2012-07-31-01:46) Web demo
@@ -142,7 +166,8 @@ the file, and that the process terminates.
    latex
    website
    poster
-** 2012-06-26
+** 2012-06
+*** 2012-06-26
 tags: {equality-types, labels}
 
 When we see an equality type variable (''a) we generated this:
@@ -157,7 +182,7 @@ error is coming from! I need to find the location where the equality
 type error is coming from, and fix that (because it's likely wrong),
 then we should get the label that's missing.
 
-** 2012-06-27
+*** 2012-06-27
 tags: {equality-types, binders, accessors, labels}
 
 The error was not coming from the equality type variable, and rather
@@ -241,7 +266,7 @@ I think it's the case when solving two equality type variables that
 we're not sure what to do when both of them already exist in the
 map...
 
-** 2012-06-28
+*** 2012-06-28
 tags: {equality-types}
 
 (2012-06-28-00:38)
@@ -457,7 +482,7 @@ rather spend the time writing about that event here, than spent my
 time stuck in a whirlwind of type errors. I'll maybe work on the first
 year report this evening, it would be good to continue with that.
 
-** 2012-06-29
+*** 2012-06-29
 tags: {first-year-report, labels}
 
 (2012-06-29-12:55)
@@ -478,7 +503,8 @@ Adding this as a TODO item also.
 Just found the org-mode guide I had filed away. Will fix this document
 up to make use of some of the nice org features.
 
-** 2012-07-01
+** 2012-07
+*** 2012-07-01
 tags: {test-framework, first-year-report}
 (2012-07-01-22:12)
 
@@ -514,7 +540,7 @@ Maybe I want to look at their algorithm in much more depth as part of
 the review of other implementations (preferably in another section)?
 Think about this.
 
-** 2012-07-02
+*** 2012-07-02
 tags: {test-framework, first-year-report}
 
 (2012-07-02-10:48)
@@ -608,7 +634,7 @@ some very much undefined time, and the paper would eventually be
 updated to include work done on equality types anyway. I'll think some
 more about this anyway.
 
-** 2012-07-03
+*** 2012-07-03
 tags: {first-year-report, other-implementations}
 
 (2012-07-03-11:28)
@@ -664,7 +690,7 @@ with what the have in the implementation, which hopefully will not be
 greatly difficult. I guess it'll depend whether what they have in
 their paper accurately reflects their implementation...
 
-** 2012-07-04
+*** 2012-07-04
 tags: {other-implementations}
 
 (2012-07-04-09:41)
@@ -710,7 +736,7 @@ that, but maybe highlight that suggestion in red or something and when
 you hover over it get the slices showing why that choice would make
 the code untypable, who knows).
 
-** 2012-07-06
+*** 2012-07-06
 tags: {papers, equality-types}
 
 (2012-07-06-10:21)
@@ -783,7 +809,7 @@ Forcing the stripEqualityStatus (TYPE_VAR [...]) case to return an
 empty list as its first element, this used to be eq. Adding a warning,
 this should let me figure out where the errors are much more quickly.
 
-** 2012-07-09
+*** 2012-07-09
 tags: {equality-types, labels}
 (2012-07-09-08:16)
 
@@ -874,7 +900,7 @@ the second run. The problem is that I don't know what the real error
 is for certain. The initial error was 'The error should be an error'
 which I've changed to the current understanding which I've got now.
 
-** 2012-07-10
+*** 2012-07-10
 tags: {equality-types, labels, first-year-report, latex}
 (2012-07-10-00:08)
 
@@ -981,7 +1007,7 @@ types completion date, sharing completion date, and fill in the
 blanks. It's quite hard to guess this kind of thing but I guess it's
 to think more about what's ahead than create anything which is accurate.
 
-** 2012-07-11
+*** 2012-07-11
 tags: {first-year-report}
 
 (2012-07-11-13:46)
@@ -989,7 +1015,7 @@ tags: {first-year-report}
 I've figured down some rough dates for things to be completed by
 for the first year report, the text has been updated accordingly.
 
-** 2012-07-12
+*** 2012-07-12
 tags: {other-implementations, first-year-report}
 
 (2012-07-12-01:59)
@@ -1050,7 +1076,7 @@ if she has time.
 Going to work on the literature review for the rest of the day and get
 that text cleaned up, it needs much more love than it's currently had...
 
-** 2012-07-13
+*** 2012-07-13
 
 (2012-07-13-10:28)
 
@@ -1080,7 +1106,7 @@ format for such a bibtex file. There must be formats that people
 already used, maybe there's even a script that will check if a bibtex
 file adheres to a certain format. Something to look into at some point.
 
-** 2012-07-17
+*** 2012-07-17
 tags: {first-year-report, latex}
 
 (2012-07-17-23:41)
@@ -1115,7 +1141,7 @@ The viva is scheduled for tomorrow, I guess work on the analysis
 engine will recommence shortly after that and I can continue with
 equality types.
 
-** 2012-07-19
+*** 2012-07-19
 tags: {first-year-report, test-framework}
 
 (2012-07-19-09:21)
@@ -1155,7 +1181,7 @@ It occurs to me that the test framework should really run tests from a
 do the same steps that a user has to do in order to build the test
 framework, and can't make use of any existing files that are around.
 
-** 2012-07-20
+*** 2012-07-20
 tags: {test-framework}
 
 (2012-07-20-10:33)
@@ -1195,7 +1221,7 @@ happy so that should be that all sorted. Apparently they still don't
 need my ethical approval form, so I'll just keep it until they do
 actually want to receive that information from me.
 
-** 2012-07-22
+*** 2012-07-22
 tags: {test-framework}
 
 I've changed the crontab entry for the test framework so that the
@@ -1217,7 +1243,7 @@ symbolic link to this from the testing/ folder of the repository, I'll
 think about that. There needs to be more text of this form, but this
 is all I have time to write at the moment.
 
-** 2012-07-23
+*** 2012-07-23
 tags: {test-framework, equality-types}
 
 (2012-07-23-12:16)
@@ -1291,7 +1317,7 @@ I'm going to try and implement something like this, it seems a
 reasonable way to go and will give is the second endpoint that is
 needed here for little extra analysis engine overhead.
 
-** 2012-07-24
+*** 2012-07-24
 tags: {equality-types, labels}
 
 (2012-07-24-14:01)
@@ -1354,7 +1380,7 @@ are being solved too, so I'm actually going to make use of it to store
 some equality type variables which will result in the user getting the
 correct endpoints.
 
-** 2012-07-25
+*** 2012-07-25
 tags: {equality-types, labels}
 
 (2012-07-25-01:06)
@@ -1415,7 +1441,7 @@ Alright, so the number '4' was used twice so that it actually meant
 
 Exterminate!
 
-** 2012-07-26
+*** 2012-07-26
 tags: {test-framework}
 
 (2012-07-26-14:26)
@@ -1478,7 +1504,7 @@ The documentation needs to be updated with information how to add
 tests to the test database now as I've changed that procedure. I've
 added a warning to the top of this file and I'll get around to that soon.
 
-** 2012-07-27
+*** 2012-07-27
 tags: {test-framework}
 
 (2012-07-27-02:05)
@@ -1543,7 +1569,7 @@ use in the test framework apart from the use of the \n separator which
 has to be removed manually. There should really be a command line
 argument option so that this does not have to happen.
 
-** 2012-07-28
+*** 2012-07-28
 tags: {test-framework, website}
 
 (2012-07-28-00:18)
@@ -1562,7 +1588,7 @@ to be written, I'll get around to that sometime soon, hopefully
 Saturday afternoon or something. After that the plan will be to push
 forward with equality types and handle more complex cases.
 
-** 2012-07-30
+*** 2012-07-30
 tags: {equality-types, poster}
 
 (2012-07-30-01:32)
@@ -1619,7 +1645,7 @@ I'm going to take a look at the webdemo soon, as that's something
 which if I don't look at before tomorrow I might not get the chance
 until the end of the week.
 
-** 2012-07-31
+*** 2012-07-31
 tags: {test-framework, website}
 
 (2012-07-31-01:28)
@@ -1774,7 +1800,8 @@ For the moment, I'm going to add the relevant libraries to my
 LD_LIBRARY_PATH and try and work round it that way. I'll have to
 e-mail Steve about this.
 
-** 2012-08-01
+** 2012-08
+*** 2012-08-01
 tags: {test-framework,
 
 (2012-08-01-05:53)
@@ -2031,7 +2058,7 @@ tomorrow, it failed its test this morning to do that because I was
 busy installing and uninstalling it during all this webdemo
 installation.
 
-** 2012-08-02
+*** 2012-08-02
 
 (2012-08-02-12:42)
 
@@ -2139,7 +2166,7 @@ along with rlwrap and mlton.
 Going to work on the poster for the rest of the day, and spend
 at least the majority of tomorrow on equality types.
 =======
-** 2012-08-03
+*** 2012-08-03
 
 (2012-08-03-11:26)
 
@@ -2192,7 +2219,7 @@ printAstProgs doesn't store things like \n characters and spacial
 information, which isn't actually surprising. Maybe it's best to use
 printSlice after all and just extend that...
 
-** 2012-08-04
+*** 2012-08-04
 
 (2012-08-04-11:17)
 
@@ -2287,7 +2314,7 @@ find the time. Looking less likely I'll get that equality type passing
 that I wanted to but this labelled program output will really be
 rather useful so I think it's worth it.
 
-** 2012-08-05
+*** 2012-08-05
 
 (2012-08-05-03:47)
 
@@ -2377,7 +2404,7 @@ getting done, I shall do this tomorrow. I intend to spend probably
 most of the day on equality types stuff and a little on the poster
 too. That should really be completed before the end of the week.
 
-** 2012-08-06
+*** 2012-08-06
 
 (2012-08-06-01:27)
 
@@ -2705,7 +2732,7 @@ to be quite difficult to debug after they have been written. I'll have
 a think about how exactly the stripping should work and write here
 what the solution is.
 
-** 2012-08-07
+*** 2012-08-07
 
 (2012-08-07-10:44)
 
@@ -2777,7 +2804,7 @@ information to a file, that's the main improvement that could be made
 here. I might do this later, but for the moment I'm happy to just
 paste it into a file.
 
-** 2012-08-08
+*** 2012-08-08
 
 (2012-08-08-10:08)
 
@@ -2851,7 +2878,7 @@ will be able to clone it easily that way too. We have copyright
 statements secured for that file, so it should probably be in the
 skalpel repository, rather than the tes repository.
 
-** 2012-08-09
+*** 2012-08-09
 
 (2012-08-09-09:39)
 
@@ -3027,7 +3054,7 @@ is happening in the unification phase where a new type variable is
 created for some reason and the information hasn't been propagated
 through.
 
-** 2012-08-10
+*** 2012-08-10
 
 (2012-08-10-08:13)
 
@@ -3120,7 +3147,7 @@ Mm, no I didn't find most of them! There are still quite a few left,
 probably going to spend the rest of the time doing this and meeting
 Joe.
 
-** 2012-08-13
+*** 2012-08-13
 
 (2012-08-13-09:58)
 
@@ -3171,7 +3198,7 @@ I'm going to fix up the tests that broke as it needs to be done.
 Fixed those bugs up, they should work great tomorrow. I'll do some
 more on the equality types stuff this evening.
 
-** 2012-08-14
+*** 2012-08-14
 
 (2012-08-14-10:19)
 
@@ -3268,7 +3295,7 @@ generator is depicted when printed to the debugging output, it's a bit
 hard to understand in its current form. Hoping to finish that up
 tonight and push the changes.
 
-** 2012-08-15
+*** 2012-08-15
 
 (2012-08-15-01:18)
 
@@ -3499,7 +3526,7 @@ I've had a quick look at the paper this evening but ended up tweaking
 the bugzilla error reports and the like. I'll have to read over this
 tomorrow and take a good look at it.
 
-** 2012-08-16
+*** 2012-08-16
 
 (2012-08-16-11:46)
 
@@ -3513,7 +3540,7 @@ bugs that existed for the terminal front end. I'll aim to finish this
 the poster tomorrow and get it to Joe to glance over and suggest any
 changes before I get it sent for printing.
 
-** 2012-08-17
+*** 2012-08-17
 
 (2012-08-17-09:28)
 
@@ -3563,14 +3590,14 @@ way whatsoever.
 
 Out of time for this. Oh well, never mind.
 
-** 2012-08-18
+*** 2012-08-18
 
 (2012-08-18-15:06)
 
 Fixed the alignment of that text by adjusting the baseline manually,
 poster should be fine on that side of things now.
 
-** 2012-08-20
+*** 2012-08-20
 
 (2012-08-20-13:57)
 
@@ -3651,7 +3678,7 @@ Managed to find Nick, he's approved the printing of the poster. I'll
 head in first thing tomorrow and get it to them so that I can pick it
 up first thing on Thursday morning.
 
-** 2012-08-21
+*** 2012-08-21
 
 (2012-08-21-09:51)
 
@@ -3824,7 +3851,7 @@ mechanism and do the example tomorrow, this is alas probably going to
 take most of the rest of the evening. A good use of an evening though
 if it saves me pain tomorrow I guess!
 
-** 2012-08-22
+*** 2012-08-22
 
 (2012-08-22-00:22)
 
@@ -4038,7 +4065,7 @@ like S.x looks up x in the structure S, then the type information for
 x is deemed by solving an accessor to the signature binding or
 something.
 
-** 2012-08-23
+*** 2012-08-23
 
 (2012-08-23-00:19)
 
@@ -4090,7 +4117,7 @@ pack. I'll head there in about a half hour or something. It seems the
 poster session lasts for two hours and a half, and then it's demos
 after that.
 
-** 2012-08-24
+*** 2012-08-24
 
 (2012-08-24-10:12)
 
@@ -4432,7 +4459,7 @@ being mapped to twice. Maybe I should just keep the same variable in
 the map and update the labels. The unification algorithm should remove
 any labels which become irrelevant...
 
-** 2012-08-25
+*** 2012-08-25
 
 (2012-08-25-02:23)
 
@@ -4544,7 +4571,7 @@ State EQ:
 There is lots of label information in this state, certainly enough to
 show that there is a type error in the program. Hm.
 
-** 2012-08-27
+*** 2012-08-27
 
 (2012-08-27-10:16)
 
@@ -4638,7 +4665,7 @@ non-accessor based code will not be too complex, I think handling the
 eqtype keyword might be a little more work in the sense of getting the
 slices right. I'll play around with these a little more this evening.
 
-** 2012-08-28
+*** 2012-08-28
 
 (2012-08-28-10:55)
 
@@ -4893,7 +4920,7 @@ it's dealing with a tuple, so perhaps something simple could be added
 to also check that each component also has a top level EQUALITY_TYPE
 constraint. This might be a good area to look at.
 
-** 2012-08-29
+*** 2012-08-29
 
 (2012-08-29-09:58)
 
@@ -4988,7 +5015,7 @@ left or right hand sides of ExpOp, go through all the field
 constructions and constrain each of the type variables in the field
 constructions to equality type status EQUALITY_TYPE.
 
-** 2012-08-30
+*** 2012-08-30
 tags: {equality-types, write-up}
 
 (2012-08-30-11:05)
@@ -5103,3 +5130,489 @@ Something like that might come in handy.
 Updated this document to have tags. It's about time that was
 done. Still need to do the rest of this month at some point because
 sometimes searching backwards for things is awkward.
+*** 2012-08-31
+tags: {equality-types, write-up}
+
+(2012-08-31-09:45)
+
+My goal today is to get slices for equality type errors involving
+tuples and do some more of the write-up. I'm hoping next week to
+improve equality type reporting for signatures using ''a, as some
+cases don't work yet, then handle the eqtype keyword.
+
+(2012-08-31-10:12)
+
+I see that the tuple-with-function-call-inside.sml example is working
+correctly now, something else I did yesterday must have fixed that
+example. I'll add it to the test case database.
+
+(2012-08-31-11:19)
+
+In the test 'signature-equality-constraint-on-tuple.sml', the reason
+we don't get a slice is because we pass a tuple in. If the tuple is
+made an accessor to a tuple, then the example works (well, three
+endpoints appear, which is incorrect, but that's probably trivial to
+fix). The most important example right now to fix is the one with
+tuples.
+
+(2012-08-31-11:40)
+
+Looking over the work that I did yesterday in terms of write-up, I
+think some of the text that I wrote about what should be in the
+external syntax section should actually be in the constraint syntax
+section. So perhaps say that the only external syntax to change is the
+addition of the eqtype keyword:
+
+spec   ∈ Spec   ::= .... | eqtype dn^l
+
+Then under constraint syntax changes perhaps something like this:
+
+α ∈ ITyVar   (internal non-equality type variables)
+β ∈ IEqTyVar (internal equality type variables)
+τ ∈ ITy ::= α | β | τ μ | τ_1 -> τ_2 | <τ, \overset{-}{d} >
+
+(2012-08-31-11:58)
+
+There are no new environments, I guess something that I would be doing
+would be extending figure 11.7, which contains the constraint
+generation rules.
+
+So to take an example, rule G4:
+
+fn pat =>^l exp -|> <α, [(ev=1_1);ev^l;e2;(α \overset{l}{=} α_1 -> α_2)]> <= pat -|> <α_1, e_1>> /\ exp -|> <α_2, e_2>
+
+is annotated with equality type information. Anonymous functions, or
+indeed any kind of function, is attributed with NOT_EQUALITY_TYPE
+status (or, in fact, they are attributed with an equality type
+variable which has that status assigned to it in the state map).
+
+(2012-08-31-14:02)
+
+I've been thinking a bit how equality constraints for tuples could be
+handled. The issue is basically that AtExpTuple gets a whole bunch of
+equality type variables back from the functions that it calls to work
+out constraints for each of the components of the tuple.
+
+It would be nice if the equality type variable that is created at the
+AtExpTuple level could somehow be assigned to all of the equality type
+variables for each component. I think this would require a change in
+the way that equality type information is represented in the state
+though. I'll have to think about this, maybe the equality types in the
+state map should be mapped to lists of equality types rather than just
+a single equality type. Either that, or AtExpTuple could return a list
+of equality type variables? That way they all could be mapped to a
+status in ExpOp in a fairly straightforward manner?
+
+** 2012-09
+*** 2012-09-02
+tags: {equality-types}
+
+(2012-09-02-21:41)
+
+Just having a quick a look at things while I'm on a train. This
+netbook might not be up to the task, but I'll have a look at the tuple
+situation again.
+
+(2012-09-02-21:47)
+
+The MLB files aren't being generated from the .cm files
+correctly. It's a bit poor that. There is a bug for it in the bugzilla
+database I think, I'll check when I get an internet connection.
+
+(2012-09-02-21:52)
+
+Hm yes, after some thought this whole list idea sounds like a good
+plan. At the moment, this happens when we encounter a tuple (debug
+print statement omitted).
+
+| f_atexp indent (A.AtExpTuple (expl, _, lab, _)) =
+let
+  val indent = convertIndentToSpaces indent
+  val tv = T.freshTypeVar ()
+  val newEqTypeVar = T.freshEqualityTypeVar ()
+  val (tvl, equalityTypeVars, csts, csss) = unzipFour (map (f_labexp (indent^SS.bottomLeftCurve^SS.straightLine)) expl)
+  val cst = E.unionConstraintsList csts
+  val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
+  val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
+in (tv, eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
+end
+
+So we have a few things concerning equality type variables here:
+
+1) the fresh equality type variable newEqTypeVar
+2) the equality type variables (equalityTypeVars) that come back from
+   mapping f_labexp over each of the components in the tuple.
+
+The change I'm proposing would be to generate not just one type
+variable, but one for each component in the tuple, then return a list
+of them.
+
+This solution would also be used for records (AtExpRecord), and lists
+(AtExpList).
+
+By changing the return type of f_atexp I need to also change the
+return type f_exp (as it calls f_atexp).
+
+f_exp is called by f_quote, f_labexp, and f_progone. The equality type
+variables returned to f_progone aren't used, so that's
+irrelevant. f_quote is called only by f_atexp, so that's alright as
+that would be changed anyway. And so much for my luck, f_labexp is
+called all over the place, so rather a few changes would need to be
+made.
+
+Right, I'm just going to get on with it and see what I can do before
+this train arrives. Here goes.
+
+(2012-09-02-22:25)
+
+There's a new function in the constraint generator called
+createNewEqualityTypeVars, which takes as input a list of equality
+type variables and a label, and will generate fresh equality type
+variables and a constraint between the fresh variable and the one
+existing in the list. It's being returned as a pair, so I'll return
+from f_AtExpTuple a list of the left hand side of the pairs as the new
+equality type variables, and put the list of the constraints on the
+right hand side of the pairs in with the rest of the constraint values
+that are being returned.
+
+(2012-09-02-22:59)
+
+Alright this should work I think:
+
+| f_atexp indent (A.AtExpTuple (expl, _, lab, _)) =
+let
+  val indent = convertIndentToSpaces indent
+  val tv = T.freshTypeVar ()
+  val (tvl, eqtvs, csts, csss) = unzipFour (map (f_labexp (indent^SS.bottomLeftCurve^SS.straightLine)) expl)
+  (* we can get a whole bunch of equality type varibles back when looking at tuples, because
+  * there is an equality type variable for each component of the tuple. We need to create fresh
+  * equality type variables for each component and return a list of the fresh variables and the
+  * new constraints generated *)
+  val (newEqualityTypeVars, newEqualityTypeConstraints) = unzipTwo(createNewEqualityTypeVars eqtvs lab)
+  val cst = E.unionConstraintsList csts
+  val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
+  val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
+  val newConstraints = foldr (fn (x, xs) => (E.consConstraint (lab, x) xs))
+                             cst
+                             (c::newEqualityTypeConstraints)
+  in (tv, newEqualityTypeVars, newConstraints, contextSensitiveSyntaxError)
+end
+
+I don't think we'll lose any constraints using foldr like that, it
+should be fine.
+
+I'm going to go ahead and change the other functions to work with this
+new return type.
+
+(2012-09-02-23:03)
+
+Graargh it's everywhere, this is going to take a few hours. I'll
+revert back to this point if everything explodes, though it should be
+fine *touches wood*.
+
+*** 2012-09-03
+tags: {equality-types}
+
+(2012-09-03-00:21)
+
+Leaving a note here for tomorrow. I'm currently changing the f_exp
+function to return as its second parameter a list of equality type
+variables. Ignore the compilation warnings, they are incorrect. Look
+at the AtExpTuple case to see what sort of thing we should be doing to
+get this list of equality type variables. Don't forget to get all the
+constraints that are generated for all the equality type variables
+too, we're going to need everything.
+
+(2012-09-03-09:31)
+
+Going to continue from where I left off yesterday, with any luck I'll
+have equality type errors for tuples at the end of the day.
+
+(2012-09-03-11:03)
+
+This is probably going to take all day, but I'll try and stop sometime
+around lunchtime and look over some of the text I wrote about writing up.
+
+(2012-09-03-14:57)
+
+What is going on with AtExpTuple? It gets lists of list of equality
+type variables? Why is that the case? I'm trying to figure out if
+that's something that we want or not. I think it is in the event that
+we have tuples inside tuples? Hm.
+
+(2012-09-03-15:37)
+
+Right it's compiling. I need to go back to AtExpTuple to sort out that
+situation, as I just left it commented out for the moment, I'm going
+to run all the tests again to check that they all still.
+
+(2012-09-03-16:24)
+
+The tests broke in some fun new ways but I've patched them back to
+health now I think. I'm going to keep doing that until everything is
+fine, then I'll go back and work on what to do about the tuple
+constraints, then hopefully equality type errors should start
+appearing when tuples are involved.
+
+(2012-09-03-16:29)
+
+The tests that are now broken are the ones involving datatype
+constructors. I'll look through the log and figure out what's going on
+there.
+
+*** 2012-09-04
+
+(2012-09-04-10:17)
+
+Didn't get around to any of the write-up yesterday, so I'm going to
+look at that a bit now.
+
+(2012-09-04-12:17)
+
+I'm not sure what the deal is with the constraint syntax with respect
+to the accessors, should they be extended? I have put in place a new
+type of accessor. This will look confusing in the paper because there
+is one more type of accessor than there is binder, so that either:
+
+a) needs to be explained as it makes the code clearer (right?)
+b) needs to be changed in the implementation (do we sacrifice code quality?)
+
+(2012-09-04-13:05)
+
+Alright, enough playing with greek letters. Going to try and fix up
+the examples that broke yesterday
+
+(2012-09-04-18:07)
+
+Had a meeting with Joe instead. Next steps are to finish the work on
+tuples, then handle the eqtype keyword. The val tick tick stuff can be
+left until later.
+
+(2012-09-04-23:31)
+
+Hm, I can't find this bug which is causing failures in tests involving
+equality types and datatypes. One of the constraints must be getting
+lost, because no equality type errors are being generated for datatype
+constructors. All the other tests seem to work fine... it must be just
+one of the cases in the constraint generator for just one of the
+abstract syntax tree nodes. Question is which one... :/
+
+*** 2012-09-05
+
+(2012-09-05-09:52)
+
+What I'm planning to do today is to find this bug where datatype
+constructors no longer get equality type errors because of the new
+list representation I'm using to pass things around, then attempt to
+get equality type errors with tuples.
+
+If I'm able to do both today, I'll stop and do a bit of writing and
+tomorrow look at handling the eqtype keyword.
+
+(2012-09-05-10:06)
+
+The problem seems to be with the equality type variable that's
+returned when solving the case of TYPE_VAR where we get back the
+TYPE_POLY expression which has the equality type variable inside:
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31857,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_VAR(s10546),51,POLY,CONSTANT(5.0,373,40164),l40164,EQUALITY_TYPE_VAR(eqtv19689))
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19689) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [] and Labels = [40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19690) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19691) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19693) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40160,40162,40163,40164]
+(CONSTRAINT_SOLVING) Unification.sml: returning 'Success' status from the unification algorithm
+
+whereas in the case previously:
+
+(EQUALITY_TYPES) Unification.sml: solving the case of TYPE_VAR, which is this: TYPE_VAR(t31857,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)) and something else, namely this: TYPE_POLY(ROW_VAR(s10546),51,POLY,CONSTANT(5.0,373,40164),l40164,EQUALITY_TYPE_VAR(eqtv19689))
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19689) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [] and Labels = [40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19690) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19691) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19692) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40160,40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: solving an equality type constraint of EQUALITY_TYPE_VAR(eqtv19688) and EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE). Deps = [40164] and Labels = [40160,40162,40163,40164]
+(EQUALITY_TYPES) Unification.sml: status already exists in the map for equality type variable (EQUALITY_TYPE)! Checking for equaliy type error...
+(EQUALITY_TYPES) Unification.sml: Equality type error detected. Label information: l = 40164, ls = [40154,40155,40156,40157,40158,40160,40161,40162,40163,40164], deps = [40158,40164]
+
+The equality type variable numbers and label information should be
+exactly the same because the example has not changed between these
+runs. So I can see there is a difference towards the end of this
+output.
+
+When solving equality type variable 19691 with the new list
+representation, we then move to solve 19693 which is successful and no
+error is generated. Previously, when solving 19691 we then move to
+solve 19692, then 196988 and discover there is an error.
+
+The output from both representations should be exactly the same
+(right?), so this difference should be found and changed.
+
+(2012-09-05-10:39)
+
+There is no 19693 variable... so somehow extra equality type variables
+must be being generated.
+
+(2012-09-05-11:25)
+
+The diff is proving hard to read, it's going to be easier if the
+constraints are generated in the same order with the previous method
+as they were with this list representation, not for any technical
+reason but just because the diffs will be easier to follow.
+
+(2012-09-05-11:31)
+
+That turned out to be a good idea, there is are only a few differences
+here. Will bear that in mind for the future.
+
+(2012-09-05-12:01)
+
+I have discovered why the constraints for datatype constructors have
+disappeared, and it's to do with the ExpApp case of the constraint
+generation process. Previously, the code worked like this with
+respect to equality types:
+
+Get equality type variable from left hand side α
+Get equality type variable from right hand side β
+Make a new equality type variable γ
+Make constraint α -> γ
+Make constraint γ -> β
+Return equality type vairable γ (and new constraints, naturally).
+
+It's now the case that the left hand side and the right hand side are
+no longer single equality type variables but are now lists and the
+code is currently doing this:
+
+Get equality type variables from left hand side α
+Get equality type variables from right hand side β
+Make new equality type variables γ_1 to γ_n and create the constraint
+γ -> (current list item) over the list (α @ β).
+Return list of γ variables and list of new constraints.
+
+This is not what used to happen. So now I have to think about what I
+want to do. Perhaps I want to do something like this:
+
+Get equality type variables from left hand side α
+Get equality type variables from right hand side β
+For all α in α_1 to α_n, create constraint α_i -> (δ | δ ∈ β)
+Return list of γ variables and list of new constraints
+
+This would certainly create at least the same constraints that were
+created initially. I'll implement this and see what happens, we should
+get the errors back.
+
+(2012-09-05-12:46)
+
+Oh wait, I can't do that because the solving algorithm represents
+constraints as functions, so an α_i value can't be mapped to two
+different β_i values. Hm. I'm going to find out if there can indeed be
+multiple values in both lists by running through the test database,
+that should tell me whether I need to update the constraint solving
+algorithm or not.
+
+(2012-09-05-13:00)
+
+There are multiple equality type values on the left and right hand
+sides of the application function, which makes things difficult.
+
+I'm going to go back and look at precisely why tuples work when using
+accessors but they don't if no accessors are used, otherwise I need to
+change the constraint solving algorithm to handle one equality type
+variable being constrained to multiple other equality type variables,
+which is a headache that I don't want. Maybe I can find another,
+cleaner solution to this.
+
+(2012-09-05-14:50)
+
+The problem seems to be partially concerned with the way that equality
+type variables are propagated with applications, which I don't like
+the look of at all. It works well for datatype constructors, but it
+doesn't work well in some cases for function application. I'm going to
+take a look at it now.
+
+(2012-09-05-16:34)
+
+The application problem is a bug but I'll come back to that, and
+continue the tuple work for now. AtExpTuple will get a list of
+equality type variables for the top node of each component of the
+tuple. I'll need a special constraint to handle this I think,
+essentially just checking if any of the equality type variables it
+gets end up mapped to NOT_EQUALITY_TYPE, then the tuple itself cannot
+be tested for equality.
+*** 2012-09-06
+
+(2012-09-06-12:06)
+
+There are two ideas I have for handling tuples. The first is to just
+create a binder for them, then solve the accessor, which might work,
+but I still have to think about that some more.
+
+The alternative is to take the fresh equality type variable that is
+generated in AtExpTuple, and make an equality constraint between it
+and a *list* of equality type variables that are received by mapping
+f_labexp over the components of the tuple (a new constructor would be
+needed to represent this). The type of the equality type state map
+would have to change so that the right hand side is a list but I think
+this would be not too difficult to accomplish.
+
+I'm going to look a little into the binder/accessor idea though,
+because that really does work just so well at the moment.
+
+(2012-09-06-13:24)
+
+Utilising the way that binders and accessors are represented is a
+no-go. I'm going to do it the way that I thought it should be done
+anyway, by representing the right hand side of the equality type state
+map as a list and allow one equality type variable to be mapped to a
+list of items.
+
+The equaltyType datatype in Ty.sml is getting a new constructor,
+EQUALITY_TYPE_VAR_LIST, created in mind specifically for tuples and
+records. This will allow one equality type variable to be constraint
+to a whole list of other equality type variables. The constraint
+solving algorithm will need to be extended so that:
+
+a) it can handle and store lists instead of just values of status values
+b) if an NOT_EQUALITY_TYPE constraint is attributed to an equality
+type variable inside a list on the right hand side of the equality
+type state map, the entry is removed and the left hand side be put in
+the map as NOT_EQUALITY_TYPE.
+
+(2012-09-06-14:59)
+
+So it turns out that because the state map is of type equalityTypeVar ->
+equalityType, and I extended the equalityType datatype already, the
+constraint solver will already handle a system where the right hand
+side can be a list of equality type variables. So all I really need to
+do is handle the constraint solving rules to include the following
+scenarios:
+
+Let α, β_1... β_n be equality type variables, and STATE_EQ be the
+part of the state map responsible for holding equality type variables.
+
+1. If solving α -> EQUALITY_TYPE_VAR_LIST(β_1, ... β_n) then:
+   - if α ∉ STATE_EQ, insert mapping α -> EQUALITY_TYPE_VAR_LIST(β_1, ... β_n)
+   - if α ∈ STATE_EQ and the right hand side is an
+     EQUALITY_TYPE_VAR_LIST, then raise an exception (I don't think
+     this should ever happen). If it's a status, do nothing. If it is
+     an equality type variable, raise an exception (surely this should
+     never happen either).
+
+2. If solving α -> .... (NOT_EQUALITY_TYPE), then:
+   - if α ∉ STATE_EQ, then insert into STATE_EQ: α -> NOT_EQUALITY_TYPE
+   - if α ∈ STATE_EQ and the right hand side is an
+     EQUALITY_TYPE_VAR_LIST, then replace the entry in STATE_EQ with:
+     α -> NOT_EQUALITY_TYPE. Other cases remain the same
+
+3. If solving β -> .... (NOT_EQUALITY_TYPE), and β is in an
+   EQUALITY_TYPE_VAR_LIST for some α, then same procedure as normal
+   but with additional constraint α -> NOT_EQUALITY_TYPE in STATE_EQ
+
+(2012-09-06-20:32)
+
+This is all very well and good but point three has a problem. How do we
+check if β ∈ an EQUALITY_TYPE_VAR_LIST for some α? We could look
+through all the right hand sides of the map but is that really what we
+want to do? Isn't that inefficient?
+
+It would be better to have some other component, so when looking up β
+in the map part of the information we get back is a list of α values
+that β is in the right hand side EQUALITY_TYPE_VAR_LIST of.
