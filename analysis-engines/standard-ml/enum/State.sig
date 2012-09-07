@@ -29,7 +29,7 @@ signature STATE = sig
 
     type stTv = Ty.ty
     type stTf = Ty.typeFunction
-    type stEq = Ty.equalityType
+    type stEq = (Ty.equalityType * Ty.equalityTypeVar list)
     type stTn = Ty.typenameType
     type stSq = Ty.rowType
     type stRt = Ty.fieldType
@@ -55,7 +55,7 @@ signature STATE = sig
     (* ACCESS THE UNIFIERS AND ENVS *)
     val getValStateTv      : state -> Ty.typeVar         -> stTv option
     val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
-    val getValStateEq      : state -> Ty.equalityTypeVar        -> stEq option
+    val getValStateEq      : state -> Ty.equalityTypeVar -> stEq option
     val getValStateTn      : state -> Ty.typenameVar     -> stTn option
     val getValStateSq      : state -> Ty.rowVar        -> stSq option
     val getValStateRt      : state -> Ty.fieldVar        -> stRt option

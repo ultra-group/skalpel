@@ -253,6 +253,7 @@ signature TY = sig
     val printEqualityType : equalityType       -> string
     val printEqualityTypeStatus : equalityTypeStatus       -> string
     val printEqualityTypeVar : equalityTypeVar       -> string
+    val printEqualityTypeVarList : equalityTypeVar list       -> string
     val printtnty         : typenameType        -> string
     val printtnty'        : typenameType        -> string
     val printtyf         : typeFunction       -> string

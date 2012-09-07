@@ -54,7 +54,7 @@ type rcty  = T.fieldType list * T.flex * (L.label * T.fieldName) EL.extLab list
 
 type stTv = T.ty
 type stTf = T.typeFunction
-type stEq = T.equalityType (* the state for equality types (CHANGE THIS NAME) *)
+type stEq = (T.equalityType * T.equalityTypeVar list) (* the state for equality types (CHANGE THIS NAME) *)
 type stTn = T.typenameType
 type stSq = T.rowType
 type stRt = T.fieldType
@@ -236,7 +236,7 @@ fun printStateGe statege =
 fun printStateSe {tv, tf, eq, tn, sq, rt, lt, ev, cl} =
     "State TV:\n" ^ printStateGen  tv T.printty    ^ "\n" ^
     "State TF:\n" ^ printStateGen  tf T.printtyf   ^ "\n" ^
-    "State EQ:\n" ^ printStateGen  eq T.printEqualityType ^ "\n" ^
+    "State EQ:\n" ^ printStateGen  eq (fn (left, right) => "(" ^ T.printEqualityType left ^ ", " ^ T.printEqualityTypeVarList right ^ ")") ^ "\n" ^
     "State TN:\n" ^ printStateGen  tn T.printtnty  ^ "\n" ^
     "State SQ:\n" ^ printStateGen  sq T.printseqty ^ "\n" ^
     "State RT:\n" ^ printStateGen  rt T.printFieldType ^ "\n" ^
@@ -288,7 +288,7 @@ fun getStateEv x = #ev (getStateSe x)
 fun getStateCl x = #cl (getStateSe x)
 
 fun printStateEq state =
-    "State EQ:\n" ^ printStateGen  (getStateEq state) T.printEqualityType ^ "\n"
+    "State EQ:\n" ^ printStateGen  (getStateEq state) (fn (left,right) => ("(" ^ T.printEqualityType left ^ ", " ^ T.printEqualityTypeVarList right ^ ")")) ^ "\n"
 
 (*fun getStateTc x = #tc (getStateUb x)
 fun getStateAp x = #ap (getStateUb x)*)
