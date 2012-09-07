@@ -5616,3 +5616,55 @@ want to do? Isn't that inefficient?
 It would be better to have some other component, so when looking up β
 in the map part of the information we get back is a list of α values
 that β is in the right hand side EQUALITY_TYPE_VAR_LIST of.
+
+*** 2012-09-07
+
+(2012-09-07-09:52)
+
+The constraint generation side of handling tuples, records, and so on
+should be done (at least for tuples, but when this is working
+extending it to records should be trivial as I just need to write the
+same constraints but in the part of the constraint generator that
+handles record abstract syntax tree nodes). All I should need to do is
+write the constraint solving algorithm and that will be fine.
+
+The way I'm going to handle the problem I was worrying about in log
+entry (2012-09-06-20:32) is to have the right hand side of the state
+map for equality types as a tuple, with the first component playing
+the role of what the old right hand side used to do and the second
+component storing information for the EQUALITY_TYPE_VAR_LISTs the left
+hand side is a member of.
+
+(2012-09-07-12:25)
+
+I've decided that extending the equalityType datatype to hold this
+information isn't the right way to go, there are going to be pattern
+match changes everywhere and the only thing that can go on the right
+hand side of the tuple state entry is a list of equality type
+variables anyway. I'm just going to store that as a plain list and
+lose the datatype extension.
+
+(2012-09-07-13:10)
+
+Wait no we do need that datatype constructor, it just shouldn't make
+its way through to constraint solving. At constraint solving time we
+should just unwrap the constructor from the equality type variable
+list and put that in the state.
+
+(2012-09-07-13:57)
+
+Right that's compiling properly now. I'll write up the constraint
+solving rules from the logs yesterday.
+
+(2012-09-07-18:16)
+
+I've had to think a little bit about one of the constraint rules, it's
+often the case that a constraint can be made between some α and some
+EQUALITY_TYPE_LIST β but α already exists in the map, mapped to some
+dependancy γ on an equality type variable. I think in this case the
+correct thing is to do γ -> EQUALITY_TYPE_LIST β?
+
+In the case I have, the equality type variable in the dependancy γ I
+think is mapped to an equality type status δ in the state. In that
+case I should end up with δ -> EQUALITY_TYPE_LIST β, at which point I
+should create constraints β_1 -> δ, β_2 -> δ, ..., β_n -> δ?
