@@ -1,4 +1,9 @@
 [begin database checking]
+equality-types/tuple-with-function-call-inside.sml OK
+equality-types/basic-tuple-example.sml OK
+equality-types/basic-equality-type-in-signature.sml more than OK
+equality-types/function-return-types.sml OK
+equality-types/basic-real-greater-than-real.sml OK
 equality-types/basic-real-equals-real.sml OK
 equality-types/binding-of-another-binding.sml OK but slower
 equality-types/datatype-constructor.sml OK
@@ -537,8 +542,8 @@ PROBLEM: numbered/code562.sml: TO CHECK!!!!
 numbered/code563.sml OK
 numbered/code564.sml OK
 numbered/code565.sml OK
-[longest test: numbered/code496.sml (5327)]
-[OK      tests: 348]
+[longest test: numbered/code531.sml (5401)]
+[OK      tests: 353]
 [deps    tests: 14]
 [failing tests: 50]
 [tocheck tests: 125]
@@ -546,4 +551,4 @@ numbered/code565.sml OK
 [dead    tests: 1]
 [format  tests: 0]
 [sol     tests: 0]
-[end database checking (257978ms)]
+[end database checking (276224ms)]
