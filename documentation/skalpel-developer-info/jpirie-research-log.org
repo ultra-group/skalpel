@@ -64,6 +64,18 @@ October 2013 - ESOP?
    constraint with a type variable. Will this cause a problem later?
    Do we need multiple type constraints.
 
+   Some of the constraints in log (2012-09-06-14:59) have been left
+   unimplemented, because I actually think that we can do without
+   them. Furthermore, this constraint:
+
+   | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR eqtv), resultLabels, resultDeps, resultIds), recordInformation) =>
+
+   when handling a constraint from an equality type variable to an
+   equality type variable list, does nothing, and simply solves the
+   remaining constraints. I'm not sure if this is ever a situation
+   where we should solve these constraints more carefully, testing
+   will need to be completed.
+
 * TODOs
 ** Test framework
 *** (2012-07-31-01:46) Web demo
@@ -5668,3 +5680,39 @@ In the case I have, the equality type variable in the dependancy γ I
 think is mapped to an equality type status δ in the state. In that
 case I should end up with δ -> EQUALITY_TYPE_LIST β, at which point I
 should create constraints β_1 -> δ, β_2 -> δ, ..., β_n -> δ?
+
+(2012-09-07-23:36)
+
+I have noticed a little optimisation that can be made to the way
+equality types are stored in the state environment. If we currently
+are solving some constraint (α, β), where α and β are equality type
+variables, if β is not in the state environment then we currently put
+the mapping β -> EQUALITY_TYPE_DEPENDANCY(α) in the state environment.
+
+We do not check however if α currently has an equality type status
+assigned to it. I'm going to add in the change that if some mapping α
+-> γ exists in the state where γ is an equality type status, then when
+handling (α, β) allow the mapping β -> γ to go into the state
+environment instead if γ is available. I'll implement this and run the
+test framework to make sure this doesn't break anything.
+
+(2012-09-07-23:43)
+
+When I ran this against the test framework I got errors for some tests
+because we didn't get multiple endpoint labels. This was a bug, which
+has now been fixed. This change will therefore stay in place.
+
+*** 2012-09-08
+
+(2012-09-08-00:14)
+
+I think the constraint solving rules are mostly written now. They might
+not be perfect, I will have to test it, I'll try to find some time at
+weekend for that. Compiling now to test on basic-tuple-example.sml.
+
+(2012-09-08-01:00)
+
+There were a few bugs but I've ironed them out now. Now we're getting
+great type error slices for the basic-tuple-example.sml code file now,
+great! I'll commit to the test framework now and update the master
+test files at the remote end.

@@ -1,5 +1,7 @@
 {
     "test-list":[
+	"equality-types/tuple-with-function-call-inside.sml",
+	"equality-types/basic-tuple-example.sml",
 	"equality-types/basic-equality-type-in-signature.sml",
         "equality-types/function-return-types.sml",
         "equality-types/basic-real-greater-than-real.sml",
