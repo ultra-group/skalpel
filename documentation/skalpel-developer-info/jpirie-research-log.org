@@ -126,19 +126,6 @@ run on that file, and check that Emacs is highlighting things inside
 the file, and that the process terminates.
 
 ** Equality types implementation
-*** (2012-06-28-16:00) Generating equality constraints for non-accessor based code
-
-    This code will generate an equality type error:
-
-    val x = (1.0, 2);
-    x=x;
-
-    But this code will not:
-
-    (1.0, 2) = (1.0, 2);
-
-    And similarly for records.
-
 *** (2012-06-29-21:19) Detection of equality type errors with the eqtype keyword
 
     In the case where we have 'eqtype x' in a signature (instead of
@@ -161,6 +148,16 @@ the file, and that the process terminates.
     I don't get generate NOT_EQUALITY_TYPE for 'a for example,
     although EQUALITY_TYPE is generated for ''b we need the constraint
     for 'a.
+
+    This also demonstrates the problem fairly well:
+
+    fun f (x:'b) = x = x;
+    Error-Type error in function application.
+    Function: = : ''a * ''a -> bool
+    Argument: (x, x) : 'a * 'a
+    Reason: Can't unify ''a to 'a (Requires equality type)
+    Found near x = x
+    Static Errors
 
 ** Other
 *** TODO (2012-08-30-15:16) Add tags to research log entries for August
@@ -5716,3 +5713,14 @@ There were a few bugs but I've ironed them out now. Now we're getting
 great type error slices for the basic-tuple-example.sml code file now,
 great! I'll commit to the test framework now and update the master
 test files at the remote end.
+
+(2012-09-08-10:57)
+
+I've done a little testing of the tuples and I'm happy with the slices
+that I'm getting back, looks good.
+
+I have also extended the solution to work for records (records are
+technically a different node in the abstract syntax tree so a few
+lines needed inserted in the constraint generation functions
+associated with handling those nodes), so we're now getting slices for
+these as well.
