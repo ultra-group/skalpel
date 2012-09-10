@@ -47,7 +47,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "f03eafe1f21d89668fe73d242e5065928a745dc4"
+val SKALPEL_VERSION = "VERSION_HERE"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -389,6 +389,7 @@ fun smlTesStrArgs strArgs =
 				    \    -e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)\n\
 				    \    -b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)\n\
 				    \    -d PARSING \t shows debugging output during parsing various files\n\
+				    \    -d NO_COLOURS \t doesn't put ANSI colour information in debug strings\n\
 				    \       ONE_RUN \t give debug output only once (don't show during minimisation process)\n\
 				    \       STATE   \t gives internal state output\n\
 				    \       TESTING \t shows debugging info when running the test database\n\
@@ -476,7 +477,8 @@ fun smlTesStrArgs strArgs =
 		       (* note that at this current time, no debugging information is printed for the basis.
 			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
 			* be able to toggle such an option, but for the moment this is simply disabled *)
-		       "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
+		       "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""}; D.textReset := "")
+		     | "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
 		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
 		     | "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)

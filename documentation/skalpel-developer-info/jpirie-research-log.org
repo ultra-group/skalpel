@@ -5724,3 +5724,60 @@ technically a different node in the abstract syntax tree so a few
 lines needed inserted in the constraint generation functions
 associated with handling those nodes), so we're now getting slices for
 these as well.
+*** 2012-09-10
+
+(2012-09-10-10:27)
+
+Plan is to look at the equality type stuff (the eqtype keyword), and
+getting that information put into the slice if necessary.
+
+I think I'm going to look at the theory again tomorrow, and focus on
+this today.
+
+(2012-09-10-13:28)
+
+There are a lot of constraints in the basis.sml file, it's going to be
+quite hard to debug the constraints that are generated for this
+file. I'm not sure how I'm going to figure that one out, I'll need to
+restrict the amount of constraints shown to be part of the basis file
+somehow I guess.
+
+(2012-09-10-14:50)
+
+Ahh, skalpel is being lovely again today. I think I'm going to find a
+way to get Skalpel to ignore undefined identifiers if the user
+specifies they want this, because I for one would like to consider
+only this file. I don't care about anything outside the constraint
+generator, I just care about the constraint generator.
+
+Perhaps the solution is to persuade users to make .tes files rather
+than have this option. But then Skalpel is going to take ages and I
+don't want that. No, that's not the solution, I really just want to
+consider this file.
+
+(2012-09-10-15:44)
+
+I'm enhancing the debug options because using CONSTRAINT_PATH on the
+basis exposed some things that haven't been written yet. It's worth
+noting that it's faster to use Skalpel than the compiler, which is a
+good sign (though it would be much faster if I didn't have to press F7
+about 12 times to get past the undeclared identifiers).
+
+(2012-09-10-16:46)
+
+The -d CONSTRAINT_PATH parameter has been enhanced so it covers much
+more of the abstract syntax tree, I should be able to work with this
+better now. There are still a few nodes which don't work correctly,
+but it's perfect for the most part.
+
+(2012-09-10-16:53)
+
+Quick note here about generating constraints for:
+
+type <something>
+type <something> = <something else>
+eqtype <something>
+
+I think each of these three cases has its own different abstract
+syntax tree node. If this is indeed the case constraint generation
+should be not too tricky to do at all (fingers crossed ;).

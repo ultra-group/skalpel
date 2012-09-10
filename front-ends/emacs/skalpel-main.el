@@ -58,16 +58,12 @@
 
 ;; *** need better name ***
 (defface skalpel-standard-error-focus
-  '((((class color) (background dark))
-     (:background "#9b0000"))
-    (t (:background "#ff0050" :foreground "#fefefe")))
+  '((t (:background "#ff0000" :foreground "#fefefe")))
   "Used to highlight a section of code that contributes to the type error when the error is in focus.")
 
 ;; *** need better name ***
 (defface skalpel-standard-error-non-focus
-  '((((class color) (background dark))
-     (:background "#500000"))
-    (t (:background "#ffdcbd")))
+  '((t (:background "#ffdcbd" :foreground "#000000")))
   "Used to highlight a section of code that contributes to the type error when the error is not in focus.")
 
 
@@ -75,19 +71,11 @@
 ;;;; STANDARD ERROR BOX: FOCUS AND NON FOCUS
 
 (defface skalpel-standard-error-box-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#9b0000" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#ff0050" :style nil))))
+  '((t (:box (:line-width 2 :color "#ff0000" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not (when the error is in focus).")
 
 (defface skalpel-standard-error-box-non-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#500000" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#ffdcbd" :style nil))))
+  '((t (:box (:line-width 2 :color "#ffdcbd" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not (when the error is not in focus).")
 
 
@@ -95,9 +83,7 @@
 ;;;; STANDARD ERROR HEAD: FOCUS
 
 (defface skalpel-standard-error-head-focus
-  '((((class color) (background dark))
-     (:background "#9b0000" :foreground "white" :weight extra-bold))
-    (t (:background "#ff8e8e" :foreground "white" :weight extra-bold)))
+  '((t (:background "#ff8e8e" :foreground "white" :weight extra-bold)))
   "*********************************************")
 
 
@@ -105,15 +91,11 @@
 ;;;; END POINT ONE: FOCUS AND NON FOCUS
 
 (defface skalpel-end-point-one-focus
-  '((((class color) (background dark))
-     (:background "Blue"))
-    (t (:background "#5e76c1" :foreground "#ffffff")))
+  '((t (:background "#5e76c1" :foreground "#ffffff")))
   "Used to highlight a section of code that is an end point of a type constructor clash, an arity clash, or a record clash (in focus).")
 
 (defface skalpel-end-point-one-non-focus
-  '((((class color) (background dark))
-     (:background "#000050"))
-    (t (:background "#dfdffb")))
+  '((t (:background "#dfdffb")))
   "Used to highlight a section of code that is an end point of a type constructor clash, an arity clash, or a record clash (not in focus).")
 
 
@@ -121,19 +103,11 @@
 ;;;; END POINT ONE BOX: FOCUS AND NON FOCUS
 
 (defface skalpel-end-point-one-box-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "Blue" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#5e76c1" :style nil))))
+  '((t (:box (:line-width 2 :color "#5e76c1" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not. This region identified by the box is an end point of a clash (when the error is in focus).")
 
 (defface skalpel-end-point-one-box-non-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#000050" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#dfdffb" :style nil))))
+  '((t (:box (:line-width 2 :color "#dfdffb" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not. This region identified by the box is an end point of a clash (when the error is not in focus).")
 
 
@@ -141,9 +115,7 @@
 ;;;; END POINT ONE HEAD: FOCUS
 
 (defface skalpel-end-point-one-head-focus
-  '((((class color) (background dark))
-     (:background "Blue" :foreground "white" :weight extra-bold))
-    (t (:background "#9999ff" :foreground "white" :weight extra-bold)))
+  '((t (:background "#9999ff" :foreground "white" :weight extra-bold)))
   "********************************************")
 
 
@@ -151,15 +123,11 @@
 ;;;; END POINT TWO: FOCUS AND NON FOCUS
 
 (defface skalpel-end-point-two-focus
-  '((((class color) (background dark))
-     (:background "#898989"))
-    (t (:background "#7b7a85" :foreground "#ffffff")))
+  '((t (:background "#7b7a85" :foreground "#ffffff")))
   "Used to highlight a section of code that is an end point of a type constructor clash, an arity clash, or a record clash (in focus).")
 
 (defface skalpel-end-point-two-non-focus
-  '((((class color) (background dark))
-     (:background "#404040"))
-    (t (:background "#e3e3e3")))
+  '((t (:background "#e3e3e3")))
   "Used to highlight a section of code that is an end point of a type constructor clash, an arity clash, or a record clash (not in focus).")
 
 
@@ -167,19 +135,11 @@
 ;;;; END POINT TWO BOX: FOCUS AND NON FOCUS
 
 (defface skalpel-end-point-two-box-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#898989" :style nil)))
-    (t (:box
-	(:line-width 2 :color "grey" :style nil))))
+  '((t (:box (:line-width 2 :color "grey" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not. This region identified by the box is an end point of a clash (when the error is in focus).")
 
 (defface skalpel-end-point-two-box-non-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#404040" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#e3e3e3" :style nil))))
+  '((t (:box (:line-width 2 :color "#e3e3e3" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not. This region identified by the box is an end point of a clash (when the error is not in focus).")
 
 
@@ -187,9 +147,7 @@
 ;;;; END POINT TWO HEAD: FOCUS
 
 (defface skalpel-end-point-two-head-focus
-  '((((class color) (background dark))
-     (:background "#898989" :foreground "white" :weight extra-bold))
-    (t (:background "grey" :foreground "white" :weight extra-bold)))
+  '((t (:background "grey" :foreground "white" :weight extra-bold)))
   "**********************************************")
 
 
@@ -197,15 +155,11 @@
 ;;;; MERGED ERROR: FOCUS AND NON FOCUS
 
 (defface skalpel-merged-regions-focus
-  '((((class color) (background dark))
-     (:background "ForestGreen"))
-    (t (:background "#af1de2" :foreground "#ffffff")))
+  '((t (:background "#af1de2" :foreground "#ffffff")))
   "Used to highlight a section of code that is an end point of a record clash (in focus). The highlited text appears in both clashing records.")
 
 (defface skalpel-merged-regions-non-focus
-  '((((class color) (background dark))
-     (:background "#004000"))
-    (t (:background "#d8b1e2")))
+  '((t (:background "#d8b1e2")))
   "Used to highlight a section of code that is an end point of a record clash (not in focus). The highlited text appears in both clashing records.")
 
 
@@ -213,20 +167,12 @@
 ;;;; MERGED ERROR BOX: FOCUS AND NON FOCUS
 
 (defface skalpel-merged-regions-box-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "ForestGreen" :style nil)))
-    (t (:box
-	(:line-width 2 :color "af1de2" :style nil))))
+  '((t (:box (:line-width 2 :color "af1de2" :style nil))))
   "Used to surround a piece of code in a tuple clashing with a record.
   The piece of code is the the nth component of the tuple but the record does not mention n")
 
 (defface skalpel-merged-regions-box-non-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#004000" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#d8b1e2" :style nil))))
+  '((t (:box (:line-width 2 :color "#d8b1e2" :style nil))))
   "Used to surround a piece of code in a tuple clashing with a record.
   The piece of code is the the nth component of the tuple but the record does not mention n")
 
@@ -236,16 +182,12 @@
 
 ;; *** need better name ***
 (defface skalpel-further-explanations-focus
-  '((((class color) (background dark))
-     (:background "DarkMagenta"))
-    (t (:background "#FF9300")))
+  '((t (:background "#FF9300")))
   "Used to highlight code provides information about the status of identifiers or that is expansive (in focus).")
 
 ;; *** need better name ***
 (defface skalpel-further-explanations-non-focus
-  '((((class color) (background dark))
-     (:background "#500050"))
-    (t (:background "#FFBF77")))
+  '((t (:background "#FFBF77")))
   "Used to highlight code provides information about the status of identifiers or that is expansive (not in focus).")
 
 
@@ -253,19 +195,11 @@
 ;;;; FURTHER EXPLANATION BOX: FOCUS AND NON FOCUS
 
 (defface skalpel-further-explanations-box-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "DarkMagenta" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#FF20AA" :style nil))))
+  '((t (:box (:line-width 2 :color "#FF20AA" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not (when the error is in focus).")
 
 (defface skalpel-further-explanations-box-non-focus
-  '((((class color) (background dark))
-     (:box
-      (:line-width 2 :color "#500050" :style nil)))
-    (t (:box
-	(:line-width 2 :color "#FFB3E1" :style nil))))
+  '((t (:box (:line-width 2 :color "#FFB3E1" :style nil))))
   "Used to surround a piece of code for which the presence is relevant to the error but the contents are not (when the error is not in focus).")
 
 
@@ -273,15 +207,11 @@
 ;;;; PARSING: FOCUS AND NON FOCUS
 
 (defface skalpel-parsing-error-focus
-  '((((class color) (background dark))
-     (:background "#FFE50B"))
-    (t (:background "#FFE50B")))
+  '((t (:background "#FFE50B")))
   "Used to highlight the regions of code that cannot be parsed by Skalpel.")
 
 (defface skalpel-parsing-error-non-focus
-  '((((class color) (background dark))
-     (:background "#FFE50B"))
-    (t (:background "#FFE50B")))
+  '((t (:background "#FFE50B")))
   "Used to highlight the regions of code that cannot be parsed by Skalpel.")
 
 
@@ -586,11 +516,9 @@ value nil.")
 		     (debug-output-buffer "*skalpel-debugging-output*")
 		     (timer nil) ;; *** DEAD VARIABLE?
 		     )
-		(print (concat "Running this command: " run-command))
 		(skalpel-forget-all-slices) ;; remove error info loaded previously
 		;; *** Use make-directory instead!  Arrgh!
 		(shell-command (format "mkdir %s" output-dir)) ;; create temp dir
-		(print (format "mkdir %s" output-dir))
 		(skalpel-trace "RUNNING SLICER: Please wait..")
 		(setq skalpel-last-run-command run-command) ;; debugging trace
 		(skalpel-stop-skalpel-process) ;; kill skalpel- process
@@ -962,8 +890,6 @@ value nil.")
     ((IDE) (insert "Additional info: Free identifier\n\n"))
     )
   )
-
-(eval (read "(print 1)"))
 
 (defun skalpel-format-slice-info (slice assumptions kind)
   "Formats the details of the error for displaying to the user"
@@ -1557,8 +1483,7 @@ SYMBOL KEY VALUE)."
   (with-current-buffer "*skalpel-slice-info*"
   (catch 'break (while (not (equal looplist nil))
   (if (equal (car (car looplist)) id)
-      (progn (print "found it, hiding text!") (put-text-property (car (cdr (car looplist))) (cdr (cdr (car looplist))) 'invisible t) (throw 'break nil))
-      (print (car (car looplist)))
+      (progn (put-text-property (car (cdr (car looplist))) (cdr (cdr (car looplist))) 'invisible t) (throw 'break nil))
       (setq looplist (cdr looplist))))))
 
   ;; Set pointer to be an exact copy of skalpel-overlays
