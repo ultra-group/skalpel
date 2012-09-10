@@ -349,7 +349,7 @@ fun generateConstraints' prog pack nenv =
 		    end
 	     | f_scon indent (A.SconReal (s, v, _, lab, _)) =
 	       if benv (* We bind the real to the "Real" overloading class *)
-	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SconReal (benv = "^Bool.toString(benv)^", s = "^(#red D.colors)^s^D.textReset^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       then let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SconReal (benv = "^Bool.toString(benv)^", s = "^(#red (!D.colors))^s^(!D.textReset)^", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
@@ -359,7 +359,7 @@ fun generateConstraints' prog pack nenv =
 			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Equality type constraint (NOT_EQUALITY_TYPE) generated for a SconReal")
 		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c, c2]), E.emptyContextSensitiveSyntaxError)
 		    end
-	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SconReal (benv = "^Bool.toString(benv)^", str = \""^(#red D.colors)^s^(D.textReset)^"\", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
+	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SconReal (benv = "^Bool.toString(benv)^", str = \""^(#red (!D.colors))^s^((!D.textReset))^"\", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
 			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyreal lab) lab
@@ -515,7 +515,7 @@ fun generateConstraints' prog pack nenv =
             * ID of the binder (this can be found by looking on the left hand side of the (I.printLid lid) output
 	    *)
 	   and f_longidexp indent longid =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^" f_longidexp function (longid="^(#red D.colors)^(A.printAstLongId longid)^D.textReset^")");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^" f_longidexp function (longid="^(#red (!D.colors))^(A.printAstLongId longid)^(!D.textReset)^")");
 	       case A.longidToLid longid of
 		   NONE => (D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "in f_longidexp - couldn't find the numeric ID of a binder for this accessor ");
 			    (T.freshTypeVar (), T.freshEqualityTypeVar(), L.dummyLab, CL.newClassVar (), E.emptyConstraint))
@@ -565,7 +565,7 @@ fun generateConstraints' prog pack nenv =
 	    * handles the binding of a new identifier (constructs a binder using E.consBindPoly)
 	    *)
 	   and f_identpat indent (A.Ident (str, id, _, lab, _)) =
-	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.Ident (str=\""^(#red D.colors)^str^D.textReset^"\")");
+	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.Ident (str=\""^(#red (!D.colors))^str^(!D.textReset)^"\")");
 	       if String.isPrefix "_" str
 	       then (T.freshTypeVar (), T.freshEqualityTypeVar (), E.emvar, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       else let val tv1  = T.freshTypeVar ()
@@ -701,8 +701,8 @@ fun generateConstraints' prog pack nenv =
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val (tvl, eqtvs, csts, csss) = unzipFour (map (f_labexp (indent^SS.bottomLeftCurve^SS.straightLine)) expl)
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing eqtvs for AtExpTuple...\n"^(#red D.colors)^(foldr (fn (x,y) => x^"\n"^y) "" (List.map T.printEqualityTypeVar eqtvs)))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for AtExpTuple...\n"^(#green D.colors)^(foldr (fn (x,y) => x^"\n"^y) "" (List.map E.printConstraints csts)))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing eqtvs for AtExpTuple...\n"^(#red (!D.colors))^(foldr (fn (x,y) => x^"\n"^y) "" (List.map T.printEqualityTypeVar eqtvs)))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for AtExpTuple...\n"^(#green (!D.colors))^(foldr (fn (x,y) => x^"\n"^y) "" (List.map E.printConstraints csts)))
 
 		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val cst = E.unionConstraintsList csts
@@ -866,13 +866,13 @@ fun generateConstraints' prog pack nenv =
 	       let
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ExpApp (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val indent = convertIndentToSpaces indent
- 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^"left hand side of application...")
+ 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green (!D.colors))^"left hand side of application...")
 		   val (tv1, eqtv, cst1, contextSensitiveSyntaxError1) = f_exp (indent^SS.verticalFork^SS.straightLine) exp
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^"right hand side of application...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red (!D.colors))^"right hand side of application...")
 		   val (tv2, eqTypeVar, cst2, contextSensitiveSyntaxError2) = f_atexp (indent^SS.bottomLeftCurve^SS.straightLine) atexp
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of application...\n"^(#green D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of application...\n"^(#red D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of application...\n"^(#green (!D.colors))^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of application...\n"^(#red (!D.colors))^(E.printConstraints cst2))
 
 		   val tv  = T.freshTypeVar ()
  		   val freshEqTypeVar = T.freshEqualityTypeVar ()
@@ -921,8 +921,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tv1, eqtv1, cst1, contextSensitiveSyntaxError1) = f_labexp (indent^SS.verticalFork^SS.straightLine) labexp1
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**********  ExpOp right hand side... **********")
 		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labexp (indent^SS.bottomLeftCurve^SS.straightLine) labexp2
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "done left and right of expop\nprinting constraints for cst1 (tv ="^(Int.toString(T.typeVarToInt(tv1)))^")...\n"^(#red D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for cst2...\n"^(#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "done left and right of expop\nprinting constraints for cst1 (tv ="^(Int.toString(T.typeVarToInt(tv1)))^")...\n"^(#red (!D.colors))^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for cst2...\n"^(#green (!D.colors))^(E.printConstraints cst2))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ExpOp type variables are tv1 = "^(Int.toString(T.typeVarToInt(tv1)))^", tv2 = "^(Int.toString(T.typeVarToInt(tv2))))
 		   val ty  = T.newTYPE_VAR ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
@@ -935,9 +935,9 @@ fun generateConstraints' prog pack nenv =
 		   val c3 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv2) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
 
 		   val allConstraints1 = E.unionConstraintsList [cst1]
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints1...\n"^(#red D.colors)^(E.printConstraints allConstraints1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints1...\n"^(#red (!D.colors))^(E.printConstraints allConstraints1))
 		   val allConstraints2 = E.unionConstraintsList [cst2]
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints2...\n"^(#red D.colors)^(E.printConstraints allConstraints2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for allConstraints2...\n"^(#red (!D.colors))^(E.printConstraints allConstraints2))
 
 		   val a   = E.initValueIDAccessor (E.consAccId (I.ID (id, lab)) ty (CL.consVAL ()) lab) lab
 	       in
@@ -1085,14 +1085,14 @@ fun generateConstraints' prog pack nenv =
 	    * "'a" in the code: "datatype 'a t = C of 'a | D of int -> int"
 	    *)
 	   and f_typevar indent (A.TypeVar (str, id, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVar (str=\""^(#red D.colors)^str^(D.textReset)^"\")")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVar (str=\""^(#red (!D.colors))^str^((!D.textReset))^"\")")
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val a  = E.genAccIeEm (E.consAccId (I.ID (id, lab)) tv (CL.consTYVAR ()) lab) lab
 	       in (SOME id, tv, eqTypeVar, E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT a))
 	       end
 	     | f_typevar indent (A.EqualityTypeVar (str, id, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevar; str=\""^(#red D.colors)^str^(D.textReset)^"\")")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevar; str=\""^(#red (!D.colors))^str^((!D.textReset))^"\")")
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
 		   val eqTypeVar2 = T.freshEqualityTypeVar ()
@@ -1547,18 +1547,18 @@ fun generateConstraints' prog pack nenv =
 	     | f_conbind (A.ConBindOf (labid, labtyp, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ConBindOf")
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^"left hand side of 'of'...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green (!D.colors))^"left hand side of 'of'...")
 		   (* this is the code to the left hand side of the 'of' (a constructor name) *)
 		   val (tv1, cons, cst1, css1) = f_labid "X" labid
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^"right hand side of 'of'...")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red (!D.colors))^"right hand side of 'of'...")
 		   (* this is the code to the right hand side of the 'of' (a type) *)
 		   val (tv2, eqtypeVar, cst2, css2) = f_labtype "X" labtyp
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst1))
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of 'of'...\n"^(#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of 'of'...\n"^(#green (!D.colors))^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of 'of'...\n"^(#green (!D.colors))^(E.printConstraints cst2))
 
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "The constraints generated for the type of the datatype constructor are:\n"^(#red D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "The constraints generated for the type of the datatype constructor are:\n"^(#red (!D.colors))^(E.printConstraints cst2))
 
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newClassVar ()
@@ -1616,68 +1616,70 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.cst, Env.css) *)
-	   and f_conbindseq (A.ConBindSeq conbinds) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ConBindSeq")
+	   and f_conbindseq indent (A.ConBindSeq conbinds) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConBindSeq")
 		   val (tvs, conss, csts, csss) = unzipFour (map f_conbind conbinds)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 	       in (tvs, cons, cst, css)
 	       end
-	     | f_conbindseq (A.ConBindSeqDots pl) =
+	     | f_conbindseq indent (A.ConBindSeqDots pl) =
 	       let val env = f_partlist pl
 	       in ([], E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
-	   and f_typevarbind (A.TypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "in f_typevarbind - generating constraints for A.TypeVar (lab = "^Int.toString(L.toInt(lab))^")")
+	   and f_typevarbind indent (A.TypeVar (_, n, _, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVar (f_typevarbind, lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
-	     | f_typevarbind (A.EqualityTypeVar (_, n, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "in f_typevarbind - generating constraints for A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
+	     | f_typevarbind indent (A.EqualityTypeVar (_, n, _, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
-	     | f_typevarbind A.TypeVarDots = (T.freshTypeVar (), E.emtv, E.emptyConstraint)
+	     | f_typevarbind indent A.TypeVarDots = (T.freshTypeVar (), E.emtv, E.emptyConstraint)
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
-	   and f_labtypevarbind (A.LabTypeVar (typeVar, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.LabTypeVar")
-		   val (tv, tyvs, cst) = f_typevarbind typeVar
+	   and f_labtypevarbind indent (A.LabTypeVar (typeVar, _, lab, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"generating constraints for A.LabTypeVar")
+		   val indent = convertIndentToSpaces indent
+		   val (tv, tyvs, cst) = f_typevarbind indent typeVar
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_labtypevarbind (A.LabTypeVarDots typeVars) =
+	     | f_labtypevarbind indent (A.LabTypeVarDots typeVars) =
 	       (T.freshTypeVar (), E.emtv, E.emptyConstraint)
 
 	   (* RETURNS: (Ty.rowVar, Ty.tvenv, Env.cst) *)
-	   and f_typevarseq (A.TypeVarSeqOne (typeVar, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypeVarSeqOne")
-		   val (tv, tyvs, cst) = f_typevarbind typeVar
+	   and f_typevarseq indent (A.TypeVarSeqOne (typeVar, _, lab, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVarSeqOne")
+		   val (tv, tyvs, cst) = f_typevarbind (indent^SS.bottomLeftCurve^SS.straightLine) typeVar
 		   val sv = T.freshRowVar ()
 		   val sq = T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) sq lab
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_typevarseq (A.TypeVarSeqEm (_, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypeVarSeqEm")
+	     | f_typevarseq indent (A.TypeVarSeqEm (_, lab, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVarSeqEm")
 		   val sv = T.freshRowVar ()
 		   val sq = T.ROW_C ([], T.noflex (), lab)
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) sq lab
 	       in (sv, E.emtv, E.singleConstraint (lab, c))
 	       end
-	     | f_typevarseq (A.TypeVarSeqSeq (typevars, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypeVarSeqSeq")
-		   val (tvs, tyvss, csts) = unzipThree (map f_labtypevarbind typevars)
+	     | f_typevarseq indent (A.TypeVarSeqSeq (typevars, _, lab, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVarSeqSeq")
+		   val indent = convertIndentToSpaces indent
+		   val (tvs, tyvss, csts) = unzipThree (map (f_labtypevarbind (indent^SS.bottomLeftCurve^SS.straightLine)) typevars)
 		   val tyvs = E.unionEnvList tyvss
 		   val cst  = E.unionConstraintsList csts
 		   val sv   = T.freshRowVar ()
@@ -1685,8 +1687,8 @@ fun generateConstraints' prog pack nenv =
 		   val c    = E.initRowConstraint (T.ROW_VAR sv) sq lab
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
-	     | f_typevarseq (A.TypeVarSeqDots typeVars) =
-	       let val (_, tyvss, csts) = unzipThree (map f_typevarbind typeVars)
+	     | f_typevarseq indent (A.TypeVarSeqDots typeVars) =
+	       let val (_, tyvss, csts) = unzipThree (map (f_typevarbind indent) typeVars)
 		   val tyvs = E.unionEnvList tyvss
 		   val cst  = E.unionConstraintsList csts
 		   val sv   = T.freshRowVar ()
@@ -1694,10 +1696,11 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Ty.typenv, Ty.varenv * Id.idl option, Env.cst, Env.cst, Env.css) *)
-	   and f_datbind (A.DatBind (datname, conbindseq, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DatBind")
-		   val (tvs, cons, cst1, css1) = f_conbindseq conbindseq
-		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst2, css2) = f_datname datname
+	   and f_datbind indent (A.DatBind (datname, conbindseq, _, lab, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatBind")
+		   val indent = convertIndentToSpaces indent
+		   val (tvs, cons, cst1, css1) = f_conbindseq indent conbindseq
+		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst2, css2) = f_datname (indent^SS.verticalFork^SS.straightLine) datname
 		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
@@ -1716,15 +1719,16 @@ fun generateConstraints' prog pack nenv =
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
 	       in (E.toTYCONTypeNameEnv typeNameEnv E.emvar false (L.singleton lab), (cons, v), cst, cst', css)
 	       end
-	     | f_datbind (A.DatBindDots pl) =
+	     | f_datbind indent (A.DatBindDots pl) =
 	       let val env = f_partlist pl
 	       in (E.getTypeNameEnv env, (E.getValueIds env, NONE), E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typenv, (Ty.varenv * Id.idl option) list, Env.cst, Env.css) *)
-	   and f_datbindseq (A.DatBindSeq (datbinds, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DatBindSeq")
-		   val (typeNameEnvs, conss, csts1, csts2, csss) = unzipFive (map f_datbind datbinds)
+	   and f_datbindseq indent (A.DatBindSeq (datbinds, _, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatBindSeq")
+		   val indent = convertIndentToSpaces indent
+		   val (typeNameEnvs, conss, csts1, csts2, csss) = unzipFive (map (f_datbind indent) datbinds)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst1 = E.unionConstraintsList csts1
 		   val cst2 = E.unionConstraintsList csts2
@@ -1733,7 +1737,7 @@ fun generateConstraints' prog pack nenv =
 		   val css2 = consCSM (E.unionEnvList (map (fn (cons, _) => cons) conss))
 	       in (typeNameEnv, conss, cst1, cst2, E.unionContextSensitiveSyntaxErrors [css, css1, css2])
 	       end
-	     | f_datbindseq (A.DatBindSeqDots pl) =
+	     | f_datbindseq indent (A.DatBindSeqDots pl) =
 	       let val env = f_partlist pl
 	       in (E.getTypeNameEnv env, [(E.getValueIds env, NONE)], E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
@@ -1750,9 +1754,9 @@ fun generateConstraints' prog pack nenv =
 		   val (tv2, eqtv2, cst2, css2) = f_labexp (indent^SS.bottomLeftCurve^SS.straightLine) labexp
 
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindCore - cst1 ***")
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red (!D.colors))^(E.printConstraints cst1))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindCore - cst2 ***")
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green (!D.colors))^(E.printConstraints cst2))
 		   val vids' = E.closeValueIds vids (V.nonexpLabExp labexp)
 		   val c     = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val cst   = E.consConstraint (lab, c) (cst2)
@@ -1774,10 +1778,10 @@ fun generateConstraints' prog pack nenv =
 		   val vids = E.unionEnvList vidss
 		   val cst1 = E.unionConstraintsList csts1
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindSeq - cst1 ***")
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red D.colors)^(E.printConstraints cst1))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red (!D.colors))^(E.printConstraints cst1))
 		   val cst2 = E.unionConstraintsList csts2
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "**** constraints for A.ValBindSeq - cst2 ***")
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green D.colors)^(E.printConstraints cst2))
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#green (!D.colors))^(E.printConstraints cst2))
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 	       in (vids, cst1, cst2, css)
 	       end
@@ -1966,9 +1970,9 @@ fun generateConstraints' prog pack nenv =
 	    * 1. 'Operators' 'datatype Operators = ADD of int*int | IF | LESS_THAN'
 	    * 2. 'mytype' in 'type mytype = int'
 	    *)
-	   and f_tyconbind (A.TyCon (str, id, _, lab, _)) =
+	   and f_tyconbind indent (A.TyCon (str, id, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TyCon (str=\""^str^"\")")
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TyCon (str=\""^str^"\")")
 		   (* generate new type variable, row variable and type function variable *)
 		   val freshTypeVar   = T.freshTypeVar  ()
 		   val freshRowVar   = T.freshRowVar ()
@@ -1989,26 +1993,27 @@ fun generateConstraints' prog pack nenv =
 	       in
 		   (str, SOME (id, lab), freshTypeVar, freshRowVar, typeNameEnv, E.singleConstraint (lab, c))
 	       end
-	     | f_tyconbind A.TyConDots =
+	     | f_tyconbind indent A.TyConDots =
 	       let val tv = T.freshTypeVar  ()
 		   val sv = T.freshRowVar ()
 	       in ("", NONE, tv, sv, E.emtyp, E.emptyConstraint)
 	       end
 
 	   (* RETURNS: (string, Id.id option, Ty.typeVar, Ty.rowVar, Ty.rowVar, Env.typenv, Env.tvenv, Env.cst, Env.css) *)
-	   and f_datname (A.DatName (typvarseq, tycon, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DatName")
-		   val (sv1, tyvs, cst1) = f_typevarseq typvarseq
+	   and f_datname indent (A.DatName (typvarseq, tycon, _, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatName")
+		   val indent = convertIndentToSpaces indent
+		   val (sv1, tyvs, cst1) = f_typevarseq (indent^SS.verticalFork^SS.straightLine) typvarseq
 
 		   (* call f_tyconbind, which deals with the new binding of type constructors *)
-		   val (str, idLabelPair, tv2, sv2, typeNameEnv, cst2) = f_tyconbind tycon
+		   val (str, idLabelPair, tv2, sv2, typeNameEnv, cst2) = f_tyconbind (indent^SS.bottomLeftCurve^SS.straightLine) tycon
 		   val css = consCSM tyvs
 	       (* NOTE: sv1 and sv2 have to be equal *)
 	       in
 		   (* v is an option (Option.map used on it in f_typdescone *)
 		   (str, idLabelPair, tv2, sv2, sv1, typeNameEnv, tyvs, E.unionConstraintsList [cst1, cst2], css)
 	       end
-	     | f_datname A.DatNameDots =
+	     | f_datname indent A.DatNameDots =
 	       let val tv  = T.freshTypeVar ()
 		   val sv1 = T.freshRowVar ()
 		   val sv2 = T.freshRowVar ()
@@ -2016,11 +2021,11 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
-	   and f_typbind (A.TypBind (datname, labtyp, _, lab, _)) =
+	   and f_typbind indent (A.TypBind (datname, labtyp, _, lab, _)) =
 	       let
-		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypBind")
-		   val (_, _, tv1, sv1, sv1', typeNameEnv, tyvs, cst1, css1) = f_datname datname
-		   val (tv2, eqtv, cst2, css2) = f_labtype "X" labtyp
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypBind")
+		   val (_, _, tv1, sv1, sv1', typeNameEnv, tyvs, cst1, css1) = f_datname (indent^SS.verticalFork^SS.straightLine) datname
+		   val (tv2, eqtv, cst2, css2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val c2  = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv1') lab
 		   val c3  = E.LET_CONSTRAINT (E.ROW_ENV (E.projExplicitTypeVars tyvs, E.CONSTRAINT_ENV cst2))
@@ -2028,22 +2033,23 @@ fun generateConstraints' prog pack nenv =
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (typeNameEnv, cst, css)
 	       end
-	     | f_typbind (A.TypBindDots pl) =
+	     | f_typbind indent (A.TypBindDots pl) =
 	       let val env = f_partlist pl
 	       in (E.getTypeNameEnv env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.typenv, Env.cst, Env.css) *)
-	   and f_typbindseq (A.TypBindSeq (typbinds, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypBindSeq")
-		   val (typeNameEnvs, csts, csss) = unzipThree (map f_typbind typbinds)
+	   and f_typbindseq indent (A.TypBindSeq (typbinds, _, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypBindSeq")
+		   val indent = convertIndentToSpaces indent
+		   val (typeNameEnvs, csts, csss) = unzipThree (map (f_typbind (indent^SS.bottomLeftCurve^SS.straightLine)) typbinds)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst  = E.unionConstraintsList csts
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 		   val css1 = consCSM typeNameEnv
 	       in (typeNameEnv, cst, E.unionContextSensitiveSyntaxErrors [css, css1])
 	       end
-	     | f_typbindseq (A.TypBindSeqDots pl) =
+	     | f_typbindseq indent (A.TypBindSeqDots pl) =
 	       let val env = f_partlist pl
 	       in (E.getTypeNameEnv env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
@@ -2213,20 +2219,20 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Ty.rowVar, Env.cst, Env.css) *)
-	   and f_tyclassseq (A.TyClassSeqOne (tyclass, _, lab, _)) =
+	   and f_tyclassseq indent (A.TyClassSeqOne (tyclass, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TyClassSeqOne")
 		   val (tv, cst, css) = f_tyclass tyclass
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
-	     | f_tyclassseq (A.TyClassSeqEm (_, lab, _)) =
+	     | f_tyclassseq indent (A.TyClassSeqEm (_, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TyClassSeqEm")
 		   val sv = T.freshRowVar ()
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C ([], T.noflex (), lab)) lab
 	       in (sv, E.singleConstraint (lab, c), E.emptyContextSensitiveSyntaxError)
 	       end
-	     | f_tyclassseq (A.TyClassSeqSeq (labtyclasss, _, lab, _)) =
+	     | f_tyclassseq indent (A.TyClassSeqSeq (labtyclasss, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TyClassSeqSeq")
 		   val (tvs, csts, csss) = unzipThree (map f_labtyclass labtyclasss)
 		   val sv  = T.freshRowVar ()
@@ -2235,7 +2241,7 @@ fun generateConstraints' prog pack nenv =
 		   val c   = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_C (T.constuple tvs lab, T.noflex (), lab)) lab
 	       in (sv, E.consConstraint(lab, c) cst, css)
 	       end
-	     | f_tyclassseq (A.TyClassSeqDots pl) =
+	     | f_tyclassseq indent (A.TyClassSeqDots pl) =
 	       let val env = f_partlist pl
 		   val sv  = T.freshRowVar ()
 	       in (sv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
@@ -2322,7 +2328,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_dec indent (A.DecDatType (datbinds, _, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecDatType")
-		   val (typeNameEnv, conss, cst1, cst2, css) = f_datbindseq datbinds
+		   val (typeNameEnv, conss, cst1, cst2, css) = f_datbindseq indent datbinds
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
 		   val env1 = E.ROW_ENV (E.CONSTRAINT_ENV cst2, E.envsToSeq envs)
@@ -2330,9 +2336,9 @@ fun generateConstraints' prog pack nenv =
 	       in (env2, css)
 	       end
 	     | f_dec indent (A.DecDatWith (datbind, typbind, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecDatWith")
-		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbind
-		   val (typeNameEnv2, cst2, css2) = f_typbindseq typbind
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DecDatWith")
+		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq (indent^SS.verticalFork^SS.straightLine) datbind
+		   val (typeNameEnv2, cst2, css2) = f_typbindseq (indent^SS.bottomLeftCurve^SS.straightLine) typbind
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2]
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
@@ -2344,7 +2350,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_dec indent (A.DecDatRep (tycon, longtycon, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecDatRep")
-		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind tycon
+		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind indent tycon
 		   val (typeFunctionVar, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
@@ -2357,7 +2363,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_dec indent (A.DecType (typbindseq, _, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecType")
-		   val (typeNameEnv, cst, css) = f_typbindseq typbindseq
+		   val (typeNameEnv, cst, css) = f_typbindseq (indent^SS.bottomLeftCurve^SS.straightLine) typbindseq
 	       in (E.ROW_ENV (E.CONSTRAINT_ENV cst, E.consEnvTypeNames typeNameEnv), css)
 	       end
 	     | f_dec indent (A.DecEx (exbindseq, _, _)) =
@@ -2386,9 +2392,10 @@ fun generateConstraints' prog pack nenv =
 	       in (env5 (*E.LOCAL_ENV (env1, env2)*), E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
 	     | f_dec indent (A.DecAbsType (datbinds, decs, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecAbsType")
-		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbinds
-		   val (env2, css2) = f_decs indent decs
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DecAbsType")
+		   val indent = convertIndentToSpaces indent
+		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq (indent^SS.verticalFork^SS.straightLine) datbinds
+		   val (env2, css2) = f_decs (indent^SS.bottomLeftCurve^SS.straightLine) decs
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
 		   val env3 = E.ROW_ENV (E.CONSTRAINT_ENV cst1', E.envsToSeq envs)
@@ -2401,9 +2408,10 @@ fun generateConstraints' prog pack nenv =
 	       in (env5, css)
 	       end
 	     | f_dec indent (A.DecAbsWith (datbinds, typbinds, decs, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecAbsWith")
-		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq datbinds
-		   val (typeNameEnv2, cst2, css2) = f_typbindseq typbinds
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DecAbsWith")
+		   val indent = convertIndentToSpaces indent
+		   val (typeNameEnv1, conss, cst1, cst1', css1) = f_datbindseq (indent^SS.verticalFork^SS.straightLine) datbinds
+		   val (typeNameEnv2, cst2, css2) = f_typbindseq (indent^SS.bottomLeftCurve^SS.straightLine) typbinds
 		   val (env3, css3) = f_decs indent decs
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
@@ -2445,11 +2453,12 @@ fun generateConstraints' prog pack nenv =
 	       in (E.emptyEnv, css)
 	       end
 	     | f_dec indent (A.DecOverload (labid, labtyp, labTypeVar, tyclassseq, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecOverload")
-		   val (tv1, vids, cst1, css1) = f_labid "X" labid
-		   val (tv2, eqtv, cst2, css2) = f_labtype "X" labtyp
-		   val (tv3, tyvs, cst3) = f_labtypevarbind labTypeVar
-		   val (sv4, cst4, css4) = f_tyclassseq tyclassseq
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DecOverload")
+		   val indent = convertIndentToSpaces indent
+		   val (tv1, vids, cst1, css1) = f_labid (indent^SS.verticalFork^SS.straightLine) labid
+		   val (tv2, eqtv, cst2, css2) = f_labtype (indent^SS.verticalFork^SS.straightLine) labtyp
+		   val (tv3, tyvs, cst3) = f_labtypevarbind (indent^SS.verticalFork^SS.straightLine) labTypeVar
+		   val (sv4, cst4, css4) = f_tyclassseq (indent^SS.bottomLeftCurve^SS.straightLine) tyclassseq
 		   val lid  = Option.getOpt (A.getlabidLabId labid, (I.dummyId, L.dummyLab))
 		   val c1   = E.initTypeConstraint (T.consTYPE_VAR tv3) (T.TYPE_POLY (T.ROW_VAR sv4, T.freshidor (), T.POLY, T.VALUE lid, lab, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
@@ -2462,7 +2471,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_dec indent (A.DecClass (labclass, tyclassseq, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecClass")
 		   val (sv1, ovcs, cst1) = f_labclassbind labclass
-		   val (sv2, cst2, css2) = f_tyclassseq tyclassseq
+		   val (sv2, cst2, css2) = f_tyclassseq indent tyclassseq
 		   val c   = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
 		   val env = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.projOverloadingClasses ovcs)
@@ -2531,9 +2540,10 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* this is used to represent one single type description, for example the 'int' in 'eqtype int' *)
-	   and f_typdescone (A.TypDescOne (datname, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypDescOne")
-		   val (str, idLabelPair, tv, sv1, sv2, typeNameEnv, tyvs, cst, css) = f_datname datname
+	   and f_typdescone indent (A.TypDescOne (datname, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypDescOne")
+		   val indent = convertIndentToSpaces indent
+		   val (str, idLabelPair, tv, sv1, sv2, typeNameEnv, tyvs, cst, css) = f_datname (indent^SS.bottomLeftCurve^SS.straightLine) datname
 		   (* NOTE: tyvs is not used *)
 		   val id   = Option.getOpt (Option.map (fn (id, _) => id) idLabelPair, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, lab) => lab) idLabelPair, lab)
@@ -2548,7 +2558,7 @@ fun generateConstraints' prog pack nenv =
 		   val typenameOption = Option.map (fn (id, lab) => {id = id, lab = lab, kind = E.TYPE, name = typename}) idLabelPair
 	       in (typenameOption, typeNameEnv, E.consConstraint(lab, c1) (E.consConstraint(lab', c2) cst), css)
 	       end
-	     | f_typdescone (A.TypDescOneDots pl) =
+	     | f_typdescone indent (A.TypDescOneDots pl) =
  	       let val env = f_partlist pl
 	       in (NONE, E.getTypeNameEnv env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
@@ -2559,15 +2569,16 @@ fun generateConstraints' prog pack nenv =
 	    *                         spec ::= [...] | type typdesc | eqtype typdesc | [...] *
 	    *
 	    *)
-	   and f_typdesc (A.TypDesc (typdescs, _, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypDesc")
+	   and f_typdesc indent (A.TypDesc (typdescs, _, _)) =
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypDesc")
 
 		   (* we have f_typdescone over the type descriptions, as there might be multiple of them.
 		    * If there are then each type description will be represented by f_typeNameEnvescone via the map.
 		    * We then call unzipFour which puts all of the first element in the tuple of each f_typdescone in a list,
 		    * and then all the second elements, third, and fourth (we union these in the next lines) *)
 		   (* could typeNameEnvs be a list of environments? Why is it a list of environments? *)
-		   val (typenamesOption, typeNameEnvs, constraints, csss) = unzipFour (map f_typdescone typdescs)
+		   val indent = convertIndentToSpaces indent
+		   val (typenamesOption, typeNameEnvs, constraints, csss) = unzipFour (map (f_typdescone (indent^SS.bottomLeftCurve^SS.straightLine)) typdescs)
 
 		   (* because we have all first to fourth elements of the typdescs now in a list, we have to union them *)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
@@ -2585,15 +2596,15 @@ fun generateConstraints' prog pack nenv =
 
 	       in (typename,  typeNameEnv, constraint, css)
 	       end
-	     | f_typdesc (A.TypDescDots pl) =
+	     | f_typdesc indent (A.TypDescDots pl) =
 	       let val env = f_partlist pl
 	       in ([], E.getTypeNameEnv env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.env, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
-	   and f_tdrdescone (A.TdrDescOne (datname, labtyp, _, lab, _)) =
+	   and f_tdrdescone indent (A.TdrDescOne (datname, labtyp, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TdrDescOne")
-		   val (s, v, tv1, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname datname
+		   val (s, v, tv1, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname indent datname
 		   val (tv2, eqtv, cst2, css2) = f_labtype "X" labtyp
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val c2  = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
@@ -2603,33 +2614,33 @@ fun generateConstraints' prog pack nenv =
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (env, cst, css)
 	       end
-	     | f_tdrdescone (A.TdrDescOneDots pl) =
+	     | f_tdrdescone indent (A.TdrDescOneDots pl) =
 	       let val env = f_partlist pl
 	       in (env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.env, E.emptyContextSensitiveSyntaxError) *)
-	   and f_tdrdesclist []                    = (E.emptyEnv, E.emptyContextSensitiveSyntaxError)
-	     | f_tdrdesclist [tdrdesc]             =
-	       let val (env, cst, css) = f_tdrdescone tdrdesc
+	   and f_tdrdesclist indent []                    = (E.emptyEnv, E.emptyContextSensitiveSyntaxError)
+	     | f_tdrdesclist indent [tdrdesc]             =
+	       let val (env, cst, css) = f_tdrdescone indent tdrdesc
 	       in (E.ROW_ENV (E.CONSTRAINT_ENV cst, env), css)
 	       end
-	     | f_tdrdesclist (tdrdesc :: tdrdescs) =
-	       let val (env1, cst, css1) = f_tdrdescone tdrdesc
-		   val (env2, css2) = f_tdrdesclist tdrdescs
+	     | f_tdrdesclist indent (tdrdesc :: tdrdescs) =
+	       let val (env1, cst, css1) = f_tdrdescone indent tdrdesc
+		   val (env2, css2) = f_tdrdesclist indent tdrdescs
 		   val css = E.unionContextSensitiveSyntaxErrors [css1, css2]
 	       in (E.ROW_ENV (E.ROW_ENV (E.CONSTRAINT_ENV cst, env1), env2), css)
 	       end
 
 	   (* RETURNS: (Env.env, E.emptyContextSensitiveSyntaxError) *)
-	   and f_tdrdesc (A.TdrDesc (tdrdescs, _, _)) = f_tdrdesclist tdrdescs
+	   and f_tdrdesc indent (A.TdrDesc (tdrdescs, _, _)) = f_tdrdesclist indent tdrdescs
 	       (*let val (typeNameEnvs, csts, csss) = unzipThree (map f_tdrdescone tdrdescs)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst  = E.unionConstraintsList csts
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 	       in (typeNameEnv, cst, css)
 	       end*)
-	     | f_tdrdesc (A.TdrDescDots pl) =
+	     | f_tdrdesc indent (A.TdrDescDots pl) =
 	       let val env = f_partlist pl
 	       in (env, E.emptyContextSensitiveSyntaxError)
 	       end
@@ -2671,14 +2682,15 @@ fun generateConstraints' prog pack nenv =
 	       end
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
-	   and f_condescone (A.ConDescOneId (ident, _)) =
-	       let val (tv, eqtv, cons, cst, css) = f_identpat "X" ident
+	   and f_condescone indent (A.ConDescOneId (ident, _)) =
+	       let val (tv, eqtv, cons, cst, css) = f_identpat indent ident
 	       in (tv, E.toDA0ValueIds cons L.empty, cst, css)
 	       end
-	     | f_condescone (A.ConDescOneOf (labid, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ConDescOneOf")
-		   val (tv1, cons, cst1, css1) = f_labid "X" labid
-		   val (tv2, eqtv, cst2, css2) = f_labtype "X" labtyp
+	     | f_condescone indent (A.ConDescOneOf (labid, labtyp, _, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConDescOneOf")
+		   val indent = convertIndentToSpaces indent
+		   val (tv1, cons, cst1, css1) = f_labid (indent^SS.verticalFork^SS.straightLine) labid
+		   val (tv2, eqtv, cst2, css2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
 		   val (lab1, lab2) = Option.getOpt (A.getLabelsIdLabId labid, (lab, lab))
 		   val clv1 = CL.newClassVar ()
 		   val clv2 = CL.newClassVar ()
@@ -2693,37 +2705,40 @@ fun generateConstraints' prog pack nenv =
 	       (*val cons = E.toDA1ValueIds cons (L.singleton lab)*)
 	       in (tv, E.toCLSValueIds cons clv1 L.empty, cst', css)
 	       end
-	     | f_condescone (A.ConDescOneNoOf (ident, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ConDescOneNoOf")
-		   val (tv, eqtv, cons, cst, css) = f_identpat "X" ident
+	     | f_condescone indent (A.ConDescOneNoOf (ident, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConDescOneNoOf")
+		   val indent = convertIndentToSpaces indent
+		   val (tv, eqtv, cons, cst, css) = f_identpat (indent^SS.bottomLeftCurve^SS.verticalFork) ident
 		   val tv' = T.freshTypeVar ()
 	       in (tv, E.toDATValueIds cons L.empty, cst, css)
 	       end
-	     | f_condescone (A.ConDescOneDots pl) =
+	     | f_condescone indent (A.ConDescOneDots pl) =
 	       let val env = f_partlist pl
 		   val tv  = T.freshTypeVar ()
 	       in (tv, E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
-	   and f_condesc (A.ConDesc (condescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ConDesc")
-		   val (tvs, conss, csts, csss) = unzipFour (map f_condescone condescs)
+	   and f_condesc indent (A.ConDesc (condescs, _, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConDesc")
+		   val indent = convertIndentToSpaces indent
+		   val (tvs, conss, csts, csss) = unzipFour (map (f_condescone (indent^SS.bottomLeftCurve^SS.straightLine)) condescs)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
 	       in (tvs, cons, cst, css)
 	       end
-	     | f_condesc (A.ConDescDots pl) =
+	     | f_condesc indent (A.ConDescDots pl) =
 	       let val env = f_partlist pl
 	       in ([], E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: ((Id.id, Ty.Typename) option, Env.typenv, E.varenv * Id.idl option, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
-	   and f_datdescone (A.DatDescOne (datname, consdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DatDescOne")
-		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname datname
-		   val (tvs, cons, cst2, css2) = f_condesc consdesc
+	   and f_datdescone indent (A.DatDescOne (datname, consdesc, _, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatDescOne")
+		   val indent = convertIndentToSpaces indent
+		   val (s, v, tv, sv1, sv2, typeNameEnv, tyvs, cst1, css1) = f_datname (indent^SS.verticalFork^SS.straightLine) datname
+		   val (tvs, cons, cst2, css2) = f_condesc (indent^SS.bottomLeftCurve^SS.straightLine) consdesc
 		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
 		   val lab' = Option.getOpt (Option.map (fn (_, l) => l) v, lab)
@@ -2738,15 +2753,15 @@ fun generateConstraints' prog pack nenv =
 		   (*val cs4 = checkTypeVarInc (A.gettypeVarDatName dn) (A.getlabDatName dn) (A.gettypeVarConDesc cd)*)
 	       in (typenameOption, typeNameEnv, (cons, v), cst, cst', E.unionContextSensitiveSyntaxErrors [css1, css2])
 	       end
-	     | f_datdescone (A.DatDescOneDots pl) =
+	     | f_datdescone indent (A.DatDescOneDots pl) =
 	       let val env = f_partlist pl
 	       in (NONE, E.getTypeNameEnv env, (E.getValueIds env, NONE), E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: ((Id.id, Ty.tyname) option, Env.typenv, (E.varenv * Id.idl option) list, E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
-	   and f_datdesc (A.DatDesc (datdescs, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DatDesc")
-		   val (typenameOption, typeNameEnvs, conss, csts, csts', csss) = unzipSix (map f_datdescone datdescs)
+	   and f_datdesc indent (A.DatDesc (datdescs, _, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatDesc")
+		   val (typenameOption, typeNameEnvs, conss, csts, csts', csss) = unzipSix (map (f_datdescone indent) datdescs)
 		   val typeNameEnv = E.unionEnvList typeNameEnvs
 		   val cst  = E.unionConstraintsList csts
 		   val cst' = E.unionConstraintsList csts'
@@ -2754,7 +2769,7 @@ fun generateConstraints' prog pack nenv =
 		   val typename  = List.mapPartial (fn x => x) typenameOption
 	       in (typename, typeNameEnv, conss, cst, cst', css)
 	       end
-	     | f_datdesc (A.DatDescDots pl) =
+	     | f_datdesc indent (A.DatDescDots pl) =
 	       let val env = f_partlist pl
 	       in ([], E.getTypeNameEnv env, [(E.getValueIds env, NONE)], E.emptyConstraint, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
@@ -2887,8 +2902,9 @@ fun generateConstraints' prog pack nenv =
 
 	     (* type declarations inside a signature *)
 	     | f_specone indent (A.SpecType (typdesc, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SpecType")
-		   val (typenames, typeNameEnv, constraints, css) = f_typdesc typdesc
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SpecType")
+		   val indent = convertIndentToSpaces indent
+		   val (typenames, typeNameEnv, constraints, css) = f_typdesc (indent^SS.bottomLeftCurve^SS.straightLine) typdesc
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev lab) env lab
@@ -2906,7 +2922,7 @@ fun generateConstraints' prog pack nenv =
 		    * the third element of the tuple represents the constraints that have been built from (???)
 		    * the fourth element of the tuple represents context sensitive syntax error information
 		    *)
-		   val (typenames, typeNameEnv, constraints, contextSensitiveSyntaxError) = f_typdesc typdesc
+		   val (typenames, typeNameEnv, constraints, contextSensitiveSyntaxError) = f_typdesc indent typdesc
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 
@@ -2933,7 +2949,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone indent (A.SpecTdr (tdrdesc, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SpecTdr")
-		   val (env, css) = f_tdrdesc tdrdesc
+		   val (env, css) = f_tdrdesc indent tdrdesc
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
 		   val c1   = E.initEnvConstraint (E.consENV_VAR ev1 L.dummyLab) env L.dummyLab
@@ -2961,9 +2977,9 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone indent (A.SpecDat (datdesc, _, lab, _)) =
 	       let
-		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
-
-		   val (typenames, typeNameEnv, conss, cst1, cst2, css) = f_datdesc datdesc
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SpecDat (lab = "^Int.toString(L.toInt lab)^")")
+		   val indent = convertIndentToSpaces indent
+		   val (typenames, typeNameEnv, conss, cst1, cst2, css) = f_datdesc (indent^SS.bottomLeftCurve^SS.straightLine) datdesc
 		   val envs = map (fn (cons, SOME idl) => E.DATATYPE_CONSTRUCTOR_ENV (idl, E.ENVPOL (E.emtv, E.projValueIds cons))
 				    | (cons, NONE) => E.ENVPOL (E.emtv, E.projValueIds cons)) conss
 		   val env1 = E.ROW_ENV (E.CONSTRAINT_ENV cst2, E.envsToSeq envs)
@@ -3011,7 +3027,7 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_specone indent (A.SpecRep (tycon, longtycon, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SpecRep")
-		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind tycon
+		   val (s, v, tv, sv, typeNameEnv, cst1) = f_tyconbind indent tycon
 		   val (typeFunctionVar, cst2) = f_longtycon longtycon
 		   val c   = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val cst = E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])
@@ -3314,39 +3330,40 @@ fun generateConstraints' prog pack nenv =
 		 | SOME lid => SOME lid
 
 	   (* RETURNS: (Id.lid option, Ty.rowVar, Env.env, Env.cst) *)
-	   and f_ldatname (A.LDatName (typevarseq, longtycon, _, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.LDatName")
-		   val (sv, tyvs, cst1) = f_typevarseq typevarseq
+	   and f_ldatname indent (A.LDatName (typevarseq, longtycon, _, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.LDatName")
+		   val (sv, tyvs, cst1) = f_typevarseq indent typevarseq
 		   val lidop = f_longtyconwhere longtycon
 	       in (lidop, sv, tyvs, cst1)
 	       end
-	     | f_ldatname A.LDatNameDots =
+	     | f_ldatname indent A.LDatNameDots =
 	       let val sv  = T.freshRowVar ()
 	       in (NONE, sv, E.emtv, E.emptyConstraint)
 	       end
 
 	   (* RETURNS: (Id.lid option, Ty.tyfvar, Env.cst, Env.css) *)
-	   and f_ltreadescone (A.LTReaDOne (ldatname, labtyp, _, lab, _)) =
-	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.LTReaDOne")
-		   val (lidop, sv, tyvs, cst1) = f_ldatname ldatname
-		   val (tv, eqtv, cst2, css) = f_labtype "X" labtyp
+	   and f_ltreadescone indent (A.LTReaDOne (ldatname, labtyp, _, lab, _)) =
+	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.LTReaDOne")
+		   val indent = convertIndentToSpaces indent
+		   val (lidop, sv, tyvs, cst1) = f_ldatname (indent^SS.verticalFork^SS.straightLine) ldatname
+		   val (tv, eqtv, cst2, css) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
 		   val typeFunctionVar = T.freshTypeFunctionVar ()
 		   val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv, T.consTYPE_VAR tv, lab)) lab
 		   val c2  = E.LET_CONSTRAINT (E.ROW_ENV (E.CONSTRAINT_ENV cst1, E.ROW_ENV (E.projExplicitTypeVars tyvs, E.CONSTRAINT_ENV cst2)))
 		   (*val cs3 = checkTypeVarInc (A.gettypeVarLDatName dn) (A.getlabLDatName dn) (A.gettypeVarLabType ty)*)
 	       in (lidop, typeFunctionVar, E.consConstraint(lab, c1) (E.singleConstraint (L.dummyLab, c2)), css)
 	       end
-	     | f_ltreadescone (A.LTReaDOneDots pl) =
+	     | f_ltreadescone indent (A.LTReaDOneDots pl) =
 	       let val env = f_partlist pl
 		   val typeFunctionVar = T.freshTypeFunctionVar ()
 	       in (NONE, typeFunctionVar, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Env.longtyp list, Env.cst, Env.css) *)
-	   and f_ltreadesc (A.LTReaDesc (ltreadescs, _, lab, _)) =
+	   and f_ltreadesc indent (A.LTReaDesc (ltreadescs, _, lab, _)) =
 	       (D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.LTReaDesc");
 	       foldr (fn (ltreadesc, (reas, cst, css)) =>
-			 case f_ltreadescone ltreadesc of
+			 case f_ltreadescone indent ltreadesc of
 			     (SOME lid, typeFunctionVar, cst0, css0) =>
 			     let val longid = {lid = lid, sem = T.consTYPE_FUNCTION_VAR typeFunctionVar, class = CL.consTYCON (), lab = lab}
 				 val cst1 = E.unionConstraintsList [cst, cst0]
@@ -3356,7 +3373,7 @@ fun generateConstraints' prog pack nenv =
 			   | (NONE, _, cst0, css0) => (reas, E.unionConstraintsList [cst, cst0], E.unionContextSensitiveSyntaxErrors [css, css0]))
 		     ([], E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 		     ltreadescs)
-	     | f_ltreadesc (A.LTReaDescDots pl) =
+	     | f_ltreadesc indent (A.LTReaDescDots pl) =
 	       let val env = f_partlist pl
 	       in ([], E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
@@ -3425,7 +3442,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_sigexp indent (A.SigExpRea (labsigexp, rea, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigExpRea")
 		   val (ev1, cst1, css1) = f_labsigexp indent labsigexp
-		   val (reas, cst2, css2) = f_ltreadesc rea
+		   val (reas, cst2, css2) = f_ltreadesc indent rea
 		   val ev   = E.freshEnvVar ()
 		   val ev'  = E.freshEnvVar ()
 		   val cst  = E.unionConstraintsList [cst1, cst2]
@@ -3750,11 +3767,11 @@ fun generateConstraints' prog pack nenv =
 	     | f_proglist indent ((x, file, true, _) :: xs) =
 	       if benv
 	       then let val _ = setBasis true
-			val skalpelDebugValue = !(D.debug)
-			val _ = D.debug := false
+			(* val skalpelDebugValue = !(D.debug) *)
+			(* val _ = D.debug := false *)
 			val (env1, css1) = f_prog indent x
 			val _ = setBasis false
-			val _ = D.debug := skalpelDebugValue
+			(* val _ = D.debug := skalpelDebugValue *)
 			val (env2, css2) = f_proglist indent xs
 			val env = f_progfile file env1 env2
 		    in (env, E.unionContextSensitiveSyntaxErrors [css1, css2])

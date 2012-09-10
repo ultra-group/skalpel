@@ -154,6 +154,7 @@ this section.
 \section{Linux}
 
 \subsection{Configuration of the Terminal Front-End}
+\label{skalpel-environment-vars}
 
 To use Skapel in a terminal, the analysis engine binary (the binary
 installed to the system called \texttt{skalpel}), should be called
@@ -175,7 +176,7 @@ arguments are as follows:
   \texttt{skalpel} package/archive, it is recommended that the
   environment variable \$SKALPEL\_BASIS is set, which will allow the
   user to omit this argument. This can be done with similar lines to
-  the below specified in the \texttt{{\textasciitilde}/.bashrc} file\footnote{users of shells
+  the below specified in the \texttt{{\textasciitilde}/.bashrc} file\footnote{ Users of shells
     other than bash should consult the documentation for their shell
     to discover how to set environment variables}:\\
 
@@ -188,8 +189,14 @@ arguments are as follows:
     should be an environment variable for this?}
 \end{itemize}
 
-\todo[inline]{An example should go here of the Skalpel terminal front
-  end being executed}
+The Skalpel program binary should also be added to the PATH variable
+of the shell inside which Skalpel is to be executed. This can be
+achieved as follows (users not using \texttt{bash} should consult the
+documentation of their shell if they need to know how to do this),
+replacing /path/to/dir/containing/skalpel/binary/ as appropriate:
+
+\noindent \texttt{PATH=/path/to/dir/containing/skalpel/binary:\$PATH}\\
+\texttt{export PATH}
 
 \subsection{Configuration of the Emacs Front-End}
 
@@ -202,19 +209,33 @@ Skalpel archive was downloaded from the downloads page (see
 \ref{skalpel-downloads-page} for URL) then Emacs needs to be
 configured to load an Emacs lisp file present inside the archive which
 can be done by inserting the following lines into an Emacs startup
-file\footnote{examples of startup files Emacs looks for include
+file\footnote{ Examples of startup files Emacs looks for include
   \texttt{{\textasciitilde}/.emacs} and
   \texttt{{\textasciitilde}/.emacs.el}}, replacing
 /path/to/extracted/archive/ as appropriate:
 
-\noindent \texttt{(add-to-list 'load-path (file-truename "/path/to/extracted/archive/EmacsUI/"))}
-\texttt{(defvar skalpel-emacs-directory "/path/to/extracted/archive/EmacsUI/")}
-\texttt{(defvar skalpel-bin-directory "/path/to/extracted/archive/analysis-engines/standard-ml/bin")}
-\texttt{(defvar skalpel-lib-directory "/path/to/extracted/archive/lib/")}
-\texttt{(defvar skalpel-sources-directory "/path/to/extracted/archive/analysis-engines/standard-ml/")}
+\noindent \texttt{(add-to-list 'load-path (file-truename "/path/to/extracted/archive/EmacsUI/"))}\\
+\texttt{(defvar skalpel-emacs-directory "/path/to/extracted/archive/EmacsUI/")}\\
+\texttt{(defvar skalpel-bin-directory "/path/to/extracted/archive/analysis-engines/standard-ml/bin")}\\
+\texttt{(defvar skalpel-lib-directory "/path/to/extracted/archive/lib/")}\\
+\texttt{(defvar skalpel-sources-directory "/path/to/extracted/archive/analysis-engines/standard-ml/")}\\
 \texttt{(load "skalpel-config.el")}
 
-Emacs should now be configured to use Skalpel on Standard ML programs.
+If configuration is set up correctly, the 'Skalpel' menu bar item will
+be visible when in any file with the suffix ``.tes'', ``.sml'' or
+``.sig.''.
+
+\chapter{Using Skalpel in a Terminal Window}
+
+For the purposes of this chapter, it is assumed that we have the
+SKALPEL\_BASIS environment variable set up (described in section
+\ref{skalpel-environment-vars}), and so the \texttt{-b} parameter is
+omitted.
+
+\todo[inline]{An example should go here of the Skalpel terminal front
+  end being executed}
+
+
 
 \chapter{Using Skalpel in Emacs}
 

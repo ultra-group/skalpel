@@ -50,8 +50,8 @@ signature DEBUG = sig
     val sep1' : string
     val sep2' : string
 
-    val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string}
-    val textReset : string
+    val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
+    val textReset : string ref
 
     val enableDebugFeature : debugFeature -> unit
 
