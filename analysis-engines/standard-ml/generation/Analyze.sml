@@ -647,14 +647,17 @@ fun generateConstraints' prog pack nenv =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.ExpField");
 		   val (lv, lop, cst1)  = f_tylab tylab
 		   val (tv, eqtv, cst2, css2) = f_labexp "X" labexp
+		   val eqtv' = T.freshEqualityTypeVar()
 		   val rv = T.freshFieldVar ()
 		   val c  = E.initFieldConstraint (T.FIELD_VAR rv) (T.FC (T.LABEL_VAR lv, T.consTYPE_VAR tv, lab)) lab
-	       in ((lop, rv), E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
+		   val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv') (T.consEQUALITY_TYPE_VAR eqtv) lab
+	       in ((lop, rv), eqtv', E.consConstraint(lab, c2) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2])), css2)
 	       end
 	     | f_expfield (A.ExpFieldDots pl) =
 	       let val rv  = T.freshFieldVar ()
 		   val env = f_partlist pl
-	       in ((NONE, rv), E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
+		   val eqtv = T.freshEqualityTypeVar()
+	       in ((NONE, rv), eqtv, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typeVar, Env.cst, Env.css) *)
@@ -701,10 +704,6 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing eqtvs for AtExpTuple...\n"^(#red D.colors)^(foldr (fn (x,y) => x^"\n"^y) "" (List.map T.printEqualityTypeVar eqtvs)))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for AtExpTuple...\n"^(#green D.colors)^(foldr (fn (x,y) => x^"\n"^y) "" (List.map E.printConstraints csts)))
 
-		   (* so some kind of constraint is needed here so that if any of the eqtv values end up being
-		    * mapped to NOT_EQUALITY_TYPE, then the fresh equality type var that's generated is also
-		    * NOT_EQUALITY_TYPE *)
-
 		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
@@ -715,26 +714,28 @@ fun generateConstraints' prog pack nenv =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.AtExpRecord (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (xs, csts, csss) = unzipThree (map f_expfield expfields)
+		   val (xs, eqtvs, csts, csss) = unzipFour (map f_expfield expfields)
 		   val (lops, rts) = ListPair.unzip xs
+		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val cst  = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val css' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.noflex ()) lab) lab
-	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css'])
+	       in (tv, eqTypeVar, E.consConstraint (lab, equalityTypeConstraint) (E.consConstraint (lab, c) cst), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, css'])
 	       end
 	     | f_atexp indent (A.AtExpSlRec (expfields, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.AtExpSlRec (lab = "^(Int.toString(L.toInt(lab))^")"))
 		   val tv  = T.freshTypeVar ()
 		   val eqTypeVar = T.freshEqualityTypeVar ()
-		   val (xs, csts, csss) = unzipThree (map f_expfield expfields)
+		   val (xs, eqtvs, csts, csss) = unzipFour (map f_expfield expfields)
 		   val (lops, rts) = ListPair.unzip xs
 		   val cst  = E.unionConstraintsList csts
+		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val contextSensitiveSyntaxError  = E.unionContextSensitiveSyntaxErrors csss
 		   val contextSensitiveSyntaxError' = consCSMlab (List.mapPartial (fn x => x) lops)
 		   (* We condiser that as a widlcard because it is incomplete: *)
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constyrecord rts (T.consflex lab) lab) lab
-	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
+	       in (tv, eqTypeVar, E.consConstraint (lab, equalityTypeConstraint) (E.consConstraint (lab, c) cst), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atexp indent (A.AtExpLet (decs, labexp, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.AtExpLet (lab = "^(Int.toString(L.toInt(lab))^")"))
