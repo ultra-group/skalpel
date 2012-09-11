@@ -5724,6 +5724,7 @@ technically a different node in the abstract syntax tree so a few
 lines needed inserted in the constraint generation functions
 associated with handling those nodes), so we're now getting slices for
 these as well.
+
 *** 2012-09-10
 
 (2012-09-10-10:27)
@@ -5781,3 +5782,27 @@ eqtype <something>
 I think each of these three cases has its own different abstract
 syntax tree node. If this is indeed the case constraint generation
 should be not too tricky to do at all (fingers crossed ;).
+
+*** 2012-09-11
+
+(2012-09-11-09:30)
+
+Going to look at the theory today and then move on to implementation
+at some point, would be good to keep working on that.
+
+(2012-09-11-11:48)
+
+I've looked a little bit at the theory and made some notes on the
+whiteboard but there's quite a lot here to parse with my eyes. I'm
+going to take a look at this further.
+
+(2012-09-11-17:28)
+
+Finished a meeting with Joe, I'm going to focus more on the theory
+than the implementation in the next few days. I think I might just
+work solely on the theory in the day and then work on the
+implementation in the evenings or something like that. Hoping to do a
+bit of the eqtype keyword stuff this evening and then have another
+look at the theory tomorrow morning and figure out how I'm going to
+play this.
+
