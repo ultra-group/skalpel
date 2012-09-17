@@ -1,5 +1,3 @@
-
-
 datatype 'a mydt = firstCons of 'a | secondCons of 'a;
 
 fun test () = 5.0;
