@@ -5806,3 +5806,31 @@ bit of the eqtype keyword stuff this evening and then have another
 look at the theory tomorrow morning and figure out how I'm going to
 play this.
 
+*** 2012-09-12
+
+(2012-09-12-13:54)
+
+I'm going to put the theory that I'm working on in the jpirie-phd
+repo. It's going to be probably easier to make edits just in the .tex
+file.
+
+*** 2012-09-14
+
+(2012-09-14-23:30)
+
+Just leaving a note here for tomorrow, the constraint generation rules
+that I'm mocking up for the equality types writeup I think should
+contain something like 'l, <something>' above the equals sign in rule
+G1 to denote an equality type variable is being used. I think that's
+right way to do that. Not sure what to do for the other rules yet but
+I'll have a think about them.
+
+*** 2012-09-15
+
+(2012-09-15-01:32)
+
+I also think that I am going to have to put some text in the
+constraint syntax section after all, as I'm going to need to define
+the set of equality type variables (and most likely the equality type
+status values as well). I'm not sure how to write that yet but I'll
+think about it tomorrow and write something up then.
