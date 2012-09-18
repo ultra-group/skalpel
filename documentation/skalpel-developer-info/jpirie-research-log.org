@@ -5834,3 +5834,29 @@ constraint syntax section after all, as I'm going to need to define
 the set of equality type variables (and most likely the equality type
 status values as well). I'm not sure how to write that yet but I'll
 think about it tomorrow and write something up then.
+
+*** 2012-09-17
+
+(2012-09-17-16:23)
+
+From the way the constraint generator is described in the paper, it
+looks like equality type information can be carried around in standard
+type constraints, but when I initially tried this idea it did not work
+very well as:
+
+- multiple type constraints needed to be created in some cases to have
+  the correct labels for equality type errors
+- code lost modularity, in constraint generation but particularly in
+  constraint solving, as solving algorithm for equality type variables
+  got stuffed in with all the TYPE_VAR solving code
+- extra information carried around in TYPE_VAR constructor which is
+  completely irrelevant to equality type error detection
+- complex to debug
+
+*** 2012-09-18
+
+(2012-09-18-03:03)
+
+Note for tomorrow to find some of the definitions of variables and
+write them down from the thesis. Flipping backwards and forwards for
+definitions is time consuming.
