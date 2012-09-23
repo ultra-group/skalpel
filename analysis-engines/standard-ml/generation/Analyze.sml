@@ -3135,7 +3135,7 @@ fun generateConstraints' prog pack nenv =
 	       in (strs, cst, css)
 	       end
 
-	   (* RETURNS: (Env.strenv, Env.cst, Env.css) *)
+	   (* structure binding using an opaque signature *)
 	   and f_strbindone indent (A.StrBindOneOp (strid, labsigexp, labstrexp, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.StrBindOneOp")
 		   val (ev1, cst1, css1) = f_labstrexp indent labstrexp
@@ -3148,6 +3148,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
+	     (* structure binding using a translucent signature *)
 	     | f_strbindone indent (A.StrBindOneTr (strid, labsigexp, labstrexp, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.StrBindOneTr")
 		   val indent = convertIndentToSpaces indent
@@ -3161,6 +3162,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
+	     (* structure binding using no signature *)
 	     | f_strbindone indent (A.StrBindOne (strid, labstrexp, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.StrBindOne")
 		   val (ev1, strs, cst1, css1) = f_strid indent strid

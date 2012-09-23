@@ -134,8 +134,11 @@ and strbind =
   | StrBindDots     of part list
 
 and strbindone =
+    (* for opaque signature use *)
     StrBindOneOp    of strid * labsigexp * labstrexp * R.region list * L.label * next
+    (* for translucent signature use *)
   | StrBindOneTr    of strid * labsigexp * labstrexp * R.region list * L.label * next
+    (* for no signature use *)
   | StrBindOne      of strid * labstrexp * R.region * L.label * next
   | StrBindOneDots  of part list
 

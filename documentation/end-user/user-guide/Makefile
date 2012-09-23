@@ -24,7 +24,10 @@
 
 
 default:
-	rubber -d user-guide
+	pdflatex user-guide.tex
+
+document:
+	pdflatex user-guide.tex
 
 clean:
 	rm -f user-guide.dvi

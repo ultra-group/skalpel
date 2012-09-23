@@ -39,8 +39,8 @@ date=`date +%Y-%m-%d`
 # the binary target should be called smlnj-bin
 default:
 	# you can either
+	#  - generate a binary (using MLton, recommended!)              : 'mlton-bin'
 	#  - generate a binary (using SML/NJ)                           : 'smlnj-bin'
-	#  - generate a binary (using MLton)                            : 'mlton-bin'
 	#  - generate a binary (using Poly/ML)                          : 'polyml-bin'
 	#  - generate a binary to be used in the webdemo (using SML/NJ) : 'smlnj-bin-webdemo'
 	#  - generate a binary to be used in the webdemo (using MLton)  : 'mlton-bin-webdemo'
@@ -179,9 +179,7 @@ cmtomlb:
 	./cmtomlb.sh
 
 sml-tes-deps:
-	# after this is done, add 'make ml-binary' as command in the created entry
-	# Is there another way to achieve that apart from sed or something like that?
-	# I still have to write some code to delete the stuff obtained via sml-makedepend.
+	@echo "***** Attempting to do SML/NJ specific commands. If you are not using the SML/NJ compiler, ignore any errors"
 	ml-makedepend "${SOURCESDIR}/sources.cm" "${SOURCESDIR}/bin/slicer-smlnj"
 	cat Makefile | sed "s/^\(# END  : ml-makedepend\)/\tmake ml-binary\n\1/" > tmp-makefile
 	mv tmp-makefile Makefile
@@ -198,7 +196,7 @@ cleaner:
 clean: cleaner
 	rm Makefile
 
-smlnj-bin: ${SOURCESDIR}/bin/slicer-smlnj
+smlnj-bin: ml-binary
 
 mlton-bin-gen: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
