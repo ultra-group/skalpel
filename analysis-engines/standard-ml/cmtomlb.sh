@@ -72,6 +72,7 @@ function cmtomlb {
 	echo "  \$(SML_LIB)/smlnj-lib/Controls/controls-lib.mlb" >> ${mlbfile}
 	echo "  \$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb"        >> ${mlbfile}
 	echo "  \$(SML_LIB)/smlnj-lib/PP/pp-lib.mlb"             >> ${mlbfile}
+	echo "  \$(SML_LIB)/smlnj-lib/JSON/json-lib.mlb"         >> ${mlbfile}
 	echo                                                     >> ${mlbfile}
 
         # We add our mlb files to the mlb file

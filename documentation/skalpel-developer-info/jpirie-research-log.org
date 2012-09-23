@@ -5860,3 +5860,182 @@ very well as:
 Note for tomorrow to find some of the definitions of variables and
 write them down from the thesis. Flipping backwards and forwards for
 definitions is time consuming.
+
+*** 2012-09-19
+
+I'm going to start making a list of the terms in the thesis with odd
+names and then maybe we can change them later. Joe doesn't like them
+either, so I guess they'll end up being changed in the paper.
+
+*** 2012-09-20
+
+(2012-09-20-11:15)
+
+Leaving here some notes from the meeting with Joe yesterday.
+
+Anything of the form:
+
+type <something>
+
+means that <something> is *not* an equality type if the signature in
+which this is currently being defined is opaque. If however we see
+this:
+
+type <something> = <something else>
+
+then <something> *is* an equality type, provided that the 'where'
+keyword does not appear in <something else>. If it does, I think it's
+possible that <something> might be not an equality type.
+
+If the signature is translucent, then:
+
+type <something>
+
+does not say anything about the equality type status of
+<something>. However,
+
+eqtype <something>
+
+will always mean that <something> is an equality type.
+
+I need to check these rules further with Hamlet and by reading the standard.
+
+(2012-09-20-13:51)
+
+These rules don't seem to quite work as I expected. For example,
+Hamlet thinks this program is typable:
+
+val S = 10;
+structure S = struct val x = 10 end;
+S = S;
+
+However, by appending this line
+
+S + S;
+
+This would no longer typable under Hamlet. Skalpel states this is
+typable, Poly states this is typable also.
+
+*** 2012-09-22
+
+(2012-09-22-22:12)
+
+A few notes on the way that signature constraint generation works (I'm
+looking at this because I need to implement equality types for
+signatures). I'm still working on the write-up but I'm going to take a
+look at this while I am still storing most of the information related
+to equality types in my head.
+
+The basis file starts with:
+
+structure Basis :> sig
+
+[definition]
+
+end = _structBasis
+
+This is what happens with respect to lexical analysis and parsing.
+
+The ':>' symbol as picked up by the lexer is called 'SEAL'. It is used
+in the first line of code above as the first case of the below ML.grm
+fragment:
+
+
+strbindone :
+  strid SEAL labsigexp EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (si, pasc) = labsigexp masc
+	    val (se, (q, asc')) = labstrexp pasc
+	    val reg1 = R.consReg SEALleft SEALright
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion SEALright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.StrBindOneOp (sid, si (ri1 @ ri2), se re, [reg1, reg2], n, q), (q, asc'))
+	end)
+| strid COLON labsigexp EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (si, pasc) = labsigexp masc
+	    val (se, (q, asc')) = labstrexp pasc
+	    val reg1 = R.consReg COLONleft COLONright
+	    val reg2 = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val ri1  = getRegion COLONright labsigexpleft
+	    val ri2  = getRegion labsigexpright EQUALOPleft
+	in (A.StrBindOneTr (sid, si (ri1 @ ri2), se re, [reg1, reg2], n, q), (q, asc'))
+	end)
+| strid EQUALOP labstrexp
+    (fn (n, asc) =>
+	let val (sid, masc) = strid (L.nextLabel n, asc)
+	    val (se, (p, asc')) = labstrexp masc
+	    val reg = R.consReg EQUALOPleft EQUALOPright
+	    val re   = getRegion EQUALOPright labstrexpleft
+	    val _ = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: strid EQUALOP labstrexp")
+	in (A.StrBindOne (sid, se re, reg, n, p), (p, asc'))
+	end)
+
+
+The first rule is the rule that fires in the code fragment discussed
+as it is an opaque signature. The second rule will fire for
+translucent signatures, and the third rule will fire if no signature
+is specified.
+
+Further along the line in constraint generation, we have three cases
+for dealing with each of these three structure binding forms. I'll
+just look at the first two cases here (using opaque or translucent
+signatures).
+
+(* structure binding using an opaque signature *)
+and f_strbindone indent (A.StrBindOneOp (strid, labsigexp, labstrexp, _, lab, _)) =
+    let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.StrBindOneOp")
+	val (ev1, cst1, css1) = f_labstrexp indent labstrexp
+	val (ev2, cst2, css2) = f_labsigexp indent labsigexp
+	val (ev3, strs, cst3, css3) = f_strid indent strid
+	val c    = E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab)
+	val cst  = E.singleConstraint (lab, c)
+	val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
+	val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
+	val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
+   in (strs, E.unionConstraintsList [cst3, cst'], css)
+   end
+   (* structure binding using a translucent signature *)
+  | f_strbindone indent (A.StrBindOneTr (strid, labsigexp, labstrexp, _, lab, _)) =
+    let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.StrBindOneTr")
+	val indent = convertIndentToSpaces indent
+	val (ev1, cst1, css1) = f_labstrexp (indent^SS.verticalFork^SS.straightLine) labstrexp
+	val (ev2, cst2, css2) = f_labsigexp (indent^SS.verticalFork^SS.straightLine) labsigexp
+	val (ev3, strs, cst3, css3) = f_strid (indent^SS.bottomLeftCurve^SS.straightLine) strid
+	val c    = E.SIGNATURE_CONSTRAINT (ev2, SOME ev3, ev1, NONE, lab)
+	val cst  = E.singleConstraint (lab, c)
+	val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
+	val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
+	val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
+     in (strs, E.unionConstraintsList [cst3, cst'], css)
+     end
+
+Constraint generation is very similar in both cases. The main
+difference is in the definition of 'c', in which the second and fourth
+arguments are reversed. A SIGNATURE_CONSTRAINT is:
+
+SIGNATURE_CONSTRAINT of evsbind
+
+where ensbind is defined as this:
+
+(* 1st envVar: instantiated signature
+ * 2nd envVar: signature matching
+ * 3rd envVar: enriched structure
+ * 4th envVar: resulting structure
+ * the bool if false if we want to impose some restrictions based on the
+ * structure env (where clauses). *)
+(* WARNING: it is suspected the above comment may not be relevant to the below. Read with caution! *)
+type evsbind        = envVar        *
+		      envVar option *
+		      envVar        *
+		      envVar option *
+		      L.label
+
+I'll need to really look in the constraint solving code to find out
+what the real difference is I guess. I'll try and find some time
+tomorrow for that.

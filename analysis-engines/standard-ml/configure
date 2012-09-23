@@ -3,13 +3,8 @@
 ###############################################################
 ###############################################################
 ##
-## Copyright 2010 Heriot-Watt University
+## Copyright 2010 2012 Heriot-Watt University
 ## Copyright 2010 John Pirie
-##
-## This file is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
 ##
 ## This file is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,26 +15,38 @@
 ## along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##
-## Authors: Steven Shiells
+## Authors: Steven Shiells, John Pirie
 ## Date: December 2009
-## Description: This is a shell script to run Skalpel, type 
-##              error slicer for SML.
+## Description: This is a hand-written configure script for Skalpel.
 ##
 ################################################################
 ################################################################
 
-case $USER in
-    ss215)
-	SMLBINDIR=/u1/pg/rahli/softwares/smlnj/bin
-	;;
-    dd35)
-	SMLBINDIR=/u1/pg/rahli/softwares/smlnj/bin
-	;;
-#    jbw)
-#	SMLBINDIR=/home/jbw/smlnj/bin
-#	;;
-esac
 
+# check for necessary programs
+mllexLocation=`which sml 2>/dev/null | sed 's#[/]*sml$##'`
+if [ "${mllexLocation}" == "" ]; then
+    echo "ERROR: Cannot find the SML/NJ compiler on this system, and it is necessary to compile Skalpel (even if using the MLton compiler)."
+    exit
+fi
+
+mllexLocation=`which mllex 2>/dev/null | sed 's#[/]*mllex$##'`
+if [ "${mllexLocation}" == "" ]; then
+    echo "ERROR: Cannot find the mllex command on this system, and it is necessary to compile Skalpel."
+    exit
+fi
+
+mlyaccLocation=`which mlyacc 2>/dev/null | sed 's#[/]*mlyacc$##'`
+if [ "${mlyaccLocation}" == "" ]; then
+    echo "ERROR: Cannot find the mlyacc command on this system, and it is necessary to compile Skalpel."
+    exit
+fi
+
+mltonLocation=`which mlton 2>/dev/null | sed 's#[/]*mlyacc$##'`
+if [ "${mltonLocation}" == "" ]; then
+    echo "ERROR: Cannot find the mlton command on this system, and it is necessary to compile Skalpel."
+    exit
+fi
 
 # If not already set, we set the following variables:
 #   SMLBINDIR, POLYBINDIR, POLYLIBDIR, TEXTEDITOR, WEBBROWSER,
