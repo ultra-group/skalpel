@@ -6039,3 +6039,52 @@ type evsbind        = envVar        *
 I'll need to really look in the constraint solving code to find out
 what the real difference is I guess. I'll try and find some time
 tomorrow for that.
+*** 2012-09-25
+
+(2012-09-25-21:12)
+
+Doing a bit of implementation this evening, might not get as far as
+generating new constraints for signatures, depends how long it takes
+me to figure out how environment variables are used in the
+implementation.
+
+(2012-09-25-22:03)
+
+The difference between the opaque signature constraint generation and
+the translucent constraint generation seems to be in the what is put
+into the right hand side of the state environment for env3.
+
+In the case of translucent signatures, this is is made on the right
+hand side:
+
+buildFEnv (*justBuildEnv*) env1 state true
+
+and for opaque signatures:
+
+freshenv' (renameenv' env0 state) (SOME O.empty) false
+
+I had initially thought that buildFEnv would be
+'buildFreshEnvironment', but the buildfreshenv' function call for
+opaque signatures has me uncertain on that one.
+
+(2012-09-25-22:36)
+
+Yeah, buildFEnv looks like it builds a fresh environment:
+
+fun buildFEnv env state bstr = buildEnv env state (SOME (F.finitState ())) bstr
+
+Indeed yes, F is the structure Fresh, and finitState initialises a new
+state.
+
+(2012-09-25-23:36)
+
+I'm being led off into a series of function calls, might not be able
+to untangle this this evening...
+
+*** 2012-09-26
+
+(2012-09-26-00:23)
+
+Nope, I'm not able to untangle this right now. This is going to take a
+while. Will continue with this tomorrow evening if a meeting isn't on
+the cards, maybe I'll be able to make sense of more then.
