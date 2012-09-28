@@ -6096,3 +6096,20 @@ the cards, maybe I'll be able to make sense of more then.
 I could really, really, really really, really, really, use a list of
 all the definitions from Vincent's thesis. I'm going to build one at
 some point, I might have to do that today.,
+*** 2012-09-28
+
+(2012-09-28-17:31)
+
+A short note on how a part of equality type solving with tuples works
+because it's not obvious from the code.
+
+We will always generate the constraint equality type variable =
+equality type variable list after we have generated the constraints
+for the individual tuple components. Therefore when solving the
+constraint equality type variable = equality type variable list, if
+the equality type variable is mapped to a status at some point in the
+constraint solving process this will already exist in the state
+environment map. This is why the constraint solving code for solving
+equality type status = equality type variable list is only present in
+the equality type variable = equality type variable list constraint
+solving case in the constraint solver.
