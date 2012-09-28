@@ -4237,7 +4237,7 @@ fun unif env filters user =
 		    end
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR eqtv), resultLabels, resultDeps, resultIds), recordInformation) =>
 		    let
-			val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equaltiy type variable already exists in map when creating mapping from equality type variable to a list of other equality type variables")
+			val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "WARNING: equaltiy type variable already exists in map when creating mapping from equality type variable to a list of other equality type variables")
 		    in
 			fsimplify cs' l
 		    end
