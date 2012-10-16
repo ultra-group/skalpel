@@ -25,7 +25,7 @@
 structure Debug :> DEBUG = struct
 
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING
 
 val rand = Random.rand (0,6)
 
@@ -48,6 +48,7 @@ val debugTesting              : bool ref = ref false
 val debugParsing              : bool ref = ref false
 val debugState                : bool ref = ref false
 val debugProgramLabelling     : bool ref = ref false
+val debugBasisLabelling       : bool ref = ref false
 
 fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature CONSTRAINT_PATH = debugConstraintPath := true
@@ -57,6 +58,7 @@ fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature TESTING = debugTesting := true
   | enableDebugFeature STATE = debugState     := true
   | enableDebugFeature PROGRAM_LABELLING = debugProgramLabelling     := true
+  | enableDebugFeature BASIS_LABELLING   = debugBasisLabelling       := true
 
 fun printFilename JSON   = "JsonParser.sml"
   | printFilename UNIF   = "Unification.sml"
@@ -87,6 +89,18 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
 	let
 	    val filename = (case OS.Process.getEnv "SKALPEL_LABELLED_PROGRAM" of
 			      NONE => (print "Warning: Environment variable SKALPEL_LABELLED_PROGRAM not set! Defaulting to: /tmp/skalpel-labelled-program.tex"; "/tmp/skalpel-labelled-program.tex")
+			    | SOME file => file)
+	    val outputStream = TextIO.openOut filename
+	in
+	    (TextIO.output (outputStream, stringFunction());
+	     TextIO.closeOut outputStream)
+	end
+    else ()
+  | printDebugFeature file BASIS_LABELLING stringFunction =
+    if (!debug) andalso (!debugBasisLabelling) then
+	let
+	    val filename = (case OS.Process.getEnv "SKALPEL_LABELLED_BASIS" of
+			      NONE => (print "Warning: Environment variable SKALPEL_LABELLED_BASIS not set! Defaulting to: /tmp/skalpel-labelled-basis.tex"; "/tmp/skalpel-labelled-basis.tex")
 			    | SOME file => file)
 	    val outputStream = TextIO.openOut filename
 	in

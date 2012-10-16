@@ -3050,7 +3050,8 @@ fun unif env filters user =
 	    end
 
 	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, sem, class, lab}, labs, stts, deps)) l =
-	    (case filterLid lid filters of
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving an type constructor accessor. Labels = " ^ L.toString labs);
+	     case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
 		 (case S.getValStateIdTy state lid false of
@@ -3064,14 +3065,16 @@ fun unif env filters user =
 			    val c = E.genCstTfAll sem tf (L.union labs0 (I.getLabs lid)) stts0 deps0
 			in fsimplify [c] l
 			end*)
-		      let val sq   = S.getValStateAr state lid (SOME l)
+		      let
+			  val sq   = S.getValStateAr state lid (SOME l)
 			  val labs = L.union labs (I.getLabs lid)
 			  val tf   = T.TFC (sq, T.newTYPE_VAR (), lab)
 			  val c    = E.genCstTfAll sem tf labs stts deps
 		      in fsimplify [c] l
 		      end
 		    | (SOME (({id, bind = (bind, _, _), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
-		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
+		      let val _ = print ("Still solving this accessor. Label detected: "^(L.printLab l))
+			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  val bind1 = freshTypeFunction bind true
 			  val bind2 = T.labelBuiltinTyf bind1 lab

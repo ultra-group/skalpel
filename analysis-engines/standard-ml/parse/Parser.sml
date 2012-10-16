@@ -332,7 +332,13 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 					       (_,_,true,_) =>  y               (* true means this file is the basis *)
 					     | (_,_,false,_) => x::y) [] progs  (* false means this file is NOT the basis *)
 
-	(* only print out to debug program laballeling for non-basis files *)
+	val basisProgs = List.foldl (fn (x,y) =>
+					case x of                            (* x comes from newFilesToTreat - a three tuple *)
+					    (_,_,true,_) =>  x::y            (* true means this file is the basis *)
+					  | (_,_,false,_) => y) [] progs     (* false means this file is NOT the basis *)
+
+	(* print out labelled basis and non-basis files as per the user requested *)
+	val _ = D.printDebugFeature D.PARSER D.BASIS_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))
 	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs nonBasisProgs) true)^"\n"))
     in (A.Progs progs, m, masc, basisVal')
     end
