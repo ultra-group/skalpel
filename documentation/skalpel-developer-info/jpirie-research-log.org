@@ -6213,3 +6213,52 @@ as currently the real keyword in the basis is omitted. Writing
 constraints so that keyword is included might be a stepping stone to
 this problem, I'll have to think about whether that's worth chasing
 after tomorrow.
+
+(2012-10-16-11:13)
+
+It looks like when types are looked up in the basis they are given
+a type constructor accessor. I managed to trace one generated for the
+type t = real part of the program (same program as yesterday), but I'm
+not sure if this accessor will solve itself to a label which exists in
+the basis and be able to draw conclusions from that. I'm guessing this
+is the case but I'm looking into it now.
+
+(2012-10-16-12:54)
+
+I've added another option to the command line list called "-d
+BASIS_LABELLING" which will export a labelled basis program. This
+shouldn't really be used for the full basis, which may cause head
+explosions, but rather for a smaller subset of a basis used for
+debugging (which is what I'm using at the moment).
+
+(2012-10-16-13:49)
+
+I'm going to add θ information to the binders for type
+constructors. I'll also need to create some mapping θ |-> Σ to go into
+the state environment (θ and Σ are equality type variables and
+equality type status values, respectively), but that will be handled
+when the constraints for the basis structure are being generated.
+
+(2012-10-16-15:36)
+
+The right place to put this kind of constraint looks to be the
+function which deals with type constructor bindigs, f_tyconbind. At
+the moment, it does this:
+
+[E.consBindPoly	{id = id, typeOfId=(T.TYPE_FUNCTION_VAR typeFunctionVar, E.TYPE, ref (E.emvar, false)), classOfId=(CL.consTYCON ()), labelOfConstraint=lab}])
+
+I'll need to get some θ information in there somehow. Should I extend
+this binder? Or perhaps use the equality type accessor stuff?
+
+(2012-10-16-16:18)
+
+What I'm planning to do is to insert a θ into this point in the
+code, then pass the θ back through to the higher level functions which
+deals with the signature declaration (eg type xyz vs type xyz =
+int). Things will still change if the signature is translucent or
+opaque though, so how is that going to work?
+
+In truth, if the θ is stored there, then shouldn't the opaque vs
+translucent solution work automatically? Hm, I guess I'll see when
+I've finished implementing this bit, but it seems the right way to go
+for the moment.
