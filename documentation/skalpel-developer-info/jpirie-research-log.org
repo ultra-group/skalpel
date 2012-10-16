@@ -6113,3 +6113,103 @@ environment map. This is why the constraint solving code for solving
 equality type status = equality type variable list is only present in
 the equality type variable = equality type variable list constraint
 solving case in the constraint solver.
+** 2012-10
+*** 2012-10-15
+
+(2012-10-15-11:36)
+
+I've made a basic example including an equality type error, which is below.
+
+signature S =
+sig
+    eqtype t
+end
+
+structure T : S =
+struct
+    type t = real
+end
+
+I can't test this on skalpel at  the moment though because the real
+keyword doesn't have equality type constraints attached to it which
+come from the basis, so I'm going to have to do that first.
+
+(2012-10-15-15:20)
+
+I may need to make some sort of tiny basis which contains only the
+definitions used in my small program, because the output for the basis
+is not really practical to work with, it's just huge. I'll need to
+take care though that I don't create some solution for my mini-basis
+which doesn't actually work for the full basis, because that would be
+the very definition of sadness.
+
+(2012-10-15-17:36)
+
+I have made a small basis which I should be able to work with, the
+output that I'm getting for the constraint path and for the constraint
+generation process is significantly reduced so there's much less
+background noise.
+
+The definition of real I believe to be basically a binder, with the
+using of the keyoword real in the sml program being an accessor. If so
+I should be able to reuse existing code that I wrote for writing other
+parts of the equality type problem.
+
+(2012-10-15-17:51)
+
+I've extended the debugging feature information to include the
+information for signatures correctly, as the output was buggy. It may
+need a bit of tweaking but shouldn't be anything major.
+
+(2012-10-15-22:32)
+
+I've fiddled with the program I'm giving as input and with the cut
+down version of the basis and I think I've managed to reduce it down
+to about 5 lines or so I should be able to get something out of that.
+
+(2012-10-15-23:44)
+
+The constraints which come from the debugging output are for the
+signature expressions and the structure expressions (that is, the body
+of the signatures and structures).
+
+*** 2012-10-16
+
+(2012-10-16-00:47)
+
+Ah, I might continue to use a sort of mini-basis for debugging, as
+I've realised that I'm actually able to print out state information
+now without generating vast amounts of information, it might be easier
+to do then add debugging mechanisms for printing out different parts
+of the state environment.
+
+The information that is coming out of the state environment isn't too
+useful, I'm going to need to look at the constraint generator a little
+more closely. It would also be useful to get a labelled version of the
+basis so I can see which labels are associated with which
+constraints. This should again be a minor modification on the existing
+debugging framework.
+
+(2012-10-16-01:02)
+
+I'm going to leave this for the night and pick this up again
+tomorrow. I need to figure out some way of generating constraints
+dependent on whether the signature is translucent or opaque, I'm not
+sure that the existing mechanism for doing that will be sufficient. I
+think if I attach equality type information to the type variables, it
+might be possible be able to use the existing framework, but it will
+make the code hard to debug and maintain.
+
+This is a bit difficult to break down easily, as numerous different
+parts really need to be working before I can get equality type errors
+reported in this way. I might try to attach equality type information
+to the real type and get the real keyword in the basis included in a
+user slice when the program is for example:
+
+datatype mydt = firstCons of real
+firstCons(5.0) = firstCons(5.0)
+
+as currently the real keyword in the basis is omitted. Writing
+constraints so that keyword is included might be a stepping stone to
+this problem, I'll have to think about whether that's worth chasing
+after tomorrow.
