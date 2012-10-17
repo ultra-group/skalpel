@@ -2952,7 +2952,7 @@ fun generateConstraints' prog pack nenv =
 		    * the third element of the tuple represents the constraints that have been built from (???)
 		    * the fourth element of the tuple represents context sensitive syntax error information
 		    *)
-		   val (typenames, typeNameEnv, constraints, contextSensitiveSyntaxError) = f_typdesc indent typdesc
+		   val (typenames, typeNameEnv, equalityTypeVars, constraints, contextSensitiveSyntaxError) = f_typdesc indent typdesc
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 
