@@ -58,8 +58,8 @@ signature ENV = sig
     datatype typeNameKind     = DATATYPE | TYPE
 
     (* ------ TYPENV ------ *)
-    type extType         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) bind
-    type typeEnv         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
+    type extType         = (Ty.typeFunction * Ty.equalityTypeVar * typeNameKind * (varEnv * bool) ref) bind
+    type typeEnv         = (Ty.typeFunction * Ty.equalityTypeVar * typeNameKind * (varEnv * bool) ref) genericEnv
 
     (* ------ OVERLADINGENV ------ *)
     type extovc         = Ty.rowType bind

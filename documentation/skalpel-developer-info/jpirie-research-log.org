@@ -6262,3 +6262,93 @@ In truth, if the θ is stored there, then shouldn't the opaque vs
 translucent solution work automatically? Hm, I guess I'll see when
 I've finished implementing this bit, but it seems the right way to go
 for the moment.
+
+*** 2012-10-17
+
+(2012-10-17-11:28)
+
+The way that I'm planning to work things out for the moment is that if
+we're currently looking at the basis, and we see something of the form
+'type x', then give x a NOT_EQUALITY_TYPE status. I'm planning to do
+this by putting a θ into the binding of the type constructor, and
+passing the θ values back through from f_tyconbind where the type
+constructor binding is made through to f_typdescone, and input (θ |->
+Σ; Σ |-> NOT_EQUALITY_TYPE) into the state environment at that
+point.
+
+This should at the very least add the basis definition of types into
+the type error slice when the user makes an equality type error.
+
+(2012-10-17-12:02)
+
+One approach that I'm looking at is to actually changing the
+definition of what a binder actually is. It could be this:
+
+(* a binder is used for program occurences of id that are being bound*)
+type 'a bind = {id    : I.id,                        (* Identifier for which we generate this constraint *)
+		eqaulityTypeVar : T.equalityTypeVar  (* holds an equality type variable                  *)
+		bind  : 'a,                          (* Type of the identifier                           *)
+		class : CL.class,                    (* Status/class of the identifier                   *)
+		lab   : L.label,                     (* Label of the contraint                           *)
+		poly  : P.poly}                      (* Constraint on the poly/mono binding if binding   *)
+
+Here the field 'equalityTypeVar' is added to the bind record.
+
+The other approach would be to put an equality type variable
+into the 'bind' portion where the binder is constructed. I'll try
+putting it in the bind portion first and see how that goes, then I
+should be able to get access to that equality type variable easily
+when solving accessors by just grabbing that field and stripping out
+the variable.
+
+(2012-10-17-12:44)
+
+It looks like neither of the approaches I looked at are simple. The
+first approach means changing the definition of a binder, which means
+changes in quite a lot of places as binders are a fairly big part of
+the system, on the other hand slotting the equality type variable into
+the bind field of the bind record means changing the definition of a
+type environment (currently (T.typeFunction * T.equalityTypeVar *
+typeNameKind * (varEnv * bool) ref) genericEnv), which isn't that
+pretty either. The type errors are going to take some time to solve
+either way, so I'm going to think about this a little more before I
+make a decision on which route to go down.
+
+(2012-10-17-16:04)
+
+At..... last. I thought it would take a while, ah well I guess that's
+alright. I have added the θ to the 'bind' field of the binder by
+adding an extra component in the tuple which is assigned to that
+field. Hopefully I can play around with the constraints now and get
+something working by the time I have to go on a search for something
+tasty to eat.
+
+I plan to take a look at the equality type variable that's being
+passed around and make sure that's working properly, then constrain it
+to be some Σ in some higher-up function that the one that deals with
+type constructor bindings, and then from there change the accessor so
+that it too carries an equality type variable with it, and remove the
+Σ constraint that currently exists in SconReal. I doubt I'll plough
+through all that today but I'll see what I can do.
+
+(2012-10-17-17:40)
+
+The equality type variable propagation has been done up to the point
+of the function that deals with the binding of datatype names
+(handling A.DatName). The equality type variable still needs to be
+passed through to the functions that handle A.TypDescOne, then
+A.TypDesc and finally A.SpecType. It is at the A.SpecType level that
+the (θ |-> Σ) mapping should be constructed. The alternative to
+A.SpecType is A.SpecEqtype, naturally, a mapping should occur there as
+well but with an EQUALITY_TYPE constraint rather than a
+NOT_EQUALITY_TYPE constraint. I'll do both at the same time before I
+look into getting the accessors working with this equality type
+variable to give the real endpoint location in the basis.
+
+(2012-10-17-20:39)
+
+Everything should be done now apart from creating the mappings at the
+level of SpecType as I mentioned earlier. I need to think about what
+is going to happen though with translucent signatures though, because
+the constraints are different in that case. Maybe this will already be
+handled for me, perhaps not. I'll need to look and work that out.

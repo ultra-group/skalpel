@@ -640,13 +640,13 @@ fun freshocsenv clenv tvl state bstr =
     E.mapenv (fn semty => map (fn x => freshextseqty x tvl state bstr) semty) clenv
 
 fun freshexttypfun x tvl state bstr =
-    freshextgen x tvl state bstr (fn (typfun, tnKind, varenv) =>
+    freshextgen x tvl state bstr (fn (typfun, eqtv, tnKind, varenv) =>
 				  fn tvl                      =>
 				  fn state                    =>
 				  fn bstr                     =>
 				     let val (cons, b) = !varenv
 					 val _ = varenv := (freshvarenv cons tvl state bstr, b)
-				     in (freshtypeFunction typfun tvl state bstr, tnKind, varenv)
+				     in (freshtypeFunction typfun tvl state bstr, eqtv, tnKind, varenv)
 				     end)
 
 fun freshtypenv idenv tvl state bstr =
@@ -872,13 +872,13 @@ fun buildTy' ty state fresh dom bmon bstr = buildty ty state dom bmon false
 
 fun buildSeqTy' seqty state fresh dom bmon bstr = buildseqty seqty state dom bmon false
 
-fun buildTypSem (typfun, tnKind, cons) state fresh dom bmon bstr =
+fun buildTypSem (typfun, eqtv, tnKind, cons) state fresh dom bmon bstr =
     let val typfun' = buildtypeFunction typfun state dom bmon false
-    in (typfun', tnKind, cons)
+    in (typfun', eqtv, tnKind, cons)
     end
 
-fun freshTypSem (typfun, tnKind, cons) tvl fresh bstr =
-    (freshtypeFunction typfun tvl fresh bstr, tnKind, cons)
+fun freshTypSem (typfun, eqtv, tnKind, cons) tvl fresh bstr =
+    (freshtypeFunction typfun tvl fresh bstr, eqtv, tnKind, cons)
 
 fun freshEnv env tvl fresh bstr = env
 
@@ -1142,9 +1142,8 @@ fun matchSigStr env1 env2 l filters labs stts deps bfun err =
 		(fn bind2 =>
 		    if CL.classIsANY (E.getBindC bind1) orelse CL.classIsANY (E.getBindC bind2)
 		    then NONE
-		    else let val (tyf1, tnKind1, cons1) = E.getBindT bind1
-			     val (tyf2, tnKind2, cons2) = E.getBindT bind2
-			     (*val _ = D.printdebug2 (T.printtyf tyf1 ^ "\n" ^ T.printtyf tyf2)*)
+		    else let val (tyf1, eqtv1, tnKind1, cons1) = E.getBindT bind1
+			     val (tyf2, eqtv2, tnKind2, cons2) = E.getBindT bind2
 			     val labs = L.union  labs (L.cons l (L.union (EL.getExtLabL bind1) (EL.getExtLabL bind2)))
 			     val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
 			     val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
@@ -1327,7 +1326,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
 					| E.TYPE => (tfnDs, insertInTypeFunction tfnTs name (newTypeFunction ())))
 			| [etv] =>
 			  let val ty = case E.getBindT etv of
-					   (tf, _, _) => (* What do we need the T.ROW_C for? *)
+					   (tf, eqtv, _, _) => (* What do we need the T.ROW_C for? *)
 					   (case collapseTf tf labs stts deps of
 						T.TYPE_FUNCTION_DEPENDANCY (T.TFC ((*T.ROW_C*) _, _, _), _, _, _) =>
 						collapseTf tf (EL.getExtLabL etv) (EL.getExtLabE etv) (EL.getExtLabD etv)
@@ -1441,7 +1440,7 @@ fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
 			  else (case E.plusproj (E.getTypeNameEnv env1) id of
 				    [] => (utf, OM.insert (tfns, T.typenameToInt name, NONE))
 				  | [etv'] => (case E.getBindT etv' of
-						   (tf, _, _) =>
+						   (tf, _, _, _) =>
 						   (case T.getTypename tf of
 							SOME _ =>
 							let val labs  = L.union  (EL.getExtLabL etv) (EL.getExtLabL etv')
@@ -1607,9 +1606,9 @@ fun genTypeFunctionExtGen bind tfun f btyp =
     in (cs', bind')
     end
 
-fun genTypeFunctionFunTy' (typeFunction, tnKind, cons) tfun btyp =
+fun genTypeFunctionFunTy' (typeFunction, eqtv, tnKind, cons) tfun btyp =
     let val (cs, typeFunction') = genTypeFunctionFunTy typeFunction tfun btyp
-    in (cs, (typeFunction', tnKind, cons))
+    in (cs, (typeFunction', eqtv, tnKind, cons))
     end
 
 fun genTypeFunctionExtTy    x _ tfun _ _ = genTypeFunctionExtGen x tfun genTypeFunctionTy     true
@@ -1775,9 +1774,9 @@ fun applyTypeFunctionExtGen bind tfun f btyp =
     in (cs', bind')
     end
 
-fun applyTypeFunctionFunTy' (typeFunction, tnKind, cons) tfun btyp =
+fun applyTypeFunctionFunTy' (typeFunction, eqtv, tnKind, cons) tfun btyp =
     let val (cs, typeFunction') = applyTypeFunctionFunTy typeFunction tfun btyp
-    in (cs, (typeFunction', tnKind, cons))
+    in (cs, (typeFunction', eqtv, tnKind, cons))
     end
 
 fun applyTypeFunctionExtTy    x tfun = applyTypeFunctionExtGen x tfun applyTypeFunctionTy     true
@@ -1880,7 +1879,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	    * - The type name shouldn't be used anyway because there is no binding in the envsig. *)
 	   else (tmap, false)
 	 | [bind] => (* We found a matching in the signature. *)
-	   let val (tf, kind, _) = E.getBindT bind
+	   let val (tf, eqtv, kind, _) = E.getBindT bind
 	       val _ = case kind of
 			   E.DATATYPE => if CL.classIsANY (E.getBindC bind)
 	 			    then ()
@@ -2064,12 +2063,12 @@ fun renameseqenv ovsenv state ren =
 
 fun renameexttypfun x state ren =
     renameextgen x state ren
-		 (fn (typfun, tnKind, varenv) =>
+		 (fn (typfun, eqtv, tnKind, varenv) =>
 		  fn state =>
 		  fn ren =>
 		     let val (cons, b) = !varenv
 			 val _ = varenv := (renamevarenv cons state ren, b)
-		     in (renametypfun typfun ren, tnKind, varenv)
+		     in (renametypfun typfun ren, eqtv, tnKind, varenv)
 		     end)
 
 fun renametypenv typenv state ren =
@@ -2510,10 +2509,10 @@ fun unif env filters user =
 	fun solveexttyp (bind as (btyp, labs, stts, deps)) =
 	    case FI.getStateLabs filters (EL.getExtLabL bind)
 	     (*FI.getStateLab filters (E.getBindL bind)*) of
-		FI.IN   => let val (tyf, tnKind, cons) = E.getBindT bind
+		FI.IN   => let val (tyf, eqtv, tnKind, cons) = E.getBindT bind
 			       val tyf' = buildtypeFunction tyf state I.empty false false
 			   (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ I.printId (E.getBindI bind) ^ "\n" ^ T.printtyf tyf ^ "\n" ^ T.printtyf tyf')*)
-			   in BINDIN (C.mapBind btyp (fn _ => (tyf', tnKind, cons)),
+			   in BINDIN (C.mapBind btyp (fn _ => (tyf', eqtv, tnKind, cons)),
 				      labs,
 				      stts,
 				      deps)
@@ -2876,9 +2875,9 @@ fun unif env filters user =
 		 NONE => E.newEnvVar lab
 	       | SOME (_, true) =>
 		 (case S.getValStateIdTy state lid false of
-		      (SOME (({id, bind = (bind, tnKind, cons), lab = _, poly, class = CL.ANY}, labs, stts, deps), _), _, _) =>
+		      (SOME (({id, bind = (bind, eqtv, tnKind, cons), lab = _, poly, class = CL.ANY}, labs, stts, deps), _), _, _) =>
 		      E.newEnvVar lab
-		    | (SOME (({id, bind = (bind, tnKind, cons), lab = _, poly, class}, labs, stts, deps), _), _, _) =>
+		    | (SOME (({id, bind = (bind, eqtv, tnKind, cons), lab = _, poly, class}, labs, stts, deps), _), _, _) =>
 		      let val labs' = L.cons lab (L.union (I.getLabs lid) labs)
 			  val (varenv, cmp) = !cons
 		      (*val _ = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab lab)*)
@@ -3055,7 +3054,7 @@ fun unif env filters user =
 		 NONE => ()
 	       | SOME (_, true) =>
 		 (case S.getValStateIdTy state lid false of
-		      (SOME (({id, bind = (bind, _, _), lab = l, poly, class = CL.ANY}, _, _, _), _), _, _) =>
+		      (SOME (({id, bind = (bind, equalityTypeVar, _, _), lab = l, poly, class = CL.ANY}, _, _, _), _), _, _) =>
 		      (*(2010-06-16)We used to return () but we need to do something
 		       * else to catch the arity errors.*)
 		      (*let val (tf, labs', stts', deps') = buildTypeFunctionAr state bind lab L.empty L.empty CD.empty
@@ -3072,8 +3071,8 @@ fun unif env filters user =
 			  val c    = E.genCstTfAll sem tf labs stts deps
 		      in fsimplify [c] l
 		      end
-		    | (SOME (({id, bind = (bind, _, _), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
-		      let val _ = print ("Still solving this accessor. Label detected: "^(L.printLab l))
+		    | (SOME (({id, bind = (bind, equalityTypeVar, _, _), lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
+		      let val _ = print ("Still solving this accessor. Label detected: "^(L.printLab l)^". Equality type var ="^(T.printEqualityType (T.consEQUALITY_TYPE_VAR equalityTypeVar)))
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  val bind1 = freshTypeFunction bind true

@@ -85,8 +85,8 @@ datatype typeNameKind = DATATYPE | TYPE
 (* ------ TYPEENV ------ *)
 
  (* extType maybe stands for explicit type variables? *)
-type extType         = (T.typeFunction * typeNameKind * (varEnv * bool) ref) bind
-type typeEnv         = (T.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
+type extType         = (T.typeFunction * T.equalityTypeVar * typeNameKind * (varEnv * bool) ref) bind
+type typeEnv         = (T.typeFunction * T.equalityTypeVar * typeNameKind * (varEnv * bool) ref) genericEnv
 
 (* ------ OVERLOADINGENV ------ *)
 type extovc                = T.rowType bind
@@ -295,7 +295,7 @@ fun printGenEnv xs ind f =
 
 fun printExtVar extvar = printBind' extvar T.printty
 and printExtTyv exttyv = printBind' exttyv (fn (tv, b) => "(" ^ T.printTypeVar tv ^ "," ^ Bool.toString b ^ ")")
-and printExtTyp exttyp = printBind' exttyp (fn (tyf, tnkind, cons) => "(" ^ T.printtyf tyf ^ "," ^ printTnKind tnkind ^ "," ^ printExtCon (!cons) ^ ")")
+and printExtTyp exttyp = printBind' exttyp (fn (tyf, eqtv, tnkind, cons) => "(" ^ T.printtyf tyf ^ "," ^ T.printEqualityTypeVar eqtv ^ "," ^ printTnKind tnkind ^ "," ^ printExtCon (!cons) ^ ")")
 and printExtSeq extovc = printBind' extovc T.printseqty
 and printExtCon (cons, b) = "(" ^ printVarEnv cons "" ^ "," ^ Bool.toString b ^ ")"
 
@@ -1014,7 +1014,7 @@ fun toCLSValueIds valueIds cls labs =
 (* We have DAT here because this is only used for datatypes and datatype descriptions. *)
 (* WARNING: typeNames here may not be typeNames! It's this env that's been going around! *)
 fun toTYCONTypeNameEnv typeNames cons b labs =
-    let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DATATYPE, ref (cons, b)))
+    let fun mapbind x = C.mapBind x (fn (tyf, eqtv, _, _) => (tyf, eqtv, DATATYPE, ref (cons, b)))
     in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)
 	      typeNames
     end
@@ -1037,10 +1037,11 @@ fun allEqualValueIds valueIds =
 (* Generates an env from a long identifier and a type function *)
 fun genLongEnv (I.ID (id, lab)) tyfun =
     let val tfv  = T.freshTypeFunctionVar ()
+	val eqtv  = T.freshEqualityTypeVar ()
 	val c    = initFunctionTypeConstraint (T.consTYPE_FUNCTION_VAR tfv) tyfun lab
 	val typeNames = consSingleEnv (id, [consBindPoly
 						{id=id,
-						 typeOfId=(T.consTYPE_FUNCTION_VAR tfv, TYPE, ref (emvar, false)),
+						 typeOfId=(T.consTYPE_FUNCTION_VAR tfv, eqtv, TYPE, ref (emvar, false)),
 						 classOfId=(CL.consTYCON ()),
 						 labelOfConstraint=lab}])
     in (singleConstraint (lab, c), consEnvTypeNames typeNames)
@@ -1134,7 +1135,7 @@ fun getLabEnv (env as ENV_CONS _) = getILab env
 fun getTypeNames typeNames =
     foldrienv (fn (id, sem, typeNameMap) =>
 		  List.foldr (fn (bind, typeNameMap) =>
-				 let val (tf, typeNameKind, _) = getBindT bind
+				 let val (tf, _, typeNameKind, _) = getBindT bind
 				     val lab = getBindL bind
 				     val (names, labs, stts, deps) = T.isTypename tf
 				 in case names of

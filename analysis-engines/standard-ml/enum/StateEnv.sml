@@ -850,7 +850,7 @@ fun deleteStateGe state key value =
 
 fun updateDatCons state (id, lab) (env as E.ENV_CONS _) =
     (case getValStateIdTy state (I.idToLid id lab) true of
-	 (SOME (({id, bind = (bind, tnKind, cons), lab = l, poly, class}, labs, stts, deps), _), _, _) =>
+	 (SOME (({id, bind = (bind, eqtv, tnKind, cons), lab = l, poly, class}, labs, stts, deps), _), _, _) =>
 	 if L.eq lab l
 	 then cons := (E.getValueIds env, E.getIComplete env)
 	 else ()
