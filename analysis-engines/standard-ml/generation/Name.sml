@@ -63,8 +63,8 @@ fun genCstTyZero' ftycons = genCstTyZero (constyZ ftycons)
 fun genCstTyOne'  ftycons = genCstTyOne  (constyO ftycons)
 
 (* generates a binding *)
-fun genBind id tyf tnKind = E.consBindPoly {id=id,
-					    typeOfId=(tyf, tnKind, ref (E.emvar, false)),
+fun genBind id tyf eqtv tnKind = E.consBindPoly {id=id,
+					    typeOfId=(tyf, eqtv, tnKind, ref (E.emvar, false)),
 					    classOfId=(CL.consTYCON ()),
 					    labelOfConstraint=L.builtinLab}
 
@@ -72,8 +72,9 @@ fun genBind id tyf tnKind = E.consBindPoly {id=id,
  * such as string, int, or bool *)
 fun genBuildZero f id tnKind =
     let val tyf  = T.newTYPE_FUNCTION_VAR ()
+	val eqtv  = T.freshEqualityTypeVar ()
 	val c    = genCstTyZero' f tyf L.builtinLab
-	val bind = genBind id tyf tnKind
+	val bind = genBind id tyf eqtv tnKind
     in (bind, c)
     end
 
@@ -81,8 +82,9 @@ fun genBuildZero f id tnKind =
  * such as ref, list, or option *)
 fun genBuildOne f id tnKind =
     let val tyf  = T.newTYPE_FUNCTION_VAR ()
+	val eqtv  = T.freshEqualityTypeVar ()
 	val c    = genCstTyOne' f tyf L.builtinLab
-	val bind = genBind id tyf tnKind
+	val bind = genBind id tyf eqtv tnKind
     in (bind, c)
     end
 
