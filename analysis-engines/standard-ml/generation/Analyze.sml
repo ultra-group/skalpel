@@ -2931,11 +2931,12 @@ fun generateConstraints' prog pack nenv =
 	     | f_specone indent (A.SpecType (typdesc, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SpecType")
 		   val indent = convertIndentToSpaces indent
-		   val (typenames, typeNameEnv, eqaulityTypeVars, constraints, css) = f_typdesc (indent^SS.bottomLeftCurve^SS.straightLine) typdesc
+		   val (typenames, typeNameEnv, equalityTypeVars, constraints, css) = f_typdesc (indent^SS.bottomLeftCurve^SS.straightLine) typdesc
 
 		   (* we need to set all the equality type variables to NOT_EQUALITY_TYPE here (what if the signature is translucent??) *)
+		   val equalityConstraints = List.map (fn eqtv => E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab) equalityTypeVars
 
-		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV constraints, E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
+		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, equalityConstraints) constraints), E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev lab) env lab
 		   val env' = E.ROW_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENV_VAR ev lab) lab))

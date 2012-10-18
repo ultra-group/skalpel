@@ -6352,3 +6352,25 @@ level of SpecType as I mentioned earlier. I need to think about what
 is going to happen though with translucent signatures though, because
 the constraints are different in that case. Maybe this will already be
 handled for me, perhaps not. I'll need to look and work that out.
+
+*** 2012-10-18
+
+(2012-10-18-02:42)
+
+I've added in the relevant lines so that the mapping from the θ to the
+Σ values are made, so carrying a θ through from a type constructor
+accessor should be the last step in getting the endpoint locations set
+up in the basis. I'm going to do that tomorrow. From there, I'm going
+to test what happens in the differences between opaque/translucent
+signatures and check whether I get any functionality for free as I
+suspect I will. Assuming that all works tomorrow and I don't run into
+any errors which are too crazy I'll just continue to look at the
+eqtype x vs type x vs type x = y vs type x = y where ... cases, as
+there are a number of options to consider with respect to type
+declarations in signatures, and how the signature is used.
+
+This will mean that types which the user cannot check for equality
+(currently only real) will be extended to cover every type when this
+is working (assuming everything works correctly), aside from the
+function type (as functions not being equality types is not specified
+in the basis, naturally).
