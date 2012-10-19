@@ -84,11 +84,10 @@ signature ENV = sig
 
     type class = ClassId.class
 
-    (* ------ ACCESSORS ------ *)
-    type 'a accid       = {lid : Id.lid, sem : 'a, class : ClassId.class, lab : Label.label}
+    type 'a accessorId       = {lid : Id.lid, equalityTypeVar : Ty.equalityTypeVar, sem : 'a, class : ClassId.class, lab : Label.label}
 
     (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
-    type longTypeConsBinder        = Ty.typeFunction accid ExtLab.extLab
+    type longTypeConsBinder        = Ty.typeFunction accessorId ExtLab.extLab
 
     (* ------ ENRICHEMENT AND INSTANTIATION ------ *)
     type evsbind        = envVar * envVar option * envVar * envVar option * Label.label
@@ -99,9 +98,7 @@ signature ENV = sig
     (* ------ SHARING ------ *)
     type shabind        = envVar * envVar * envVar * Label.label
 
-    (* ------ SIGNATURE MATCHING ------ *)
-    datatype matchKind  = OPAQUE
-			| TRANSLUCENT
+    datatype matchKind  = OPAQUE | TRANSLUCENT
 
     (* ------ ENVS ------ *)
     datatype env        = ENV_CONS of {valueIds : varEnv,
@@ -128,14 +125,14 @@ signature ENV = sig
 			| ENVFIL of string * env * (unit -> env)
 			| TOP_LEVEL_ENV
 
-	and accessor        = VALUEID_ACCESSOR of Ty.ty       accid ExtLab.extLab
-			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accid ExtLab.extLab
-			    | EQUALITY_TYPE_ACCESSOR of Ty.equalityType accid ExtLab.extLab
-			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accid ExtLab.extLab
-			    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType    accid ExtLab.extLab
-			    | STRUCTURE_ACCESSOR of env         accid ExtLab.extLab
-			    | SIGNATURE_ACCESSOR of env         accid ExtLab.extLab
-			    | FUNCTOR_ACCESSOR of (env * env) accid ExtLab.extLab
+	and accessor        = VALUEID_ACCESSOR of Ty.ty       accessorId ExtLab.extLab
+			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accessorId ExtLab.extLab
+			    | EQUALITY_TYPE_ACCESSOR of Ty.equalityType accessorId ExtLab.extLab
+			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accessorId ExtLab.extLab
+			    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType    accessorId ExtLab.extLab
+			    | STRUCTURE_ACCESSOR of env         accessorId ExtLab.extLab
+			    | SIGNATURE_ACCESSOR of env         accessorId ExtLab.extLab
+			    | FUNCTOR_ACCESSOR of (env * env) accessorId ExtLab.extLab
 
 	 and oneConstraint       = TYPE_CONSTRAINT of (Ty.ty    * Ty.ty)    ExtLab.extLab
 				 | TYPENAME_CONSTRAINT of (Ty.typenameType  * Ty.typenameType)  ExtLab.extLab
@@ -230,7 +227,7 @@ signature ENV = sig
     val consBindPoly : {id : Id.id, typeOfId : 'a, classOfId : ClassId.class, labelOfConstraint : Label.label} -> 'a bind
     val consBindMono : Id.id -> 'a -> ClassId.class -> Label.label              -> 'a bind
 
-    val consAccId    : Id.lid -> 'a -> ClassId.class -> Label.label -> 'a accid
+    val consAccessorId    : Id.lid -> Ty.equalityTypeVar -> 'a -> ClassId.class -> Label.label -> 'a accessorId
 
     val getBindI     : 'a bind -> Id.id
     val getBindT     : 'a bind -> 'a
@@ -364,7 +361,7 @@ signature ENV = sig
     val genCstEvAll  : env       -> env      -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
     val genCstClAll  : class     -> class    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
 
-    val genValueIDAccessor  : Ty.ty    accid -> Label.labels -> Label.labels -> LongId.set -> accessor
+    val genValueIDAccessor  : Ty.ty    accessorId -> Label.labels -> Label.labels -> LongId.set -> accessor
 
     val initTypeConstraint         : Ty.ty    -> Ty.ty    -> Label.label -> oneConstraint
     val initFunctionTypeConstraint : Ty.typeFunction -> Ty.typeFunction -> Label.label -> oneConstraint
@@ -376,14 +373,14 @@ signature ENV = sig
     val initEnvConstraint          : env      -> env      -> Label.label -> oneConstraint
     val initClassConstraint        : class    -> class    -> Label.label -> oneConstraint
 
-    val initValueIDAccessor   : Ty.ty    accid -> Label.label -> accessor
-    val genAccIeEm   : Ty.typeVar accid -> Label.label -> accessor
-    val initEqualityTypeAccessor : Ty.equalityType accid -> Label.label -> accessor
-    val genAccItEm   : Ty.typeFunction accid -> Label.label -> accessor
-    val genAccIoEm   : Ty.rowType accid -> Label.label -> accessor
-    val genAccIsEm   : env      accid -> Label.label -> accessor
-    val genAccIiEm   : env      accid -> Label.label -> accessor
-    val genAccIfEm   : funsem   accid -> Label.label -> accessor
+    val initValueIDAccessor   : Ty.ty    accessorId -> Label.label -> accessor
+    val genAccIeEm   : Ty.typeVar accessorId -> Label.label -> accessor
+    val initEqualityTypeAccessor : Ty.equalityType accessorId -> Label.label -> accessor
+    val genAccItEm   : Ty.typeFunction accessorId -> Label.label -> accessor
+    val genAccIoEm   : Ty.rowType accessorId -> Label.label -> accessor
+    val genAccIsEm   : env      accessorId -> Label.label -> accessor
+    val genAccIiEm   : env      accessorId -> Label.label -> accessor
+    val genAccIfEm   : funsem   accessorId -> Label.label -> accessor
 
     val printEnv     : env    -> string -> string
     val printConstraints : constraints -> string

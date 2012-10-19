@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/basic-eqtype-translucent.sml",
 	"equality-types/tuple-with-function-call-inside.sml",
 	"equality-types/basic-tuple-example.sml",
 	"equality-types/basic-equality-type-in-signature.sml",

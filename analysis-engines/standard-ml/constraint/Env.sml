@@ -130,17 +130,16 @@ type evfbind        = envVar * envVar * envVar * envVar * L.label
 (* ------ SHARING ------ *)
 type shabind        = envVar * envVar * envVar * L.label
 
-(* ------ ACCESSORS ------ *)
-type 'a accid       = {lid : I.lid, sem : 'a, class : CL.class, lab : L.label}
+(* represents a type of accessor - see datatype constructors ending in "_ACCESSOR" *)
+type 'a accessorId       = {lid : I.lid, equalityTypeVar : T.equalityTypeVar, sem : 'a, class : CL.class, lab : L.label}
 
 (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
-type longTypeConsBinder        = T.typeFunction accid EL.extLab
+type longTypeConsBinder        = T.typeFunction accessorId EL.extLab
 
 type class = CL.class
 
-(* ------ SIGNATURE MATCHING ------ *)
-datatype matchKind  = OPAQUE       (* for opaque signatures *)
-		    | TRANSLUCENT  (* for translucent signatures *)
+(* for denoting opaque or translucent signatures *)
+datatype matchKind  = OPAQUE | TRANSLUCENT
 
 (* the env datatype *)
 datatype env = ENV_CONS of {valueIds : varEnv,                          (* value identifiers *)
@@ -168,7 +167,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 
 	     | ENVWHR of env * longTypeConsBinder
 
-	     (*(2010-07-07)We want something like: Ty.typeFunction accid extLab list, instead of the second env.*)
+	     (*(2010-07-07)We want something like: Ty.typeFunction accessorId extLab list, instead of the second env.*)
 	     | ENVSHA of env * env
 
 	     (* SIGNATURE_ENV represents signature envs
@@ -191,14 +190,14 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 	     | ENVFIL of string * env * (unit -> env) (* Like a SEQ but the first env is from a file which has the name given by the string and the second env is a stream *)
 	     | TOP_LEVEL_ENV (* to mark that we reached the top level *)
 
-     and accessor        = VALUEID_ACCESSOR of T.ty accid EL.extLab                       (* value identifiers *)
-			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accid EL.extLab         (* explicit type variables *)
-			 | EQUALITY_TYPE_ACCESSOR of T.equalityType accid EL.extLab       (* explicit type variables *)
-			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accid EL.extLab    (* type constructors *)
-			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accid EL.extLab      (* overloading classes *)
-			 | STRUCTURE_ACCESSOR of env accid EL.extLab                      (* structures *)
-			 | SIGNATURE_ACCESSOR of env accid EL.extLab                      (* signatures *)
-			 | FUNCTOR_ACCESSOR of (env * env) accid EL.extLab                (* functors *)
+     and accessor        = VALUEID_ACCESSOR of T.ty accessorId EL.extLab                       (* value identifiers *)
+			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accessorId EL.extLab         (* explicit type variables *)
+			 | EQUALITY_TYPE_ACCESSOR of T.equalityType accessorId EL.extLab       (* explicit type variables *)
+			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accessorId EL.extLab    (* type constructors *)
+			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accessorId EL.extLab      (* overloading classes *)
+			 | STRUCTURE_ACCESSOR of env accessorId EL.extLab                      (* structures *)
+			 | SIGNATURE_ACCESSOR of env accessorId EL.extLab                      (* signatures *)
+			 | FUNCTOR_ACCESSOR of (env * env) accessorId EL.extLab                (* functors *)
 
      and oneConstraint    = TYPE_CONSTRAINT     of (T.ty     * T.ty)     EL.extLab
 			  | TYPENAME_CONSTRAINT of (T.typenameType   * T.typenameType)   EL.extLab
@@ -359,8 +358,9 @@ fun printShaBind (ev1, ev2, ev3, lab) =
 
 fun printPair (x, y) f = "(" ^ f x ^ "," ^ f y ^ ")"
 
-fun printAccId {lid, sem, class, lab} f ind ascid =
+fun printAccessorId {lid, equalityTypeVar, sem, class, lab} f ind ascid =
     "{" ^ I.printLid' lid ascid ^
+    "," ^ T.printEqualityTypeVar equalityTypeVar ^
     "," ^ f sem                 ^
     "," ^ CL.toString class     ^
     "," ^ L.printLab lab        ^ "}"
@@ -369,7 +369,7 @@ fun printMatchKind OPAQUE = "OPAQUE"
   | printMatchKind TRANSLUCENT = "TRANSLUCENT"
 
 fun printLongTypeConsBinder longTypeConsBinder ind =
-    "LONGTYPECONSBINDER(" ^ EL.printExtLab' longTypeConsBinder (fn x => printAccId x T.printtyf' ind I.emAssoc) ^ ")"
+    "LONGTYPECONSBINDER(" ^ EL.printExtLab' longTypeConsBinder (fn x => printAccessorId x T.printtyf' ind I.emAssoc) ^ ")"
 
 fun printExtEnv     x      = printBind' x (fn x => printEnv x "")
 and printExtEnvList xs     = printlistgen xs printExtEnv
@@ -409,21 +409,21 @@ and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, fu
     "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
   | printEnv ENVTOP ind = "ENVTOP"
 and printAcc (VALUEID_ACCESSOR x) ind ascid =
-    "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printty' ind ascid) ascid ^ ")"
+    "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printty' ind ascid) ascid ^ ")"
   | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid =
-    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printTypeVar ind ascid) ascid ^ ")"
+    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printTypeVar ind ascid) ascid ^ ")"
   | printAcc (EQUALITY_TYPE_ACCESSOR x) ind ascid =
-    "EQUALITY_TYPE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printEqualityType ind ascid) ascid ^ ")"
+    "EQUALITY_TYPE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printEqualityType ind ascid) ascid ^ ")"
   | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid =
-    "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printtyf' ind ascid) ascid ^ ")"
+    "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printtyf' ind ascid) ascid ^ ")"
   | printAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid =
-    "OVERLOADING_CLASSES_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x T.printseqty' ind ascid) ascid ^ ")"
+    "OVERLOADING_CLASSES_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printseqty' ind ascid) ascid ^ ")"
   | printAcc (STRUCTURE_ACCESSOR x) ind ascid =
-    "STRUCTURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
+    "STRUCTURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
   | printAcc (SIGNATURE_ACCESSOR x) ind ascid =
-    "SIGNATURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
+    "SIGNATURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
   | printAcc (FUNCTOR_ACCESSOR x) ind ascid =
-    "FUNCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
+    "FUNCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
 and printocst (TYPE_CONSTRAINT x) _ ascid =
     "  TYPE_CONSTRAINT(" ^ EL.printExtLab x (fn x => printPair x T.printty') ascid ^ ")"
   | printocst (FUNCTION_TYPE_CONSTRAINT x) _ ascid =
@@ -475,7 +475,7 @@ fun consBindPoly {id=id, typeOfId=bind, classOfId=class, labelOfConstraint=lab} 
     EL.initExtLab (C.consBindPoly id bind class lab)      lab
 fun consBindMono id bind class lab      = EL.initExtLab (C.consBindMono id bind class lab)      lab
 
-fun consAccId lid sem class lab = {lid = lid, sem = sem, class = class, lab = lab}
+fun consAccessorId lid eqtv sem class lab = {lid = lid, equalityTypeVar = eqtv, sem = sem, class = class, lab = lab}
 
 (* Accessors to a extenv *)
 
@@ -1258,7 +1258,7 @@ fun filterOpenEnv openEnv labs =
        else SOME openEnv'
     end
 
-fun filterLongTypeConsBinder (longTypeConsBinder as ({lid, sem, class, lab}, _, _, _)) labs =
+fun filterLongTypeConsBinder (longTypeConsBinder as ({lid, equalityTypeVar, sem, class, lab}, _, _, _)) labs =
     if testlab lab labs
     then SOME longTypeConsBinder
     else NONE

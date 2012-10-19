@@ -44,6 +44,13 @@ October 2013 - ESOP?
    In constraint generation, case f_exp of A.ExpFn doesn't have any
    equality type constraints
 
+   Remove my warning comments in Unification.sml (in type constructor
+   accessor solving, case match 2), they should be fine now. Also in
+   componetype.
+
+   A.DecDatRep and A.SpecRep get eqtvs from f_longtycon. Need to check
+   labels for these.
+
    A.ExpCase has equality type variables which should have constraints
    generated out of it but it currently throws them away (I guess
    that's just not been implemented yet). Similarly for A.ExpConsList,
@@ -6374,3 +6381,241 @@ This will mean that types which the user cannot check for equality
 is working (assuming everything works correctly), aside from the
 function type (as functions not being equality types is not specified
 in the basis, naturally).
+
+(2012-10-18-11:54)
+
+I foresee a possible problem coming up which I may to have to
+fix. The creation of the Σ valve is not until the point where we reach
+the function that handles A.SpecType. At that point the mapping
+(θ |-> Σ) is inserted into the state with the label attributed to the
+current function that is being executed (f_spectype), which means that
+it is the 'type' keyword which is held as the endpoint for the
+equality type error. I think this is alright actually, this isn't a
+problem? Will the endpoint always be the 'type' or 'eqtype' keyword
+(same goes for eqtype)?
+
+(2012-10-18-12:13)
+
+I'm looking at changing how the accessors hold information. Currently,
+the definition is this:
+
+type 'a accessorId = {lid : I.lid, sem : 'a, class : CL.class, lab : L.label}
+
+Now either I can hold the equality type information for that accessor in the 'sem'
+portion of the accessor, or I can give it a new slot in the accessorId
+type.
+
+Note that accessorId used to be called 'accid', I'm changing this over
+now because I don't think 'accid' is really clear enough.
+
+(2012-10-18-12:34)
+
+There's not much in the way of discussion here, the information has to
+go into the record as a new field, and not sit in the 'sem' field of
+the record (what does 'sem' even mean anyway?). The way that the*
+accessors are defined is quite nice the way it is but integrating
+equality type information into the sem field isn't practical given the
+way accessors are defined in Env.sml. I'm going to put the new field
+in.
+
+(2012-10-18-13:27)
+
+Hurray, Skalpel went a long way to helping me solve a type error. My
+skalpel-view-next-part of slice binding is broken though, though
+perhaps there's something funny going on with my system. Also, a
+function like skalpel-highlight-slice-at-point would have been useful
+here.
+
+(2012-10-18-13:30)
+
+I have made the modifications to accessors and the analysis engine is
+compiling again. I should only now have to constrain the θ of the
+accessor to be the same as the θ of the binder, and I should be able
+to get endpoint locations in the basis for equality type errors.
+
+(2012-10-18-15:43)
+
+The equality type variable is now correctly propagated through a type
+constructor accessor and a constraint is made from that to the
+equality type variable associated with the binder with the correct
+label.
+
+Now the same approach needs to be done but this time from the other
+side. In this user code:
+
+signature S =
+sig
+    eqtype t
+end
+
+structure T : S =
+struct
+    type t = real
+end
+
+
+The 'real' keyword has the correct Σ attached to it with labels coming
+from the basis. The 'eqtype t' also has the correct Σ attached to
+it. So what needs to be done from here is to get the accessor for the
+type t to get the θ that comes from the signature, and then constraint
+the θ from the accessor of t to be equal to the θ for the real
+keyword, and I should get a type error slice.
+
+(2012-10-18-16:32)
+
+Ah, it seems that in the 'type t = real' above, the 't' is not a type
+constructor accessor at all, it is fact a binder, which means the
+check between that and the type of t specified in the signature occurs
+somewhere else. That makes sense I guess. The place where that is
+checked is probably the same place that I need to write some equality
+type variable information too.
+
+I'm not sure exactly where to go to find where that connection is
+made. I expect it's done somewhere in the unification algorithm
+though.
+
+(2012-10-18-17:26)
+
+There is a function in the Unification.sml file called "matchSigStr"
+which has a name indicating it might be relevant to what I want. This
+function is used when solving signature environments and when solving
+functors, so this might be just the thing.
+
+The whole process of solving signatures I might refamiliarise with to
+get a handle on this. It's also worth noting that the matchKind
+(signature or opaque) is checked in the solveenv function when
+SIGNATURE_ENV is pattern matched as an argument, and two different
+things are done in each case. Probably I want to integrate into that
+somehow.
+
+(2012-10-18-17:36)
+
+It looks like I need to blast debug printouts into the matchSigStr so
+I can actually figure out for sure whether the parameters env1 and
+env2 and for the environments for the signature and structure, and to
+find where I might need to insert my equality type constraints. The
+function isn't enormous, so I might have got off lightly there.
+
+These names aren't great so I might clean these up a bit, but there is
+a function called componeTyp, which might perhaps compare a type
+declaration? This might be just the place I've been looking for.
+
+(2012-10-18-19:38)
+
+Yes, componeTyp is indeed the source of this:
+
+| componeTyp _ es bind1 =
+  List.mapPartial
+  (fn bind2 =>
+    if CL.classIsANY (E.getBindC bind1) orelse CL.classIsANY (E.getBindC bind2)
+    then NONE
+    else
+	let
+	    val (tyf1, eqtv1, tnKind1, cons1) = E.getBindT bind1
+	    val (tyf2, eqtv2, tnKind2, cons2) = E.getBindT bind2
+[.....]
+
+I'm going to constrain the eqtv values here (θ values) to be equal to
+one another and see what happens to the final state. I still don't
+think I'll get an equality type error yet, I think there are still a
+few functions that need propagation code written into them.
+
+(2012-10-18-20:30)
+
+I don't like the label getting used at the location. The whole
+structure is probably going to be highlighted which shouldn't be the
+case, I guess I'll have to fiddle with that later.
+
+(2012-10-18-21:04)
+
+Hooray, I'm almost at the point where I'm done with this example. The
+unification algorithm is throwing its usual error:
+
+"Error: Error! The unification algorithm terminated in a success state,
+ but an error was generated previously! Hint: It has been found
+ previously to be the case that this error is cased by a bug solely in
+ the unification algorithm where some labels are not propagated
+ correctly..."
+
+I'm sure that's exactly what's happening here too, there's probably
+one label that's just been left out along the way, or I have selected
+one wrong label and one of the functions in the constraint path (or
+during recursive calls in the constraint solver).
+
+After fiddling around with labels, this example should be fine.
+
+(2012-10-18-21:12)
+
+I've had a quick look at the labels and it looks like all the ones
+that I wanted to take are in fact there. There are perhaps extra
+labels that I have to take because a signature is involved in the
+error. I'll have to look into this.
+
+*** 2012-10-19
+
+(2012-10-19-10:14)
+
+I think the labels that are missing are the ones dictating that 'we are
+in the user structure', 'we are in the user signature', and 'we are in
+the basis'. It'll take some fiddling but I should be able to get
+this example working today.
+
+(2012-10-19-12:42)
+
+I have found the missing labels for the user program, which are the
+labels for structure declarations and so on. I'm going to look for the
+basis ones now, then I'll arrange things so that they get placed into
+the state environment. From there I should have an equality type error
+for this program.
+
+(2012-10-19-13:04)
+
+I have found the missing labels for the basis portion of the
+program. The problem was really how labels are taken in equality type
+constraints when solving accessors and signatures.
+
+The question now is how to get these labels into the state environment
+with the rest of the labels in the equality type constraints. I'll
+look into this now and figure something out.
+
+(2012-10-19-14:26)
+
+These labels can be placed into the state environment by using
+T.EQUALITY_TYPE_DEPENDANCY instead of T.EQUALITY_TYPE_VAR for the
+second component of the equality type constraint, then putting the
+labels for the structure information inside that dependancy. The
+constraint solving rules *should* handle this, but I'll do some
+testing now to see whether that will hold up alright.
+
+(2012-10-19-14:48)
+
+Wooooo done it. There's a lovely error for the user program:
+
+signature S =
+sig
+    eqtype t
+end
+
+structure T : S =
+struct
+    type t = real
+end
+
+I have checked this with the full basis and I also get the same
+result. I'm running the test database to check I didn't blow anything
+else up but I expect it to be fine.
+
+(2012-10-19-15:45)
+
+This example also works with any other non-equality type in place of
+real, such as 'exn' or 'substring'. The endpoint is highlighted to be
+the 'type' keyword in the basis, perhaps that should be 'type real'?
+Anyway, changing that should be trivial.
+
+(2012-10-19-18:35)
+
+I'm going to take a stab at another of the equality type tests
+(value-declaration-with-type.sml) and I need to change the type of a
+binder that's used (E.consBindPoly in f_identPat). It'll take a while
+but I need to do it anyway because I'm going to need it in another of
+the tests I think.
