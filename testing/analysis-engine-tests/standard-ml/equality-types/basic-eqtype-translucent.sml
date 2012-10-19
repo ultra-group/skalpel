@@ -5,5 +5,5 @@ end
 
 structure T : S =
 struct
-    type t = real
+    type t = exn
 end
