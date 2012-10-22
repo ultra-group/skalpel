@@ -36,8 +36,9 @@ signature DEBUG = sig
 			| PARSER   (* Parser.sml *)
 
     val debugProgramLabelling : bool ref
-    val oneRunOnly : bool ref
-    val debug : bool ref
+    val oneRunOnly            : bool ref
+    val debug                 : bool ref
+    val debugBasis            : bool ref
     datatype debugFeature = EQUALITY_TYPES
 			  | CONSTRAINT_PATH
 			  | CONSTRAINT_GENERATION
@@ -46,7 +47,6 @@ signature DEBUG = sig
 			  | PARSING
 			  | STATE
 			  | PROGRAM_LABELLING
-			  | BASIS_LABELLING
 
     val sep1' : string
     val sep2' : string
