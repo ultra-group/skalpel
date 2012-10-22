@@ -3826,11 +3826,11 @@ fun generateConstraints' prog pack nenv =
 	     | f_proglist indent ((x, file, true, _) :: xs) =
 	       if benv
 	       then let val _ = setBasis true
-			(* val skalpelDebugValue = !(D.debug) *)
-			(* val _ = D.debug := false *)
+			val skalpelDebugValue = !(D.debug)
+			val _ = D.debug := !(D.debugBasis)
 			val (env1, css1) = f_prog indent x
 			val _ = setBasis false
-			(* val _ = D.debug := skalpelDebugValue *)
+			val _ = D.debug := skalpelDebugValue
 			val (env2, css2) = f_proglist indent xs
 			val env = f_progfile file env1 env2
 		    in (env, E.unionContextSensitiveSyntaxErrors [css1, css2])
