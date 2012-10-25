@@ -65,6 +65,7 @@ fun genCstTyOne'  ftycons = genCstTyOne  (constyO ftycons)
 (* generates a binding *)
 fun genBind id tyf eqtv tnKind = E.consBindPoly {id=id,
 					    typeOfId=(tyf, eqtv, tnKind, ref (E.emvar, false)),
+					    equalityTypeVar = eqtv,
 					    classOfId=(CL.consTYCON ()),
 					    labelOfConstraint=L.builtinLab}
 
