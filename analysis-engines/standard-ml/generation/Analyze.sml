@@ -437,6 +437,7 @@ fun generateConstraints' prog pack nenv =
 			val ev2  = E.freshEnvVar ()
 			val strs = E.consSingleEnv (v, [E.consBindPoly {id=v,
 									typeOfId=(E.consENV_VAR ev2 lab),
+									equalityTypeVar = T.freshEqualityTypeVar(),
 									classOfId=(CL.consSTR ()),
 									labelOfConstraint=lab}])
 			val c    = E.initEnvConstraint (E.ENV_VAR (ev1, lab)) (E.ENV_VAR (ev2, lab)) lab
@@ -474,6 +475,7 @@ fun generateConstraints' prog pack nenv =
 			val env2 = E.consENV_VAR ev2' lab
 			val funs = E.consSingleEnv (v, [E.consBindPoly {id=v,
 									typeOfId=(env1, env2),
+									equalityTypeVar = T.freshEqualityTypeVar(),
 									classOfId=(CL.consFUNC ()),
 										   labelOfConstraint=lab}])
 			val c1   = E.initEnvConstraint (E.ENV_VAR (ev1, lab)) (E.ENV_VAR (ev1', lab)) lab
@@ -505,6 +507,7 @@ fun generateConstraints' prog pack nenv =
 			val ev2  = E.freshEnvVar ()
 			val sigs = E.consSingleEnv (v, [E.consBindPoly {id=v,
 									typeOfId=(E.consENV_VAR ev2 lab),
+									equalityTypeVar = T.freshEqualityTypeVar(),
 									classOfId=(CL.consSIG ()),
 									labelOfConstraint=lab}])
 			val c    = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
@@ -592,6 +595,7 @@ fun generateConstraints' prog pack nenv =
 			val eqTypeVar' = T.freshEqualityTypeVar()
 			val vids = E.consSingleEnv (id, [E.consBindPoly {id=id,
 									 typeOfId=(T.consTYPE_VAR tv2),
+									 equalityTypeVar = eqTypeVar',
 									 classOfId=(CL.consVAL ()),
 									 labelOfConstraint=lab}])
 			val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
@@ -1659,7 +1663,8 @@ fun generateConstraints' prog pack nenv =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVar (f_typevarbind, lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
+		   val eqtv = T.freshEqualityTypeVar()
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv  (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
@@ -1667,7 +1672,8 @@ fun generateConstraints' prog pack nenv =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
+		   val eqtv  = T.freshEqualityTypeVar ()
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tv2, tyvs, E.singleConstraint (lab, c))
 	       end
@@ -2022,6 +2028,7 @@ fun generateConstraints' prog pack nenv =
 								      freshEqualityTypeVar,
 								      E.TYPE,
 								      ref (E.emvar, false)),
+							    equalityTypeVar = freshEqualityTypeVar',
 							    classOfId=(CL.consTYCON ()), (* class is a type constructor *)
 							    labelOfConstraint=lab}])      (* label of the constraint *)
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
@@ -2184,6 +2191,7 @@ fun generateConstraints' prog pack nenv =
 		   val c    = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
 		   val ovcs = E.consSingleEnv (v, [E.consBindPoly {id=v,
 								   typeOfId=(T.ROW_VAR sv2),
+								   equalityTypeVar = T.freshEqualityTypeVar(),
 								   classOfId=(CL.consOC ()),
 								   labelOfConstraint=lab}])
 	       in (sv1, ovcs, E.singleConstraint (lab, c))
@@ -2296,14 +2304,16 @@ fun generateConstraints' prog pack nenv =
 	   and f_typevarval indent (A.TypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVar (f_typevarval case, lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
+		   val eqtv = T.freshEqualityTypeVar ()
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) eqtv (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarval indent (A.EqualityTypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevarval case, lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) (CL.consTYVAR ()) lab])
+		   val eqtv = T.freshEqualityTypeVar()
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) eqtv (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
@@ -2900,7 +2910,8 @@ fun generateConstraints' prog pack nenv =
 		   (* generate some fresh type variables *)
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
+		   val eqtv = T.freshEqualityTypeVar ()
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv (CL.consTYVAR ()) lab])
 		   (* generate a type constraint (how is this actually used later?) *)
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tyvs, E.singleConstraint (lab, c))
@@ -2912,7 +2923,7 @@ fun generateConstraints' prog pack nenv =
 		   val tv2  = T.freshTypeVar ()
 		   val eqtv = T.freshEqualityTypeVar()
 		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS T.EQUALITY_TYPE) lab
-		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) (CL.consTYVAR ()) lab])
+		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv (CL.consTYVAR ()) lab])
 		   (* generate a type constraint (how is this actually used later?) *)
 		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.consEQUALITY_TYPE_VAR eqtv)) lab
 	       in (tyvs, E.consConstraint (lab, c2) (E.singleConstraint (lab, c)))
@@ -3766,6 +3777,7 @@ fun generateConstraints' prog pack nenv =
 		   val cst  = E.consConstraint(lab, c) cst1
 		   val vids = E.consSingleEnv (v, [E.consBindPoly {id=v,
 								   typeOfId=(T.consTYPE_VAR tv'),
+								   equalityTypeVar = eqtv,
 								   classOfId=(CL.consVAL ()),
 								   labelOfConstraint=lab}])
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "ProgOneExp constraints in env1 are: \n"^(E.printConstraints cst))
@@ -3855,6 +3867,7 @@ fun generateConstraints' prog pack nenv =
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly {id=id,
 						   typeOfId=ty1,
+						   equalityTypeVar = T.freshEqualityTypeVar(),
 						   classOfId=class0,
 						   labelOfConstraint=L.dummyLab}
 		    in (bind, c)
@@ -3865,6 +3878,7 @@ fun generateConstraints' prog pack nenv =
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly {id=id,
 						   typeOfId=ty1,
+						   equalityTypeVar = T.freshEqualityTypeVar(),
 						   classOfId=class0,
 						   labelOfConstraint=L.dummyLab}
 		    in (bind, c)
@@ -3875,6 +3889,7 @@ fun generateConstraints' prog pack nenv =
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly {id=id,
 						   typeOfId=ty1,
+						   equalityTypeVar = T.freshEqualityTypeVar(),
 						   classOfId=class0,
 						   labelOfConstraint=L.dummyLab}
 		    in (bind, c)
@@ -3886,6 +3901,7 @@ fun generateConstraints' prog pack nenv =
 			val c    = E.initTypeConstraint ty1 ty2 L.dummyLab
 			val bind = E.consBindPoly {id=id,
 						   typeOfId=ty1,
+						   equalityTypeVar = T.freshEqualityTypeVar(),
 						   classOfId=class1,
 						   labelOfConstraint=L.dummyLab}
 		    in (bind, c)

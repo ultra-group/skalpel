@@ -223,9 +223,9 @@ signature ENV = sig
     val emptyMap     : 'a envMap
     val emnfo        : infoEnv
 
-    val consBind     : Id.id -> 'a -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
-    val consBindPoly : {id : Id.id, typeOfId : 'a, classOfId : ClassId.class, labelOfConstraint : Label.label} -> 'a bind
-    val consBindMono : Id.id -> 'a -> ClassId.class -> Label.label              -> 'a bind
+    val consBind     : Id.id -> 'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
+    val consBindPoly : {id : Id.id, typeOfId : 'a, equalityTypeVar : Ty.equalityTypeVar, classOfId : ClassId.class, labelOfConstraint : Label.label} -> 'a bind
+    val consBindMono : Id.id -> 'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label              -> 'a bind
 
     val consAccessorId    : Id.lid -> Ty.equalityTypeVar -> 'a -> ClassId.class -> Label.label -> 'a accessorId
 
