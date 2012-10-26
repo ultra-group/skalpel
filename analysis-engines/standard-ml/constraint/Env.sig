@@ -58,8 +58,8 @@ signature ENV = sig
     datatype typeNameKind     = DATATYPE | TYPE
 
     (* ------ TYPENV ------ *)
-    type extType         = (Ty.typeFunction * Ty.equalityTypeVar * typeNameKind * (varEnv * bool) ref) bind
-    type typeEnv         = (Ty.typeFunction * Ty.equalityTypeVar * typeNameKind * (varEnv * bool) ref) genericEnv
+    type extType         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) bind
+    type typeEnv         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
 
     (* ------ OVERLADINGENV ------ *)
     type extovc         = Ty.rowType bind
@@ -231,6 +231,7 @@ signature ENV = sig
 
     val getBindI     : 'a bind -> Id.id
     val getBindT     : 'a bind -> 'a
+    val getBindEqualityTypeVar : 'a bind -> Ty.equalityTypeVar
     val getBindC     : 'a bind -> ClassId.class
     val getBindL     : 'a bind -> Label.label
     val getBindP     : 'a bind -> Poly.poly
