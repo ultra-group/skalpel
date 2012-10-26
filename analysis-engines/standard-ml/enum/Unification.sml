@@ -626,8 +626,8 @@ fun freshTypeFunction typeFunction bstr = freshtypeFunction typeFunction NONE (F
 fun freshTypeVar' tyvar P.POLY = T.freshTypeVar ()
   | freshTypeVar' tyvar _      = tyvar
 
-fun freshextgen (ext as ({id, bind, class, lab, poly}, labs, stts, deps)) tvl state bstr f =
-    (C.consBind id (f bind tvl state bstr) class lab poly, labs, stts, deps)
+fun freshextgen (ext as ({id, bind, equalityTypeVar, class, lab, poly}, labs, stts, deps)) tvl state bstr f =
+    (C.consBind id (f bind tvl state bstr) equalityTypeVar class lab poly, labs, stts, deps)
 
 fun freshextty x tvl state bstr = freshextgen x tvl state bstr freshty
 
@@ -1913,8 +1913,8 @@ and renamefieldType (x as T.FIELD_VAR _)      _     = x
 (*and renametylist xs state = map (fn x => renamety x state) xs
 and renameseqtylist xs state = map (fn x => renameseqty x state) xs*)
 
-fun renameextgen ({id, bind, class, lab, poly}, labs, stts, deps) state ren f =
-    (C.consBind id (f bind state ren) class lab poly, labs, stts, deps)
+fun renameextgen ({id, bind, equalityTypeVar, class, lab, poly}, labs, stts, deps) state ren f =
+    (C.consBind id (f bind state ren) equalityTypeVar class lab poly, labs, stts, deps)
 
 fun renameextty x state ren = renameextgen x state ren (fn x => fn state => fn ren => renamety x ren)
 
@@ -2171,7 +2171,7 @@ fun unif env filters user =
 	fun solveMono (x as P.EXPANS (X.Expdep (lid, labels))) =
 	    if FI.testtodos filters labels
 	    then case S.getValStateIdVa state lid false of
-		     (SOME (({id, bind, lab, poly, class}, labs, _, _), _), _, _) =>
+		     (SOME (({id, bind, equalityTypeVar, lab, poly, class}, labs, _, _), _), _, _) =>
 		     if CL.classIsCON class orelse
 			CL.classIsANY class
 		     (*(2010-02-16) then because the binder is a cons,

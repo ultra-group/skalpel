@@ -25,6 +25,7 @@ signature CONSID = sig
 
     type 'a bind = {id    : Id.id,
 		    bind  : 'a,
+		    equalityTypeVar : Ty.equalityTypeVar,
 		    class : ClassId.class,
 		    lab   : Label.label,
 		    poly  : Poly.poly}
@@ -36,11 +37,11 @@ signature CONSID = sig
     val getBindP          : 'a bind -> Poly.poly
 
     (* Full constructor *)
-    val consBind          : Id.id -> 'a -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
+    val consBind          : Id.id -> 'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> Poly.poly -> 'a bind
     (* Constructor for a polymorphic binder *)
-    val consBindPoly      : Id.id -> 'a -> ClassId.class -> Label.label -> 'a bind
+    val consBindPoly      : Id.id -> 'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> 'a bind
     (* Constructor for a monomorphic binder *)
-    val consBindMono      : Id.id -> 'a -> ClassId.class -> Label.label -> 'a bind
+    val consBindMono      : Id.id -> 'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> 'a bind
 
     (* Returns the label of the identifier and the labels associated
      * to the name of the function in the different branches of a fun dec

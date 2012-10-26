@@ -470,10 +470,10 @@ fun printOneAccessor   cst = printAcc cst "" I.emAssoc
 
 (* Bindings constructors *)
 
-fun consBind     id bind class lab poly = EL.initExtLab (C.consBind     id bind class lab poly) lab
-fun consBindPoly {id=id, typeOfId=bind, classOfId=class, labelOfConstraint=lab} =
-    EL.initExtLab (C.consBindPoly id bind class lab)      lab
-fun consBindMono id bind class lab      = EL.initExtLab (C.consBindMono id bind class lab)      lab
+fun consBind     id bind equalityTypeVar class lab poly = EL.initExtLab (C.consBind     id bind equalityTypeVar class lab poly) lab
+fun consBindPoly {id=id, typeOfId=bind, equalityTypeVar=eqtv, classOfId=class, labelOfConstraint=lab} =
+    EL.initExtLab (C.consBindPoly id bind eqtv class lab)      lab
+fun consBindMono id bind equalityTypeVar class lab      = EL.initExtLab (C.consBindMono id bind equalityTypeVar class lab)      lab
 
 fun consAccessorId lid eqtv sem class lab = {lid = lid, equalityTypeVar = eqtv, sem = sem, class = class, lab = lab}
 
@@ -1042,6 +1042,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 	val typeNames = consSingleEnv (id, [consBindPoly
 						{id=id,
 						 typeOfId=(T.consTYPE_FUNCTION_VAR tfv, eqtv, TYPE, ref (emvar, false)),
+						 equalityTypeVar = eqtv,
 						 classOfId=(CL.consTYCON ()),
 						 labelOfConstraint=lab}])
     in (singleConstraint (lab, c), consEnvTypeNames typeNames)
@@ -1055,6 +1056,7 @@ fun genLongEnv (I.ID (id, lab)) tyfun =
 	val structs = consSingleEnv (id, [consBindPoly
 					      {id=id,
 					       typeOfId=(consENV_VAR ev2 lab1),
+					       equalityTypeVar = T.freshEqualityTypeVar(),
 					       classOfId=(CL.consSTR ()),
 					       labelOfConstraint=lab1}])
     in (consConstraint (lab2, c2) (consConstraint (lab1, c1) cst), projStructs structs)
