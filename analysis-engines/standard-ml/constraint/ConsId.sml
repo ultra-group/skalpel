@@ -43,6 +43,7 @@ type 'a bind = {id    : I.id,        (* Identifier for which we generate this co
 (* grabs a different field from bind *)
 fun getBindI (x : 'a bind) = #id    x
 fun getBindT (x : 'a bind) = #bind  x
+fun getBindEqualityTypeVar (x : 'a bind) = #equalityTypeVar  x
 fun getBindC (x : 'a bind) = #class x
 fun getBindL (x : 'a bind) = #lab   x
 fun getBindP (x : 'a bind) = #poly  x

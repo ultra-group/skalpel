@@ -1522,14 +1522,11 @@ fun generateConstraints' prog pack nenv =
 	       in (tvo, T.freshEqualityTypeVar (), E.unionEnvList [vids1, vids2], cst, contextSensitiveSyntaxError)
 	       end
 	     | f_pat indent (A.PatTyped (labpat, labtyp, _, lab, _)) =
-	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.PatTyped")
+	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.PatTyped (lab = "^(L.printLab lab)^")")
 		   val tv = T.freshTypeVar ()
 		   val indent = convertIndentToSpaces indent
-		   (**********************************************
-		    * we ignore eqtv2 here, is that right? I think that's ok as we have a right hand side to take equality type variables from? *)
 		   val (tv1, eqtv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat (indent^SS.verticalFork^SS.straightLine) labpat
 		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
-		   (**********************************************)
 		   val eqtv1' = T.freshEqualityTypeVar()
 		   val equalityConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv1') (T.consEQUALITY_TYPE_VAR eqtv1) lab
 		   val equalityConstraint2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv1) (T.consEQUALITY_TYPE_VAR eqtv2) lab
@@ -2025,10 +2022,9 @@ fun generateConstraints' prog pack nenv =
 						      [E.consBindPoly
 							   {id = id,
 							    typeOfId=(T.TYPE_FUNCTION_VAR typeFunctionVar,
-								      freshEqualityTypeVar,
 								      E.TYPE,
 								      ref (E.emvar, false)),
-							    equalityTypeVar = freshEqualityTypeVar',
+							    equalityTypeVar = freshEqualityTypeVar,
 							    classOfId=(CL.consTYCON ()), (* class is a type constructor *)
 							    labelOfConstraint=lab}])      (* label of the constraint *)
 		   (*(2010-06-10)NOTE: the false abaove is because we still don't know v's constructors.*)
