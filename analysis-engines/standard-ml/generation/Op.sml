@@ -199,11 +199,12 @@ fun getOpType ascid =
 	    let val lab = L.builtinLab
 		val (tl, tr, to) = getTyBinaryOp str lab
 		val ty  = T.newTYPE_VAR ()
+		val eqtv = T.freshEqualityTypeVar()
 		val ti  = T.consTyTupleTy [tl, tr] lab T.BUILTIN_BASIS_CONS
 		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
-		val bd  = E.consBindPoly {id=id, typeOfId=ty, classOfId=cl, labelOfConstraint=lab}
+		val bd  = E.consBindPoly {id=id, typeOfId=ty, equalityTypeVar = eqtv, classOfId=cl, labelOfConstraint=lab}
 	    in (bd, c)
 	    end
 	fun scanUnary (id, str) =
@@ -213,6 +214,7 @@ fun getOpType ascid =
 		val c   = E.initTypeConstraint ty (T.consTyArrowTy ti to lab T.BUILTIN_BASIS_CONS) lab
 		val bd  = E.consBindPoly {id=id,
 					  typeOfId=ty,
+					  equalityTypeVar=T.freshEqualityTypeVar(),
 					  classOfId=(CL.consREC ()),
 					  labelOfConstraint=lab}
 	    in (bd, c)
