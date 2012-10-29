@@ -27,6 +27,7 @@ structure Debug :> DEBUG = struct
 datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
 datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING  | TESTING | PARSING | STATE | PROGRAM_LABELLING
 
+(* used to generate random colors for brackets of labelled program output *)
 val rand = Random.rand (0,6)
 
 (* below are ansi escape sequences, which can be used to colour
@@ -40,6 +41,7 @@ val textReset=ref "\^[[0m"
 
 val oneRunOnly = ref false
 val debug = ref false
+val debugBasis                : bool ref = ref false
 val debugEqualityTypes        : bool ref = ref false
 val debugConstraintPath       : bool ref = ref false
 val debugBasis                : bool ref = ref false

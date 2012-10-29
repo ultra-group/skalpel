@@ -32,6 +32,7 @@ signature CONSID = sig
 
     val getBindI          : 'a bind -> Id.id
     val getBindT          : 'a bind -> 'a
+    val getBindEqualityTypeVar : 'a bind -> Ty.equalityTypeVar
     val getBindC          : 'a bind -> ClassId.class
     val getBindL          : 'a bind -> Label.label
     val getBindP          : 'a bind -> Poly.poly

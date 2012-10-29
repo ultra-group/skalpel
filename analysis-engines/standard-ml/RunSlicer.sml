@@ -398,6 +398,8 @@ fun smlTesStrArgs strArgs =
 				    \       CONSTRAINT_GENERATION \t shows constraint generation debugging information\n\
 				    \       CONSTRAINT_SOLVING \t shows constraint solving debugging information\n\
 				    \       PROGRAM_LABELLING <filename> \t gives a labelled program output in latex to file specified in environment variable $SKALPEL_LABELLED_PROGRAM\n\
+				    \       BASIS \t applies debugging flags also to the basis file\n\
+				    \       BASIS_LABELLING <filename> \t gives a labelled basis output in latex to file specified in environment variable $SKALPEL_LABELLED_BASIS\n\
 				    \       EQUALITY_TYPES \t debugging information for equality types\n\
 				    \    --bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    --tab <tabwidth> define the tab width in user code regions\n\
@@ -481,6 +483,11 @@ fun smlTesStrArgs strArgs =
 		       "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""}; D.textReset := "")
 		     | "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
 		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
+<<<<<<< HEAD
+=======
+		     | "BASIS_LABELLING" => (D.debug := true; D.enableDebugFeature D.BASIS_LABELLING)
+		     | "BASIS" => (D.debug := true; D.debugBasis := true)
+>>>>>>> devel
 		     | "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
 		     | "DEBUG_BASIS" => (D.debug := true; D.debugBasis := true)
 		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
