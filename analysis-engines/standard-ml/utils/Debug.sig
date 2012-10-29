@@ -47,6 +47,7 @@ signature DEBUG = sig
 			  | PARSING
 			  | STATE
 			  | PROGRAM_LABELLING
+			  | BASIS_LABELLING
 
     val sep1' : string
     val sep2' : string
