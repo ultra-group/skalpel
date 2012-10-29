@@ -41,6 +41,11 @@ October 2013 - ESOP?
 ** Whatever is needed to make Skalpel work on itself
 * WARNINGS
 ** Equality types
+   ConsBindOf uses an old method of carrying around equality type
+   variables, an equality type variable should be generated from the
+   type name and constrained that way, rather than carrying it around
+   in the standard type constraint.
+
    In constraint generation, case f_exp of A.ExpFn doesn't have any
    equality type constraints
 
@@ -6619,3 +6624,113 @@ I'm going to take a stab at another of the equality type tests
 binder that's used (E.consBindPoly in f_identPat). It'll take a while
 but I need to do it anyway because I'm going to need it in another of
 the tests I think.
+*** 2012-10-26
+
+(2012-10-26-10:15)
+
+A little more on the implementation today. I'm changing the way that
+equality type variables are carried through in binders so that the
+variable is part of the record itself rather than sitting in the
+'bind' field of the declaration of bind. It'll make it easier to pass
+the couple of tests that I have left which aren't supported yet and
+it'll make understanding the code a little cleaner.
+
+I committed a little work on this last night also, it's sitting in the
+devel branch but it won't compile at the moment, I'm going to fix that
+up now.
+
+(2012-10-26-11:21)
+
+Oh, that didn't take as much time as I thought it was going to, was
+expecting another hour of debugging at least.
+
+I'm going to run the test database through and check nothing has
+broken, then check the code for constructing the bindings is correct
+with the record field, and then remove the old values and run the test
+database again. Hopefully I should be able to do all that and still
+have hours to spare afterwards, I've been through these type errors
+before so I should be able to work through these quickly...
+
+(2012-10-26-11:48)
+
+No tests failing, moving on to making sure that the equality type variables
+are coming from the record field and not from the 'bind'.
+
+(2012-10-26-12:58)
+
+Right I've moved everything over but one of the tests is no longer
+passing (basic-eqtype-translucent, a test which uses the eqtype
+keyword in a signature). I suspect one of the equality type variables
+got lost along the way or something, but I'll find it again :o).
+
+(2012-10-26-13:17)
+
+Alright, that's done. I needed to create a new function to grab the
+equality type field from a given binder, then use it on two separate
+binders and create a constraint that the equality type variables
+should be equal. Good, glad that didn't take long.
+
+All the tests which currently do not work are the tests with type
+annotations, which I believe to be not handled at the moment at
+all. Those tests and finishing off the use of the eqtype keyword
+(errors can be detected incorrectly in user signatures if I remember
+correctly) are all that's left, the rest should be 'bugs' rather than
+'unsupported features'.
+
+(2012-10-26-13:41)
+
+I'm looking at the value-declaration-with-type.sml example, a simple
+example. It looks like there are two problems:
+
+1. the equality type variable associated with the identifier to the
+   left hand side of the type annotation is lost
+
+2. When solving VALUEID_ACCSSOR constructors, equality type variables
+   are ignored.
+
+With any luck this might be fairly straightforward? All I should have
+to do in the first case is go over the constraints and find where one
+is getting lost, and in the second case just create a constraint θ_1
+=^l θ_2, then the test should pass. I think that's all there is to it
+(at least for this test).
+
+(2012-10-26-14:26)
+
+I have a type error slice for this program now, but one of the labels
+is wrong. That's fine, should be easy to fix.
+
+(2012-10-26-15:12)
+
+Done! This test looks fine now.
+
+*** 2012-10-29
+
+(2012-10-29-12:28)
+
+I'm looking at the test that isn't passing which is relating to
+datatype constructor names.
+
+While looking at this I've noticed that the ConsBindOf constraint
+generation code isn't using the best way of carrying around type
+variables, and it embedding that inside the information which is
+already being passed around. I tried this approach because it's
+usually the sensible one, but in this case I found it to be
+horrendously confusing to debug.
+
+I think it's OK to leave for the moment but I'm going to add a warning
+to the top of the file. I might need to fix it up to pass this test.
+
+(2012-10-29-16:50)
+
+I've passed about another three of the tests today which is pretty
+good, the three that are left are all really variants on the same
+underlying language feature so I'm going to take a stab at that
+tonight and see how far I get. If I manage to get some of those done
+then the only thing left to do will be finishing the spec eqtype up,
+then a bit of testing and development for equality types should be
+done I guess.
+
+I've been thinking a little about the constraint generation rules of
+the writeup though that I've got in the other repository, and what to
+do if the rules have been redefined. Maybe I want to present the
+equality type feature in all variants of such rules, hrm.
