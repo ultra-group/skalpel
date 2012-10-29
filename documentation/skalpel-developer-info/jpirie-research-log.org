@@ -41,6 +41,11 @@ October 2013 - ESOP?
 ** Whatever is needed to make Skalpel work on itself
 * WARNINGS
 ** Equality types
+   ConsBindOf uses an old method of carrying around equality type
+   variables, an equality type variable should be generated from the
+   type name and constrained that way, rather than carrying it around
+   in the standard type constraint.
+
    In constraint generation, case f_exp of A.ExpFn doesn't have any
    equality type constraints
 
@@ -6697,3 +6702,35 @@ is wrong. That's fine, should be easy to fix.
 (2012-10-26-15:12)
 
 Done! This test looks fine now.
+
+*** 2012-10-29
+
+(2012-10-29-12:28)
+
+I'm looking at the test that isn't passing which is relating to
+datatype constructor names.
+
+While looking at this I've noticed that the ConsBindOf constraint
+generation code isn't using the best way of carrying around type
+variables, and it embedding that inside the information which is
+already being passed around. I tried this approach because it's
+usually the sensible one, but in this case I found it to be
+horrendously confusing to debug.
+
+I think it's OK to leave for the moment but I'm going to add a warning
+to the top of the file. I might need to fix it up to pass this test.
+
+(2012-10-29-16:50)
+
+I've passed about another three of the tests today which is pretty
+good, the three that are left are all really variants on the same
+underlying language feature so I'm going to take a stab at that
+tonight and see how far I get. If I manage to get some of those done
+then the only thing left to do will be finishing the spec eqtype up,
+then a bit of testing and development for equality types should be
+done I guess.
+
+I've been thinking a little about the constraint generation rules of
+the writeup though that I've got in the other repository, and what to
+do if the rules have been redefined. Maybe I want to present the
+equality type feature in all variants of such rules, hrm.

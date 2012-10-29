@@ -38,6 +38,7 @@ signature DEBUG = sig
     val debugProgramLabelling : bool ref
     val oneRunOnly : bool ref
     val debug : bool ref
+    val debugBasis : bool ref
     datatype debugFeature = EQUALITY_TYPES
 			  | CONSTRAINT_PATH
 			  | CONSTRAINT_GENERATION

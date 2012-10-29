@@ -3,7 +3,7 @@
                                "labels"      : {"count": 10, "labelNumbers": [40154,40155,40156,40157,40158,40160,40161,40162,40163,40164]},
                                "kind"        : {"errorKindName": "ErrorKind.EqTypeRequired", "errorKindInfo": {"tnerrLabel1": 40158, "tnerrLabel2": 40164}},
                                "time"        : 243,
-                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..secondCons of ''a..⟩..⟩..secondCons (5.0)..⟩",
+                               "slice"       : "⟨..datatype ⟨..⟨..⟩ = ⟨..⟨..secondCons..⟩ of ''a..⟩..⟩..secondCons (5.0)..⟩",
                                "assumptions" : [],
                                "regions"     : [{"fileName": "/home/jpirie/repos/skalpel/testing/analysis-engine-tests/standard-ml/equality-types/datatype-constructor.sml", "regionList": [{"nodeType": "leaf", "fromLine": 1, "fromColumn": 1, "toLine": 1, "toColumn": 8, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 19, "toLine": 1, "toColumn": 19, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 40, "toLine": 1, "toColumn": 53, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 1, "fromColumn": 54, "toLine": 1, "toColumn": 56, "color": "B", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 1, "toLine": 3, "toColumn": 11, "color": "R", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 12, "toLine": 3, "toColumn": 14, "color": "P", "weight": 1},{"nodeType": "leaf", "fromLine": 3, "fromColumn": 15, "toLine": 3, "toColumn": 15, "color": "R", "weight": 1}]}]}],
               "time"         : {"analysis": 0, "enumeration": 0, "minimisation": 0, "slicing": 0, "html": 0},

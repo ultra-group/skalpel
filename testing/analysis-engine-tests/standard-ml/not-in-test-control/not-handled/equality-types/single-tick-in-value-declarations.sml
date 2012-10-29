@@ -1,1 +1,1 @@
-val 'b f = fn x : 'b => x = x;
+fn x : 'b => x = x;
