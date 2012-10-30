@@ -6734,3 +6734,38 @@ I've been thinking a little about the constraint generation rules of
 the writeup though that I've got in the other repository, and what to
 do if the rules have been redefined. Maybe I want to present the
 equality type feature in all variants of such rules, hrm.
+
+(2012-10-29-21:44)
+
+I'm going to work on the function-type-specified-as-equality.sml test
+because it's similar to the other two that are in the folder so if I
+can get this one passing I should be able to apply the solution to the
+other tests and finish these off.
+
+(2012-10-29-22:03)
+
+This example requires the arguments to a function to be matched with
+the signature, and if the signature is ''a then I need to care when it
+comes to equality types.
+
+(2012-10-30-00:17)
+
+In the case of thee tests that are remaining in the folder, they are
+going to be hard to solve. The way that information is represented
+when it comes back from a binders when solving an accessor is not
+easy to manipulate and extract information from. I'm not sure how I'm
+going to solve these yet. Binder information from the test I made
+today is below, this is useless to anyone but me.
+
+TYPE_CONSTRAINT(((TYPE_VAR(t31890,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+(TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l40151),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40151):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+(TYPENAME_CONSTRUCTION(record,OTHER_CONS,l40155),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40155):TYPE_DEPENDANCY(TYPE_VAR(t46189,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40156,40157],[],[]),l40155),FIELD_CONSTRUCTION((2,l40155):TYPE_DEPENDANCY(TYPE_VAR(t46189,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40157,40158,40159],[],[]),l40155)],-,l40155),l40155,EQUALITY_TYPE_STATUS(UNKNOWN)),[40152,40153,40154,40155],[],[]),l40151),FIELD_CONSTRUCTION((2,l40151):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+(TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l40161),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40161):TYPE_DEPENDANCY(TYPE_VAR(t46190,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40162,40163],[],[]),l40161),FIELD_CONSTRUCTION((2,l40161):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+(TYPENAME_CONSTRUCTION(record,OTHER_CONS,l40165),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l40165):TYPE_DEPENDANCY(TYPE_VAR(t46189,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40157,40166,40167],[],[]),l40165),FIELD_CONSTRUCTION((2,l40165):TYPE_DEPENDANCY(TYPE_VAR(t46189,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[40157,40168,40169],[],[]),l40165)],-,l40165),l40165,EQUALITY_TYPE_STATUS(UNKNOWN)),[40164,40165],[],[]),l40161)],-,l40161),l40161,EQUALITY_TYPE_STATUS(UNKNOWN)),[40160,40161],[],[]),l40151)],-,l40151),l40151,EQUALITY_TYPE_STATUS(UNKNOWN)),[40147,40148,40149,40150,40151],[],[])),[40149,40185],[],1693))
+
+If I actually need to read into these field constructions to get the
+labels associated with the type annotation portion of the signature
+value of the value binding, then it's not going to be nice. Hopefully
+there is some nicer way the information is represented internally,
+I'll have to look around the unification algorithm tomorrow to see if
+that's the case.
