@@ -1,5 +1,5 @@
-(* jpirie: notice that with the signature removed we get a type error slice for this
- * why is this the case? *)
+(* the slice we get is correct, but we are missing the minimal error
+ * slice that omits the signature *)
 
 structure S : sig datatype ''a mydt = firstCons of ''a end =
 struct
