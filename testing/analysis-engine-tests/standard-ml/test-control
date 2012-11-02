@@ -1,7 +1,6 @@
 {
     "test-list":[
 	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",
-	"equality-types/datatype-constructor-in-structure-with-sig.sml",
 	"equality-types/basic-eqtype-translucent.sml",
 	"equality-types/tuple-with-function-call-inside.sml",
 	"equality-types/basic-tuple-example.sml",

@@ -523,8 +523,17 @@ fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 					    lab,
 					    EQUALITY_TYPE_STATUS(UNKNOWN))
 
+(* constructs an equality type variable *)
+fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
+
+(* constructs an equality type variable list *)
+fun consEQUALITY_TYPE_VAR_LIST eqtvs = EQUALITY_TYPE_VAR_LIST eqtvs
+
+
+fun printTypeVar     tv  = "t"   ^ Int.toString tv
+
 (* constructs an implicit type var *)
-fun consTYPE_VAR   tv = TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun consTYPE_VAR   tv = (TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN)))
 
 
 (* constructs an implicit type var *)
@@ -539,12 +548,6 @@ fun consFIELD_VAR  fv  = FIELD_VAR fv
 
 (* constructs a function variable *)
 fun consTYPE_FUNCTION_VAR tfv = TYPE_FUNCTION_VAR tfv
-
-(* constructs an equality type variable *)
-fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
-
-(* constructs an equality type variable list *)
-fun consEQUALITY_TYPE_VAR_LIST eqtvs = EQUALITY_TYPE_VAR_LIST eqtvs
 
 fun newTYPE_VAR   () = consTYPE_VAR   (freshTypeVar  ())
 fun newFIELD_VAR  () = consFIELD_VAR  (freshFieldVar ())
@@ -611,6 +614,7 @@ fun constyunit'          lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_
 fun constylist'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSLIST, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constyref'        tv lab k = TYPE_CONSTRUCTOR (NC (CONSREF, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constytuple'     tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+fun constytuple'WithEquality     tvl eqtv lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, eqtv)
 fun constysubstring'     lab k = TYPE_CONSTRUCTOR (NC (CONSSUBSTRING, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constyarray'      tv lab k = TYPE_CONSTRUCTOR (NC (CONSARRAY, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constyvector'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSVECTOR, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
@@ -637,6 +641,7 @@ fun constyunit          lab = constyunit'          lab OTHER_CONS
 fun constylist       tv lab = constylist'       tv lab OTHER_CONS
 fun constyref        tv lab = constyref'        tv lab OTHER_CONS
 fun constytuple     tvl lab = constytuple'     tvl lab OTHER_CONS
+fun constytupleWithEquality tvl eq lab = constytuple'WithEquality     tvl eq lab OTHER_CONS
 fun constysubstring     lab = constysubstring'     lab OTHER_CONS
 fun constyarray      tv lab = constyarray'      tv lab OTHER_CONS
 fun constyvector     tv lab = constyvector'     tv lab OTHER_CONS
@@ -774,7 +779,7 @@ fun isPoly POLY = true
 
 (********* PRINTING SECTION **********)
 
-fun printTypeVar     tv  = "t"   ^ Int.toString tv
+
 fun printetyvar    tv  = "e"   ^ Int.toString tv (*printetyvar for print explicit type variable *)
 fun printRowVar    sv  = "s"   ^ Int.toString sv
 fun printTypenameVar tnv = "tnv" ^ Int.toString tnv

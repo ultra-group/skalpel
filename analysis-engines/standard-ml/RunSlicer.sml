@@ -124,8 +124,7 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 	     then
 		 (* this will probably not work on the windows operating system- need to check this! *)
 		 let
-		     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^
-						     "; for FILE in "^ffile^"*.sh; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; done; rm -f "^ffile^"*;")  handle OS.SysErr (str, opt) => raise Fail str
+		     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^"; for FILE in "^ffile^"-"^(Int.toString counter)^".sh ; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; rm -f "^ffile^"*.sh; done;")  handle OS.SysErr (str, opt) => raise Fail str
 		 in
 		     ()
 		 end
@@ -143,7 +142,9 @@ fun genFinished (bfile, ffile) suff msg =
 	     val _     = TextIO.output (stout, msg)
 	     val _     = TextIO.closeOut stout
 	     val _     = OS.FileSys.rename {old = fin', new = fin}
-	 in () end
+	 in
+	     ()
+	 end
 	 handle IO.Io {name, function, cause} => print ("Input/Output error. Cannot open or close the following file: "^ffile^"\n")
     else ()
 
@@ -369,6 +370,7 @@ fun smlTesStrArgs strArgs =
 	val bcs      = ref ""
 	val search   = ref ""
 	val runtests = ref false
+	val terminalSet = ref false
 	val filesNeeded = ref true
 	val basisSpecified = ref false
 	val outputFilesNeeded = ref true
@@ -451,9 +453,9 @@ fun smlTesStrArgs strArgs =
 	    (* why do we have two filebas here? *)
 	    (basisSpecified := true; Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)
 	  | parse ("-e"::"0"::tail) =
-	    (terminalSlices := NO_DISPLAY; parse tail)
+	    (terminalSet := true; terminalSlices := NO_DISPLAY; parse tail)
 	  | parse ("-e"::"1"::tail) =
-	    (terminalSlices := NON_INTERACTIVE; parse tail)
+	    (terminalSet := true; terminalSlices := NON_INTERACTIVE; parse tail)
 	  | parse (option::str::tail)=
 	     ((if option = "-f"
 	     then filein:=str
@@ -491,7 +493,7 @@ fun smlTesStrArgs strArgs =
 		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
 		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
 		     | "ONE_RUN" => D.oneRunOnly := true
-		     | str  => (print ("Unrecognised debugging feature: "^str);
+		     | str  => (print ("Unrecognised debugging feature: "^str^"\n");
 				raise Fail ("Unrecognised debugging feature: "^str));
 		   outputFilesNeeded := false)
 	     else if option = "-bo"
@@ -528,7 +530,7 @@ fun smlTesStrArgs strArgs =
 		 else (
 		     (* display slices in the terminal by default *)
 		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!filejson) = ""
-			 andalso !runtests = false andalso !outputFilesNeeded = true)
+			 andalso !runtests = false andalso (!terminalSet = false orelse !terminalSlices <> NO_DISPLAY))
 		     then if (!fileperl) = ""
 			  then (fileperl := "/tmp/output.pl"; terminalSlices := NON_INTERACTIVE)
 			  else (terminalSlices := NON_INTERACTIVE)
