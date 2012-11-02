@@ -197,6 +197,9 @@ fun consCSMlab [] = []
     in E.unionContextSensitiveSyntaxErrors [css1, css2]
     end
 
+fun assignTypeVarEquality (T.TYPE_VAR(typeVar,x,poly,_)) eqtv = T.TYPE_VAR(typeVar,x,poly,eqtv)
+  | assignTypeVarEquality _ _ = raise EH.DeadBranch "Attempted to assign equality type information to something other than a TYPE_VAR"
+
 fun checkTypeVarInc typeVarsbind labs typeVars =
     let val (labs, ids) =
 	    foldl (fn (A.TypeVar (_, id, _, lab, _), (labs, ids)) =>
@@ -539,9 +542,12 @@ fun generateConstraints' prog pack nenv =
 		       (* NOTE: We want all the labels from lid *)
 		       val tv  = T.freshTypeVar ()
 		       val eqtv  = T.freshEqualityTypeVar ()
+		       val eqtv2  = T.freshEqualityTypeVar ()
 		       val class  = CL.newClassVar ()
 
-		       val accessor   = E.initValueIDAccessor (E.consAccessorId lid eqtv (T.consTYPE_VAR tv) class lab) lab
+		       val equalityConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR eqtv2) lab
+
+		       val accessor   = E.initValueIDAccessor (E.consAccessorId lid eqtv (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv2)) class lab) lab
 		       val accessor2   = E.initEqualityTypeAccessor (E.consAccessorId lid eqtv (T.consEQUALITY_TYPE_VAR eqtv) class lab) lab
 		   in (tv, eqtv, lab, class, E.conscsts (lab, [E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2)))
 		   end)
@@ -968,6 +974,9 @@ fun generateConstraints' prog pack nenv =
 		   val ty  = T.newTYPE_VAR ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
 
+		   (* I don't think the eqTypeVar should go here, θs should be present in tv1 and tv2
+		    * EDIT: can't do that, they're just integers. Oh well. *)
+		   (* val ti  = T.constytupleWithEquality [tv1, tv2] (T.consEQUALITY_TYPE_VAR eqTypeVar) lab *)
 		   val ti  = T.constytuple [tv1, tv2] lab
 		   val tvo = T.freshTypeVar ()
  		   val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consTYPE_VAR tvo) lab T.OTHER_CONS) lab
@@ -1219,13 +1228,14 @@ fun generateConstraints' prog pack nenv =
 	       end
 	     | f_type indent (A.TypeTuple (labtyps, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeTuple");
-		   val (tvs, eqtvs, csts, csss) = unzipFour (map (f_labtype "X") labtyps)
+		   val (tvs, eqtvs, csts, csss) = unzipFour (map (f_labtype indent) labtyps)
 		   val tv  = T.freshTypeVar ()
 		   val eqTypeVar  = T.freshEqualityTypeVar ()
+		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvs lab) lab
-	       in (tv, eqTypeVar, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
+	       in (tv, eqTypeVar, E.consConstraint (lab, equalityTypeConstraint) (E.consConstraint (lab, c) cst), contextSensitiveSyntaxError)
 	       end
 	     | f_type indent (A.TypeRecord (tyfields, _, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeRecord");
@@ -2079,6 +2089,7 @@ fun generateConstraints' prog pack nenv =
 		   val indent = convertIndentToSpaces indent
 		   val (_, _, tv1, eqtv, sv1, sv1', typeNameEnv, tyvs, cst1, css1) = f_datname (indent^SS.verticalFork^SS.straightLine) datname
 		   val (tv2, eqtv2, cst2, css2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
+		   val newEqTypeVar = T.freshEqualityTypeVar()
 		   val equalityTypeConstraint  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR eqtv2) lab
 		   val c1  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.consTYPE_VAR tv2) lab
 		   val c2  = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv1') lab

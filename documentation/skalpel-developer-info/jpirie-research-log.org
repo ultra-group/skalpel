@@ -6769,3 +6769,102 @@ value of the value binding, then it's not going to be nice. Hopefully
 there is some nicer way the information is represented internally,
 I'll have to look around the unification algorithm tomorrow to see if
 that's the case.
+
+*** 2012-10-31
+
+(2012-10-31-11:27)
+
+Some of the equality type information is going to have to be moved
+into the type so that propagation works better. I kept slots in the
+types because I thought I might have to come back and use this
+method.
+
+(2012-10-31-11:32)
+
+I'm changing the constytuple function to accept something of type
+equalityType so that it can be passed through to the
+TYPE_CONSTRUCTOR. I'm testing this in the ExpOp function at the
+moment so each type variable from the left and right hand side of
+expressions have an equality type variable, but they have to get the
+same one apparently because of the way type variables are constructed
+with constytuple. The equality type variable should end up next to the
+type constructor this way.
+
+(2012-10-31-22:04)
+
+Still debugging this program. This is going to be unbelievably hard to
+follow for any moderate size of program. I can't actually make this
+program any smaller though or the error I want to test will disappear,
+so I guess I'm going to have to make do. I think I can get something
+by modifying the way that equality type variables are generated for
+the last component of the different TYPE_VAR value constructor tuples...
+
+(2012-10-31-23:17)
+
+At the moment I've arranged things so that I face constraints:
+
+(tv1,...,eqtv) |-> (tv2,...,UNKNOWN) where (tv2 |->
+TYPE_DEPENDANCY(tv3,...,UNKNOWN)) ∈ StateEnv and (tv3 |->
+(.....,eqtv2)) ∈ StateEnv. In the case where we have two type
+variables constrained and the right one has an UNKNOWN status but the
+left one has a value, the right hand side will acquire that variable
+and then go back through the map to make its dependants have that
+variable. Eventually it should find eqtv2 and cause a type error.
+
+(2012-11-01-00:12)
+
+Maybe I can propegate θ values upward through 'tv' values. I'm not
+sure, I'll need to work that out somehow.
+
+** 2012-11
+*** (2012-11-01)
+
+(2012-11-01-10:34)
+
+Building on what I had in the last log entry, if I change the second
+entry in the state map for tv2 so that the entry have eqtv in it, then
+that change should be propagated correctly.
+
+(2012-11-01-14:33)
+
+Oh goodie, infinite loops. The above worked, but in the case where the
+type variable doesn't exist, if I so much as touch that part of the
+state the analysis engine will go into an infinite loop. I suppose
+it's nice to know that can happen.
+
+(2012-11-01-15:02)
+
+I managed to get around the infinite loop issue by using a fresh type
+variable instead of the one I wanted, which I guess is fine, but there
+is a label missing from the error that's reported.
+
+(2012-11-01-18:45)
+
+This is too difficult to debug, there is just far more information
+here than there is time for me to read and parse, and then act on,
+regenerate, and repeat. I'm going to see what I can do to cut this
+down somehow, there is just no way I can go on reading this amount of
+information or this is going to take forever.
+
+(2012-11-02-02:01)
+
+I think I've fixed the bug where type bindings in structures aren't
+recorded correctly if they are tuples. I'll have to debug that
+tomorrow, but it should be alright I think.
+
+*** (2012-11-02
+
+(2012-11-02-12:12)
+
+The test I'm working on at the moment is the same one as yesterday
+night. I thought this would be an easier example to debug but it turns
+out to be not the case. Don't know what's messing this up, hopefully
+I'll be able to make some sense of these number.
+
+(2012-11-02-20:51)
+
+The test that's been running is passing now but it's caused a possible
+deadbranch in another test if the test is ran forever until all
+solutions have been found. I haven't seen this kind of error before,
+I'll need to look into it to see if there is an actual problem with
+this test.

@@ -163,6 +163,7 @@ signature TY = sig
     val constyfrag        : typeVar -> Label.label -> ty
     val constyarrow       : typeVar -> typeVar -> Label.label -> ty
     val constytuple       : typeVar list -> Label.label -> ty
+    val constytupleWithEquality : typeVar list -> equalityType -> Label.label -> ty
     val constyrecord      : fieldVar list -> Label.label option -> Label.label -> ty
 
     val constyint'        : Label.label -> constructorKind -> ty
