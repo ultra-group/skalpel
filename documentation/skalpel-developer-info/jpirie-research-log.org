@@ -6868,3 +6868,23 @@ deadbranch in another test if the test is ran forever until all
 solutions have been found. I haven't seen this kind of error before,
 I'll need to look into it to see if there is an actual problem with
 this test.
+*** (2012-11-04)
+
+(2012-11-05-23:54)
+
+Leaving a note for tomorrow:
+
+(CONSTRAINT_SOLVING) Unification.sml: solving the following VALUEID_ACCESSOR accessor:
+VALUEID_ACCESSOR(({ID(7,52),eqtv34,TYPE_VAR(t34,-,POLY,EQUALITY_TYPE_VAR(eqtv35)),CLVAR(1),52},[52],[],))
+(CONSTRAINT_SOLVING) Unification.sml: new type constraint =   TYPE_CONSTRAINT(((TYPE_VAR(t34,-,POLY,EQUALITY_TYPE_VAR(eqtv35)),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l29),RO
+W_CONSTRUCTION([FIELD_CONSTRUCTION((1,l29):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[31,32,33,34,35,36,37,38],[],[]),l29),FIELD_CONSTRUCTION((2,l29):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+ (TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l28),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l28):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[38,39,40,41,42,43,44,45,46],[],[]),l28),FIELD_CO
+NSTRUCTION((2,l28):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[26,27,34,35,36,37,38,47,48],[],[ID(8,36)]),l28)],-,l28),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28],[],[]),l29)],-,l29),l29,
+EQUALITY_TYPE_STATUS(UNKNOWN)),[29,30],[],[])),[30,52],[],))
+
+The first field construction looks useful because it contains type
+variable 43, which is later checked with the TYPE_POLY.
+
+- why is this the case?
+- where is variable 43 checked?
+- how to print debug information on field constructions?
