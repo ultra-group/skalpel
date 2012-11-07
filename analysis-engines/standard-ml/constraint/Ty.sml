@@ -126,34 +126,6 @@ type explicitTypeVar = typeVar ExtLab.extLab
 			  | TFC of rowType * ty * Label.label
 			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
-	 (* do we actually need to track this equalityTypeVar?
-	  * I mean, we don't need to checck that two equality type vars are the same,
-	  * we just have to check that they both are actually equality types
-	  * so for the below, maybe no arguments for EQTYPE_VAR and NOT_EQTYPE_VAR
-	  * would be best?
-	  *
-	  * Addition: don't we need to keep track of the equalityTypeVar for reasons of slicing?
-	  * We would need to hold the labels or something... right?
-	  *)
-
-	 (* a datatype to give the different status that we can be in when checking if something is an equality type
-	  * EQUALITY_TYPE: definitely an equality type
-	  * NOT_EQUALITY_TYPE: definitely not an equality type
-	  *)
-	 and equalityTypeStatus = EQUALITY_TYPE
-				| NOT_EQUALITY_TYPE
-				| UNKNOWN
-
-
-	 (* this was used for equality type constraints
-	  * this is possibly no longer going to be used if we are
-	  * going to integrate the constraints into the ty datatype *)
- 	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
-			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
-			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
-			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
-
-
 	 (*--------------------------------------------------------------------------
 	  * The ty datatype:
 	  *
@@ -179,6 +151,28 @@ type explicitTypeVar = typeVar ExtLab.extLab
 		| TYPE_DEPENDANCY   of ty ExtLab.extLab
 
 	 (*------------------------------------------------------------------------*)
+
+	 (* a datatype to give the different status that we can be in when checking if something is an equality type
+	  * EQUALITY_TYPE: definitely an equality type
+	  * NOT_EQUALITY_TYPE: definitely not an equality type *)
+	 and equalityTypeStatus = EQUALITY_TYPE
+				| NOT_EQUALITY_TYPE
+				| UNKNOWN
+
+
+	 (* datatype constructor for equality type status tracking
+	  * EQUALITY_TYPE_VAR: an equality type variable, just a number
+	  * EQUALITY_TYPE_VAR_LIST: a list of equality type variables
+	  * EQUALITY_TYPE_STATUS: for when we know the equality type status of an expression
+	  * EQUALITY_TYPE_DEPENDANCY: allows us to hold e.g. labels when creating constraints
+	  * EQUALITY_TYPE_ON_TYPE: holds any of the ty constructors (allows constraining ty's
+          *                        equality type vars to another equality type var *)
+ 	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
+			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
+			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
+			  | EQUALITY_TYPE_ON_TYPE of ty
+
 
 datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | NOTTYPENAME
 
@@ -882,6 +876,7 @@ and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ print
   | printEqualityType (EQUALITY_TYPE_VAR_LIST eqtvs)    = "EQUALITY_TYPE_LIST(" ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
   | printEqualityType (EQUALITY_TYPE_DEPENDANCY dep) = "EQUALITY_TYPE_DEPENDANCY("  ^ (EL.printExtLab' dep printEqualityType) ^")"
+  | printEqualityType (EQUALITY_TYPE_ON_TYPE ty) = "EQUALITY_TYPE_ON_TYPE("  ^ (printty ty) ^")"
 
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
   | printtyf (TFC (sq, ty, l))    = "TFC(" ^ printseqty    sq  ^
