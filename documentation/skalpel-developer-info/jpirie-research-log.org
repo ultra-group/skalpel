@@ -731,14 +731,14 @@ when it comes to function applications:
 ;;function application
 ((appExpD-p expD)
  (let* ((result-for-m (type-inference-w env (appExpD-fun expD)))
- (result-set-for-d (lambda-type-inference-v 
+ (result-set-for-d (lambda-type-inference-v
       (apply-subst-to-env env (w-result-subst result-for-m))
       (appExpD-argD expD)))
  (result-set (map-set
-'(lambda (x) 
+'(lambda (x)
    ;;When unification fails, the function unify throws an error with nil, which becomes the value of this catch expression.
-   (catch 'error 
-     (let* 
+   (catch 'error
+     (let*
 	 ((new-tyVar (varTy (freshTyVar)))
 	  (S3 (unify (singleton-set (cons
 				     (apply-subst-to-type (w-result-type result-for-m) (v-result-subst x))
@@ -2492,7 +2492,7 @@ l40145):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRU
 138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n302,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(RO
 W_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)
 ],-,l39728),[39725,39726,39727,39728,40162],[],[]),51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[]),l40145)],-,l
-40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])                                                                  
+40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])
 
 If there is an equality type status that isn't at the top level (isn't
 embedded somewhere in TYPE_DEPENDANCY), then we constrain the accessor
@@ -2598,7 +2598,7 @@ l40145):TYPE_DEPENDANCY(TYPE_POLY(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRU
 138,11139,11140,11141,11143,11144,11145,39734,39735,39736,39737,39738,39739],[],[]),l39728),FIELD_CONSTRUCTION((3,l39728):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n302,DECLARATION_CONS(61),l10090),ROW_DEPENDANCY(RO
 W_CONSTRUCTION([],-,l10091),[10089,10091],[],[]),l10090,EQUALITY_TYPE_STATUS(UNKNOWN)),[0,10084,10085,10086,10087,10088,10090,11160,11161,11162,11163,11164,39741,39742,39743,39744,39745,39746],[],[]),l39728)
 ],-,l39728),[39725,39726,39727,39728,40162],[],[]),51,POLY,CONSTANT(5.0,373,40162),l40162,EQUALITY_TYPE_VAR(eqtv19685)),[40146,40147,40148,40149,40150,40151,40158,40159,40160,40161,40162],[],[]),l40145)],-,l
-40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])                                                                  
+40145),[40143,40144,40145],[],[]),l40143,EQUALITY_TYPE_STATUS(UNKNOWN)),[40143,40147,40148,40149,40154,40155,40156,40157,40158,40159],[],[])
 
 The top-level equality type information is
 EQUALITY_TYPE_STATUS(UNKNOWN). This is coming from
@@ -3605,7 +3605,7 @@ to chase that down today.
 (2012-08-17-15:55)
 
 These positioning parameters just aren't affecting this node in any
-way whatsoever. 
+way whatsoever.
 
 (2012-08-17-15:58)
 
@@ -5090,16 +5090,16 @@ this is shown:
 sigid  ∈ SigId      (signature identifiers)
 
 sigdec ∈ SigDec ::= signature sigid \overset{l}{=} sigexp
-                  | dot-d ( \overset{--->}{term} )
+		  | dot-d ( \overset{--->}{term} )
 
 sigexp ∈ SigExp ::= sigid^l | sig^l spec_1 .... spec_n end
-                  | dot-s ( \overset{--->}{term} )
+		  | dot-s ( \overset{--->}{term} )
 
 spec   ∈ Spec   ::= val vid :^l ty
-                  | type dn^l
-                  | datatype dn \overset{l}{=} cd
-                  | structure strid :^l sigexp
-                  | dot-d ( \overset{--->}{term} )
+		  | type dn^l
+		  | datatype dn \overset{l}{=} cd
+		  | structure strid :^l sigexp
+		  | dot-d ( \overset{--->}{term} )
 
 It looks like I would just extend 'spec' to be something like this:
 
@@ -5314,8 +5314,8 @@ let
   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
   val newConstraints = foldr (fn (x, xs) => (E.consConstraint (lab, x) xs))
-                             cst
-                             (c::newEqualityTypeConstraints)
+			     cst
+			     (c::newEqualityTypeConstraints)
   in (tv, newEqualityTypeVars, newConstraints, contextSensitiveSyntaxError)
 end
 
@@ -6925,3 +6925,53 @@ In the case of the anonymous-functions-with-arrow-type.sml test, I've
 managed to follow the type variables around and see what's
 happening. It looks like it shouldn't be difficult to get this test to
 pass, so I'm going to work on that this evening.
+
+*** 2012-11-07
+
+(2012-11-07-00:46)
+
+I have extended the definition of the equality type datatype:
+
+and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
+		 | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
+		 | EQUALITY_TYPE_STATUS of equalityTypeStatus
+		 | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
+		 | EQUALITY_TYPE_ON_TYPE of ty
+
+The EQUALITY_TYPE_ON_TYPE constructor has been added to allow me to
+constrain an equality type variable over another type constraint,
+which I'll then recurse on. This should allow the
+anonymous-functions-with-arrow-type test case to pass, as the equality
+type variable from the m = m portion of the problem will be carried
+through the type constraints and assigned to them until it reaches the
+TYPE_POLY constraint, which is NOT_EQUALITY_TYPE, and so the analysis
+engine will deduce there is an error.
+
+(2012-11-07-02:02)
+
+I've added the necessary solving rules to support
+EQUALITY_TYPE_ON_TYPE. The rule hasn't been fully written but there's
+red warning text that comes up when debugging with the constraint
+solving flag if a rule is fired which hasn't been written up yet.
+
+(2012-11-07-02:36)
+
+I'm getting equality type errors for
+anonymous-functions-with-arrow-type.sml now, the labels are incorrect
+but the essence of the error is certainly there. I'll do the labels
+next.
+
+(2012-11-07-11:26)
+
+Some of the tests broke with this solution failing with 'not enough
+slices'. This isn't anything to worry about, there are a few cases
+where some constraints get lost because the recursive call doesn't
+contain the correct constraints, I'll fix this up now.
+
+(2012-11-07-11:48)
+
+Done that, so that's working fine.I also notice there are some slices
+for a few other tests in the not handled pile so I'll look into that
+today. I still need to fix the labels for this current test, then
+after that I guess I'll move on to the other tests that are in the
+not-handled/ folder.

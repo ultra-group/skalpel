@@ -206,8 +206,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 			  | LABEL_CONSTRAINT of (T.labelType  * T.labelType)  EL.extLab
 			  | ENV_CONSTRAINT of (env      * env)      EL.extLab
 			  | IDENTIFIER_CLASS_CONSTRAINT of (CL.class * CL.class) EL.extLab
-			  (* type function constrint*)
-			  | FUNCTION_TYPE_CONSTRAINT of (T.typeFunction  * T.typeFunction)  EL.extLab
+			  | FUNCTION_TYPE_CONSTRAINT of (T.typeFunction  * T.typeFunction)  EL.extLab (* type function constrint*)
 			  | ACCESSOR_CONSTRAINT of accessor
 			  | LET_CONSTRAINT of env
 			  | SIGNATURE_CONSTRAINT of evsbind (* Transform that into an env with a switch for opaque and translucent *)

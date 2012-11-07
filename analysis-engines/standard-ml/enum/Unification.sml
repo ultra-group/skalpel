@@ -2836,9 +2836,11 @@ fun unif env filters user =
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
+			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs, stts, deps)
+			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
-			   in fsimplify [c1, c2] l
+			   in fsimplify [equalityTypeConstraint, c1, c2] l
 			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
 		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "case 2");
@@ -4424,6 +4426,30 @@ fun unif env filters user =
 		  | SOME _ => raise EH.TODO "got something in the equality status map that isn't handled!"
 	    end
 
+	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (T.TYPE_VAR (tv, extv, poly, eqtv))), ls, deps, ids)):: cs') l =
+	    let
+		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		(* first, let's look up ty in tv in the state and see if there's another constraint there *)
+		val _ = case S.getValStateTv state tv of
+			    NONE =>
+			    (* we put a new type variable there with the correct equality type variable attached to it *)
+			    (S.updateStateTv state tv (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (T.freshTypeVar()) equalityTypeVar1, ls, deps, ids));
+			     fsimplify cs' l)
+			  | SOME newTy =>
+			    (* we have found something in the state, let's recurse on that
+			     * jpirie: maybe we should union the labels here? *)
+			    let
+				val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_ON_TYPE (newTy)), ls, deps, ids)
+			    in fsimplify (c :: cs') l
+	    		    end
+
+	    in ()
+	    end
+
+	  (* ignore other constructors of the ty datatype for the time being *)
+	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (_)), ls, deps, ids)):: cs') l =
+	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Warning, ignoring constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	     fsimplify cs' l)
 
 	  (*
 	   * constraint solving - equality types
