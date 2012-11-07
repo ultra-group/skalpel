@@ -2986,7 +2986,9 @@ fun generateConstraints' prog pack nenv =
 		   val (typenames, typeNameEnv, equalityTypeVars, constraints, css) = f_typdesc (indent^SS.bottomLeftCurve^SS.straightLine) typdesc
 
 		   (* we need to set all the equality type variables to NOT_EQUALITY_TYPE here (what if the signature is translucent??) *)
-		   val equalityConstraints = List.map (fn eqtv => E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab) equalityTypeVars
+		   val equalityConstraints = if getBasis()
+					     then List.map (fn eqtv => E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab) equalityTypeVars
+					     else []
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, equalityConstraints) constraints), E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()

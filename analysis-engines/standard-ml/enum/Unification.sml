@@ -3873,7 +3873,7 @@ fun unif env filters user =
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    ((* if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
 	     if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
@@ -3886,7 +3886,7 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev, lab), env), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    ((* if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
 	     case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -3899,7 +3899,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((env1 as E.ENV_CONS _, env2 as E.ENV_CONS _), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		(* val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
 		val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
@@ -4077,7 +4077,7 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((currentConstraint as E.LET_CONSTRAINT env) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		(* val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
 		val _ = solveenv env false
 	    in fsimplify cs' l
 	    end

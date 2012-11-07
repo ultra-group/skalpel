@@ -1,5 +1,11 @@
 {
     "test-list":[
+    	"equality-types/opaque-signature-illegal-equality-test.sml",
+	"equality-types/eqtype-vs-real-cross-real.sml",
+	"equality-types/anonymous-function-with-type-annotation.sml",
+	"equality-types/opaque-and-translucent-signatures.sml",
+	"equality-types/where-clause-clash-with-sig.sml",
+	"equality-types/type-then-fully-defined-in-structure.sml",
 	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",
 	"equality-types/basic-eqtype-translucent.sml",
 	"equality-types/tuple-with-function-call-inside.sml",
