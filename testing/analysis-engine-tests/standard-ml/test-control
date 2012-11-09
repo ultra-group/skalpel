@@ -1,5 +1,6 @@
 {
     "test-list":[
+    	"equality-types/anonymous-function-with-arrow-type.sml",
     	"equality-types/basic-anonymous-function.sml",
     	"equality-types/opaque-signature-illegal-equality-test.sml",
 	"equality-types/eqtype-vs-real-cross-real.sml",

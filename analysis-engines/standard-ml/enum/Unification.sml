@@ -4435,7 +4435,7 @@ fun unif env filters user =
 			in
 			    fsimplify (c::cs') l
 			end
-		  | SOME _ => raise EH.TODO "got something in the equality status map that isn't handled!"
+		  | SOME (x,y) => raise EH.TODO ("got something in the equality status map that isn't handled!: "^(T.printEqualityType x)^" "^(T.printEqualityTypeStatus    status))
 	    end
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (T.TYPE_VAR (tv, extv, poly, eqtv))), ls, deps, ids)):: cs') l =
@@ -4448,7 +4448,6 @@ fun unif env filters user =
 				val newTypeVar = T.freshTypeVar()
 				(* we put a new type variable there with the correct equality type variable attached to it *)
 				val _ = S.updateStateTv state tv (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (newTypeVar) equalityTypeVar1, ls, deps, ids));
-				val _ = print ("(*** new type variable generated is: "^(Int.toString(T.typeVarToInt newTypeVar)))
 			    in
 				fsimplify cs' l
 			    end
