@@ -7036,3 +7036,13 @@ to try that now.
 After this effort to drag the labels through clumsily into this error
 the minimisation algorithm has swiftly dispensed with them. So now
 what? I guess I'll sleep on it. Hm.
+
+*** 2012-11-09
+
+(2012-11-09-09:24)
+
+Well I found out why the label were disappearing, they were actually
+irrelevant to the error. A pair of parenthesis somehow got lost in the
+test file and that screwed everything up and changed the error result
+completely, so the type error slice that I've been getting has been
+correct all along. -.-
