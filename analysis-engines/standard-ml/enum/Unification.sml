@@ -2836,7 +2836,7 @@ fun unif env filters user =
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts0 deps0
-			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs, stts, deps)
+			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs1, stts, deps)
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
@@ -3554,6 +3554,18 @@ fun unif env filters user =
 		 | SOME ty' =>
  		   (* we have seen this type variable before *)
 		   let
+		       (* get the extra labels that might be in the state ge so that the equality type error has all the labels in place *)
+		       val _ = case ty' of T.TYPE_DEPENDANCY(T.TYPE_VAR(tv', _, _, T.EQUALITY_TYPE_VAR eqtv'),_,_,_) =>
+					   (* here we want to take the labels that are associated with mapping tv' |-> tv ∈ StateGe and put then in eqtv' *)
+					   (case S.getValStateGe state tv'
+					    of SOME (typeVarGe, labsGe, sttsGe, depsGe)  =>
+					     (* put labsGe in eqtv' mapping in StateEQ *)
+					       (case S.getValStateEq state eqtv'
+						of SOME (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, labsEq, sttsEq, depsEq),eqTypeVarList) => S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, L.union labsEq labsGe, sttsEq, depsEq),eqTypeVarList)
+						 | _ => raise EH.DeadBranch "Equality type dependant variable mapping expected in state but is not present.")
+					     | NONE => ())
+					 | _ => ()
+
 		       val c = E.genCstTyAll (updateFlex ty' b) ty ls deps ids
 		   in fsimplify (c :: cs') l
 		   end
@@ -4399,7 +4411,7 @@ fun unif env filters user =
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
 					     val error  = ERR.consPreError ERR.dummyId (L.cons l (L.union resultLabels ls)) ids errorKind (L.union deps resultDeps)
 	  				 in
-					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable and a status");
+					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable and a status. Labels: "^(L.toString (L.union resultLabels ls)));
 					      handleSimplify error cs' l)
 					 end
 				       | _ => raise EH.DeadBranch "Didn't get two endpoint labels for an equality type error."
@@ -4432,9 +4444,14 @@ fun unif env filters user =
 		(* first, let's look up ty in tv in the state and see if there's another constraint there *)
 		val _ = case S.getValStateTv state tv of
 			    NONE =>
-			    (* we put a new type variable there with the correct equality type variable attached to it *)
-			    (S.updateStateTv state tv (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (T.freshTypeVar()) equalityTypeVar1, ls, deps, ids));
-			     fsimplify cs' l)
+			    let
+				val newTypeVar = T.freshTypeVar()
+				(* we put a new type variable there with the correct equality type variable attached to it *)
+				val _ = S.updateStateTv state tv (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (newTypeVar) equalityTypeVar1, ls, deps, ids));
+				val _ = print ("(*** new type variable generated is: "^(Int.toString(T.typeVarToInt newTypeVar)))
+			    in
+				fsimplify cs' l
+			    end
 			  | SOME newTy =>
 			    (* we have found something in the state, let's recurse on that
 			     * jpirie: maybe we should union the labels here? *)

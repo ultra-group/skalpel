@@ -524,6 +524,7 @@ fun updateStateTv state key value =
 						let val labs0 = L.union  labs labs'
 						    val stts0 = L.union  stts stts'
 						    val deps0 = CD.union deps deps'
+						    val _ = print ("v: "^(Int.toString(T.typeVarToInt v))^", key: "^(Int.toString(T.typeVarToInt key))^", labs = "^(L.toString labs0)^"\n")
 						in updateStateGe state v (key, labs0, stts0, deps0)
 						end)
 					    tyvars
