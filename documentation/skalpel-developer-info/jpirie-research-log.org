@@ -6975,3 +6975,64 @@ for a few other tests in the not handled pile so I'll look into that
 today. I still need to fix the labels for this current test, then
 after that I guess I'll move on to the other tests that are in the
 not-handled/ folder.
+
+(2012-11-07-14:11)
+
+The basis-anonymous-function.sml test is now passing. I guess that's
+not surprising as I'm working on passing another test with anonymous
+functions which is more complex. I'll add a solution file for that
+soon.
+
+(2012-11-07-18:09)
+
+The labels for the current test that I was talking about isn't quite
+as straightforward as I thought. It seems the labels that aren't being
+handled are in State GE (which I believe has something to do with
+monomorphism, but who really knows). In State GE there is a mapping
+from type variable 65 to type variable 10, and in that mapping there
+seems to exist all the labels that I want to become part of this
+error.
+
+I guess that when solving type var vs type var cases I should look up
+this State GE and drag labels out of that that I need along my
+journey? I'm not certain about that but it looks like the most likely
+explanation for the missing labels at this time.
+
+*** 2012-11-08
+
+(2012-11-08-10:09)
+
+Plan is to look into this State GE thing that I was talking about in
+the last log. It might be a bit awkward to get if the entry to State
+GE for type variable 65 is made at some point after I've finished
+dealing with it though. Hrm.
+
+(2012-11-08-14:57)
+
+Still haven't been able to chase the type variables down, it's quite
+tangled in there. Some type variable seem to be getting lost along
+the way for some reason as some constraints are made on type variables
+that don't show up in the state map. Will look into this....
+
+(2012-11-08-16:10)
+
+I fixed some of the type variables not showing up, that was a just a
+small bug. I found that this State GE is updated when updating a type
+variable sometimes, so that must indeed be where my labels keep
+disappearing off to. Added some debug statements to print that out and
+if that's the case I'll think of some way to keep those labels tracked
+right through the error.
+
+(2012-11-08-22:57)
+
+Hrm this is still not easy. I can't just add these labels into the
+constraint because that might blow up other tests, so I guess the
+solution is to grab the labels from the State GE map and then put
+those in with the equality type variable that's available. I'm going
+to try that now.
+
+(2012-11-09-23:57)
+
+After this effort to drag the labels through clumsily into this error
+the minimisation algorithm has swiftly dispensed with them. So now
+what? I guess I'll sleep on it. Hm.
