@@ -7046,3 +7046,85 @@ irrelevant to the error. A pair of parenthesis somehow got lost in the
 test file and that screwed everything up and changed the error result
 completely, so the type error slice that I've been getting has been
 correct all along. -.-
+*** 2012-11-12
+
+(2012-11-12-12:52)
+
+I just had a look at the test involving refs, which incorrectly
+generates type error slices.
+
+ref 5.0 = ref 5.0
+
+The definition of ref is this:
+
+datatype 'a ref = ref of 'a
+
+This is a problem, because I think this datatype definition is magical
+in the sense that it is ONLY the specific datatype constructor 'ref'
+can be compared for equality, irrespective or its argument. For
+example, this program is supposed to be typable:
+
+datatype 'a ref = ref of 'a  (* from the basis *)
+ref 5.0 = ref 5.0
+
+But this is not:
+
+datatype 'a myref = myref of 'a (* defined anywhere *)
+myref 5.0 = myref 5.0
+
+Hrm, I'll need to ask Joe what to do about that. The choices are
+either to have another keyword in the basis which we can parse for
+ourselves (eqdatatype or something), or to look for datatypes defined
+with the name 'ref' in the basis and do something special for them.
+
+*** 2012-11-13
+
+(2012-11-13-12:39)
+
+I'm working on the test where the equality type status of the argument
+to a datatype needs to be taken into account to know the equality type
+status of the variable which is of that type. What isn't correct is to
+do this:
+
+datatype 'a mydt = A of int
+val x : real mydt = ...
+
+and then constrain the equality type variable of 'real' to be of the
+same status as that of 'mydt', which is what I have at the
+moment. This causes errors to be incorrectly found in the basis. What
+actually needs to happen here is that the equality type variable
+representing 'real' need to be constrained to be the same as x.
+
+What might work is to have the equality type variable of x dependant
+on an equality type variable list which contains the equality type
+variables for both 'real' and 'mydt'. That should make sure that x
+gets the correct equality type status, because if either the type
+constructor or the datatype itself is not an equality type, then x
+won't be either.
+
+(2012-11-13-22:08)
+
+Type variable 43 in the test argument-test.sml needs to have an
+EQUALITY_TYPE constraint attached to it somehow, maybe it could be put
+in the map with that equality type status somehow? I'm getting this
+from:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   ACCESSOR_CONSTRAINT(OVERLOADING_CLASSES_ACCESSOR(({ID(12,53),eqtv36,ROW_VAR(s4),OC,53},[53],[],)))
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t35,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_POLY(ROW_VAR(s4),0,POLY,CONSTANT(5.0,12,53),l53,EQUALITY_TYPE_VAR(eqtv36)
+)),[53],[],))
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_POLY(ROW_VAR(s4),0,POLY,CONSTANT(5.0,12,53),l53,EQUALITY_TYPE_VAR(eqtv36)
+)),[29,30,31,32,33,34,35,36,37,38,51,52,53],[],))
+
+I think type variable 43 is the type variable that represents the
+first field as part of the row constraint on the type of the function
+that is being called. It will therefore need to have some kind of
+equality type variable attached to it, right?
+
+(2012-11-13-22:39)
+
+It's worth noting that the labels for type variable 43 are for the
+(y:'a) part of the program, which is exactly what I'm looking for.
+
+* Questions for Joe
+
+See entry (2012-11-12-12:52)
