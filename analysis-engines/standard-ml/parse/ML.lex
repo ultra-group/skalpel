@@ -348,6 +348,7 @@ stUseFile    = ([^\*\ \n\t]*(\*[^\)])?)*;
 <INITIAL,STDEC> "and"        => (token T.AND        yytext arg);
 <INITIAL,STDEC> "val"        => (token T.VAL        yytext arg);
 <INITIAL,STDEC> "datatype"   => (token T.DATATYPE   yytext arg);
+<INITIAL,STDEC> "eqdatatype" => (token T.EQDATATYPE   yytext arg);
 <INITIAL,STDEC> "let"        => (token T.LET        yytext arg);
 <INITIAL,STDEC> "in"         => (token T.IN         yytext arg);
 <INITIAL,STDEC> "end"        => (token T.END        yytext arg);
