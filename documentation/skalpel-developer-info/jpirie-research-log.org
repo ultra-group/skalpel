@@ -7256,3 +7256,33 @@ it.
 
 These results look fine, going to add tests to test database and
 commit, then figure out what to do from there.
+
+(2012-11-16-16:42)
+
+All committed and added tests, going to look at another test now or
+perhaps do some writeup.
+
+(2012-11-16-18:40)
+
+I'm looking at the tests where tuples are involved in matching against
+signatures, there's a piece of the puzzle missing and hopefully it
+won't take too long to find out what that missing piece is.
+
+(2012-11-16-20:58)
+
+The missing piece is constytuple, because it takes typeVar values and
+then constructs ty datatype constructors using consTYPE_VAR. I have
+added a variation on that called constytupleWithTheta which takes ty
+values, which I've pre-built with the correct theta in the constraint
+generator in the A.AtExpTuple case.
+
+This should allow the θ values to be carried through correctly in
+cases involving tuples.
+
+(2012-11-16-21:05)
+
+And indeed it does! That passes a further 4 tests in the unsolved pile
+which is pretty great. Going to run the test database and check
+nothing else broke and commit this now, I'll add the newly working
+tests to the test database tomorrow.
+
