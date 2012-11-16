@@ -751,7 +751,16 @@ fun generateConstraints' prog pack nenv =
 		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.consEQUALITY_TYPE_VAR_LIST eqtvs) lab
 		   val cst = E.unionConstraintsList csts
 		   val contextSensitiveSyntaxError = E.unionContextSensitiveSyntaxErrors csss
-		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab
+
+		   fun createTypedTvs [] [] = []
+		     | createTypedTvs (tv::tvs) (eqtv::eqtvs) = (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv))::(createTypedTvs tvs eqtvs)
+		     | createTypedTvs _ _ = raise EH.DeadBranch "Didn't get the same number of type variables and equality type variables. Raised in A.AtExpTuple case of constraint generator."
+
+		   val equalityTypeTvs = createTypedTvs tvl eqtvs
+
+		   (* val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytuple tvl lab) lab *)
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.constytupleWithTheta equalityTypeTvs lab) lab
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints generated for tuple (constytuple call): "^(E.printOneConstraint c))
 	       in (tv, eqTypeVar, E.consConstraint (lab, equalityTypeConstraint) (E.consConstraint (lab, c) cst), contextSensitiveSyntaxError)
 	       end
 	     | f_atexp indent (A.AtExpRecord (expfields, _, _, lab, _)) =
@@ -1859,6 +1868,7 @@ fun generateConstraints' prog pack nenv =
 	       let
 		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ValBind")
 		   val (vids, cst1, cst2, css) = f_valbindseq valbindseq indent
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "constraints for A.ValBind: "^(E.printConstraints cst1))
 		   val env = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.projValueIds vids)
 	       in (env, css)
 	       end
