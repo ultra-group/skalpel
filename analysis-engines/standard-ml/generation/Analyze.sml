@@ -364,11 +364,13 @@ fun generateConstraints' prog pack nenv =
 			val sv = T.freshRowVar ()
 			val tv = T.freshTypeVar  ()
 			val eqTypeVar = T.freshEqualityTypeVar  ()
+			val eqTypeVar' = T.freshEqualityTypeVar  ()
 			val a  = E.genAccIoEm (E.consAccessorId (I.ID (v, lab)) eqTypeVar (T.ROW_VAR sv) (CL.consOC ()) lab) lab
-			val c  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.consEQUALITY_TYPE_VAR eqTypeVar)) lab
+			val c  = E.initTypeConstraint (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqTypeVar')) (T.TYPE_POLY (T.ROW_VAR sv, T.freshidor (), T.POLY, T.CONSTANT (s, v, lab), lab, T.consEQUALITY_TYPE_VAR eqTypeVar)) lab
 			val c2  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab
+			val c3  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab
 			val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Equality type constraint (NOT_EQUALITY_TYPE) generated for a SconReal")
-		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c, c2]), E.emptyContextSensitiveSyntaxError)
+		    in (tv, eqTypeVar, E.singcsts (lab, [E.ACCESSOR_CONSTRAINT a, c, c2, c3]), E.emptyContextSensitiveSyntaxError)
 		    end
 	       else let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SconReal (benv = "^Bool.toString(benv)^", str = \""^(#red (!D.colors))^s^((!D.textReset))^"\", v = "^I.printId(v)^", lab = "^(Int.toString(L.toInt(lab))^")"))
 			val tv = T.freshTypeVar ()
@@ -549,7 +551,7 @@ fun generateConstraints' prog pack nenv =
 
 		       val accessor   = E.initValueIDAccessor (E.consAccessorId lid eqtv (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv2)) class lab) lab
 		       val accessor2   = E.initEqualityTypeAccessor (E.consAccessorId lid eqtv (T.consEQUALITY_TYPE_VAR eqtv) class lab) lab
-		   in (tv, eqtv, lab, class, E.conscsts (lab, [E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2)))
+		   in (tv, eqtv, lab, class, E.conscsts (lab, [E.ACCESSOR_CONSTRAINT accessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT accessor2 )))
 		   end)
 
 	   (* RETURNS: (Ty.typeVar, Env.varenv, E.emptyConstraint, E.emptyContextSensitiveSyntaxError) *)
@@ -923,7 +925,8 @@ fun generateConstraints' prog pack nenv =
 
 		   val tv  = T.freshTypeVar ()
  		   val freshEqTypeVar = T.freshEqualityTypeVar ()
-		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow tv2 tv lab) lab
+		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VAR tv) lab) lab
+		   val _  = print("********* just made constraint "^(E.printOneConstraint(c))^" tv1 = "^(T.printTypeVar tv1)^", tv2 = "^(T.printTypeVar tv2)^", eqtv = "^(T.printEqualityTypeVar eqtv)^", eqTypeVar = "^(T.printEqualityTypeVar eqTypeVar))
 		   val c1 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR freshEqTypeVar) lab
 		   val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR freshEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
 	       in (tv, freshEqTypeVar, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
@@ -2325,16 +2328,20 @@ fun generateConstraints' prog pack nenv =
 		   val tv   = T.freshTypeVar ()
 		   val eqtv = T.freshEqualityTypeVar ()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) eqtv (CL.consTYVAR ()) lab])
-		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
 	       in (tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarval indent (A.EqualityTypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevarval case, lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv   = T.freshTypeVar ()
 		   val eqtv = T.freshEqualityTypeVar()
+		   val eqtv' = T.freshEqualityTypeVar()
+		   val eqtvExplicit = T.freshEqualityTypeVar()
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv, false) eqtv (CL.consTYVAR ()) lab])
-		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.UNKNOWN)) lab
-	       in (tyvs, E.singleConstraint (lab, c))
+		   val c    = E.initTypeConstraint (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv')) (T.EXPLICIT_TYPE_VAR (n, T.freshTypeVar (), lab, T.consEQUALITY_TYPE_VAR(eqtvExplicit))) lab
+		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv') (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
+		   val c3   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtvExplicit) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
+	       in (tyvs, E.singcsts (lab, [c, c2, c3]))
 	       end
 	     | f_typevarval indent A.TypeVarDots = (E.emtv, E.emptyConstraint)
 
@@ -2398,6 +2405,8 @@ fun generateConstraints' prog pack nenv =
 		   val (tyvs2, cst2) = f_typevarvallist indent (A.getTypeVarFValBind fvalbind)
 		   val tyvs = E.plusenv tyvs2 tyvs1
 		   val cst  = E.unionConstraintsList [cst1, cst2]
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints (cst1) for A.DecFVal:\n"^E.printConstraints(cst1))
+		   val _   = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints (cst2) for A.DecFVal:\n"^E.printConstraints(cst2))
 		   val env' = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (tyvs, env))
 	       in (env', css)
 	       end

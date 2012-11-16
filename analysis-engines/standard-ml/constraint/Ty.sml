@@ -143,7 +143,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * TYPE_DEPENDANCY: type annotated with dependancies *)
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
-		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
+		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityType
 		| TYPE_CONSTRUCTOR  of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION       of typeFunction  * rowType * Label.label
 		| TYPE_POLY         of rowType  * idor  * poly * orKind * Label.label * equalityType
@@ -589,11 +589,18 @@ fun constuple tvl lab =
     in cons tvl 1
     end
 
+fun constupleTyped tvl lab =
+    let fun cons []          _ = []
+	  | cons (tv :: tvl) n = (FC (conslabty n lab, tv, lab)) :: (cons tvl (n + 1))
+    in cons tvl 1
+    end
+
 fun consTupleTy tyl lab =
     #1 (foldl (fn (x, (xs, n)) => ((FC (conslabty n lab, x, lab)) :: xs, n+1)) ([], 1) tyl)
 
 (* constructors with kinds *)
 
+fun constyarrow'Typed tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constupleTyped [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 fun constyarrow'Eq tv1 tv2 lab k eq = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, eq)
 fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (map (fn x => FIELD_VAR x) tvl, f, lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
@@ -623,6 +630,7 @@ fun consTyTupleTy     tyl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW
 
 (* constructors without kinds *)
 fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OTHER_CONS
+fun constyarrowTyped tv1 tv2 lab = constyarrow'Typed tv1 tv2 lab OTHER_CONS
 fun constyrecord  tvl f lab = constyrecord'  tvl f lab OTHER_CONS (* the label option is for the flex *)
 fun constybool          lab = constybool'          lab OTHER_CONS
 fun constyint           lab = constyint'           lab OTHER_CONS
@@ -890,7 +898,7 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
   | printty (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("   ^ I.printId     id  ^
 				    ","    ^ printTypeVar    tv  ^
 				    ","    ^ printlabel    l   ^
-				    ","    ^ printEqualityTypeStatus    eqtv   ^ ")"
+				    ","    ^ printEqualityType    eqtv   ^ ")"
   | printty (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR("   ^ printtnty     tn  ^
 				    ","    ^ printseqty    sq  ^
 				    ","    ^ printlabel    l   ^
@@ -944,7 +952,7 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
   | printty' (EXPLICIT_TYPE_VAR (id, tv, l, eqtv))       = "EXPLICIT_TYPE_VAR("    ^ I.printId     id  ^
 							   ","     ^ printTypeVar    tv  ^
 							   ","     ^ printlabel    l ^
- 							   ","     ^ printEqualityTypeStatus eqtv   ^ ")"
+ 							   ","     ^ printEqualityType eqtv   ^ ")"
   | printty' (TYPE_CONSTRUCTOR (tn, sq, l, eq))       = "TYPE_CONSTRUCTOR (" ^ printtnty'    tn  ^
 				     ","     ^ printseqty'   sq  ^
 				     ","     ^ printlabel    l   ^

@@ -1,6 +1,9 @@
 {
     "test-list":[
-    	"equality-types/anonymous-function-with-arrow-type.sml",
+    	"equality-types/datatype-constructor-in-structure-with-sig.sml",
+    	"equality-types/burried-constraints.sml",
+    	"equality-types/argument-test.sml",
+    	"equality-types/anonymous-functions-with-arrow-type.sml",
     	"equality-types/basic-anonymous-function.sml",
     	"equality-types/opaque-signature-illegal-equality-test.sml",
 	"equality-types/eqtype-vs-real-cross-real.sml",
