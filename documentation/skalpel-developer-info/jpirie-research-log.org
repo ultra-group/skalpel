@@ -7125,6 +7125,134 @@ equality type variable attached to it, right?
 It's worth noting that the labels for type variable 43 are for the
 (y:'a) part of the program, which is exactly what I'm looking for.
 
-* Questions for Joe
+*** 2012-11-15
 
-See entry (2012-11-12-12:52)
+(2012-11-15-12:16)
+
+Going to get rid of some of this equality type accessor stuff if I can
+because it's getting in the way of some of the other tests, and
+equality type variables are correctly placed in binding expressions
+now without having to have a special kind of accessor for it.
+
+I'm not sure what effect this will have on the test framework if I
+just take this code out, I think I have solved all the problems which
+involved that but I'm not sure yet. I'm going to take that out and see
+what happens with respect to the test results.
+
+(2012-11-15-16:44)
+
+Type variable 35 in the argument-test seems to be specifically related
+to not equality type 5.0 expression in the code, so trying to get an
+equality type status on that seems futile. Instead, notice how when
+VALUEID_ACCESSOR (7,52) is looked up we create this constraint:
+
+new type constraint (equality types) =   EQUALITY_TYPE_CONSTAINT(((EQUALITY_TYPE_VAR(eqtv34),EQUALITY_TYPE_ON_TYPE(TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n1,OTHER_CONS,l29),R
+OW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l29):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[31,32,33,34,35,36,37,38],[],[]),l29),FIELD_CONSTRUCTION((2,l29):TYPE_DEPENDANCY(TYPE_CONSTRUCTO
+R((n1,OTHER_CONS,l28),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l28):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[38,39,40,41,42,43,44,45,46],[],[]),l28),FIELD_CONSTRUCTION((2,l28):TYPE_
+DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[26,27,34,35,36,37,38,47,48],[],[ID(8,36)]),l28)],-,l28),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28],[],[]),l29)],-,l29),l29,EQUALITY_TYPE_STATUS(UNK
+NOWN)),[29,30],[],[]))),[30,52],[],))
+
+new type constraint =   TYPE_CONSTRAINT(((TYPE_VAR(t34,-,POLY,EQUALITY_TYPE_VAR(eqtv35)),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l29),RO
+W_CONSTRUCTION([FIELD_CONSTRUCTION((1,l29):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[31,32,33,34,35,36,37,38],[],[]),l29),FIELD_CONSTRUCTION((2,l29):TYPE_DEPENDANCY(TYPE_CONSTRUCTOR
+ (TYPENAME_CONSTRUCTION(arrow,OTHER_CONS,l28),ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l28):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[38,39,40,41,42,43,44,45,46],[],[]),l28),FIELD_CO
+NSTRUCTION((2,l28):TYPE_DEPENDANCY(TYPE_VAR(t43,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),[26,27,34,35,36,37,38,47,48],[],[ID(8,36)]),l28)],-,l28),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28],[],[]),l29)],-,l29),l29,
+EQUALITY_TYPE_STATUS(UNKNOWN)),[29,30],[],[])),[30,52],[],))
+
+Type variable 43 comes up there, and given the labels I think that
+comes directly from the binder. Also, type variable 35 is dependant
+on 43. So if there were a NOT_EQUALITY_TYPE constraint on t35 and an
+EQUALITY_TYPE constraint on t43 then that should make this example
+work.
+
+Tricky bit is going to be in doing this, t43 is burried under a lot of
+constructions. Perhaps the θ could have been inserted earlier in the
+constraint generation process? Unfortunately, 43 < 35 so I think that
+might not be the case, either that or the variable numbers have been
+regenerated which is possible (though that would be worrying, because
+I bet any information attached to those numbers was also scrapped).
+
+(2012-11-15-17:15)
+
+When looking up the binder for label 52 in this example the 'bind'
+that is received back when solving value ID accessors does contain
+type variable 43. But then the fun begins - all of the type variables
+are renumbered, so what happens to the equality type information is
+anyone's guess.
+
+(2012-11-15-17:49)
+
+The equality type information should now be preserved. Before θ_43 was
+renamed its number was 31. I'll have to follow that to reach the real
+pot of gold, where I can insert a θ which has mapping θ |->
+EQAULITY_TYPE in the state.
+
+*** 2012-11-16
+
+(2012-11-16-01:25)
+
+I have done all the necessary following of type variables and I think
+this should do the trick. The problem with this test was that in some
+cases when an explicit type variable was detected of the form
+''<letter>, in some cases the EQUALITY_TYPE constraint wasn't attached
+correctly. Also when creating field constraints, the θ values were not
+carried through correctly. These should be fixed now, though I've
+still got to check this test passes then run it through the test
+database.
+
+(2012-11-16-01:53)
+
+I'm changing the ty datatype a little:
+
+	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
+		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityType
+
+It seems that EXPLICIT_TYPE_VAR cannot carry an equalityTypeStatus at
+the end and now must carry an equalityType instead. This is so that it
+can hold an equality type variable, which can be constrained to a
+status and a label can be put on it, which needs to be kept for
+endpoints to work (currently only getting one endpoint on this test).
+
+(2012-11-16-02:27)
+
+This test is passing now, I have to take care of a few nonexhaustive
+match exceptions which I raise that come up on other tests but apart
+from that this test should be fine.
+
+The datatype-constructor-in-structure-with-sig is now passing also, so
+I can add that to the database.
+
+Also, function-type-specified-as-equality is partially working,
+it looks like a problem with tuples is stopping that from fully
+working, but I can look into that.
+
+Note that when the problem with tuples is fixed then
+the functor-with-tuples.sml test should also pasesd, I changed that
+and took the tuples out and put in a single value and we get the
+equality type error slice generated from the code I just put in.
+
+The problem with tuples IS NOT fixable by adding the θ to the TYPE_VAR
+representing the tuple, we really need to find the connection with the
+variables inside the tuple and the ''a that's in the signature, or the
+slice will not be correct.
+
+(2012-11-16-14:25)
+
+I've been working away at passing other tests and the
+burried-constraint.sml test started to work properly without the
+minimization algorithm breaking down, bonus. A few exceptions are
+being raised though and causes four more tests are failing so I'm
+going to take a look at that first, then add the tests I have to the
+test database and then work out what to do from there.
+
+(2012-11-16-15:08)
+
+Fixed the exceptions that were being raised, it's because we don't
+know what to do when an equality type variable list is constrained to
+another equality type variable list, it's a bit strange that. I don't
+think we need to do anything in that case but I'll have a think about
+it.
+
+(2012-11-16-15:37)
+
+These results look fine, going to add tests to test database and
+commit, then figure out what to do from there.

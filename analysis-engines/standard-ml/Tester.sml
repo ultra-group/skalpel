@@ -1130,7 +1130,7 @@ fun compareErrors2 [] [] (true,  id) = ()
 	else (D.printDebugFeature D.TEST D.TESTING (fn _ => "Difference in context dependancies. In database: "^(printCD cds)^". Discovered: "^(printCD cds')^".");
 	      compareErrors2 xs ys' (false, id))   (* context dependancies are different *)
       (* we didn't find the slice, we failed this test *)
-      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find slice: "^slice^ " in ["^
+      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find database slice: "^slice^ "\nfound in this execution: ["^
 							    (List.foldr (op ^) "" ((List.map (fn (id, slice, cds, regs) => slice) ys)))
 							   ^"]"); raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 
@@ -1159,21 +1159,21 @@ fun compareErrors (_, []) (_, (_ :: _)) = raise TypableTest
     compareErrors1 xs ys (* means we now have to check that the new algo is more efficient *)
 
 (* declare functions which will give delevelopers messagees about the status of tests *)
-fun messageFormat     test st = "PROBLEM: " ^  test ^ ": format (" ^ st ^ ")\n"
-fun messageMissing    test st = "PROBLEM: " ^  test ^ ": a slice has not been found (Error UID = " ^ st ^ ")\n"
-fun messageCtxtDep    test st = test ^ " OK except the dependencies (" ^ st ^ ")\n"
-fun messageTypable    test    = "PROBLEM: " ^  test ^ ": was marked as typable but is not anymore\n"
-fun messageToomuch    test    = "PROBLEM: " ^  test ^ ": too many slices\n"
-fun messageNotmuch    test    = "PROBLEM: " ^  test ^ ": not enough slices\n"
-fun messageRegs       test    = "PROBLEM: " ^  test ^ ": the regions are wrong\n"
-fun messageTocheck    test    = "PROBLEM: " ^  test ^ ": TO CHECK!!!!\n"
-fun messageBad        test    = "PROBLEM: " ^  test ^ "\n"
-fun messageBetter     test    = test ^ " more than OK\n"
-fun messageSlow       test    = test ^ " OK but slower\n"
-fun messageOK         test    = test ^ " OK\n"
-fun messageNewer      test    = "PROBLEM: test " ^  test ^ ": test recorded with a newer SOL\n"
-fun messageDeadBranch test st = "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
-fun messageTodo       test    = "PROBLEM: test " ^  test ^ ": TODO: "
+fun messageFormat     test st = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": format (" ^ st ^ ")\n"
+fun messageMissing    test st = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": a slice has not been found (Error UID = " ^ st ^ ")\n"
+fun messageCtxtDep    test st = (#purple (!D.colors)) ^ test ^ " OK except the dependencies (" ^ st ^ ")\n"
+fun messageTypable    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": was marked as typable but is not anymore\n"
+fun messageToomuch    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": too many slices\n"
+fun messageNotmuch    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": not enough slices\n"
+fun messageRegs       test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": the regions are wrong\n"
+fun messageTocheck    test    = (#yellow (!D.colors)) ^ "PROBLEM: " ^  test ^ ": TO CHECK!!!!\n"
+fun messageBad        test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ "\n"
+fun messageBetter     test    = (#green (!D.colors)) ^  test ^ " more than OK\n"
+fun messageSlow       test    = (#green (!D.colors)) ^ test ^ " OK but slower\n"
+fun messageOK         test    = (#green (!D.colors)) ^ test ^ " OK\n"
+fun messageNewer      test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": test recorded with a newer SOL\n"
+fun messageDeadBranch test st = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
+fun messageTodo       test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": TODO: "
 
 fun generateTmpDBFile () =
     let val date = Date.toString (Date.fromTimeLocal (Time.now ()))

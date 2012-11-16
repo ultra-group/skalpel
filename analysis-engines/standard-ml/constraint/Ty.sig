@@ -83,7 +83,7 @@ signature TY = sig
 			  | EQUALITY_TYPE_ON_TYPE of ty
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
-                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityTypeStatus
+                | EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityType
 		| TYPE_CONSTRUCTOR       of typenameType   * rowType * Label.label * equalityType
 		| APPLICATION            of typeFunction  * rowType * Label.label
 		| TYPE_POLY              of rowType  * idor  * poly * orKind * Label.label * equalityType
@@ -163,6 +163,7 @@ signature TY = sig
     val constyoption      : typeVar -> Label.label -> ty
     val constyfrag        : typeVar -> Label.label -> ty
     val constyarrow       : typeVar -> typeVar -> Label.label -> ty
+    val constyarrowTyped  : ty -> ty -> Label.label -> ty
     val constytuple       : typeVar list -> Label.label -> ty
     val constytupleWithEquality : typeVar list -> equalityType -> Label.label -> ty
     val constyrecord      : fieldVar list -> Label.label option -> Label.label -> ty
@@ -185,6 +186,7 @@ signature TY = sig
     val constyoption'     : typeVar -> Label.label -> constructorKind -> ty
     val constyfrag'       : typeVar -> Label.label -> constructorKind -> ty
     val constyarrow'      : typeVar -> typeVar -> Label.label -> constructorKind -> ty
+    val constyarrow'Typed : ty -> ty -> Label.label -> constructorKind -> ty
     val constyarrow'Eq      : typeVar -> typeVar -> Label.label -> constructorKind -> equalityType -> ty
     val constytuple'      : typeVar list -> Label.label -> constructorKind -> ty
     val constyrecord'     : fieldVar list -> Label.label option -> Label.label -> constructorKind -> ty
