@@ -1,5 +1,8 @@
 {
     "test-list":[
+    	"equality-types/signature-equality-constraint.sml",
+    	"equality-types/functor-with-tuples.sml",
+    	"equality-types/function-type-specified-as-equality.sml",
     	"equality-types/datatype-constructor-in-structure-with-sig.sml",
     	"equality-types/burried-constraints.sml",
     	"equality-types/argument-test.sml",
