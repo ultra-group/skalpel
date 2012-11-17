@@ -7286,3 +7286,15 @@ which is pretty great. Going to run the test database and check
 nothing else broke and commit this now, I'll add the newly working
 tests to the test database tomorrow.
 
+*** 2012-11-17
+
+(2012-11-17-02:15)
+
+Newly working tests have been added to the test database. I'm going to
+continue to work on these over the weekend as I have some spare
+time. Hopefully I'll be able to get through the functor signature
+related tests, perhaps the op-equals test, define functions as
+NOT_EQUALITY_TYPE and have a stab at the datatype leftover problems
+too. If I get through all that I'll have 2 tests left in the
+not-handled pile, plus tests to fix which used to work but have been
+broken (there are about 4 of these if I remeber correctly).
