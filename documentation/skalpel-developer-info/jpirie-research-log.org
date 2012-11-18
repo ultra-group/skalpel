@@ -7601,3 +7601,40 @@ unification algorithm (well, I say simple.. ^^).
 
 Yeah, that worked, good stuff. I also fixed another test which was
 not passing which is already in the test database so that's great.
+
+(2012-11-18-17:15)
+
+I've moved on to adding the necessary constraints so that arrow types
+are considered types which cannot be tested for equality. The basic
+case of just adding a NOT_EQUALITY_TYPE status to the TYPE_CONSTRUCTOR
+seems simple enough, it's getting the EQUALITY_TYPE constraint on the
+left hand side that's the difficult part. It's got to be one of these
+type variables.
+
+(2012-11-18-19:28)
+
+It seems that there are mappings getting into the state environment
+α_1 |-> α_2 where the θ in α_1 and the θ in α_2 would cause an
+equality type error. I'm not sure how that is happening, so I'm adding
+a constraint so that when we lookup α_1 and get α_2, we check θ_1 and
+θ_2 also.
+
+(2012-11-18-22:17)
+
+Looking also at the op-equals test.
+
+    let fun getTyBinaryOp "=" l =
+	    let val tv = T.freshTypeVar ()
+		val tl = T.consTYPE_VAR tv
+		val tr = T.consTYPE_VAR tv
+		val to = T.constybool' l T.BUILTIN_BASIS_CONS
+	    in (tl, tr, to)
+	    end
+
+This looks useful, where the type variable of = is actually
+built. I'll try building these with a θ and see how it goes.
+
+(2012-11-18-23:17)
+
+That worked out just fine, getting an equality type error for that
+test now.

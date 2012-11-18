@@ -3436,7 +3436,8 @@ fun unif env filters user =
 		fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
-			let val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq2)
+			let val _   = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "tv1 not in the state. Adding dependancy.")
+			    val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq2)
 			    (*val _ = BI.updateMono state tv1 t ls deps ids*)
 			    val _ = if occurs (CT (tv1, t)) [T (tv2, ls, deps, ids)] 0 l
 				    then S.updateStateTv state tv1 (T.TYPE_DEPENDANCY (t, ls, deps, ids))
@@ -3444,11 +3445,13 @@ fun unif env filters user =
 			in fsimplify cs' l
 			end
 		      | SOME ty =>
-			let val bop = if Option.isSome b2 then b2 else b1
+			let val _   = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found tv1 in the state mapped to "^(T.printty ty)^". Recursing now.")
+			    val bop = if Option.isSome b2 then b2 else b1
 			    val t   = T.TYPE_VAR (tv2, bop, p2, eq2)
 			    val c   = E.genCstTyAll ty t ls deps ids
 			in fsimplify (c :: cs') l
 	    		end
+
 
 		(* in the event that eq1 is not unkown, and eq2 is unknown, then we look up tv2 in the state and put eq1 in there somewhere *)
 		(* val _ = case (eq1,eq2)  of *)
