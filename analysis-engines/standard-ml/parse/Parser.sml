@@ -340,7 +340,7 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 	(* print out labelled basis and non-basis files as per the user requested *)
 	val skalpelDebugValue = !(D.debug)
 	val _ = D.debug := !(D.debugBasis)
-	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))
+	val _ = D.printDebugFeature D.PARSER D.BASIS_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))
 	val _ = D.debug := skalpelDebugValue
 	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs nonBasisProgs) true)^"\n"))
     in (A.Progs progs, m, masc, basisVal')

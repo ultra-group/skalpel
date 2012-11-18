@@ -7298,3 +7298,200 @@ NOT_EQUALITY_TYPE and have a stab at the datatype leftover problems
 too. If I get through all that I'll have 2 tests left in the
 not-handled pile, plus tests to fix which used to work but have been
 broken (there are about 4 of these if I remeber correctly).
+
+(2012-11-17-12:38)
+
+Working on the functor-with-signature-of-structure-visible test
+example. This should be easy to pass I think, as I'm getting things
+of this form:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t20,-,POLY,EQUALITY_TYPE_VAR(eqtv32)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(3),l15),ROW_DEPENDAN
+CY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_STATUS(UNKNOWN))),[0,3,4,5,6,13,15,22,25,27,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,62,63,64],[],))
+
+Equality type variable 32 is set to EQUALITY_TYPE, which must have
+come from the = expression on the second line of the test. I should
+just be able to insert an equality type variable into the
+TYPE_CONSTRUCTOR for real and then this test will pass.
+
+(2012-11-17-13:11)
+
+Added in the appropriate constraint but the minimiser is dying. There
+must be a missing label somewhere I guess. Hrm. Ah well, getting used
+to it now so I'm sure I'll find it.
+
+(2012-11-17-13:24)
+
+Ah I've made the constraint in the wrong place I think. The constraint
+of NOT_EQUALITY_TYPE is made in TypDescOne, but it cannot be made
+here, because that handles things of the form:
+
+type t
+and
+eqtype t
+
+In the case of eqtype t, obviously the type can be checked for
+equality, and putting the NOT_EQUALITY_TYPE constraint here would
+violate. Instead I'll try and use the equality type variable that I
+had coming from there before and put that in the type constructor
+constraint.
+
+(2012-11-17-13:43)
+
+Ah nice, it seems that a lot of the tests that are failing are failing
+for this specific problem. I'll look at this more in-depth in a few
+hours, but I hope this solution will make up to 50% of the currently
+unhandled/buggy tests pass properly.
+
+At the moment the functor-with-signature-of-structure-visible test is
+dying in the minimiser because the link between
+
+val x : t
+
+and
+
+type t = real
+
+isn't made correctly with respect to θ propagation. If this link is
+made correctly, then I think it should be the case that these tests
+will start to pass.
+
+(2012-11-17-18:42)
+
+I found this in the constraint solving output (for the same test)
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t12,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(3),l15),ROW_DEPE
+NDANCY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_VAR(eqtv7))),[0,3,4,5,6,13,15,22,30,31,32,34,35,36,43,44],[],))
+
+These labels cover everything right up to the 't' portion of 'x :
+t'. If these labels could be included in the error along with what I'm
+currently getting, I don't think the minimiser would fail any
+longer. I'll see if type variable 12 there plays a role in the
+constraints, if it does then I should probably be using that.
+
+(2012-11-17-18:48)
+
+Type variable 12 isn't used again.. but:
+
+20 : TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(3),l15),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_VAR(eqtv7)),[0,3,4,5,6,13,15,22,25,27,28,29,30,31,32,34,35,36,38,
+39,40,41,42,43,44,62,63,64],[],[])
+
+Type variable 20 there contains the same information w.r.t. the real
+type but contains _all_ of the labels associated with the
+NOT_EQUALITY_TYPE part of the problem. Perhaps I can use this.
+
+(2012-11-17-18:51)
+
+And now this:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t20,-,POLY,EQUALITY_TYPE_VAR(eqtv32)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(3),l15),ROW_DEPENDAN
+CY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_VAR(eqtv7))),[0,3,4,5,6,13,15,22,25,27,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,62,63,64],[],))
+
+This has all of the labels which relate to the error with the only
+problem θ_32 does not exist in the state environment (though
+surrounding numbers are all bound to EQUALITY_TYPE). If I can find
+where this equality type variable got lost and get that added in to
+the state environment, perhaps this test will pass correctly.
+
+(2012-11-17-19:06)
+
+Found the missing link I think. When solving value id accessors
+equality type variables 31 and 32 are in the same scope so some sort
+of constraint should be made there. θ_31 has the right status and
+labels that I want too, so I'll go for that.
+
+(2012-11-17-19:27)
+
+I've adding in that constraint but there is still a problem where
+labels from the NOT_EQUALITY_TYPE portion of the problem still get
+lost. I'll take a look at it now but this is definitely better.
+
+(2012-11-17-19:35)
+
+I think I may be trying to solve the equality type variable constraint
+too early when we're solving a VALUEID_ACCESSOR. If I wait a few lines
+longer I will have access to labs1, which I believe is an enhanced set
+of labels attributed to the binding expression. After printing these
+out if they look like the labels that I want, I'll take these labels
+instead and that might fix things up.
+
+(2012-11-17-19:41)
+
+That didn't work, the labels there are not what I'm looking for. What
+I'm actually looking for are the labels that exist in sem, which seems
+to be type dependancy in this case. Perhaps I can take the labels from
+that, that would work but I'm not sure it would work for all
+cases. I'll try it and if it works I'll run some tests.
+
+(2012-11-17-20:37)
+
+I got a slice for the test, but it broke the burried-constraints
+test. I'm going to have to re-think the solution of this test. I'll
+need to make sure that the labels are correct some other way.
+
+(2012-11-18-23:58)
+
+Hrm, I might have been looking in the wrong place to find the labels
+that I'm looking for. This constraint looks like more what I want I
+think:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t20,-,POLY,EQUALITY_TYPE_VAR(eqtv32)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(3),l15),ROW_DEPENDAN
+CY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_VAR(eqtv7))),[0,3,4,5,6,13,15,22,25,27,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,62,63,64],[],))
+
+θ_32 and θ_7 are mapped to EQUALITY_TYPE and NOT_EQUALITY_TYPE
+respectively. Also, the full labels are available. I'll look into
+this.
+
+*** 2012-11-18
+
+(2012-11-18-00:35)
+
+The idea that I've been looking in the wrong place isn't accurate
+because the work that I've done has led to the constraint in the
+previous entry being made correctly, as previously equality type
+variable 32 did not exist in the state map.
+
+Perhaps it should be all downhill from here then, I should be able to
+just constrain those equality type variables with those labels and a
+new error should come out of it.
+
+On the downside the burried-constraints.sml program I believe is
+broken. It's possibly something to do with this partially generated
+error. I'll need to look bag at the git diffs to find out what might
+have caused such a change.
+
+(2012-11-18-00:51)
+
+This seemed to work though for some strange reason I have three
+endpoint labels. I'll need to look at the labelled basis to find out
+which labels are the correct ones to take.
+
+Just fixed a bug where the -d BASIS_LABELLING debug option did nothing
+instead of doing what it was supposed to, this should work fine now.
+
+(2012-11-18-01:02)
+
+This test is passing now, so I'm going to run it against the database
+and see what the deal is with the burried-constraints.sml test that is
+now failing.
+
+(2012-11-18-02:18)
+
+Ooft I've finally figured this one out. The problem was that two
+equality type variables were being constrained θ_1 = θ_2 and not θ_2 =
+θ_1, which it needed to be in this case, because it involved a type
+variable which already had its equality type information all worked
+out and an accessor, which didn't know what was going on and the label
+got mixed up in the type variable's equality type variable constraint,
+which it shouldn't have.
+
+In any case, that's another test passed without breakage, I'll add the
+test to the test database after I've got some sleep.
+
+(2012-11-18-02:25)
+
+Quick note for tomorrow: check out
+non-eqtype-in-signature-used-outside-as-eqtype.sml. This test is
+failing now, but the solution file looks like it might not be as good
+as the slice that we're now getting. Take a look at that. Actually
+maybe not, we don't have a structure slice currently but we have one
+for the signature... hmm.

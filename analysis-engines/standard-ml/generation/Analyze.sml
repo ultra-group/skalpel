@@ -2647,11 +2647,25 @@ fun generateConstraints' prog pack nenv =
 		   val typename   = if benv andalso getBasis () then getTypenameString str else T.freshTypename ()
 		   val c1   = E.initRowConstraint (T.ROW_VAR sv1) (T.ROW_VAR sv2) lab
 
-		   (* the equality type status would actually depend on what it's binding really (ie whether eqtype or not) *)
-		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.ROW_VAR sv1, lab', T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab'
-
 		   val eqtv' = T.freshEqualityTypeVar()
 		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv') (T.consEQUALITY_TYPE_VAR eqtv) lab
+
+		   (*****************************************************************************************************)
+		   (***********************************
+		    * passed burried-constraint, fails new test
+		    **********************************)
+		   (* the equality type status would actually depend on what it's binding really (ie whether eqtype or not) *)
+		   (* val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.ROW_VAR sv1, lab', T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab' *)
+
+		   (***********************************
+		    * fails burried-constraint, passes new test
+		    **********************************)
+
+		   (* the equality type status would actually depend on what it's binding really (ie whether eqtype or not) *)
+		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.ROW_VAR sv1, lab', T.consEQUALITY_TYPE_VAR eqtv')) lab'
+		   (*****************************************************************************************************)
+
+		   val _    = print ("tv at TypDescOne is "^Int.toString(T.typeVarToInt tv))
 
 		   (* Option.map: maps NONE to NONE and SOME(v) to SOME(f v)
 		    * idLabelPair comes from f_tyconbind, where the id and label of A.TyCon are paired *)
@@ -2686,6 +2700,7 @@ fun generateConstraints' prog pack nenv =
 		   (* unions a list of CONSTRAINTS values
 		    * that is, unions a list of lists of constraints *)
 		   val constraint  = E.unionConstraintsList constraints
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "constraints generated for A.TypDesc: "^E.printConstraints constraint)
 
 		   (* unions a list of context sensitive syntax errors *)
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
