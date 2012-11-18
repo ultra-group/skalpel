@@ -59,14 +59,7 @@ fun unaryid assoc  = List.mapPartial
 fun getOpType ascid =
     (* returns three tuple of type on the left,
      * type on the right, and type of the operator *)
-    let fun getTyBinaryOp "=" l =
-	    let val tv = T.freshTypeVar ()
-		val tl = T.consTYPE_VAR tv
-		val tr = T.consTYPE_VAR tv
-		val to = T.constybool' l T.BUILTIN_BASIS_CONS
-	    in (tl, tr, to)
-	    end
-	  | getTyBinaryOp "=old" l =
+    let fun getTyBinaryOp "=old" l =
 	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
 		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
 		val to = T.constybool' l T.BUILTIN_BASIS_CONS
@@ -197,7 +190,18 @@ fun getOpType ascid =
 	  | getTyUnaryOp _ _ = raise EH.DeadBranch ""
 	fun scanBinary (id, str) =
 	    let val lab = L.builtinLab
-		val (tl, tr, to) = getTyBinaryOp str lab
+		val ((tl,tr,to), cst) = case str of
+				     "=" =>
+				     let val tv = T.freshTypeVar ()
+					 val eqtv = T.freshEqualityTypeVar()
+					 val equalityConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS T.EQUALITY_TYPE) lab
+					 val tl = T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv)
+					 val tr = T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv)
+					 val to = T.constybool' lab T.BUILTIN_BASIS_CONS
+				     in ((tl, tr, to), [equalityConstraint])
+				     end
+				   | _ =>
+				     (getTyBinaryOp str lab, [])
 		val ty  = T.newTYPE_VAR ()
 		val eqtv = T.freshEqualityTypeVar()
 		val ti  = T.consTyTupleTy [tl, tr] lab T.BUILTIN_BASIS_CONS
@@ -205,7 +209,7 @@ fun getOpType ascid =
 		(* :: is the only constructor *)
 		val cl  = if str = "::" then CL.consDA1 () else CL.consREC ()
 		val bd  = E.consBindPoly {id=id, typeOfId=ty, equalityTypeVar = eqtv, classOfId=cl, labelOfConstraint=lab}
-	    in (bd, c)
+	    in (bd, [c]@cst)
 	    end
 	fun scanUnary (id, str) =
 	    let val lab = L.builtinLab
@@ -221,7 +225,7 @@ fun getOpType ascid =
 	    end
 	val (binds1, cst1) = foldr (fn (id, (binds, cs)) =>
 				       let val (bd, c) = scanBinary id
-				       in (bd :: binds, c :: cs) end)
+				       in (bd :: binds, c @ cs) end)
 				   ([], [])
 				   (binaryid ascid)
 	val (binds2, cst2) = foldr (fn (id, (binds, cs)) =>

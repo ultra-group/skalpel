@@ -935,10 +935,10 @@ fun generateConstraints' prog pack nenv =
 		   val tv  = T.freshTypeVar ()
  		   val freshEqTypeVar = T.freshEqualityTypeVar ()
 		   val c  = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VAR tv) lab) lab
-		   val _  = print("********* just made constraint "^(E.printOneConstraint(c))^" tv1 = "^(T.printTypeVar tv1)^", tv2 = "^(T.printTypeVar tv2)^", eqtv = "^(T.printEqualityTypeVar eqtv)^", eqTypeVar = "^(T.printEqualityTypeVar eqTypeVar))
+
 		   val c1 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR freshEqTypeVar) lab
 		   val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR freshEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
-	       in (tv, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, freshEqTypeVar, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp indent (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let

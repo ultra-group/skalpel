@@ -1,5 +1,8 @@
 {
     "test-list":[
+    	"equality-types/functor-with-signature-of-structure-visible.sml",
+    	"equality-types/functor-signature-test.sml",
+    	"equality-types/op-equals.sml",
     	"equality-types/signature-equality-constraint.sml",
     	"equality-types/functor-with-tuples.sml",
     	"equality-types/function-type-specified-as-equality.sml",
