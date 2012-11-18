@@ -2808,6 +2808,42 @@ fun unif env filters user =
 		    | (SOME (({id, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
 		      (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder)));
 		       fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l;
+
+		       (* if the sem portion is a type variable, it might contain an equality type variable which should be constrained correctly *)
+		       (* this case was built from test functor-with-signature-of-structure-visible.sml
+			* needs to be checked that this solution will work in all cases. Can we count on a (TYPE_VAR,TYPE_DEPENDANCY) constraint? *)
+
+		       (* doesn't seme I can do this, this breaks another test. The θ values will have to take care of themselves outside of this function *)
+		       (* (case bind of *)
+		       (* 	    T.TYPE_DEPENDANCY(_,dependancyLabels,dependancyStts,dependancyDeps) => *)
+		       (* 	    (* updates the labels on equalityTypeVarAccessor *) *)
+		       (* 	    (case S.getValStateEq state equalityTypeVarAccessor of *)
+		       (* 		NONE => (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "\n*****\n*****\nWARNING: equaltiy type variable doesn't exist in state when I think it probably should....\n*****\n*****"); *)
+		       (* 			 S.updateStateEq state equalityTypeVarAccessor (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS T.UNKNOWN, dependancyLabels, dependancyStts, dependancyDeps), [])) *)
+		       (* 	      | SOME (T.EQUALITY_TYPE_DEPENDANCY(x, stateLabs, mapDeps, mapIds),_) => *)
+		       (* 		      S.updateStateEq state equalityTypeVarAccessor (T.EQUALITY_TYPE_DEPENDANCY (x, L.union stateLabs (L.union dependancyLabels (L.cons lab (L.union labs (L.cons l labs')))), mapDeps, mapIds), []) *)
+		       (* 	      | _ => ()) *)
+		       (* 	  | _ => ()); *)
+
+		       (* ----------- this version doesn't seem to work, labels don't get propagated correctly ------------- *)
+		       (* (case bind of *)
+		       (* 	    T.TYPE_DEPENDANCY(_,dependancyLabels,_,_) => *)
+
+		       (* ============= this section makes sure an equality type variables missing from the state gets into the state ========================================= *
+			* IT ALSO FAILS THE BURRIED-CONSTRAINTS.SML TEST - BEWARE *)
+ 		       (* print ("lab = "^(L.printLab lab)^"labs = "^(L.toString labs)^", l = "^(L.printLab l)^"labs' = "^(L.toString labs)^"\n"); *)
+		       (case sem of
+		       	    T.TYPE_VAR(_,_,_,typeVarEqualityTypeVar) => fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, typeVarEqualityTypeVar),
+		       	    											L.empty, stts, deps) ] l
+		       	  | _ => ());
+
+
+		       (* ============= end section ========================================= *)
+
+
+
+		       (* 	  | _ => ()); *)
+
 		       (* fsimplify [E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVarBinder) (T.consEQUALITY_TYPE_VAR equalityTypeVarAccessor) l ] l; *)
 
 		      (* if: - b    is true (coming from the parameter of a functor)
@@ -3521,6 +3557,7 @@ fun unif env filters user =
 		  | updateFlex ty _ = ty
 		val ty = buildDirectOr ty state
 
+		(* get equality type variables and constrain *)
 		val cs' = (case (eq, ty) of
 			       (T.EQUALITY_TYPE_VAR eq, T.TYPE_POLY (sq', idor, poly, orKind, lab2, T.EQUALITY_TYPE_VAR eq2)) =>
 			       let
@@ -3528,6 +3565,14 @@ fun unif env filters user =
 			       in
 				   (c::cs')
 			       end
+			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (_, _, lab2, T.EQUALITY_TYPE_VAR eq2)) =>
+			       let
+				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
+				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.cons lab2 (L.cons l ls), deps, ids)
+			       in
+				   (c::cs')
+			       end
+
 			     | _ => cs')
 	    in
 		(* check whether we have this type variable already existing in the state *)
