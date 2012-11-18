@@ -37,6 +37,7 @@ signature LONGID = sig
     val buildKey       : Id.lid -> key
 
     val equal          : set -> set -> bool
+    val length         : set -> int
     val subset         : set -> set -> bool
     val subseteq       : set -> set -> bool
     val union          : set -> set -> set
