@@ -938,7 +938,7 @@ fun generateConstraints' prog pack nenv =
 		   val _  = print("********* just made constraint "^(E.printOneConstraint(c))^" tv1 = "^(T.printTypeVar tv1)^", tv2 = "^(T.printTypeVar tv2)^", eqtv = "^(T.printEqualityTypeVar eqtv)^", eqTypeVar = "^(T.printEqualityTypeVar eqTypeVar))
 		   val c1 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR freshEqTypeVar) lab
 		   val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR freshEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
-	       in (tv, freshEqTypeVar, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp indent (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let
@@ -2664,8 +2664,6 @@ fun generateConstraints' prog pack nenv =
 		   (* the equality type status would actually depend on what it's binding really (ie whether eqtype or not) *)
 		   val c2   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.TYPE_CONSTRUCTOR (T.NC (typename, T.DECLARATION_CONS id, lab'), T.ROW_VAR sv1, lab', T.consEQUALITY_TYPE_VAR eqtv')) lab'
 		   (*****************************************************************************************************)
-
-		   val _    = print ("tv at TypDescOne is "^Int.toString(T.typeVarToInt tv))
 
 		   (* Option.map: maps NONE to NONE and SOME(v) to SOME(f v)
 		    * idLabelPair comes from f_tyconbind, where the id and label of A.TyCon are paired *)

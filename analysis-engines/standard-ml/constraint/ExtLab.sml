@@ -35,7 +35,7 @@ fun printExtLab (term, labs, stats, cdeps) f ascid =
     "(" ^ f term                        ^
     "," ^ L.toString        labs        ^
     "," ^ L.toString        stats       ^
-    "," ^ ContextDependancy.toStringListSt cdeps ascid ^ ")"
+    ", contextDependancies=" ^ ContextDependancy.toStringListSt cdeps ascid ^ ")"
 
 fun printExtLab' (x, labs, st, deps) f =
     "(" ^ f x              ^

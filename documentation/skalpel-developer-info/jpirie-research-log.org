@@ -7495,3 +7495,109 @@ failing now, but the solution file looks like it might not be as good
 as the slice that we're now getting. Take a look at that. Actually
 maybe not, we don't have a structure slice currently but we have one
 for the signature... hmm.
+
+(2012-11-18-11:13)
+
+functor-signature-test is what I'm looking at now, as I there are about
+4 tests failing because this problem isn't handled correctly. A type
+error slice is generated incorrectly for this variation on the
+problem:
+
+functor F (S : sig type t = real end) =
+struct
+   fun x (y:S.t) z =
+       (y=z)
+end;
+
+Here a type error slice is generated but the z is included in the
+error. This should not be the case. It seems that this problem has
+something to do with this state entry:
+
+22 : TYPE_DEPENDANCY(TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_VAR(eqtv37)),[61,69],[],[])
+
+α_42 is compared with α_7 later on, which is the type variable
+assigned to the real type constructor, and then θ_37 is checked
+against another equality type variable incorrectly. θ_37 has the
+correct labels in it:
+37 : (EQUALITY_TYPE_DEPENDANCY((EQUALITY_TYPE_STATUS(EQUALITY_TYPE),[45,46,47,60,61,65,68,69],[65],[])), )
+
+With 65 as the endpoint which is the right hand side of the =
+operator, so that looks fine. To stop this problem, either α_42
+shouldn't be checked with α_7 later on, or α_42 shouldn't have θ_37
+attached to it. Or perhaps something about the mapping α_22 |-> α_42
+will change.
+
+So in this constraint:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t22,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(real,DECLARATION_CONS(3),l15),ROW_DEPE
+NDANCY(ROW_CONSTRUCTION([],-,l16),[14,16],[],[]),l15,EQUALITY_TYPE_VAR(eqtv7))),[0,1,3,4,5,6,13,15,22,25,27,28,29,30,31,32,34,35,36,51,52,53,54,55,56,57,58,61,65,66,67,68,69],[],10,
+11))
+
+We notice that α_22 is mapped to α_42 in the map and then call a new
+constraint based on that. Perhaps we shouldn't look at the new
+equality type variable in the map? The label here doesn't
+include 61, the 'z', and I'm not sure we want that.
+
+(2012-11-18-11:49)
+
+I think I know why this this happening. The 'z' is being compared
+against the real type constructor so that the analysis engine can
+determine that z is of the correct type. However, while it is true
+that z has to be of type real, because the left hand side is of type
+real, the equality type information should be destroyed. It is not the
+case that the equality type variable for z should be checked against
+the equality type information for the real type constructor, because
+that will generate incorrect error slices.
+
+I think I see a way to fix this by using some of the little-documented
+fields at the end of type constraints. I'll need to have a look at
+this now but if I can check that they are empty before making the θ
+constraints, perhaps this will solve the problem.
+
+(2012-11-18-11:59)
+
+That worked... great. I'm not getting errors for the test when there
+should be, but at least I'm not getting incorrect program
+slices. Going to document that a bit now before proceeding.
+
+(2012-11-18-14:21)
+
+Documented that up now. If I can make sure that equality type variable
+28 gets an equality type variable attached to it which ends up being
+mapped to status NOT_EQUALITY_TYPE then I should be fine. Perhaps the
+reason for this failing test might be in the constraint generator
+rather than the constraint solver.
+
+I made this change in f_labexp, which makes this test pass:
+
+val c   = E.initTypeConstraint (T.consTYPE_VARwithEQ tv' (T.EQUALITY_TYPE_VAR(eqTypeVar'))) (T.consTYPE_VARwithEQ tv (eqtv)) lab
+
+Here the α on the right hand side is constrained with an equality type
+var that it got back from the function which returned tv. While this
+makes the test pass, it breaks all the other tests, and a variation on
+this test under a similar theme also breaks, so we don't want this,
+but perhaps something a bit like this.
+
+(2012-11-18-14:40)
+
+Might be able to solve this test using the TYPE_ON_TYPE constraint
+that I made earlier. At the moment it's ignoring a constraint because
+I haven't written a pattern match for it. I'll try completing these
+pattern match cases, I'm pretty sure that will make this test pass but
+it might break others. Hrm.
+
+(2012-11-18-14:57)
+
+It doesn't break the others and it solves a lot of problems, this look
+like the right way to go. The only problem with it is that there is
+_one_ label missing, and it's causing the minimiser to die. When this
+label gets into the error that's generated, this test should have a
+nice solution.
+
+This might be just a simple case of incorrect label propagation in the
+unification algorithm (well, I say simple.. ^^).
+
+(2012-11-18-15:05)
+
+Yeah, that worked, good stuff. I also fixed another test which was
+not passing which is already in the test database so that's great.
