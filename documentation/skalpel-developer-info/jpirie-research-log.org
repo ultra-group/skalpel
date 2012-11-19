@@ -7638,3 +7638,21 @@ built. I'll try building these with a θ and see how it goes.
 
 That worked out just fine, getting an equality type error for that
 test now.
+
+*** 2012-11-19
+
+(2012-11-19-09:31)
+
+Currently looking at way to get the equality type error slice from
+structures to the user in cases where the structure and the signature
+combined are an equality type error. There's a problem with this
+because I don't see any connection between the labels for a type
+declaration in a structure and a variable of that type outside of the
+structure. It looks like it checks its type against the signature
+alone, though actually that might make sense because variables can't
+be used outside of the structure unless they are defined correctly in
+the signature.
+
+Nevertheless I do need to look inside the structure, so what now? I
+could force the type variables to be constrained inside the structure,
+but that could affect a number of other tests.

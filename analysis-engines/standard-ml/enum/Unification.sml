@@ -4478,7 +4478,7 @@ fun unif env filters user =
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
 					     val error  = ERR.consPreError ERR.dummyId (L.cons l (L.union resultLabels ls)) ids errorKind (L.union deps resultDeps)
 	  				 in
-					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable and a status. Labels: "^(L.toString (L.union resultLabels ls)));
+					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable ("^(T.printEqualityType equalityTypeVar)^") and a status ("^(T.printEqualityTypeStatus status)^"). Labels: "^(L.toString (L.union resultLabels ls)));
 					      handleSimplify error cs' l)
 					 end
 				       | [l1] => raise EH.DeadBranch ("Only got one endpoint label for an equality type error: "^(Int.toString l1))
