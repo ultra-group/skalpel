@@ -5,6 +5,7 @@ structure Basis :> sig
 
 type unit = {}
 
+eqtype int
 type real
 
 end = _structBasis
