@@ -7656,3 +7656,161 @@ the signature.
 Nevertheless I do need to look inside the structure, so what now? I
 could force the type variables to be constrained inside the structure,
 but that could affect a number of other tests.
+
+(2012-11-19-22:20)
+
+Hrm managed to look at a few tests today but didn't manage to get
+through the debug information that was spat out. Getting the structure
+slice for the test I was working on originally proved to be quite
+difficult, so I'm taking a break from that test and I'll come back
+around to it, perhaps another test will provide a stepping stone to
+solving that problem.
+
+(2012-11-19-23:35)
+
+Working on removing bogus slices that sometimes show up, would be good
+to get that cleared up. I'm changing the internal representation a
+bit, so I've removed part of the old mechanism and am adding something
+new in. As a result this test doesn't pass:
+
+(fn x => x) 5.0 = (fn x => x) 5.0
+
+Once it does the application equality type constraints will sit in the
+type constraints, which is something I've been meaning to get around
+to. Hopefully I can finish that this evening.
+
+At the moment I'm looking at this constraint:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t26,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_POLY(ROW_VAR(s4),0,POLY,CONSTANT(5.0,8,35),l35,EQUALITY_TYPE_VAR(eqtv18))
+),[1,24,25,26,27,28,29,30,31,32,33,34,35,36],[], contextDependancies=7))
+
+If type variable 26 inherited the status of EQUALITY_TYPE from
+somewhere then this test would be fine... aside from one thing. Label
+36 represents the right hand side of the = operator, because... um oh
+wait. Won't the minimiser get rid of that label?
+
+I think it will actually, in which case that's fine, I can just work
+on propagating the right equality type variable to t26 and hopefully
+this test (and the ones I just broke in the analysis engine by
+removing the old constraints) will also pass.
+
+*** 2012-11-20
+
+(2012-11-20-01:43)
+
+I managed to get a solution going, but it only works on the left hand
+side of the test! This is pretty odd, I must have added the
+constraints to one type variable and not the other, or
+something. Hopefully easy to fix... *ahem*.
+
+(2012-11-20-03:27)
+
+Ugh these numbers. Leaving a note. Eqtv 17 is constrained with that
+which has NOT_EQAULITY_STATUS but 17 has a label from expop =, see
+state eq for ref test. Maybe that should be possible, I'm not sure I
+need to look at this after some sleep.
+
+(2012-11-20-12:50)
+
+Just working on an example to get application working perfectly.
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t14,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_VAR(t16,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN))),[1,24,25,36],[], contextDe
+pendancies=))
+
+Here is a constraint from this test:
+
+(fn x => 1) 5.0 = 1
+
+This constraint is actually constraining the left and right type
+variables, as the labels here are 24, 25 and 36, where 24 is the
+equals operator, 25 is the left hand side, and 36 is the right hand
+side.
+
+This means that:
+
+- type variable t14 should have equaltiy type status EQUALITY_TYPE in the
+  type variable because the 5.0 is thrown away and we get 1.
+
+- type variable t16 should have equality type status EQAULITY_TYPE for
+  this constraint because there is no NOT_EQUALITY_TYPE constraint to
+  be gained here.
+
+At the moment they are both UNKNOWN. When the left hand side type
+variable t14 is not an equality type or an equality type when the
+function throws away the 5.0 and when it doesn't (respectively,
+i.e. the identity function), then this should be working correctly.
+
+*** 2012-11-21
+
+(2012-11-21-01:30)
+
+Both type variable 16 and 18, the two type variables from ExpOp, are
+constrained to type variable 30. The equality type variable attributed
+to 30 (in both cases, as is correct).
+
+Need to check these three constraints
+
+val ti  = T.constytupleWithTheta [T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv1), T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqtv2)] lab
+val tvo = T.freshTypeVar ()
+val c   = E.initTypeConstraint ty (T.consTyArrowTy ti (T.consTYPE_VAR tvo) lab T.OTHER_CONS) lab
+
+as tvo, which I think is the type variable that all of ti are being
+constrained to, and so probably should be the cause as such error, is
+not constructed with an equality type variable. If that's the case
+then why does tv30 have a θ attached to it, it must be derived? I'll
+look into this.
+
+(2012-11-21-10:37)
+
+While both α_16 and α_18 are being constrained to be both equal to
+α_30, it seems that tvo in the previous entry actually turns out to be
+α_20. I'm not sure where the 30 comes from. Interesting though.
+
+This is what α_20 turns out to be constrained to:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t20,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),TYPE_CONSTRUCTOR (TYPENAME_CONSTRUCTION(bool,OTHER_CONS,l28),ROW_CONSTRUCTION(
+[],-,l28),l28,EQUALITY_TYPE_STATUS(UNKNOWN))),[1,28],[], contextDependancies=))
+
+I'm not entirely sure whether I should be looking at α_20 or α_30
+here. While α_20 is tvo, aside from the connection that α_20 is a
+record with two fields α_16 and α_18 I don't see where I can make a
+good equality type constraint here.
+
+(2012-11-21-10:49)
+
+By removing the tvo constraint, the engine becomes unable to detect
+differences in types. I'm not sure why though, because I thought that
+would have been done with α_30.
+
+Hrm I have just checked that and taving away tvo also makes α_30
+disappear, so I'm guessing that α_30 is produced as a result of the
+constraint listed in the previous entry.
+
+Given this, I think looking at α_30 is probably the way to go.
+
+(2012-11-21-18:52)
+
+Hrm still working on this problem but I think I know what's going on,
+I must be losing a constraint somewhere either in labexp expressions
+or in perhaps expfn. Some of the other tests have failed as well which
+do not have equality types in them so I'm thinking that it's probably
+a missing constraint.
+
+*** 2012-11-22
+
+(2012-11-22-03:53)
+
+Finished this problem and cleaned up all the bugs I think that relate
+to it, application-related bugs should hopefully now be all gone.
+
+I'm going to move onto datatype constructors tomorrow and get them
+working again, after which I've only got a few more tests in the
+current database to play around with which don't pass yet.
+
+(2012-11-22-11:54)
+
+Just going to commit and push the changes for yesterday (and maybe the
+day before), I've still got to update the test database with the tests
+that are passing now but for the moment that's fine.
+
+
