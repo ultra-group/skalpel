@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",
     	"equality-types/functor-with-signature-of-structure-visible.sml",
     	"equality-types/functor-signature-test.sml",
     	"equality-types/op-equals.sml",
@@ -17,7 +18,6 @@
 	"equality-types/opaque-and-translucent-signatures.sml",
 	"equality-types/where-clause-clash-with-sig.sml",
 	"equality-types/type-then-fully-defined-in-structure.sml",
-	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",
 	"equality-types/basic-eqtype-translucent.sml",
 	"equality-types/tuple-with-function-call-inside.sml",
 	"equality-types/basic-tuple-example.sml",

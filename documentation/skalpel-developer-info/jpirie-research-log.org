@@ -7813,4 +7813,30 @@ Just going to commit and push the changes for yesterday (and maybe the
 day before), I've still got to update the test database with the tests
 that are passing now but for the moment that's fine.
 
+(2012-11-22-15:22)
 
+I'm going to change a little bit what happens when two θ values are
+constrained. If we have θ_1 = θ_2 and θ_2 ∈ StateEv with mapping
+(θ_2 |-> Σ), we make consraint θ_1 = Σ. This isn't what we should do
+though, because if the Σ is an unknown equality type status then we
+haven't really gained any information. We should instead make θ_2
+dependant on θ_1. I'll making this change now, hopefully it won't
+break other tests.
+
+(2012-11-22-22:12)
+
+Ugh, still reading this output. We have to have some nicer way of
+doing this one day, it's taking far too long to do anything. I've
+noticed that in untypable programs where we have a type constructor
+which takes an int and a type constructor usage where a real is taken
+as input, the program will generate an equality type error. I want to
+do something very much like this so I'm going to try and follow the
+type variables involved in that error around and see what changes when
+I add the ''a condition.
+
+*** (2012-11-23)
+
+(2012-11-23-11:58)
+
+Managed to get that bug fixed after a bit more reading. Going to sort
+out the test database out now and see what more still has to be done.
