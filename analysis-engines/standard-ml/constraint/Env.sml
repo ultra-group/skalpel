@@ -191,7 +191,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 	     | TOP_LEVEL_ENV (* to mark that we reached the top level *)
 
      and accessor        = VALUEID_ACCESSOR of T.ty accessorId EL.extLab                       (* value identifiers *)
-			 | EXPLICIT_TYPEVAR_ACCESSOR of T.typeVar accessorId EL.extLab         (* explicit type variables *)
+			 | EXPLICIT_TYPEVAR_ACCESSOR of T.ty accessorId EL.extLab              (* explicit type variables *)
 			 | EQUALITY_TYPE_ACCESSOR of T.equalityType accessorId EL.extLab       (* explicit type variables *)
 			 | TYPE_CONSTRUCTOR_ACCESSOR of T.typeFunction accessorId EL.extLab    (* type constructors *)
 			 | OVERLOADING_CLASSES_ACCESSOR of T.rowType accessorId EL.extLab      (* overloading classes *)
@@ -410,7 +410,7 @@ and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, fu
 and printAcc (VALUEID_ACCESSOR x) ind ascid =
     "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printty' ind ascid) ascid ^ ")"
   | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid =
-    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printTypeVar ind ascid) ascid ^ ")"
+    "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printty ind ascid) ascid ^ ")"
   | printAcc (EQUALITY_TYPE_ACCESSOR x) ind ascid =
     "EQUALITY_TYPE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printEqualityType ind ascid) ascid ^ ")"
   | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid =

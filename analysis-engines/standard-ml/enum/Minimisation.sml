@@ -523,11 +523,11 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 			      D.printdebug2
 				  (msg ^
 				   "\n" ^ err ^
-				   "\n" ^ L.toString labs  ^
+				   "\nlabs:  " ^ L.toString labs  ^
 				   (*"\n" ^ S.printSlice (S.slice ast labs) true ^*)
-				   "\n" ^ L.toString labs1 ^
-				   "\n" ^ L.toString keep  ^
-				   "\n" ^ L.toString labs2 ^
+				   "\nlabs1: " ^ L.toString labs1 ^
+				   "\nkeep:  " ^ L.toString keep  ^
+				   "\nlabs2: " ^ L.toString labs2 ^
 				   "\n" ^ S.printSlice (S.slice ast labs2) true)
 		      in raise EH.DeadBranch msg
 		      end

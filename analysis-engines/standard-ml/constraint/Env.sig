@@ -126,7 +126,7 @@ signature ENV = sig
 			| TOP_LEVEL_ENV
 
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accessorId ExtLab.extLab
-			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.typeVar    accessorId ExtLab.extLab
+			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.ty    accessorId ExtLab.extLab
 			    | EQUALITY_TYPE_ACCESSOR of Ty.equalityType accessorId ExtLab.extLab
 			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accessorId ExtLab.extLab
 			    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType    accessorId ExtLab.extLab
@@ -375,7 +375,7 @@ signature ENV = sig
     val initClassConstraint        : class    -> class    -> Label.label -> oneConstraint
 
     val initValueIDAccessor   : Ty.ty    accessorId -> Label.label -> accessor
-    val genAccIeEm   : Ty.typeVar accessorId -> Label.label -> accessor
+    val genAccIeEm   : Ty.ty accessorId -> Label.label -> accessor
     val initEqualityTypeAccessor : Ty.equalityType accessorId -> Label.label -> accessor
     val genAccItEm   : Ty.typeFunction accessorId -> Label.label -> accessor
     val genAccIoEm   : Ty.rowType accessorId -> Label.label -> accessor

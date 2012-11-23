@@ -1130,9 +1130,9 @@ fun compareErrors2 [] [] (true,  id) = ()
 	else (D.printDebugFeature D.TEST D.TESTING (fn _ => "Difference in context dependancies. In database: "^(printCD cds)^". Discovered: "^(printCD cds')^".");
 	      compareErrors2 xs ys' (false, id))   (* context dependancies are different *)
       (* we didn't find the slice, we failed this test *)
-      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find database slice: "^slice^ "\nfound in this execution: ["^
-							    (List.foldr (op ^) "" ((List.map (fn (id, slice, cds, regs) => slice) ys)))
-							   ^"]"); raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
+      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find database slice:\n"^slice^ "\nfound in this execution:\n"^
+							    (List.foldr (fn (x,y) => x^"\n"^y) "" ((List.map (fn (id, slice, cds, regs) => slice) ys))));
+		       raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 
 fun compareErrors1 xs ys =
     let val xs1 = map (fn (i, x, y, z) => (i, String.translate transParen x, y, z)) xs
