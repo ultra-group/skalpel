@@ -7840,3 +7840,16 @@ I add the ''a condition.
 
 Managed to get that bug fixed after a bit more reading. Going to sort
 out the test database out now and see what more still has to be done.
+
+(2012-11-23-18:26)
+
+Test database all sorted out and passing more tests which is nice. A
+test though has broken due to a change in the constraint generation
+file, I'm going to binary chop out the changes I've just made until I
+find the one that breaks the test, and see if there's a way to keep
+all the tests happy. Hopefully just turns out to be something simple
+that I can fix.
+
+(2012-11-23-19:06)
+
+It was something simple so I've just fixed that up, change committed.
