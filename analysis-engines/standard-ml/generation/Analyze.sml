@@ -669,7 +669,7 @@ fun generateConstraints' prog pack nenv =
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_exp (indent^SS.bottomLeftCurve^SS.straightLine) exp
 		   val tv' = T.freshTypeVar ()
 		   val eqTypeVar' = T.freshEqualityTypeVar ()
-		   val c   = E.initTypeConstraint (T.consTYPE_VARwithEQ tv' (T.EQUALITY_TYPE_VAR(eqTypeVar'))) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv)) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VARwithEQ tv' (T.EQUALITY_TYPE_VAR(eqTypeVar'))) (T.consTYPE_VAR tv) lab
 		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR eqtv) lab
 	       in (tv', eqTypeVar', E.consConstraint (lab, c2) (E.consConstraint (lab, c) cst), contextSensitiveSyntaxError)
 	       end
@@ -943,14 +943,9 @@ fun generateConstraints' prog pack nenv =
 
 		   (* gets equality type error on one side of = only? *)
 		   val c  = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv)) (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR freshEqTypeVar)) lab) lab
-		   (* val c  = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv)) *)
-		   (* 				 (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR freshEqTypeVar)) lab) lab *)
-
 		   val _ = print ("in A.ExpApp. freshEqTypeVar is: "^(T.printEqualityTypeVar freshEqTypeVar)^" and type var is "^T.printTypeVar(tv)^"\n")
 
-		   (* val c1 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR freshEqTypeVar) lab *)
-		   (* val c2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR freshEqTypeVar) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab *)
-	       in (tv, freshEqTypeVar, (* E.consConstraint (lab, c2 ) (E.consConstraint (lab, c1) *) (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))(*)*), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
+	       in (tv, freshEqTypeVar, (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))(*)*), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
 	       end
 	     | f_exp indent (A.ExpCase (labexp, match, _, _, lab, _)) =
 	       let
@@ -998,7 +993,7 @@ fun generateConstraints' prog pack nenv =
 		   val ty  = T.freshTypeVar ()
 		   val ty'  = T.newTYPE_VAR ()
  		   val eqTypeVar = T.freshEqualityTypeVar ()
- 		   val eqTypeVar' = T.freshEqualityTypeVar ()
+		   val eqTypeVar' = T.freshEqualityTypeVar ()
 
 		   val cn = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
 
@@ -1208,6 +1203,7 @@ fun generateConstraints' prog pack nenv =
 		    * tv that we get from f_type. That way we get this label (the label
 		    * of f_labtype) in the constraints *)
 		   val newTypeVar = T.freshTypeVar ()
+
 		   (* same story for the equality type variable - new constraint *)
 		   val newEqTypeVar = T.freshEqualityTypeVar ()
 
@@ -1657,13 +1653,8 @@ fun generateConstraints' prog pack nenv =
 
 		   val newEqtypeVar = T.freshEqualityTypeVar()
 
-		   (* this needs to be cleaned up. Use a basic datatype constructor equaqlity type error to test it *)
-		   (* val c0   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR newEqtypeVar) (T.consEQUALITY_TYPE_VAR eqtypeVar) lab *)
-		   (* val c5   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar) (T.consEQUALITY_TYPE_VAR eqtypeVar) lab *)
-
 		   (* this is an old approach, it shouldn't be done this way
 		    * an equality type variable should probably be generated and return for the constructor name, then assigned to be equal to the right hand side *)
-		   (* val c1   = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.constyarrow'Eq tv2 tv lab (T.DECLARATION_CONS I.dummyId) (T.consEQUALITY_TYPE_VAR newEqtypeVar)) lab *)
 		   val c1   = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar)) (T.constyarrow'Typed (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqtypeVar)) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR newEqtypeVar)) lab (T.DECLARATION_CONS I.dummyId)) lab
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
