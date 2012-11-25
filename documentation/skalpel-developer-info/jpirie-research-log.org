@@ -7834,7 +7834,7 @@ do something very much like this so I'm going to try and follow the
 type variables involved in that error around and see what changes when
 I add the ''a condition.
 
-*** (2012-11-23)
+*** 2012-11-23
 
 (2012-11-23-11:58)
 
@@ -7853,3 +7853,171 @@ that I can fix.
 (2012-11-23-19:06)
 
 It was something simple so I've just fixed that up, change committed.
+
+*** 2012-11-24
+
+Working a little more on datatype constructors, which account for most
+of the tests that don't work correctly at the moment. On this test:
+
+datatype 'a mydt = firstCons of 'a;
+
+fun x y =
+firstCons 5.0 = y
+
+There is this constraint:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t23,-,POLY,EQUALITY_TYPE_VAR(eqtv28)),TYPE_CONSTRUCTOR (TYPENAME_DEPENDANCY(TYPENAME_CONSTRUCTION(a user type,DECLARATIO
+N_CONS(6),l29),[28,29],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_STATUS(UNKNOWN)),l30)],-,l30),[28,29,30],[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN)))
+,[28,32,33,34,49,50],[], contextDependancies=))
+
+It's important to note tv42 here, which is:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_VAR(eqtv26)),TYPE_POLY(ROW_VAR(s9),0,POLY,CONSTANT(5.0,12,51),l51,EQUALITY_TYPE_VAR(eqtv26))),[
+31,32,33,34,35,36,49,50,51],[], contextDependancies=))
+
+The solution here looks like to add an equality type variable in the
+last unknown field of the first constraint which is mapped to a list
+of the field construction equality type variables. That's probably a
+good way to go about it. Note that also that type variable 42 should
+have its equality type variable in the type construction there too,
+which seems to have fallen off there for some reason.
+
+(2012-11-24-03:10)
+
+I've made an equality type variable for t42 and it's carried around
+now, I'll check to make sure it doesn't break any tests.
+
+(2012-11-24-12:15)
+
+There was a case where type variable 42 goes through a function and
+comes out as a different type variable but the equality type variable
+is getting dropped off, I'm going to attempt to fix that first. After
+the equality type variable is carried around everywhere correctly, I
+can look at building new constraints.
+
+(2012-11-24-12:23)
+
+Hm, it turns out that the constraint I was looking at in the first
+entry I made today is not relevant. The type variable 42 that I'm
+looking at is the type variable assigned to the explicit type variable
+that sits next to the typename in datatype declarations. This isn't
+useful to me because I need to have the equality type status of the
+5.0 term in play, and not (at the moment) the value of 'a expression
+(I think this might be useful in another test however). So the
+constraint up above, repeated here:
+
+TYPE_CONSTRAINT(((TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_VAR(eqtv17)),TYPE_POLY(ROW_VAR(s9),0,POLY,CONSTANT(5.0,12,51),l51,EQUALITY_TYPE_VAR(eqtv26))),[
+31,32,33,34,35,36,49,50,51],[], contextDependancies=))
+
+This is just checking that 5.0 and 'a are unifiable, which they
+are. I'm looking for another constraint to make this test work
+correctly.
+
+
+(2012-11-24-12:33)
+
+I think this is the constraint that I've actually been looking for:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t25,-,POLY,EQUALITY_TYPE_VAR(eqtv32)),TYPE_CONSTRUCTOR (TYPENAME_DEPENDANCY(TYPENAME_CONSTRUCTION(a user type,DECLARATIO
+N_CONS(6),l29),[28,29],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_VAR(eqtv17)),l30)],-,l30),[28,29,30],[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN))),[1,
+28,32,33,34,47,48,49,50,52],[], contextDependancies=))
+
+θ_32 is mapped to EQUALITY_TYPE is it's the θ responsible for
+representing the equals operator. θ_17 doesn't have the right Σ
+attached to it so I'm going to work on that first.
+
+(2012-11-24-13:08)
+
+That's been done now, but there is going to be an issue with equality
+type variable freshening.
+
+The status I'm assigning to θ_17 shouldn't actually be assigned to
+θ_17 but to some other θ which is fresh but still represents that part
+of the program. For example:
+
+
+datatype 'a mydt = firstCons of 'a;
+firstCons 5.0;
+firstCons 5
+
+An equality type error would be generated incorrectly in this case. If
+θ_17 represents the left hand 'a, then the 5.0 will constrain that
+θ to have Σ NOT_EQUALITY_TYPE, then when 5 is applied to it in line 3
+we would get a clash between EQUALITY_TYPE (int) vs NOT_EQUALITY_TYPE
+('a), where the non-equality type status of 'a has been derived from
+the 5.0. I'm going to look into to freshening this now with each use,
+I suspect this will have something to do with accessor lookup.
+
+(2012-11-24-13:17)
+
+Working on the freshening now, but there may be the problem in that
+freshening the θ variables will loose equality type information
+expressed by explicit type variables representing an equality type
+(''a). I think what needs to happen here is that when freshening the
+equality type variable we take the entry that's assigned to it in the
+map, and copy that to a fresh equality type variable. The issue with
+that however is that this would need to be done recursively to handle
+equality type dependancies!
+
+Work needs to be done on the freshty function then, to make sure that
+equality type variables are freshened safely.
+
+Some sort of 'freshEqualityType' function is nedeed which will take an
+equality type variable, and generate a fresh one where ALL the
+information is preserved but re-numbered, so for example if freshening
+θ_1 and θ_1 -> θ_2 ∈ StateEQ, then we generate θ_3, where mapping θ_3
+-> θ_4 is in StateEQ and the information of θ_3 and θ_4 match the
+information about θ_1 and θ_2 respectively and perfectly.
+
+*** 2012-11-25
+
+(2012-11-25-13:02)
+
+I have managed to make use of a function that I had written before
+which strips equality type variables from a given type. I'm hoping
+that I'll be able to use this to strip the equality type variables
+from a type constructor's row dependancy's row constructor's field
+constraints, which will allow me to find errors where arguments of
+datatype constructors are involved against a Σ that is
+EQUALITY_TYPE. Hopefully this won't cause problems where there are
+irrelevant equality type variables, that's the main problem that I can
+see.
+
+(2012-11-25-14:29)
+
+Having a problem with labels, where the analysis engine thinks that
+the datatype constructor is not relevant to the error when in fact it
+is. I think the way that equality type variables are being stripped
+means that the minimiser can throw away lots of information. Perhaps
+what is needed is some kind of much more general mechanism, for
+example pattern matching on a longer phrase of the constraint that is
+generated which will stop the minimiser from throwing information we
+need away, for example:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t25,-,POLY,EQUALITY_TYPE_VAR(eqtv32)),TYPE_CONSTRUCTOR (TYPENAME_DEPENDANCY(TYPENAME_CONSTRUCTION(a user type,DECLARATIO
+N_CONS(6),l29),[28,29],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t42,-,POLY,EQUALITY_TYPE_VAR(eqtv17)),l30)],-,l30),[28,29,30],[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN))),[1,
+28,32,33,34,47,48,49,50,52],[], contextDependancies=))
+
+At the moment the process is descending into this constraint and
+stripping the equality type variables of the type constructor out and
+constraining them to be equality to the equality type variable of the
+TYPE_VAR expression. Perhaps instead might be to pattern match on this
+entire expression aside from the FIELD_CONSTRUCTIONS values, then
+strip the equality type variables from that.
+
+(2012-11-25-14:50)
+
+Great, that worked. I still need to do the freshening though otherwise
+we'll get bogus errors in some cases, eg
+
+datatype 'a mydt = firstCons of 'a;
+
+firstCons 5.0;
+
+fun x y =
+firstCons 5 = y
+
+The code above will be marked as untypable if freshening isn't done
+correctly, as firstCons is deemed to be not an equality type forever,
+so when compared with the equals operator an error is generated. I'll
+hope to have this finished today also.

@@ -546,6 +546,7 @@ fun generateConstraints' prog pack nenv =
 		       val lab = I.getLabId lid
 		       (* NOTE: We want all the labels from lid *)
 		       val tv  = T.freshTypeVar ()
+		       val _ = print ("in f_longidexp. tv = "^(T.printTypeVar tv)^"\n")
 		       val eqtv  = T.freshEqualityTypeVar ()
 		       val eqtv2  = T.freshEqualityTypeVar ()
 		       val class  = CL.newClassVar ()
@@ -668,6 +669,7 @@ fun generateConstraints' prog pack nenv =
 		   val indent = convertIndentToSpaces indent
 		   val (tv, eqtv, cst, contextSensitiveSyntaxError) = f_exp (indent^SS.bottomLeftCurve^SS.straightLine) exp
 		   val tv' = T.freshTypeVar ()
+		   val _ = print ("In f_longidexp. New tv' = "^(T.printTypeVar tv')^"\n")
 		   val eqTypeVar' = T.freshEqualityTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VARwithEQ tv' (T.EQUALITY_TYPE_VAR(eqTypeVar'))) (T.consTYPE_VAR tv) lab
 		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR eqtv) lab
@@ -1292,6 +1294,7 @@ fun generateConstraints' prog pack nenv =
 	     | f_type indent (A.TypeTyCon (typseq, longtycon, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeTyCon")
 		   val indent = convertIndentToSpaces indent
+		   (* the equality type status of this is whichever <, eqtvRow or eqTypeVar. If either are not equality type, then we have a non-equality type constraint *)
 		   val (sv, eqtvRow, cst1, contextSensitiveSyntaxError1) = f_typeRow (indent^SS.verticalFork^SS.straightLine) typseq
 		   val (typeFunctionVar, eqTypeVar, cst2) = f_longtycon (indent^SS.bottomLeftCurve^SS.straightLine) longtycon
 		   val tv  = T.freshTypeVar ()
@@ -1706,27 +1709,29 @@ fun generateConstraints' prog pack nenv =
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val eqtv = T.freshEqualityTypeVar()
+		   val _ = print ("in f_typevarbind. New type variables are: tv1 = "^(T.printTypeVar tv1)^", tv2 = "^(T.printTypeVar tv2))
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv  (CL.consTYVAR ()) lab])
-		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))) lab
-	       in (tv2, tyvs, E.singleConstraint (lab, c))
+		   val c    = E.initTypeConstraint (T.consTYPE_VAR tv1) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, T.consEQUALITY_TYPE_VAR eqtv)) lab
+	       in (tv2, eqtv, tyvs, E.singleConstraint (lab, c))
 	       end
 	     | f_typevarbind indent (A.EqualityTypeVar (_, n, _, lab, _)) =
 	       let val _   = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.EqualityTypeVar (f_typevarbind; lab = "^Int.toString(L.toInt(lab))^")")
 		   val tv1  = T.freshTypeVar ()
 		   val tv2  = T.freshTypeVar ()
 		   val eqtv  = T.freshEqualityTypeVar ()
+		   val _ = print ("in f_typevarbind. New type variables are: tv1 = "^(T.printTypeVar tv1)^", tv2 = "^(T.printTypeVar tv2))
 		   val tyvs = E.consSingleEnv (n, [E.consBindMono n (tv1, true) eqtv (CL.consTYVAR ()) lab])
 		   val c    = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv)) (T.TYPE_VAR (tv2, SOME (n, lab), T.POLY, (T.consEQUALITY_TYPE_VAR eqtv))) lab
 		   val c2   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.EQUALITY_TYPE)) lab
-	       in (tv2, tyvs, E.consConstraint (lab, c2) (E.singleConstraint (lab, c)))
+	       in (tv2, eqtv, tyvs, E.consConstraint (lab, c2) (E.singleConstraint (lab, c)))
 	       end
-	     | f_typevarbind indent A.TypeVarDots = (T.freshTypeVar (), E.emtv, E.emptyConstraint)
+	     | f_typevarbind indent A.TypeVarDots = (T.freshTypeVar (), T.freshEqualityTypeVar(), E.emtv, E.emptyConstraint)
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
 	   and f_labtypevarbind indent (A.LabTypeVar (typeVar, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.LabTypeVar")
 		   val indent = convertIndentToSpaces indent
-		   val (tv, tyvs, cst) = f_typevarbind indent typeVar
+		   val (tv, eqtv, tyvs, cst) = f_typevarbind indent typeVar
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 	       in (tv', tyvs, E.consConstraint (lab, c) cst)
@@ -1738,9 +1743,9 @@ fun generateConstraints' prog pack nenv =
 	   and f_typevarseq indent (A.TypeVarSeqOne (typeVar, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TypeVarSeqOne")
 		   val indent = convertIndentToSpaces indent
-		   val (tv, tyvs, cst) = f_typevarbind (indent^SS.bottomLeftCurve^SS.straightLine) typeVar
+		   val (tv, eqtv, tyvs, cst) = f_typevarbind (indent^SS.bottomLeftCurve^SS.straightLine) typeVar
 		   val sv = T.freshRowVar ()
-		   val sq = T.ROW_C (T.constuple [tv] lab, T.noflex (), lab)
+		   val sq = T.ROW_C (T.constupleTyped [T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv)] lab, T.noflex (), lab)
 		   val c  = E.initRowConstraint (T.ROW_VAR sv) sq lab
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
@@ -1763,7 +1768,7 @@ fun generateConstraints' prog pack nenv =
 	       in (sv, tyvs, E.consConstraint (lab, c) cst)
 	       end
 	     | f_typevarseq indent (A.TypeVarSeqDots typeVars) =
-	       let val (_, tyvss, csts) = unzipThree (map (f_typevarbind indent) typeVars)
+	       let val (_, eqtvs, tyvss, csts) = unzipFour (map (f_typevarbind indent) typeVars)
 		   val tyvs = E.unionEnvList tyvss
 		   val cst  = E.unionConstraintsList csts
 		   val sv   = T.freshRowVar ()
