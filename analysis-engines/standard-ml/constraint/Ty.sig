@@ -144,6 +144,7 @@ signature TY = sig
     val CONSREAL          : typename
 
     val constuple         : typeVar list -> Label.label -> fieldType list
+    val constupleTyped    : ty list -> Label.label -> fieldType list
 
     val constyint         : Label.label -> ty
     val constyword        : Label.label -> ty
@@ -238,6 +239,7 @@ signature TY = sig
 
     val stripDepsSq       : rowType -> rowType ExtLab.extLab
     val stripEqualityVariables : ty -> Label.labels -> equalityTypeVar list * Label.labels
+    val stripEqualityVariables_sequenceType : rowType -> Label.labels -> equalityTypeVar list * Label.labels
 
     val tntyToTyCon       : typenameType -> typename
 

@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/ref-test.sml",
 	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",
     	"equality-types/functor-with-signature-of-structure-visible.sml",
     	"equality-types/functor-signature-test.sml",

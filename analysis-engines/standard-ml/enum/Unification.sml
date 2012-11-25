@@ -3461,21 +3461,6 @@ fun unif env filters user =
 			in fsimplify (c :: cs') l
 	    		end
 
-
-		(* in the event that eq1 is not unkown, and eq2 is unknown, then we look up tv2 in the state and put eq1 in there somewhere *)
-		(* val _ = case (eq1,eq2)  of *)
-		(* 	    (T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_STATUS(T.UNKNOWN)) => *)
-		(* 	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Left hand type variable has equality type variable assigned and right does not - putting equality type variable in state"); *)
-		(* 	     case S.getValStateTv state tv2 of *)
-		(* 		 NONE => *)
-		(* 		 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Right hand equality type variable doesn't exist in state, putting something in"); *)
-		(* 		  S.updateStateTv state tv2 (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (T.freshTypeVar()) (T.EQUALITY_TYPE_VAR(eqtv)), L.empty, L.empty, CD.empty))) *)
-		(* 	       | SOME (T.TYPE_DEPENDANCY(T.TYPE_VAR(tv,explicitTypeVar,poly,T.EQUALITY_TYPE_STATUS(UNKNOWN)),labels,deps,ids)) => *)
-		(* 		 S.updateStateTv state tv2 (T.TYPE_DEPENDANCY (T.TYPE_VAR(tv,explicitTypeVar,poly,T.EQUALITY_TYPE_VAR(eqtv)), labels, deps, ids)) *)
-		(* 	       | _ => ()) *)
-		(* 	    | _ => () *)
-
-		(* solve equality type constraints, not using the above commented out method any more unless I find we still need it... *)
 		val _  = fsimplify [(E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), ls, deps, ids))] l
 
 	    in if T.eqTypeVar tv1 tv2
@@ -3577,6 +3562,7 @@ fun unif env filters user =
 			       in
 				   (c::cs')
 			       end
+
 			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (_, _, lab2, T.EQUALITY_TYPE_VAR eq2)) =>
 			       let
 				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
@@ -3598,10 +3584,27 @@ fun unif env filters user =
 				    * however incorrect, z shouldn't be involved in an equality type error here. The solution is to simply not
 				    * check the equality type variables against each other in this case.
 				    *)
-
 				   if (CD.length ids) < 2 (* CD.isEmpty ids *)
 				   then (c::cs')
 				   else cs' end
+
+			     (* type constructors get a bit complex, as we have to look inside the type constructor. Inside the
+			      * type constructor can be row information (ROW_DEPENDANCY(ROW_CONSTRUCTION(..))), and inside the row
+			      * construction there are field constructions. Each of these field constructions has an equality type
+			      * variable attached to it, and we need to check those against the equality type variable of the type
+			      * variable (TYPE_VAR) also. A function is therefore required to strip all the equality type variables
+			      * from the type constructor, and then we can build the necessary constraints *)
+			     (* if we pattern match on this we lose labels when the minimiser throws everything else away *)
+
+			     (* | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (_,_,lab2,_)) => *)
+			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (T.TYPENAME_DEPENDANCY(T.NC(_,_,typenameLab),typenameDepLab,_,_),T.ROW_DEPENDANCY(rowConstruction,rowDependancyLabs,_,_),typeConstructorLab,_)) =>
+			       let
+ 				   val (strippedEqualityVars, strippedEqualityLabels) = T.stripEqualityVariables_sequenceType rowConstruction L.empty
+				   val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "stripped equality type variables and found: "^(T.printEqualityTypeVarList strippedEqualityVars)^" with labels: "^(L.toString strippedEqualityLabels))
+				   val newConstraints = List.map (fn newEqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR newEqtv), L.union typenameDepLab (L.union rowDependancyLabs (L.union strippedEqualityLabels (L.cons typeConstructorLab (L.cons l (L.cons typenameLab ls))))), deps, ids)) strippedEqualityVars
+			       in
+				   newConstraints@cs'
+			       end
 
 			     | _ => cs')
 	    in
@@ -4612,11 +4615,16 @@ fun unif env filters user =
 		      (* the equality type variable already exists in the map
 		       * we want to go create a constraint to see whether all the constraints are still satisfyable *)
 		      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS mapStatus, labs, stts, cd), recordInformation) =>
-			let
-			    val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.cons l (L.union labs ls), L.union stts deps, ids)
-			in
-			    fsimplify (c::cs') l
-			end
+			(* we only make the constraint if the status is not UNKNOWN. If it's UNKNOWN, make a dependancy instead *)
+			(case mapStatus of
+			    T.UNKNOWN =>
+			    S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, L.union ls labs, deps, ids), [])
+			  | _ =>
+			    let
+				val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.cons l (L.union labs ls), L.union stts deps, ids)
+			    in
+				fsimplify (c::cs') l
+			    end)
 
 		      | SOME(T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR mapEqualityTypeVar, labs, stts, cd), recordInformation) =>
 			let
