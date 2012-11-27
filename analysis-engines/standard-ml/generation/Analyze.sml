@@ -1300,16 +1300,16 @@ fun generateConstraints' prog pack nenv =
 		   val eqTypeVar'  = T.freshEqualityTypeVar ()
 		   val eqTypeVar2  = T.freshEqualityTypeVar ()
 		   val sv' = T.freshRowVar ()
-		   (* enable the below line to test datatype argument equality type test errors *)
 		   val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv', T.consTYPE_VAR tv', lab)) lab
+		   (* enable the below line to test datatype argument equality type test errors *)
 		   (* val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv', T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar'), lab)) lab *)
 		   (* val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar')) lab *)
 		   val c2  = E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VAR tv') lab
 		   val c3  = E.initRowConstraint (T.ROW_VAR sv) (T.ROW_VAR sv') lab
 		   val c4 =  E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR eqtvRow) lab
-		   (* val c4 =  E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar2) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab *)
-		   (* val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR_LIST [eqTypeVar2, eqtvRow]) lab *)
-	       in (tv, eqTypeVar', E.conscsts (lab, [c1, c2, c3, c4(* , equalityTypeConstraint *)]) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError1)
+		   val c4 =  E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar2) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
+		   val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar') (T.consEQUALITY_TYPE_VAR_LIST [eqTypeVar2, eqtvRow]) lab
+	       in (tv, eqTypeVar', E.conscsts (lab, [c1, c2, c3, c4, equalityTypeConstraint]) (E.unionConstraintsList [cst1, cst2]), contextSensitiveSyntaxError1)
 	       end
 	     | f_type indent (A.TypeParen (labtyp, _, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.TypeParen")

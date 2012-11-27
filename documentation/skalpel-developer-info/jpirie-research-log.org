@@ -8055,3 +8055,17 @@ For the moment I've commented out the line that generates the correct
 slice for the datatype-argument-test but that generates incorrect
 slices for the basis. I still can't see any nice way to do that for
 the moment, I'll have to take another look at this later.
+
+(2012-11-27-13:02)
+
+I just found out that the commit last night contained a bug that
+fails another test, going to take a break looking at some of the
+theory to fix this because that test shouldn't be breaking.
+
+Some constraints were removed that I thought were now irrelevant, but
+one of them was obviously still being useful.
+
+(2012-11-27-14:04)
+
+Found it, going to commit that now so it doesn't get lost in the mist
+of whatever I'm going to work on this afternoon.
