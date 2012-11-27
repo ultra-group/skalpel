@@ -1141,6 +1141,13 @@ specone :
 	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: DATATYPE datdesc")
 	in (A.SpecDat (dd, reg, n, m), (m, asc'))
 	end)
+| EQDATATYPE datdesc
+    (fn (n, asc) =>
+	let val (dd, (m, asc')) = datdesc (L.nextLabel n, asc)
+	    val reg = R.consReg EQDATATYPEleft EQDATATYPEright
+	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: EQDATATYPE datdesc")
+	in (A.SpecDat (dd, reg, n, m), (m, asc'))
+	end)
 | STRUCTURE strdesc
     (fn (n, asc) =>
 	let val (sd, (m, asc')) = strdesc (L.nextLabel n, asc)
@@ -1168,6 +1175,17 @@ specone :
 	    val reg2 = R.consReg EQUALOPleft   EQUALOPright
 	    val reg3 = R.consReg DATATYPE2left DATATYPE2right
 	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: DATATYPE tycon EQUALOP DATATYPE longtycon")
+	in (A.SpecRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+
+| EQDATATYPE tycon EQUALOP EQDATATYPE longtycon
+    (fn (n, nasc) =>
+	let val (tc, masc) = tycon (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtycon masc
+	    val reg1 = R.consReg EQDATATYPE1left EQDATATYPE1right
+	    val reg2 = R.consReg EQUALOPleft   EQUALOPright
+	    val reg3 = R.consReg EQDATATYPE2left EQDATATYPE2right
+	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: EQDATATYPE tycon EQUALOP EQDATATYPE longtycon")
 	in (A.SpecRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
 	end)
 
@@ -2505,6 +2523,33 @@ dec' :
 	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: DATATYPE tycon EQUALOP DATATYPE longtycon")
 	in (A.DecDatRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
 	end)
+| EQDATATYPE datbindseq
+    (fn nasc =>
+	let val (db, (m, masc)) = datbindseq nasc
+	    val reg = R.consReg EQDATATYPEleft EQDATATYPEright
+	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: EQDATATYPE datbindseq")
+	in (A.DecDatType (db, reg, m), (m, masc))
+	end)
+| EQDATATYPE datbindseq WITHTYPE typbindseq
+    (fn (n, nasc) =>
+	let val (db, masc) = datbindseq (L.nextLabel n, nasc)
+	    val (tb, (p, pasc)) = typbindseq masc
+	    val reg1 = R.consReg EQDATATYPEleft EQDATATYPEright
+	    val reg2 = R.consReg WITHTYPEleft WITHTYPEright
+	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: EQDATATYPE datbindseq WITHTYPE typbindseq")
+	in (A.DecDatWith (db, tb, [reg1, reg2], n, p), (p, pasc))
+	end)
+| EQDATATYPE tycon EQUALOP EQDATATYPE longtycon
+    (fn (n, nasc) =>
+	let val (tc, masc) = tycon (L.nextLabel n, nasc)
+	    val (ltc, (p, pasc)) = longtycon masc
+	    val reg1 = R.consReg EQDATATYPE1left EQDATATYPE1right
+	    val reg2 = R.consReg EQUALOPleft   EQUALOPright
+	    val reg3 = R.consReg EQDATATYPE2left EQDATATYPE2right
+	    val _   = D.printDebugFeature D.MLGRM D.PARSING (fn _ => "pattern detected: EQDATATYPE tycon EQUALOP EQDATATYPE longtycon")
+	in (A.DecDatRep (tc, ltc, [reg1, reg2, reg3], n, p), (p, pasc))
+	end)
+
 | ABSTYPE datbindseq WITH decs END
     (fn (n, asc) =>
 	let val (db, masc) = datbindseq (L.nextLabel n, asc)

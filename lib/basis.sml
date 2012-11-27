@@ -69,7 +69,7 @@ val map    : ('a -> 'b) -> 'a list -> 'b list
 val foldl  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 val foldr  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 
-datatype 'a ref = ref of 'a
+eqdatatype 'a ref = ref of 'a
 val !  : 'a ref -> 'a
 val := : 'a ref * 'a -> unit
 
