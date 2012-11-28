@@ -3042,10 +3042,15 @@ fun generateConstraints' prog pack nenv =
 		   val indent = convertIndentToSpaces indent
 		   val (typenames, typeNameEnv, equalityTypeVars, constraints, css) = f_typdesc (indent^SS.bottomLeftCurve^SS.straightLine) typdesc
 
-		   (* we need to set all the equality type variables to NOT_EQUALITY_TYPE here (what if the signature is translucent??) *)
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Equality type variables got back: "^(T.printEqualityTypeVarList equalityTypeVars))
+
+		   (* in the basis, something which is specified as a SpecType is a non equality constraint
+		    * if we aren't in the basis then we constrain the equality type variable to be equal to
+		    * itself, but the right hand side of the constraint is replaced with NOT_EQUALITY_TYPE
+		    * if this type is in a signature that is used in an opaque way *)
 		   val equalityConstraints = if getBasis()
 					     then List.map (fn eqtv => E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab) equalityTypeVars
-					     else []
+					     else List.map (fn eqtv => E.genCstEqAll (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR eqtv) (L.cons lab L.empty) (L.cons lab L.empty) CD.empty) equalityTypeVars
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, equalityConstraints) constraints), E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()
@@ -3281,11 +3286,23 @@ fun generateConstraints' prog pack nenv =
 		   val (ev1, cst1, css1) = f_labstrexp (indent^SS.verticalFork^SS.straightLine) labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp (indent^SS.verticalFork^SS.straightLine) labsigexp
 		   val (ev3, strs, cst3, css3) = f_strid (indent^SS.bottomLeftCurve^SS.straightLine) strid
-		   val c    = E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab)
-		   val cst  = E.singleConstraint (lab, c)
-		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
+
+
+		   (* now we need to go through the constraints of cst2, the signature, and give the types
+		    * a NOT_EQUALITY_TYPE status constraint as the structure is using the signature in an
+		    * opaque manner *)
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Starting edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
+		   val cst2New = E.createOpaqueEqualityConstraints cst2 lab
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Finished edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
+
+		   val cst  = E.singleConstraint (lab, E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab))
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
+		   (* val env'  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst2New]), E.CONSTRAINT_ENV cst) *)
+		   (* val cst'' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env') *)
+
+
+		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     (* structure binding using a translucent signature *)

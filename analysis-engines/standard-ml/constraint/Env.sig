@@ -383,6 +383,8 @@ signature ENV = sig
     val genAccIiEm   : env      accessorId -> Label.label -> accessor
     val genAccIfEm   : funsem   accessorId -> Label.label -> accessor
 
+    val createOpaqueEqualityConstraints : constraints -> Label.label -> constraints
+
     val printEnv     : env    -> string -> string
     val printConstraints : constraints -> string
     val printOneConstraint : oneConstraint -> string
