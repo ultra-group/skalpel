@@ -8069,3 +8069,111 @@ one of them was obviously still being useful.
 
 Found it, going to commit that now so it doesn't get lost in the mist
 of whatever I'm going to work on this afternoon.
+
+(2012-11-27-14:49)
+
+Ah, excellent! Found a test that was actually passing but the solution
+was incorrect, must have happened sometime in the last couple of
+days. Ah well that's good, 4 left currently.
+
+Perhaps it's time to move onto this test about opaque and translucent
+signatures. At the moment the opaque signature constraint blocks any
+equality type constraints from appearing inside the signature or
+structure, whereas the opaque signature should really put a
+NOT_EQUALITY_TYPE constraint on all type variables. I'll look into
+this now.
+
+(2012-11-27-14:56)
+
+I think I've worked out what to do when we see an opaque
+signature. At the moment what happens is the structure is entirely
+hidden from the type constraints outside but the signature is still
+valid. The trick is going to be to set all of the type variables to
+status NOT_EQUALITY_TYPE inside the signature with the non-equality
+endpoint being the opaque signature label.
+
+This might be more difficult to pull off, but hopefully I should have
+an idea how long it's going to take to change that around in the next
+hour or so.
+
+(2012-11-27-15:18)
+
+I had briefly considered the idea of changing the constraint
+generation rules for signatures to be different when being used
+translucently or opaquely. This is not possible because signatures can
+be defined on their own (signature S = sig ... end) and then used
+opaquely or translucently. Just something worth noting because I need
+to bear that in mind, the differences in constraint generation must
+happen somewhere like for example f_strbindone.
+
+(2012-11-27-15:35)
+
+It is ONLY in the case of 'type <something>' that we want to generate
+a Σ of NOT_EQUALITY_TYPE with the label of the opaque signature. If it
+has a 'type <something> = <something else>' syntax then we have
+equality type information that we can use.
+
+(2012-11-27-16:21)
+
+Right I think I have a plan of action for this test. When seeing a
+SpecType we don't know if the signature is being used opaquely or not,
+so I'm going to put the label for the SpecType at the end of the
+equality constraint that will now be generated. Then when generating
+an opaque structure constraint I will look inside the constraints for
+the signature environment for equality type constraints with such
+labels (no other labels will exist). If they are found, I will
+generate a fresh equality type variable mapped to NOT_EQUALITY_TYPE
+with the endpoint label of the opaque structure expression, put that
+in place of the old equality type constraint, and pass the updated
+environment through to the structure, where the type will not be an
+equality type.
+
+This will mean that outside the structure, and in other structures
+using other kinds of signatures, this equality type status will be
+unique and will not break any other tests, and will still work when
+being used translucently.
+
+(2012-11-27-17:15)
+
+Changed my mind with this a bit, instead of using the context
+dependancies to store the label I'm going to use the dependancy set of
+labels and then remove the label after the constraint has been
+replaced.
+
+(2012-11-27-18:07)
+
+I have done the constraints for SpecType to match what I mentioned in
+the last entry and have just run the test database, and none of the
+other equality type tests were affected, which is great. The only
+thing left to do now is to go through the environment returned when
+using a signature opaquely, find the equality type variables that are
+highlighted in this way, and constrain them to be NOT_EQUALITY_TYPE,
+with the endpoint label as the opaque signature (:>) expression label.
+
+(2012-11-27-22:08)
+
+The code needed to be written for this test to pass is finishedand the
+test passes... but there is a problem. When using an opaque signature,
+the types become non-equality... but then they can be part of equality
+type errors between themselves and types which are later defined in
+structures to have an EQUALITY_TYPE status e.g. type t = int!
+
+This is very annoying. I have a solution to fix this which I'm working
+on now, which is to make sure that there cannot be equality type error
+clashes between signatures and structures. I can do this because this
+should never be the case, if they differ in equality type status then
+they will also differ at the type level so we'll generate an error for
+that anyway.
+
+(2012-11-27-23:25)
+
+The solution I had didn't work because of complication involving the
+'where' keyword, so I'm back to thinking about how to stop structures
+and signatures clashing when used opaquely. Hmmm.
+
+(2012-11-28-00:28)
+
+Still no solutions on this, it doesn't seem I can do anything with the
+environment variables to try and restrict the structure to only seeing
+the unmodified constraints. I might need to do something with the
+status assignments to set some kind of flag.

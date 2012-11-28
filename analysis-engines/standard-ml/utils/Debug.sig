@@ -48,6 +48,7 @@ signature DEBUG = sig
 			  | STATE
 			  | PROGRAM_LABELLING
 			  | BASIS_LABELLING
+			  | TEMP                    (* temporary output, this should be cleaned up regularly! *)
 
     val sep1' : string
     val sep2' : string

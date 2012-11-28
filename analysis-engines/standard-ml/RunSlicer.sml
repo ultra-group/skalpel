@@ -493,6 +493,7 @@ fun smlTesStrArgs strArgs =
 		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
 		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
 		     | "ONE_RUN" => D.oneRunOnly := true
+		     | "TEMP" => (D.debug := true; D.enableDebugFeature D.TEMP)
 		     | str  => (print ("Unrecognised debugging feature: "^str^"\n");
 				raise Fail ("Unrecognised debugging feature: "^str));
 		   outputFilesNeeded := false)

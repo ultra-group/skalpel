@@ -467,6 +467,56 @@ fun printConstraints cst =
 fun printOneConstraint cst = printocst cst "" I.emAssoc
 fun printOneAccessor   cst = printAcc cst "" I.emAssoc
 
+(* a function which will create NOT_EQUALITY_TYPE constaints for types used
+ * in an opaque signature. Called at constraint generation time when we see
+ * that we are in fact dealing with an opaque signature *)
+fun createOpaqueEqualityConstraints cst lab =
+    let
+	val equalityTypeVarsToFreshen = ref []
+
+	fun freshenEqualityTypeVar eqtv =
+	    let
+		val newEqtv = T.freshEqualityTypeVar()
+		val _ = equalityTypeVarsToFreshen := (eqtv,newEqtv)::(!(equalityTypeVarsToFreshen))
+	    in
+		newEqtv
+	    end
+
+	fun checkForFreshening eqtv =
+	    let
+		fun checkForFreshening' eqtv [] = eqtv
+		  | checkForFreshening' eqtv ((old,new)::t) =
+		    if (T.equalityTypeVarToInt eqtv = T.equalityTypeVarToInt old)
+		    then new
+		    else checkForFreshening' eqtv t
+	    in
+		checkForFreshening' eqtv (!(equalityTypeVarsToFreshen))
+	    end
+
+	fun createOpaqueEqualityConstraintsInEnv (FUNCTOR_ENV cst)      lab = FUNCTOR_ENV (topLevel cst lab)
+	  | createOpaqueEqualityConstraintsInEnv (CONSTRAINT_ENV cst)   lab = CONSTRAINT_ENV(topLevel cst lab)
+	  | createOpaqueEqualityConstraintsInEnv (ROW_ENV (env1, env2)) lab = ROW_ENV (createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab)
+	  | createOpaqueEqualityConstraintsInEnv x                      lab = x
+
+	and createOpaqueEqualityOneConstraint (ENV_CONSTRAINT ((env1, env2),x,y,z)) lab = (ENV_CONSTRAINT ((createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab), x,y,z))
+	  | createOpaqueEqualityOneConstraint (currentConstraint as EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR eqtv2), x, deps ,z)) lab =
+					       if (T.equalityTypeVarToInt eqtv1) = (T.equalityTypeVarToInt eqtv2) andalso L.length deps > 0
+					       then (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Found eqtv used in opaque scope, freshening and constraining: "^(T.printEqualityTypeVar eqtv1));
+						     EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (freshenEqualityTypeVar eqtv1), T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)), L.cons lab L.empty, L.empty, CD.empty))
+					       else EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (checkForFreshening eqtv1), T.EQUALITY_TYPE_VAR (checkForFreshening eqtv2)), x, deps ,z)
+	  | createOpaqueEqualityOneConstraint (currentConstraint as TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(eqtv))), y, deps ,z)) lab =
+	    TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(checkForFreshening eqtv))), y, deps ,z)
+	  | createOpaqueEqualityOneConstraint x lab = x
+
+	and createOpaqueEqualityConstraintsList []     lab = []
+	  | createOpaqueEqualityConstraintsList (h::t) lab = ((createOpaqueEqualityOneConstraint h lab)::(createOpaqueEqualityConstraintsList t lab))
+
+	and topLevel (CONSTRAINTS cst) lab =
+	    CONSTRAINTS(OMC.map (fn oneConstraint => createOpaqueEqualityConstraintsList oneConstraint lab) cst)
+    in
+	topLevel cst lab
+    end
+
 (* Bindings constructors *)
 
 fun consBind     id bind equalityTypeVar class lab poly = EL.initExtLab (C.consBind     id bind equalityTypeVar class lab poly) lab
