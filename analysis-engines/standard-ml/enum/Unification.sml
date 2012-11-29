@@ -3581,6 +3581,7 @@ fun unif env filters user =
 			       let
 				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
 				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.cons lab2 (L.cons l ls), deps, ids)
+				   val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => if (!(sigVsStr)) orelse (!(sigVsStrTyp)) then "TRUE!" else "")
 			       in
 				   (* if the context dependancies are not empty, then that means that we are checking that the type var and
 				    * type constructor match, based on other information we inferred from another type var. For example:
@@ -4235,7 +4236,6 @@ fun unif env filters user =
 				    NONE => ()
 				  | SOME ev =>
 				    let val env3 = freshenv' (renameenv' env0 state) (SOME O.empty) false
-				    (*val _ = D.printdebug2 (E.printEnv (E.consENV_VAR ev lab) "" ^ "\n" ^ E.printEnv env3 "")*)
 				    in S.updateStateEv state ev (E.pushExtEnv env3 (L.singleton lab) L.empty CD.empty)
 				    end
 		    in fsimplify cs' l
@@ -4506,6 +4506,7 @@ fun unif env filters user =
 			     val _ = case endpointLabels of
 					 (l1::l2::[]) =>
 					 let
+					     val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "sigVsStr = "^(Bool.toString (!(sigVsStr)))^", sigVsStrTyp ="^(Bool.toString (!(sigVsStrTyp))))
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
 					     val error  = ERR.consPreError ERR.dummyId (L.cons l (L.union resultLabels ls)) ids errorKind (L.union deps resultDeps)
 	  				 in
