@@ -4,10 +4,9 @@
 
 (* this is NOT typable *)
 
-(*
+
 structure S :> sig type t end = struct type t = int; val x : t = 6 end;
-(* fun x (y:S.t) (z:S.t) = y = z; *)
-*)
+fun x (y:S.t) (z:S.t) = y = z;
 
 (*
 (* Skalpel wrongly finds non-minimal error slices.  There is a smaller slice that does not use the signature. *)
@@ -61,7 +60,7 @@ fun f x w = let val 'b z = fn y : 'b => w y in (z true, z 1) end;
 (* The slice Skalpel gives for this is not minimal and is bizarre in
  * multiple confusing ways.  For starters, how is w involved?  Other
  * things are also confusing. *)
-fun f x w = let val 'b z = fn y : 'b => w y in z () end;
+(* fun f x w = let val 'b z = fn y : 'b => w y in z () end; *)
 
 (*
 (* Another Skalpel failure. *)
