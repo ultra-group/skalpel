@@ -3054,6 +3054,7 @@ fun generateConstraints' prog pack nenv =
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, equalityConstraints) constraints), E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "ev fresh is: "^(E.printEnvVar ev))
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev lab) env lab
 		   val env' = E.ROW_ENV (E.CONSTRAINT_ENV (E.singleConstraint (lab, c)), E.ENVDEP (EL.initExtLab (E.consENV_VAR ev lab) lab))
 	       in (env', css)
@@ -3287,20 +3288,20 @@ fun generateConstraints' prog pack nenv =
 		   val (ev2, cst2, css2) = f_labsigexp (indent^SS.verticalFork^SS.straightLine) labsigexp
 		   val (ev3, strs, cst3, css3) = f_strid (indent^SS.bottomLeftCurve^SS.straightLine) strid
 
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "(ev1, ev2, ev3) = ("^(E.printEnvVar ev1)^", "^(E.printEnvVar ev2)^", "^(E.printEnvVar ev3)^")")
 
 		   (* now we need to go through the constraints of cst2, the signature, and give the types
 		    * a NOT_EQUALITY_TYPE status constraint as the structure is using the signature in an
 		    * opaque manner *)
-		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Starting edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
-		   val cst2New = E.createOpaqueEqualityConstraints cst2 lab
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Starting edit for constraints for an opaque signature. Constraints CST2:\n"^(E.printConstraints cst2))
+		   (* at the moment cst2New isn't used becasue it creates false errors between the structure and the signature, which shouldn't happen
+		    * the structure should not see these new constraints. Need to find a way to stop that from happening. *)
+		   val cst2 = E.createOpaqueEqualityConstraints cst2 lab
 		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Finished edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
 
 		   val cst  = E.singleConstraint (lab, E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab))
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
-		   (* val env'  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst2New]), E.CONSTRAINT_ENV cst) *)
-		   (* val cst'' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env') *)
-
 
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)

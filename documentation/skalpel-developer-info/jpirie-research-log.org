@@ -8177,3 +8177,110 @@ Still no solutions on this, it doesn't seem I can do anything with the
 environment variables to try and restrict the structure to only seeing
 the unmodified constraints. I might need to do something with the
 status assignments to set some kind of flag.
+
+*** 2012-11-28
+
+(2012-11-28-13:50)
+
+I've thought about this and the only real solution to this should be
+to edit the state mappings of the environment variables I think. For
+this test (opaque-and-translucent-signatures, with first typable
+section commented out), three environment variables are generated when
+generating the opaque signature:
+
+-------------------------------------
+ev1 - comes from f_labstrexp:
+
+{valueIds:8:[((8,TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(4),l19),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l20),[18,20],[],[]),l19,EQUALITY_TYPE_VAR(eqtv10)),[0,3,4,5,6,17,19,26,39,40,42,43,44,49,50,51,52,53,54],[],[]),eqtv21,PO
+LY,51,VID(VAL)),[0,51],[], contextDependancies=8)]
+ typeNames:7:[((7,(TYPE_FUNCTION_DEPENDANCY(TFC(ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l41),[39,41],[],[]),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n5,DECLARATION_CONS(4),l19),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l20),[18,20],[],[]),l19,EQUALITY_
+TYPE_VAR(eqtv10)),[0,3,4,5,6,17,19,26,39,42,43,44],[],[]),l40),[40],[],[]),,TYPE,(,false)),eqtv12,POLY,40,TYCON),[0,40],[], contextDependancies=)]
+ explicitTypeVars:
+ structs:
+ sigs:
+ overloadingClasses:
+ info:(0,true,[],false)}
+
+Notable information is the equality type variable on the type
+constructor, which is eqtv10, and mapped to NOT_EQUALITY_TYPE in
+StateEQ. This makes sense, as in the structure, the type constructor
+is set to a real with type t = real
+-------------------------------------
+
+-------------------------------------
+ev2 - comes from f_labsigexp:
+
+{valueIds:
+ typeNames:7:[((7,(TYPE_FUNCTION_DEPENDANCY(TFC(ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l35),[33,35],[],[]),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n18,DECLARATION_CONS(7),l34),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l35),[33,35],[],[]),l34,EQUALITY
+_TYPE_VAR(eqtv35)),[34],[],[]),l34),[34],[],[]),,TYPE,(,false)),eqtv33,POLY,34,TYCON),[0,32,34],[], contextDependancies=)]
+ explicitTypeVars:
+ structs:
+ sigs:
+ overloadingClasses:
+ info:(0,true,[(7,34,TYPE,n18)],false)}
+
+Notable information is that the equality type variable here is eqtv35,
+mapped to EQUALITY_TYPE in the state environment. Also the labels on
+the type constructor are only 32 and 34, which are the labels for
+'type t' and for the 't' in type t.
+-------------------------------------
+
+-------------------------------------
+ev3 - comes from f_strid:
+
+{valueIds:
+ typeNames:7:[((7,(TYPE_FUNCTION_DEPENDANCY(TFC(ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l35),[33,35],[],[]),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR((n21,DECLARATION_CONS(7),l34),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l35),[33,35],[],[]),l34,EQUALITY
+_TYPE_VAR(eqtv35)),[34],[],[]),l34),[34],[],[]),,TYPE,(,false)),eqtv33,POLY,34,TYCON),[0,28,30,31,32,34],[], contextDependancies=)]
+ explicitTypeVars:
+ structs:
+ sigs:
+ overloadingClasses:
+ info:(0,true,[(7,34,TYPE,n21)],false)}
+
+Notable information is that this is the same as ev2, but with more
+labels, namely 28, 30 and 31. 30 and 31 are labels for the signature
+expression sig ... end and 28 is everything from S :> sig ... all the
+way to what must be the end of the structure definition, which is
+quite a distance. I'm not sure which one I want.
+-------------------------------------
+
+Perhaps editing these mappings rather the constraint (cst2) will
+provide a way to generate this error without affecting the constraints
+inside the structure. When solving an opaque structure we do not put
+ev3 into the signature constraint, therefore constraints there I would
+think would be invisible to the outside. The only place possible to
+make the change then, is to the environment variable representing
+f_labsigexp. The relationship between that and cst2 I do not yet know,
+I expect cst2 contains all constraints from the signature which are
+perhaps checked against the structure.
+
+(2012-11-28-15:04)
+
+No, that didn't work either. Turns out I am actually changing env2,
+because env2 is derived from cst2, which is what I'm editing at the
+moment anyway.
+
+(2012-11-28-15:33)
+
+I think I might have found something. In the constraint solving
+process for signatures, there is a function called matchSigStr, which
+I guess matches signatures up with their structures. If I could supply
+another environment variable which was mapped to the new set of
+constraints that I have built and passed that in to the process, I
+could pass the old set of constraints to matchSigStr, and the new set
+of constraints could be put into the map for the outside to know
+about. Something like this might work.
+
+(2012-11-28-15:36)
+
+I just found six ref values which are toggled on and off during
+constraint solving of signatures with a comment next to them 'What is
+that?'. I expect these will cause issues. These probably should go
+away...
+
+(2012-11-28-15:46)
+
+Perhaps I can use the sigVsStr ref toggles to my advantage by simply
+suppressing equality type errors when it is enabled. Might work if the
+refs aren't still set when solving structure constraints irrespective
+of the signature.
