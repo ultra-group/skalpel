@@ -3296,7 +3296,7 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Starting edit for constraints for an opaque signature. Constraints CST2:\n"^(E.printConstraints cst2))
 		   (* at the moment cst2New isn't used becasue it creates false errors between the structure and the signature, which shouldn't happen
 		    * the structure should not see these new constraints. Need to find a way to stop that from happening. *)
-		   val cst2 = E.createOpaqueEqualityConstraints cst2 lab
+		   (* val cst2New = E.createOpaqueEqualityConstraints cst2 lab *)
 		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Finished edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
 
 		   val cst  = E.singleConstraint (lab, E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab))
