@@ -4232,11 +4232,12 @@ fun unif env filters user =
 				    let
 					val env3 = freshenv' (renameenv' env0 state) (SOME O.empty) false
 					val stateEntry = (E.pushExtEnv env3 (L.singleton lab) L.empty CD.empty)
+					val (stateEntryWithOpaqueConstraints, newConstraints) = E.createOpaqueEqualityConstraints stateEntry l
 					val _ = (if (not (!analysingBasis))
-						 then D.printDebugFeature D.UNIF D.TEMP (fn _ => "Adding opaque constraint to StateEv. Environment variable "^(E.printEnvVar ev)^
-												 " is getting mapped to:\n"^(E.printEnv stateEntry ""))
+						 then D.printDebugFeature D.UNIF D.TEMP (fn _ => "Created opaque signature constraint for equality type variables! Environment variable "^(E.printEnvVar ev)^
+												 " is getting mapped to:\n"^(E.printEnv stateEntryWithOpaqueConstraints ""))
 						 else ())
-					val stateEntryWithOpaqueConstraints = E.createOpaqueEqualityConstraints stateEntry l
+					val _ = fsimplify newConstraints l
 				    in
 					S.updateStateEv state ev stateEntryWithOpaqueConstraints
 				    end
