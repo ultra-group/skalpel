@@ -5,7 +5,7 @@
 (* this is NOT typable *)
 
 
-structure S :> sig type t end = struct type t = int; val x : t = 6 end;
+structure S :> sig type t end = struct type t = real; val x : t = 6.0 end;
 fun x (y:S.t) (z:S.t) = y = z;
 
 (*

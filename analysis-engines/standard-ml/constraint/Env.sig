@@ -269,7 +269,6 @@ signature ENV = sig
     val updateIArgOfFunctor   : bool   -> env -> env
 
     val getTypeNames   : typeEnv -> names list
-    val getEqualityTypeVars : constraints -> Ty.typeVar list
 
     val plusEnv            : env -> env -> env
 
@@ -383,7 +382,7 @@ signature ENV = sig
     val genAccIiEm   : env      accessorId -> Label.label -> accessor
     val genAccIfEm   : funsem   accessorId -> Label.label -> accessor
 
-    val createOpaqueEqualityConstraints : env -> Label.label -> env
+    val createOpaqueEqualityConstraints : env -> Label.label -> (env * oneConstraint list)
 
     val printEnv     : env    -> string -> string
     val printEnvVar  : envVar -> string

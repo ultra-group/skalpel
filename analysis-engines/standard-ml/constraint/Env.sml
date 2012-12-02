@@ -1168,59 +1168,6 @@ fun getTypeNames typeNames =
 	      []
 	      typeNames
 
-fun getEqualityTypeVars (CONSTRAINTS(constraints)) =
-    let
-	(* the list of constraints associated with each key *)
-	val allConstraintValues = OMC.listItems constraints
-
-	(* join all the lists of lists so that it's easier to search through them *)
-	val singleConstraintList = List.foldl (op @) [] allConstraintValues
-
-	fun findEqualityTypeVars [] = []
-	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(tyv, _, _, _), Ty.TYPE_POLY _),_,_,_)::t) =
-	    tyv::(findEqualityTypeVars t)
-	  | findEqualityTypeVars (h::t) = findEqualityTypeVars t
-    in
-	findEqualityTypeVars singleConstraintList
-    end
-
-(* (2012-07-09) jpirie: I don't think that this is needed any more, removing this and the calls to it
- * in the ExpOp case of the constraint generation process *)
-(* fun createEqualityTypeConstraints (CONSTRAINTS(constraints)) lab equalityValue = *)
-(*     let *)
-(* 	(* we shouldn't need allConstraintValues, singleConstraintList or makeTypeVarsEquality *)
-(* 	 * keeping them during testing (2012-05-16) *) *)
-(* 	(* the list of constraints associated with each key *) *)
-(* 	val allConstraintValues = OMC.listItems constraints *)
-
-(* 	(* join all the lists of lists so that it's easier to search through them *) *)
-(* 	val singleConstraintList = List.foldl (op @) [] allConstraintValues *)
-
-(* 	(* makes a TYPE_VAR an equality type but replacing the equality type status field with EQUALITY_TYPE *) *)
-(* 	fun changeTypeVarsEquality (Ty.TYPE_VAR (tv,extv,poly,_)) equalityValue = Ty.TYPE_VAR(tv,extv,poly,equalityValue) *)
-(* 	  | changeTypeVarsEquality x equalityValue  = x *)
-
-(* 	(* finds equality type variables nested a 'ty' type *) *)
-(* 	fun findEqualityTypeVars [] _ = [] *)
-(* 	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, x), Ty.TYPE_POLY (d,e,f,g,h,_)),l1,l2,deps)::t) lab = *)
-(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a))); *)
-(* 	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,x), Ty.TYPE_POLY(d,e,f,g,h,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab)) *)
-
-(* 	  | findEqualityTypeVars (TYPE_CONSTRAINT((Ty.TYPE_VAR(a, b, c, _), Ty.TYPE_VAR (a2, b2, c2, _)),l1,l2,deps)::t) lab = *)
-(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for type variable number "^(Int.toString (T.typeVarToInt a))); *)
-(* 	     TYPE_CONSTRAINT((Ty.TYPE_VAR(a,b,c,equalityValue), Ty.TYPE_VAR(a2,b2,c2,equalityValue)),(L.cons lab l1),l2,deps)::(findEqualityTypeVars t lab)) *)
-
-(* 	  | findEqualityTypeVars (ACCESSOR_CONSTRAINT (VALUEID_ACCESSOR({lid=lid,sem=sem,class=class,lab=label}, l1, l2, cd))::t) lab = *)
-(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Creating equality constraint for an accessor"); *)
-(* 	     ACCESSOR_CONSTRAINT(VALUEID_ACCESSOR({lid=lid,sem=(changeTypeVarsEquality sem equalityValue),class=class,lab=label},(L.cons lab l1),l2,cd))::(findEqualityTypeVars t lab)) *)
-(* 	  | findEqualityTypeVars (h::t) lab = *)
-(* 	    (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "WARNING: findEqualityTypeVars got something of a form that is not yet supported"); *)
-(* 	     findEqualityTypeVars t lab) *)
-(*     in *)
-(* 	CONSTRAINTS (OMC.map (fn cs => (findEqualityTypeVars cs lab)) constraints) *)
-(*     end *)
-
-
 (* a function which will create NOT_EQUALITY_TYPE constaints for types used
  * in an opaque signature. Called at constraint generation time when we see
  * that we are in fact dealing with an opaque signature *)
@@ -1238,7 +1185,7 @@ fun createOpaqueEqualityConstraints env lab =
 
 	fun checkForFreshening eqtv =
 	    let
-		fun checkForFreshening' eqtv [] = eqtv
+		fun checkForFreshening' eqtv [] = freshenEqualityTypeVar eqtv
 		  | checkForFreshening' eqtv ((old,new)::t) =
 		    if (T.equalityTypeVarToInt eqtv = T.equalityTypeVarToInt old)
 		    then new
@@ -1247,46 +1194,70 @@ fun createOpaqueEqualityConstraints env lab =
 		checkForFreshening' eqtv (!(equalityTypeVarsToFreshen))
 	    end
 
-	fun createOpaqueEqualityConstraintsInEnv (FUNCTOR_ENV cst)      lab = FUNCTOR_ENV (topLevel cst lab)
-	  | createOpaqueEqualityConstraintsInEnv (CONSTRAINT_ENV cst)   lab = CONSTRAINT_ENV(topLevel cst lab)
-	  | createOpaqueEqualityConstraintsInEnv (ROW_ENV (env1, env2)) lab = ROW_ENV (createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab)
-	  | createOpaqueEqualityConstraintsInEnv x                      lab = x
+	(* (2012-12-02) jpirie: this was used to change the constraints in the constraint generator rather than
+	 * the constraint solving for putting equality type constraints in opaque signatures, leaving it here for
+	 * a bit ine case it turns out I need it.  The other code here parses forms that are present when solving
+	 * opaque signatures constraints, which is different. *)
+	(* fun createOpaqueEqualityConstraintsInEnv (FUNCTOR_ENV cst)      lab = FUNCTOR_ENV (topLevel cst lab) *)
+	(*   | createOpaqueEqualityConstraintsInEnv (CONSTRAINT_ENV cst)   lab = CONSTRAINT_ENV(topLevel cst lab) *)
+	(*   | createOpaqueEqualityConstraintsInEnv (ROW_ENV (env1, env2)) lab = ROW_ENV (createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab) *)
+	(*   | createOpaqueEqualityConstraintsInEnv x                      lab = x *)
 
-	and createOpaqueEqualityOneConstraint (ENV_CONSTRAINT ((env1, env2),x,y,z)) lab = (ENV_CONSTRAINT ((createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab), x,y,z))
-	  | createOpaqueEqualityOneConstraint (currentConstraint as EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR eqtv2), x, deps ,z)) lab =
-					       if (T.equalityTypeVarToInt eqtv1) = (T.equalityTypeVarToInt eqtv2) andalso L.length deps > 0
-					       then (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Found eqtv used in opaque scope, freshening and constraining: "^(T.printEqualityTypeVar eqtv1));
-						     EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (freshenEqualityTypeVar eqtv1), T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)), L.cons lab L.empty, L.empty, CD.empty))
-					       else EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (checkForFreshening eqtv1), T.EQUALITY_TYPE_VAR (checkForFreshening eqtv2)), x, deps ,z)
-	  | createOpaqueEqualityOneConstraint (currentConstraint as TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(eqtv))), y, deps ,z)) lab =
-	    TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(checkForFreshening eqtv))), y, deps ,z)
-	  | createOpaqueEqualityOneConstraint x lab = x
+	(* and createOpaqueEqualityOneConstraint (ENV_CONSTRAINT ((env1, env2),x,y,z)) lab = (ENV_CONSTRAINT ((createOpaqueEqualityConstraintsInEnv env1 lab, createOpaqueEqualityConstraintsInEnv env2 lab), x,y,z)) *)
+	(*   | createOpaqueEqualityOneConstraint (currentConstraint as EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR eqtv2), x, deps ,z)) lab = *)
+	(* 				       if (T.equalityTypeVarToInt eqtv1) = (T.equalityTypeVarToInt eqtv2) andalso L.length deps > 0 *)
+	(* 				       then (D.printDebugFeature D.ENV D.EQUALITY_TYPES (fn _ => "Found eqtv used in opaque scope, freshening and constraining: "^(T.printEqualityTypeVar eqtv1)); *)
+	(* 					     EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (freshenEqualityTypeVar eqtv1), T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)), L.cons lab L.empty, L.empty, CD.empty)) *)
+	(* 				       else EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_VAR (checkForFreshening eqtv1), T.EQUALITY_TYPE_VAR (checkForFreshening eqtv2)), x, deps ,z) *)
+	(*   | createOpaqueEqualityOneConstraint (currentConstraint as TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(eqtv))), y, deps ,z)) lab = *)
+	(*     TYPE_CONSTRAINT((tv,T.TYPE_CONSTRUCTOR(v,w,x,T.EQUALITY_TYPE_VAR(checkForFreshening eqtv))), y, deps ,z) *)
+	(*   | createOpaqueEqualityOneConstraint x lab = x *)
 
-	and createOpaqueEqualityConstraintsList []     lab = []
-	  | createOpaqueEqualityConstraintsList (h::t) lab = ((createOpaqueEqualityOneConstraint h lab)::(createOpaqueEqualityConstraintsList t lab))
+	(* and createOpaqueEqualityConstraintsList []     lab = [] *)
+	(*   | createOpaqueEqualityConstraintsList (h::t) lab = ((createOpaqueEqualityOneConstraint h lab)::(createOpaqueEqualityConstraintsList t lab)) *)
 
-	and topLevel (CONSTRAINTS cst) lab =
-	    CONSTRAINTS(OMC.map (fn oneConstraint => createOpaqueEqualityConstraintsList oneConstraint lab) cst)
+	(* and topLevel (CONSTRAINTS cst) lab = *)
+	(*     CONSTRAINTS(OMC.map (fn oneConstraint => createOpaqueEqualityConstraintsList oneConstraint lab) cst) *)
 
-	fun getBinds term =
+	fun getBinds [] = []
+	  | getBinds (singleBind::t) =
 	    let
-		val binds = List.map getBindT term
-		val _ = List.map (fn x => print x) binds
+		val (extLabTerm, extLabLabel, extLabExtraLabels, extLabCds) = (EL.getExtLabT singleBind, EL.getExtLabL singleBind, EL.getExtLabE singleBind, EL.getExtLabD singleBind)
+		val (bindId, bindBind, bindEqtv, bindClass, bindLab, bindPoly) = (C.getBindI extLabTerm, C.getBindT extLabTerm, C.getBindEqualityTypeVar extLabTerm, C.getBindC extLabTerm, C.getBindL extLabTerm, C.getBindP extLabTerm)
+		val (s1, s2, s3) = bindBind
+
+		(* if we see a type dependancy on a type constructor on the right hand side that is for a user type, freshen its type variable *)
+		val s1 = case s1 of
+			     T.TYPE_FUNCTION_DEPENDANCY(T.TFC(a, T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(T.NC(r,p,q),w,x,T.EQUALITY_TYPE_VAR(eqtv)),b,c,d),e),f,g,h) =>
+			     if T.printTypename' r = "a user type"
+			     then T.TYPE_FUNCTION_DEPENDANCY(T.TFC(a, T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(T.NC(r,p,q),w,x,T.EQUALITY_TYPE_VAR(checkForFreshening eqtv)),b,c,d),e),f,g,h)
+			     else s1
+			   | _ => s1
+
+		val consBindBuilt = C.consBind bindId (s1,s2,s3) bindEqtv bindClass bindLab bindPoly
+		val extLabBuilt   = EL.consExtLab consBindBuilt extLabLabel extLabExtraLabels extLabCds
 	    in
-		binds
+		extLabBuilt::(getBinds t)
 	    end
 
 	fun parseTypeNames typeNames = mapenv (fn x => getBinds x) typeNames
+
+	(* make sure the fresh equality type variables are mapped to NOT_EQUALITY_TYPE (this is an opaque signature, we can't check for equality *)
+	fun generateEqtvConstraints [] lab = []
+	  | generateEqtvConstraints ((_,new)::t) lab =
+	    (initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR new) (T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)) lab)::(generateEqtvConstraints t lab)
 
 	fun parseEnv (test as ENV_CONS {valueIds,typeNames,explicitTypeVars,structs,sigs,functors,overloadingClasses,info}) =
 	    let
 		val binds = parseTypeNames typeNames
 	    in
-		ENV_CONS {valueIds=valueIds,typeNames=typeNames,explicitTypeVars=explicitTypeVars,structs=structs,sigs=sigs,functors=functors,overloadingClasses=overloadingClasses,info=info}
+		(ENV_CONS {valueIds=valueIds,typeNames=parseTypeNames typeNames,explicitTypeVars=explicitTypeVars,structs=structs,sigs=sigs,functors=functors,overloadingClasses=overloadingClasses,info=info})
 	    end
-	  | parseEnv _ = raise EH.DeadBranch "Attempeted to create opaque equality type constraints with something that isn't an environment"
+
+	  (* we don't care about other cases like environment variable dependancies... *)
+	  | parseEnv env = env
     in
-	parseEnv env
+	(parseEnv env, generateEqtvConstraints (!(equalityTypeVarsToFreshen)) lab)
     end
 
 (* The set of labels is the set of labels that we want to keep *)
