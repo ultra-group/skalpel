@@ -190,7 +190,7 @@ fun printenv x = E.printEnv x ""
 fun printStTy stty = EL.printExtLab' stty E.printExtTy
 fun printStSt stst = EL.printExtLab' stst E.printExtEnv*)
 
-fun printStateId renv = E.printEnv (!renv) ""  ^ "\n"
+fun printStateId renv = "State Id:\n"^(E.printEnv (!renv) ""  ^ "\n")
 
 (*fun printStateFr ub =
     MT.foldri (fn (k, x, y) =>
@@ -234,14 +234,14 @@ fun printStateGe statege =
 	      (!statege)
 
 fun printStateSe {tv, tf, eq, tn, sq, rt, lt, ev, cl} =
-    "State TV:\n" ^ printStateGen  tv T.printty    ^ "\n" ^
-    "State TF:\n" ^ printStateGen  tf T.printtyf   ^ "\n" ^
-    "State EQ:\n" ^ printStateGen  eq (fn (left, right) => "(" ^ T.printEqualityType left ^ ", " ^ T.printEqualityTypeVarList right ^ ")") ^ "\n" ^
-    "State TN:\n" ^ printStateGen  tn T.printtnty  ^ "\n" ^
+    "State TV (type variables):\n" ^ printStateGen  tv T.printty    ^ "\n" ^
+    "State TF (type functions):\n" ^ printStateGen  tf T.printtyf   ^ "\n" ^
+    "State EQ (equality types):\n" ^ printStateGen  eq (fn (left, right) => "(" ^ T.printEqualityType left ^ ", " ^ T.printEqualityTypeVarList right ^ ")") ^ "\n" ^
+    "State TN (type names):\n" ^ printStateGen  tn T.printtnty  ^ "\n" ^
     "State SQ:\n" ^ printStateGen  sq T.printseqty ^ "\n" ^
     "State RT:\n" ^ printStateGen  rt T.printFieldType ^ "\n" ^
     "State LT:\n" ^ printStateGen  lt T.printlabty ^ "\n" ^
-    "State EV:\n" ^ printStateGen  ev printenv     ^ "\n" ^
+    "State EV (environment variables):\n" ^ printStateGen  ev printenv     ^ "\n" ^
     "State CL:\n" ^ printStateGen' cl CL.toString  ^ "\n"
 
 fun printNames names =

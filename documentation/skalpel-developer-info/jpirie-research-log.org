@@ -8284,3 +8284,172 @@ Perhaps I can use the sigVsStr ref toggles to my advantage by simply
 suppressing equality type errors when it is enabled. Might work if the
 refs aren't still set when solving structure constraints irrespective
 of the signature.
+
+*** 2012-12-03
+
+(2012-12-03-11:21)
+
+Updates for things because I haven't written this in a few days is
+that the test I was working on in the last entry is fixed up and
+correct slices are getting generated. The way to do this was to
+freshen the equality type variables at constraint solving time when
+solving a SIGNATURE_CONSTRAINT but only *after* the constraints had
+been solved between the structure and the signature, and *before* the
+constraints for the signature were placed on the right hand side of
+StateEV. I'm going to look back at the datatype-argument test now and
+see if I can solve that in a similar way, as we can only tell the
+difference between type functions and datatypes at constraint solving
+time.
+
+(2012-12-03-11:34)
+
+I've looked at the solution that was in place at the moment for the
+datatype-argument test where errors are being incorrectly generated
+for type functions, and in this solution no other tests are broken
+(aside from all these erroneous slices involving type functions). I'm
+going to see if I can fix up this current solution and remove the
+erroneous slices, at that point there shouldn't be any more tests
+breaking and this test should pass.
+
+(2012-12-03-12:06)
+
+This is the constraint I'm interested in:
+
+val c1  = E.initFunctionTypeConstraint (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv', T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar'), lab)) lab
+
+This constraint is built in the A.TypeTyCon case of f_type, and it's
+the constraint which really generates the equality type error. The
+typeFunctionVar though comes from f_longtycon, which is the function
+which will look up the typename x in val y : real x = ...
+
+I'm going to see if I can catch this function in constraint solving,
+which shouldn't be too difficult, then see if I can access information
+which tells me whether typeFunctionVar is being used on a type or a
+datatype. If it's a type, we throw away the equality type variable, if
+it's a datatype then we don't. I think this should work.
+
+(2012-12-03-13:21)
+
+This might help:
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   ACCESSOR_CONSTRAINT(TYPE_CONSTRUCTOR_ACCESSOR(({ID(6,49),eqtv28,TYPE_FUNCTION_VAR(tfv5),TYCON,49},[49],[], contextDependancies=)))
+(CONSTRAINT_SOLVING) Unification.sml: solving an type constructor accessor. Labels = [49]
+(CONSTRAINT_SOLVING) Unification.sml: found binding for type constructor accessor (binding label: 29).
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_FUNCTION_CONSTRAINT(((TYPE_FUNCTION_VAR(tfv5),TYPE_FUNCTION_CONSTRUCTION(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(
+t48,-,POLY,EQUALITY_TYPE_VAR(eqtv14)),l30)],-,l30),[28,30],[],[]),TYPE_DEPENDANCY(TYPE_CONSTRUCTOR (TYPENAME_DEPENDANCY(TYPENAME_CONSTRUCTION(a user type,DECLARATION_CONS(6),l29),[28,29],[],[]),ROW_DEPENDANC
+Y(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t48,-,POLY,EQUALITY_TYPE_VAR(eqtv14)),l30)],-,l30),[28,29,30],[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28],[],[]),l29)),[28,29,49],[], contextDependa
+ncies=))
+
+This might be the sort of thing that I've been looking for, where the
+type function variable is looked up in the state and we get a
+construction back which contains the typename construction which is
+listed in this case as a user type. What I'm most interested in is
+whether the user type is a plain old type or whether it's a
+datatype. The DECLARATION_CONS part might help with that, not sure
+what that 6 is supposed to represent.
+
+(2012-12-03-15:57)
+
+I think I have found a way to do this using the state environment, the
+printing information was misleading which is why I didn't see this
+sooner. So here we can get out of this the declaration cons of the
+user type, which is 6.
+
+This number needs to be looked up in the state for identifiers, State
+Id. By looking at the typeNames field for  environment constructions,
+we can see things like this:
+
+ENV_CONS{valueIds:8:[.....]
+ typeNames:6:[((6,(tyf=TYPE_FUNCTION_DEPENDANCY(TFC(ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t8,-,POLY,EQUALITY_TYPE_VAR(eqtv14)),l30)],-,l30),[28,30],[],[]),TYPE_DEPENDANCY(TYPE_
+CONSTRUCTOR(TYPENAME_DEPENDANCY((n18,DECLARATION_CONS(6),l29),[28,29],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t8,-,POLY,EQUALITY_TYPE_VAR(eqtv14)),l30)],-,l30),[28,29,30],
+[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28],[],[]),l29),[29],[],[]),tnkind=DATATYPE,cons=(8:[((8,TYPE_DEPENDANCY(TYPE_CONSTRUCTOR(TYPENAME_DEPENDANCY((n18,DECLARATION_CONS(6),l29),[28,29],[],[]),ROW_DEPEN
+DANCY(ROW_CONSTRUCTION([FIELD_CONSTRUCTION((1,l30):TYPE_VAR(t8,-,POLY,EQUALITY_TYPE_VAR(eqtv14)),l30)],-,l30),[28,29,30],[],[]),l28,EQUALITY_TYPE_STATUS(UNKNOWN)),[28,32],[],[]),eqtv13,POLY,32,VID(DA0)),[32]
+,[], contextDependancies=)],true)),eqtv15,POLY,29,TYCON),[28,29],[], contextDependancies=)].....}
+
+Taking a look at the second field, we see that tnkind=DATATYPE. It is
+in this case which we generate an error, because this datatype
+constructor would take the equality type variable of whatever is on
+the left hand side, otherwise we would do nothing.
+
+The place to do all of this might be when solving a type constructor
+accessor. We can make the decision there whether or not we want to
+freshen this equality type variable.
+
+(2012-12-03-16:26)
+
+The pair of the id (6 in this case) and the label is already present,
+so I don't need to go parsing through to find the number inside the
+DECLARATION_CONS accessor. I was sort of hoping that the kind would be
+nicely present somewhere that I can easily access but it doesn't seem
+to be, so I'll need to write something to get that from StateId I
+guess. I'll keep looking first to see if this information is anywhere
+that I can use, not everything is printed out (try the class? I think
+I might be able to deduce it from that).
+
+(2012-12-03-23:30)
+
+All that's available from the class I mentioned before is that we are
+dealing with some kind of type constructor, the differentiation
+between datatypes and types is not made at this point. I think I'm
+going to have to go into the state environment to find this
+information out.
+
+*** 2012-12-04
+
+(2012-12-04-01:01)
+
+It's actually not as bad as I thought, there are some functions
+written in the state environment to help me do this, namely
+getValStateIdTy which takes a state, a labelled id and a bdown
+(whatever that is) and returns:
+
+(Env.extType * bool) option * (Id.labelledId * Env.env ExtLab.extLab) option * bool
+
+I'll need to look at this type and find out how to play with it
+correctly to get the information I need out of it.
+
+(2012-12-04-11:29)
+
+I've managed to strip out the necessary information which turned out
+to be fairly straight forward, and am now working on freshening the
+type variable if it turns out that we see a datatype instead of a
+plain old type. It turns out it might be tricky to freshen the
+equality type variable as we don't have it to hand, hopefully I can
+just locate it on the right hand side of the type function variable
+state as we have a type function variable anyway, and freshen the
+equality type variable there. The only problem with that will be if
+there are constraints which have been built and are in the list still
+to be solved which carry around the non-freshened equality type
+variable. Hopefully that situation won't arise.
+
+(2012-12-04-12:43)
+
+It doesn't look like this is the case, I should be able to just
+freshen the equality type variable in the state entry and that should
+be enough to make this test pass properly...
+
+(2012-12-04-13:52)
+
+The freshening that occurs seems to wipe out more equality type errors
+than I thought. It seems that this will only work if we are freshening
+a type constructor that is strictly an argument to a type. This is
+very annoying, perhaps I can do this another way.
+
+(2012-12-05-02:44)
+
+I think I've written a solution for this now but I'm too tired to
+debug it, leaving a note here: Flag is set for when a type has
+arguments, label added to stts and then removed but checking of stts
+and removal is done during type constructor accessors, but addition
+made during type function constraint. That doesn't make sense... need
+to fix that up.
+
+*** 2012-12-05
+
+(2012-12-05-12:46)
+
+Right, finally got that test passing. Took an extra day longer than I
+thought it would but oh well, never mind. Turns out I could do
+something fairly straightforward in the portion of the constraint
+solver that deals with solving type function variables. Going to clean
+up the code a bit and move on.

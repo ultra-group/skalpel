@@ -377,7 +377,7 @@ and printSigEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printStrEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printFunEnv     xs ind = printGenEnv xs ind printFunSemList
 and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) ind =
-    "\n" ^ ind ^ "{valueIds:" ^ printVarEnv valueIds ind ^
+    "\n" ^ ind ^ "ENV_CONS{valueIds:" ^ printVarEnv valueIds ind ^
     "\n" ^ ind ^ " typeNames:" ^ printTypeEnv typeNames ind ^
     "\n" ^ ind ^ " explicitTypeVars:" ^ printTypeVarEnv explicitTypeVars ind ^
     "\n" ^ ind ^ " structs:" ^ printStrEnv structs ind ^

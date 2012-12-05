@@ -576,6 +576,26 @@ and tryToMatchOrsRt path (T.FC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
 
 fun tryToMatchOrs sq1 sq2 = tryToMatchOrsSq [] sq1 sq2
 
+
+(* a function which will tell us whether an ID belongs to a datatype or a type
+ * note: the 'true' argument to getValStateIdTy is thrown away *)
+fun getTypeNameKindOfId state id =
+    let
+	val (extLabAndBoolOption, secondPart, someBool) = S.getValStateIdTy state id true
+    in
+	case extLabAndBoolOption of
+	    SOME (extLabAndBool) =>
+	    let
+		val extLab = (#1 extLabAndBool)
+		val termPortion = EL.getExtLabT extLab
+		val bindPortion = #bind termPortion
+	    in
+		(* returns the type name kind *)
+		#2 bindPortion
+	    end
+	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Typename kind of this identifier could not be determined (probably the id did not refer to a typename) Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
+    end
+
 (* ------ Type freshning ------ *)
 
 fun freshlabty (T.LABEL_VAR lv) state = T.LABEL_VAR (F.freshLabVar lv state)
@@ -2973,7 +2993,7 @@ fun unif env filters user =
 	    end
 
 	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, equalityTypeVar = eqTypeVarAccessor, sem, class, lab = accessorLabel}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving an type constructor accessor. Labels = " ^ L.toString labs);
+	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor. Labels = " ^ L.toString labs);
 	     case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2996,7 +3016,51 @@ fun unif env filters user =
 		      in fsimplify [c] l
 		      end
 		    | (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
-		      let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^").")
+		      let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^"): "^(T.printtyf bind))
+
+			  val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "id is: "^(I.printId id)^", class is: "^(CL.toString class))
+			  (* we check whether this type constructor came from a type or a datatype, if it
+			   * came from a datatype we keep the equality type variable *)
+			  val typeNameKind = getTypeNameKindOfId state (I.ID(id,l))
+			  (* val _ = case sem of *)
+			  (* 	      T.TYPE_FUNCTION_VAR(tfv) => *)
+			  (* 	      (case typeNameKind of *)
+			  (* 		  E.DATATYPE => *)
+			  (* 		  (* we're dealing with a datatype so can get equality type errors when used with arguments here; do nothing *) *)
+			  (* 		  D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a datatype, not freshening equality type variable") *)
+			  (* 		| E.TYPE => *)
+			  (* 		  (* if we have arguments to the type, then we freshen *) *)
+			  (* 		  if L.length stts > 0 *)
+			  (* 		  then *)
+			  (* 		      (case S.getValStateTf state tfv of *)
+			  (* 			   NONE => *)
+			  (* 			   D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type. sem isn't in state though...") *)
+			  (* 			 | SOME tf => *)
+			  (* 			   let *)
+			  (* 		               val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type. sem in state is: "^(T.printtyf tf)^". Freshening equality type variable...") *)
+			  (* 			       val _ = case tf of T.TYPE_FUNCTION_DEPENDANCY(T.TFC(someRowVar,T.TYPE_VAR(tv,x,poly,T.EQUALITY_TYPE_VAR(eqtv)),tfcLab),depLabs,depStts,depCds) => *)
+			  (* 						  let *)
+
+			  (* 						      val _ = if L.length depStts > 0 *)
+			  (* 							      then *)
+			  (* 								  let *)
+			  (* 								      val newEntry = (T.TYPE_FUNCTION_DEPENDANCY(T.TFC(someRowVar,T.TYPE_VAR(tv,x,poly,T.EQUALITY_TYPE_VAR(T.freshEqualityTypeVar())),tfcLab),depLabs,L.empty,depCds)) *)
+			  (* 								      val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "Freshened equality type variable if possible. sem in state is now: "^(T.printtyf newEntry)) *)
+			  (* 								  in *)
+			  (* 								      S.updateStateTf state tfv newEntry *)
+			  (* 								  end *)
+			  (* 							      else *)
+			  (* 								  D.printDebugFeature D.UNIF D.TEMP (fn _ => "Type doesn't have arguments, not freshening") *)
+			  (* 						  in *)
+			  (* 						      () *)
+			  (* 						  end *)
+			  (* 						| _ => () *)
+			  (* 			   in *)
+			  (* 			       () *)
+			  (* 			   end) *)
+			  (* 		  else  D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type without arguments, not freshening")) *)
+			  (* 	   |  _ => D.printDebugFeature D.UNIF D.TEMP (fn _ => "sem is not a type function variable when solving type constructor accessor. Is this even possible?") *)
+
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  (* we constrain the equality type variable of the accessor to be equal to the equality type variable of the binder
@@ -3006,17 +3070,11 @@ fun unif env filters user =
 										    accessorLabel
 			  val bind1 = freshTypeFunction bind true
 			  val bind2 = T.labelBuiltinTyf bind1 accessorLabel
-			  (*val _ = D.printdebug2 (T.printtyf bind  ^ "\n" ^
-						   T.printtyf bind1 ^ "\n" ^
-						   T.printtyf bind2 ^ "\n" ^
-						   L.toString labs1)*)
 			  val c     = E.genCstTfAll sem bind2 labs1 stts0 deps0
 		      in fsimplify [equalityTypeConstraint, c] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      ((*D.printdebug2 (E.printEnv env "");*)
-		       (*D.printdebug2 (S.printState state);*)
-		       handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
+		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		    | (_, _, b) =>
 		      (*(2010-06-16)Similar as for ANY.*)
 		      if b orelse S.hasEnvVar state
@@ -4030,11 +4088,26 @@ fun unif env filters user =
 	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
 		 NONE =>
-		 let val _ = S.updateStateTf state tfv (collapseTf typeFunction labs stts deps)
+		 let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is not in the state, inserting mapping.")
+		     val _ = S.updateStateTf state tfv (collapseTf typeFunction labs stts deps)
 		 in fsimplify cs' l
 		 end
 	       | SOME typeFunction' =>
-		 let val c     = E.genCstTfAll typeFunction' typeFunction labs stts deps
+		 let
+		     val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is in the state, mapped to: "^(T.printtyf typeFunction'))
+		     val typeFunction' = case typeFunction' of
+					     T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(_)),lab),labs,stts,cds) =>
+					     if L.length stts > 0
+					     then
+						 let
+						     val newEntry = T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(T.freshEqualityTypeVar())),lab),labs,L.empty,cds)
+						     val _ = S.updateStateTf state tfv newEntry
+						 in
+						     newEntry
+						 end
+					     else typeFunction'
+					   | _ => typeFunction'
+		     val c = E.genCstTfAll typeFunction' typeFunction labs stts deps
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
@@ -4518,7 +4591,7 @@ fun unif env filters user =
 					 end
 				       | [l1] => raise EH.DeadBranch ("Only got one endpoint label for an equality type error: "^(Int.toString l1))
 				       | [] => raise EH.DeadBranch "Got NO endpoint labels for an equality type error!"
-				       | _ => (D.printDebugFeature D.UNIF D.STATE (fn _ => S.printState state); raise EH.DeadBranch "Got more than two endpoint labels for an equality type error!")
+				       | other => raise EH.DeadBranch ("Got more than two endpoint labels for an equality type error: "^(foldr (fn (x,y)=>Int.toString(x)^" "^y) "" other))
 			 in
 			     ()
 	  		 end
