@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/datatype-argument-test.sml",
 	"equality-types/function-type-test.sml",
 	"equality-types/ref-test.sml",
 	"equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml",

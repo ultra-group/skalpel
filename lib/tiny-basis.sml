@@ -8,6 +8,11 @@ type unit = {}
 eqtype int
 type real
 
+structure teststruct : sig
+	      type 'a mytype
+	      val y : int mytype
+end
+
 end = _structBasis
 
 open Basis
