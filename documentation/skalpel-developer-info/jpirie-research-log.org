@@ -8453,3 +8453,105 @@ thought it would but oh well, never mind. Turns out I could do
 something fairly straightforward in the portion of the constraint
 solver that deals with solving type function variables. Going to clean
 up the code a bit and move on.
+
+(2012-12-05-16:02)
+
+The test case which I'm looking at now is the case where we are
+comparing two constructors for equality which are equality types
+(datatype-constructor-typable-but-typename-not), but the datatype as a
+whole is not an equality type, because on of the other constructors
+cannot be tested for equality.
+
+(CONSTRAINT_SOLVING) Unification.sml: Solving constraint:   TYPE_CONSTRAINT(((TYPE_VAR(t37,-,POLY,EQUALITY_TYPE_VAR(eqtv57)),TYPE_CONSTRUCTOR (TYPENAME_DEPENDANCY(TYPENAME_CONSTRUCTION(a user type,DECLARATIO
+N_CONS(10),l50),[49,50],[],[]),ROW_DEPENDANCY(ROW_CONSTRUCTION([],-,l51),[49,50,51],[],[]),l49,EQUALITY_TYPE_STATUS(UNKNOWN))),[1,49,52,53,54,67,68,69,70,72],[], contextDependancies=))
+
+Here is an example of a constraint which might be
+interesting. Equality type variable 57 here is an equality type which
+has been influenced by the equals operator in the example and the
+TYPE_CONSTRUCTOR on the right hand side which turns out to be a
+typename dependancy on a TYPENAME_CONSTRUCTION is the datatype
+typename, which itself in this case is not actually an equality
+type. If the EQUALITY_TYPE_STATUS here was replaced with an equality
+type variable which was mapped to NOT_EQUALITY_TYPE in the state then
+this test should get some nice slices.
+
+Getting an equality type variable in there should be not too much
+trouble, but having it assigned to the right status will probably be
+the most tricky part of passing this test.
+
+(2012-12-05-16:17)
+
+Actually, that constraint isn't what I want though because it's not
+the datatype typename it's referring to but the constructor
+typename. That said, the equality type status for that typename is
+UNKNOWN. Perhaps I could just change the equality type statuses for
+the typenames, that would be pretty handy...
+
+(2012-12-05-16:32)
+
+Nope, that's not going to work here, the typename might be for the
+constructor but there are too many type variables changing in the
+unification algorithm to find out which one the equality type status
+is coming from. I guess there must be another way.
+
+(2012-12-05-17:51)
+
+What I have done now is to make sure that the datatype constructor
+typenames have an equality type variable associated with them
+too. So for example:
+
+datatype mydt = C of int;
+
+C = C 5
+
+I have changed things so that this program generates the following slice:
+
+⟨..datatype ⟨..⟨..⟩ = ⟨..⟨..C..⟩ of ⟨..⟩..⟩..⟩
+ ..C = ⟨..⟩..⟩
+
+This slice is for testing purposes and obviously nonsense, because C
+is constructed with a value (the 'of' keyword is shown here). What is
+happening here is that I have forced the typename to have a not
+equality type status. However, when the C is given an argument, e.g. C
+5 as on the right hand side of the equals operator in the example, we
+suddenly lose the error. What I want to do is keep that error in
+addition to the current error. When that is in place I can remove my
+constraint which forces typenames to be not equality type, then gather
+all the typenames together and if any one is not an equality type, set
+the rest to be not an equality type either.
+
+The typename equality type variable therefore needs to take the
+equality type variable of its argument *in the definition only*. So if
+we have:
+
+datatype mydt = C of real | D of int;
+
+D 5 = D 7
+
+The typename of C has status NOT_EQUALITY_TYPE from the 'real'
+keyword. This is then spread to the D using some function I've yet to
+code. The D 5 application will not cause an error, but the D 5 = will.
+
+In short then, we need a constraint for the typename's equality types
+variable to be checked against that of the = operator *in addition to*
+its argument, which is also checked separately.
+
+(2012-12-05-21:02)
+
+I think the only way to do this is during constraint solving. Getting
+the equality type variable on the left hand side of an application if
+the left hand side is a type constructor is impossible to express in
+ExpApp, but perhaps looking at what happens to the constraint
+generated might be a good idea:
+
+val c  = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv)) (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR freshEqTypeVar)) lab) lab
+
+Perhaps I can intercept that constraint and do something special in
+the case of a datatype constructor?
+
+(2012-12-05-22:56)
+
+Yes I think I see a way to get this working here using the above. I'll
+need to familiarise myself with the path of the type variable that is
+assigned to represent the datatype constructor, that should give me a
+good indication of where I need to look.
