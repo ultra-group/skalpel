@@ -23,6 +23,6 @@
               "basis"        : 2,
               "timelimit"    : 5000,
               "labelling"    : "",
-              "final"        : false,
+              "final"        : true,
               "name"         : "dummy"
               }

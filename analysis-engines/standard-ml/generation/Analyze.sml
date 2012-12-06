@@ -433,7 +433,7 @@ fun generateConstraints' prog pack nenv =
 		   val indent = convertIndentToSpaces indent
 		   val (tv, eqtv, vids, cst, contextSensitiveSyntaxError) = f_identpat (indent^SS.bottomLeftCurve^SS.straightLine) ident
 		   val tv' = T.freshTypeVar ()
-		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
+		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR eqtv)) lab
 	       in (tv', eqtv, vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
 	       end
 	     | f_labid indent (A.LabIdDots pl) =
@@ -936,13 +936,15 @@ fun generateConstraints' prog pack nenv =
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => (#red (!D.colors))^"right hand side of application...")
 		   val (tv2, eqTypeVar, cst2, contextSensitiveSyntaxError2) = f_atexp (indent^SS.bottomLeftCurve^SS.straightLine) atexp
 
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "The type variable representing the datatype constructor typename is: "^(T.printTypeVar tv1))
+		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "The type variable representing the constructor ARGUMENT is: "^(T.printTypeVar tv2))
+
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for left hand side of application...\n"^(#green (!D.colors))^(E.printConstraints cst1))
 		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for right hand side of application...\n"^(#red (!D.colors))^(E.printConstraints cst2))
 
 		   val tv  = T.freshTypeVar ()
  		   val freshEqTypeVar = T.freshEqualityTypeVar ()
 
-		   (* gets equality type error on one side of = only? *)
 		   val c  = E.initTypeConstraint (T.consTYPE_VARwithEQ tv1 (T.consEQUALITY_TYPE_VAR eqtv)) (T.constyarrowTyped (T.consTYPE_VARwithEQ tv2 (T.consEQUALITY_TYPE_VAR eqTypeVar)) (T.consTYPE_VARwithEQ tv (T.consEQUALITY_TYPE_VAR freshEqTypeVar)) lab) lab
 
 	       in (tv, freshEqTypeVar, (E.consConstraint (lab, c) (E.unionConstraintsList [cst1, cst2]))(*)*), E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError1, contextSensitiveSyntaxError2])
@@ -1678,9 +1680,16 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initClassConstraint clv2 (CL.consDA1 ()) lab
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
+
+
+		   (***** delete this constraint *****)
+		   val c5   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar) (T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)) lab
+
+
+
 		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2]
-		   val cst' = E.conscsts (lab, [(* c0 ,*) c1, c2(* , c5 *)]) (E.consConstraint (lab1, c3) (E.consConstraint (lab2, c4) cst))
+		   val cst' = E.conscsts (lab, [(* c0 ,*) c1, c2, c5]) (E.consConstraint (lab1, c3) (E.consConstraint (lab2, c4) cst))
 		   (*(2010-06-24)I don't believe labid's label is necessary here, but
 		    * this is what the old implementation had recorded in the database. *)
 		   (*val labs = L.cons lab (A.getLabelLabId labid)*)
