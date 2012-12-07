@@ -1,2 +1,2 @@
 datatype t = C of int | D of real;
-C = C 7;
+C 5 = C 7;

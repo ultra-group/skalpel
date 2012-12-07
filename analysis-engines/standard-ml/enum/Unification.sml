@@ -593,7 +593,24 @@ fun getTypeNameKindOfId state id =
 		(* returns the type name kind *)
 		#2 bindPortion
 	    end
-	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Typename kind of this identifier could not be determined (probably the id did not refer to a typename) Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
+	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
+    end
+
+fun get state id =
+    let
+	val (extLabAndBoolOption, secondPart, someBool) = S.getValStateIdTy state id true
+    in
+	case extLabAndBoolOption of
+	    SOME (extLabAndBool) =>
+	    let
+		val extLab = (#1 extLabAndBool)
+		val termPortion = EL.getExtLabT extLab
+		val bindPortion = #bind termPortion
+	    in
+		(* returns the type name kind *)
+		#2 bindPortion
+	    end
+	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
     end
 
 (* ------ Type freshning ------ *)
@@ -2825,7 +2842,7 @@ fun unif env filters user =
 		 (case S.getValStateIdVa state lid false of
 		      (SOME (({id, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = CL.ANY}, labs', _, _), _), _, _) =>
 		      (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder))); fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l)
-		    | (SOME (({id, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
+		    | (SOME (({id = bindId, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
 		      (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder)));
 		       fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l;
 
@@ -2833,36 +2850,28 @@ fun unif env filters user =
 		       (* this case was built from test functor-with-signature-of-structure-visible.sml
 			* needs to be checked that this solution will work in all cases. Can we count on a (TYPE_VAR,TYPE_DEPENDANCY) constraint? *)
 
-		       (* doesn't seme I can do this, this breaks another test. The θ values will have to take care of themselves outside of this function *)
-		       (* (case bind of *)
-		       (* 	    T.TYPE_DEPENDANCY(_,dependancyLabels,dependancyStts,dependancyDeps) => *)
-		       (* 	    (* updates the labels on equalityTypeVarAccessor *) *)
-		       (* 	    (case S.getValStateEq state equalityTypeVarAccessor of *)
-		       (* 		NONE => (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "\n*****\n*****\nWARNING: equaltiy type variable doesn't exist in state when I think it probably should....\n*****\n*****"); *)
-		       (* 			 S.updateStateEq state equalityTypeVarAccessor (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS T.UNKNOWN, dependancyLabels, dependancyStts, dependancyDeps), [])) *)
-		       (* 	      | SOME (T.EQUALITY_TYPE_DEPENDANCY(x, stateLabs, mapDeps, mapIds),_) => *)
-		       (* 		      S.updateStateEq state equalityTypeVarAccessor (T.EQUALITY_TYPE_DEPENDANCY (x, L.union stateLabs (L.union dependancyLabels (L.cons lab (L.union labs (L.cons l labs')))), mapDeps, mapIds), []) *)
-		       (* 	      | _ => ()) *)
-		       (* 	  | _ => ()); *)
-
-		       (* ----------- this version doesn't seem to work, labels don't get propagated correctly ------------- *)
-		       (* (case bind of *)
-		       (* 	    T.TYPE_DEPENDANCY(_,dependancyLabels,_,_) => *)
-
-		       (* ============= this section makes sure an equality type variables missing from the state gets into the state ========================================= *
-			* IT ALSO FAILS THE BURRIED-CONSTRAINTS.SML TEST - BEWARE *)
- 		       (* print ("lab = "^(L.printLab lab)^"labs = "^(L.toString labs)^", l = "^(L.printLab l)^"labs' = "^(L.toString labs)^"\n"); *)
 		       (case sem of
 		       	    T.TYPE_VAR(_,_,_,typeVarEqualityTypeVar) => fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, typeVarEqualityTypeVar),
 		       	    											L.empty, stts, deps) ] l
 		       	  | _ => ());
 
+		       case cl of
+			   CL.VID(CL.DA1) =>
+			   let
+			       val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "Datatype constructor found!")
+			       val _ = case sem of
+					   T.TYPE_VAR(tv,_,_,_) =>
+					   (case S.getValStateTv state tv of
+					       SOME(stateType as T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,_,_),T.ROW_C([T.FC(_,T.TYPE_VAR(rhsTypeVar,_,_,T.EQUALITY_TYPE_VAR(eqtvState)),_),T.FC(_,T.TYPE_VAR(_,_,_,_),_)],_,_),_,_),_,_,_)) =>
+					       if T.typenameToInt arrow = 1
+					       then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Made fresh ty: "^(T.printty (freshty stateType NONE (F.finitState ()) false)))					       else ()
+					     | _ => ())
+					 | _ => ()
+			   in
+			       ()
+			   end
+			 | _              => D.printDebugFeature D.UNIF D.TEMP (fn _ => "Got some other form of constructor.");
 
-		       (* ============= end section ========================================= *)
-
-
-
-		       (* 	  | _ => ()); *)
 
 		       (* fsimplify [E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVarBinder) (T.consEQUALITY_TYPE_VAR equalityTypeVarAccessor) l ] l; *)
 
@@ -3688,6 +3697,7 @@ fun unif env filters user =
 		   (* we don't have it in the state, let's put it in the state map *)
 		   let (* here we have to update statege (we know that ty is not a variable) *)
 		       (*val _ = BI.updateMono state tv ty ls deps ids*)
+		       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "No existing map entry for type variable. Adding entry.")
 		       val _ = reportGenError ()
 		       val (rho, n) = decomptyty ty ls deps ids
 		       val _ = if occurs (CT (tv, ty)) rho n l
@@ -3698,6 +3708,7 @@ fun unif env filters user =
 		 | SOME ty' =>
  		   (* we have seen this type variable before *)
 		   let
+		       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type variable exists in the state, recursing on new constraints.")
 		       (* get the extra labels that might be in the state ge so that the equality type error has all the labels in place *)
 		       val _ = case ty' of T.TYPE_DEPENDANCY(T.TYPE_VAR(tv', _, _, T.EQUALITY_TYPE_VAR eqtv'),_,_,_) =>
 					   (* here we want to take the labels that are associated with mapping tv' |-> tv ∈ StateGe and put then in eqtv' *)

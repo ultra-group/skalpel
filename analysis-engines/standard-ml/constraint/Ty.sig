@@ -140,7 +140,8 @@ signature TY = sig
     val getflex           : flex -> Label.label
     val printflex         : flex -> string
 
-    val DUMMYTYPENAME       : typename
+    val DUMMYTYPENAME     : typename
+    val CONSARROW         : typename
     val CONSREAL          : typename
 
     val constuple         : typeVar list -> Label.label -> fieldType list
