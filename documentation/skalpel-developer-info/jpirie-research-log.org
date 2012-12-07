@@ -8285,6 +8285,7 @@ suppressing equality type errors when it is enabled. Might work if the
 refs aren't still set when solving structure constraints irrespective
 of the signature.
 
+** 2012-12
 *** 2012-12-03
 
 (2012-12-03-11:21)
@@ -8555,3 +8556,82 @@ Yes I think I see a way to get this working here using the above. I'll
 need to familiarise myself with the path of the type variable that is
 assigned to represent the datatype constructor, that should give me a
 good indication of where I need to look.
+
+*** 2012-12-06
+
+(2012-12-06-12:59)
+
+At the SPLS, but I should be able to get a few things done
+anyway. Going to see what I can do with this test, I know what to do
+with it I think so I just need to do some implementation here.
+
+(2012-12-06-13:05)
+
+Ah apparently not, can't find power, gah, I'll have to pick this up later.
+
+(2012-12-06-18:30)
+
+So yes, this test. There is a route to victory here somewhere, but for
+starters perhaps this. If we see that we are solving a
+VALUEID_ACCESSOR, and the type variable that were are solving is
+mapped to an arrow constructor in the type variable state environment
+AND that the ID of the VALUEID_ACCESSOR we are solving is a datatype
+constructor then rebuild the same constraint again but shift the
+equality type variable from the constructor to the right hand side of
+the arrow.
+
+I think however that the type variables may need to be freshened to
+avoid explosions, but hopefully the equality type variables would not
+need to be freshened. I may be able to use the freshty functions that
+exist here if necessary.
+
+(2012-12-06-23:09)
+
+Ok I'm going to just try and implement this using the freshening
+techniques that I was talking about before and see how that goes.
+
+(2012-12-06-23:46)
+
+It's worth noting that it's impossible to find out what the
+typename kind of an id is when we are just starting to solve an
+accessor. We need to have a binder first before we know this
+information (the accessor could be a function for all we know at that
+point).
+
+(2012-12-07-00:58)
+
+Hrm, little snag in this plan, actually, what I'm looking up is a
+datatype constructor in the state environment map and not a datatype,
+so I won't find it listed in there as such. Looking at the typename
+kind isn't going to work for this test. I can however look at a
+different part of the state which will tell me if the identifier came
+from a datatype constructor, namely the class portion of the
+binding. This is even easier than looking up the typename, good stuff.
+
+(2012-12-07-02:13)
+
+We don't even need to check necessarily for the arrow constructor do
+we? Isn't it always going to be an arrow? My guess is that this might
+not be the case when we pattern match on that constructor value, so
+I'm going to add in the check that we are dealing with an arrow from
+one type variable to another anyway.
+
+(2012-12-07-03:39)
+
+I've written up all the checks that are needed, the only thing left
+now is to create the new constraints at the point where we know we're
+dealing with the correct case and add those to the list of constraints
+that we have yet to solve when we recurse.
+
+(2012-12-07-03:55)
+
+Freshened the arrow constraint up so that it can be reused with a new
+equality type variable. I'll clean up some of the code surrounding
+this too it's lost a bit of cleanliness, good to keep this sort of
+stuff in some kind of shape where at all possible.
+
+(2012-12-07-04:07)
+
+I'll add some of that recursive stuff after some sleep, it's going to
+require some label fiddling and memorising large sets of numbers is
+better done after sleep...
