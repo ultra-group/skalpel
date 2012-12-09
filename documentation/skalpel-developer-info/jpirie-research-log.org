@@ -8737,3 +8737,74 @@ That's what I was working on, should be getting errors now.
 Unioned a couple of extra labels along the way that got lost and now
 we're getting a slice. I'll check the test database to see if there's
 breakage and add this to the test database now.
+
+*** 2012-12-09
+
+(2012-12-09-01:21)
+
+Looking at the last test I have in the database that isn't working
+now. I see that an error is generated when using the "^" operator
+instead of the '=' operator on x, so perhaps there is some kind of
+existing mechanism that I can use there.
+
+After looking into this I have found that there is a warning produced
+by some code that I wrote, where we are ignoring constraints of the
+form EQUALITY_TYPE_CONSTRAINT(EQUALITY_TYPE_VAR(...),
+EQUALITY_TYPE_ON_TYPE(TYPE_DEPENDANCY(EXPLICIT_TYPE_VAR(....)...)...)...).
+
+This might be the very constraint that I want to look at, as I figure
+that if the explicit type variable contained a θ that was mapped to
+NOT_EQUALITY_TYPE, then we would have our error.
+
+There is only one other test which generates this warning, and that is
+the argument-test.sml test file. Check with:
+
+for file in *.sml
+do
+echo $file; skalpel-tiny -d CONSTRAINT_SOLVING $file | grep
+"EXPLICIT_TYPE_VAR" | grep "TYPE_ON_TYPE" | grep "Warning"
+done
+
+If I can look in more detail and work out what that warning in the
+other test file should not generate an error, but the one in this
+error file should, then perhaps a solution will come out of that.
+
+(2012-12-09-01:30)
+
+I already see something, there is an equality type variable present in
+the argument-test.sml file and there isn't one present in this test,
+it's an UNKNOWN status. This is because in this test we have a 'a
+value instead of a ''a value. Using this distinction to make this test
+pass would work but would be very incorrect, because anything with 'a
+would essentially become a NOT_EQUALITY_TYPE. I need to see if the
+'UNKNOWN' belongs to part of the fn expression somehow (or some other
+equivalent place).
+
+Perhaps we can do something when we see an EXPLICIT_TYPE_VAR
+constraint in constraint generation for an fn expression where the
+eqtv is mapped to UNKNOWN?
+
+(2012-12-09-01:58)
+
+An equality type var accessor is constructor for the 'a expression in
+the test. Not sure why it's not just a plain explicit type var, but
+it's not. Makes this more tricky (perhaps?) but oh well.
+
+(2012-12-09-10:28)
+
+Ach, fell into the trap that I saw coming, the argument to the
+function with the x typed as a single tick is generating an error
+because the single tick is marked as NOT_EQUALITY_TYPE. I think I can
+make this working with the TYPE_ON_TYPE constructor that I built
+before, and generate an error against UNKNOWN if I see one,  which
+will still allow other tests to pass.
+
+Actually, thinking about this some more, I can just generate an error
+against the UNKNOWN case, because that would be exactly this sort of
+error. The UNKNOWN match isn't made against equality type variables
+that come in as arguments, so we should be safe there. I'll try it now
+and see what happens, but I think this actually should work.
+
+(2012-12-09-11:51)
+
+That seems to work very actually, test passed! Adding to database.

@@ -1603,7 +1603,9 @@ fun generateConstraints' prog pack nenv =
 		   val tv = T.freshTypeVar ()
 		   val indent = convertIndentToSpaces indent
 		   val (tv1, eqtv1, vids, cst1, contextSensitiveSyntaxError1) = f_labpat (indent^SS.verticalFork^SS.straightLine) labpat
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Constraints for f_labpat:"^(E.printConstraints cst1))
 		   val (tv2, eqtv2, cst2, contextSensitiveSyntaxError2) = f_labtype (indent^SS.bottomLeftCurve^SS.straightLine) labtyp
+		   val _ = D.printDebugFeature D.AZE D.CONSTRAINT_GENERATION (fn _ => "Constraints for f_labtyp:"^(E.printConstraints cst2))
 		   val eqtv1' = T.freshEqualityTypeVar()
 		   val equalityConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv1') (T.consEQUALITY_TYPE_VAR eqtv1) lab
 		   val equalityConstraint2 = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv1) (T.consEQUALITY_TYPE_VAR eqtv2) lab

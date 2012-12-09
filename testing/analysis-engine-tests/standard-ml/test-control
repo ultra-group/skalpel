@@ -1,5 +1,6 @@
 {
     "test-list":[
+	"equality-types/single-tick-in-value-declarations.sml",
 	"equality-types/datatype-constructor-typable-but-typename-not.sml",
 	"equality-types/datatype-argument-test.sml",
 	"equality-types/function-type-test.sml",
