@@ -49,7 +49,6 @@ signature STATE = sig
     (* (2010-02-17) We really want an env for free identifiers with stateub *)
     type stUb = Env.class ExtLab.extLab*)
 
-    (* Unification env *)
     type state
 
     (* ACCESS THE UNIFIERS AND ENVS *)

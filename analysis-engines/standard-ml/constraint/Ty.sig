@@ -80,6 +80,7 @@ signature TY = sig
 			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
 			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
+			  | EQUALITY_TYPE_TYPENAME of equalityTypeVar list
 			  | EQUALITY_TYPE_ON_TYPE of ty
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
