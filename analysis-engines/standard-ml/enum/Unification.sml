@@ -2936,7 +2936,6 @@ fun unif env filters user =
 		      (SOME (({id, bind, equalityTypeVar, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (currentBinder as SOME (({id, bind = (bind, b), equalityTypeVar=eqtvBind, lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let
-			  val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binder. eqtvBind is "^(T.printEqualityTypeVar eqtvBind));
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val ty1 = sem
 			  val ty2 = T.consTYPE_VARwithEQ (freshTypeVar' bind poly) (T.consEQUALITY_TYPE_VAR eqtvBind)
@@ -2946,6 +2945,7 @@ fun unif env filters user =
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
 			  val c2  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVar) (T.consEQUALITY_TYPE_VAR eqtvBind) l
+			  val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binder, made new constraints:"^(E.printOneConstraint c)^(E.printOneConstraint c2));
 		      in fsimplify [c, c2] l
 		      end
 		    | _ => ())
@@ -4679,6 +4679,10 @@ fun unif env filters user =
 			    	   (E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_ON_TYPE (newTy)), L.union depLabels ls, deps, ids))::cs')
 			     |  (T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (_, _, _, T.EQUALITY_TYPE_VAR eqtv),depLabels,depDeps,depContext)) =>
 			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.consEQUALITY_TYPE_VAR(eqtv))), L.union ls depLabels, deps, ids)::cs')
+			     (* in the case where we see an UNKNOWN status in a constraint such as this, but equalityTypeVar1 is mapped to equality type,
+			      * we actually have an error. (built for test single-tick-in-value-declarations.sml) *)
+			     |  (T.TYPE_DEPENDANCY(T.EXPLICIT_TYPE_VAR (_, _, _, T.EQUALITY_TYPE_STATUS T.UNKNOWN),depLabels,depDeps,depContext)) =>
+			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE))), L.union ls depLabels, L.cons l deps, ids)::cs')
 			     | _ =>
 			      if (not (!analysingBasis))
 			      then (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Warning, ignoring constraint: "^(E.printOneConstraint currentConstraint)); cs')
