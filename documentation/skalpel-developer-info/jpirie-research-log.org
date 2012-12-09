@@ -8598,6 +8598,8 @@ accessor. We need to have a binder first before we know this
 information (the accessor could be a function for all we know at that
 point).
 
+*** 2012-12-07
+
 (2012-12-07-00:58)
 
 Hrm, little snag in this plan, actually, what I'm looking up is a
@@ -8635,3 +8637,103 @@ stuff in some kind of shape where at all possible.
 I'll add some of that recursive stuff after some sleep, it's going to
 require some label fiddling and memorising large sets of numbers is
 better done after sleep...
+
+(2012-12-07-11:45)
+
+Going to try and build these constraints now. I think freshening was
+probably a good idea, if any additional errors were generated because
+of that then it would have been pretty difficult to debug.
+
+(2012-12-07-13:08)
+
+When solving a VALUEID_ACCESSOR in this sort of case we create a new
+constraint where bind2 ins constrained to be the same as the state
+entry for tv1. Well, that's sort of true, we make the constraint (tv1,
+bind2), then when we solve that constraint and find tv1 in the map,
+then we do (tv1stateEntry, bind2). I want to do something pretty
+similar to this.
+
+I've already looked up the type variable that's in the 'sem' portion
+of the binder... so I think I want to create the constraint
+(freshTv1StateEntry, freshBind2), where the first field construction
+in freshTv1StateEntry has the θ of tv1 (or sem, in this case).
+
+(2012-12-07-14:51)
+
+I've added in the constraint that I've been talking about and I'm
+getting some type errors, which is a good thing. It's also not
+breaking any tests in any unexpected ways.
+
+The bad news of this test is that the equality type status of the
+datatype constructor typename now clashes with its argument,
+e.g. these slices result:
+
+⟨..datatype ⟨..⟨..⟩ = ⟨..C of ⟨..⟩..⟩..⟩
+       ..C 7..⟩
+
+In this case, C isn't an equality type (this is supposed to be due to
+another typename being untypable but that isn't implement yet so this
+is all a bit forced for now), but its argument is. This causes a
+clash. This clash needs to be removed, we are only worried about the
+equal operator here (or whatever else is in place) that comes after
+the C, not its arguments.
+
+⟨..structure ⟨..Basis :> sig 
+      ⟨..eqtype ⟨..⟩ int..⟩
+       end = ⟨..⟩..⟩;
+ ..open ⟨..Basis..⟩..⟩
+⟨..datatype ⟨..⟨..⟩ = ⟨..C of ⟨..⟩ int..⟩..⟩
+ ..C ⟨..⟩..⟩
+
+Similarly here, C is not an equality type, but it takes an integer
+parameter which is an equality type. This false detection also needs
+to be removed.
+
+(2012-12-07-16:14)
+
+I think what I want to do here is freshen the equality type variable
+in the bind expression for my constraint, that should help with this
+problem somewhat.
+
+(2012-12-07-19:12)
+
+Aha, some progress. I have managed to eliminate the bogus slices that
+were coming out and we now get a slice for the untypable typenames. I
+still need to create some mechanism that will make all of the
+typenames untypable whenever one of them is.
+
+*** 2012-12-08
+
+(2012-12-08-11:32)
+
+Working on doing that mechanism that I was talking about yesterday,
+there is already a slot for that sort of thing in the state
+environment (recordInformation) that I can make use of in this case.
+
+I have removed the constraint that I forcefully put in to let me see
+what the slice would look like so I'm hoping to just work on this
+section so that this is all coded up, and then the test should pass
+correctly. There might be issues involving the state, but we'll see
+how it goes.
+
+(2012-12-08-13:28)
+
+Added constraint call for NOT_EQUALITY_TYPE Σ values on all the
+typenames. Note that the place where this is called from only happens
+in one case of the pattern match of the function that it is in, and
+this should be extended to cover all cases, I'll work on that.
+
+(2012-12-08-13:47)
+
+Aargh I think I've finished everything up but don't have time to test
+it, note for when I get back. check out this case of unif:
+
+| fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE), T.EQUALITY_TYPE_TYPENAME [eqtv]), labs, stts, deps))::cs') l = |
+
+That's what I was working on, should be getting errors now.
+
+(2012-12-08-23:17)
+
+Unioned a couple of extra labels along the way that got lost and now
+we're getting a slice. I'll check the test database to see if there's
+breakage and add this to the test database now.

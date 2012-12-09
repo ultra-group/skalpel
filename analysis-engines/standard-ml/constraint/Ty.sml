@@ -170,6 +170,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
 			  | EQUALITY_TYPE_STATUS of equalityTypeStatus
+			  | EQUALITY_TYPE_TYPENAME of equalityTypeVar list
 			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 			  | EQUALITY_TYPE_ON_TYPE of ty
 
@@ -886,6 +887,7 @@ and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ print
   | printEqualityType (EQUALITY_TYPE_VAR_LIST eqtvs)    = "EQUALITY_TYPE_LIST(" ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
   | printEqualityType (EQUALITY_TYPE_DEPENDANCY dep) = "EQUALITY_TYPE_DEPENDANCY("  ^ (EL.printExtLab' dep printEqualityType) ^")"
+  | printEqualityType (EQUALITY_TYPE_TYPENAME eqtvs) = "EQUALITY_TYPE_TYPENAME("  ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_ON_TYPE ty) = "EQUALITY_TYPE_ON_TYPE("  ^ (printty ty) ^")"
 
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"

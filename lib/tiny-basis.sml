@@ -13,6 +13,9 @@ structure teststruct : sig
 	      val y : int mytype
 end
 
+eqtype string
+val ^         : string * string -> string
+
 end = _structBasis
 
 open Basis

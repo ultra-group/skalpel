@@ -1640,7 +1640,7 @@ fun generateConstraints' prog pack nenv =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConBind")
 		   val indent = convertIndentToSpaces indent
 		   val (tv, eqtv, cons, cst, css) = f_identpat indent ident
-	       in (tv, E.toDA0ValueIds cons L.empty, cst, css)
+	       in (tv, T.freshEqualityTypeVar(), E.toDA0ValueIds cons L.empty, cst, css)
 	       end
 
 	     (* f_conbind: A.ConBindOf
@@ -1683,8 +1683,10 @@ fun generateConstraints' prog pack nenv =
 
 
 		   (***** delete this constraint *****)
-		   val c5   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar) (T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE)) lab
-
+		   (********* when this is mapped to NOT_EQUALITY_TYPE directly we get a correct slice for the test i'm working on, needs to work in a non-forced way though *)
+		   val c5   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar) (T.consEQUALITY_TYPE_VAR eqtypeVar) lab
+		   val _    = D.printDebugFeature D.AZE D.TEMP (fn _ => (#red (!D.colors))^"Constraint interested in right now: "^(E.printOneConstraint c5))
+		   (**********************************)
 
 
 		   val cst  = E.unionConstraintsList [cst1, cst2]
@@ -1698,34 +1700,34 @@ fun generateConstraints' prog pack nenv =
 
 	       (* NOTE - toCLSValueIds seems to have something to do with creating BINDERS
 		* this might be the key to figuring out how that works *)
-	       in (tv, E.toCLSValueIds cons clv1 L.empty, cst', css)
+	       in (tv, typenameEqualityTypeVar, E.toCLSValueIds cons clv1 L.empty, cst', css)
 	       end
 	     | f_conbind indent (A.ConBindNoOf (ident, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConBindNoOf")
 		   val indent = convertIndentToSpaces indent
 		   val (tv, eqtv, cons, cst, css) = f_identpat (indent^SS.bottomLeftCurve^SS.straightLine) ident
 		   val tv' = T.freshTypeVar ()
-	       in (tv', E.toDATValueIds cons L.empty, cst, css)
+	       in (tv', T.freshEqualityTypeVar(), E.toDATValueIds cons L.empty, cst, css)
 	       end
 	     | f_conbind indent (A.ConBindDots pl) =
 	       let val env = f_partlist pl
 		   val tv  = T.freshTypeVar ()
-	       in (tv, E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	       in (tv, T.freshEqualityTypeVar(), E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typeVar list, Env.varenv, Env.cst, Env.css) *)
 	   and f_conbindseq indent (A.ConBindSeq conbinds) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ConBindSeq")
 		   val indent = convertIndentToSpaces indent
-		   val (tvs, conss, csts, csss) = unzipFour (mapIndent f_conbind indent conbinds)
+		   val (tvs, eqtvs, conss, csts, csss) = unzipFive (mapIndent f_conbind indent conbinds)
 		   val cons = E.unionEnvList conss
 		   val cst  = E.unionConstraintsList csts
 		   val css  = E.unionContextSensitiveSyntaxErrors csss
-	       in (tvs, cons, cst, css)
+	       in (tvs, eqtvs, cons, cst, css)
 	       end
 	     | f_conbindseq indent (A.ConBindSeqDots pl) =
 	       let val env = f_partlist pl
-	       in ([], E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
+	       in ([], [], E.getValueIds env, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       end
 
 	   (* RETURNS: (Ty.typeVar, Ty.tvenv, Env.cst) *)
@@ -1802,7 +1804,8 @@ fun generateConstraints' prog pack nenv =
 	   and f_datbind indent (A.DatBind (datname, conbindseq, _, lab, _)) =
 	       let val _ = D.printDebugFeature D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DatBind")
 		   val indent = convertIndentToSpaces indent
-		   val (tvs, cons, cst1, css1) = f_conbindseq (indent^SS.verticalFork^SS.straightLine) conbindseq
+		   (* here the eqtvs that are returned are the equality type variables bound to constructor typenames *)
+		   val (tvs, eqtvs, cons, cst1, css1) = f_conbindseq (indent^SS.verticalFork^SS.straightLine) conbindseq
 		   val (s, v, tv, eqtv, sv1, sv2, typeNameEnv, tyvs, cst2, css2) = f_datname (indent^SS.bottomLeftCurve^SS.straightLine) datname
 		   val typename   = if benv andalso getBasis () then getTypenameString s else T.freshTypename ()
 		   val id   = Option.getOpt (Option.map (fn (i, _) => i) v, I.dummyId)
@@ -1815,8 +1818,9 @@ fun generateConstraints' prog pack nenv =
 		   (*(2010-06-21)c2' is similar to c2 but weaker.  It just constrains tv to be of the
 		    * form T.TYPE_CONSTRUCTOR.*)
 		   val c3   = E.LET_CONSTRAINT (E.ROW_ENV (E.projExplicitTypeVars tyvs, E.CONSTRAINT_ENV cst1))
+		   val c4   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR (T.freshEqualityTypeVar())) (T.EQUALITY_TYPE_TYPENAME eqtvs) lab
 		   val cs   = map (fn x => E.initTypeConstraint (T.consTYPE_VAR x) (T.consTYPE_VAR tv) lab) tvs
-		   val cst  = E.conscsts (lab, [c1, c2']) (E.consConstraint (lab', c2) cst2)
+		   val cst  = E.conscsts (lab, [c1, c2',c4]) (E.consConstraint (lab', c2) cst2)
 		   val cst' = E.conscsts (lab, cs) (E.singleConstraint (L.dummyLab, c3))
 		   val css3 = checkTypeVarInc (A.getTypeVarDatName datname) (A.getlabDatName datname) (A.getTypeVarConbindseq conbindseq)
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]

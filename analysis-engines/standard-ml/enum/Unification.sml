@@ -2855,24 +2855,6 @@ fun unif env filters user =
 		       	    											L.empty, stts, deps) ] l
 		       	  | _ => ());
 
-		       case cl of
-			   CL.VID(CL.DA1) =>
-			   let
-			       val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "Datatype constructor found!")
-			       val _ = case sem of
-					   T.TYPE_VAR(tv,_,_,_) =>
-					   (case S.getValStateTv state tv of
-					       SOME(stateType as T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,_,_),T.ROW_C([T.FC(_,T.TYPE_VAR(rhsTypeVar,_,_,T.EQUALITY_TYPE_VAR(eqtvState)),_),T.FC(_,T.TYPE_VAR(_,_,_,_),_)],_,_),_,_),_,_,_)) =>
-					       if T.typenameToInt arrow = 1
-					       then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Made fresh ty: "^(T.printty (freshty stateType NONE (F.finitState ()) false)))					       else ()
-					     | _ => ())
-					 | _ => ()
-			   in
-			       ()
-			   end
-			 | _              => D.printDebugFeature D.UNIF D.TEMP (fn _ => "Got some other form of constructor.");
-
-
 		       (* fsimplify [E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVarBinder) (T.consEQUALITY_TYPE_VAR equalityTypeVarAccessor) l ] l; *)
 
 		      (* if: - b    is true (coming from the parameter of a functor)
@@ -2903,6 +2885,33 @@ fun unif env filters user =
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind2= "^(T.printty bind2)^"\n")
+
+			       val _ = case cl of
+					   CL.VID(CL.DA1) =>
+					   let
+					       val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "Datatype constructor found!")
+					       val _ = case sem of
+							   T.TYPE_VAR(tv,_,_,eqtvSem) =>
+							   (case S.getValStateTv state tv of
+								SOME(existingEntry as T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,a,b),T.ROW_C([T.FC(c,T.TYPE_VAR(lhsTypeVar,d,e,T.EQUALITY_TYPE_VAR(eqtvL)),f),T.FC(g,T.TYPE_VAR(rhsTypeVar,z,y,T.EQUALITY_TYPE_VAR(eqtvR)),i)],j,k),l,m),depLabs,p,q)) =>
+								if T.typenameToInt arrow = 1
+								then
+								    (* let val newTy = freshty (T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,a,b),T.ROW_C([T.FC(c,T.TYPE_VAR(rhsTypeVar,d,e,eqtvSem),f),T.FC(g,h,i)],j,k),l,m),n,p,q))	NONE (F.finitState ()) false *)
+								    (* 	val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Old ty: "^(T.printty existingEntry)) *)
+								    (* 	val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Made fresh ty: "^(T.printty newTy)) *)
+								    (* in *)
+									(* fsimplify [E.genCstTyAll newTy bind2 labs1 stts0 deps0] l *) (* () *)
+								    fsimplify [E.EQUALITY_TYPE_CONSTRAINT (((eqtvSem, (T.consEQUALITY_TYPE_VAR eqtvR)), L.union depLabs labs1, stts0, deps0))] l
+								(* end *)
+								else ()
+							      | _ => ())
+							 | _ => ()
+					   in
+					       ()
+					   end
+					 | _ => D.printDebugFeature D.UNIF D.TEMP (fn _ => "Got some other form of constructor.");
+
+
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts deps0
 			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs1, stts, deps)
 			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
@@ -4572,12 +4581,24 @@ fun unif env filters user =
 			 fsimplify cs' l)
 		     else if statusInMap = T.UNKNOWN
 		     then
-			 (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Status in map is UNKNOWN but right now it is something other than UNKNOWN. Replacing entry and unioning label information.");
-			  case L.length ls of
-			      (* we now have an equality type status so THIS label is the real endpoint, overwrite the deps *)
-			      1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, ls, ids), recordInformation)
-			    | _ => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, deps, ids), recordInformation);
-			 fsimplify cs' l)
+			 let
+			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Status in map is UNKNOWN but right now it is something other than UNKNOWN. Replacing entry and unioning label information.")
+			     val _ = case L.length ls of
+					 (* we now have an equality type status so THIS label is the real endpoint, overwrite the deps *)
+					 1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, ls, ids), recordInformation)
+				       | _ => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, deps, ids), recordInformation);
+
+      			     (* check should be made here to pass this test (code here should end up being generalised to all cases) *)
+			     val _ =
+				 case recordInformation of
+				     [] => ()
+				   | _ => if status = T.NOT_EQUALITY_TYPE
+					  (* maybe we don't want ls, deps, ids.... *)
+					  then fsimplify [E.EQUALITY_TYPE_CONSTRAINT((T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE),T.EQUALITY_TYPE_TYPENAME(recordInformation)),ls,deps,ids)] l
+					  else ()
+			 in
+			     fsimplify cs' l
+			 end
 	  	     else
 			 (* otherwise, an equality type variable is constrained to be both an EQUALITY_TYPE and NOT_EQUALITY_TYPE. Generate an error! *)
 	  		 let
@@ -4746,6 +4767,45 @@ fun unif env filters user =
 		      | _ => raise EH.TODO "Impossible pattern match case occurred"
 	    end
 
+	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT(((T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_TYPENAME(eqtvList)),labs,stts,ids)))::cs') l =
+	    let
+		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = case S.getValStateEq state eqtv of
+			    NONE =>
+ 			    S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME (eqtvList), labs, stts, ids), [])
+			  | SOME(_) =>
+			    raise EH.DeadBranch "An impossible case occurred."
+
+		fun createTypenameEqtvConstraint [] = ()
+		  | createTypenameEqtvConstraint (h::t) =
+		    case S.getValStateEq state h of
+			NONE => (S.updateStateEq state h (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS (T.UNKNOWN),labs,stts,ids), [eqtv]); createTypenameEqtvConstraint t)
+		      | SOME(lhsConstraint,_) =>
+			(S.updateStateEq state h (lhsConstraint, [eqtv]);
+			 createTypenameEqtvConstraint t)
+
+		val _ = createTypenameEqtvConstraint eqtvList
+
+	    in
+		fsimplify cs' l
+	    end
+
+	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE), T.EQUALITY_TYPE_TYPENAME [eqtv]), labs, stts, deps))::cs') l =
+	    (case S.getValStateEq state eqtv of
+		NONE => raise EH.DeadBranch "An impossible case occurred when solving equality type status values of datatype constructor typenames."
+	      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME(depList),_,_,_), _) =>
+		let
+		    fun setNonEqualityType [] = ()
+		      | setNonEqualityType (h::t) =
+			case S.getValStateEq state h of
+			    NONE => raise EH.DeadBranch "An impossible case occurred"
+			  | SOME (T.EQUALITY_TYPE_DEPENDANCY(_,labs',stts',deps'),_) =>
+			    S.updateStateEq state h (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE), L.cons l (L.union labs labs'), stts, deps'), [])
+			  | _ => raise EH.DeadBranch "Something is in the state is not a dependancy."
+		in setNonEqualityType depList
+		end
+	      | SOME (x,_) => raise EH.DeadBranch ("An impossible case occurred in the state while solivng datatype constructor equality type status values: "^(T.printEqualityType x))
+	    )
 
 	  (* if we see a (stutus, variable) constraint, flip it around *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS status, T.EQUALITY_TYPE_VAR eqtv), labs1, labs2, deps))::cs') l =
