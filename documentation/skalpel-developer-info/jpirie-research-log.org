@@ -8808,3 +8808,72 @@ and see what happens, but I think this actually should work.
 (2012-12-09-11:51)
 
 That seems to work very actually, test passed! Adding to database.
+
+* meeting with joe
+** Experiment to test effectiveness of Skalpel
+*** HTML output
+**** Buttons
+
+Do these buttons on the output actually work? On the webdemo the
+arrows don't seem to work all that well. Run skalpel on program for
+demonstration:
+
+fun x y z = y;
+
+x 1 = x 1 2
+
+**** Context dependancies
+
+Should we show these? Is this empty in most cases.
+
+**** Slice
+
+Seems to not display correctly. My fonts could be an issue but I don't
+think I've ever seen this displaying correctly.
+
+**** Just use the more polished webdemo for experimentation?
+
+By using that for the experiment we can improve that front end, which
+other users are more likely to use anyway, might be a bigger win.
+
+Also, it means that we can run the test from anywhere with little
+effort. We could also build in otherwise useful features
+e.g. uploading a file, or automatic sending of user programs to an
+e-mail address or to file, etc.
+
+WARNING: If we want to use this we are relying on MACS technology, and
+should expect it to blow up at the most inconvenient of moments. The
+webdemo should probably be accessible through a second server (it's
+possible through localhost should be fine, if we are controlling the
+test machine).
+
+**** No highlighting in the .html output files
+
+They just get the slice. Didn't we want to move away from that?
+
+*** Papers
+**** Experiment to test effectiveness of Skalpel
+
+I assume Mark had a paper list. If that exists can I have a copy of it?
+
+**** Hyperref paper in repo?
+
+It would be nice to do this for any documents I produce, perhaps I can
+make that work with the paper as well.
+
+** Theory
+*** One single constraint syntax presentation
+**** Complete presentation of what was in the thesis
+
+Joe might like to see that. Is it worth putting anywhere useful?
+
+**** Names of terms
+
+Can we make the names of things more meaningful in the constraint
+syntax figure, or is the space cost too high?
+
+** Literature review
+
+Does Joe want to see what I'm producing for this incrementally? It
+might be boring to read about but I could put reports in the phd repo
+or something.
