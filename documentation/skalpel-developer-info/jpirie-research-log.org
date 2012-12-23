@@ -185,8 +185,9 @@ the file, and that the process terminates.
    other-implementations
    papers
    latex
-   website
+   website (this includes the web demo)
    poster
+   mlton
 ** 2012-06
 *** 2012-06-26
 tags: {equality-types, labels}
@@ -8808,6 +8809,49 @@ and see what happens, but I think this actually should work.
 (2012-12-09-11:51)
 
 That seems to work very actually, test passed! Adding to database.
+
+*** 2012-12-20
+tags: {experiment website}
+
+(2012-12-20-09:21)
+
+I have just taken a look at the web developer tools for firefox. Damn
+that's handy! Worth checking out if developing the webdemo or the
+website certainly.
+
+The 3D view of the website is actually very handy also...
+
+(2012-12-20-14:21)
+
+The webdemo is now sending code that the user submits to the MLton
+compiler. At the moment the output from MLton is written to disk in
+/tmp. I foresee the problem however that when given a typable program,
+MLton will go right to the end of compilation which will take up a lot
+of time, and we are currently waiting for that process to finish. I'll
+have a look for a way around that.
+
+(2012-12-21-12:19)
+
+*** 2012-12-21
+tags: {mlton}
+
+(2012-12-21-07:17)
+
+MLton can be passed an argument which will make it only check that the
+program that is fed into it is well typed. This will be useful for the
+webdemo.
+
+It also might be useful during any development of the analysis engine,
+where I just want to know that the code I have written compiles, but
+I'm not interested in running it at that particular moment.
+
+(2012-12-21-12:26)
+
+I have displayed the output from the type checking of the user program
+to the right of the output that we provide on the webdemo. Currently,
+the text from the compiler is just dumped there. I would like it to be
+presented in a very similar style to that of our presentation of
+error, ideally as simply as possible.
 
 * meeting with joe
 ** Experiment to test effectiveness of Skalpel
