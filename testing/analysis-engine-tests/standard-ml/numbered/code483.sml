@@ -25,4 +25,4 @@ end
 
 structure S :> S where type s = s where type c = C.c = _S
 
-val _ = fn x => S.translate (fn y => C.toString x)
+val _ = fn x => S.translate (fn y => C.toString x);

@@ -19,4 +19,4 @@ val upd = build 10 extend;
 fun test 0 u = []
   | test n u = let val (v,_) = u (n,n) in v::test (n-1) u end;
 
-val _ = test 10 upd;
+val _ = test 10 upd;;

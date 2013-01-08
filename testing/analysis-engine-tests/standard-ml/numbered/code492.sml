@@ -16,4 +16,4 @@ functor F (S : s) = S :> s
 functor G (S : s) = struct
 structure T = F(S)
 val _ = T.X.f T.x
-end
+end;

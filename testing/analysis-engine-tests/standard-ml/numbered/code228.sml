@@ -57,4 +57,4 @@ fun discard_least nil = nil
 fun silly xs =
     case (powerset o (sort leq)) xs of
 	(y :: ys) => insert y ys
-      | nil => y :: nil
+      | nil => y :: nil;

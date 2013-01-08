@@ -22,4 +22,4 @@ let
     fun foo (SOME x) = SOME (x ())
       | foo NONE = NONE;
 in ()
-end;
+end;;

@@ -5,4 +5,4 @@ let
     datatype t = D
     datatype t = E
 in C (D, E)
-end
+end;

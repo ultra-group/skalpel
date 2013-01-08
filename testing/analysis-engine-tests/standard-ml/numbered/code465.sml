@@ -7,4 +7,4 @@ end
 
 structure X = struct val x = true end
 
-structure T = F(X)
+structure T = F(X);

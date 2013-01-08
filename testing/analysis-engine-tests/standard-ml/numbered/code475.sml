@@ -25,4 +25,4 @@ val g = f
 end
 structure X = struct fun f x = x + 1 end
 structure T = F(X)
-val _ = T.g true
+val _ = T.g true;

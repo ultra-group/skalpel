@@ -7,4 +7,4 @@ let
     and f = fn (f, f) => f
     and f = fn (f, f) => f
 in (f true, f (true, true))
-end
+end;

@@ -16,4 +16,4 @@ structure S = struct
 			 in g T
 			 end
 		      end
-end
+end;

@@ -16,4 +16,4 @@ end
 
 structure S = F(type k = bool)
 
-fun foo lab = (S.insert (lab, lab)) : int
+fun foo lab = (S.insert (lab, lab)) : int;

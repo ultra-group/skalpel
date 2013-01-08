@@ -5,4 +5,4 @@ datatype t = f
 fun f f f = ();
 (* sml/nj complains about *)
 datatype t = f
-val rec f = fn (f, f) => ();
+val rec f = fn (f, f) => ();;

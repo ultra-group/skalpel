@@ -19,4 +19,4 @@ val e' = e'
 (* EXAMPLE4:
  * Typable *)
 exception e
-val e = e
+val e = e;

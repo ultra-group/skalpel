@@ -7,4 +7,4 @@ val _ = (1 :: x, true :: x)
 val f = (fn x => x) []
 val h = let val g = f in (1 :: g, true :: g) end
 (* this is typable *)
-val _ = fn x => let val f = (fn x => x)[] in f end
+val _ = fn x => let val f = (fn x => x)[] in f end;

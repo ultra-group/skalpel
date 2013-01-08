@@ -5,4 +5,4 @@ datatype 'a option = NONE | SOME of 'a
 structure S : _s = struct
 fun foo (SOME x) = SOME (x ())
   | foo NONE = NONE
-end
+end;

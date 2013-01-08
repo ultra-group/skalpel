@@ -9,4 +9,4 @@ fun swap (x1, x2) = (x2, x1)
 fun cons x =
     let
 	val g = fn h => h :: x
-    in swap (apply1 (g, g) (1, true) false) end
+    in swap (apply1 (g, g) (1, true) false) end;

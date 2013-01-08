@@ -20,4 +20,4 @@ signature s = sig
    end
 end
 structure S : s = _structS
-structure T = S.X
+structure T = S.X;

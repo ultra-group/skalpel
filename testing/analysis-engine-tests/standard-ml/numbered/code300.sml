@@ -5,4 +5,4 @@ datatype t = a | b of t;
 fun a () = ();
 b a;
 datatype t2 = datatype t;
-b a;
+b a;;

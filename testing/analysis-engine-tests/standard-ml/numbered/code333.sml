@@ -7,4 +7,4 @@ overload + : 'a * 'a  -> 'a with 'a in (real f, xyzzy)
 (* typable *)
 val _ = 1.1 + 1.1
 (* untypable *)
-val _ = true + true
+val _ = true + true;

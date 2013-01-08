@@ -9,4 +9,4 @@ fun f z = (z x, z S.y)
 (* EXAMPLE2
  * We can load a file as follows: *)
 (**SML-TES-SMLNJ-SCRIPT foo.sml*)
-val _ = x + 1
+val _ = x + 1;

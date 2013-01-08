@@ -13,4 +13,4 @@ type t = int
 structure X = struct type t = t end
 val v = 1
 fun f (x : X.t) y = x + y + v
-end
+end;

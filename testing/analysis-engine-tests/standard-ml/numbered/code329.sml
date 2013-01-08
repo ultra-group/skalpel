@@ -13,4 +13,4 @@ val (cBuild : bool -> exn, cCheck) = newTag ();
 val d = [aBuild 1, bBuild 2, cBuild true];
 bCheck (List.last d);
 aCheck (List.last d);
-cCheck (List.last d);
+cCheck (List.last d);;

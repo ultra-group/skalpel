@@ -9,4 +9,4 @@
 val c = "C"
 val x = `A \/ B \/ ^(c)`
 fun m f = map f x
-val _ = m (fn x => x + 1)
+val _ = m (fn x => x + 1);

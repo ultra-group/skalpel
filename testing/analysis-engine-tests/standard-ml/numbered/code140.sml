@@ -5,4 +5,4 @@ datatype ('a, 'b) t = Red    of 'a * 'b
 fun trans (Red   (x, y)) = Green (x, y)
   | trans (Green (x, y)) = Red   (x, y)
 type ('a, 'b) u = ('a, 'b) t * 'a
-fun f x = (trans (#1 x), #2 x) : (int, bool) u
+fun f x = (trans (#1 x), #2 x) : (int, bool) u;

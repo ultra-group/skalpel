@@ -12,4 +12,4 @@ fun foo c d =
     end
 
 val x1 = foo T1 T2
-val x2 = foo U1 U2
+val x2 = foo U1 U2;

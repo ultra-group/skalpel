@@ -11,4 +11,4 @@ fun g3 x = x;
 let val x = g3 in (x 1, x true) end;
 (* no error in the following 2 lines: *)
 datatype 'a t = Nil of unit | Cons of 'a * 'a t;
-let val x = Nil () in (Cons (1, x), Cons (true, x)) end;
+let val x = Nil () in (Cons (1, x), Cons (true, x)) end;;

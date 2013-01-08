@@ -21,4 +21,4 @@ fun find_best weight lists =
     in best
     end
 
-val find_best_simple = find_best 1
+val find_best_simple = find_best 1;

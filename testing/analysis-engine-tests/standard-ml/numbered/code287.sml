@@ -8,4 +8,4 @@ local
 in
 val u = x
 end
-val _ = u + 1
+val _ = u + 1;

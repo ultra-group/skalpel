@@ -8,4 +8,4 @@
  *)
 
 fun f x = foo x
-val _ = bar ((f "") + 1)
+val _ = bar ((f "") + 1);

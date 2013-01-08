@@ -3,4 +3,4 @@
 (* the fun and datatype do not conflict *)
 fun f x = x
 datatype t = f;
-f 1;
+f 1;;

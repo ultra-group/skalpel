@@ -12,4 +12,4 @@ val u = let open T
 	    val z = y
 	    open S
 	in fn w => (w z, w x)
-	end
+	end;

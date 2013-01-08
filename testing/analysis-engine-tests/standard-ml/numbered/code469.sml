@@ -16,4 +16,4 @@ val x = let exception e
 	in f
 	end
 end
-val _ = (S.x 1, S.x true)
+val _ = (S.x 1, S.x true);

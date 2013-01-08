@@ -8,4 +8,4 @@ structure X = struct
   structure T = S
   val _ = 1 :: S.f
   val _ = true :: T.f
-end
+end;

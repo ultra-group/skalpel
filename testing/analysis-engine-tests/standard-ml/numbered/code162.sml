@@ -11,4 +11,4 @@ structure st2' : S = struct type t = bool end;
 (* this type check *)
 1 : st1'.t;
 (* this is because the environemnt associated to st1 does
-   not rename the type names *)
+   not rename the type names *);

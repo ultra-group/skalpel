@@ -6,4 +6,4 @@
 
 functor F (val x : int -> int) =
         struct val _ = x true end
-structure T = F(val x = fn z => z)
+structure T = F(val x = fn z => z);

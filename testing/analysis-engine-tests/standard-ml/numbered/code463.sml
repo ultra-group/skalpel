@@ -8,4 +8,4 @@ structure S = struct
   val rec f = fn v => let val rec h = fn U x => T x
 		      in h (U g)
 		      end
-end
+end;

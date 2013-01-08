@@ -4,4 +4,4 @@
 let
     datatype t = D of int
 in D + 2
-end
+end;

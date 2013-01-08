@@ -6,4 +6,4 @@ val (f x) = 2
 
 (* untypable *)
 datatype t = C
-val (C x) = 2
+val (C x) = 2;

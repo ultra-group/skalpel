@@ -12,4 +12,4 @@ fun g () =
 	fun f (x : 'a) = x
 	val _ = (f true, f 1)
     in x : 'a
-    end
+    end;

@@ -13,4 +13,4 @@ structure S = struct
     open S
     val rec f = fn (C x) => x + v
   end
-end
+end;

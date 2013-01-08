@@ -16,4 +16,4 @@ val y = x + 1
 Control.quotation := true;
 
 val x = ``
-val y = x + 1
+val y = x + 1;

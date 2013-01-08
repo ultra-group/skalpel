@@ -14,4 +14,4 @@ datatype ('a, 'b) mytree = Node of ('a, 'b) w * 'b | Leaf of 'a
 and treeoption = TSOME of (int, bool) w | TNONE
 fun g (Node (x, y)) = g x
   | g (Leaf x)      = x
-val x = TSOME (g (Node (Leaf 0, true)))
+val x = TSOME (g (Node (Leaf 0, true)));

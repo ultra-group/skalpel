@@ -17,4 +17,4 @@ let in fn x => x : 'a end;
 (* two other type errors *)
 (1; true; fn x => x; true);
 it + 1;
-(# 2 (1, true, 3)) + 1;
+(# 2 (1, true, 3)) + 1;;

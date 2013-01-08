@@ -9,4 +9,4 @@ structure S = struct
   val rec f = fn v => let val rec g = fn w => v (T U)
 		      in v (T V)
 		      end
-end
+end;

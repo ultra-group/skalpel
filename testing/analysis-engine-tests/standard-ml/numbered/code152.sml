@@ -41,4 +41,4 @@ fun 'a f () = let val ex4 = (fn x => fn y : 'a => x) () in () end;
  * Untypable because 'a is bound to the outter val declaration
  * and so at 'f 1' the type of f is not generalised and still
  * 'a -> 'a and 'a is different from int. *)
-val 'a u = let val f = fn x : 'a => x in f 1 end;
+val 'a u = let val f = fn x : 'a => x in f 1 end;;

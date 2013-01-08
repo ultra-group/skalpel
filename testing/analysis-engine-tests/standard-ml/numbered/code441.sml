@@ -14,4 +14,4 @@ structure S : s = struct fun f x : int = x end
 
 (* Typable *)
 fun f x : 'a = x
-val _ = f 1
+val _ = f 1;

@@ -19,4 +19,4 @@ structure S = F()
 
 datatype t = UPD of int S.map
 
-fun foo lab sets = UPD (S.insert (sets, lab, (lab, false)))
+fun foo lab sets = UPD (S.insert (sets, lab, (lab, false)));

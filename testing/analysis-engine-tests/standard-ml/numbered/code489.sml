@@ -11,4 +11,4 @@ signature s = sig
     val x : X.u
 end
 structure S :> s = _structS
-val _ = S.X.f S.x
+val _ = S.X.f S.x;

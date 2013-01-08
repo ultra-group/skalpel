@@ -9,4 +9,4 @@ structure X : sig val f : 'a -> 'a end = struct
 fun g () = fn x => x
 val f = g ()
 end
-val _ = (X.f 1, X.f true)
+val _ = (X.f 1, X.f true);

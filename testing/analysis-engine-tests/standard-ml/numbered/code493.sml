@@ -12,4 +12,4 @@ signature s = sig type t val x : t end where type t = int
 (*structure S :> s = _S*)
 functor F (S : s) = struct
 val x = S.x : bool
-end
+end;

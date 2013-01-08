@@ -11,4 +11,4 @@ in if true
            fun x _ = f
        in fn z => (z 1, z 2)
        end
-end
+end;

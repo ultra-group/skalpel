@@ -6,4 +6,4 @@ val _ = S.f 1
 val _ = S.f ()
 end
 structure X = struct fun f x = x + 1 end
-structure T = F(X)
+structure T = F(X);

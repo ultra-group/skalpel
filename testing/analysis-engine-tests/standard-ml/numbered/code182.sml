@@ -9,4 +9,4 @@ fn x => (x: int, x : bool);
 
 (* same problem *)
 fun f x = (x, let val g = f in g 1 end)
-val _ = f true;
+val _ = f true;;

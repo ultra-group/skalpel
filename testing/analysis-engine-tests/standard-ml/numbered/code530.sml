@@ -23,4 +23,4 @@ structure Foo = struct
 
   val x = field2 1
   val y = field2 true
-end
+end;

@@ -8,4 +8,4 @@ let val createList = fn x => [x]
     val rec comp  = fn f => fn g => f o g
     and appComp = fn v1 => fn v2 =>
         (comp removeList createList v1) = hd (comp createList removeList v2)
-in appComp 5 [5] end
+in appComp 5 [5] end;

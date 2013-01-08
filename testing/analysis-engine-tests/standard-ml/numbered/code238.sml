@@ -15,4 +15,4 @@ val {foo, bar, bla} = {fooo=1, barr=1, bla=1}
 
 (**)
 val x = true
-val _ = 1 + x
+val _ = 1 + x;

@@ -6,4 +6,4 @@ let
 	   fn (y,_) =>
 	      fn z => (z x, z y)
 in f (1,2) ((),4)
-end
+end;

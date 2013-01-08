@@ -9,4 +9,4 @@ val _ = (1 :: f1, true :: f1)
 (* Untypable because g2 is monomorphic *)
 fun g2 () = []
 val f2 = g2 ();
-val _ = (1 :: f2, true :: f2)
+val _ = (1 :: f2, true :: f2);

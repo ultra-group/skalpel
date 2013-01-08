@@ -23,4 +23,4 @@ end
 
 structure S = F(type k = bool)
 
-fun foo lab = (S.id lab) : int
+fun foo lab = (S.id lab) : int;

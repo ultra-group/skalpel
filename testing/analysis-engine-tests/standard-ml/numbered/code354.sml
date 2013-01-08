@@ -7,4 +7,4 @@ signature s = sig
     val v1 : t
     val v2 : t
     val f  : t -> t -> t
-end where type X.t = bool
+end where type X.t = bool;

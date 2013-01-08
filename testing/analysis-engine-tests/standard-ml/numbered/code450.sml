@@ -17,4 +17,4 @@ structure T = struct
     open X
     (*open S X*)
     val y = if m then 1 else x
-end
+end;

@@ -39,4 +39,4 @@ fun f u = (pretrans x, pretrans y,
 	    trans o trans o trans o trans o trans o
 	    trans o trans o trans o trans o trans o
 	    trans o trans o trans o trans o trans o
-	    trans) u)
+	    trans) u);

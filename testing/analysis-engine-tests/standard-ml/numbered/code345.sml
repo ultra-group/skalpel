@@ -17,4 +17,4 @@ end where type bool = bool
 = struct
 datatype bool = datatype bool
 end;
-S.true : bool;
+S.true : bool;;

@@ -8,4 +8,4 @@ signature s = sig
     end
     val v : t
     val f : t -> t -> t
-end where type X.Y.u = bool
+end where type X.Y.u = bool;

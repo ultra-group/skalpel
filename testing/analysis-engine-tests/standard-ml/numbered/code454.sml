@@ -21,4 +21,4 @@ structure S = struct
 	 in v2 U (* forces the first z to be a U *)
 	 end
       end
-end
+end;

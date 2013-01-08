@@ -11,4 +11,4 @@ val _ : bool u = (C 1) : bool t
 val _ : bool u = (C 1) : int t
 val _ : int u = (C 1) : bool t
 (* This isn't typable: arity clash *)
-val _ : u = C 1
+val _ : u = C 1;

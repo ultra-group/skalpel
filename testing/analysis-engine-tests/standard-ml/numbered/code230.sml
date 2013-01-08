@@ -31,4 +31,4 @@ fun f x = let val y = ( x (fn x => x), x (fn x => true) )
 
 val u = f (fn g => g 0 > 0)
 
-val v = f (fn g => if g 0 then 0 else 1)
+val v = f (fn g => if g 0 then 0 else 1);

@@ -17,4 +17,4 @@ Control.quotation := true;
 val x = `abc^(``)def`;
 (**SML-TES-QUASIQUOTES false *);
 Control.quotation := false;
-if length x = `` then print "yay\n" else print "on noes!\n";
+if length x = `` then print "yay\n" else print "on noes!\n";;

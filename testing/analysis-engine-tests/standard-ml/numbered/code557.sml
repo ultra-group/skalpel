@@ -18,4 +18,4 @@ structure S : s = F(type k = bool val c = true)
 
 functor F (val c : 'a) = struct val d = c end
 signature s = sig val d : int end
-structure S : s = F(val c = true)
+structure S : s = F(val c = true);

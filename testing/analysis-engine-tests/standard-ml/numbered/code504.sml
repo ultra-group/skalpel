@@ -7,4 +7,4 @@ fun (x + y) = print (x ^ y ^ "\n");
 val () = "hello" + "world";
 
 fun x + y = print (x ^ y ^ "\n");
-val () = "hello" + "world";
+val () = "hello" + "world";;

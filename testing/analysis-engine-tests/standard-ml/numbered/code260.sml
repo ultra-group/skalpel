@@ -14,4 +14,4 @@ let
     fun f () = let datatype t = A | B of t in (A, B) end;
     val (a, b) = f ();
     val (c, d) = f ()
-in (b a, d c, d a) end;
+in (b a, d c, d a) end;;

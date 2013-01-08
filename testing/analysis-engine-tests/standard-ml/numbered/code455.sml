@@ -18,4 +18,4 @@ structure S = struct
   val rec g = fn y => f w y
   val rec h = fn f => f U
   val rec dummy = fn v => g h
-end
+end;

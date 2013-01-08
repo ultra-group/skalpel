@@ -14,4 +14,4 @@ structure S :> s = struct type t = int type u = bool end
 (* Untypable - type constructor clash *)
 signature s = sig type t type u sharing type t = u end
 structure S :> s = struct type t = int type u = t end
-val _ = 1 : S.t
+val _ = 1 : S.t;

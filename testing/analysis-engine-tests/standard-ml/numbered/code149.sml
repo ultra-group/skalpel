@@ -6,4 +6,4 @@ let
     val y = 1 :: x1
     val z = true :: x1
 in ()
-end
+end;

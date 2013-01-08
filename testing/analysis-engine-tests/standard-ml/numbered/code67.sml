@@ -15,4 +15,4 @@ type t3 = int t2
 type t4 = {x : t3, y : t3}
 fun f x = x + 1
 fun g x = x + 2
-val x : t4 = {x = T f, y = T g}
+val x : t4 = {x = T f, y = T g};

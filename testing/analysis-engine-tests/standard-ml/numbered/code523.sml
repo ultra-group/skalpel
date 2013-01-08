@@ -27,4 +27,4 @@ structure S = F(type key = int)
 
 datatype t = UPD of int S.map
 
-fun foo lab sets = UPD (S.insert (sets, lab, lab))
+fun foo lab sets = UPD (S.insert (sets, lab, lab));

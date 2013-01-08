@@ -19,4 +19,4 @@ functor F (val y : 'a) =
   struct val x = y
          val _ = x : bool
          val _ = x + 1
-  end
+  end;

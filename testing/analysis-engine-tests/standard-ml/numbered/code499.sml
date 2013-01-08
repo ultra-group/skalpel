@@ -5,4 +5,4 @@
 structure S = struct end;
 fun f () = ();
 open S.T;
-val _ = f 1;
+val _ = f 1;;

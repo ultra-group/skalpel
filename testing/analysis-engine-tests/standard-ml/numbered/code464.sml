@@ -7,4 +7,4 @@ open T S
 val _ = x + 1
 open S T
 (* Typable *)
-val _ = x - 1
+val _ = x - 1;
