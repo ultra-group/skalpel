@@ -19,4 +19,4 @@ datatype t = f
 local
     fun f () = ()
 in val f = fn () => () end
-val _ = (fn f => f + 1) 1
+val _ = (fn f => f + 1) 1;

@@ -10,4 +10,4 @@ end
 structure E :> e = struct
 type 'a t = 'a list
 type 'a u = 'a list t
-end
+end;

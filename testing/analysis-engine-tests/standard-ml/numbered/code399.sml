@@ -7,4 +7,4 @@ val z = y
 structure S :> s = struct type t = bool val x = true end
 val x = z
 open S
-val _ = x + 1
+val _ = x + 1;

@@ -39,4 +39,4 @@ fun pretrans (SpeCol (col, b)) =
     else UniCol (touni col, b)
   | pretrans x = x
 val x = SpeCol (Red (2, 2, false), true)
-val y = pretrans x
+val y = pretrans x;

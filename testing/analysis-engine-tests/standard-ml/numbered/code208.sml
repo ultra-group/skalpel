@@ -18,4 +18,4 @@ end;
 
 functor F(X: BS) = struct end;
 
-structure A = F(B);
+structure A = F(B);;

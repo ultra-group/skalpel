@@ -9,4 +9,4 @@ functor F1 (S1 : sig val y : 'a end) = struct
     val _ = if y then y + 1 else 2
   end
   structure T = F2 (S1)
-end
+end;

@@ -19,4 +19,4 @@ structure X =
 structure Y =
   struct
     val y = X.x 1
-  end
+  end;

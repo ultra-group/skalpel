@@ -16,4 +16,4 @@ end
 
 (* EXAMPLE 2 - Nicer version *)
 fun f () = ()
-val _ = fn f => fn f => fn f => fn f => (f 1, f true)
+val _ = fn f => fn f => fn f => fn f => (f 1, f true);

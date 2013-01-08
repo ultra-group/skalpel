@@ -12,4 +12,4 @@ val (S.C x) = S.C 1;
 structure S :> sig
     datatype t = C of int
 end = struct datatype t = C of int end;
-val (S.C x) = S.C 1;
+val (S.C x) = S.C 1;;

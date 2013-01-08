@@ -11,4 +11,4 @@ end;
 
 open S
 
-structure T = F(val x = 1)
+structure T = F(val x = 1);

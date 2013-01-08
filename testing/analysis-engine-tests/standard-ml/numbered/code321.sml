@@ -6,4 +6,4 @@ struct
 (* This should be a strdec *)
 functor F (X : sig end) = struct end;
 end;
-(* F is accessible outside the structure only with open. *)
+(* F is accessible outside the structure only with open. *);

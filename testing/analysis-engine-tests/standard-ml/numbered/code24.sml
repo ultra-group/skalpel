@@ -7,4 +7,4 @@ let
     and 'a c = C of int t * w
     and 'a d = D of (bool) w
 in ()
-end
+end;

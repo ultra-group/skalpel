@@ -18,4 +18,4 @@ val y = f
 val f = fn x => x + 1
 val _ = y (f 1)
 end
-val _ = f true
+val _ = f true;

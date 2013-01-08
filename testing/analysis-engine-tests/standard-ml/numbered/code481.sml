@@ -14,4 +14,4 @@ val _ = T.g true
 
 (* Simpler version *)
 functor F (S : sig type 'a t = 'a end) = struct end
-structure T = F(struct type 'a t = int end)
+structure T = F(struct type 'a t = int end);

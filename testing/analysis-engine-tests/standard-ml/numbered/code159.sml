@@ -4,4 +4,4 @@
    bacause it contains 'a which is also in the context and the generalisation
    is not over the type variable of the context *)
 fun f x = let val y = x : 'a in () end
-val _ = f 1
+val _ = f 1;

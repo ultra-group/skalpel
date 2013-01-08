@@ -6,4 +6,4 @@ let
     val _ = c u
     val _ = u + v
 in c true
-end
+end;

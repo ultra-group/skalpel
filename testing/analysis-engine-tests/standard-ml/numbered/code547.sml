@@ -8,4 +8,4 @@ local
 in
 val y = x
 end
-val _ = fn z => (z y, z x)
+val _ = fn z => (z y, z x);

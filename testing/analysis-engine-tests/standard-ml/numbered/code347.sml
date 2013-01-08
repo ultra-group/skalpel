@@ -8,4 +8,4 @@ structure S : sig type 'a t end =
 struct type t = int list end
 (* EXAMPLE3: Untypable *)
 structure S : sig type 'a t end =
-struct type t = int end
+struct type t = int end;

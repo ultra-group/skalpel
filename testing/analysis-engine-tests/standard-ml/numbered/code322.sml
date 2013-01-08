@@ -12,4 +12,4 @@ signature s =
 structure S : s = _structS
 
 (* S has signature s but X is not specified in the signature s.*)
-structure P = S.X
+structure P = S.X;

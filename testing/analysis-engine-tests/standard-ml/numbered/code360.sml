@@ -12,4 +12,4 @@ fun seqWith f (p1, p2) getc strm =
 	 (* end case *))
        | NONE => NONE
     (* end case *))
-fun seq (p1, p2) = seqWith (fn x => x) (p1, p2)
+fun seq (p1, p2) = seqWith (fn x => x) (p1, p2);

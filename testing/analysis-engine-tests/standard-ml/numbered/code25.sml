@@ -9,4 +9,4 @@ let
     and v = V of (int, bool) w
     val x = V (W (0, 0))
 in ()
-end
+end;

@@ -35,4 +35,4 @@ structure AStudentInTheAcademy = Academy (Student);
  * but the code would be typable without the next line. *)
 val b = AStudentInTheAcademy.name;
 
-val _ = print (AStudentInTheAcademy.toString ());
+val _ = print (AStudentInTheAcademy.toString ());;

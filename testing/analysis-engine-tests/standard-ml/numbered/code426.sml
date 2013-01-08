@@ -7,4 +7,4 @@ structure S = struct
   structure T = struct structure U = struct val x = () end end
 end
 open S
-val _ = x + 1
+val _ = x + 1;

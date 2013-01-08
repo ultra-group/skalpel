@@ -9,4 +9,4 @@ val ex5 =
     let
 	val x = (let val id : 'a -> 'a = fn z => z in id id end; fn z => z : 'a)
     in fn z => z : 'a
-    end
+    end;

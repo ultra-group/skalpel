@@ -5,4 +5,4 @@
 
 val foo = {f = (fn x => x) (fn x => x)}
 val {f} = foo
-val _ = (f 1, f true)
+val _ = (f 1, f true);

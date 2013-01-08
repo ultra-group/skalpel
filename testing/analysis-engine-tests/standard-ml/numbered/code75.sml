@@ -10,4 +10,4 @@ type w = int and w = bool and w = string
 datatype ('a, 'b) t = C | C of w and 'a t = D of t
 val (C x) = C 3
 exception e and e of int
-val ex3 = e true
+val ex3 = e true;

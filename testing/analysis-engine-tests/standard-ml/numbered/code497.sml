@@ -14,4 +14,4 @@ end
 
 structure S :> s = X
 
-val _ = S.V.f S.U.x
+val _ = S.V.f S.U.x;

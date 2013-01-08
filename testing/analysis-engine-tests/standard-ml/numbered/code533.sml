@@ -8,4 +8,4 @@ Control.quotation := true;
 structure SMLofNJ = struct
   datatype 'a frag = QUOTE of string | ANTIQUOTE of 'a
 end
-val a = `xyzzy^(())plugh` : unit SMLofNJ.frag list
+val a = `xyzzy^(())plugh` : unit SMLofNJ.frag list;

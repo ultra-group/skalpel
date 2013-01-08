@@ -17,4 +17,4 @@ structure S = struct
   val rec f = fn C x => let val rec g = fn v => x T
 			in x U
 			end
-end
+end;

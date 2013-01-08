@@ -10,4 +10,4 @@ end
 structure S :> s = struct
 structure U = struct type u = int fun f x = x end
 structure V = struct type v = U.u val x = 1 end
-end
+end;

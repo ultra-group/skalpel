@@ -12,4 +12,4 @@ S.f S.z;
 structure T =
   struct type t = int type u = bool fun f (x : t) = x val z : u = true end
   : sig type t type u val f : t -> t val z : u end;
-T.f T.z;
+T.f T.z;;

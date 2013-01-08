@@ -7,4 +7,4 @@ fun g x y =
                 else fn z => z
 	val u = (f, true)
     in (#1 u) y
-    end
+    end;

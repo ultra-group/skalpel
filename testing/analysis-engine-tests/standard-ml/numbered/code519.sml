@@ -6,4 +6,4 @@ fun not true  = false
   | not false = true
 end
 
-val _ = S.nor true
+val _ = S.nor true;

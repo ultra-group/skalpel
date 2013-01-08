@@ -9,4 +9,4 @@ fun trans2 (Node (x, t)) f = Node (f x, trans2 t f)
 val trans = fn x => fn f => fn g => trans1 (trans2 x f) f
 val f1 = fn x => fn y => x + y
 val f2 = fn x => fn y => x orelse y
-val ex = fn u => fn v => TSOME (trans (Node (0, Leaf true)) (f1 u) (f2 v))
+val ex = fn u => fn v => TSOME (trans (Node (0, Leaf true)) (f1 u) (f2 v));

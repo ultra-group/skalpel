@@ -9,4 +9,4 @@ val _ = () handle S.e _ => ()
 
 (* Untypable: *)
 structure S = struct datatype t = e of string end
-exception e = S.e
+exception e = S.e;

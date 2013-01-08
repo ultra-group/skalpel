@@ -10,4 +10,4 @@ open S
 structure P = struct open P end
 open P
 open R Q (* different from open P R Q *)
-val _ = f x
+val _ = f x;

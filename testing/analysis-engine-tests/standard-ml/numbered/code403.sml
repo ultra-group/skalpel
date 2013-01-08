@@ -4,4 +4,4 @@
 val x = true
 structure S = struct end
 open S
-val _ = x + 1
+val _ = x + 1;

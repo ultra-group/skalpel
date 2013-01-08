@@ -5,4 +5,4 @@
 type t = int X.v
 structure S = struct structure X = struct type v = int end end
 open S
-val _ : X.v = true
+val _ : X.v = true;

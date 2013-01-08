@@ -10,4 +10,4 @@ end
 val _ = T true (* untypable *)
 val _ = T 1    (* typable   *)
 val _ = f 1    (* untypable *)
-val _ = f true (* typable   *)
+val _ = f true (* typable   *);

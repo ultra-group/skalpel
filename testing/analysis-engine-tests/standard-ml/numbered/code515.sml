@@ -4,4 +4,4 @@
 
 (**SML-TES-QUASIQUOTES true*)
 
-val _ = `foo ^(1) bar ^(true)`
+val _ = `foo ^(1) bar ^(true)`;

@@ -8,4 +8,4 @@ in
 	datatype t = T of u
     in T V
     end
-end
+end;

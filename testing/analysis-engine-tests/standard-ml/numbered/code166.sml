@@ -4,4 +4,4 @@
  * 'fn' should be 'val' *)
 val x = 1
 fn y = x
-val _ = if y then 1 else 2
+val _ = if y then 1 else 2;

@@ -11,4 +11,4 @@ end
 
 open S
 
-val _ = 1 f 2
+val _ = 1 f 2;

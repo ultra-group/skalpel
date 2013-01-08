@@ -20,4 +20,4 @@ fun f (n,m) (d,e) =
     in if x > y
        then compare d n m
        else compare e (n,m)
-    end
+    end;

@@ -39,55 +39,6 @@ october 2013 - esop?
 ** graphical slice presentation
 ** generalising to other languages
 ** whatever is needed to make skalpel work on itself
-* warnings
-** equality types
-   consbindof uses an old method of carrying around equality type
-   variables, an equality type variable should be generated from the
-   type name and constrained that way, rather than carrying it around
-   in the standard type constraint.
-
-   in constraint generation, case f_exp of a.expfn doesn't have any
-   equality type constraints
-
-   remove my warning comments in unification.sml (in type constructor
-   accessor solving, case match 2), they should be fine now. also in
-   componetype.
-
-   a.decdatrep and a.specrep get eqtvs from f_longtycon. need to check
-   labels for these.
-
-   a.expcase has equality type variables which should have constraints
-   generated out of it but it currently throws them away (i guess
-   that's just not been implemented yet). similarly for a.expconslist,
-   a.expor, a.expand, a.expite, a.expwhile (what is that anyway?),
-   a.expraise, and a.exphandle.
-
-   a.expop generates a fresh equality type variable and returns that
-   as its list. should this equality type variable have any kind of
-   constraint on it?
-
-   f_progone throws away the equality type variables it gets back from
-   f_exp. is this correct? probably it is because i can't think of any
-   constraints off the top of my head that we would want to do at the
-   f_progone level.
-
-   f_labexp has something worrying where we take the first element in
-   the list of new equality type variables and put that into a type
-   constraint with a type variable. will this cause a problem later?
-   do we need multiple type constraints.
-
-   some of the constraints in log (2012-09-06-14:59) have been left
-   unimplemented, because i actually think that we can do without
-   them. furthermore, this constraint:
-
-   | some (t.equality_type_dependancy((t.equality_type_var eqtv), resultlabels, resultdeps, resultids), recordinformation) =>
-
-   when handling a constraint from an equality type variable to an
-   equality type variable list, does nothing, and simply solves the
-   remaining constraints. i'm not sure if this is ever a situation
-   where we should solve these constraints more carefully, testing
-   will need to be completed.
-
 * todos
 ** test framework
 *** (2012-07-31-01:46) web demo
@@ -137,42 +88,6 @@ started with a standard ml source file open, have the type error slice
 run on that file, and check that emacs is highlighting things inside
 the file, and that the process terminates.
 
-** equality types implementation
-*** (2012-06-29-21:19) detection of equality type errors with the eqtype keyword
-
-    in the case where we have 'eqtype x' in a signature (instead of
-    what could be 'type x') an equality status constraint of
-    equality_type should be generated for x (obviously). then if the
-    user is to do something like 'val y : x = 5.0' then an equality
-    type error should be output by skalpel, the equality_type status
-    of x clashing with the not_equality_type status of the 5.0.
-
-*** (2012-08-08-16:13) value declarations with ticks
-
-    val 'b f = fn x : 'b => x = x;
-
-    does this apply to things other than value declarations?
-
-    fun 'b f (x:'b) = x = x
-
-    (same as above)
-
-    i don't get generate not_equality_type for 'a for example,
-    although equality_type is generated for ''b we need the constraint
-    for 'a.
-
-    this also demonstrates the problem fairly well:
-
-    fun f (x:'b) = x = x;
-    error-type error in function application.
-    function: = : ''a * ''a -> bool
-    argument: (x, x) : 'a * 'a
-    reason: can't unify ''a to 'a (requires equality type)
-    found near x = x
-    static errors
-
-** other
-*** todo (2012-08-30-15:16) add tags to research log entries for august
 * research logs
 ** tags available
    equality-types
@@ -8852,6 +8767,77 @@ to the right of the output that we provide on the webdemo. Currently,
 the text from the compiler is just dumped there. I would like it to be
 presented in a very similar style to that of our presentation of
 error, ideally as simply as possible.
+
+** 2013-01
+*** 2013-01-07
+tags: {mlton, webdemo}
+
+(2013-01-07-15:20)
+
+Spent the day so far adding a new feature to the webdemo, viewing
+MLton output for code submitted.
+
+It's now the case that when the user runs their code using the online
+demo they will also get compilation output from MLton to the right of
+it. I've done my best to make this output look as similar in
+presentation to ours as possible, so that we can use it later for
+experimental analysis. What I've currently got at the moment looks
+good from that perspective.
+
+MLton does not go ahead and compile a binary of the user code, it
+stops after typechecking in order that the page takes less time to
+load for the user.
+
+At the moment I'm parsing the console output for an error line and
+column number, then using that information to annotate the file with a
+CSS tag which we define for slicing, so that the error produced by
+MLton is also highlighted to the user (perhaps we want to use a
+different colour, or a box or something, for experimental purposes).
+
+I'm quite happy with the output that we have here, but there are a
+number of things to note:
+
+o Firstly, the MLton output highlighting starts at the point specified
+in the compilation output, and ends at the end of the line. It
+shouldn't really end at that point but at some point more sensible.
+
+o Secondly, there is an issue where MLton will reject programs like
+this as syntax errors:
+
+fn _ => 1
+
+I'm not sure why it does this, it seems to want something like a
+structure, or a (non-anonymous) function wrapped around that in order
+to work. This means that MLton rejects some of the tests as syntax
+errors when that's not really the problem.
+
+It might be nice for the users to be able to choose between various
+compilers, but security considerations may be opened up e.g. SML/NJ.
+
+(2013-01-08-00:14)
+
+I've updated the MLton output code for the webdemo again and made some
+changes. Buttons have been moved into their own section on the form so
+that the first two sections (Tool reporting error and Source code with
+error highlighted) are presented in exactly the same way.
+
+Also with regard to the syntax errors mysteriously rejecting, I have
+added a semicolon to the end of all the test files so that the user
+might not be confused when running the test database examples
+online. If they make that mistake in their own code when they submit
+it to the online demo, then the confusing as to why the end of the
+file is reported is part of the compiler confusion, so it's
+unexplained.
+
+Also, the end region for the error as output from MLton is not given
+by the compiler. As it changes the abstract syntax tree and presents a
+changed one to the user, it's very hard to tell where the end of the
+error region should be. So for the moment, it's staying at the end of
+the current line (it's worth noting that that's exactly what Emacs
+reports, too).
+
+I'll perhaps install this webdemo fresh tomorrow so that it's running
+a new version of the binary.
 
 * meeting with joe
 ** Experiment to test effectiveness of Skalpel

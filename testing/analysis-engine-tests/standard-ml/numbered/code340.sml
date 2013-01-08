@@ -12,4 +12,4 @@ structure S : s = struct type t = int type u = int val C = 1 end;
 (* Typable but it seems that f cannot be applied. *)
 functor f (x : s) = struct open x end : s;
 (* Typable.  We now have a new contructor for int. *)
-functor f (x : s) = struct open x fun g C = 1 val h = g 2 end : s;
+functor f (x : s) = struct open x fun g C = 1 val h = g 2 end : s;;

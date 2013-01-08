@@ -16,4 +16,4 @@ fun 'a ex x = (let exception e of 'a in e x end; 1);
 (* HaMLet complains about undetermined types on top level *)
 val ex = let val myfun : 'a -> 'a = fn x => x in myfun end;
 (* This is beacuse the returned myfun is an instance of the
- * declared myfun but we don't know which generalisation. *)
+ * declared myfun but we don't know which generalisation. *);

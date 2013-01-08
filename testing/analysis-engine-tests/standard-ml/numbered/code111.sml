@@ -7,4 +7,4 @@ datatype 'a t = Blue   of 'a
 	      | Pink   of 'a
 type 'a u = 'a t * bool * 'a
 val x = (Red 2, 1, true)
-val y : int u = x
+val y : int u = x;

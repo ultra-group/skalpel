@@ -31,4 +31,4 @@ fun doubleOdds xs =
     let fun f (n,inc) = if isEven n
 			then ( n, inc )
                         else ( 2 * n, inc + n)
-    in mapActL f (xs,0) end
+    in mapActL f (xs,0) end;

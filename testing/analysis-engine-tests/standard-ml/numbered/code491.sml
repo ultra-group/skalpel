@@ -15,4 +15,4 @@ end
 (*structure S :> s = X*)
 functor F (S : s) = struct
 val _ = S.V.f S.U.x
-end
+end;

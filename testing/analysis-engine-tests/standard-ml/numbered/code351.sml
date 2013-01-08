@@ -10,4 +10,4 @@ structure S : s = struct type t = int datatype u = C end;
 
 (* Untypable *)
 signature s = sig type u end where type u = int;
-structure S : s = struct datatype u = C end;
+structure S : s = struct datatype u = C end;;

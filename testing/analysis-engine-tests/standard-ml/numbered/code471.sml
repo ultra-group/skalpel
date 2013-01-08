@@ -27,4 +27,4 @@ let val x = fn _ =>
 	       end
 in ((raise (#1 (x ())) 4)    handle (e x) => x : int,
     (raise (#2 (x ())) true) handle (e x) => x : bool)
-end;
+end;;

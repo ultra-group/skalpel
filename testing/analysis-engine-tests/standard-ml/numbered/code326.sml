@@ -24,4 +24,4 @@ fun foobar _ =
 	fun foo (x : O.ordset) = isEmpty x
     in ()
     end
-end
+end;

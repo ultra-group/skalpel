@@ -8,4 +8,4 @@ overload c : 'a -> 'a -> 'a with 'a in (_typet)
 val _ = c 1 0w0
 (* Untypable *)
 overload c : 'a -> 'a -> 'a with 'a in (bool)
-val _ = c 1 0w0
+val _ = c 1 0w0;

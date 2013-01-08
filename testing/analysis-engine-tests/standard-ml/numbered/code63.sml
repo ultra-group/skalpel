@@ -13,4 +13,4 @@ fun trans2 (Node (x, y)) f = Node (x, trans2 y f)
   | trans2 (Leaf x)      f = Leaf (f x)
 fun f x y = (plus : int -> int -> int) x y
 fun g x y = x orelse y
-val ex = fn u => fn v => TSOME (trans1 (trans2 (Node (0, Leaf true)) g) f)
+val ex = fn u => fn v => TSOME (trans1 (trans2 (Node (0, Leaf true)) g) f);

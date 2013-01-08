@@ -5,4 +5,4 @@ overload f : 'a -> bool with 'a in (in Foo, unit)
 (* Typable: *)
 val _ = f 1
 (* Untypable: *)
-val _ = f 1.1
+val _ = f 1.1;

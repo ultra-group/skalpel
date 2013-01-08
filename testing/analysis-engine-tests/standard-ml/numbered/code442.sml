@@ -6,4 +6,4 @@ structure S = struct
   val f = true
 end
 open S
-val _ = fn f => (f true, f 1)
+val _ = fn f => (f true, f 1);

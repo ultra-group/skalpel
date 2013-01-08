@@ -6,4 +6,4 @@ structure S = struct
   val rec f = fn c => let val rec g = fn c x => x
 		      in c
 		      end
-end
+end;

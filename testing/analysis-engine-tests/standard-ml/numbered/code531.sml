@@ -80,4 +80,4 @@ structure Main = struct
   val x = raw (#1 new)
   val y = raw (#2 new)
 
-end
+end;

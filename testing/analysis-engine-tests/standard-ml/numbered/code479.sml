@@ -6,4 +6,4 @@ val x = S1.g1
 fun f1 () = ()
 structure S1 = struct val g1 = fn () => [] end
 val f1 = S1.g1 ();
-val _ = (x :: f1, true :: f1)
+val _ = (x :: f1, true :: f1);

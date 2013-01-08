@@ -4,4 +4,4 @@
    in the structure without any *)
 datatype t = x of int | C of int;
 structure S :> sig end =
-struct val x = fn u => C u end;
+struct val x = fn u => C u end;;

@@ -25,4 +25,4 @@ fun f (x : X.t) y = x orelse y
 end
 
 (* Untypable because the signatures are opaque. *)
-val _ = S1.f S2.v1
+val _ = S1.f S2.v1;

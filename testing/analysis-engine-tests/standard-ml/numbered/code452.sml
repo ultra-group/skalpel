@@ -8,4 +8,4 @@ structure S = struct
     val c = fn x => x + 1
     val _ = c ()
 end
-open S
+open S;

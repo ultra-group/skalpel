@@ -20,4 +20,4 @@ structure T = struct
     (* 1 possible fix: replace the 2 lines above by the line below *)
     (* open S X *)
     val y = if m then [true] else x
-end
+end;

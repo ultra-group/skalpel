@@ -12,4 +12,4 @@ structure X : S =
 struct
 type t = bool
  and u = bool
-end;
+end;;

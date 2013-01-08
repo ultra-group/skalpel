@@ -4,4 +4,4 @@
 signature s = sig exception e of string end
 structure S :> s = struct exception e of string end
 open S
-val _ = e 1;
+val _ = e 1;;

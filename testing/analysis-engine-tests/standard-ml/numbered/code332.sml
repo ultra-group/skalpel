@@ -45,4 +45,4 @@ fun f 1 x = 0.0
 (* EXAMPLE15 *)
 fn x => if x then x+1 else x-2.2;
 (* EXAMPLE16 *)
-fn x => (x+1) (if x then x+1 else x-2.2);
+fn x => (x+1) (if x then x+1 else x-2.2);;

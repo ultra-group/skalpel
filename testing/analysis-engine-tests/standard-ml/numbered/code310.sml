@@ -10,4 +10,4 @@ fun f2 (T x | U (x, y)) = x
 (* Syntacticaly correct *)
 fun f3 (T x | V x) = x
   | f3 (U (x, y)) = x
-  | f3 _ = 0
+  | f3 _ = 0;

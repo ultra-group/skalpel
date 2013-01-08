@@ -2,4 +2,4 @@
 
 (* Typable *)
 fun f [] = []
-  | f (x :: xs) = xs
+  | f (x :: xs) = xs;

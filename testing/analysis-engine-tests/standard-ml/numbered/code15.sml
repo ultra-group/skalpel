@@ -14,4 +14,4 @@ let
 	      fn f =>
 		 ((constList l1 (f l1)), (constList l2 (f l2)))
 in applyCl [1, 2, 3] [true, false, true] length
-end
+end;

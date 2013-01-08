@@ -10,4 +10,4 @@ structure s : sig
 	structure s : sig end
     end
 end =
-struct structure s = struct end end
+struct structure s = struct end end;

@@ -7,4 +7,4 @@ let exception e of 'a in e 4 end;
    and so 'a is not int *)
 fun f _ = let exception e of 'a in e 4 end;
 (* However, the next one is typable *)
-fun f _ = let exception e of 'a in e end; f () 1;
+fun f _ = let exception e of 'a in e end; f () 1;;

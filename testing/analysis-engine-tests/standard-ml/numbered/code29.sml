@@ -8,4 +8,4 @@ val _ = f (C (1,2)) (C ((),u))
 (* We care about V but not about x being the only argument of V. *)
 datatype v = V of int
 datatype w = W of int
-val _ = (fn (V x) => x) (W 1)
+val _ = (fn (V x) => x) (W 1);

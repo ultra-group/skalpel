@@ -6,4 +6,4 @@ structure S = struct
   datatype 'a w = W
   datatype 'a u = U of 'a t
   val rec f = fn v => U W
-end
+end;

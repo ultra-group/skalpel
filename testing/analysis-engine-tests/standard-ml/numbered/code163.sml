@@ -4,4 +4,4 @@
 structure T :> sig val x : 'a end =
 struct exception e val x = raise e end;
 (* This isn't *)
-signature S = sig datatype t = C val C : int end;
+signature S = sig datatype t = C val C : int end;;

@@ -10,4 +10,4 @@ val it = (raise x 5 5) handle E => ()
 
 (* we shouldn't accept that because it is unsound *)
 exception E of 'a
-val it = (raise E 5) handle E f => f (2)
+val it = (raise E 5) handle E f => f (2);

@@ -8,4 +8,4 @@
 (**SML-TES-USE-FILE /u1/pg/rahli/work/jbw/smlnj-script/smlnjscript.sml*)
 (**SML-TES-USE-FILE smlnj-script-sig.sml*)
 (**SML-TES-USE-FILE foo.sml*)
-(**SML-TES-USE-FILE test-prog.sml*)
+(**SML-TES-USE-FILE test-prog.sml*);

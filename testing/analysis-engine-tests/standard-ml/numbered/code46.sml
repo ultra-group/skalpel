@@ -8,4 +8,4 @@ let
     val g4 = fn (f x, f y) => (x, y)
     val g5 = fn (f x, f) => x
 in f
-end
+end;

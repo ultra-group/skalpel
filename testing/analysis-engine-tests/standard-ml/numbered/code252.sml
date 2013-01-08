@@ -7,4 +7,4 @@ local
 in
 val x = x + 1
 end
-val _ : bool = x
+val _ : bool = x;

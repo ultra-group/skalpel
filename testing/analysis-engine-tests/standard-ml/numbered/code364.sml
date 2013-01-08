@@ -16,4 +16,4 @@ val _ = (1 :: f2, true :: f2)
 fun g3 () = ()
 val g3 = fn () => []
 val f3 = g3 ();
-val _ = (1 :: f3, true :: f3)
+val _ = (1 :: f3, true :: f3);

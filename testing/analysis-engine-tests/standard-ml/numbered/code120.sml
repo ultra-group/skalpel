@@ -8,4 +8,4 @@ fun g  x y =
 	    then fn z => z + 1
             else fn z => z
     in f y
-    end
+    end;

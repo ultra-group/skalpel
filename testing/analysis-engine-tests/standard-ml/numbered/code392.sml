@@ -12,4 +12,4 @@ val (c x) = c 1
 end
 
 (* untypable *)
-val (S.c x) = S.c 1
+val (S.c x) = S.c 1;

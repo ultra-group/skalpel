@@ -25,4 +25,4 @@ datatype 'a t = T1 of int | T2 of 'a
 datatype u = datatype t
 end;
 
-structure st2 : S = st1;
+structure st2 : S = st1;;

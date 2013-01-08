@@ -12,4 +12,4 @@ signature s = sig
     sharing type V.u = U.t
 end
 
-structure S :> s = X
+structure S :> s = X;

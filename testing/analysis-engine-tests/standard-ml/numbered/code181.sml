@@ -7,4 +7,4 @@ fun fromIntToint 0 = zero
 		     then pred (fromIntToint (n + 1))
 		     else succ (fromIntToint (n - 1));
 fromIntToint ~4;
-(fromIntToint ~4) + 1;
+(fromIntToint ~4) + 1;;

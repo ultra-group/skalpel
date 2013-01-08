@@ -5,4 +5,4 @@ let
     val rec g = fn _ => 1 + u
 in if u then g () else g ()
 end
-end
+end;

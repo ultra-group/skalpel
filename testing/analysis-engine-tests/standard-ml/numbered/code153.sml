@@ -37,4 +37,4 @@ val ex5 = ((fn x => fn y : 'a => x) (); 1);
 
 (* EXAMPLE6
  * Typable because 'a can be generalised where specified. *)
-fun 'a f () = let val _ = (fn x => fn y : 'a => x) () in () end;
+fun 'a f () = let val _ = (fn x => fn y : 'a => x) () in () end;;
