@@ -40,6 +40,27 @@ october 2013 - esop?
 ** generalising to other languages
 ** whatever is needed to make skalpel work on itself
 * todos
+** second year report document
+*** build list of all papers to go into literature review
+*** build list of all implementations to go into implementation review
+*** equality types writeup
+
+This is still to be done
+
+*** simplification of skalpel core
+
+Currently working on this. As I'm going to be presenting a simplified
+version of the constraint syntax though, I'm going to have to explain
+what all the parts of the constraint syntax actually do.
+
+I'm also presumably going to have to make semantics for the
+constraints and put that in there also.
+
+*** index of symbols
+
+There should be an index of symbols given in the appendix. Make sure
+this goes in, it's important that we have something like this.
+
 ** test framework
 *** (2012-07-31-01:46) web demo
 
@@ -8839,71 +8860,12 @@ reports, too).
 I'll perhaps install this webdemo fresh tomorrow so that it's running
 a new version of the binary.
 
-* meeting with joe
-** Experiment to test effectiveness of Skalpel
-*** HTML output
-**** Buttons
+*** 2013-01-08
 
-Do these buttons on the output actually work? On the webdemo the
-arrows don't seem to work all that well. Run skalpel on program for
-demonstration:
+(2013-01-08-15:41)
 
-fun x y z = y;
-
-x 1 = x 1 2
-
-**** Context dependancies
-
-Should we show these? Is this empty in most cases.
-
-**** Slice
-
-Seems to not display correctly. My fonts could be an issue but I don't
-think I've ever seen this displaying correctly.
-
-**** Just use the more polished webdemo for experimentation?
-
-By using that for the experiment we can improve that front end, which
-other users are more likely to use anyway, might be a bigger win.
-
-Also, it means that we can run the test from anywhere with little
-effort. We could also build in otherwise useful features
-e.g. uploading a file, or automatic sending of user programs to an
-e-mail address or to file, etc.
-
-WARNING: If we want to use this we are relying on MACS technology, and
-should expect it to blow up at the most inconvenient of moments. The
-webdemo should probably be accessible through a second server (it's
-possible through localhost should be fine, if we are controlling the
-test machine).
-
-**** No highlighting in the .html output files
-
-They just get the slice. Didn't we want to move away from that?
-
-*** Papers
-**** Experiment to test effectiveness of Skalpel
-
-I assume Mark had a paper list. If that exists can I have a copy of it?
-
-**** Hyperref paper in repo?
-
-It would be nice to do this for any documents I produce, perhaps I can
-make that work with the paper as well.
-
-** Theory
-*** One single constraint syntax presentation
-**** Complete presentation of what was in the thesis
-
-Joe might like to see that. Is it worth putting anywhere useful?
-
-**** Names of terms
-
-Can we make the names of things more meaningful in the constraint
-syntax figure, or is the space cost too high?
-
-** Literature review
-
-Does Joe want to see what I'm producing for this incrementally? It
-might be boring to read about but I could put reports in the phd repo
-or something.
+Made a few notes on how to simplify the presentation of the theory. I
+think we can reduce the reader's reading time by simplifying the way
+dependancies are presented (as dependancies have a high presence in
+the constraint syntax), and merge a few similar things together that
+are then distinguished in the constraint semantics section.
