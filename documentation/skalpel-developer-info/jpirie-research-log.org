@@ -42,6 +42,11 @@ october 2013 - esop?
 * todos
 ** second year report document
 *** build list of all papers to go into literature review
+
+    I have a list now, constructed from Mark's dissertation and
+    Vincent's thesis. That list should end up going here, and I want
+    to be able to mark off which papers I have written up.
+
 *** build list of all implementations to go into implementation review
 *** equality types writeup
 
@@ -8861,6 +8866,7 @@ I'll perhaps install this webdemo fresh tomorrow so that it's running
 a new version of the binary.
 
 *** 2013-01-08
+tags: {write-up, papers}
 
 (2013-01-08-15:41)
 
@@ -8869,3 +8875,28 @@ think we can reduce the reader's reading time by simplifying the way
 dependancies are presented (as dependancies have a high presence in
 the constraint syntax), and merge a few similar things together that
 are then distinguished in the constraint semantics section.
+
+(2013-01-08-23:07)
+
+Literature review has been updated for TypeHope paper. I'm thinking
+that the way that the literature review is laid out where I have
+<paper> <description> <paper> <description> is going to make things a
+bit long winded. Perhaps this is fine, might be something to bring up
+with Joe.
+
+Also, I have changed the citation style to 'alpha' to add a little bit
+more context to the citations. I think it might be a good idea, but
+something to think about.
+
+(2013-01-09-00:19)
+
+Changed the constraint syntax notation for dependancies to lighten the
+load on the reader, I'll run this past Joe, he might not like
+this ::=_d notation...
+
+* questions for joe
+** citation style
+
+   Changed citation style to 'alpha' to add a bit of context. Any
+   issues I should know about, is this unconventional or against
+   university submission regulations or anything like that?
