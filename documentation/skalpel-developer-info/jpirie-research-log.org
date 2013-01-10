@@ -8900,3 +8900,12 @@ this ::=_d notation...
    Changed citation style to 'alpha' to add a bit of context. Any
    issues I should know about, is this unconventional or against
    university submission regulations or anything like that?
+
+** dependancy syntax
+
+   Is this ::=_d stuff alright or just confusing?
+
+
+** running an experiment
+
+   What do we still need before we can run an experiment?p
