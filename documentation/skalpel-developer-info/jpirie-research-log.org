@@ -8905,7 +8905,11 @@ this ::=_d notation...
 
    Is this ::=_d stuff alright or just confusing?
 
-
 ** running an experiment
 
    What do we still need before we can run an experiment?p
+** inclusion mapping
+
+Does the symbol $\hookrightarrow$ mean the same as
+http://planetmath.org/InclusionMapping.html? If it does, why aren't we
+using simply the standard subset symbol?
