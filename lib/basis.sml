@@ -69,6 +69,7 @@ val map    : ('a -> 'b) -> 'a list -> 'b list
 val foldl  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 val foldr  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 
+(* *** jbw: need to disable use of eqdatatype pseudo-keyword while using old Skalpel version *)
 eqdatatype 'a ref = ref of 'a
 val !  : 'a ref -> 'a
 val := : 'a ref * 'a -> unit
@@ -1192,6 +1193,11 @@ structure BinPrimIO  :> PRIM_IO
 structure TextPrimIO :> PRIM_IO
     where type array  = CharArray.array
     where type vector = CharVector.vector
+    (* jbw 2013-02-09: The sharing with CharVectorSlice.slice in the
+     * next line is missing from The SML Basis Library book.  There
+     * are probably lots of similar omissions which we will only find
+     * through experience. *)
+    where type vector_slice = CharVectorSlice.slice (* jbw 2013-02-09 *)
     where type elem   = Char.char    = _structTextPrimIO
 
 structure TextIO :> TEXT_IO
@@ -2736,6 +2742,72 @@ signature GET_OPT =
   end
 
 structure GetOpt :> GET_OPT = _structGetOpt
+
+(* DOM-style API (tree based) *)
+structure JSON :
+  sig
+    (* JSON.value does not admit equality, because one of the cases is
+     * of type real. *)
+    datatype value
+      = ARRAY of value list
+      | BOOL of bool
+      | FLOAT of real
+      | INT of IntInf.int
+      | NULL
+      | OBJECT of (string * value) list
+      | STRING of string
+  end = _structJSON
+
+structure JSONPrinter :
+  sig
+    val print : TextIO.outstream * JSON.value -> unit
+    val print' : {pretty:bool, strm:TextIO.outstream}
+                 -> JSON.value -> unit
+  end = _structJSONPrinter
+
+structure JSONParser :
+  sig
+    val parse : TextIO.instream -> JSON.value
+    val parseFile : string -> JSON.value
+  end = _structJSONParser
+
+(* SAX-style API (event based) *)
+structure JSONStreamPrinter :
+  sig
+    (* In fact, the signature on the JSONStreamPrinter structure is
+     * translucent, so you can see all of the part of the datatype
+     * printer.  However, the datatype context and its constructors
+     * are not exposed, so you can't do much with that component of a
+     * printer.  I think the intention is that this is supposed to be
+     * abstract.
+     *)
+    type printer (* = P of {ctx:context ref, indent:int ref, pretty:bool, strm:TextIO.outstream} *)
+    val null : printer -> unit
+    val boolean : printer * bool -> unit
+    val integer : printer * IntInf.int -> unit
+    val float : printer * real -> unit
+    val string : printer * string -> unit
+    val beginObject : printer -> unit
+    val objectKey : printer * string -> unit
+    val endObject : printer -> unit
+    val beginArray : printer -> unit
+    val endArray : printer -> unit
+    val new : TextIO.outstream -> printer
+    val new' : {pretty:bool, strm:TextIO.outstream} -> printer
+    val close : printer -> unit
+  end = _structJSONStreamPrinter
+
+structure JSONStreamParser :
+  sig
+    type 'a callbacks =
+      {boolean:'a * bool -> 'a, endArray:'a -> 'a, endObject:'a -> 'a,
+       error:'a * string -> 'a, float:'a * real -> 'a,
+       integer:'a * IntInf.int -> 'a, null:'a -> 'a,
+       objectKey:'a * string -> 'a, startArray:'a -> 'a,
+       startObject:'a -> 'a, string:'a * string -> 'a}
+    val parse : 'a callbacks -> TextIO.instream * 'a -> 'a
+    val parseFile : 'a callbacks -> string * 'a -> 'a
+  end = _structJSONSTreamParser
 
 (**********************************************************************)
 (* Defined by mlyacc *)
