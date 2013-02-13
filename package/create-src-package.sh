@@ -1,11 +1,6 @@
 ###################################################################
 # Copyright 2010 2011 John Pirie
-# Copyright 2011 Heriot-Watt University
-#
-#
-# This file is part of the ULTRA SML Type Error Slicer (SKALPEL) -
-# a Type Error Slicer for Standard ML written by the ULTRA Group of
-# Heriot-Watt University, Edinburgh.
+# Copyright 2011 2013 Heriot-Watt University
 #
 # SKALPEL is a free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,268 +15,88 @@
 # You should have received a copy of the GNU General Public License
 # along with SKALPEL.  If not, see <http://www.gnu.org/licenses/>.
 #
-#  o Authors:     John Pirie
-#  o Affiliation: Heriot-Watt University, MACS
-#  o Date:        January 2011
-#  o File name:   create-src-package.sh
-#  o Description: This script will generate source RPMs, binary RPMs,
-#                 and a source archive which can be used for a new
-#                 release of the slicer.
+#  o Authors: John Pirie o Affiliation: Heriot-Watt University, MACS o
+#  Date: January 2011 o File name: create-src-package.sh o
+#  Description: This script will generate source RPMs, binary RPMs, a
+#               source archive, a debian binary archive, a debian source archive,
+#               and a mac package which can be used for a new release of Skalpel.
 ###################################################################
 
 #!/bin/bash
 
 # the version of the source code is stored here
-VERSION=0.7
+VERSION=0.8
 
 mkdir -p skalpel-$VERSION
 
 echo "version number set to ${VERSION}"
 
-echo "calling 'make cmtomlb' in ../implementation/tes-seq/ ..."
-(cd ../implementation/tes-seq/; make cmtomlb)
+################################################################################
+#                             copy necessary files                             #
+################################################################################
 
-echo "copying configuration and makefile.in..."
-(cd ../implementation/; autoconf)
-cp ../implementation/configure skalpel-$VERSION/
-cp ../implementation/Makefile.in skalpel-$VERSION/
-
-########## documentation ##########
-
+# documentation
 echo "copying documentation..."
-mkdir -p skalpel-$VERSION/user-guide/
+mkdir -p skalpel-$VERSION/documentation/
+cp ../documentation/end-user/user-guide/user-guide.pdf skalpel-$VERSION/documentation/
+cp ../documentation/end-user/user-guide/info/Skalpel.info skalpel-$VERSION/documentation/
+cp ../documentation/end-user/man-pages/skalpel.1 skalpel-$VERSION/documentation/
 
-# user guide
-mkdir -p skalpel-$VERSION/user-guide/
-cp ../documentation/user-guide/user-guide.tex skalpel-$VERSION/user-guide/
-
-# readme
-mkdir -p skalpel-$VERSION/readme
-cp ../documentation/readme/README skalpel-$VERSION/readme/
-makeinfo ../documentation/user-guide/info/emacsmanual.texi
-cp Skalpel.info skalpel-$VERSION/readme/
-
-########## user interfaces ##########
-
+# user interface
 echo "copying user interfaces..."
+mkdir -p skalpel-$VERSION/front-ends/terminal-window
+cp ../front-ends/terminal-window/skalpel-legend         skalpel-$VERSION/front-ends/terminal-window/
+cp ../front-ends/terminal-window/skalpel-perl-to-bash   skalpel-$VERSION/front-ends/terminal-window/
+mkdir -p skalpel-$VERSION/front-ends/emacs
+cp ../front-ends/emacs/SKALPEL-HELP                  skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-config.el             skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-main.el               skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-menu.el               skalpel-$VERSION/front-ends/emacs/
+cp shared/skalpel-emacs/skalpel-emacs.1              skalpel-$VERSION/front-ends/emacs/
 
-mkdir -p skalpel-$VERSION/command-line
-cp ../ui/command-line/skalpel                skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel.1              skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel-bin.1          skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel-legend         skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel-legend.1       skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel-perl-to-bash   skalpel-$VERSION/command-line/
-cp ../ui/command-line/skalpel-perl-to-bash.1 skalpel-$VERSION/command-line/
-
-mkdir -p skalpel-$VERSION/EmacsUI
-cp ../ui/EmacsUI/SKALPEL-HELP                   skalpel-$VERSION/EmacsUI/
-cp ../ui/EmacsUI/skalpel-config.el              skalpel-$VERSION/EmacsUI/
-cp ../ui/EmacsUI/skalpel-debug-utils.el         skalpel-$VERSION/EmacsUI/
-cp ../ui/EmacsUI/skalpel-main.el                skalpel-$VERSION/EmacsUI/
-
-# fix the problem where the emacs.el file is looking at the wrong filename for the slicer binary
-cat skalpel-$VERSION/EmacsUI/skalpel-main.el | sed 's/\(defvar skalpel-slicer-bin \)\"slicer\"/\1\"skalpel-bin\"/' > skalpel-main2.el; mv skalpel-main2.el skalpel-$VERSION/EmacsUI/skalpel-main.el
-
-cp ../ui/EmacsUI/skalpel-menu.el               skalpel-$VERSION/EmacsUI/
-cp shared/skalpel-emacs/skalpel-emacs.1 skalpel-$VERSION/EmacsUI/
-
-########## database ##########
-
+# test database
 echo "copying the test database..."
+mkdir -p skalpel-$VERSION/testing/analysis-engine-tests/standard-ml/
+cp -r ../testing/analysis-engine-tests/standard-ml/*    skalpel-$VERSION/testing/analysis-engine-tests/standard-ml/
 
-mkdir -p skalpel-$VERSION/database/
-cp ../implementation/database/code*.sml    skalpel-$VERSION/database/
-cp ../implementation/database/output*.html skalpel-$VERSION/database/
-cp ../implementation/database/test*.sml    skalpel-$VERSION/database/
+# analysis-engine
+echo "copying analysis-engine..."
+mkdir -p skalpel-$VERSION/
+find ../analysis-engines/standard-ml -name "*.sml" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+find ../analysis-engines/standard-ml -name "*.sig" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+find ../analysis-engines/standard-ml -name "*.mlb" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+find ../analysis-engines/standard-ml -name "*.cm"  | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+cp ../analysis-engines/standard-ml/ChangeLog             skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/configure             skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/Makefile.in           skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/cmtomlb.sh            skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/mlton-control.sml.in  skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/README                skalpel-$VERSION/analysis-engines/standard-ml/
 
-########## implementation ##########
-
-echo "copying tes-seq..."
-
-mkdir -p skalpel-$VERSION/tes-seq
-
-# files in the directory itself
-cp ../implementation/tes-seq/ChangeLog            skalpel-$VERSION/tes-seq/
-### Why do we provide this cmtomlb.sh?
-### It would make sense to provide it if we were to provide the .cm files
-### as well.
-#cp ../implementation/tes-seq/cmtomlb.sh           skalpel-$VERSION/tes-seq/
-### Why do we provide this mlton-control.sml, it should be generated
-### from the initial one?
-#cp ../implementation/tes-seq/mlton-control.sml    skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/mlton-control.sml.in skalpel-$VERSION/tes-seq/
-### Why do we provide PGOps?
-#cp ../implementation/tes-seq/PGOps.sml            skalpel-$VERSION/tes-seq/
-### Why do we provide this README?
-cp ../implementation/tes-seq/README               skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/RunSlicer.sig        skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/RunSlicer.sml        skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/SlicerOptArgs.sig    skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/SlicerOptArgs.sml    skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/sources.cm           skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/sources.mlb          skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/Tester.sig           skalpel-$VERSION/tes-seq/
-cp ../implementation/tes-seq/Tester.sml           skalpel-$VERSION/tes-seq/
-
-#ast
-mkdir -p skalpel-$VERSION/tes-seq/ast
-cp ../implementation/tes-seq/ast/AstMLB.sml  skalpel-$VERSION/tes-seq/ast/
-cp ../implementation/tes-seq/ast/AstSML.sig  skalpel-$VERSION/tes-seq/ast/
-cp ../implementation/tes-seq/ast/AstSML.sml  skalpel-$VERSION/tes-seq/ast/
-cp ../implementation/tes-seq/ast/AstTest.sig skalpel-$VERSION/tes-seq/ast/
-cp ../implementation/tes-seq/ast/AstTest.sml skalpel-$VERSION/tes-seq/ast/
-cp ../implementation/tes-seq/ast/sources.mlb skalpel-$VERSION/tes-seq/ast/
-
-# constraint
-mkdir -p skalpel-$VERSION/tes-seq/constraint
-cp ../implementation/tes-seq/constraint/ClassId.sig skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/ClassId.sml skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/ConsId.sig  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/ConsId.sml  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Env.sig     skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Env.sml     skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Expans.sig  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Expans.sml  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Poly.sig    skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Poly.sml    skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Ty.sig      skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/Ty.sml      skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/ExtLab.sig  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/ExtLab.sml  skalpel-$VERSION/tes-seq/constraint/
-cp ../implementation/tes-seq/constraint/sources.mlb skalpel-$VERSION/tes-seq/constraint/
-
-# enum
-mkdir -p skalpel-$VERSION/tes-seq/enum
-cp ../implementation/tes-seq/enum/Enumeration.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Enumeration.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Filter.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Filter.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Fresh.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Fresh.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Minimisation.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Minimisation.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/SearchSpace.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/SearchSpace.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/State.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/StateEnv.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Unification.sig skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/Unification.sml skalpel-$VERSION/tes-seq/enum/
-cp ../implementation/tes-seq/enum/sources.mlb skalpel-$VERSION/tes-seq/enum/
-
-#error
-mkdir -p skalpel-$VERSION/tes-seq/error
-cp ../implementation/tes-seq/error/Error.sig skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/Error.sml skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/ErrorKind.sig skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/ErrorKind.sml skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/ExtReg.sig skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/ExtReg.sml skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/Html.sig skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/Html.sml skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/Tag.sig skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/Tag.sml skalpel-$VERSION/tes-seq/error/
-cp ../implementation/tes-seq/error/sources.mlb skalpel-$VERSION/tes-seq/error/
-
-# generation
-mkdir -p skalpel-$VERSION/tes-seq/generation
-cp ../implementation/tes-seq/generation/ValuePol.sig skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/ValuePol.sml skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Analyze.sig  skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Analyze.sml  skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Name.sig     skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Name.sml     skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Op.sig       skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/Op.sml       skalpel-$VERSION/tes-seq/generation/
-cp ../implementation/tes-seq/generation/sources.mlb  skalpel-$VERSION/tes-seq/generation/
-
-# parse
-mkdir -p skalpel-$VERSION/tes-seq/parse
-cp ../implementation/tes-seq/parse/Comment.sig   skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/Comment.sml   skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/Infix.sig     skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/Infix.sml     skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/ParseDefs.sig skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/ParseDefs.sml skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/LexDefs.sig   skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/LexDefs.sml   skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/ML.grm        skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/ML.lex        skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/MLB.grm       skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/MLB.lex       skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/Parser.sig    skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/Parser.sml    skalpel-$VERSION/tes-seq/parse/
-cp ../implementation/tes-seq/parse/sources.mlb   skalpel-$VERSION/tes-seq/parse/
-
-# ppp
-mkdir -p skalpel-$VERSION/tes-seq/ppp
-cp ../implementation/tes-seq/ppp/PPP-mlton.sml skalpel-$VERSION/tes-seq/ppp/
-cp ../implementation/tes-seq/ppp/PPP.sig skalpel-$VERSION/tes-seq/ppp/
-cp ../implementation/tes-seq/ppp/PPP.sml skalpel-$VERSION/tes-seq/ppp/
-cp ../implementation/tes-seq/ppp/sources.mlb skalpel-$VERSION/tes-seq/ppp
-
-# region
-mkdir -p skalpel-$VERSION/tes-seq/region/
-cp ../implementation/tes-seq/region/Region.sig skalpel-$VERSION/tes-seq/region/
-cp ../implementation/tes-seq/region/Region.sml skalpel-$VERSION/tes-seq/region/
-cp ../implementation/tes-seq/region/sources.mlb skalpel-$VERSION/tes-seq/region/
-
-# sets
-mkdir -p skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/Ident.sig skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/Ident.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/Label.sig skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/Label.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/LongId.sig skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/LongId.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdIdl.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdId.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdKey.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdLabLid.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdLid.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdSet.sig skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdSet.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/OrdStr.sml skalpel-$VERSION/tes-seq/sets/
-cp ../implementation/tes-seq/sets/sources.mlb skalpel-$VERSION/tes-seq/sets/
-
-# slicing
-mkdir -p skalpel-$VERSION/tes-seq/slicing
-cp ../implementation/tes-seq/slicing/Slice.sig skalpel-$VERSION/tes-seq/slicing/
-cp ../implementation/tes-seq/slicing/Slice.sml skalpel-$VERSION/tes-seq/slicing/
-cp ../implementation/tes-seq/slicing/sources.mlb skalpel-$VERSION/tes-seq/slicing/
-
-# utils
-mkdir -p skalpel-$VERSION/tes-seq/utils
-cp ../implementation/tes-seq/utils/Debug.sig skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/Debug.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/ErrorHandler.sig skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/ErrorHandler.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/Solution.sig skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/Solution.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/SymbSlice.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/Tools.sig skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/Tools.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/VTimer.sig skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/VTimer.sml skalpel-$VERSION/tes-seq/utils/
-cp ../implementation/tes-seq/utils/sources.mlb skalpel-$VERSION/tes-seq/utils/
-
-########## package ##########
+# package
 echo "copying extra documentation..."
 mkdir -p skalpel-$VERSION/package/shared/skalpel/
 cp shared/skalpel/README skalpel-$VERSION/package/shared/skalpel/
 cp shared/COMPILE skalpel-$VERSION/
 cp shared/COPYING skalpel-$VERSION/
 
-########## basis.sml ##########
-
+# basis
 echo "copying the basis..."
 mkdir -p skalpel-$VERSION/lib
-cp ../implementation/lib/basis.sml skalpel-$VERSION/lib/
+cp ../lib/basis.sml skalpel-$VERSION/lib/
+
+exit 0
+
+################################################################################
+#                       create source archive (.tar.gz)                        #
+################################################################################
 
 echo "creating archive..."
 tar -czf skalpel_${VERSION}-src.tar.gz skalpel-$VERSION
 
-########## create debian package ##########
+################################################################################
+#                  create debian source archive (-src.tar.gz)                  #
+################################################################################
 
 DSCFILE="skalpel_${VERSION}.dsc"
 
@@ -317,7 +132,10 @@ mv skalpel-${VERSION}.moved skalpel-${VERSION}
 
 echo "checking which packages to build..."
 
-######### check for rpmbuild ############
+################################################################################
+#                   create rpm and source rpm (.rpm, .srpm)                    #
+################################################################################
+
 rpmBuildCheck=`rpmbuild --version 2> /dev/null`
 
 if [ "$rpmBuildCheck" != "" ]
@@ -353,7 +171,10 @@ else
     echo "rpmcheck has NOT been detected - will not generate .rpm and .srpm"
 fi
 
-######### check for dpkg ############
+################################################################################
+#                         create debian package (.deb)                         #
+################################################################################
+
 dpkgBuildCheck=`dpkg --version 2> /dev/null`
 
 if [ "$dpkgBuildCheck" != "" ]
@@ -364,16 +185,18 @@ else
     echo "dpkg has NOT been detected - .deb will not be created"
 fi
 
-### please do not touch this section for the time being! - ta, Scott ########
-######### check for Mac pkg dependencies ############
+################################################################################
+#                          create mac package (.bom)                           #
+################################################################################
+
 bomCheck=`mkbom 2> /dev/null`
 bomOk=false;
 if [ "$bomCheck" != "mkbom: command not found" ]
-	then
-	echo "mkbom found.";
-	bomOk=true;
+then
+    echo "mkbom found.";
+    bomOk=true;
 else
-	echo "mkbom not found. Mac pkg cannot be created";
+    echo "mkbom not found. Mac pkg cannot be created";
 fi
 
 paxOk=false;
@@ -386,12 +209,15 @@ else
     echo "pax not found. Mac pkg cannot be created";
 fi
 
-## Sorry, I've changed the following if_then_else because it was breaking the script, vincent.
 if [[ "$paxOk" == true && "$bomOk" == true ]]
 then
     echo "building Mac pkg script";
-	# build Mac pkg script
+    # <insert build instructions here>
 fi
+
+################################################################################
+#                                   clean up                                   #
+################################################################################
 
 echo "cleaning up..."
 rm -rf tmpbuild/

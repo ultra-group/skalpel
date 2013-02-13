@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "eaaed043a4ae1475e9e871d35c975d3ed85eb51a"
+val SKALPEL_VERSION = "0.8"
 
 (* takes a boolean value b, if true then we are generating a binary for the web demo *)
 fun setWebDemo b = webdemo := b
@@ -145,7 +145,7 @@ fun genFinished (bfile, ffile) suff msg =
 	 in
 	     ()
 	 end
-	 handle IO.Io {name, function, cause} => print ("Input/Output error. Cannot open or close the following file: "^ffile^"\n")
+	 handle IO.Io {name, function, cause} => TextIO.output (TextIO.stdErr, "Input/Output error. Cannot open or close the following file: "^ffile^"\n")
     else ()
 
 (* prints the integer value of iderror *)
@@ -222,12 +222,12 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	(* handle errors depending on the developer option *)
 	val (bfm, msg) = if dev
 			 then run ()
-			      handle EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
+			      handle EH.TODO str => (TextIO.output (TextIO.stdErr, "TODO raised: " ^ str ^ "\n"); (false, str))
 			 else run ()
-			      handle EH.DeadBranch st => (print "the slicer encountered an impossible case\n"; (false, st))
-				   | EH.TODO str => (print ("TODO raised: " ^ str ^ "\n"); (false, str))
-				   | Fail st => (print ("Error: "^st^"\n"); (false, ""))
-				   | _ => (print "the slicer failed for some reason\n"; (false, ""))
+			      handle EH.DeadBranch st => (TextIO.output (TextIO.stdErr, "the slicer encountered an impossible case\n"); (false, st))
+				   | EH.TODO str => (TextIO.output (TextIO.stdErr, "TODO raised: " ^ str ^ "\n"); (false, str))
+				   | Fail st => (TextIO.output (TextIO.stdErr, "Error: " ^ st ^ "\n"); (false, ""))
+				   | _ => (TextIO.output (TextIO.stdErr, "the slicer failed for some reason\n"); (false, ""))
 
 	(* if the slicer didn't fail, print the lisp/perl messages *)
 	val fmlisp = if bfm then finishedLispMessage1 msg else finishedLispMessage2 msg
@@ -511,8 +511,9 @@ fun smlTesStrArgs strArgs =
 	     then bcs:=str
 	     else if option = "--search-space"
 	     then search:=str
-	     else (print ("Unknown option: "^option); raise Fail "Unknown argument fed as input"));
-	     parse tail)
+	     else (TextIO.output (TextIO.stdErr, "Unknown argument fed as input");
+		   raise Fail "Unknown argument fed as input"));
+	      parse tail)
     in
 	(* parse the arguments *)
 	if strArgs = ""

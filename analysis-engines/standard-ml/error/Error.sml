@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -243,6 +243,7 @@ fun printOnePerlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
     let val id = "id => " ^ Int.toString id
 	val cd = "assumptions => [" ^ toListSep (CD.toStringList deps ascid) ", " "\"" ^ "]"
 	val (idk, errk) = EK.printErrKind ek ascid
+	val errk = String.translate (fn #"\"" => "\\\"" | x=>(Char.toString x)) errk
 	val ek = "kind        => {id  => \"" ^ idk ^ "\", msg => \"" ^ errk ^ "\"}"
 	val rm = "remove      => " ^ printRemoves rem
 	val sl = "slice       => \"" ^ transfun2 (S.printSlice sl bslice) ^ "\""
