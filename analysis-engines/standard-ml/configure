@@ -137,9 +137,9 @@ echo                                                                          >>
 
 cat Makefile.in >> Makefile
 
-make sml-tes-deps
+# make sml-tes-deps
 
-make cmtomlb
+# make cmtomlb
 
 echo                                                  >> Makefile
 echo "${CURDIR}/bin/slicer-mlton: \\"                 >> Makefile
