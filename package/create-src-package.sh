@@ -27,6 +27,12 @@
 # the version of the source code is stored here
 VERSION=0.8
 
+if [ -d skalpel-$VERSION ]
+then
+    echo "File skalpel-$VERSION already exists in this directory. If this is an old version, delete it."
+    exit 1
+fi
+
 mkdir -p skalpel-$VERSION
 
 echo "version number set to ${VERSION}"
@@ -37,22 +43,24 @@ echo "version number set to ${VERSION}"
 
 # documentation
 echo "copying documentation..."
-mkdir -p skalpel-$VERSION/documentation/
-cp ../documentation/end-user/user-guide/user-guide.pdf skalpel-$VERSION/documentation/
-cp ../documentation/end-user/user-guide/info/Skalpel.info skalpel-$VERSION/documentation/
-cp ../documentation/end-user/man-pages/skalpel.1 skalpel-$VERSION/documentation/
+mkdir -p						 skalpel-$VERSION/documentation/
+cp ../documentation/end-user/user-guide/user-guide.pdf	 skalpel-$VERSION/documentation/
+cp ../documentation/end-user/info-pages/Skalpel.info	 skalpel-$VERSION/documentation/
+cp ../documentation/end-user/man-pages/skalpel.1	 skalpel-$VERSION/documentation/
+cp ../README						 skalpel-$VERSION/
+cp ../COPYING						 skalpel-$VERSION/
+
 
 # user interface
 echo "copying user interfaces..."
-mkdir -p skalpel-$VERSION/front-ends/terminal-window
-cp ../front-ends/terminal-window/skalpel-legend         skalpel-$VERSION/front-ends/terminal-window/
-cp ../front-ends/terminal-window/skalpel-perl-to-bash   skalpel-$VERSION/front-ends/terminal-window/
-mkdir -p skalpel-$VERSION/front-ends/emacs
-cp ../front-ends/emacs/SKALPEL-HELP                  skalpel-$VERSION/front-ends/emacs/
-cp ../front-ends/emacs/skalpel-config.el             skalpel-$VERSION/front-ends/emacs/
-cp ../front-ends/emacs/skalpel-main.el               skalpel-$VERSION/front-ends/emacs/
-cp ../front-ends/emacs/skalpel-menu.el               skalpel-$VERSION/front-ends/emacs/
-cp shared/skalpel-emacs/skalpel-emacs.1              skalpel-$VERSION/front-ends/emacs/
+mkdir -p						 skalpel-$VERSION/front-ends/terminal-window
+cp ../front-ends/terminal-window/skalpel-legend		 skalpel-$VERSION/front-ends/terminal-window/
+cp ../front-ends/terminal-window/skalpel-perl-to-bash	 skalpel-$VERSION/front-ends/terminal-window/
+mkdir -p						 skalpel-$VERSION/front-ends/emacs
+cp ../front-ends/emacs/SKALPEL-HELP			 skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-config.el		 skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-main.el			 skalpel-$VERSION/front-ends/emacs/
+cp ../front-ends/emacs/skalpel-menu.el			 skalpel-$VERSION/front-ends/emacs/
 
 # test database
 echo "copying the test database..."
@@ -65,20 +73,15 @@ mkdir -p skalpel-$VERSION/
 find ../analysis-engines/standard-ml -name "*.sml" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
 find ../analysis-engines/standard-ml -name "*.sig" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
 find ../analysis-engines/standard-ml -name "*.mlb" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+find ../analysis-engines/standard-ml -name "*.lex" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
+find ../analysis-engines/standard-ml -name "*.grm" | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
 find ../analysis-engines/standard-ml -name "*.cm"  | grep -v ".cm/"  | cpio -pd skalpel-$VERSION/analysis-engines
 cp ../analysis-engines/standard-ml/ChangeLog             skalpel-$VERSION/analysis-engines/standard-ml/
-cp ../analysis-engines/standard-ml/configure             skalpel-$VERSION/analysis-engines/standard-ml/
+cp ../analysis-engines/standard-ml/configure.ac          skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/Makefile.in           skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/cmtomlb.sh            skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/mlton-control.sml.in  skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/README                skalpel-$VERSION/analysis-engines/standard-ml/
-
-# package
-echo "copying extra documentation..."
-mkdir -p skalpel-$VERSION/package/shared/skalpel/
-cp shared/skalpel/README skalpel-$VERSION/package/shared/skalpel/
-cp shared/COMPILE skalpel-$VERSION/
-cp shared/COPYING skalpel-$VERSION/
 
 # basis
 echo "copying the basis..."
