@@ -1,5 +1,5 @@
 .\" Process this file with
-.\" groff -man -Tascii skalpel-bin.1
+.\" groff -man -Tascii skalpel.1
 .\"
 .\"
 \" ##############################################################
@@ -26,16 +26,81 @@
 \" ##
 \" ###############################################################
 \" ###############################################################
-.TH SKALPEL-BIN 1 "January 2010" Linux "User Manuals"
+.TH SKALPEL 1 "February 2013" Linux "User Manuals"
 .SH NAME
-skalpel-bin \- runs a type error slicer for SML.
+skalpel - a type error slicer for Standard ML
 .SH SYNOPSIS
-skalpel-bin
+skalpel [OPTION]... [FILE]
 .SH DESCRIPTION
-Users wishing to use the skalpel-bin command should instead use the
-.I skalpel
-command as it allows the user to use skalpel-bin in a more user
-friendly way.
+Skalpel is a type error slicer for SML, developed by the ULTRA group of
+Heriot-Watt University, Edinburgh.
+
+Traditional type error messages given for SML can be hard to decipher
+and often indicate incomplete and unprecise locations as the source of
+the programming error.  The error messages produced are also biased
+because they report only one location which is dependent on the way
+which the abstract syntax tree is traversed.
+
+Skalpel aims to eliminate these problems.  The error messages produced by
+the type error slicer offer textual explanations of the errors and
+highlights all and only those program points which contribute to the
+error.
+
+.SH OPTIONS
+
+-l <file> place output in <file> in lisp format
+
+-h <file> place output in <file> in HTML format
+
+-s <file> place output in <file> in SML format
+
+-j <file> place output in <file> in JSON format
+
+-x <file> place output in <file> in XML format
+
+-p <file> place output in <file> in perl format
+
+-t <timelimet> specify a numerical time limit
+
+-x <true/false> suppress exception handling (dev mode)
+
+-c <directory> Run analysis engine on tests in <directory>
+
+-e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)
+
+-b <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify file as basis)
+
+-d PARSING   shows debugging output during parsing various files
+
+-d NO_COLOURS                        doesn't put ANSI colour information in debug strings
+   ONE_RUN                           give debug output only once (don't show during minimisation process)
+   STATE                             gives internal state output
+   TESTING                           shows debugging info when running the test database
+   CONSTRAINT_PATH                   shows path taken through the constraint generator
+   CONSTRAINT_GENERATION             shows constraint generation debugging information
+   CONSTRAINT_SOLVING                shows constraint solving debugging information
+   PROGRAM_LABELLING <filename>      gives a labelled program output in latex to file specified in
+                                     environment variable $SKALPEL_LABELLED_PROGRAM
+   BASIS                             applies debugging flags also to the basis file
+   BASIS_LABELLING <filename>        gives a labelled basis output in latex to file specified in
+                                     environment variable $SKALPEL_LABELLED_BASIS
+   EQUALITY_TYPES                    debugging information for equality types
+
+-bo <0 | 1> If set to 1, hides basis slice in overloading errors
+
+-tab <tabwidth> define the tab width in user code regions
+
+-sol <solution> define solution to use (default 9)
+
+-min <true/false> if true, shows non-minimal errors
+
+--print-env <true/false> whether to print the environment
+
+--show-legend Shows the legend for notation and colour of slice display in the terminal
+
+--search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)
+
+--help Show this help text%
 
 .SH AUTHORS
 Joe Wells  <jbw@macs.hw.ac.uk>
@@ -51,6 +116,3 @@ Mark Wyper <mw105@macs.hw.ac.uk>
 Steven Shiells <ss215@macs.hw.ac.uk>
 
 David Dunsmore <dd35@macs.hw.ac.uk>
-
-.SH "SEE ALSO"
-skalpel(1), skalpel-legend(1), skalpel-perl-to-bash(1).
