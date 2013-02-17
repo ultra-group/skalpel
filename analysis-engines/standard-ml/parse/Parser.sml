@@ -1,4 +1,4 @@
-(* Copyright 2002 2009 2010 2012 Heriot-Watt University
+(* Copyright 2002 2009 2010 2012 2013 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,19 +136,19 @@ fun parse file inputStream nextNodeLabel nasc =
 	   then raise PD.ParseError (str, reg)
 	   else (ast, m, asc)
 	end
-	handle LD.LexError x            => (print "LexError"; dummyparsing [x] nextNodeLabel nasc)
-	     | PD.ParseError (msg, reg) => (print "ParseError"; dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
+	handle LD.LexError x            => (TextIO.output (TextIO.stdErr, "Error: LexError\n") ; dummyparsing [x] nextNodeLabel nasc)
+	     | PD.ParseError (msg, reg) => (TextIO.output (TextIO.stdErr, "Error: ParseError\n"); dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
 	     | _ => (print (". Region = ("^(Int.toString(#1(!posref)))^", "^(Int.toString(#2(!posref)))^")\n");
 		     if (#2(!posref) = 1)
 		     then (dummyparsing [(
 			   "syntax error",
-			   "our parser threw an exception, there is an error somewhere previously in the file (likely close) from the end of the highlighted region",
+			   "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
 			   [{from= (#1(!posref)-1, #2(!posref)), (* highlight something for start of line regions *)
 			     to= (#1(!posref)-1, #2(!posref)+999)}])]
 					nextNodeLabel nasc)
 		     else dummyparsing [(
 			  "syntax error",
-			  "our parser threw an exception, there is an error somewhere previously in the file (likely close) from the end of the highlighted region",
+			  "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
 			  [{from= (#1(!posref), #2(!posref) -1), (* highlight something for end of line regions *)
 			    to= !posref}])]
 				       nextNodeLabel nasc)
@@ -244,7 +244,7 @@ fun convertToFull file fop fnames =
 		   then createOneErrFileAlready f fop
 		   else (SOME f, [])
 		end
-		handle OS.SysErr (str,_) => (print ("OS.SysErr was raised with string: \""^str^"\" on file "^file^"\n");
+		handle OS.SysErr (str,_) => (TextIO.output (TextIO.stdErr, "OS.SysErr was raised with string: \""^str^"\" on file "^file^"\n");
 					     createOneErrFileAccess file fop))
       | _ => createOneErrFileAccess file fop
 

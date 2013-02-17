@@ -5,7 +5,7 @@
 ##
 ## Copyright 2010 Vincent Rahli
 ## Copyright 2009, 2010 Steven Shiells
-## Copyright 2012 Heriot-Watt University
+## Copyright 2012 2013 Heriot-Watt University
 ##
 ## Skalpel is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -152,6 +152,11 @@ sub fromColToClashNestedBox {
 ##########################################
 ## A function which treats a lines of code
 ##########################################
+sub protect {
+    my $stuff = $_[0];
+    $stuff =~ s/(["\$\\])/\\$1/g;
+    return $stuff; }
+
 sub treatLine {
     my ($line, $regs, $pos, $isBox, $lineno) = @_;
     my $newline;
@@ -165,12 +170,15 @@ sub treatLine {
 	    my $missfrom = $prevline + 1;
 	    my $missto = $lineno - 1;
 	    if ($missfrom eq $missto){
-		$newline = "echo -e \"Line $missto:\t\t ...\"\n";
+		## display line number
+		$newline = "echo -e \"$missto:\t\t ...\"\n";
 	    }else{
-		$newline = "echo -e \"Lines $missfrom-$missto:\t ...\"\n";
+		## display line numbers
+		$newline = "echo -e \"$missfrom-$missto:\t\t ...\"\n";
 	    }
  	}
-	$newline .= "echo -en \"Line $lineno: ";
+	## display line number
+	$newline .= "echo -en \"$lineno:\t\t ";
     }
     chomp $line;
     ## Extract the details of the region and apply the appropraite highlighting
@@ -184,8 +192,8 @@ sub treatLine {
 	my $re = $reg->{'reg'};
 	if ($nd eq "L") {
 	    ## If the region is a leaf (Normal Highlighting)
-	    my $st1 = substr ($line, $pos, $c1 - $pos - 1);
-	    my $st2 = substr ($line, $c1 - 1, $c2 - $c1 + 1);
+	    my $st1 = protect (substr ($line, $pos, $c1 - $pos - 1));
+            my $st2 = protect (substr ($line, $c1 - 1, $c2 - $c1 + 1));
 	    my $clashb = (fromColToClash $co);
 	    my $clashe = "\e[40m";
 	    $pos = $c2;
@@ -193,7 +201,7 @@ sub treatLine {
 	}
 	## If the region is a node (Box)
 	elsif ($nd eq "N") {
-	    my $st1 = substr ($line, $pos, $c1 - $pos - 1);
+	    my $st1 = protect (substr ($line, $pos, $c1 - $pos - 1));
 	    my $st2 = treatLine (substr ($line, 0, $c2), $re, $c1 - 1, 1);
 	    $boxCount++;
 	    my $clashb;
@@ -211,7 +219,7 @@ sub treatLine {
 	    ## If the region is a head (pipe)
 	elsif ($nd eq "H") {
 	    if ($c1 == $c2) {} else {die ("DeadBranch");} # for such a region the end and beginning have to be equal
-	    my $st = substr ($line, $pos, $c1 - $pos - 1);
+	    my $st = protect (substr ($line, $pos, $c1 - $pos - 1));
 	    my $clashb = (fromColToClash $co);
 	    my $clashe = $resetCol;
 	    $pos = $c2 - 1;
@@ -219,7 +227,7 @@ sub treatLine {
 	}
     }
     if ($pos < (length $line)){
-	$newline .= substr ($line, $pos, (length $line) - $pos);
+	$newline .= protect (substr ($line, $pos, (length $line) - $pos));
     }
     $newline .= "\"\n";
     if ($isBox) {} else {$newline .= "echo\n";}
@@ -264,9 +272,11 @@ sub treatRegions {
 	my $missto = $cline - 1;
 	## Show the line numbers of the code that has been missed out.
 	if ($missfrom eq $missto){
-	    $endofcode = "echo -e \"Line $missto:\t\t ...\"\n";
+	    ## display line number
+	    $endofcode = "echo -e \"$missto:\t\t ...\"\n";
 	}else{
-	    $endofcode = "echo -e \"Lines $missfrom-$missto:\t ...\"\n";
+	    ## display line numbers
+	    $endofcode = "echo -e \"$missfrom-$missto:\t\t ...\"\n";
 	}
 	push (@ret, $endofcode);
     }
@@ -301,7 +311,8 @@ sub treatError {
 	    if ($bname eq "/usr/share/skalpel/basis.sml"){
 		push (@lines, "\necho -e \"" . $title . "Basis slice:" . $resetCol . "\"\n")
 	    }else{
-		push (@lines, "\necho -e \"" . $title . "Slice in context:" . $resetCol . "\"\n")
+		# push (@lines, "\necho -e \"" . $title . "Slice in context:" . $resetCol . "\"\n")
+		push (@lines, "\necho -e \"" . $title . $bname . ":" . $resetCol . "\"\n")
 	    }
 	    ## Treat the region
 	    @lines = (@lines, treatRegions ($filein, $bname, $regs));
@@ -318,6 +329,7 @@ sub treatError {
 	$ret .= "#! /bin/bash\n";
 	$ret .= "\necho -e \"" . $stand . $title . $msg . ":" . $resetCol . "\"\n";
 	$ret .= "echo\n";
+	$ret .= "\necho -e \"" . $title . "Slice in context:" . $resetCol . "\n\"\n";
 	#### Highlighted Code ####
 	$ret .= "@lines";
 	$ret .= "echo\n";
