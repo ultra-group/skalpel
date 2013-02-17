@@ -130,6 +130,10 @@ mlton-base:
 mlton-bin-webdemo: mlton-base
 	echo "val _ = Slicer.setWebDemo true;" >> mlton-control.sml
 	echo "val _ = slicerpp ();" >> mlton-control.sml
+
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+
 	mlton -output bin/skalpel-webdemo-bin sources.mlb
 
 ## my-smlnj-binary is similar to binary but for another function.
@@ -200,6 +204,10 @@ smlnj-bin: ml-binary
 
 mlton-bin-gen: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
+
+	# makes implementation directory
+	mkdir -p ${SOURCESDIR}/bin
+
 	mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
 	mv RunSlicer.sml.original RunSlicer.sml
 

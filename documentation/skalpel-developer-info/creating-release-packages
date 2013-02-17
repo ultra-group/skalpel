@@ -1,0 +1,48 @@
+##############################################################
+#
+# Copyright 2013 Heriot-Watt University
+#
+# Skalpel is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with skalpel.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: John Pirie
+# Description: This file describes how to build a release
+#
+###############################################################
+
+1. Check and update all documentation.
+
+2. Build all documentation. (.texi turned into .info, .tex turned into .pdf etc).
+
+3. Check Skalpel can be compiled correctly on that machine.
+
+4. Change the value of the SKALPEL_VERSION variable in RunSlicer.sml to the new version number and recompile.
+
+5. Change the value of VERSION in create-src-package.sh to the new version number.
+
+6. Check that inside the create-src-package.sh script all files to be copied exist, adding new paths for new files as appropriate.
+
+7. Run create-src-package.sh on a red hat like machine. This will create:
+
+   - the source archive (.tar.gz)
+   - the debian source package (-src.tar.gz)
+   - rpm package (.rpm)
+   - source rpm package (.srpm)
+
+8. Run create-src-package.sh on a debian machine. This will create:
+
+   - the debian package (.deb)
+
+9. (currently broken, skip this step) Run create-src-package.sh on a mac machine. This will create:
+
+   - the mac package (.bom)
