@@ -35,6 +35,14 @@
  * definitions because they are currently only recognized as the real
  * built-in types if they are specs in a structure named Basis. *)
 
+(* *** We should not use the name Basis because the name might be the
+ * same as or similar to the name of a user-defined structure.  We
+ * should use a special magic only-recognizable-by-Skalpel name
+ * syntax.
+ *
+ * Alternatively, we could introduce specs at the top level with our
+ * special magic comments?  No need to use a signature? *)
+
 structure Basis :> sig
 
 datatype bool = false | true
@@ -69,7 +77,10 @@ val map    : ('a -> 'b) -> 'a list -> 'b list
 val foldl  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 val foldr  : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b
 
-(* *** jbw: need to disable use of eqdatatype pseudo-keyword while using old Skalpel version *)
+(* *** jbw: I need to temporarily disable use of the eqdatatype
+ * pseudo-keyword while using old Skalpel version.  Maybe we should
+ * make ref magic using a magic comment rather than using a
+ * non-standard keyword? *)
 eqdatatype 'a ref = ref of 'a
 val !  : 'a ref -> 'a
 val := : 'a ref * 'a -> unit
@@ -132,6 +143,40 @@ exception Subscript
 end = _structBasis
 
 open Basis
+
+(*
+
+(* *** Technically, some of what we have put in Basis above is
+ * supposed to go into General, like so: *)
+
+signature GENERAL
+  = sig
+      type unit = {}
+      type exn = exn
+
+      exception Bind
+      exception Match
+      exception Chr
+      exception Div
+      exception Domain
+      exception Fail of string
+      exception Overflow
+      exception Size
+      exception Span
+      exception Subscript
+
+      val exnName : exn -> string
+      val exnMessage : exn -> string
+      datatype order = LESS | EQUAL | GREATER
+      val ! : ’a ref -> ’a
+      val := : ’a ref * ’a -> unit
+      val o : (’b -> ’c) * (’a -> ’b) -> ’a -> ’c
+      val before : ’a * unit -> 'a
+      val ignore : 'a -> unit
+    end
+structure General :> GENERAL = _structGeneral
+open General
+*)
 
 signature LIST =
   sig
