@@ -24,7 +24,7 @@
 
 structure Debug :> DEBUG = struct
 
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER | BLANK
 datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP
 
 (* used to generate random colors for brackets of labelled program output *)
@@ -78,6 +78,7 @@ fun printFilename JSON   = "JsonParser.sml"
   | printFilename ENV    = "Env.sml"
   | printFilename TEST   = "Tester.sml"
   | printFilename PARSER = "Parser.sml"
+  | printFilename BLANK = ""
 
 (* this s hould later become printDebug and the old printDebug should go away *)
 fun printDebugFeature file EQUALITY_TYPES stringFunction =

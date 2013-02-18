@@ -34,6 +34,7 @@ signature DEBUG = sig
 			| RUN      (* RunSlicer.sml *)
 			| ENV      (* Env.sml *)
 			| PARSER   (* Parser.sml *)
+			| BLANK    (* empty string *)
 
     val debugProgramLabelling : bool ref
     val oneRunOnly : bool ref

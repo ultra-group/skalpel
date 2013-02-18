@@ -1,30 +1,26 @@
 ######################################################################
-# Copyright 2009 2010 2011 2012 Heriot-Watt University
+# Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
 #
-#
-# This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
-# a Type Error Slicer for Standard ML written by the ULTRA Group of
-# Heriot-Watt University, Edinburgh.
-#
-# SMLTES is a free software: you can redistribute it and/or modify
+# Skalpel is a free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# SMLTES is distributed in the hope that it will be useful,
+# Skalpel is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+# along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
 #
-#  o Authors:     Vincent Rahli
+#  o Authors:     Vincent Rahli, John Pirie
 #  o Affiliation: Heriot-Watt University, MACS
 #  o Date:        25 May 2010
 #  o File name:   Makefile.in
 #  o Description: initial Makefile from which a Makefile file can be
-#      generated using the configure script
+#      		  generated using the configure script (use autoconf
+#                 to generate the configure script)
 ######################################################################
 
 SOURCESDIR = ${CURDIR}
@@ -204,7 +200,7 @@ clean: cleaner
 
 smlnj-bin: ml-binary
 
-mlton-bin-gen: mlton-base
+mlton-bin: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 
 	# makes implementation directory
@@ -218,8 +214,6 @@ mlton-bin-gen: mlton-base
 # the dependencies of the mlton binary.
 # The problem is that then it is done twice because it's done
 # again in mlton-bin-gen.
-mlton-bin: mlton-base ${SOURCESDIR}/bin/slicer-mlton
-
 polyml-bin:
 	./cmtomlb.sh cmtopoly
 	poly < FILES.sml
@@ -246,7 +240,6 @@ smlnj-profile:
 install:
 	mkdir -p $(DESTDIR)@prefix@/bin/
 	cp ${SOURCESDIR}/bin/skalpel             $(DESTDIR)@prefix@/bin/
-	cp ../../front-ends/terminal-window/skalpel-perl-to-bash    $(DESTDIR)@prefix@/bin/
 
 	mkdir -p $(DESTDIR)@prefix@/share/skalpel/
 	cp ../../lib/basis.sml $(DESTDIR)@prefix@/share/skalpel/
