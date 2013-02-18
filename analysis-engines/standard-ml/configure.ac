@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(SMLTES, 0.6, rahli@macs.hw.ac.uk)
+AC_INIT(Skalpel, 0.8, jpirie23@gmail.com)
 
 # Checks for programs.
 #AC_PROG_LEX

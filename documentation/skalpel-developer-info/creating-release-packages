@@ -28,21 +28,23 @@
 
 4. Change the value of the SKALPEL_VERSION variable in RunSlicer.sml to the new version number and recompile.
 
-5. Change the value of VERSION in create-src-package.sh to the new version number.
+5. Change the value of the version in AC_INIT in the configure.ac script in the analysis engine.
 
-6. Check that inside the create-src-package.sh script all files to be copied exist, adding new paths for new files as appropriate.
+6. Change the value of VERSION in create-src-package.sh to the new version number.
 
-7. Run create-src-package.sh on a red hat like machine. This will create:
+7. Check that inside the create-src-package.sh script all files to be copied exist, adding new paths for new files as appropriate.
+
+8. Run create-src-package.sh on a red hat based machine. This will create:
 
    - the source archive (.tar.gz)
    - the debian source package (-src.tar.gz)
    - rpm package (.rpm)
    - source rpm package (.srpm)
 
-8. Run create-src-package.sh on a debian machine. This will create:
+9. Run create-src-package.sh on a debian machine. This will create:
 
    - the debian package (.deb)
 
-9. (currently broken, skip this step) Run create-src-package.sh on a mac machine. This will create:
+10. (currently broken, skip this step) Run create-src-package.sh on a mac machine. This will create:
 
    - the mac package (.bom)

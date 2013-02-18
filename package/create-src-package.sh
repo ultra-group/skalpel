@@ -53,9 +53,6 @@ cp ../COPYING						 skalpel-$VERSION/
 
 # user interface
 echo "copying user interfaces..."
-mkdir -p						 skalpel-$VERSION/front-ends/terminal-window
-cp ../front-ends/terminal-window/skalpel-legend		 skalpel-$VERSION/front-ends/terminal-window/
-cp ../front-ends/terminal-window/skalpel-perl-to-bash	 skalpel-$VERSION/front-ends/terminal-window/
 mkdir -p						 skalpel-$VERSION/front-ends/emacs
 cp ../front-ends/emacs/SKALPEL-HELP			 skalpel-$VERSION/front-ends/emacs/
 cp ../front-ends/emacs/skalpel-config.el		 skalpel-$VERSION/front-ends/emacs/
@@ -81,7 +78,6 @@ cp ../analysis-engines/standard-ml/configure.ac          skalpel-$VERSION/analys
 cp ../analysis-engines/standard-ml/Makefile.in           skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/cmtomlb.sh            skalpel-$VERSION/analysis-engines/standard-ml/
 cp ../analysis-engines/standard-ml/mlton-control.sml.in  skalpel-$VERSION/analysis-engines/standard-ml/
-cp ../analysis-engines/standard-ml/README                skalpel-$VERSION/analysis-engines/standard-ml/
 
 # basis
 echo "copying the basis..."
