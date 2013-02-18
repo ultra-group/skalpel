@@ -4,6 +4,7 @@
 @c ##
 @c ##Copyright 2010 Steven Shiells
 @c ##Copyright 2011 John Pirie
+@c ##Copyright 2013 Heriot-Watt University
 @c ##
 @c ## This file is part of skalpel-emacs - an Emacs User Interface for a
 @c ## Type Error Slicer for Standard ML written by the ULTRA Group of 

@@ -225,41 +225,6 @@ fun transfun1 #"\""    = "\\\""
 
 fun transfun2 st = String.translate transfun1 st
 
-(* quick hack for the next release to reduce overloading information from the basis *)
-fun removeBasisSlice sl =
-let
-    fun stripBasisSlice sl =
-	let
-	    (* we start at two because when we look for the start of the basis slice, we take
-             * two brackets into account *)
-	    val bracketBalancer = ref 2;
-
-	    (* locates the start of the slice for the basis *)
-	    fun findBasisSlice [] = []
-	      | findBasisSlice (h::t) =
-		if h = #"\168" (* opening slice bracket *)
-		then (bracketBalancer := !bracketBalancer + 1; findBasisSlice t)
-		else
-		    if h = #"\169" (* closing slice bracket *)
-		    then (bracketBalancer := !bracketBalancer - 1;
-			  if !bracketBalancer = 0
-			  then t
-			  else findBasisSlice t)
-		    else findBasisSlice t
-	in
-	    String.implode (findBasisSlice sl)
-	end
-
-    fun findStartBasisSlice sl =
-	if (String.extract (sl, 0, SOME(11))) = "..structure"
-	   andalso
-	   (String.extract (sl, 15, SOME(7))) = "..Basis"
-	then stripBasisSlice (String.explode (String.extract (sl, 20, NONE)))
-	else findStartBasisSlice (String.extract (sl, 1, NONE))
-in
-    findStartBasisSlice sl
-end
-
 fun debuggingHTML errl
 		  (ast, m, ascid)
 		  bmin
@@ -293,7 +258,7 @@ fun errorsToXML [] _ _ _ = ""
 	sep ^ "<remove>"       ^ rem            ^ "</remove>\n"       ^
 	sep ^ "<time>"         ^ t              ^ "</time>\n"         ^
 	(if (String.isSubstring "overload" ek  andalso basisoverloading = 0)
-	 then sep ^ "<slice>"  ^ (removeBasisSlice sl) ^ "</slice>\n"
+	 then sep ^ "<slice>"  ^ (ERR.removeBasisSlice sl) ^ "</slice>\n"
 	 else sep ^ "<slice>"  ^ sl             ^ "</slice>\n" )      ^
 	sep ^ "<regions>"      ^ reg            ^ "</regions>\n"      ^
 	sep ^ "<minimal>"      ^ min            ^ "</minimal>\n"      ^
@@ -382,7 +347,7 @@ fun errorsToSML [] _ _ _ = ""
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "slice       = \"" ^ (ERR.removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
@@ -395,7 +360,7 @@ fun errorsToSML [] _ _ _ = ""
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "slice       = \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "slice       = \"" ^ (ERR.removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
@@ -410,7 +375,7 @@ fun errorsToJSON [] _ _ _ = ""
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (ERR.removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
@@ -423,7 +388,7 @@ fun errorsToJSON [] _ _ _ = ""
 		    begsep ^ " " ^ sk ^ ",\n" ^
 		    begsep ^ " " ^ tm ^ ",\n" ^
 		    (if String.isSubstring "Overload" sk andalso basisoverloading = 0
-		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (removeBasisSlice sl) ^ ",\n")
+		     then (begsep ^ " " ^ "\"slice\"       : \"" ^ (ERR.removeBasisSlice sl) ^ ",\n")
 		     else (begsep ^ " " ^ sl ^ ",\n")) ^
 		    begsep ^ " " ^ sa ^ ",\n" ^
 		    begsep ^ " " ^ re ^ "}"
@@ -677,7 +642,7 @@ fun debuggingLISP' [] _ _ _ _ = ""
 	val re = ind' ^ " " ^ re (* regions *)
 	val mn = ind' ^ " " ^ mn
     in (if String.isSubstring "OV" ek andalso basisoverloading = 0
-	then ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ "(slice . \"" ^ (removeBasisSlice sl) ^ "\n" ^ (*at ^ "\n" ^*) ap ^ "\n" ^ ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")"
+	then ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ "(slice . \"" ^ (ERR.removeBasisSlice sl) ^ "\n" ^ (*at ^ "\n" ^*) ap ^ "\n" ^ ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")"
 	else ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ sl ^ "\n" ^ (*at ^ "\n" ^*) ap ^ "\n" ^ ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")"
 	)
     end (* at is the ast of the slice *)
@@ -693,7 +658,7 @@ fun debuggingLISP' [] _ _ _ _ = ""
 	val mn = ind' ^ " " ^ mn
 	val xs = debuggingLISP' errs ascid ind' bslice basisoverloading
     in (if String.isSubstring "OV" ek andalso basisoverloading = 0
-	then ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ "(slice . \"" ^ (removeBasisSlice sl) ^ "\n" ^ at ^ "\n" ^ (*ap ^ "\n" ^*) ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")\n" ^ xs
+	then ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ "(slice . \"" ^ (ERR.removeBasisSlice sl) ^ "\n" ^ at ^ "\n" ^ (*ap ^ "\n" ^*) ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")\n" ^ xs
 	else ind ^ "(" ^ id ^ "\n" ^ re ^ "\n" ^ sl ^ "\n" ^ at ^ "\n" ^ (*ap ^ "\n" ^*) ek ^ "\n" ^ rm ^ "\n" ^ mn ^ ")\n" ^ xs
        )
     end
@@ -708,7 +673,7 @@ fun debuggingPERL' [] _ _ _ _ = ""
        "{   "    ^ id ^
        ",\n    " ^ re ^
        (if String.isSubstring "OV" ek andalso basisoverloading = 0
-	then (",\n    " ^ "slice     =>\"" ^ (removeBasisSlice sl))
+	then (",\n    " ^ "slice     =>\"" ^ (ERR.removeBasisSlice sl))
 	else (",\n    " ^ sl)) ^
        ",\n    " ^ ap ^
        ",\n    " ^ ek ^
@@ -723,7 +688,7 @@ fun debuggingPERL' [] _ _ _ _ = ""
        "{   "    ^ id ^
        ",\n    " ^ re ^
        (if String.isSubstring "OV" ek andalso basisoverloading = 0
-	then (",\n    " ^ "slice     =>\"" ^ (removeBasisSlice sl))
+	then (",\n    " ^ "slice     =>\"" ^ (ERR.removeBasisSlice sl))
 	else (",\n    " ^ sl)) ^
        ",\n    " ^ ap ^
        ",\n    " ^ ek ^
@@ -734,6 +699,17 @@ fun debuggingPERL' [] _ _ _ _ = ""
 fun debuggingPERL errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     "my @error = (" ^ (debuggingPERL' errl ascid "" bslice basisoverloading) ^ ");\n" ^
     "sub getError { return @error; }"
+
+
+fun debuggingBASH' [] _ _ _ _ = ()
+  | debuggingBASH' [err] ascid ind bslice basisoverloading =
+    ERR.printOneBashErr err ascid bslice basisoverloading
+  | debuggingBASH' (h::t) ascid ind bslice basisoverloading =
+    (ERR.printOneBashErr h ascid bslice basisoverloading;
+     debuggingBASH' t ascid ind bslice basisoverloading)
+
+fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
+    (debuggingBASH' errl ascid "" bslice basisoverloading)
 
 
 

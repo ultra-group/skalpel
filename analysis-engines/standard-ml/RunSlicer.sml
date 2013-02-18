@@ -120,15 +120,16 @@ fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
 	     val _     = TextIO.closeOut stout
 	     val _     = OS.FileSys.rename {old = file', new = file}
 	 in
-	     if (!terminalSlices) <> NO_DISPLAY andalso suff=".pl"
-	     then
-		 (* this will probably not work on the windows operating system- need to check this! *)
-		 let
-		     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^"; for FILE in "^ffile^"-"^(Int.toString counter)^".sh ; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; rm -f "^ffile^"*.sh; done;")  handle OS.SysErr (str, opt) => raise Fail str
-		 in
-		     ()
-		 end
-	     else ()
+	     (* if (!terminalSlices) <> NO_DISPLAY andalso suff=".pl" *)
+	     (* then *)
+	     (* 	 (* this will probably not work on the windows operating system- need to check this! *) *)
+	     (* 	 let *)
+	     (* 	     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^"; for FILE in "^ffile^"-"^(Int.toString counter)^".sh ; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; rm -f "^ffile^"*.sh; done;")  handle OS.SysErr (str, opt) => raise Fail str *)
+	     (* 	 in *)
+	     (* 	     () *)
+	     (* 	 end *)
+	     (* else () *)
+	     ()
 	 end
     else ()
 
@@ -172,13 +173,14 @@ fun printFound counter errors time =
  * to the system *)
 fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading filesin
 	   errs parse bmin times cs initlab name st counter time =
-    let val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading Tester.removeBasisSlice
+    let val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading ER.removeBasisSlice
 	val dbgxml   = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbgsml   = Tester.debuggingSML  errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbgjson  = Tester.debuggingJSON  errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbglisp  = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
+	val dbgbash  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
 	val _ = if bhtml then dbghtml' st else ()
 	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st filesin
 	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st filesin
@@ -224,7 +226,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 			 then run ()
 			      handle EH.TODO str => (TextIO.output (TextIO.stdErr, "TODO raised: " ^ str ^ "\n"); (false, str))
 			 else run ()
-			      handle EH.DeadBranch st => (TextIO.output (TextIO.stdErr, "the slicer encountered an impossible case\n"); (false, st))
+			      handle EH.DeadBranch st => (TextIO.output (TextIO.stdErr, ("the slicer encountered an impossible case: "^st^"\n")); (false, st))
 				   | EH.TODO str => (TextIO.output (TextIO.stdErr, "TODO raised: " ^ str ^ "\n"); (false, str))
 				   | Fail st => (TextIO.output (TextIO.stdErr, "Error: " ^ st ^ "\n"); (false, ""))
 				   | _ => (TextIO.output (TextIO.stdErr, "the slicer failed for some reason\n"); (false, ""))
@@ -334,6 +336,54 @@ fun smltes ({fileBas     : string,
  * slicer. *)
 open SlicerOptArgs
 
+
+fun printLegend () =
+    let
+	val indent=""
+	fun printReset str = print (str^(!D.textReset))
+    in
+	(printReset ((#yellow (!D.underlineColors))^"Legend:\n\n");
+	 printReset ("  "^(#red (!D.backgroundColors))^"red highlights\n");
+	 printReset "  - Indicates that the highlighted code contributes to the error.\n\n";
+	 printReset ("  "^(#blue (!D.backgroundColors))^"blue" ^ (!D.textReset) ^ " / " ^ (#cyan (!D.backgroundColors)) ^ "cyan" ^ (!D.textReset) ^ " highlights \n");
+	 printReset "  - Indicates that the highlighted code is an end point of either\n";
+	 printReset  "\t - a type constructor clash\n\t - an arity clash\n\t - a record clash\n";
+	 printReset  "\t NOTE: The cyan used here is equivalent to the gray\n\t       used by other interfaces of the type error slicer.\n\n";
+
+	 printReset ("  "^(#green (!D.backgroundColors))^"green highlights\n");
+	 printReset "  - Indicates that the highlighted code is the endpoint of a record clash.\n\n";
+
+	 printReset  ("  "^(#purple (!D.backgroundColors))^"purple highlights\n");
+	 printReset "  - Indicates that the highlighted code either\n";
+	 printReset  "\t - provides information about an identifier\n\t - is expansive.\n\n";
+
+	 printReset ("  "^(#yellow (!D.backgroundColors))^"yellow highlights\n");
+	 printReset "  - Indicates that the type error slicer cannot parse the file.\n\n";
+
+	 printReset  ("  "^ (#purple (!D.underlineColors)) ^"underlined text\n");
+	 printReset "  - The use of the underline with no background highlighting is used to\n";
+	 printReset  "    signify that the underlined text may be irrelevant, but its presence\n";
+	 printReset  "    definitely contributes to the error.\n";
+	 printReset "  - The use of the underline can indicate on of two things;\n";
+	 printReset  "\t1. The application of a function to an argument (the underlined\n";
+	 printReset  "\t    code) takes part in an error.\n";
+	 printReset  "\t2. The underlined code is the unique argument of a type name\n";
+	 printReset  "\t   to make explicit that its arity is 1 (that is, it has 1 argument).\n";
+	 printReset "  - NOTE: The colour of the underline can be any of those above.\n";
+	 printReset "  - NOTE: This notation is equivalent to the box notation used in\n";
+	 printReset "          other interfaces to the type error slicer.\n\n";
+
+
+	 printReset ("  " ^ (#blue (!D.underlineColors)) ^ "foo" ^ (#red (!D.underlineColors)) ^ "underlined text" ^ (#blue (!D.underlineColors)) ^ "foo\n");
+	 printReset "  - The use of the strike through effect is to use to show that the\n";
+	 printReset "    highlighted code is in a nested underlined.\n";
+	 printReset "  - The colour of the nested box is that of the strike through and\n";
+	 printReset "    the colour of the external box is the colour of the underlines\n";
+	 printReset "    which immediately precede and follow the strike through.\n"
+
+	)
+    end
+
 (* Same as smltes but takes a list of parameters instead of a record *)
 fun smlteslight list = smltes (optArg [list])
 
@@ -442,7 +492,7 @@ fun smlTesStrArgs strArgs =
 	    else if option = "-v"
 	    then (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
 	    else if option = "--show-legend"
-	    then (filesNeeded:=false; OS.Process.system("skalpel-legend"); ())
+	    then (filesNeeded:=false; printLegend())
 	    else filein:=option
 	  (* have a 0/1/2 case for emacs ui *)
 	  | parse ("-b"::"0"::tail) =
@@ -481,7 +531,11 @@ fun smlTesStrArgs strArgs =
 		       (* note that at this current time, no debugging information is printed for the basis.
 			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
 			* be able to toggle such an option, but for the moment this is simply disabled *)
-		       "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""}; D.textReset := "")
+		       "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+					D.boldColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+					D.underlineColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+					D.backgroundColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+					D.textReset := "")
 		     | "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
 		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
 		     | "BASIS_LABELLING" => (D.debug := true; D.enableDebugFeature D.BASIS_LABELLING)
