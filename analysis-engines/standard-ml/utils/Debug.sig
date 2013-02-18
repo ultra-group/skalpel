@@ -54,9 +54,15 @@ signature DEBUG = sig
     val sep2' : string
 
     val colors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
+    val boldColors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
+    val underlineColors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
+    val backgroundColors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
+    val leafInBoxColors : {black:string, red:string, green:string, yellow:string, blue:string, purple:string, cyan:string, white:string} ref
     val textReset : string ref
 
     val enableDebugFeature : debugFeature -> unit
+
+    val printReset : string -> unit
 
     val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
 

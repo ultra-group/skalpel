@@ -70,6 +70,7 @@ signature TESTER = sig
     val debuggingJSON : string temptype
     val debuggingLISP : string temptype
     val debuggingPERL : string temptype
+    val debuggingBASH : unit temptype
     val debuggingHTML : Error.error list ->
 			AstSML.packs     ->
 			bool        ->
@@ -88,8 +89,6 @@ signature TESTER = sig
 			string      -> (* basis switch: 0 (no basis), 1 (builtin basis), 2 (file) *)
 			unit
 
-    val removeBasisSlice : string -> (* input slice *)
-			   string    (* output slice *)
 
     (**)
     (*val buildError    : error debug*)

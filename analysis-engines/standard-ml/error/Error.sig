@@ -68,6 +68,10 @@ signature ERROR = sig
 		   unit
 
 
+    val removeBasisSlice : string -> (* input slice *)
+			   string    (* output slice *)
+
+
     val resetError       : unit -> unit
     val getError         : unit -> id
     val freshError       : unit -> id
@@ -208,6 +212,8 @@ signature ERROR = sig
 			   string * (* slice                                *)
 			   string * (* regions                              *)
 			   string   (* minimal                              *)
+
+    val printOneBashErr  : error -> Id.assoc -> bool -> int -> unit
 
     val setSlice         : AstSML.progs -> error -> error
     val setSlices        : AstSML.progs -> error list -> error list

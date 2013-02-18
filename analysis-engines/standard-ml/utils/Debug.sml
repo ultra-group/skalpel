@@ -34,9 +34,10 @@ val rand = Random.rand (0,6)
  * the output of text in terminals. Note that not all terminals
  * support this feature! *)
 val colors= ref {black="\^[[0;30m",red="\^[[0;31m", green="\^[[0;32m", yellow="\^[[0;33m", blue="\^[[0;34m", purple="\^[[0;35m", cyan="\^[[0;36m", white="\^[[0;37m"}
-val boldColors={black="\^[[1;30m",red="\^[[1;31m", green="\^[[1;32m", yellow="\^[[1;33m", blue="\^[[1;34m", purple="\^[[1;35m", cyan="\^[[1;36m", white="\^[[1;37m"}
-val underlineColors={black="\^[[4;30m",red="\^[[4;31m", green="\^[[4;32m", yellow="\^[[4;33m", blue="\^[[4;34m", purple="\^[[4;35m", cyan="\^[[4;36m", white="\^[[4;37m"}
-val backgroundColors={black="\^[[40m",red="\^[[41m", green="\^[[42m", yellow="\^[[43m", blue="\^[[44m", purple="\^[[45m", cyan="\^[[46m", white="\^[[47m"}
+val boldColors= ref {black="\^[[1;30m",red="\^[[1;31m", green="\^[[1;32m", yellow="\^[[1;33m", blue="\^[[1;34m", purple="\^[[1;35m", cyan="\^[[1;36m", white="\^[[1;37m"}
+val underlineColors= ref {black="\^[[4;30m",red="\^[[4;31m", green="\^[[4;32m", yellow="\^[[4;33m", blue="\^[[4;34m", purple="\^[[4;35m", cyan="\^[[4;36m", white="\^[[4;37m"}
+val backgroundColors= ref {black="\^[[0;40;37m",red="\^[[0;41;37m", green="\^[[0;42;37m", yellow="\^[[0;43;37m", blue="\^[[0;44;37m", purple="\^[[0;45;37m", cyan="\^[[0;46;37m", white="\^[[0;47;37m"}
+val leafInBoxColors= ref {black="\^[[4;40;37m",red="\^[[4;41;37m", green="\^[[4;42;37m", yellow="\^[[4;43;37m", blue="\^[[4;44;37m", purple="\^[[4;45;37m", cyan="\^[[4;46;37m", white="\^[[4;47;37m"}
 val textReset=ref "\^[[0m"
 
 val oneRunOnly = ref false
@@ -52,6 +53,9 @@ val debugParsing              : bool ref = ref false
 val debugState                : bool ref = ref false
 val debugProgramLabelling     : bool ref = ref false
 val debugBasisLabelling       : bool ref = ref false
+
+fun printReset str =
+    print (str ^ (!textReset))
 
 fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature TEMP = debugTemp := true

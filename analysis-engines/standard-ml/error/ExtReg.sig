@@ -62,6 +62,7 @@ signature EXTREG = sig
     val printJsonExtRegs : regs -> string
     val printLispExtRegs : regs -> string
     val printPerlExtRegs : regs -> string
+    val printBashExtRegs : regs -> unit
 
     (*val getFormatPos     : (AstSML.progs * Error.error) list -> regs list*)
     (*val printExtRegSp    : treeReg list -> string*)

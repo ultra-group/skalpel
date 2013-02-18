@@ -32,6 +32,7 @@ structure R  = Reg
 structure L  = Label
 structure S  = Slicing
 structure O  = OrdSet
+structure D  = Debug
 structure TO = Tools
 structure EK = ErrorKind
 structure ER = ExtReg
@@ -207,7 +208,7 @@ fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslic
 	val sl = "\"slice\"       : " ^ "\"" ^ transfun2 (S.printSlice sl bslice) ^ "\""
     in (id, ll, cd, ek, tm, sl,
        (if basisoverloading = 0
-       then "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs ) ^ "]"
+       then "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name andalso String.isSubstring "Overload" ek andalso basisoverloading = 0) then false else true)) regs ) ^ "]"
        else "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs regs ^ "]"))
     end
 
@@ -229,11 +230,11 @@ fun printOneLispErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 	val rm = "(remove . (" ^ toListSep (removesToList rem) " " "" ^ "))"
 	val ss = "(slice . \"" ^ transfun2 (S.printSlice sl bslice) ^ "\")"
 	val at = "(ast . \"" ^ ""(*SlToString sl*) ^ "\")"
-	val re = "(regions . (" ^ (String.translate (fn #"\\" => "\\\\" | x=>str x) (ER.printLispExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs))) ^ "))"
+	val re = "(regions . (" ^ (String.translate (fn #"\\" => "\\\\" | x=>str x) (ER.printLispExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name andalso String.isSubstring "OV" ek andalso basisoverloading = 0) then false else true)) regs))) ^ "))"
 	val mn = "(minimal . " ^ Bool.toString min ^ ")"
     in (id, cd, ek, rm, ss, at,
 	(if basisoverloading = 0
-	 then "(regions . (" ^ (String.translate (fn #"\\" => "\\\\" | x=>str x) (ER.printLispExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs))) ^ "))"
+	 then "(regions . (" ^ (String.translate (fn #"\\" => "\\\\" | x=>str x) (ER.printLispExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name andalso String.isSubstring "OV" ek andalso basisoverloading = 0) then false else true)) regs))) ^ "))"
 	 else "(regions . (" ^ (String.translate (fn #"\\" => "\\\\" | x=>str x) (ER.printLispExtRegs regs)) ^ "))")
       , mn)
     end
@@ -250,9 +251,75 @@ fun printOnePerlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 	val mn = "minimal     => " ^ Bool.toString min
     in (id, cd, ek, rm, sl,
 	(if basisoverloading = 0
-	 then "regions     => [" ^ ER.printPerlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]"
+	 then "regions     => [" ^ ER.printPerlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name andalso String.isSubstring "OV" ek andalso basisoverloading = 0) then false else true)) regs) ^ "]"
 	 else "regions     => [" ^ ER.printPerlExtRegs regs ^ "]")
 	, mn)
+    end
+
+(* quick hack for the next release to reduce overloading information from the basis *)
+fun removeBasisSlice sl =
+let
+    fun stripBasisSlice sl =
+	let
+	    (* we start at two because when we look for the start of the basis slice, we take
+             * two brackets into account *)
+	    val bracketBalancer = ref 2;
+
+	    (* locates the start of the slice for the basis *)
+	    fun findBasisSlice [] = []
+	      | findBasisSlice (h::t) =
+		if h = #"\168" (* opening slice bracket *)
+		then (bracketBalancer := !bracketBalancer + 1; findBasisSlice t)
+		else
+		    if h = #"\169" (* closing slice bracket *)
+		    then (bracketBalancer := !bracketBalancer - 1;
+			  if !bracketBalancer = 0
+			  then t
+			  else findBasisSlice t)
+		    else findBasisSlice t
+	in
+	    String.implode (findBasisSlice sl)
+	end
+
+    fun findStartBasisSlice sl =
+	if (String.extract (sl, 0, SOME(11))) = "..structure"
+	   andalso
+	   (String.extract (sl, 15, SOME(7))) = "..Basis"
+	then stripBasisSlice (String.explode (String.extract (sl, 20, NONE)))
+	else findStartBasisSlice (String.extract (sl, 1, NONE))
+in
+    findStartBasisSlice sl
+end
+
+(* prints one error in perl format *)
+fun printOneBashErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid bslice basisoverloading =
+    let
+	val cdStringList = (CD.toStringList deps ascid)
+	val cd = toListSep cdStringList ", " "\""
+	val (idk, errk) = EK.printErrKind ek ascid
+	val ek = "kind        => {id  => \"" ^ idk ^ "\", msg => \"" ^ errk ^ "\"}"
+	val errk = String.translate (fn #"\"" => "\\\"" | x=>(Char.toString x)) errk
+	fun printReset str = print (str^(!D.textReset))
+    in
+	(printReset( (#yellow (!D.underlineColors)) ^ errk ^ "\n\n");
+	 printReset( (#yellow (!D.underlineColors)) ^ "Slice in context:\n\n");
+	 ER.printBashExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) andalso String.isSubstring "OV" ek andalso basisoverloading = 0 then false else true)) regs);
+	 printReset( (#yellow (!D.underlineColors)) ^ "\nSlice on its own:\n");
+	 printReset( (#white (!D.boldColors)) ^ (if String.isSubstring "OV" ek andalso basisoverloading = 0
+						 then removeBasisSlice (S.printSlice sl bslice)
+						 else(S.printSlice sl bslice))  ^ "\n");
+
+	 if List.length cdStringList = 0
+	 then ()
+	 else if List.length cdStringList = 1
+	 then printReset( (#yellow (!D.underlineColors)) ^ "\nContext Dependency:" ^ (!D.textReset) ^ " " ^ cd ^ " is neither a type nor an exception constructor.\n")
+	 else printReset( (#yellow (!D.underlineColors)) ^ "\nContext Dependencies:" ^ (!D.textReset) ^ " " ^ cd ^ " are neither datatype nor exception constructors.\n"))
+
+    (* (id, cd, ek, rm, slice, *)
+       (* 	(if basisoverloading = 0 *)
+       (* 	 then "regions     => [" ^ ER.printPerlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]" *)
+       (* 	 else "regions     => [" ^ ER.printPerlExtRegs regs ^ "]") *)
+       (* 	, mn) *)
     end
 
 (*
