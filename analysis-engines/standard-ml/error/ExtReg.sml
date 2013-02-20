@@ -258,11 +258,19 @@ and printSubRegions (currentLine, currentColumn) []        explodedLines moreReg
   | printSubRegions (currentLine, currentColumn) (node::t) explodedLines moreRegions previousLineNum =
     case node of
 	(L (r, c, w)) =>
-	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n");
-	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
-	then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum [];
-	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)))
-	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum)
+	let
+	    val endRegionLine = R.getPosLine(R.getTo r)
+	    val endRegionCol  = R.getPosCol(R.getTo r)
+	    val moreRegionsLine = (case moreRegions of NONE => ~1 | SOME(x,y) => x)
+	    val moreRegionsCol = (case moreRegions of NONE => ~1 | SOME(x,y) => y)
+	    val _  = print ("*********** " ^ (Int.toString (moreRegionsCol - endRegionCol)) ^ "*********************")
+	in
+	    (D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ "). End region is (" ^ (Int.toString endRegionLine) ^ "," ^ (Int.toString endRegionCol) ^ "), and more regions is (" ^ (Int.toString moreRegionsLine) ^ "," ^ (Int.toString moreRegionsCol) ^ ")\n");
+	     if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
+	     then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (if moreRegionsCol - endRegionCol > 1 then moreRegions else (SOME(~1,~1)))  previousLineNum [];
+		   SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)))
+	     else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum)
+	end
       | (H (r, c, w)) =>
 	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n");
 	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
@@ -317,7 +325,7 @@ and printCodeFragment (l1, c1) (l2, c2) explodedLines color moreRegions previous
 		    (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{got SOME regions back}\n");
 		    if l2 = finishLine andalso c2 = finishColumn
 		    then ()
-		    else printCodeFragment (finishLine, finishColumn+1) (l2, c2) explodedLines color moreRegions previousLineNum nodeRegionList)
+		    else (* MORE REGIONS NEEDS RECOMPUTED *) printCodeFragment (finishLine, finishColumn+1) (l2, c2) explodedLines color moreRegions previousLineNum nodeRegionList)
 		  | NONE =>
 		    (
 		     D.printDebugFeature D.BLANK D.TEMP (fn _ => "{got NO regions back}\n");
@@ -342,21 +350,22 @@ and printCodeFragment (l1, c1) (l2, c2) explodedLines color moreRegions previous
 			     then (print (!D.textReset); print (String.implode(List.drop(currentLineList, currentColumn))))
 			     else ())
 			   | SOME (nextLine, nextColumn) =>
-			     (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{reached target location, there are more regions, recursing...}");
+			     (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{reached target location, there are more regions (nextLine="^(Int.toString nextLine)^", nextColumn="^Int.toString(nextColumn)^"), recursing...}");
 			      if nextLine <> currentLine (* the next line the regions are on should always be the same as this one if moreRegions has a SOME case *)
 			      then if nextLine <> ~1     (* if we aren't dealing with a non-recursive case *)
 				   then raise EH.DeadBranch "Error during command line interface parsing: a region has been detected (probably incorrectly) to start at two places at once!"
-				   else ()
+				   else(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Next line has been set to -1. Not recursing!")
+				       (* a; *))
 			      else (print (!D.textReset);
 				    (* there are more regions on the line so there must be a next column, set a negative value so we don't recurse *)
-				    printCodeFragment (currentLine, currentColumn+1) (nextLine, nextColumn-1) explodedLines "" (SOME(~1,~1)) previousLineNum nodeRegionList))
+				    (* MORE REGIONS NEED RECOMPUTED *) printCodeFragment (currentLine, currentColumn+1) (nextLine, nextColumn-1) explodedLines "" (SOME(~1,~1)) previousLineNum nodeRegionList))
 		     else
 			 if currentColumn > c2
 			 then ()
 			 else
 			     if (currentColumn = (List.length currentLineList))
-			     then (print "\n"; printCodeFragmentHelper (l2, c2) explodedLines (currentLine+1, 1) previousLineNum)
-			     else (printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn+1) previousLineNum)))
+			     then raise EH.DeadBranch "Region spans multiple lines"
+			     else ((* MORE REGIONS NEED RECOMPUTED *) printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn+1) previousLineNum)))
 	    end
     in
 	(print color;
