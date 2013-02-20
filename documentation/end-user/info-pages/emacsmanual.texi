@@ -6,16 +6,12 @@
 @c ##Copyright 2011 John Pirie
 @c ##Copyright 2013 Heriot-Watt University
 @c ##
-@c ## This file is part of skalpel-emacs - an Emacs User Interface for a
-@c ## Type Error Slicer for Standard ML written by the ULTRA Group of 
-@c ## Heriot-Watt University, Edinburgh.
-@c ##
-@c ## skalpel-emacs is free software: you can redistribute it and/or modify
+@c ## Skalpel is free software: you can redistribute it and/or modify
 @c ## it under the terms of the GNU General Public License as published by
 @c ## the Free Software Foundation, either version 3 of the License, or
 @c ## (at your option) any later version.
 @c ##
-@c ## skalpel-emacs is distributed in the hope that it will be useful,
+@c ## Skalpel is distributed in the hope that it will be useful,
 @c ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 @c ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 @c ## GNU General Public License for more details.
@@ -78,449 +74,98 @@ Documentation License".
 @end direntry
 
 @ifnottex
-@c @node   Top,    Using Skalpel, (dir),     (dir)
-@node   Top,    Kinds of Type Errors, , (dir)
-@c @top
-
+@node   Top , Description, (dir), (dir)
 @c This manual is for skalpel-emacs, version 0.1.
 @end ifnottex
 
 @menu
-* Kinds of Type Errors::
-* Understanding the Highlighting::
-* Using Skalpel::
-* Personalising Skalpel::
+* Description::
+* Usage::
 @end menu
 
-@contents
+@node Description, Usage, Top, Top
 
-@node Kinds of Type Errors, Understanding the Highlighting, Top, Top
+@chapter Description
 
-@chapter Kinds of Type Errors
+skalpel - a type error slicer for Standard ML
 
-This section contains brief descriptions of the different kinds of
-type errors that Skalpel handles.
+@noindent Skalpel  is  a  type error slicer for SML, developed by the ULTRA group of Heriot-Watt University, Edinburgh.
 
-@itemize
-@item Type Constructor Clash
+@noindent Traditional type error messages given for SML can be  hard  to  decipher  and  often  indicate
+incomplete and unprecise locations as the source of the programming error.  The error messages
+produced are also biased because they report only one location which is dependent on  the  way
+which the abstract syntax tree is traversed.
 
-@itemize @minus
-@item occurs when two type constructors are constrained to be equal
-but are not, for example @code{int = bool}.
-@end itemize
+@noindent Skalpel  aims  to  eliminate  these  problems.   The error messages produced by the type error
+slicer offer textual explanations of the errors and highlights  all  and  only  those  program
+points which contribute to the error.
 
-@item Arity Clash
+@noindent Authors are as follows:
 
-@itemize @minus
-@item occurs when a sequence of length N is constrained to be equal to
-a sequence of length M where N is not equal to M.
-@end itemize
+@noindent Joe Wells  <jbw [at] macs.hw.ac.uk>
 
-@item Record Clash
+@noindent Vincent Rahli <rahli [at] macs.hw.ac.uk>
 
-@itemize @minus
-@item occurs when two records are constrained to be equal but a label
-appears in one record and does not appear in the other.
-@end itemize
+@noindent John Pirie <jp95 [at] macs.hw.ac.uk>
 
-@item Circularity Error
+@noindent Scott Fotheringham <sf47 [at] macs.hw.ac.uk>
 
-@itemize @minus
-@item occurs when a type is constrained to contain itself (infinite type).
-@end itemize
+@noindent Mark Wyper <mw105 [at] macs.hw.ac.uk>
 
-@item Inclusion Error
+@noindent Steven Shiells <ss215 [at] macs.hw.ac.uk>
 
-@itemize @minus
-@item occurs when there is a free type variable in a database or type declaration
-@end itemize
+@noindent David Dunsmore <dd35 [at] macs.hw.ac.uk>
 
-@item Multi-occurrence Error
+@node Usage, (end), Description, Top
 
-@itemize @minus
-@item occurs when an identifier is bound more than once in one declaration.
-@end itemize
+@chapter Usage
 
-@item Applied Value Variable Error
+Command line usage is given below. Fore more information, please see the
+user manual.
 
-@itemize @minus
-@item occurs when a value variable is supplied an argument in a pattern.
-@end itemize
+@noindent skalpel [OPTION]... [FILE]
 
-@item Different Function Name Error
+OPTIONS
 
-@itemize @minus
-@item occurs when a function is declared with 2 differing names.
-@end itemize
+       -l <file> place output in <file> in lisp format
 
-@item Free Explicit Type Variable at Top Level Error
+       -h <file> place output in <file> in HTML format
 
-@itemize @minus
-@item occurs when there is a type variable in the top level
-environment that is not bound to anything.
-@end itemize
+       -s <file> place output in <file> in SML format
 
-@item Value on the Left of @code{as} Error
+       -j <file> place output in <file> in JSON format
 
-@itemize @minus
-@item occurs when the identifier on the left of an @code{as} is not a
-value variable.
-@end itemize
+       -x <file> place output in <file> in XML format
 
-@item An Identifier Occurs in a Pattern Both Applied and Not Applied
-to an Argument
+       -p <file> place output in <file> in perl format
 
-@itemize @minus
-@item as the name suggests.
-@end itemize
+       -t <timelimet> specify a numerical time limit
 
-@item Different Number of Arguments Error
+       -x <true/false> suppress exception handling (dev mode)
 
-@itemize @minus
-@item occurs when a function is defined to take an inconsistent number
-of arguments.
-@end itemize
+       -c <directory> Run analysis engine on tests in <directory>
 
-@item Ungeneralisable Bound Type Variable
+       -e <0 | 1> toggles echo of slice display in terminal (0=no, 1=yes)
 
-@itemize @minus
-@item occurs when SML does not allow generalisation of type variables
-at certain value declarations.
-@end itemize
+       -b  <0 | 1 | 2 <file> > Set basis level as 0 (no basis), 1 (built in basis), 2 <file> (specify
+       file as basis)
 
-@item Unmatched Specification Error
+       -d PARSING   shows debugging output during parsing various files
 
-@itemize @minus
-@item occurs when a structure does not declare an identifier that it
-is supposed to.
-@end itemize
+       -bo <0 | 1> If set to 1, hides basis slice in overloading errors
 
-@end itemize
+       -tab <tabwidth> define the tab width in user code regions
 
-@node Understanding the Highlighting, Using Skalpel, Kinds of Type Errors, Top
+       -sol <solution> define solution to use (default 9)
 
-@chapter Understanding the Highlighting
+       -min <true/false> if true, shows non-minimal errors
 
-Skalpel highlights parts of the source files using
-different techniques to identify the different reasons for which a piece
-of code participates in the error. An explanation of the colours used
-is given below.
+       --print-env <true/false> whether to print the environment
 
-@itemize
-@item Red Highlighting
+       --show-legend Shows the legend for notation and colour of slice display in the terminal
 
-@itemize @minus
-@item Indicates that the highlighted code contributes to the error.
-@end itemize
+       --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)
 
-@item Blue/Gray Highlighting
+       --help Show this help text
 
-@itemize @minus
-@item Indicates that the highlighted code is an end point of either
 
-@itemize @minus
-@item a type constructor clash
-@item an arity clash
-@item a record clash
-@end itemize
-
-@end itemize
-
-@item Green Highlighting
-
-@itemize @minus
-@item Indicates that the highlighted code is the endpoint of a record clash.
-@end itemize
-
-@item Purple Highlighting
-
-@itemize @minus
-@item Indicates that the highlighted code either
-
-@itemize @minus
-@item provides information about an identifier
-@item is expansive
-@end itemize
-
-@end itemize
-
-@item Yellow Highlighting
-
-@itemize @minus
-@item Indicates that Skalpel cannot parse the file.
-@end itemize
-
-@item Outline of a Box
-
-@itemize @minus
-@item The use of the underline with no background highlighting is used to
-    signify that the underlined text may be irrelevant, but its presence
-    definitely contributes to the error.
-@item The use of the underline can indicate on of two things;
-
-@enumerate
-@item The application of a function to an argument (the underlined
-	    code) takes part in an error.
-@item The underlined code is the unique argument of a type name
-	   to make explicit that its arity is 1 (that is, it has 1
-           argument).
-@end enumerate
-@item @strong{NOTE}: The colour of the underline can be any of those above.
-@item @strong{NOTE}: This notation is equivalent to the box notation used in
-          other interfaces to Skalpel.
-
-@end itemize
-
-@end itemize
-
-@node Using Skalpel, Personalising Skalpel, Understanding the Highlighting, Top
-
-@c %%%%%%%% USING SKALPEL %%%%%%%%
-
-@chapter Using Skalpel
-
-@menu
-* Running Skalpel::
-* Viewing the Errors::
-* Removing the Highlighting::
-* Verbose Error Messages::
-* Creating a Type Error Slicer Control File::
-* Using with a Local Version of Emacs::
-@end menu
-
-@c %%%%%%%% RUNNING SKALPEL %%%%%%%%
-
-@node Running Skalpel, Viewing the Errors, , Using Skalpel
-
-@section Running Skalpel
-
-@subsection Running Skalpel on a Single File
-
-@itemize
-@item Open Emacs.
-@item Load the SML file you wish to check.
-@item From the @strong{Errors} menu select the @strong{Run Slicer} option.
-@end itemize
-
-@subsection Running Skalpel on a Multiple Files
-
-@itemize
-@item Open Emacs.
-@item Load Skalpel control file (@code{.tes}) or
-@code{.CM} file for
-the files you wish to check.
-@strong{Note}: If you do not know what a type error slicer control file is
-please read Section @ref{Creating a Type Error Slicer Control File}@c add reference.
-@item From the @strong{Errors} menu select the @strong{Run Slicer}
-option.
-@end itemize
-
-@c %%%%%%%% VIEWING THE ERRORS %%%%%%%%
-
-@node Viewing the Errors, Removing the Highlighting, Running Skalpel, Using Skalpel
-
-@section Viewing the Errors
-
-Skalpel reports any errors by highlighting sections of
-the source code.  There may be multiple errors per file, some of which
-may highlight parts of the source code that are also highlighted by
-some other errors.  In order to distinguish between the highlighting
-of one error from another, the type error slice allows you to cycle
-through all of the errors one at a time.
-
-@subsection View the Next Error Slice
-
-@itemize
-@item From the @strong{Errors} menu select the @strong{Next Slice}
-option.
-@end itemize
-
-@subsection View the Previous Error Slice
-@itemize
-@item From the @strong{Errors} menu select the @strong{Previous Slice}
-  option.
-@end itemize
-
-@subsection Navigating Through the Different Parts of the Error Slice
-Type Error Slices may be quite large and may be at the opposite end of
-a file, or in different files altogether.  In these cases, it may not
-be possible to view the whole slice all at the one time.  In order to
-determine what the problem is, it may be necessary to view all of
-parts of the slice.  Skalpel allows the user to cycle
-through the different parts of the error slice that are not currently
-in visible on screen.  Details on how to use this feature can be seen below.
-
-@itemize
-@item From the @strong{Errors} menu select the @strong{Next Part of Slice}.
-@end itemize
-
-@subsection Viewing the Details of the Error
-
-@itemize
-@item Details of an error are automatically shown via a buffer which
-  appears whenever the slicer is ran. If the user does not wish to see
-  details of the error, they can disable this by unchecking the menu
-  item Type Error Slicer -> Slicing -> Automatically display
-    slice information.
-
-@end itemize
-
-@subsection Removing basis information during overloading errors
-
-@itemize
-@item When encountering overloading errors, a lot of the information
-  which is related to the errors lies in the basis. While this
-  information is needed for correctness, there can be quite a lot of
-  information to display and it is often of little help. In order to
-  hide this information, make sure the Type Error Slicing ->
-    Slicing -> Show basis information for overloading errors checkbox
-  is not ticked.
-
-@end itemize
-
-@c %%%%%%%% REMOVING THE HIGHLIGHTING %%%%%%%%
-
-@node Removing the Highlighting, Verbose Error Messages, Viewing the Errors, Using Skalpel
-
-@section Removing the Highlighting
-
-@subsection Removing the Highlighting from the Current File
-
-@itemize
-@item From the @strong{Errors} menu select the @strong{Remove
-Highlighting from Current File} option.
-@end itemize
-
-@subsection Removing the Highlighting from all Files
-
-@itemize
-@item From the @strong{Errors} menu select the @strong{Remove
-  Highlighting from all Files} option.
-@end itemize
-
-@strong{Note}: All highlighting in all the files are automatically removed
-each time Skalpel is run, allowing for the new
-highlighting to be displayed properly.
-
-@c %%%%%%%%% TURN VERBOSE ERROR MESSAGES ON/OFF%%%%%%%%%%%
-
-@node Verbose Error Messages, Creating a Type Error Slicer Control File, Removing the Highlighting, Using Skalpel
-
-@section Turn Verbose Error Messages On/Off
-
-Verbose error messages contain additional details of the errors which
-may be useful for users who are not familiar with SML.  We allow users
-to decide whether or not they wish to display these error messages.
-Details of how to turn the verbose error messages on/off can be seen
-below.  Note that verbosity of error messages only affect whether a
-tool-tip includes explanations on the kind of the error in focus and
-explanations on the colours used in the highlighting.
-
-@subsection Turning Verbose Error Messages On
-
-@itemize
-@item From the @strong{Errors}
-menu select the @strong{Verbose Error Messages?} option.
-@end itemize
-
-@subsection Turning Verbose Error Messages Off
-
-@itemize
-@item From the @strong{Errors} menu
-deselect the @strong{Verbose Error Messages?} option.
-@end itemize
-
-
-@c %%%%%%%% CREATING A TES CONTROL FILE %%%%%%%%
-
-@node Creating a Type Error Slicer Control File, Using with a Local Version of Emacs, Verbose Error Messages, Using Skalpel
-
-@section Creating a Type Error Slicer Control File
-@c ADD LABEL
-
-A type error slicer control file is a file that allows the type error
-slicer to slice multiple files.  It is essentially a file that contains
-an ordered list of files you wish to run the slicer on.  The steps
-needed to create a type error slicer control file are listed below.
-
-@enumerate
-@item
-Create a new file with the @code{.tes} extension.
-
-@item
-Add a list of files you wish to check - these files can either
-be SML (@code{.sml}) or other type error slicer control
-(@code{.tes}) files.
-
-@strong{Note}: The order in which you list the files is important.  Please list
-all files which depend on other files @strong{after} the files they
-depend on, otherwise some errors may not be found.  Listing files in
-the wrong order in a @code{.tes} file may also cause false
-errors to be found.
-
-@item
-Save the file.
-@end enumerate
-
-@node Using with a Local Version of Emacs, , Creating a Type Error Slicer Control File, Using Skalpel
-
-@section Using Skalpel with a Local Version of Emacs
-
-In order to use Skalpel with a locally
-installed version of Emacs you must load the file
-@code{/usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-config.el}
-
-To save the hassle of having to do this each time you start Emacs you
-may wish to load this file in your .emacs(.el) file.
-
-@c %%%%%%%%%%%%% PERSONALISING THE SLICER %%%%%%%%%%%%%%%%%%%%
-
-@node Personalising Skalpel, , Using Skalpel, Top
-
-@chapter Personalising Skalpel
-
-@menu
-* Changing Colours of Highlights::
-@end menu
-
-@c %%%%%%%%% SETTING UP KEY BINDINGS %%%%%%%%%%
-
-@node Changing Colours of Highlights
-
-@section Changing Colours of Highlights
-
-If you do not like the default colours (or any way the parts of the
-code are highlighted) then you can edit them to something that you
-feel more comfortable with.  If you wish to change any of the features
-you can do so by using Emacs @code{customize-faces} command and
-selecting the face you wish to edit.
-
-The faces that Skalpel uses are;
-
-@itemize
-@item @code{skalpel-standard-error-focus}
-@item @code{skalpel-standard-error-non-focus}
-@item @code{skalpel-standard-error-box-focus}
-@item @code{skalpel-standard-error-box-non-focus}
-@item @code{skalpel-standard-error-head-focus}
-@item @code{skalpel-end-point-one-focus}
-@item @code{skalpel-end-point-one-non-focus}
-@item @code{skalpel-end-point-one-box-focus}
-@item @code{skalpel-end-point-one-box-non-focus}
-@item @code{skalpel-end-point-one-head-focus}
-@item @code{skalpel-end-point-two-focus}
-@item @code{skalpel-end-point-two-non-focus}
-@item @code{skalpel-end-point-two-box-focus}
-@item @code{skalpel-end-point-two-box-non-focus}
-@item @code{skalpel-end-point-two-head-focus}
-@item @code{skalpel-merged-regions-focus}
-@item @code{skalpel-merged-regions-non-focus}
-@item @code{skalpel-further-explanations-focus}
-@item @code{skalpel-further-explanations-non-focus}
-@item @code{skalpel-further-explanations-box-focus}
-@item @code{skalpel-further-explanations-box-non-focus}
-@item @code{skalpel-parsing-error-focus}
-@item @code{skalpel-parsing-error-non-focus}
-@end itemize
-
-@bye

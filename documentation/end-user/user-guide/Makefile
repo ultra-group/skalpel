@@ -25,8 +25,6 @@
 
 default:
 	pdflatex user-guide.tex
-
-document:
 	pdflatex user-guide.tex
 
 clean:

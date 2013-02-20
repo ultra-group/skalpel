@@ -34,7 +34,7 @@
 
 \input{macros-steven}
 
-\title{Skalpel v0.8 User Guide}
+\title{Skalpel 0.8 User Guide}
 \date{\today}
 
 \begin{document}
@@ -69,9 +69,9 @@ can be found on the Skalpel downloads page (section
 \ref{skalpel-downloads-page}). Readers who do not wish to install the
 pre-prepared packages (for example those with other Linux
 distributions or those who do not have root access will not be able to
-install from these packages) should skip to section \ref{archive-installation},
-which discusses how to install different Skalpel components from a
-tarball archive).
+install from these packages) should skip to section
+\ref{archive-installation}, which discusses how to install Skalpel
+from a tarball archive).
 
 \subsection {Packages}
 
@@ -136,7 +136,11 @@ again. Otherwise, if the configure script has succeeded, run
 by \texttt{make install}, which will install the binary to the desired
 location.
 
-\todo[inline]{Windows section to be written here}
+\section{Windows}
+
+Simply double click on the executable file downloaded and the
+installer program will launch, from there follow the instructions the
+installer provides on the screen.
 
 \chapter{Configuration of Front-Ends}
 
@@ -172,30 +176,23 @@ arguments are as follows:
   user to omit this argument. This can be done with similar lines to
   the below specified in the \texttt{{\textasciitilde}/.bashrc} file\footnote{ Users of shells
     other than bash should consult the documentation for their shell
-    to discover how to set environment variables}:\\
+    to discover how to set environment variables.}:\\
 
   \texttt{SKALPEL\_BASIS="/path/to/basis.sml"}\\
   \texttt{export SKALPEL\_BASIS}
 
-\item \texttt{skalpel -e <0 | 1>} Setting the -e parameter to 0 or 1
-  toggles whether or not Skalpel should display the errors it finds in
-  the terminal. This should always be set to 1. \todo{maybe there
-    should be an environment variable for this?}
 \end{itemize}
 
 The Skalpel program binary should also be added to the PATH variable
 of the shell inside which Skalpel is to be executed. This can be
 achieved as follows (users not using \texttt{bash} should consult the
 documentation of their shell if they need to know how to do this),
-replacing /path/to/dir/containing/skalpel/binary/ as appropriate:
+replacing /path/to/dir/containing/skalpel/binary as appropriate:
 
 \noindent \texttt{PATH=/path/to/dir/containing/skalpel/binary:\$PATH}\\
 \texttt{export PATH}
 
 \subsection{Configuration of the Emacs Front-End}
-
-\note[inline] {Check precisely which Emacs versions we support, and put
-this information here.}
 
 If the \texttt{skalpel-emacs} package (.rpm or .deb format) has been
 installed then no configuration should be necessary. Otherwise, if the
@@ -208,8 +205,8 @@ file\footnote{ Examples of startup files Emacs looks for include
   \texttt{{\textasciitilde}/.emacs.el}}, replacing
 /path/to/extracted/archive/ as appropriate:
 
-\noindent \texttt{(add-to-list 'load-path (file-truename "/path/to/extracted/archive/EmacsUI/"))}\\
-\texttt{(defvar skalpel-emacs-directory "/path/to/extracted/archive/EmacsUI/")}\\
+\noindent \texttt{(add-to-list 'load-path (file-truename "/path/to/extracted/archive/front-ends/emacs/"))}\\
+\texttt{(defvar skalpel-emacs-directory "/path/to/extracted/archive/front-ends/emacs/")}\\
 \texttt{(defvar skalpel-bin-directory "/path/to/extracted/archive/analysis-engines/standard-ml/bin")}\\
 \texttt{(defvar skalpel-lib-directory "/path/to/extracted/archive/lib/")}\\
 \texttt{(defvar skalpel-sources-directory "/path/to/extracted/archive/analysis-engines/standard-ml/")}\\
@@ -220,26 +217,60 @@ be visible when in any file with the suffix ``.tes'', ``.sml'' or
 ``.sig.''.
 
 \chapter{Using Skalpel in a Terminal Window}
+\label{command-line-arguments}
 
 For the purposes of this chapter, it is assumed that we have the
 SKALPEL\_BASIS environment variable set up (described in section
 \ref{skalpel-environment-vars}), and so the \texttt{-b} parameter is
 omitted.
 
-\todo[inline]{An example should go here of the Skalpel terminal front
-  end being executed}
+The skalpel analysis engine binary should be executed as follows:
 
+\noindent \textbf{usage}: skalpel [option ...] [FILE]
 
+where FILE is the file fed as input to be sliced. The command line
+options and a description of each are as follows:
+
+\
+\begin{tabular}{|l|l|}
+\indent \textbf{-l} $<$file$>$ & place output in $<$file$>$ in lisp format\\
+\indent \textbf{-h} $<$file$>$ & place output in $<$file$>$ in HTML format\\
+\indent \textbf{-s} $<$file$>$ & place output in $<$file$>$ in SML format\\
+\indent \textbf{-j} $<$file$>$ & place output in $<$file$>$ in JSON format\\
+\indent \textbf{-x} $<$file$>$ & place output in $<$file$>$ in XML format\\
+\indent \textbf{-p} $<$file$>$ & place output in $<$file$>$ in perl format\\
+\indent \textbf{-t} $<$timelimet$>$ & specify a numerical time limit\\
+\indent \textbf{-x} $<$true/false$>$ & suppress exception handling (dev mode)\\
+\indent \textbf{-c} $<$directory$>$ & Run analysis engine on tests in $<$directory$>$\\
+\indent \textbf{-e} $<0\ |\ 1>$ & toggles echo of slice display in terminal (0=no, 1=yes)\\
+\indent \textbf{-b} $<0\ |\ 1\ |\ 2 <$file$> >$ & Set basis level as 0 (no basis), 1 (built in basis), \\&2 $<$file$>$ (specify file as basis)\\
+\indent -bo $<0\ |\ 1>$ & If set to 1, hides basis slice in overloading errors\\
+\indent -tab $<$tabwidth$>$ & define the tab width in user code regions\\
+\indent -sol $<$solution$>$ & define solution to use (default 9)\\
+\indent -min $<$true/false$>$ & if true, shows non-minimal errors\\
+\indent --print-env $<$true/false$>$ & whether to print the environment\\
+\indent --show-legend & Shows the legend for notation and colour of slice display\\&in the terminal\\
+\indent --search-space $<$1,2,3$>$ & Use search space 1 (lists), 2 (sets), or 3 (red black tree)\\
+\indent --help & Show this help text
+\end{tabular}
+
+As an example, the user could execute this command in the terminal:
+
+\textbf{skalpel -e 0 -p /tmp/test.pl -j /tmp/test.json /home/me/myfile.sml}
+
+This would run Skalpel on the file /home/me/myfile.sml, with json and
+perl slices being given as outut to /tmp, and the displaying of slices
+in the terminal suppressed.
 
 \chapter{Using Skalpel in Emacs}
 
-\subsection{Running Skalpel}
+\section{Running Skalpel}
 
 %% \note{When running Skalpel, please ensure that all of
 %%  the files you intend to run Skalpel on are saved -
 %%  otherwise Skalpel will not execute.}
 
-\subsubsection{Running Skalpel on a Single File}
+\subsection{Running Skalpel on a Single File}
 
 \begin{itemize}
 \item Open Emacs.
@@ -248,22 +279,19 @@ omitted.
   option (or alternatively press \texttt{F6}).
 \end{itemize}
 
-\subsubsection{Running Skalpel on Multiple Files}
+\subsection{Running Skalpel on Multiple Files}
 
 \begin{itemize}
 \item Open Emacs.
 \item Load Skalpel control file (\texttt{.tes}) for
-  the files you wish to check.
-
-\note{If you do not know what a type error slicer control file is
-  please read Section~\ref{sec:skalpel-control-files}.}
+  the files you wish to check.\footnote{For the description of a type error slicer control file please read Section~\ref{sec:skalpel-control-files}.}
 \item From the \textbf{Skalpel} menu select the \textbf{Run Slicer}
   option (or alternatively press \texttt{F6}).
 \end{itemize}
 
 %%%%%%%% VIEWING THE ERRORS %%%%%%%%
 
-\subsection{Viewing the Errors}
+\section{Viewing the Errors}
 
 Skalpel reports any errors by highlighting sections of
 the source code. There may be multiple errors per file, some of which
@@ -272,22 +300,22 @@ some other errors. In order to distinguish between the highlighting
 of one error from another, the type error slice allows you to cycle
 through all of the errors one at a time.
 
-\subsubsection{View the Next Error Slice}
+\subsection{View the Next Error Slice}
 
 \begin{itemize}
 \item From the \textbf{Skalpel} menu select the \textbf{Next Slice}
   option (or alternatively press \texttt{F7}).
 \end{itemize}
 
-\subsubsection{View the Previous Error Slice}
+\subsection{View the Previous Error Slice}
 
 \begin{itemize}
 \item From the \textbf{Skalpel} menu select the \textbf{Previous Slice}
   option (or alternatively press \texttt{F8}).
 \end{itemize}
 
-\subsubsection{Navigating Through the Different Parts of the Error Slice}
-Type Error Slices may be quite large and may be at the opposite end of
+\subsection{Navigating Through the Different Parts of the Error Slice}
+Type error slices may be quite large and may be at the opposite end of
 a file, or in different files altogether. In these cases, it may not
 be possible to view the whole slice all at the one time. In order to
 determine what the problem is, it may be necessary to view all of
@@ -300,32 +328,32 @@ in visible on screen. Details on how to use this feature can be seen below.
   Slice} option (or alternatively press \texttt{Shift-F7}).
 \end{itemize}
 
-\subsubsection{Viewing the Details of the Error}
+\subsection{Viewing the Details of the Error}
 
 \begin{itemize}
 \item Details of an error are automatically shown via a buffer which
   appears whenever the slicer is ran. If the user does not wish to see
   details of the error, they can disable this by unchecking the menu
-  item \textbf{Skalpel -> Slicing -> Automatically display
+  item \textbf{Skalpel $\rightarrow$ Slicing $\rightarrow$ Automatically display
     slice information}.
 \end{itemize}
 
-\subsection{Removing basis information during overloading errors}
+\section{Removing basis information during overloading errors}
 \begin{itemize}
 \item When encountering overloading errors, a lot of the information
   which is related to the errors lies in the basis. While this
   information is needed for correctness, there can be quite a lot of
   information to display and it is often of little help. In order to
-  hide this information, make sure the \textbf{Type Error Slicing ->
-    Slicing -> Show basis information for overloading errors} checkbox
+  hide this information, make sure the \textbf{Type Error Slicing $\rightarrow$
+    Slicing $\rightarrow$ Show basis information for overloading errors} checkbox
   is not ticked.
 \end{itemize}
 
 %%%%%%%% REMOVING THE HIGHLIGHTING %%%%%%%%
 
-\subsection{Removing the Highlighting}
+\section{Removing the Highlighting}
 
-\subsubsection{Removing the Highlighting from the Current File}
+\subsection{Removing the Highlighting from the Current File}
 
 \begin{itemize}
 \item From the \textbf{Skalpel} menu select the \textbf{Remove
@@ -333,19 +361,20 @@ in visible on screen. Details on how to use this feature can be seen below.
   \texttt{F9}).
 \end{itemize}
 
-\subsubsection{Removing the Highlighting from all Files}
+\subsection{Removing the Highlighting from all Files}
 
 \begin{itemize}
 \item From the \textbf{Skalpel} menu select the \textbf{Remove
   Highlighting from all Files} option (or alternatively press
   \texttt{F10}).
+
+  All highlighting in all the files are automatically removed each time
+  Skalpel is run, allowing for the new highlighting to be displayed
+  properly.
+
 \end{itemize}
 
-\note{All highlighting in all the files are automatically removed
-  each time Skalpel is run, allowing for the new
-  highlighting to be displayed properly.}
-
-\subsection{Turn Verbose Error Messages On/Off}
+\section{Turn Verbose Error Messages On/Off}
 
 Verbose error messages contain additional details of the errors which
 may be useful for users who are not familiar with SML.  We allow users
@@ -355,14 +384,14 @@ below.  Note that verbosity of error messages only affect whether a
 buffer includes explanations on the kind of the error in focus and
 explanations on the colours used in the highlighting.
 
-\subsubsection{Turning Verbose Error Messages On}
+\subsection{Turning Verbose Error Messages On}
 
   \begin{itemize}
   \item From the \textbf{Skalpel}
     menu select the \textbf{Verbose Error Messages?} option.
   \end{itemize}
 
-\subsubsection{Turning Verbose Error Messages Off}
+\subsection{Turning Verbose Error Messages Off}
 
   \begin{itemize}
   \item From the \textbf{Skalpel} menu
@@ -371,19 +400,17 @@ explanations on the colours used in the highlighting.
 
 %%%%%%%% MAKING THE SLICER EASIER TO USE %%%%%%%%
 
-\subsection{Making Skalpel Easier to Use}
+\section{Making Skalpel Easier to Use}
 
-\textbf{NOTE:} You may wish to set up some key bindings that will
-allow you to operate Skalpel without the need to
-constantly selecting menu items (it can become a pain).  All of the
-code that you need to do this is supplied and can be found in the
-\texttt{skalpel-config.el} file in the \texttt{EmacsUI} folder.
-For details on how to make the key bindings active, please see
-Section~\ref{sec:setting-key-bindings}.
+Key bindings can be set up that will allow the use of Skalpel without
+the need to select menu items.  All of the code needed to do this is
+supplied and can be found in the \texttt{skalpel-config.el} file in
+the \texttt{front-ends/emacs/} folder.  For details on how to make the key
+bindings active, please see Section~\ref{sec:setting-key-bindings}.
 
 %%%%%%%% CREATING A TES CONTROL FILE %%%%%%%%
 
-\subsection{Creating a Type Error Slicer Control File}
+\section{Creating a Type Error Slicer Control File}
 \label{sec:skalpel-control-files}
 
 A type error slicer control file is a file that allows Skalpel to
@@ -393,20 +420,18 @@ to create a type error slicer control file are listed below.
 
 \begin{enumerate}
 \item Create a new file with the \texttt{.tes} extension.
-\item Add a list of files you wish to check - these files can either
-  be SML (\texttt{.sml}) or other type error slicer control
+\item Add a list of files to be checked - these files can either be
+  SML (\texttt{.sml}) or other type error slicer control
   (\texttt{.tes}) files.
 
-\note{The order in which you list the files is important.  Please list
-  all files which depend on other files \textbf{after} the files they
-  depend on, otherwise some errors may not be found.  Listing files in
-  the wrong order in a \texttt{.tes} file may also cause false
-  errors to be found.}
+  The order in of files is important.  Please list all files which
+  depend on other files \textbf{after} the files they depend on,
+  otherwise some errors may not be found.  Listing files in the wrong
+  order in a \texttt{.tes} file may also cause false errors to be
+  found.
+
 \item Save the file.
 \end{enumerate}
-
-\todo{Change section number of ``intergrating the type
-  error slicer with emacs'' as the installation guide changes}
 
 \newpage
 
@@ -419,25 +444,12 @@ to create a type error slicer control file are listed below.
 \subsection{Setting up Key Bindings}
 \label{sec:setting-key-bindings}
 
-Constantly having to select menu items when trying to use the type
-error slicer can become painstakingly annoying.  To stop this from
-happening we set up default key bindings for the features of the type
-error slicer.
-
-%% (You may be wondering why we do not set up key-bindings
-%% automatically. The reason for this is that there is a high possibility
-%% a lot of the people who wish to use Skalpel will have
-%% set up their own key bindings for other purposes. With no way of
-%% guaranteeing that the key bindings we choose that are not being used
-%% by any user of Emacs anywhere in the world, we felt it would be left
-%% to the user to decide; if they wish to use key bindings at all, and if
-%% they do, then they can choose bindings that suits them.)
-
-Our default key bindings are set up in the file
+Default key bindings are available for certain features of the type
+error slicer. Our default key bindings are set up in the file
 \texttt{emacs-config.el} (which can be found in the
-\texttt{EmacsUI} in Skalpel directory) and are only
-active in SML modes (the SML program editing mode and the mode for
-interacting with a running SML implementation).
+\texttt{front-ends/emacs} in Skalpel directory) and are only active in
+SML modes (the SML program editing mode and the mode for interacting
+with a running SML implementation).
 
 %% is all of the code you need to set up the
 %% bindings, all you need to do is remove the appropriate comments and
@@ -447,12 +459,11 @@ interacting with a running SML implementation).
 An example of setting up a key-binding can be seen below.
 
 In the file \texttt{emacs-config.el} there will be a number of
-pieces of code that look like;
+pieces of code that look like
 \texttt{(define-key map [f6] 'skalpel-run-slicer-exec)}
 
-If \texttt{F6} does not suit you and you wish to use another
-binding such as \texttt{CONTROL-F6}, you have to change the
-code between the square brackets.  The binding would then be:
+To change this binding to for example \texttt{CONTROL-F6}, the code
+between the square brackets would change. The binding would then be:
 
 \texttt{(define-key map [C-f6] 'skalpel-run-slicer-exec)}
 
@@ -489,17 +500,15 @@ Emacs call ``faces''. A face can be used to change the way that text
 can be displayed. We use a number of faces to display all of the
 supported types of highlighting.
 
-If you do not like the default colours (or any way the parts of the
-code are highlighted) then you can edit them to something that you
-feel more comfortable with. If you wish to change any of the features
-you can do so by using Emacs \texttt{customize-faces} command and
-selecting the face you wish to edit. A list of the faces that we use
-and an example of what they look like can be seen below;
+The default colours can be edited by using Emacs
+\texttt{customize-faces} command and selecting the face you wish to
+edit. A list of the faces that we use and an example of what they look
+like can be seen below.
 
 \medskip
 
-\textbf{The list of Faces used to highlight sections of source code in
-  Emacs;}
+\textbf{The list of faces used to highlight sections of source code in
+  Emacs}
 
 \begin{center}
   \begin{tabular*}{0.75\textwidth}{@{\extracolsep{\fill}}  l l}
@@ -556,13 +565,13 @@ and an example of what they look like can be seen below;
 
 \textbf{NOTE:} The colours shown above may be inaccurate due to
 differences in printers. For a more accurate representation please
-refer to PDF version which can be found on-line at \texttt{http://www2.macs.hw.ac.uk/{\textasciitilde}ss215/cgi-bin/slicer/docs.html}
+refer to the PDF version of this document.
 
 \newpage
 
 %%%%%%%%% INTERPRETING THE SLICES %%%%%%%%%%
 
-\section{Interpreting the Type Error Slices}
+\chapter{Interpreting Type Error Slices}
 
 Our type error slicer uses a colour coded system to distinguish
 between the different components of the type error slices, and
@@ -576,43 +585,39 @@ the slicer.
 
 %%%%%%%%% KINDS OF ERRORS %%%%%%%%%%
 
-\subsection{Brief Description of the Kinds of Type Errors}
+\section{Brief Description of the Kinds of Type Errors}
 
 This section contains a brief description of each of the different
-kinds of type errors that Skalpel handles. For a more
-detailed explanation of type errors, along with examples, refer to
-section 3.3 (Type Errors Explained).
+kinds of type errors that Skalpel handles.
 
 \begin{itemize}
 
-\item Type Constructor Clash; \subitem -- occurs
+\item Type Constructor Clash \subitem -- occurs
   when two type constructors are constrained to be equal but
-  are not, for example, \texttt{int = bool}
-\item Arity Clash; \subitem -- occurs when a sequence of length N is
+  are not, for example, \texttt{int = bool}.
+\item Arity Clash \subitem -- occurs when a sequence of length N is
   constrained to be equal to a sequence of length M where N $\neq$ M.
-\item Record Clash; \subitem -- occurs when two records are
+\item Record Clash \subitem -- occurs when two records are
   constrained to be equal but a label appears in one record and does
   not appear in the other.
-\item Circularity Error; \subitem -- occurs when a type is
+\item Circularity Error \subitem -- occurs when a type is
   constrained to contain itself (an infinite type).
-\item Inclusion Error; \subitem -- occurs when there is a free type
+\item Inclusion Error \subitem -- occurs when there is a free type
   variable in a datatype or type declaration.
-\item Multi-occurrence Error; \subitem -- occurs when an identifier
+\item Multi-occurrence Error \subitem -- occurs when an identifier
   is bound more than once in one declaration.
-\item Applied Value Variable Error; \subitem -- occurs when a value
+\item Applied Value Variable Error \subitem -- occurs when a value
   variable is supplied an argument in a pattern.
-\item Different Function Name Error; \subitem -- occurs when a
+\item Different Function Name Error \subitem -- occurs when a
   function is declared with 2 differing names.
-\item Free Explicit Type Variable at Top Level Error; \subitem --
+\item Free Explicit Type Variable at Top Level Error \subitem --
   occurs when there is a type variable in the top level environment
   that is not bound to anything (free).
-\item Value on the Left of \texttt{as} Error; \subitem --
+\item Value on the Left of \texttt{as} Error \subitem --
   occurs when the identifier on the left of an \texttt{as} is
   not a value variable.
-\todo{this no longer occurs in the back-end and the next
-  version of this document should reflect this}
 \item An Identifier Occurs in a Pattern Both Applied and Not Applied to
-  an Argument. \subitem -- as the name suggests.
+  an Argument. \subitem -- occurs when the arity of an identifier is determined to be two different values.
 \item Different Number of Arguments Error.  \subitem -- occurs when a
   function is defined to take an inconsistent number of arguments.
 \item Ungeneralisable Bound Type Variable.  \subitem -- occurs when SML does
@@ -621,21 +626,7 @@ section 3.3 (Type Errors Explained).
 \item Unmatched Specification Error. \subitem -- Occurs when a structure does not declare an identifier that it is supposed to..
 \end{itemize}
 
-\todo{New kind of errors: When the body a recursive
-  function is not a function; When a real number occurs in a pattern;
-  free identifiers.}
-
-\newpage
-
-%%%%%%%%% WHAT THE COLOURS MEAN %%%%%%%%%%
-
-\subsection{What the Colours Mean}
-
-\todo{Go through with Vincent to make sure correct, what
-  else to add etc}
-
-\textbf{Note:} For an explanation of the meaning of the ``jargon'', please
-refer to section 3.3 (Type errors Explained).
+\section{What the Colours Mean}
 
 \begin{itemize}
 
@@ -647,19 +638,13 @@ refer to section 3.3 (Type errors Explained).
 
 \item \texttt{\boxEnd{gray}/\boxB{blue}}
 
-\todo{Changed to and blue \tesEndPointOne}
-
 \begin{itemize}
 \item Indicates that the highlighted text is an end point of a
   type constructor clash, an arity clash, or a record clash.
 
-\todo{What is a type constructor clash????}
-
 \end{itemize}
 
 \item \texttt{\boxG{Green}}
-
-\todo{Changed to green}
 
 \begin{itemize}
 \item Indicates an endpoint of a record clash. The highlighted text
@@ -667,10 +652,6 @@ refer to section 3.3 (Type errors Explained).
   highlighting in a slice, it means that the slice merges at least two
   minimal slices.
 \end{itemize}
-
-\todo{above explanation of ``green'' changed based on
-  feedback from Vincent, need to check it over to make sure i
-  understood the feedback}
 
 \item \texttt{\fboxBl{Box}}
 
@@ -682,7 +663,7 @@ refer to section 3.3 (Type errors Explained).
   content of the box is relevant to the error, and the reason why it
   is relevant is dependant on its colour (which are explained above).
 
-\subitem A box can indicate one of two things;
+\subitem A box can indicate one of two things:
 
 \begin{enumerate}
 \item The application of a
@@ -715,7 +696,7 @@ refer to section 3.3 (Type errors Explained).
 
   \codebody{\Bl val x:t t = y \El}
 
-  The slicer produces the following output;
+  The slicer produces the following output:
 
   \codebody{\Bl \boxR{val} x:\fboxGen{mygray}{\hspace{-0.028in}\bluetext{|}\hspace{-0.03in}t}{myred}\boxR{ t} \boxR{=} y \El}
 
@@ -728,52 +709,33 @@ refer to section 3.3 (Type errors Explained).
 
 \end{itemize}
 
-\todo{Is there anything else?}
-
-\todo{Include some simple examples to show user how
-  slices should be interpreted?????}
-
 \newpage
 
-\subsection{Type Errors Explained (with examples)}
+\section{Type Errors Explained (with examples)}
 
-\todo{Do we want to show errors generated by SML command
-  line? Or will this clutter things up?}
-
-
-
-\todo{anything else to add to the above?? does the above
-  make sense??}
-
-\subsubsection{Explanation of useful terms}
+\subsection{Explanation of useful terms}
 \begin{itemize}
 
 %%%%%%%% TYPE ERROR SLICE %%%%%%%%%
 
-\item Type Error Slice;
+\item Type Error Slice
 
   \subitem A type error slice is a piece of code that contains all of
   the points in a program that contribute to a type error with all of
   the other details omitted. In this document type error slices will
   normally be referred to as ``slices''.
 
-  \todo{get clarification on the above, to make sure it
-    is absolutely correct}
-
 %%%%%%% MINIMAL SLICE %%%%%%%%%%
 
-\item Minimal Slice;
+\item Minimal Slice
 
   \subitem A minimal slice is an error slice which contains all of the
   program points that are required for the error to exist and nothing
   more.
 
-  \todo{get clarification on the above, to make sure it
-    is absolutely correct}
-
 %%%%%%% PROGRAMMING ERRORS %%%%%%%%
 
-\item Programming Errors;
+\item Programming Errors
 
   \subitem A programming error is an error which causes the program to
   do something other than it is meant to do. A programming error may
@@ -782,7 +744,7 @@ refer to section 3.3 (Type errors Explained).
 
 %%%%%%%% CONTEXT DEPENDENCY %%%%%%%%%
 
-\item Context Dependencies;
+\item Context Dependencies
 
   \subitem In some of the errors reported by Skalpel, it
   will be only be an error if some identifiers are value variables,
@@ -798,25 +760,20 @@ refer to section 3.3 (Type errors Explained).
 
 %%%%%%%% TYPE ERRORS %%%%%%%%%%%%%%
 
-\item Type Error;
+\item Type Error
 
-  \subitem For a program to be correctly typed, there is a large
-  number of constraints that have to be met. A type error occurs when
-  all of these constraints cannot be satisfied simultaneously.
-
-  \todo{Not sure about the wording, think we will also
-    need a bit about why this differs to the users wrong view}
+  \subitem For a program to be correctly typed, there is a number of
+  constraints that have to be met. A type error occurs when all of
+  these constraints cannot be satisfied simultaneously.
 
 %%%%%%% TYPE CONSTRAINT %%%%%%%%%
 
-\item Type Constraint;
+\item Type Constraint
 
-  \subitem A type constraint is when a value variable is constrained
-  to be of a certain type, for example, in the piece of code below, \texttt{x}
-  is constrained to be of type \texttt{bool},
-\codebody{\Bl val x = true \El}
-
-\todo{Is the above correct}
+  \subitem A type constraint is when a value is constrained to be of a
+  certain type, for example, in the piece of code below, \texttt{x} is
+  constrained to be of type \texttt{bool}, \codebody{\Bl val x = true
+    \El}
 
 \newpage
 
@@ -825,13 +782,13 @@ refer to section 3.3 (Type errors Explained).
 {\large The rest of this section contains explanations of the type errors
 recognised by Skalpel.}
 \vspace{0.1in}
-\subsubsection{Type Constructor Clash;}
+\subsection{Type Constructor Clash}
 
   \subitem A type constructor clash occurs when two type constructors
   are constrained (by the constraints mentioned previously) to be equal but
   they are not.
 
-  For example, consider the following code;
+  For example, consider the following code.
 
 \codebody{\Bl fun count x = x + true \El}
 
@@ -842,11 +799,11 @@ which is a Boolean. As a Boolean is not a number and \texttt{+}
 is not a Boolean operator, there is no way that this statement can be
 assigned to have one type.
 
-The slicer highlights the error in the following way;
+The slicer highlights the error in the following way:
 
 \codebody{\Bl fun count x = x \boxB{+}\boxR{ }\boxEnd{true} \El}
 
-As you can see, the \texttt{+} operator has been highlighted in blue and
+As can be seen, the \texttt{+} operator has been highlighted in blue and
 \texttt{true} in \tesEndPointOne. The differing colours indicate that
 \texttt{true} and \texttt{+} are not of the same type,
 thus causing an error.
@@ -855,12 +812,10 @@ thus causing an error.
 
 %%%%%%%%% ARITY CLASH %%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Arity Clash;}
+\subsection{Arity Clash}
 
   \subitem An arity clash happens when a sequence of length N is
   constrained to be equal to a sequence of length M, where N $\neq$ M.
-
-\todo{get proper note equal sign?? ( =/=)}
 
 For example, consider the following piece of code.
 
@@ -869,17 +824,17 @@ For example, consider the following piece of code.
 In the example above, \texttt{t} occurs with one argument,
 \texttt{'a t}, as well as occurring with two arguments
 \texttt{('a, 'a) t}. In this example, the slicer provides two
-slices;
+slices:
 
 \codebody{\Bl datatype 'a t = T of \fboxB{'a}\boxR{ t} | U of
   \boxEnd{(}'a\boxEnd{,} 'a\boxEnd{)}\boxR{t} \El}
 
-as well as;
+as well as
 
 \codebody{\Bl \boxR{datatype} \fboxB{'a}\boxR{ t} \boxR{=} T of 'a
   t | U of \boxEnd{(}'a\boxEnd{,} 'a\boxEnd{)}\boxR{t} \El}
 
-As you can see from the slices, both occurrences of \texttt{'a
+As can be seen from the slices, both occurrences of \texttt{'a
   t} have been highlighted, with the \texttt{'a} part being
 highlighted with the use of a box, indicating that it is the unique
 argument of \texttt{t}, with the \texttt{t} being
@@ -898,32 +853,23 @@ In order to correct the error, the user can alter the code so that all
 occurrences of \texttt{t} have the same number of arguments
 (same arity).
 
-\todo{changing to all ('a, 'a)t leads to a multi
-  occurrence error, why???}
-{Because i don't know SML that well, if you
-  insert \texttt{('a, 'b) t} into the definition instead of
-  \texttt{(a', a') t},all is well}
-{Both of the above notes are irrelevant as the
-  explanation has been changed to not include a specific way to correct
-the example}
-
 \newpage
 
 %%%%%%%%% RECORD CLASH %%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection {Record Clash;}
+\subsection {Record Clash}
 
 \subitem A record clash occurs when two records are constrained to be
 equal but a label appears in one record and does not appear in the other.
 \\
-For example, consider the following code;
+For example, consider the following code:
 
 \codebody{\Bl val \{foo,bar\} = \{fool=0,bar=1\} \El}
 
-As you can see, the label \texttt{foo} appears in the first record but does
+As can be seen, the label \texttt{foo} appears in the first record but does
 not appear in the second one. Also the label \texttt{fool} appears in
 the second record but does not appear in the first one. Hence, we have
-a record clash. Skalpel returns the following output;
+a record clash. Skalpel returns the following output:
 
 \codebody{\Bl \boxR{val}
   \boxR{\{}\boxB{foo}\boxR{,}\boxG{bar}\boxR{\} =
@@ -933,9 +879,7 @@ The above example is actually two minimal slices merged together. With
 this kind of error, merging the slices together makes the causes of
 the error easier to identify. Finding record clashes can be time
 consuming, so sometimes the merged slice will not be returned. The two
-slices that are merged to make the slice above can be seen below;
-
-\todo{add definition of minimal slice}
+slices that are merged to make the slice above can be seen below.
 
 \codebody{\Bl \boxR{val}
   \boxR{\{}\boxB{foo}\boxR{,}bar\boxR{\} =
@@ -945,40 +889,37 @@ slices that are merged to make the slice above can be seen below;
   \boxR{\{}\boxB{foo}\boxR{,}\boxB{bar}\boxR{\} =
     \{}\boxEnd{fool}\boxR{=}0\boxR{,}bar\boxR{=}1\boxR{\}} \El}
 
-In the first slice above, \texttt{foo} is highlighted in blue
-and all of the labels in the right-hand side are highlighted in
-\tesEndPointOne. This is because \texttt{foo} does not
-appear in the set on the right hand side, \texttt{\{fool,bar\}}
+In the first slice above, \texttt{foo} is highlighted in blue and all
+the right hand side expression is highlighted in \tesEndPointOne. This
+is because \texttt{foo} does not appear in the set on the right hand
+side, \texttt{\{fool,bar\}}.
 
 In the second slice above, \texttt{fool} is highlighted in
 \tesEndPointOne and all of the labels in the left-hand side are
 highlighted in blue. This is because \texttt{fool} does not appear
-in the set on the left hand side, \texttt{\{foo,bar\}}
+in the set on the left hand side, \texttt{\{foo,bar\}}.
 
-As you can see from the merged slice, the slicer highlights
+As can be seen from the merged slice, the slicer highlights
 \texttt{foo} in blue and \texttt{fool} in
 \tesEndPointOne. This is a combination of the two minimal slices. The slicer
 also highlights both occurrences of \texttt{bar} in
 \tesEndPointOne. This is because it appears in both clashing records.
 
-\todo{Not sure on wording - or correctness of last part
-  - confirm with Vincent}
-
 \newpage
 
 %%%%%%%% CIRCULARITY ERROR %%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Circularity Error;}
+\subsection{Circularity Error}
 
 \subitem Circularity errors occur when a type is constrained to
 contain itself. This kind of error is best explained through the use
 of an example.
 
-Consider the following pieces of code;
+Consider the following pieces of code:
 
 \codebody{\Bl fun f () = f () \El}
 
-and;
+and
 
 \codebody{\Bl fun f () = f () () \El}
 
@@ -989,17 +930,16 @@ then the second occurrence of \texttt{f} would be of type
 \texttt{unit -> unit -> 'a} and the first occurrence of
 \texttt{f} would be of type \texttt{unit -> 'a}
 
-This means that;
-\codebody{\Bl unit -> 'a =  unit -> unit -> 'a \\ 'a = unit -> 'a\El}
+This means that:
 
-\todo{Need better explanation for the above???}
+\codebody{\Bl unit -> 'a =  unit -> unit -> 'a \\ 'a = unit -> 'a\El}
 
 As a result of this:
 
  \codebody{\Bl 'a = unit -> unit -> 'a = unit -> unit -> unit ->
  unit -> 'a = ...\El}
 
-This can be better viewed as a tree structure;
+This can be better viewed as a tree structure.
 
 \begin{figure}[!h]
 \begin{center}
@@ -1007,44 +947,24 @@ This can be better viewed as a tree structure;
 \end{center}
 \end{figure}
 
-\todo{does the tree match the explanation of the error??
-  does it need to be changed to have \texttt{unit -> unit ->
-    'a} on as the leaves??}
-
-
-\todo{add tree to illustrate example better}
-
-
-
 As illustrated by the tree, the type of the function for the second
 piece of code cannot be defined, as it would be assigned an infinite
 type, which are not supported by SML, hence there is an error.
-
-\todo{get right arrow instead of upside down question
-  mark}
-
-\todo{Not sure on the use of bold to represent the types
-  in the explanation as it is inconsistent with the rest of the
-  document, however, it seems to make the explanation easier to
-  read. Perhaps the rest of the explanations should be changed to the
-  same format to be consistent????}
-
-
 
 \newpage
 
 %%%%%%%%% INCLUSION ERROR %%%%%%%%%%%%%%%%%
 
-\subsubsection{Inclusion Error;}
+\subsection{Inclusion Error}
 
 \subitem An inclusion error occurs when there is a free type variable
 in a datatype declaration.
 
-For example, consider the following piece of code;
+For example, consider the following piece of code:
 
 \codebody{\Bl datatype 'a t = T of (bool -> ('a, 'b) w) \El}
 
-The slicer highlights the code in the following way;
+The slicer highlights the code in the following way:
 
 \codebody{\Bl \boxR{datatype} \boxR{'a }t \boxR{=} T of (bool ->
   ('a, \boxR{'b}) w) \El}
@@ -1057,21 +977,16 @@ occurrence of \texttt{'b} is also highlighted as
 \texttt{'b} is the free
 type variable that causes the error.
 
-\todo{Not sure if the reason or explanation of why the
-  space is highlighted is correct}
-
-
-
 \vspace{1in}
 
 %%%%%%%%%%%%% MULTI-OCCURRENCE ERROR %%%%%%%%%%%
 
-\subsubsection{Multi-occurrence Error;}
+\subsection{Multi-occurrence Error}
 
 \subitem A multi-occurrence error occurs when an identifier is
 declared twice in a unique declaration (binding).
 
-For example, consider the following code;
+For example, consider the following code:
 
 \codebody{\Bl val (x, x) = (1, 1) \El}
 
@@ -1081,7 +996,7 @@ the pattern \texttt{val (x, x)} which is not permitted if x is
 a value variable.
 
 The slicer highlights the code in the following way (under the
-context dependency that x is a value variable;
+context dependency that x is a value variable.
 
 \codebody{\Bl \boxR{val} (\boxR{x}, \boxR{x}) \boxR{=} (1,1) \El}
 
@@ -1098,17 +1013,17 @@ datatype defining \texttt{x} if his/her intentions were for
 
 %%%%%%%% APPLIED VALUE VARIABLE ERROR %%%%%%%%%%
 
-\subsubsection{Applied Value Variable Error;}
+\subsection{Applied Value Variable Error}
 
 \subitem This error occurs when a value variable is supplied an
 argument in a pattern.
 
-For example, consider the following piece of code;
+For example, consider the following piece of code:
 
 \codebody{\Bl val (x y, z, w) = (1, 2, 3) \El}
 
 With the context dependency, \texttt{x} is a value variable,
- the slicer highlights the code as follows;
+ the slicer highlights the code as follows:
 
 \codebody{\Bl \boxR{val} (\boxR{x }\fboxR{y}, z, w) \boxR{=} (1, 2,
   3)\El}
@@ -1126,27 +1041,24 @@ pattern.
 constructor (this is the reason the context dependencies of the error are
 explicitly stated).
 
-\todo{Check wording to make sure it is technically
-  correct}
-
 \vspace{0.5in}
 
 %%%%%%% DIFFERENT FUNCTION NAME ERROR %%%%%%%
 
-\subsubsection{Different Function Name Error;}
+\subsection{Different Function Name Error}
 
   \subitem One of the constraints (we mentioned constraints in the
   section explaining type errors) that has to be met for a piece of
   code to be a valid SML program is that in a function definition,
   there must only be one name for the function.
 
-Consider the following piece of code;
+Consider the following piece of code:
 
 \codebody{\Bl fun count 0 = 1 | cout n = n + 1 \El}
 
 As you can see in the code above, we have tried to give one function
 two names. The slicer correctly identifies that this piece of code is
-not correct and highlights it as follows;
+not correct and highlights it as follows:
 
 \codebody{\Bl \boxR{fun} \boxR{count} 0 \boxR{=} 1 \boxR{|} \boxR{cout} n
   \boxR{=} n + 1 \El}
@@ -1159,54 +1071,38 @@ function definition. After a quick inspection of the slice, it becomes
 easy to see that the function has two differing names, and the
 programmer can correct the error accordingly.
 
-\todo{Not sure if the above is correct, or even makes
-  sense but i am approaching the end of a 12 hour day, so will tackle
-  it all guns blazing in the morning when i am raring to go (if i
-  remember)}
-
-{Makes a bit of sense, sounds good (perhaps not
-  correct) but I will speak to Vincent when more of the section has
-  been completed to get feedback and make any changes that are needed}
-
-\todo{Again, not sure on wording}
-
 \newpage
 
 %%%%%%%%%% FREE EXPLICIT TYPE VARIABLE AT TOP LEVEL ERROR %%%%%%%%%%%%
 
-\subsubsection{Free Explicit Type Variable at Top Level Error;}
+\subsection{Free Explicit Type Variable at Top Level Error}
 
 \subitem This error occurs when there is type variable in the top
 level environment that is not bound to anything.
 
-\todo{does the above make sense???}
-
-For example, consider the following piece of code;
+For example, consider the following piece of code:
 
 \codebody{\Bl exception e of 'a \El}
 
 The slicer highlights the code as (under the context dependency that
-\texttt{'a} is at top level);
+\texttt{'a} is at top level):
 
 \codebody{\Bl \boxR{exception} e \boxR{of} \boxR{'a} \El}
 
 The problem here is that \texttt{exception} does not implicitly
 bind type variables.
 
-\todo{we correct this by binding 'a ourselves, but
-  how??}
-
 \vspace{0.5in}
 
 %%%%%%%% VALUE ON THE LEFT OF AS MUST BE A VALUE ERROR %%%%%%%%%%
 
-\subsubsection{Value on the Left of ``as'' Must be a Variable Error;}
+\subsection{Value on the Left of ``as'' Must be a Variable Error}
 
 \subitem No matter what the situation is, the identifier on the left
 of an \texttt{as} must be a value variable, otherwise there is
 a ``value on the left of \texttt{as} must be a value'' error.
 
-Consider the following piece of code;
+Consider the following piece of code:
 
 \codebody{\Bl datatype t = c; val c as (x, y) = (1, true) \El}
 
@@ -1214,7 +1110,7 @@ The problem here is that the identifier on the left of the
 \texttt{as} (in this case \texttt{c}) is a value
 constructor and not a value variable.
 
-The slicer highlights the code as follows;
+The slicer highlights the code as follows:
 
 \codebody{\Bl \boxR{datatype} t \boxR{=} \boxR{c}; \boxR{val}
   \boxR{c as} (x, y) \boxR{=} (1, true) \El}
@@ -1236,27 +1132,23 @@ highlighting produced by the slicer.
 \codebody{\Bl \boxR{exception} \boxR{e} \boxR{val} \boxR{e as} x
   \boxR{=} 1; \El}
 
-\todo{add code once bug has been fixed}
-
-
-
 \newpage
 
 %%%%%%%%%% AN IDENTIFIER OCCURS IN A PATTERN BOTH APPLIED AND NOT APPLIED
 
-\subsubsection{An Identifier Occurs in a Pattern Both Applied and not Applied
-  to an Argument;}
+\subsection{An Identifier Occurs in a Pattern Both Applied and not Applied
+  to an Argument}
 
 \subitem This error is pretty self explanatory from the title, but the
 reasons for such an error can be best explained through the use of an
 example.
 
-Consider the following piece of code;
+Consider the following piece of code:
 
 \codebody{\Bl fn (f, f y, g x) => x + y \El}
 
 The slicer highlights the code in the following way (the slicer
-identifies other errors but this is the one we are interested in);
+identifies other errors but this is the one we are interested in):
 
 \codebody{\Bl \boxR{fn} (\boxR{f}, \boxR{f
   }\fboxR{y}, g x ) \boxR{=>} x + y \El}
@@ -1271,7 +1163,7 @@ significant in the error.
 
 This error only occurs when the identifier appears inside a pattern
 and can be caused by one of three things. The identifier in
-question (in this case \texttt{f}) can either be;
+question (in this case \texttt{f}) can either be:
 
 \begin{enumerate}
 \item A value variable --- in which case the identifier should not be
@@ -1286,18 +1178,18 @@ question (in this case \texttt{f}) can either be;
 %%%%%%% DIFFERENT NUMBER OF ARGUMENTS ERROR %%%%%%%%
 \newpage
 
-\subsubsection{Different Number of Arguments Error;}
+\subsection{Different Number of Arguments Error}
 
 \subitem This error occurs when a function is defined to have an
 inconsistent number of arguments.
 
-Consider the following function declaration;
+Consider the following function declaration:
 
 \codebody{\Bl fun foo 0 = 1 \\ \hspace{0.06in} | foo x y = x + y \El}
 
 As you can see the function \texttt{foo} is defined to handle
 both one argument and two arguments. This is not permitted in SML and
-is therefore incorrect code. The slicer highlights the code as;
+is therefore incorrect code. The slicer highlights the code as:
 
 \codebody{\Bl \boxR{fun} foo\boxR{ }\fboxR{0}\boxR{ =} 1 \\
   \hspace{0.06in} \boxR{|} foo\boxR{ }\fboxR{x}\boxR{ }\fboxR{y}
@@ -1313,11 +1205,8 @@ are not as many arguments on these lines as there are on other lines.
 \textbf{Note:} The slicer is not implying that each of the lines in
 the declaration should contain the same number of arguments as the
 line that has the most, only that all lines should have the same number.
-\todo{Better words other than ``lines'' in the above?}
 
-%%%%%%% UNGERNERALISABLE TYPE VARIABLE ERROR %%%%%%%%
-
-\subsubsection{Ungeneralisable Bound Type Variable Error}
+\subsection{Ungeneralisable Bound Type Variable Error}
 
 \subitem Explicit type variables are usually generalisable at value
 bindings but for some cases these type variables cannot be generalised
@@ -1345,47 +1234,30 @@ The slicer highlights the error in the following way.
 
 %%%%%%% UNMATCHED SPECIFICATION ERROR %%%%%%%%
 
-\subsubsection{Unmatched Specification Error}
+\subsection{Unmatched Specification Error}
 
 \subitem This kind of error occurs when a structure does not declare
 an identifier that it is supposed to.
 
-Consider the following example;
+Consider the following example:
 \codebody{\Bl structure foo = struct val x = () end; \\ foo.y;\El}
 There is an error in the above code because the structure
 \texttt{foo} does not declare the identifier \texttt{y}.
-The slicer highlights the code as;
+The slicer highlights the code as:
 \codebody{\Bl \boxR{structure} \boxR{foo} \boxR{=} \boxR{struct} \boxR{val} \boxR{x = }() \boxR{end}; \\ \boxR{foo.y};\El}
 
 \end{itemize}
 
 \chapter {Credits}
-Current Implementation (for full SML)\\
-
-	Vincent Rahli: Type Error Slicer Theory and Implementation.\\
-
-	Joe Wells: Theory and Implementation Consulting Advice and Emacs
-   		   Interface.\\
-
-	John Pirie: Type Error Slicer Implementation and Emacs Interface\\
-
-        Scott Fotheringham: Setup of bugzilla and Emacs Interface\\
-
-        Mark Wyper: Testing of the effectiveness of the Slicer.\\
-
-	Steven Shiells: Web Interface Implementation and Emacs Interface.\\
-
-	David Dunsmore: Testing of the effectiveness of the Slicer.\\
-
-	Fairouz Kamareddine: Theory Consulting\\
-
-Earlier Implementation (for a tiny subset of SML)\\
-
-	Joe Wells: Theory and Implementation Consulting Advice and Emacs
-	    	   Interface.\\
-
-	Christian Haack: Type Error Slicer Theory and Implementation.\\
-
-	Sébastien Carlier: Web Interface Implementation.
-
+Vincent Rahli: Type Error Slicer Theory and Implementation.\\\\
+Joe Wells: Theory and Implementation, Consulting Advice and Emacs
+Interface.\\\\
+John Pirie: Type Error Slicer Theory and Implementation.\\\\
+Scott Fotheringham: Setup of Bugzilla and Emacs Interface\\\\
+Mark Wyper: Testing of the effectiveness of Skalpel.\\\\
+Steven Shiells: Web Interface Implementation and Emacs Interface.\\\\
+David Dunsmore: Testing of the effectiveness of Skalpel.\\\\
+Fairouz Kamareddine: Theory Consulting\\\\
+Christian Haack: Type Error Slicer Theory and Implementation.\\\\
+S\'ebastien Carlier: Web Interface Implementation.
 \end{document}

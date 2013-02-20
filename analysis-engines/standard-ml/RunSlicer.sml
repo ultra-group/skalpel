@@ -427,7 +427,7 @@ fun smlTesStrArgs strArgs =
 	val basisoverloading = ref "1"
 
 	fun printHelp () =
-	    print ("usage: slicer [option ...] [FILE] \n\
+	    print ("usage: skalpel [option ...] [FILE] \n\
 				    \    FILE file taken as input to be sliced\n\
 				    \    -l <file> place output in <file> in lisp format\n\
 				    \    -h <file> place output in <file> in HTML format\n\
