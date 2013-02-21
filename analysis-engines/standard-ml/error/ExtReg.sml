@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   ExtReg.sml
@@ -243,7 +243,7 @@ and printPerlExtRegList []         = ""
   | printPerlExtRegList [t]        = printPerlExtReg t
   | printPerlExtRegList (t :: tl)  = printPerlExtReg t ^ ", " ^ printPerlExtRegList tl
 
-fun printBashGenExtReg r c regs explodedLines moreRegions previousLineNum nodeRegionList =
+fun printBashGenExtReg r c regs explodedLines previousLineNum nodeRegionList =
     let val p1 = R.getFrom r
 	val p2 = R.getTo r
 	val l1 = R.getPosLine p1
@@ -251,125 +251,86 @@ fun printBashGenExtReg r c regs explodedLines moreRegions previousLineNum nodeRe
 	val l2 = R.getPosLine p2
 	val c2 = R.getPosCol  p2
     in
-	 printCodeFragment (l1, c1) (l2, c2) explodedLines c moreRegions previousLineNum nodeRegionList
+	 printCodeFragment (l1, c1) (l2, c2) explodedLines c previousLineNum
     end
 
-and printSubRegions (currentLine, currentColumn) []        explodedLines moreRegions previousLineNum = NONE
-  | printSubRegions (currentLine, currentColumn) (node::t) explodedLines moreRegions previousLineNum =
-    case node of
-	(L (r, c, w)) =>
-	let
-	    val endRegionLine = R.getPosLine(R.getTo r)
-	    val endRegionCol  = R.getPosCol(R.getTo r)
-	    val moreRegionsLine = (case moreRegions of NONE => ~1 | SOME(x,y) => x)
-	    val moreRegionsCol = (case moreRegions of NONE => ~1 | SOME(x,y) => y)
-	    val _  = print ("*********** " ^ (Int.toString (moreRegionsCol - endRegionCol)) ^ "*********************")
-	in
-	    (D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ "). End region is (" ^ (Int.toString endRegionLine) ^ "," ^ (Int.toString endRegionCol) ^ "), and more regions is (" ^ (Int.toString moreRegionsLine) ^ "," ^ (Int.toString moreRegionsCol) ^ ")\n");
-	     if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
-	     then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (if moreRegionsCol - endRegionCol > 1 then moreRegions else (SOME(~1,~1)))  previousLineNum [];
-		   SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)))
-	     else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum)
-	end
-      | (H (r, c, w)) =>
-	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n");
-	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
-	then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum [];
-	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)))
-	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum)
-      | (N (r, c, w, nodeRegionList)) =>
-	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n");
-	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn
-	then (printBashGenExtReg r (printBashColor c BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum nodeRegionList;
-	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)))
-	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum)
+(* and printSubRegions (currentLine, currentColumn) []        explodedLines moreRegions previousLineNum = NONE *)
+(*   | printSubRegions (currentLine, currentColumn) (node::t) explodedLines moreRegions previousLineNum = *)
+(*     case node of *)
+(* 	(L (r, c, w)) => *)
+(* 	let *)
+(* 	    val endRegionLine = R.getPosLine(R.getTo r) *)
+(* 	    val endRegionCol  = R.getPosCol(R.getTo r) *)
+(* 	    val moreRegionsLine = (case moreRegions of NONE => ~1 | SOME(x,y) => x) *)
+(* 	    val moreRegionsCol = (case moreRegions of NONE => ~1 | SOME(x,y) => y) *)
+(* 	    val _  = print ("*********** " ^ (Int.toString (moreRegionsCol - endRegionCol)) ^ "*********************") *)
+(* 	in *)
+(* 	    (D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ "). End region is (" ^ (Int.toString endRegionLine) ^ "," ^ (Int.toString endRegionCol) ^ "), and more regions is (" ^ (Int.toString moreRegionsLine) ^ "," ^ (Int.toString moreRegionsCol) ^ ")\n"); *)
+(* 	     if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
+(* 	     then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (if moreRegionsCol - endRegionCol > 1 then moreRegions else (SOME(~1,~1)))  previousLineNum []; *)
+(* 		   SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
+(* 	     else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
+(* 	end *)
+(*       | (H (r, c, w)) => *)
+(* 	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n"); *)
+(* 	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
+(* 	then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum []; *)
+(* 	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
+(* 	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
+(*       | (N (r, c, w, nodeRegionList)) => *)
+(* 	(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Checking (" ^ (Int.toString currentLine) ^ "," ^ (Int.toString(currentColumn)) ^ ") against current node region (" ^ (Int.toString (R.getPosLine(R.getFrom r))) ^ "," ^ (Int.toString (R.getPosCol(R.getFrom r))) ^ ")\n"); *)
+(* 	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
+(* 	then (printBashGenExtReg r (printBashColor c BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum nodeRegionList; *)
+(* 	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
+(* 	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
 
-and printCodeFragment (l1, c1) (l2, c2) explodedLines color moreRegions previousLineNum nodeRegionList =
+and printSkipped explodedLines currentLine currentColumn previousLineNum color =
     let
-	val _ = D.printDebugFeature D.BLANK D.TEMP (fn _ => "current printing fragment: (" ^ Int.toString(l1) ^ "," ^ Int.toString(c1) ^ ") to (" ^ Int.toString(l2) ^ "," ^ Int.toString(c2) ^ ")\n")
-	fun printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn) previousLineNum =
-	    let
-		val _ = D.printDebugFeature D.BLANK D.TEMP (fn _ => "\n[current char: " ^ Int.toString currentColumn ^ "]\n")
-		(* we need to subtract 1 because of list indexing *)
-		val currentLineList = List.nth (explodedLines, currentLine-1)
-		(* we need to subtract 1 because of list indexing *)
-		val previousLineNum = if (currentLine - previousLineNum > 1)
-				      (* we add "..." to indicate skipped lines and print all the text that was previous in the line *)
-				      then
-					  if (currentLine - previousLineNum = 2)
-					  (* if there is only one skipped, display that number *)
-					  then (print ((!D.textReset) ^ Int.toString(previousLineNum+1) ^ ":\t\t ...\n");
-						print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
-						currentLine)
-					  (* if more than one line was skipped, give the region of skipped line numbers *)
-					  else (print ((!D.textReset) ^ (if previousLineNum = ~1 then "1" else Int.toString(previousLineNum+1)) ^ "-" ^ Int.toString(currentLine-1) ^ ":\t\t ...\n");
-						print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
-						currentLine)
-				      (* there are no skipped lines so we just print all the text that was previous in the line *)
-				      else if (currentLine - previousLineNum = 1)
-				      then (print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color); currentLine)
-				      (* otherwise don't print anything extra *)
-				      else previousLineNum
-		val currentColumnChar = List.nth (currentLineList, currentColumn-1)
-		(* if we haven't moved out of bounds, print the character *)
-	    in
-		(* if the current line and column we are printing is the same as the start line and column of a region in nodeRegionList
-		 * then we recurse, printing the region in nodeRegionList with leafboxed colouring
-		 *      if the end of the region we just printed in nodeRegionList is the same as the end of our region
-		 *      then we're done
-		 *      else we recurse, giving our current position as the start line and column
-		 * else print the character as normal and carry on *)
-		(D.printDebugFeature D.BLANK D.TEMP (fn _ => "{calling printSubRegions with currentLine = "^ (Int.toString currentLine) ^ ", currentColumn = " ^ (Int.toString currentColumn) ^ ", region list [" ^ (printExtRegList nodeRegionList) ^ "]}\n");
-		case printSubRegions (currentLine, currentColumn) nodeRegionList explodedLines moreRegions currentLine
-		 of SOME(finishLine, finishColumn) =>
-		    (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{got SOME regions back}\n");
-		    if l2 = finishLine andalso c2 = finishColumn
-		    then ()
-		    else (* MORE REGIONS NEEDS RECOMPUTED *) printCodeFragment (finishLine, finishColumn+1) (l2, c2) explodedLines color moreRegions previousLineNum nodeRegionList)
-		  | NONE =>
-		    (
-		     D.printDebugFeature D.BLANK D.TEMP (fn _ => "{got NO regions back}\n");
-		     if currentColumn > c2 then ()
-		     else
-			 case Char.toString currentColumnChar of
-			     (* in the case of new line and tab
-				characters, actually print them *)
-			     "\\n" => print ((!D.textReset) ^ "\n")
-			   | "\\t" => print ((!D.textReset) ^ "\t")
-			   | x => print x;
+	(* we need to subtract 1 because of list indexing *)
+	val currentLineList = List.nth (explodedLines, currentLine-1)
+	(* we need to subtract 1 because of list indexing *)
+	val previousLineNum =  if currentLine = previousLineNum
+			       then currentLine
+			       else if (currentLine - previousLineNum > 1)
+			      (* we add "..." to indicate skipped lines and print all the text that was previous in the line *)
+			       then if (currentLine - previousLineNum = 2)
+				    (* if there is only one skipped, display that number *)
+				   then (print ((!D.textReset) ^ Int.toString(previousLineNum+1) ^ ":\t\t ...\n");
+					 print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
+					 currentLine)
+				    (* if more than one line was skipped, give the region of skipped line numbers *)
+				    else (print ((!D.textReset) ^ (if previousLineNum = ~1 then "1" else Int.toString(previousLineNum+1)) ^ "-" ^ Int.toString(currentLine-1) ^ ":\t\t ...\n");
+					  print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
+					  currentLine)
+			       (* there are no skipped lines so we just print all the text that was previous in the line *)
+			       else if (currentLine - previousLineNum = 1)
+			       then (print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color); currentLine)
+			       else previousLineNum 				      (* otherwise don't print anything extra *)
+	val currentColumnChar = List.nth (currentLineList, currentColumn-1)
+    in
+	(currentLineList, previousLineNum, currentColumnChar)
+    end
 
-		     (* we have to subtract one because list indexing starts at zero *)
-		     if currentLine = l2 andalso currentColumn = c2
-		     then
-			 case moreRegions of
-			     (* if there are no more regions on this current line *)
-			     NONE =>
-			     (* print the rest of the line *)
-			     (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{reached target location, no more regions, returning}");
-			     if currentLine <> ~1
-			     then (print (!D.textReset); print (String.implode(List.drop(currentLineList, currentColumn))))
-			     else ())
-			   | SOME (nextLine, nextColumn) =>
-			     (D.printDebugFeature D.BLANK D.TEMP (fn _ => "{reached target location, there are more regions (nextLine="^(Int.toString nextLine)^", nextColumn="^Int.toString(nextColumn)^"), recursing...}");
-			      if nextLine <> currentLine (* the next line the regions are on should always be the same as this one if moreRegions has a SOME case *)
-			      then if nextLine <> ~1     (* if we aren't dealing with a non-recursive case *)
-				   then raise EH.DeadBranch "Error during command line interface parsing: a region has been detected (probably incorrectly) to start at two places at once!"
-				   else(D.printDebugFeature D.BLANK D.TEMP (fn _ => "Next line has been set to -1. Not recursing!")
-				       (* a; *))
-			      else (print (!D.textReset);
-				    (* there are more regions on the line so there must be a next column, set a negative value so we don't recurse *)
-				    (* MORE REGIONS NEED RECOMPUTED *) printCodeFragment (currentLine, currentColumn+1) (nextLine, nextColumn-1) explodedLines "" (SOME(~1,~1)) previousLineNum nodeRegionList))
-		     else
-			 if currentColumn > c2
-			 then ()
-			 else
-			     if (currentColumn = (List.length currentLineList))
-			     then raise EH.DeadBranch "Region spans multiple lines"
-			     else ((* MORE REGIONS NEED RECOMPUTED *) printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn+1) previousLineNum)))
+
+and printCodeFragment (l1, c1) (l2, c2) explodedLines color previousLineNum =
+    let
+	val _ = D.printDebugFeature D.BLANK D.TEMP (fn _ => "printing code fragment " ^ (Int.toString c1) ^ " to " ^ (Int.toString c2))
+	val _ = if l1 <> previousLineNum then (printSkipped explodedLines l1 c1 previousLineNum color; ()) else ()
+
+	fun printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn) =
+	    let
+		val _ = ()
+	    in
+		 if currentColumn > c2
+		 then ()
+		 else (case Char.toString (List.nth (List.nth (explodedLines, currentLine-1), currentColumn-1)) of
+			   "\\n" => print ((!D.textReset) ^ "\n") |
+			   "\\t" => print ((!D.textReset) ^ "\t") |
+			   x => print x;
+		       printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn+1))
 	    end
     in
-	(print color;
-	 printCodeFragmentHelper (l2, c2) explodedLines (l1, c1) previousLineNum)
+	(print color; printCodeFragmentHelper (l2, c2) explodedLines (l1, c1))
     end
 
 (* if the end of the first region (r1) is on the same line as as the start
@@ -402,9 +363,54 @@ fun getNextLineRegs r1 r2 =
 (* case L - we have a leaf. We use normal highlighting for this
  * case H - We make a box for this.
  * case N - we have a node. *)
-fun printBashExtReg (L (r, c, w)) explodedLines     moreRegions previousLineNum = printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines moreRegions previousLineNum []
-  | printBashExtReg (H (r, c, w)) explodedLines     moreRegions previousLineNum = printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines moreRegions previousLineNum []
-  | printBashExtReg (N (r, c, w, nodeRegionList)) explodedLines moreRegions previousLineNum = printBashGenExtReg r (printBashColor c BOX)  "[]" explodedLines moreRegions previousLineNum nodeRegionList
+fun printBashExtReg node explodedLines moreRegions previousLineNum =
+    let
+	val previousLineNum = if previousLineNum <> R.getPosLine(R.getFrom (getReg node)) andalso R.getPosCol (R.getFrom (getReg node)) <> 1
+			      then (print ((!D.textReset));
+				    printCodeFragment (R.getPosLine(R.getFrom (getReg node)), 1) (R.getPosLine(R.getFrom (getReg node)), R.getPosCol(R.getFrom (getReg node))-1)  explodedLines "" previousLineNum;
+				    R.getPosLine(R.getFrom (getReg node)))
+			      else previousLineNum
+    in
+	((* if we are on a line for the first time and the region doesn't begin from the first character, print the beginning *)
+
+	  case node of
+	      (* leaf *)
+	      (L (r, c, w)) =>
+	      (printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum [];
+	       case moreRegions of
+		   (* if there are no more regions on this current line *)
+		   NONE => (print (!D.textReset);
+	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
+		 | SOME (nextLine, nextColumn) =>
+		   (print (!D.textReset);
+		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
+		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r))))
+
+	    (* bar *)
+	    | (H (r, c, w)) =>
+	      (printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum [];
+	       case moreRegions of
+		   (* if there are no more regions on this current line *)
+		   NONE => (print (!D.textReset);
+	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
+		 | SOME (nextLine, nextColumn) =>
+		   (print (!D.textReset);
+		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
+		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r))))
+
+	    (* node *)
+	    | (N (r, c, w, nodeRegionList)) =>
+	      (print "<NODE>";
+	       (* printBashGenExtReg r (printBashColor c BOX)  "[]" explodedLines previousLineNum nodeRegionList ;*)
+	       case moreRegions of
+		   (* if there are no more regions on this current line *)
+		   NONE => (print (!D.textReset);
+	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
+		 | SOME (nextLine, nextColumn) =>
+		   (print (!D.textReset);
+		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
+		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r)))))
+    end
 
 and printBashExtRegList []        explodedLines previousLineNum = ()
   (* give NONE as there cannot be any more regions to print at the end of this region *)
@@ -416,10 +422,7 @@ and printBashExtRegList []        explodedLines previousLineNum = ()
  * the input stream, which each element of that being a character from the line *)
 fun getExplodedLines stream =
     case (TextIO.inputLine stream) of
-	SOME line => (String.explode line (* (case (String.fromString line) of SOME x => x *)
-				     (* 				     | NONE => raise EH.DeadBranch "Error when reading a code file to highlight slices! (ExtReg.sml)") *)
-		     )
-		     ::(getExplodedLines stream)
+	SOME line => (String.explode line)::(getExplodedLines stream)
 	| NONE => []
 
 fun printPerlExtRegs [] = ""
