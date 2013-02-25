@@ -27,10 +27,8 @@
 ################################################################
 
 repoDir=../../
-commandDir=${repoDir}ui/command-line/
-sourcesDir=${repoDir}implementation/
-impDir=${sourcesDir}tes-seq/
-libDir=${sourcesDir}lib/
+sourcesDir=${repoDir}analysis-engines/standard-ml/
+libDir=${repoDir}lib/
 
 sharedDir=../shared/
 
@@ -39,10 +37,10 @@ emacsDir=${repoDir}ui/EmacsUI/
 commLineName=skalpel
 
 tesname="skalpel"
-version="0.7"
+version="0.8"
 
 emacsname="skalpel-emacs"
-emacsversion="0.7"
+emacsversion="0.8"
 
 skalpeltmp="skalpeltmp"
 
@@ -58,18 +56,10 @@ skalpel:
 	#Create a directory containing all of the necessary files
 	#Get a copy of all of the necessary files
 	@cp -R ${tesname}.in                            ${tesname}-${version}
-	@cp ${commandDir}${commLineName}                ${tesname}-${version}
-	@cp ${sourcesDir}tes-seq/bin/skalpel-bin	${tesname}-${version}
-	@cp ${commandDir}${commLineName}-perl-to-bash   ${tesname}-${version}
-	@cp ${commandDir}${commLineName}-legend         ${tesname}-${version}
-	@cp ${commandDir}${commLineName}.1              ${tesname}-${version}/debian
-	@cp ${commandDir}${commLineName}-perl-to-bash.1 ${tesname}-${version}/debian
-	@cp ${commandDir}${commLineName}-legend.1       ${tesname}-${version}/debian
-	@cp ${commandDir}${commLineName}-bin.1          ${tesname}-${version}/debian
+	@cp ${sourcesDir}/bin/skalpel                   ${tesname}-${version}
+	@cp ../../documentation/end-user/man-pages/skalpel.1              ${tesname}-${version}/debian
 	@cp ${libDir}basis.sml                          ${tesname}-${version}
-	@cp ${sharedDir}skalpel/*                        ${tesname}-${version}/debian
-	#Create the binary of the slicer
-	# (cd ${impDir}; ./configure; make cmtomlb; make mlton-bin)
+	@cp ${sharedDir}skalpel/*                       ${tesname}-${version}/debian
 	@echo "You can find the files in \"${tesname}-${version}\""
 	# ./create-debs.sh
 emacs:

@@ -243,7 +243,7 @@ and printPerlExtRegList []         = ""
   | printPerlExtRegList [t]        = printPerlExtReg t
   | printPerlExtRegList (t :: tl)  = printPerlExtReg t ^ ", " ^ printPerlExtRegList tl
 
-fun printBashGenExtReg r c regs explodedLines previousLineNum nodeRegionList =
+fun printBashGenExtReg r c regs explodedLines previousLineNum =
     let val p1 = R.getFrom r
 	val p2 = R.getTo r
 	val l1 = R.getPosLine p1
@@ -360,6 +360,50 @@ fun getNextLineRegs r1 r2 =
 	else NONE                (* there are no more regions on this line, return NONE *)
     end
 
+fun printBashTreeRegNode _ [] explodedLines = raise EH.DeadBranch "Tried to print command line sub-region node which doesn't exist!"
+  | printBashTreeRegNode (currentLine, currentColumn) (node::t) explodedLines =
+    let
+	val fromLine  = R.getPosLine(R.getFrom(getReg node))
+	val fromCol   = R.getPosCol(R.getFrom(getReg node))
+	val newCurrentLine   = R.getPosLine(R.getTo(getReg node))
+	val newCurrentColumn = R.getPosCol(R.getTo(getReg node)) + 1
+    in
+	if currentLine = fromLine andalso currentColumn = fromCol
+	then (case node of
+		  (* we don't care about the previous line number for these nodes, so we set it to the current line *)
+		  (L (r, c, w)) => printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (R.getPosLine(R.getFrom r))
+		| (H (r, c, w)) => printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (R.getPosLine(R.getFrom r))
+		| (N (r, c, w, nodeRegionList)) => printBashNode (R.getPosLine(R.getFrom r), R.getPosCol(R.getFrom r))    (* from          *)
+								 (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))        (* to            *)
+								 c                                                        (* color *)
+								 nodeRegionList                                           (* extra regions *)
+								 explodedLines;                                           (* file info     *)
+	      (newCurrentLine, newCurrentColumn))
+	else printBashTreeRegNode (currentLine, currentColumn) t explodedLines
+    end
+
+and inNodeRegionList (currentLine, currentColumn) [] = false
+  | inNodeRegionList (currentLine, currentColumn) (node::t) =
+    if currentLine = R.getPosLine(R.getFrom (getReg node)) andalso currentColumn = R.getPosCol(R.getFrom (getReg node))
+    then true
+    else inNodeRegionList (currentLine, currentColumn) t
+
+and printBashNode (currentLine, currentColumn) (endLine, endColumn) color nodeRegionList explodedLines =
+    if inNodeRegionList (currentLine, currentColumn) nodeRegionList
+    then
+	let
+	    val (newCurrentLine, newCurrentColumn) = printBashTreeRegNode (currentLine, currentColumn) nodeRegionList explodedLines
+	in
+	    if newCurrentColumn > endColumn
+	    then ()
+	    else printBashNode (newCurrentLine, newCurrentColumn) (endLine, endColumn) color nodeRegionList explodedLines
+	end
+    else
+	 (printCodeFragment (currentLine, currentColumn) (currentLine, currentColumn) explodedLines (printBashColor color BOX) currentLine;
+	  if currentColumn = endColumn
+	  then ()
+	  else printBashNode (currentLine, currentColumn+1) (endLine, endColumn) color nodeRegionList explodedLines)
+
 (* case L - we have a leaf. We use normal highlighting for this
  * case H - We make a box for this.
  * case N - we have a node. *)
@@ -370,47 +414,26 @@ fun printBashExtReg node explodedLines moreRegions previousLineNum =
 				    printCodeFragment (R.getPosLine(R.getFrom (getReg node)), 1) (R.getPosLine(R.getFrom (getReg node)), R.getPosCol(R.getFrom (getReg node))-1)  explodedLines "" previousLineNum;
 				    R.getPosLine(R.getFrom (getReg node)))
 			      else previousLineNum
+	val region = getReg node
     in
-	((* if we are on a line for the first time and the region doesn't begin from the first character, print the beginning *)
+	(case node of
+	     (L (r, c, w)) => printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum
+	   | (H (r, c, w)) => printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum
+	   | (N (r, c, w, nodeRegionList)) => printBashNode (R.getPosLine(R.getFrom r), R.getPosCol(R.getFrom r))  (* from          *)
+							    (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))      (* to            *)
+							    c                                                      (* color         *)
+							    nodeRegionList                                         (* extra regions *)
+							    explodedLines;                                         (* file info     *)
 
-	  case node of
-	      (* leaf *)
-	      (L (r, c, w)) =>
-	      (printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum [];
-	       case moreRegions of
-		   (* if there are no more regions on this current line *)
-		   NONE => (print (!D.textReset);
-	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
-		 | SOME (nextLine, nextColumn) =>
-		   (print (!D.textReset);
-		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
-		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r))))
-
-	    (* bar *)
-	    | (H (r, c, w)) =>
-	      (printBashGenExtReg r (printBashColor c LEAF) "[]" explodedLines previousLineNum [];
-	       case moreRegions of
-		   (* if there are no more regions on this current line *)
-		   NONE => (print (!D.textReset);
-	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
-		 | SOME (nextLine, nextColumn) =>
-		   (print (!D.textReset);
-		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
-		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r))))
-
-	    (* node *)
-	    | (N (r, c, w, nodeRegionList)) =>
-	      (print "<NODE>";
-	       (* printBashGenExtReg r (printBashColor c BOX)  "[]" explodedLines previousLineNum nodeRegionList ;*)
-	       case moreRegions of
-		   (* if there are no more regions on this current line *)
-		   NONE => (print (!D.textReset);
-	 		    print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo r)-1), R.getPosCol(R.getTo r)))))
-		 | SOME (nextLine, nextColumn) =>
-		   (print (!D.textReset);
-		    (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
-		    printCodeFragment (R.getPosLine(R.getTo r), R.getPosCol(R.getTo r)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo r)))))
-    end
+	case moreRegions of
+	    (* if there are no more regions on this current line *)
+	    NONE => (print (!D.textReset);
+	 	     print (String.implode(List.drop(List.nth (explodedLines, R.getPosLine(R.getTo region)-1), R.getPosCol(R.getTo region)))))
+	  | SOME (nextLine, nextColumn) =>
+	    (print (!D.textReset);
+	     (* we don't want to use previousLineNum here, we've already dealt with that in printBashGenExtReg *)
+	     printCodeFragment (R.getPosLine(R.getTo region), R.getPosCol(R.getTo region)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo region))))
+end
 
 and printBashExtRegList []        explodedLines previousLineNum = ()
   (* give NONE as there cannot be any more regions to print at the end of this region *)
