@@ -32,7 +32,8 @@ libDir=${repoDir}lib/
 
 sharedDir=../shared/
 
-emacsDir=${repoDir}ui/EmacsUI/
+emacsDir=${repoDir}front-ends/emacs/
+
 
 commLineName=skalpel
 
@@ -73,11 +74,8 @@ emacs:
 	@cp ${emacsDir}skalpel-debug-utils.el         ${emacsname}-${emacsversion}
 	@cp ${emacsDir}skalpel-main.el                ${emacsname}-${emacsversion}
 	@cp ${emacsDir}skalpel-menu.el                ${emacsname}-${emacsversion}
-	@cp ${emacsDir}SKALPEL-HELP                   ${emacsname}-${emacsversion}
-	@cp ${sharedDir}skalpel-emacs/*                 ${emacsname}-${emacsversion}/debian
-	(cd ${emacsname}-${emacsversion}; cat skalpel-main.el | sed 's/\(defvar skalpel-slicer-bin \)\"slicer\"/\1\"skalpel-bin\"/' > skalpel-main2.el; mv skalpel-main2.el skalpel-main.el)
-	(cd ${emacsname}-${emacsversion}; cat skalpel-config.el | sed 's/;;\*\*//' > skalpel-config2.el; mv skalpel-config2.el skalpel-config.el)
-	@makeinfo ${repoDir}documentation/user-guide/info/emacsmanual.texi
+
+	@makeinfo ${repoDir}documentation/end-user/info-pages/emacsmanual.texi
 	@mv Skalpel.info                               ${emacsname}-${emacsversion}/Scalpel.info
 	@rm -f emacsmanual.*
 	@echo "You can find the files in \"${emacsname}-${emacsversion}\""
