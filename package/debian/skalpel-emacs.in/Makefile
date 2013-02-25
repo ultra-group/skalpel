@@ -24,21 +24,16 @@
 ################################################################
 ################################################################
 
-#! /usr/bin/make
+#!/usr/bin/make
 
 clean:
-	@echo "Cleaing compelte."
+	@echo "Cleaing complete."
 
 install:
 	cp skalpel-main.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
 	cp skalpel-menu.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
 	cp skalpel-config.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
 	cp skalpel-debug-utils.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
-	cp SKALPEL-HELP ${DESTDIR}/usr/local/share/skalpelemacs
-	cp debian/skalpelemacs.1 ${DESTDIR}/usr/local/share/man/man1
-	gzip -9 ${DESTDIR}/usr/local/share/man/man1/skalpelemacs.1
-	cp Skalpel.info ${DESTDIR}/usr/local/share/info
-	gzip -9 ${DESTDIR}/usr/local/share/info/Skalpel.info
 	@echo "Installation complete."
 
 default:

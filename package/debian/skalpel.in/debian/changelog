@@ -1,6 +1,6 @@
 skalpel (0.8) unstable; urgency=low
 
-  * Sixth release
+  * Sixth release, support for equality types, re-implementation of command-line interfaces, bugfixes, etc
 
  -- John Pirie <jpirie23@gmail.com>  Sat, 01 Oct 2010 14:28:00 +0000
 

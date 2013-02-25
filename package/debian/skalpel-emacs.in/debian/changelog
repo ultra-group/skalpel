@@ -1,3 +1,9 @@
+skalpelemacs (0.8) unstable; urgency=low
+
+   * Updated to call skalpel v0.8 correctly
+
+ -- John Pirie <jpirie23@gmail.com> Mon, 25 Feb 2013 14:30:00 +0000
+
 skalpelemacs (0.650) unstable; urgency=low
 
    * New release, likely suitable for use in teaching, might not scale to very large programs, does not handle every tricky case in the SML type system quite right yet

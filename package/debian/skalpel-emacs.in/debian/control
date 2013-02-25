@@ -1,13 +1,13 @@
 Source: skalpelemacs
 Section: devel
 Priority: optional
-Maintainer: John Pirie <jp95@macs.hw.ac.uk>
+Maintainer: John Pirie <jpirie23@gmail.com>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.3
 
 Package: skalpelemacs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends} skalpel (>= 0.650), emacs22 | emacs23
-Description: <An Emacs UI for skalpel>
+Depends: ${shlibs:Depends}, ${misc:Depends} skalpel (>= 0.8), emacs22 | emacs23 | emacs24
+Description: <Emacs user interface for Skalpel>
  <An Emacs user interface for the type error slicer developed by the
  ULTRA group of Heriot-Watt University, Edinburgh>
