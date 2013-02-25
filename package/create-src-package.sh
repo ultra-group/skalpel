@@ -84,8 +84,6 @@ echo "copying the basis..."
 mkdir -p skalpel-$VERSION/lib
 cp ../lib/basis.sml skalpel-$VERSION/lib/
 
-exit 0
-
 ################################################################################
 #                       create source archive (.tar.gz)                        #
 ################################################################################
@@ -101,8 +99,8 @@ DSCFILE="skalpel_${VERSION}.dsc"
 
 > ${DSCFILE}
 echo "Format: 1.0"                               >> ${DSCFILE}
-echo "Source: skalpel"                            >> ${DSCFILE}
-echo "Binary: skalpel"                            >> ${DSCFILE}
+echo "Source: skalpel"                           >> ${DSCFILE}
+echo "Binary: skalpel"                           >> ${DSCFILE}
 echo "Architecture: all"                         >> ${DSCFILE}
 echo "Version: ${VERSION}"                       >> ${DSCFILE}
 echo "Maintainer: John Pirie jpirie23@gmail.com" >> ${DSCFILE}
@@ -110,13 +108,13 @@ echo                                             >> ${DSCFILE}
 echo "Standards-Version: 3.8.0"                  >> ${DSCFILE}
 echo                                             >> ${DSCFILE}
 echo "Files:"                                    >> ${DSCFILE}
-echo " skalpel_${VERSION}.orig.tar.gz"            >> ${DSCFILE}
+echo " skalpel_${VERSION}.orig.tar.gz"           >> ${DSCFILE}
 
 echo "creating debian source package..."
 mkdir -p skalpel-${VERSION}/debian
-cp debian-bin-package/skalpel.in/debian/changelog      skalpel-${VERSION}/debian
-cp debian-bin-package/skalpel.in/debian/control        skalpel-${VERSION}/debian
-cp other-packaging-files/rules                        skalpel-${VERSION}/debian
+cp debian/skalpel.in/debian/changelog     skalpel-${VERSION}/debian
+cp debian/skalpel.in/debian/control       skalpel-${VERSION}/debian
+cp debian/skalpel.in/debian/rules         skalpel-${VERSION}/debian
 mkdir -p debian-src
 tar -czf debian-src/skalpel_${VERSION}.orig.tar.gz skalpel-${VERSION}
 cp ${DSCFILE} debian-src

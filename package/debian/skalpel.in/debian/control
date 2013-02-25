@@ -1,7 +1,7 @@
 Source: skalpel
 Section: devel
 Priority: optional
-Maintainer: John Pirie <jp95@macs.hw.ac.uk>
+Maintainer: John Pirie <jpirie23@gmail.com>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.3
 

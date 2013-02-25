@@ -3,7 +3,7 @@
 ##
 ## Copyright 2009, 2010 Steven Shiells
 ## Copyright 2011 John Pirie
-## Copyright 2010, 2011 Heriot-Watt University
+## Copyright 2010, 2011, 2013 Heriot-Watt University
 ##
 ## This file is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -35,29 +35,32 @@
 
 #!/bin/bash
 
+VERSION="0.8"
+
 currentDir=`pwd`
+
 
 make skalpel
 mkdir temp
-mv skalpel-0.7 temp/
+mv skalpel-${VERSION} temp/
 cd temp
-mv skalpel-0.7/debian skalpel-0.7/build-stamp skalpel-0.7/configure-stamp ./
-tar -cvzf skalpel-0.7.tar.gz skalpel-0.7/
-cd skalpel-0.7
-dh_make -c GPL3 -e jp95@hw.ac.uk -f ../skalpel-0.7.tar.gz
+mv skalpel-${VERSION}/debian skalpel-${VERSION}/build-stamp skalpel-${VERSION}/configure-stamp ./
+tar -cvzf skalpel-${VERSION}.tar.gz skalpel-${VERSION}/
+cd skalpel-${VERSION}
+dh_make -c GPL3 -e jpirie23@gmail.com -f ../skalpel-${VERSION}.tar.gz
 rm -rf debian
 mv ../debian/ ../build-stamp ../configure-stamp ./
 dpkg-buildpackage -rfakeroot
 
-cd $currentDir
-make emacs
-mkdir tempemacs
-mv skalpel-emacs-0.7 tempemacs/
-cd tempemacs
-mv skalpel-emacs-0.7/debian skalpel-emacs-0.7/build-stamp skalpel-emacs-0.7/configure-stamp ./
-tar -cvzf skalpel-emacs-0.7.tar.gz skalpel-emacs-0.7/
-cd skalpel-emacs-0.7
-dh_make -c GPL3 -e jp95@hw.ac.uk -f ../skalpel-emacs-0.7.tar.gz
-rm -rf debian
-mv ../debian/ ../build-stamp ../configure-stamp ./
-dpkg-buildpackage -rfakeroot
+# cd $currentDir
+# make emacs
+# mkdir tempemacs
+# mv skalpel-emacs-${VERSION} tempemacs/
+# cd tempemacs
+# mv skalpel-emacs-${VERSION}/debian skalpel-emacs-${VERSION}/build-stamp skalpel-emacs-${VERSION}/configure-stamp ./
+# tar -cvzf skalpel-emacs-${VERSION}.tar.gz skalpel-emacs-${VERSION}/
+# cd skalpel-emacs-${VERSION}
+# dh_make -c GPL3 -e jp95@hw.ac.uk -f ../skalpel-emacs-${VERSION}.tar.gz
+# rm -rf debian
+# mv ../debian/ ../build-stamp ../configure-stamp ./
+# dpkg-buildpackage -rfakeroot
