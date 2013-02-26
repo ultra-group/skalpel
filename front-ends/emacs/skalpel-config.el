@@ -24,9 +24,10 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;**(defvar skalpel-emacs-directory "/usr/local/share/emacs/site-lisp/skalpel-emacs" "The location where the user interface files are stored")
-;;**(defvar skalpel-bin-directory   "/usr/local/bin" "The location where the binary of Skalpel is stored")
-;;**(defvar skalpel-lib-directory   "/usr/local/share/skalpel" "The location where additional files required by Skalpel and the user interface are stored")
+;; these definitions need to be here for the packaging system, the installation of the package will fail without these lines!
+(defvar skalpel-emacs-directory "/usr/local/share/emacs/site-lisp/skalpel-emacs" "The location where the user interface files are stored")
+(defvar skalpel-bin-directory   "/usr/local/bin" "The location where the binary of Skalpel is stored")
+(defvar skalpel-lib-directory   "/usr/local/share/skalpel" "The location where additional files required by Skalpel and the user interface are stored")
 
 (defvar skalpel-developer nil "Tracks whether or not the user is a developer of Skalpel")
 ;;

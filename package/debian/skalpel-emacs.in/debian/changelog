@@ -1,4 +1,4 @@
-skalpelemacs (0.8) unstable; urgency=low
+skalpel-emacs (0.8) unstable; urgency=low
 
    * Updated to call skalpel v0.8 correctly
 

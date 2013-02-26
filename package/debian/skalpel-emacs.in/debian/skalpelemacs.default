@@ -1,6 +1,6 @@
-# Defaults for skalpelemacs initscript
-# sourced by /etc/init.d/skalpelemacs
-# installed at /etc/default/skalpelemacs by the maintainer scripts
+# Defaults for skalpel-emacs initscript
+# sourced by /etc/init.d/skalpel-emacs
+# installed at /etc/default/skalpel-emacs by the maintainer scripts
 
 #
 # This is a POSIX shell fragment
