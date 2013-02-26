@@ -599,7 +599,11 @@ fun smlTesStrArgs strArgs =
 		      * if we do not, print a warning and default to -b 0 *)
 		     if (!basisSpecified = false)
 		     then case OS.Process.getEnv "SKALPEL_BASIS" of
-			      NONE => (print "Error: Couldn't find basis file location in command line argument or environment variable (SKALPEL_BASIS).\n"; raise Fail("No basis option specified"))
+			      NONE => ((TextIO.openIn "/usr/local/share/skalpel/basis.sml"
+				       handle Io =>
+					      (print "Error: Couldn't find basis file location in command line argument or environment variable (SKALPEL_BASIS).\n";
+												  raise Fail("No basis option specified")));
+				       Tester.myfilebas:="/usr/local/share/skalpel/basis.sml"; filebas:="/usr/local/share/skalpel/basis.sml"; basop:="2")
 			    | SOME file => (Tester.myfilebas:=file; filebas:=file; basop:="2")
 		     else ();
 
