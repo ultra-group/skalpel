@@ -33,6 +33,7 @@ clean:
 
 install:
 	cp basis.sml $(DESTDIR)/usr/local/share/skalpel/
+	cp user-guide.pdf $(DESTDIR)/usr/local/share/skalpel/
 	cp skalpel $(DESTDIR)/usr/local/bin/
 	chmod 755 debian/skalpel.1
 	gzip -9 debian/skalpel.1
