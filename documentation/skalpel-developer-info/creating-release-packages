@@ -41,6 +41,16 @@
    - rpm package (.rpm)
    - source rpm package (.srpm)
 
+   Note when building a red hat machine virtual machine image, remember to install the following to the system (Fedora):
+
+   gcc
+   mlton with compiler bug fix (see sml-analysis-engine document in this directory)
+   gmp
+   gmp-devel
+   rpm-build
+   autoconf
+   git
+
 9. Run create-debs.sh on a debian machine. This will create:
 
    - the debian package (.deb) in the temp/ folder
