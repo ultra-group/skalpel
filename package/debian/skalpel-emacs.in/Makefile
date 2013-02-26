@@ -30,10 +30,10 @@ clean:
 	@echo "Cleaing complete."
 
 install:
-	cp skalpel-main.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
-	cp skalpel-menu.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
-	cp skalpel-config.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
-	cp skalpel-debug-utils.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpelemacs/
+	cp skalpel-main.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpel-emacs/
+	cp skalpel-menu.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpel-emacs/
+	cp skalpel-config.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpel-emacs/
+	cp skalpel-debug-utils.el ${DESTDIR}/usr/local/share/emacs/site-lisp/skalpel-emacs/
 	@echo "Installation complete."
 
 default:

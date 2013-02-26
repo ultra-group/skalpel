@@ -1,11 +1,11 @@
-Source: skalpelemacs
+Source: skalpel-emacs
 Section: devel
 Priority: optional
 Maintainer: John Pirie <jpirie23@gmail.com>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.3
 
-Package: skalpelemacs
+Package: skalpel-emacs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends} skalpel (>= 0.8), emacs22 | emacs23 | emacs24
 Description: <Emacs user interface for Skalpel>

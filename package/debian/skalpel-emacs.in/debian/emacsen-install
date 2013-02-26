@@ -1,12 +1,12 @@
 #! /bin/sh -e
-# /usr/lib/emacsen-common/packages/install/skalpelemacs
+# /usr/lib/emacsen-common/packages/install/skalpel-emacs
 
 # Written by Jim Van Zandt <jrv@debian.org>, borrowing heavily
 # from the install scripts for gettext by Santiago Vila
 # <sanvila@ctv.es> and octave by Dirk Eddelbuettel <edd@debian.org>.
 
 FLAVOR=$1
-PACKAGE=skalpelemacs
+PACKAGE=skalpel-emacs
 
 if [ ${FLAVOR} = emacs ]; then exit 0; fi
 
@@ -25,10 +25,10 @@ ELCDIR=/usr/local/share/${FLAVOR}/site-lisp/${PACKAGE}
 
 # Install-info-altdir does not actually exist.
 # Maybe somebody will write it.
-if test -x /usr/sbin/install-info-altdir; then
-    echo install/${PACKAGE}: install Info links for ${FLAVOR}
-    install-info-altdir --quiet --section "" "" --dirname=${FLAVOR} /usr/local/share/info/${PACKAGE}.info.gz
-fi
+# if test -x /usr/sbin/install-info-altdir; then
+#     echo install/${PACKAGE}: install Info links for ${FLAVOR}
+#     install-info-altdir --quiet --section "" "" --dirname=${FLAVOR} /usr/local/share/info/${PACKAGE}.info.gz
+# fi
 
 install -m 755 -d ${ELCDIR}
 cd ${ELDIR}

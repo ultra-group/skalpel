@@ -1,3 +1,14 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
 ###############################################################
 ###############################################################
 ##
@@ -40,7 +51,7 @@ build-stamp: configure-stamp
 
 	# Add here commands to compile the package.
 	$(MAKE)
-	#docbook-to-man debian/skalpelemacs.sgml > skalpelemacs.1
+	#docbook-to-man debian/skalpel-emacs.sgml > skalpel-emacs.1
 
 	touch $@
 
@@ -60,8 +71,8 @@ install: build
 	dh_prep  
 	dh_installdirs
 
-	# Add here commands to install the package into debian/skalpelemacs.
-	$(MAKE) DESTDIR=$(CURDIR)/debian/skalpelemacs install
+	# Add here commands to install the package into debian/skalpel-emacs.
+	$(MAKE) DESTDIR=$(CURDIR)/debian/skalpel-emacs install
 
 
 # Build architecture-independent files here.

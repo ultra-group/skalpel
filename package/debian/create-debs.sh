@@ -39,28 +39,27 @@ VERSION="0.8"
 
 currentDir=`pwd`
 
-
-make skalpel
-mkdir temp
-mv skalpel-${VERSION} temp/
-cd temp
-mv skalpel-${VERSION}/debian skalpel-${VERSION}/build-stamp skalpel-${VERSION}/configure-stamp ./
-tar -cvzf skalpel-${VERSION}.tar.gz skalpel-${VERSION}/
-cd skalpel-${VERSION}
-dh_make -c GPL3 -e jpirie23@gmail.com -f ../skalpel-${VERSION}.tar.gz
-rm -rf debian
-mv ../debian/ ../build-stamp ../configure-stamp ./
-dpkg-buildpackage -rfakeroot
-
-# cd $currentDir
-# make emacs
-# mkdir tempemacs
-# mv skalpel-emacs-${VERSION} tempemacs/
-# cd tempemacs
-# mv skalpel-emacs-${VERSION}/debian skalpel-emacs-${VERSION}/build-stamp skalpel-emacs-${VERSION}/configure-stamp ./
-# tar -cvzf skalpel-emacs-${VERSION}.tar.gz skalpel-emacs-${VERSION}/
-# cd skalpel-emacs-${VERSION}
-# dh_make -c GPL3 -e jpirie23@gmail.com -f ../skalpel-emacs-${VERSION}.tar.gz
+# make skalpel
+# mkdir temp
+# mv skalpel-${VERSION} temp/
+# cd temp
+# mv skalpel-${VERSION}/debian skalpel-${VERSION}/build-stamp skalpel-${VERSION}/configure-stamp ./
+# tar -cvzf skalpel-${VERSION}.tar.gz skalpel-${VERSION}/
+# cd skalpel-${VERSION}
+# dh_make -c GPL3 -e jpirie23@gmail.com -f ../skalpel-${VERSION}.tar.gz
 # rm -rf debian
 # mv ../debian/ ../build-stamp ../configure-stamp ./
 # dpkg-buildpackage -rfakeroot
+
+cd $currentDir
+make emacs
+mkdir tempemacs
+mv skalpel-emacs-${VERSION} tempemacs/
+cd tempemacs
+mv skalpel-emacs-${VERSION}/debian skalpel-emacs-${VERSION}/build-stamp skalpel-emacs-${VERSION}/configure-stamp ./
+tar -cvzf skalpel-emacs-${VERSION}.tar.gz skalpel-emacs-${VERSION}/
+cd skalpel-emacs-${VERSION}
+dh_make -c GPL3 -e jpirie23@gmail.com -f ../skalpel-emacs-${VERSION}.tar.gz
+rm -rf debian
+mv ../debian/ ../build-stamp ../configure-stamp ./
+dpkg-buildpackage -rfakeroot
