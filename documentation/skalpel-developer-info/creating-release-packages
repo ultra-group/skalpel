@@ -41,9 +41,9 @@
    - rpm package (.rpm)
    - source rpm package (.srpm)
 
-9. Run create-src-package.sh on a debian machine. This will create:
+9. Run create-debs.sh on a debian machine. This will create:
 
-   - the debian package (.deb)
+   - the debian package (.deb) in the temp/ folder
 
 10. (currently broken, skip this step) Run create-src-package.sh on a mac machine. This will create:
 
