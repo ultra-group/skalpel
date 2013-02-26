@@ -237,6 +237,14 @@ smlnj-profile:
 	@echo "(Backend.Profile.setProfMode true; CM.make \"${SOURCESDIR}/sources.cm\"); (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);" | sml > profile-smlnj-$(date)
 
 # binary and documentation
+install-core:
+	mkdir -p $(DESTDIR)@prefix@/bin/
+	cp ${SOURCESDIR}/bin/skalpel             $(DESTDIR)@prefix@/bin/
+
+	mkdir -p $(DESTDIR)@prefix@/share/skalpel/
+	cp ../../lib/basis.sml $(DESTDIR)@prefix@/share/skalpel/
+
+# binary and documentation
 install:
 	mkdir -p $(DESTDIR)@prefix@/bin/
 	cp ${SOURCESDIR}/bin/skalpel             $(DESTDIR)@prefix@/bin/

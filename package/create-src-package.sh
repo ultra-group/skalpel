@@ -160,7 +160,7 @@ then
     # build the binary and the source packages. Unfortunately, it seems to
     # want to generate the mlton binary twice.
     currentDir=`echo \`pwd\``
-    rpmbuild -ba --buildroot $currentDir/build-rpm/ --define '_topdir tmpbuild' other-packaging-files/skalpel.spec
+    rpmbuild -ba --buildroot $currentDir/build-rpm/ --define '_topdir tmpbuild' red-hat/skalpel.spec
 
     # copy the files to the right directory
     for FILE in `find tmpbuild/ -type f | grep "\.rpm"`; do mv $FILE ./; done
