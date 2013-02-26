@@ -459,7 +459,7 @@ fun smlTesStrArgs strArgs =
 				    \    --print-env <true/false> whether to print the environment\n\
 				    \    --show-legend Shows the legend for notation and colour of slice display in the terminal\n\
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
-				    \    --help Show this help text");
+				    \    --help Show this help text\n");
 
         (* split into tokens to allow for easy parsing *)
 	val split = String.tokens Char.isSpace strArgs
@@ -578,7 +578,7 @@ fun smlTesStrArgs strArgs =
 
 	     (* check that the user specified an input file *)
 	     if (!filein = "" andalso !filesNeeded = true)
-	     then (print ("Error: No input file specified.");
+	     then (print ("Error: No input file specified.\n");
 		   raise Fail("No input file specified"))
 	     else
 		 if (!filein = "")

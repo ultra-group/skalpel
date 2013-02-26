@@ -59,8 +59,8 @@ skalpel:
 	@cp -R ${tesname}.in                            ${tesname}-${version}
 	@cp ${sourcesDir}/bin/skalpel                   ${tesname}-${version}
 	@cp ../../documentation/end-user/man-pages/skalpel.1              ${tesname}-${version}/debian
+	@cp ../../documentation/end-user/info-pages/Skalpel.info              ${tesname}-${version}/debian
 	@cp ${libDir}basis.sml                          ${tesname}-${version}
-	@cp ${sharedDir}skalpel/*                       ${tesname}-${version}/debian
 	@echo "You can find the files in \"${tesname}-${version}\""
 	# ./create-debs.sh
 emacs:

@@ -37,6 +37,9 @@ install:
 	chmod 755 debian/skalpel.1
 	gzip -9 debian/skalpel.1
 	cp debian/skalpel.1.gz ${DESTDIR}/usr/local/share/man/man1
+	chmod 755 debian/Skalpel.info
+	gzip -9 debian/Skalpel.info
+	cp debian/Skalpel.info.gz ${DESTDIR}/usr/share/info/
 	@echo "Installation complete."
 
 default:

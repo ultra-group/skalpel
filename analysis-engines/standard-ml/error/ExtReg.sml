@@ -293,13 +293,15 @@ and printSkipped explodedLines currentLine currentColumn previousLineNum color =
 			       then currentLine
 			       else if (currentLine - previousLineNum > 1)
 			      (* we add "..." to indicate skipped lines and print all the text that was previous in the line *)
-			       then if (currentLine - previousLineNum = 2)
+			       then if (currentLine - previousLineNum = 2 andalso currentLine <> 1)
 				    (* if there is only one skipped, display that number *)
 				   then (print ((!D.textReset) ^ Int.toString(previousLineNum+1) ^ ":\t\t ...\n");
 					 print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
 					 currentLine)
 				    (* if more than one line was skipped, give the region of skipped line numbers *)
-				    else (print ((!D.textReset) ^ (if previousLineNum = ~1 then "1" else Int.toString(previousLineNum+1)) ^ "-" ^ Int.toString(currentLine-1) ^ ":\t\t ...\n");
+				    else (if currentLine <> 1
+				          then print ((!D.textReset) ^ (if previousLineNum = ~1 then "1" else Int.toString(previousLineNum+1)) ^ "-" ^ Int.toString(currentLine-1) ^ ":\t\t ...\n")
+				          else ();
 					  print ((!D.textReset) ^ Int.toString(currentLine) ^ ":\t\t" ^  (String.implode(List.take (currentLineList, currentColumn-1))) ^ color);
 					  currentLine)
 			       (* there are no skipped lines so we just print all the text that was previous in the line *)
