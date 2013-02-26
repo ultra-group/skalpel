@@ -26,9 +26,9 @@
 
 
 !define PRODUCT_NAME "Skalpel"
-!define PRODUCT_VERSION "0.7"
+!define PRODUCT_VERSION "0.8"
 !define PRODUCT_WEB_SITE "www.macs.hw.ac.uk/ultra/skalpel"
-!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\skalpel-bin.exe"
+!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\skalpel.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
@@ -47,8 +47,7 @@
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\skalpel-bin.exe"
-!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\Documentation\README"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\skalpel.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -76,7 +75,9 @@ Section "MainSection" SEC01
   SetOutPath "$INSTDIR\lib"
   SetOverwrite try
   File "..\..\..\Program Files\MLton\home\jpirie\tes\implementation\lib\basis.sml"
-  SetOutPath "$INSTDIR\EmacsUI"
+  CreateDirectory "$SMPROGRAMS\Skalpel\front-ends"
+  CreateDirectory "$SMPROGRAMS\Skalpel\front-ends\emacs"
+  SetOutPath "$INSTDIR\front-ends\emacs"
   SetOverwrite try
   File "..\..\..\Program Files\MLton\home\jpirie\tes\ui\EmacsUI\.gitignore"
   File "..\..\..\Program Files\MLton\home\jpirie\tes\ui\EmacsUI\skalpel-config.el"
@@ -86,8 +87,6 @@ Section "MainSection" SEC01
   File "..\..\..\Program Files\MLton\home\jpirie\tes\ui\EmacsUI\skalpel-menu.el"
   SetOutPath "$INSTDIR\Documentation"
   SetOverwrite ifnewer
-  File "..\..\..\Program Files\MLton\home\jpirie\tes\documentation\readme\README"
-  File "..\..\..\Program Files\MLton\home\jpirie\tes\package\shared\skalpel\CREDITS"
   File "..\..\..\Program Files\MLton\home\jpirie\tes\documentation\user-guide\user-guide.pdf"
 SectionEnd
 
@@ -123,16 +122,12 @@ FunctionEnd
 Section Uninstall
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
   Delete "$INSTDIR\uninst.exe"
-  Delete "$INSTDIR\Documentation\user-guide.pdf"
-  Delete "$INSTDIR\Documentation\CREDITS"
-  Delete "$INSTDIR\Documentation\README"
-  Delete "$INSTDIR\EmacsUI\skalpel-menu.el"
-  Delete "$INSTDIR\EmacsUI\skalpel-main.el"
-  Delete "$INSTDIR\EmacsUI\SKALPEL-HELP"
-  Delete "$INSTDIR\EmacsUI\skalpel-debug-utils.el"
-  Delete "$INSTDIR\EmacsUI\skalpel-config.el"
-  Delete "$INSTDIR\EmacsUI\.gitignore"
-  Delete "$INSTDIR\skalpel-bin.exe"
+  Delete "$INSTDIR\documentation\user-guide.pdf"
+  Delete "$INSTDIR\front-ends\emacs\skalpel-menu.el"
+  Delete "$INSTDIR\front-ends\emacs\skalpel-main.el"
+  Delete "$INSTDIR\front-ends\emacs\skalpel-debug-utils.el"
+  Delete "$INSTDIR\front-ends\emacs\skalpel-config.el"
+  Delete "$INSTDIR\skalpel.exe"
 
   Delete "$SMPROGRAMS\Skalpel\Uninstall.lnk"
   Delete "$SMPROGRAMS\Skalpel\Website.lnk"
@@ -140,8 +135,8 @@ Section Uninstall
   Delete "$SMPROGRAMS\Skalpel\Skalpel.lnk"
 
   RMDir "$SMPROGRAMS\Skalpel"
-  RMDir "$INSTDIR\EmacsUI"
-  RMDir "$INSTDIR\Documentation"
+  RMDir "$INSTDIR\front-ends\emacs"
+  RMDir "$INSTDIR\documentation"
   RMDir "$INSTDIR"
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
