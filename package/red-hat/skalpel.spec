@@ -2,7 +2,7 @@
 ###############################################################
 ##
 ## Copyright 2009, 2010 Steven Shiells
-## Copyright 2011 Heriot Watt University
+## Copyright 2011 2013 Heriot Watt University
 ##
 ## This file is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ## along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##
-## Authors: Steven Shiells
+## Authors: Steven Shiells, John Pirie
 ## Date: December 2009
 ## Description: This is a shell script to run Skalpel, type 
 ##              error slicer for SML.
@@ -27,13 +27,23 @@
 ################################################################
 
 Name:    skalpel
-Version: 0.7
+Version: 0.8
 Release: 1
 Summary: A Type Error Slicer for the programming language SML
 Group:   Development/Languages
 License: GNUv3
-URL:     http://www.macs.hw.ac.uk/ultra/compositional-analysis/type-error-slicing/
-Source:  skalpel_0.7-src.tar.gz
+URL:     http://www.macs.hw.ac.uk/ultra/skalpel
+Source:  skalpel_0.8-src.tar.gz
+
+Requires(post): info
+Requires(preun): info
+
+%post -n skalpel-emacs
+/sbin/install-info /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
+
+%preun -n skalpel-emacs
+/sbin/install-info --delete /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
+rm /usr/local/share/info/Skalpel.info.gz
 
 %description
 This is the source package for the Type Error Slicer, developed by the ULTRA group at the Heriot-Watt University.
@@ -57,29 +67,11 @@ make install DESTDIR=%{buildroot}
 rm -rf %{buildroot}
 
 %files
-#%doc %{name}-%{version}/usr/local/doc/skalpel/README
-/usr/local/bin/skalpel
-/usr/local/bin/skalpel-bin
-/usr/local/bin/skalpel-legend
-/usr/local/bin/skalpel-perl-to-bash
-/usr/local/doc/skalpel/README
-#/usr/local/share/emacs/site-lisp/site-start.d/skalpel-config.el
-#/usr/local/share/emacs/site-lisp/skalpel-emacs/sml-full-symbol-description.el
-#/usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-debug-utils.el
-#/usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-main.el
-#/usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-menu.el
-#/usr/local/share/info/Skalpel.info.gz
-/usr/local/share/man/man1/skalpel-bin.1.gz
-/usr/local/share/man/man1/skalpel-legend.1.gz
-/usr/local/share/man/man1/skalpel-perl-to-bash.1.gz
+/usr/local/bin/skalpel#
+/usr/local/share/info/Skalpel.info.gz
 /usr/local/share/man/man1/skalpel.1.gz
-#/usr/local/share/man/man1/skalpel-emacs.1.gz
 /usr/local/share/skalpel/basis.sml
-#/usr/local/share/skalpel-emacs/SKALPEL-HELP
-/usr/local/share/skalpel/database/code*.sml
-/usr/local/share/skalpel/database/test*.sml
-/usr/local/share/skalpel/database/output*.html
-#/usr/share/emacs/site-lisp/site-start.d/skalpel-config.el
+/usr/local/share/skalpel/user-guide.pdf
 
 
 ### SKALPEL-EMACS PACKAGE
@@ -89,25 +81,12 @@ Summary:  Emacs UI for a Type Error Slicer for the programming language SML
 Group:    Development/Languages
 Requires: %{name}%{_isa} = %{version}-%{release}
 
-Requires(post): info
-Requires(preun): info
-
 %description -n skalpel-emacs
-This is the Emacs UI for skalpel
-
-%post -n skalpel-emacs
-/sbin/install-info /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
-
-%preun -n skalpel-emacs
-/sbin/install-info --delete /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
-rm /usr/local/share/info/Skalpel.info.gz
+Files to allow Emacs to be used as a user interface for Skalpel.
 
 %files -n skalpel-emacs
 /usr/local/share/emacs/site-lisp/site-start.d/skalpel-config.el
 /usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-debug-utils.el
 /usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-main.el
 /usr/local/share/emacs/site-lisp/skalpel-emacs/skalpel-menu.el
-/usr/local/share/info/Skalpel.info.gz
-/usr/local/share/man/man1/skalpel-emacs.1.gz
-/usr/local/share/skalpel-emacs/SKALPEL-HELP
 /usr/share/emacs/site-lisp/site-start.d/skalpel-config.el
