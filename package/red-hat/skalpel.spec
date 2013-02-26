@@ -38,10 +38,10 @@ Source:  skalpel_0.8-src.tar.gz
 Requires(post): info
 Requires(preun): info
 
-%post -n skalpel-emacs
+%post -n skalpel
 /sbin/install-info /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
 
-%preun -n skalpel-emacs
+%preun -n skalpel
 /sbin/install-info --delete /usr/local/share/info/Skalpel.info.gz /usr/share/info/dir || :
 rm /usr/local/share/info/Skalpel.info.gz
 
@@ -50,24 +50,43 @@ This is the source package for the Type Error Slicer, developed by the ULTRA gro
 
 %prep
 tar -xf $RPM_SOURCE_DIR/%{name}_%{version}-src.tar.gz
-cd %{name}-%{version}
-./configure
+rm -rf %{name}-%{version}/testing
+cd %{name}-%{version}/analysis-engines/standard-ml/
+autoconf
+./configure --prefix=%{buildroot}/usr/local/
 
 %build
-cd %{name}-%{version}
-make
+cd %{name}-%{version}/analysis-engines/standard-ml/
+make mlton-bin
 
 %install
 rm -rf %{buildroot}
-cd %{name}-%{version}
+cd %{name}-%{version}/analysis-engines/standard-ml/
 mkdir -p %{buildroot}/usr/share/emacs/site-lisp/site-start.d/
-make install DESTDIR=%{buildroot}
+mkdir -p %{buildroot}/usr/local/share/emacs/site-lisp/site-start.d/
+make install-core # DESTDIR=%{buildroot}
+cp ../../documentation/user-guide.pdf %{buildroot}/usr/local/share/skalpel/
+gzip -9 ../../documentation/skalpel.1
+mkdir -p %{buildroot}/usr/local/share/man/man1/
+cp ../../documentation/skalpel.1.gz %{buildroot}/usr/local/share/man/man1/
+gzip -9 ../../documentation/Skalpel.info
+mkdir -p %{buildroot}/usr/local/share/info/
+cp ../../documentation/Skalpel.info.gz %{buildroot}/usr/local/share/info/
+cd %{buildroot}/../../
+mkdir -p %{buildroot}/usr/local/share/emacs/site-lisp/skalpel-emacs
+mkdir -p %{buildroot}/usr/local/share/emacs/site-start.d/
+mkdir -p %{buildroot}/usr/share/emacs/site-lisp/site-start.d/
+cp front-ends/emacs/skalpel-debug-utils.el %{buildroot}/usr/local/share/emacs/site-lisp/skalpel-emacs
+cp front-ends/emacs/skalpel-main.el %{buildroot}/usr/local/share/emacs/site-lisp/skalpel-emacs
+cp front-ends/emacs/skalpel-menu.el %{buildroot}/usr/local/share/emacs/site-lisp/skalpel-emacs
+cp front-ends/emacs/skalpel-config.el %{buildroot}/usr/local/share/emacs/site-lisp/site-start.d/
+cp front-ends/emacs/skalpel-config.el %{buildroot}/usr/share/emacs/site-lisp/site-start.d/
 
 %clean
 rm -rf %{buildroot}
 
 %files
-/usr/local/bin/skalpel#
+/usr/local/bin/skalpel
 /usr/local/share/info/Skalpel.info.gz
 /usr/local/share/man/man1/skalpel.1.gz
 /usr/local/share/skalpel/basis.sml
@@ -77,7 +96,7 @@ rm -rf %{buildroot}
 ### SKALPEL-EMACS PACKAGE
 
 %package -n skalpel-emacs
-Summary:  Emacs UI for a Type Error Slicer for the programming language SML
+Summary: Emacs UI for a Type Error Slicer for the programming language SML
 Group:    Development/Languages
 Requires: %{name}%{_isa} = %{version}-%{release}
 
