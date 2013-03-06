@@ -7,16 +7,15 @@ Standards-Version: 3.8.3
 
 Package: skalpel
 Architecture: any
+Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: A type error slicer for SML.
-   The type error slicer for SML is developed by the ULTRA group of
-   Heriot-Watt University, Edinburgh.  Traditional type error messages
-   given for SML can be hard to decipher and often indicate incomplete
-   and unprecise locations as the source of the programming error.
-   The error messages produced are also biased because they report
-   only one location which is dependent on the way which the abstract
-   syntax tree is traversed.  The type error slicing tool aims to
-   eliminate these problems.  The error messages produced by the type
-   error slicer offer textual error messages of the errors and
-   highlights all and only those program points which contribute to
-   the error.
+ Traditional type error messages given for SML can be hard to decipher
+ and often indicate incomplete and unprecise locations as the source
+ of the programming error. The error messages produced are also biased
+ because they report only one location which is dependent on the way
+ which the abstract syntax tree is traversed. Skalpel aims to
+ eliminate these problems. The error messages produced by Skalpel
+ offer textual error messages of the errors and highlight all and only
+ those program points which contribute to the error. Skalpel is
+ developed by the ULTRA group of Heriot-Watt University, Edinburgh.
