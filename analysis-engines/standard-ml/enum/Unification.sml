@@ -3034,50 +3034,6 @@ fun unif env filters user =
 		      end
 		    | (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^"): "^(T.printtyf bind))
-
-			  val _ = () (* D.printDebugFeature D.UNIF D.TEMP (fn _ => "id is: "^(I.printId id)^", class is: "^(CL.toString class)) *)
-			  (* we check whether this type constructor came from a type or a datatype, if it
-			   * came from a datatype we keep the equality type variable *)
-			  val typeNameKind = getTypeNameKindOfId state (I.ID(id,l))
-			  (* val _ = case sem of *)
-			  (* 	      T.TYPE_FUNCTION_VAR(tfv) => *)
-			  (* 	      (case typeNameKind of *)
-			  (* 		  E.DATATYPE => *)
-			  (* 		  (* we're dealing with a datatype so can get equality type errors when used with arguments here; do nothing *) *)
-			  (* 		  D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a datatype, not freshening equality type variable") *)
-			  (* 		| E.TYPE => *)
-			  (* 		  (* if we have arguments to the type, then we freshen *) *)
-			  (* 		  if L.length stts > 0 *)
-			  (* 		  then *)
-			  (* 		      (case S.getValStateTf state tfv of *)
-			  (* 			   NONE => *)
-			  (* 			   D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type. sem isn't in state though...") *)
-			  (* 			 | SOME tf => *)
-			  (* 			   let *)
-			  (* 		               val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type. sem in state is: "^(T.printtyf tf)^". Freshening equality type variable...") *)
-			  (* 			       val _ = case tf of T.TYPE_FUNCTION_DEPENDANCY(T.TFC(someRowVar,T.TYPE_VAR(tv,x,poly,T.EQUALITY_TYPE_VAR(eqtv)),tfcLab),depLabs,depStts,depCds) => *)
-			  (* 						  let *)
-
-			  (* 						      val _ = if L.length depStts > 0 *)
-			  (* 							      then *)
-			  (* 								  let *)
-			  (* 								      val newEntry = (T.TYPE_FUNCTION_DEPENDANCY(T.TFC(someRowVar,T.TYPE_VAR(tv,x,poly,T.EQUALITY_TYPE_VAR(T.freshEqualityTypeVar())),tfcLab),depLabs,L.empty,depCds)) *)
-			  (* 								      val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => "Freshened equality type variable if possible. sem in state is now: "^(T.printtyf newEntry)) *)
-			  (* 								  in *)
-			  (* 								      S.updateStateTf state tfv newEntry *)
-			  (* 								  end *)
-			  (* 							      else *)
-			  (* 								  D.printDebugFeature D.UNIF D.TEMP (fn _ => "Type doesn't have arguments, not freshening") *)
-			  (* 						  in *)
-			  (* 						      () *)
-			  (* 						  end *)
-			  (* 						| _ => () *)
-			  (* 			   in *)
-			  (* 			       () *)
-			  (* 			   end) *)
-			  (* 		  else  D.printDebugFeature D.UNIF D.TEMP (fn _ => "current id is a type without arguments, not freshening")) *)
-			  (* 	   |  _ => D.printDebugFeature D.UNIF D.TEMP (fn _ => "sem is not a type function variable when solving type constructor accessor. Is this even possible?") *)
-
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  (* we constrain the equality type variable of the accessor to be equal to the equality type variable of the binder
@@ -3383,21 +3339,6 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc1 as T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), tc2 as T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
 	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
-
-	     (* we check that the equality type status of the two type constructors are the same (so they cannot be both EQUALITY_TYPE and NOT_EQUALITY_TYPE)
-	      * however, if one of both of them are unknown then that's acceptable
-	      *)
-	     (* this was code that used to be here when eq was an EQUALITY_TYPE_STATUS. Now it's more than that
-	      * because we can have type variables there. *)
-	     (* if (eq1 <> eq2 andalso eq1 <> T.UNKNOWN andalso eq2 <> T.UNKNOWN) *)
-	     (* then *)
-	     (* 	 let *)
-	     (* 	     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "equality type error detected (fsimplify TYPE_CONSTRAINT of TYPE_CONSTRUCTOR and TYPE_CONSTUCTOR)"); *)
-	     (* 	     val ek    = EK.EqTypeRequired (L.toInt l) *)
-	     (* 	     val err   = ERR.consPreError ERR.dummyId ls ids ek deps *)
-	     (* 	 in handleSimplify err cs' l *)
-	     (* 	 end *)
-	     (* else (); *)
 	     if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 		orelse
 		(T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3536,19 +3477,6 @@ fun unif env filters user =
 			in fsimplify (c :: cs') l
 	    		end
 
-
-		(* in the event that eq1 is not unkown, and eq2 is unknown, then we look up tv2 in the state and put eq1 in there somewhere *)
-		(* val _ = case (eq1,eq2)  of *)
-		(* 	    (T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_STATUS(T.UNKNOWN)) => *)
-		(* 	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Left hand type variable has equality type variable assigned and right does not - putting equality type variable in state"); *)
-		(* 	     case S.getValStateTv state tv2 of *)
-		(* 		 NONE => *)
-		(* 		 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Right hand equality type variable doesn't exist in state, putting something in"); *)
-		(* 		  S.updateStateTv state tv2 (T.TYPE_DEPENDANCY (T.consTYPE_VARwithEQ (T.freshTypeVar()) (T.EQUALITY_TYPE_VAR(eqtv)), L.empty, L.empty, CD.empty))) *)
-		(* 	       | SOME (T.TYPE_DEPENDANCY(T.TYPE_VAR(tv,explicitTypeVar,poly,T.EQUALITY_TYPE_STATUS(UNKNOWN)),labels,deps,ids)) => *)
-		(* 		 S.updateStateTv state tv2 (T.TYPE_DEPENDANCY (T.TYPE_VAR(tv,explicitTypeVar,poly,T.EQUALITY_TYPE_VAR(eqtv)), labels, deps, ids)) *)
-		(* 	       | _ => ()) *)
-		(* 	    | _ => () *)
 
 		(* solve equality type constraints, not using the above commented out method any more unless I find we still need it... *)
 		val _  = fsimplify [(E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), ls, deps, ids))] l
@@ -3985,17 +3913,7 @@ fun unif env filters user =
 			in fsimplify cs' l
 			end
 	    in
-		((* if (eq1 = eq2 orelse eq1 = T.UNKNOWN orelse eq2 = T.UNKNOWN) *)
-		 (* then () *)
-		 (* else *)
-	  	 (*     (let *)
-		 (* 	  val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => (#red (!D.colors))^"equality type error detected!") *)
-	  	 (* 	  (* need to figure out how to get the labels to the user *) *)
- 	  	 (* 	  val ek    = EK.EqTypeRequired (L.toInt lab1) *)
-	  	 (* 	  val err   = ERR.consPreError ERR.dummyId ls ids ek deps *)
-	  	 (*      in handleSimplify err cs' l *)
-	  	 (*      end); *)
-		 case (S.getValStateOr state i1, S.getValStateOr state i2) of
+		(case (S.getValStateOr state i1, S.getValStateOr state i2) of
 		   (SOME ([path1], ls1, deps1, ids1), SOME ([path2], ls2, deps2, ids2)) =>
 		   (case (gotoInOrSq path1 sq1, gotoInOrSq path2 sq2) of
 			(SOME t1, SOME t2) =>
@@ -4303,32 +4221,23 @@ fun unif env filters user =
 			val _ = sigVsStrTypOFF ()
 			val _ = sigVsStrOFF ()
 			val _ = case translucentEnvVar of
-				    NONE => () (* (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.TEMP (fn _ => "No opaqueEnvVar found.") else ()) *)
+				    NONE => ()
 				  | SOME ev =>
 				    (*(2010-06-23)We need to rebuild env1 because of the new constraints
 				     * generated by matchSigStr.  We don't need to refresh though. *)
 				    let
 					val env1' = buildFEnv (*justBuildEnv*) env1 state true
 					val stateEntry = (E.pushExtEnv env1' (L.singleton lab) L.empty CD.empty)
-					val _ = (if (not (!analysingBasis))
-						 then () (* D.printDebugFeature D.UNIF D.TEMP (fn _ => "Adding translucent constraint to StateEv. Environment variable "^(E.printEnvVar ev)^ *)
-						      (* 						 " is getting mapped to:\n"^(E.printEnv stateEntry "")) *)
-						 else ())
-
 				    in
 					S.updateStateEv state ev stateEntry
 				    end
 			val _ = case opaqueEnvVar of
-				    NONE => () (* (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.TEMP (fn _ => "No opaqueEnvVar found.") else ()) *)
+				    NONE => ()
 				  | SOME ev =>
 				    let
 					val env3 = freshenv' (renameenv' env0 state) (SOME O.empty) false
 					val stateEntry = (E.pushExtEnv env3 (L.singleton lab) L.empty CD.empty)
 					val (stateEntryWithOpaqueConstraints, newConstraints) = E.createOpaqueEqualityConstraints stateEntry l
-					val _ = (if (not (!analysingBasis))
-						 then () (* D.printDebugFeature D.UNIF D.TEMP (fn _ => "Created opaque signature constraint for equality type variables! Environment variable "^(E.printEnvVar ev)^ *)
-							 (* 					 " is getting mapped to:\n"^(E.printEnv stateEntryWithOpaqueConstraints "")) *)
-						 else ())
 					val _ = fsimplify newConstraints l
 				    in
 					S.updateStateEv state ev stateEntryWithOpaqueConstraints
@@ -4587,7 +4496,6 @@ fun unif env filters user =
 					 1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, ls, ids), recordInformation)
 				       | _ => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, deps, ids), recordInformation);
 
-      			     (* check should be made here to pass this test (code here should end up being generalised to all cases) *)
 			     val _ =
 				 case recordInformation of
 				     [] => ()

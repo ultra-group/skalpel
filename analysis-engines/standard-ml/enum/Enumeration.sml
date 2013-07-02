@@ -550,6 +550,7 @@ fun preEnum (envcss as (env, css)) (ast, _, _) =
 	  | conv (E.CSSFREE ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty EK.FreeIdent)
 	  | conv (E.CSSWARN (ll, s)) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.Warning s))
 	  | conv (E.CSSPARS (ll, s)) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.Parsing s))
+	(* errsynt - syntax error *)
 	val (errsynt, labs) =
 	    foldl (fn (err, (errs, labs)) =>
 		      let val err   = ERR.setReg (ERR.setSlice ast (ERR.setM err true)) true
@@ -564,6 +565,7 @@ fun preEnum (envcss as (env, css)) (ast, _, _) =
 		      end)
 		  ([], L.empty)
 		  (List.mapPartial conv css)
+    (* in a file without syntax errors, errsynt is empty and labs is also empty, creating the initial filter? *)
     in (errsynt, SS.flatLabs labs) (* enum cs errsynt (flatset labs) timelimit program*)
     end
 
