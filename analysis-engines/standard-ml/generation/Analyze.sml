@@ -1683,13 +1683,7 @@ fun generateConstraints' prog pack nenv =
 		   val c3   = E.initClassConstraint clv1 clv2 lab1
 		   val c4   = E.initClassConstraint clv1 (CL.consDAT ()) lab2
 
-
-		   (***** delete this constraint *****)
-		   (********* when this is mapped to NOT_EQUALITY_TYPE directly we get a correct slice for the test i'm working on, needs to work in a non-forced way though *)
 		   val c5   = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR typenameEqualityTypeVar) (T.consEQUALITY_TYPE_VAR eqtypeVar) lab
-		   val _    = D.printDebugFeature D.AZE D.TEMP (fn _ => (#red (!D.colors))^"Constraint interested in right now: "^(E.printOneConstraint c5))
-		   (**********************************)
-
 
 		   val cst  = E.unionConstraintsList [cst1, cst2]
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2]
@@ -3316,22 +3310,9 @@ fun generateConstraints' prog pack nenv =
 		   val (ev1, cst1, css1) = f_labstrexp (indent^SS.verticalFork^SS.straightLine) labstrexp
 		   val (ev2, cst2, css2) = f_labsigexp (indent^SS.verticalFork^SS.straightLine) labsigexp
 		   val (ev3, strs, cst3, css3) = f_strid (indent^SS.bottomLeftCurve^SS.straightLine) strid
-
-		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "(ev1, ev2, ev3) = ("^(E.printEnvVar ev1)^", "^(E.printEnvVar ev2)^", "^(E.printEnvVar ev3)^")")
-
-		   (* now we need to go through the constraints of cst2, the signature, and give the types
-		    * a NOT_EQUALITY_TYPE status constraint as the structure is using the signature in an
-		    * opaque manner *)
-		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Starting edit for constraints for an opaque signature. Constraints CST2:\n"^(E.printConstraints cst2))
-		   (* at the moment cst2New isn't used becasue it creates false errors between the structure and the signature, which shouldn't happen
-		    * the structure should not see these new constraints. Need to find a way to stop that from happening. *)
-		   (* val cst2New = E.createOpaqueEqualityConstraints cst2 lab *)
-		   val _ = D.printDebugFeature D.AZE D.TEMP (fn _ => "Finished edit for constraints for an opaque signature. Constraints:\n"^(E.printConstraints cst2))
-
 		   val cst  = E.singleConstraint (lab, E.SIGNATURE_CONSTRAINT (ev2, NONE, ev1, SOME ev3, lab))
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
-
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
