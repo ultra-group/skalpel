@@ -1,24 +1,21 @@
 (* Copyright 2010 Heriot-Watt University
  * Copyright 2011 Heriot-Watt University
+ * Copyright 2013 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        06 July 2010
  *  o File name:   sources.cm
@@ -35,51 +32,147 @@ Library
   structure Slicer
   structure ExtReg
   structure ErrorKind
+  structure ErrorHandler
   structure Ppp
   structure SlicerOptArgs
   structure JsonParser
-  (*structure Slicer*)
-  (*structure SmlTesDeps*)
-  
-  (* allow these structures to be seen while debugging: *)
-  (*structure WordCBTHCSet2*)
-  (*structure IntCBTHCSet2*)
-  (*structure TestIntCBTHCSet2*)
 
 is
 
   $/basis.cm
   $/smlnj-lib.cm
-
-(*
   $/ml-yacc-lib.cm
-  (*$/ml-lpt-lib.cm*)
-  (*$/pgraph.cm
-  $/pgraph-util.cm
-  $smlnj/cm.cm*)
-  $smlnj/compiler.cm
-  $smlnj/viscomp/basics.cm
-  $smlnj/viscomp/core.cm
-*)
+  $/json-lib.cm
 
-  (*cbt-sets/sources.cm*)
+  (* utilities *)
+  utils/SymbSlice.sml
+  utils/Solution.sig
+  utils/Solution.sml
+  utils/Tools.sig
+  utils/Tools.sml
+  utils/Debug.sig
+  utils/Debug.sml
+  utils/ErrorHandler.sig
+  utils/ErrorHandler.sml
+  utils/VTimer.sig
+  utils/VTimer.sml
 
-  utils/sources.cm
-  region/sources.cm
-  sets/sources.cm
-  ast/sources.cm
-  parse/sources.cm
-  constraint/sources.cm
-  generation/sources.cm
-  ppp/sources.cm
-  slicing/sources.cm
-  error/sources.cm
-  enum/sources.cm
+  (* region *)
+  region/Region.sig
+  region/Region.sml
 
-  SlicerOptArgs.sml 
+  (* sets *)
+  sets/Label.sig
+  sets/OrdKey.sml
+  sets/Label.sml
+  sets/Ident.sig
+  sets/OrdStr.sml
+  sets/Ident.sml
+  sets/LongId.sig
+  sets/OrdLid.sml
+  sets/LongId.sml
+  sets/OrdLabLid.sml
+  sets/OrdId.sml
+  sets/OrdSet.sig
+  sets/OrdSet.sml
+  sets/OrdIdl.sml
+
+  (* abstract syntax tree *)
+  ast/AstSML.sig
+  ast/AstSML.sml
+  ast/AstMLB.sml
+  ast/AstTest.sig
+  ast/AstTest.sml
+
+  (* ppp *)
+  ppp/PPP.sig
+  ppp/PPP-mlton.sml
+
+  (* slicing *)
+  slicing/Slice.sig
+  slicing/Slice.sml
+
+  (* parsing *)
+  parse/Parser.sig
+  parse/LexDefs.sig
+  parse/Comment.sig
+  parse/Comment.sml
+  parse/LexDefs.sml
+  parse/MLB-mlton.grm.sig
+  parse/MLB-mlton.lex.sml
+  parse/MLB-mlton.grm.sml
+  parse/ML-mlton.grm.sig
+  parse/ML-mlton.lex.sml
+  parse/ParseDefs.sig
+  parse/ParseDefs.sml
+  parse/Infix.sig
+  parse/Infix.sml
+  parse/ML-mlton.grm.sml
+  parse/Parser.sml
+
+  (* extlab *)
+  constraint/ExtLab.sig
+  constraint/ExtLab.sml
+  constraint/Expans.sig
+  constraint/Expans.sml
+  constraint/ClassId.sig
+  constraint/ClassId.sml
+  constraint/Poly.sig
+  constraint/Poly.sml
+  constraint/Ty.sig
+  constraint/Ty.sml
+  constraint/ConsId.sig
+  constraint/ConsId.sml
+  constraint/Env.sig
+  constraint/Env.sml
+
+
+  (* constraint generation *)
+  generation/Analyze.sig
+  generation/Op.sig
+  generation/Op.sml
+  generation/Name.sig
+  generation/Name.sml
+  generation/ValuePol.sig
+  generation/ValuePol.sml
+  generation/Analyze.sml
+
+  (* error *)
+  error/ErrorKind.sig
+  error/ErrorKind.sml
+  error/ExtReg.sig
+  error/ExtReg.sml
+  error/Error.sig
+  error/Error.sml
+  error/Tag.sig
+  error/Tag.sml
+  error/Html.sig
+  error/Html.sml
+
+
+  (* more parsing *)
+  parse/JsonParser.sig
+  parse/JsonParser.sml
+
+  (* enumeration *)
+  enum/SearchSpace.sig
+  enum/SearchSpace.sml
+  enum/State.sig
+  enum/Filter.sig
+  enum/Filter.sml
+  enum/Unification.sig
+  enum/Fresh.sig
+  enum/Fresh.sml
+  enum/Unification.sml
+  enum/StateEnv.sml
+  enum/Minimisation.sig
+  enum/Minimisation.sml
+  enum/Enumeration.sml
+
+  (* start up files *)
   SlicerOptArgs.sig
+  SlicerOptArgs.sml
   Tester.sig
   Tester.sml
   RunSlicer.sig
   RunSlicer.sml
-  

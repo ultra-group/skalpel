@@ -626,6 +626,8 @@ fun smlTesStrArgs strArgs =
     handle Fail _ => OS.Process.failure
 
 
+fun smlnjEntryPoint (binaryName, argumentList) = smlTesStrArgs (foldr (fn (x,y)=>x^" "^y) "" argumentList)
+
 fun smltesstr str = smlTesStrArgs ("--output true -b 1 " ^ str)
 
 end
