@@ -49,8 +49,8 @@ is
   ../utils/sources.cm
   ../sets/sources.cm
 
-  ExtendedLab.sig
-  ExtendedLab.sml
+  ExtLab.sig
+  ExtLab.sml
   ClassId.sig
   ClassId.sml
   ConsId.sig

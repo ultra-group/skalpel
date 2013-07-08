@@ -35,6 +35,7 @@ Library
   structure Slicer
   structure ExtReg
   structure ErrorKind
+  structure ErrorHandler
   structure Ppp
   structure SlicerOptArgs
   structure JsonParser

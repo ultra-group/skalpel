@@ -40,6 +40,8 @@ signature SLICER = sig
      * no SKALPEL-USE-FILE and no SKALPEL-SET-BASIS *)
     val setWebDemo         : bool -> unit
 
+    val smlnjEntryPoint          :   string * string list -> OS.Process.status
+
     val commslicerp        : string      -> (* basis file       *)
     			     string list -> (* input files      *)
     			     string      -> (* HTML output file *)
