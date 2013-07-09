@@ -44,10 +44,8 @@ val lib = ref (fn x : ctxt => fn _ : string list => "")
 signature SMLTESDEPS = sig
 
     val getDot : string -> string -> unit (*string is a .cm file*)
-    val getTes : string -> string -> unit (*string is a .cm file*)
 
     val cmToDot : (string * string list) -> OS.Process.status
-    val cmToTes : (string * string list) -> OS.Process.status
 
     (*val printFiles : unit -> unit*)
 
@@ -287,35 +285,11 @@ fun getDot filein fileout =
     handle ErrorFile st => print st
 	 | _ => print "an error occured"
 
-fun getTes filein fileout =
-    let val suffix = ".tes"
-	val prefix = checkFiles filein fileout suffix
-	val fileout = prefix ^ suffix
-	val _ = silence_compiler ()
-	val mfiles = #2 (computeDependencies filein)
-	    handle Error => (unsilence_compiler ();
-			     raise ErrorFile "The input .cm file does not follow the correct syntax\n")
-	val _ = unsilence_compiler ()
-	val out = TextIO.openOut fileout
-	val _ = M.app (fn (x, _) => TextIO.output (out, x ^ "\n")) mfiles
-	val _ = TextIO.closeOut out
-    in ()
-    end
-    (*handle ErrorFile st => print st
-	 | _ => print "an error occured"*)
-
 fun cmToDot (_, [filein, fileout]) =
     (getDot filein fileout; OS.Process.success)
   | cmToDot (_, [filein]) =
     (getDot filein ""; OS.Process.success)
   | cmToDot _ = OS.Process.failure (* we should give explanations here *)
-
-(* turn a .cm file into a .tes file using getTes *)
-fun cmToTes (_, [filein, fileout]) =
-    (getTes filein fileout; OS.Process.success)
-  | cmToTes (_, [filein]) =
-    (getTes filein ""; OS.Process.success)
-  | cmToTes _ = OS.Process.failure
 
 fun printFiles () = printOrderedFiles (#2 (computeDependencies "sources.cm"))
 
