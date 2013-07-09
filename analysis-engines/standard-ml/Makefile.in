@@ -23,9 +23,9 @@
 #                 to generate the configure script)
 ######################################################################
 
-SOURCESDIR = ${CURDIR}
 CMDLINEDIR = command-line
 prefix=@prefix@
+TMPDIR=/tmp
 
 #MLTONPROFOP can be one of these:
 #  - time:  how much time is spent on each function
@@ -69,7 +69,7 @@ check:
 	make mlton-profile
 	mv test-prog.sml_backup test-prog.sml
 	# Run the slicer on the database
-	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; checktests [];" | sml
+	@echo "CM.make \"sources.cm\"; open Slicer; checktests [];" | sml
 
 load:
 	# loads emacs, starts emacs and compile TES
@@ -85,28 +85,24 @@ load:
 
 ml-binary:
 	# creates the heap image file
-	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", slicerpp);" | sml
+	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", Slicer.smlnjEntryPoint);" | sml
 	# above should be doable as: mlbuild sources.cm Slice.slicerpp slicer
 	# creates the normal executable
 	heap2exec ${TMPDIR}/slicer.x86-linux ${TMPDIR}/slicer
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
-	# copies the executable into the bin directory in the implementation directory
-	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/slicer-smlnj
+	mkdir -p bin
 	# makes a copy of the slicer-smlnj binary called slicer
-	cp ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel
-	# copies the executable to the shared directory (makes a dated backup)
-	mv ${TMPDIR}/slicer ${SHAREDIR}/slicer-$(date)
+	mv ${TMPDIR}/slicer bin/skalpel
 
 smlnj-bin-webdemo:
 	# creates the heap image file
-	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; setWebDemo true; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", slicerpp);" | sml
+	@echo "CM.make \"sources.cm\"; open Slicer; setWebDemo true; SMLofNJ.exportFn (\"${TMPDIR}/slicer\", slicerpp);" | sml
 	# creates the normal executable
 	heap2exec ${TMPDIR}/slicer.x86-linux ${TMPDIR}/slicer
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 	# copies the executable into the bin directory in the implementation directory
-	mv ${TMPDIR}/slicer ${SOURCESDIR}/bin/skalpel-webdemo-bin
+	mv ${TMPDIR}/slicer bin/skalpel-webdemo-bin
 
 mlton-base:
 	mllex  parse/ML.lex
@@ -131,7 +127,7 @@ mlton-bin-webdemo: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 
 	mlton -output bin/skalpel-webdemo-bin sources.mlb
 
@@ -141,13 +137,13 @@ mlton-bin-webdemo: mlton-base
 ## 	echo "val _ = myslicer ();" >> mlton-control.sml
 my-smlnj-binary:
 	# creates the heap image file
-	@echo "CM.make \"${SOURCESDIR}/sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/myslicer\", myslicerp);" | sml
+	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/myslicer\", myslicerp);" | sml
 	# creates the normal executable
 	heap2exec ${TMPDIR}/myslicer.x86-linux ${TMPDIR}/myslicer
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 	# copies the executable to the implementation directory
-	mv ${TMPDIR}/myslicer ${SOURCESDIR}/bin/myslicer
+	mv ${TMPDIR}/myslicer bin/myslicer
 
 bin/cmtotes: PGOps.sml
 	make cmtotes
@@ -158,24 +154,24 @@ bin/cmtodot: PGOps.sml
 ## cmtotes generates a cmtotes binary to transform a cm file into a tes file.
 cmtotes:
 	# creates the heap image file
-	@echo "use \"${SOURCESDIR}/PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtotes\", cmToTes);" | sml
+	@echo "use \"PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtotes\", cmToTes);" | sml
 	# creates the normal executable
 	heap2exec ${TMPDIR}/cmtotes.x86-linux ${TMPDIR}/cmtotes
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 	# copies the executable to the implementation directory
-	mv ${TMPDIR}/cmtotes ${SOURCESDIR}/bin/cmtotes
+	mv ${TMPDIR}/cmtotes bin/cmtotes
 
 ## cmtodot generates a cmtodot binary to transform a cm file into a dot file.
 cmtodot:
 	# creates the heap image file
-	@echo "use \"${SOURCESDIR}/PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtodot\", cmToDot);" | sml
+	@echo "use \"PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtodot\", cmToDot);" | sml
 	# creates the normal executable
 	heap2exec ${TMPDIR}/cmtodot.x86-linux ${TMPDIR}/cmtodot
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 	# copies the executable to the implementation directory
-	mv ${TMPDIR}/cmtodot ${SOURCESDIR}/bin/cmtodot
+	mv ${TMPDIR}/cmtodot bin/cmtodot
 
 ### cmtomlb generates a .mlb file from a .cm file.
 cmtomlb:
@@ -183,7 +179,7 @@ cmtomlb:
 
 sml-tes-deps:
 	@echo "***** Attempting to do SML/NJ specific commands. If you are not using the SML/NJ compiler, ignore any errors"
-	ml-makedepend "${SOURCESDIR}/sources.cm" "${SOURCESDIR}/bin/slicer-smlnj"
+	ml-makedepend "sources.cm" "bin/slicer-smlnj"
 	cat Makefile | sed "s/^\(# END  : ml-makedepend\)/\tmake ml-binary\n\1/" > tmp-makefile
 	mv tmp-makefile Makefile
 
@@ -204,7 +200,7 @@ mlton-bin: mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 
 	# makes implementation directory
-	mkdir -p ${SOURCESDIR}/bin
+	mkdir -p bin
 
 	mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
 	mv RunSlicer.sml.original RunSlicer.sml
@@ -234,12 +230,12 @@ smlnj-profile:
 	# (OS.Process.system "rm -r .cm"; Backend.Profile.setProfMode true; CM.make "sources.cm");
 	# (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);
 	make cleaner
-	@echo "(Backend.Profile.setProfMode true; CM.make \"${SOURCESDIR}/sources.cm\"); (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);" | sml > profile-smlnj-$(date)
+	@echo "(Backend.Profile.setProfMode true; CM.make \"sources.cm\"); (Backend.Profile.setTimingMode true; Slicer.checktests []; Backend.Profile.reportAll TextIO.stdOut);" | sml > profile-smlnj-$(date)
 
 # binary and documentation
 install-core:
 	mkdir -p $(DESTDIR)@prefix@/bin/
-	cp ${SOURCESDIR}/bin/skalpel             $(DESTDIR)@prefix@/bin/
+	cp bin/skalpel             $(DESTDIR)@prefix@/bin/
 
 	mkdir -p $(DESTDIR)@prefix@/share/skalpel/
 	cp ../../lib/basis.sml $(DESTDIR)@prefix@/share/skalpel/
@@ -247,7 +243,7 @@ install-core:
 # binary and documentation
 install:
 	mkdir -p $(DESTDIR)@prefix@/bin/
-	cp ${SOURCESDIR}/bin/skalpel             $(DESTDIR)@prefix@/bin/
+	cp bin/skalpel             $(DESTDIR)@prefix@/bin/
 
 	mkdir -p $(DESTDIR)@prefix@/share/skalpel/
 	cp ../../lib/basis.sml $(DESTDIR)@prefix@/share/skalpel/
@@ -276,14 +272,14 @@ install-all: install install-emacs
 
 clean:
 	# files generated by the parser and lexer
-	rm -f ${SOURCESDIR}/parse/*.grm.sml
-	rm -f ${SOURCESDIR}/parse/*.grm.sig
-	rm -f ${SOURCESDIR}/parse/*.lex.sml
+	rm -f parse/*.grm.sml
+	rm -f parse/*.grm.sig
+	rm -f parse/*.lex.sml
 	# binaries
-	rm -f ${SOURCESDIR}/slicer-skalpel
-	rm -f ${SOURCESDIR}/skalpel
+	rm -f slicer-skalpel
+	rm -f skalpel
 	# generated from mlton-control.sml.in
-	rm -f ${SOURCESDIR}/mlton-control.sml
+	rm -f mlton-control.sml
 	# man pages
 	rm -f ${CMDLINEDIR}/skalpel-legend.1.gz
 	rm -f ${CMDLINEDIR}/skalpel.1.gz
