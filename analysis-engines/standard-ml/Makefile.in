@@ -215,9 +215,8 @@ mlton-bin: mlton-base
 # The problem is that then it is done twice because it's done
 # again in mlton-bin-gen.
 polyml-bin:
-	./cmtomlb.sh cmtopoly
 	poly < FILES.sml
-	cc -o slicer-poly slicer-poly.o -L ${POLYLIBDIR} -lpolymain -lpolyml
+	cc -o slicer-poly slicer-poly.o -lpolymain -lpolyml
 	rm slicer-poly.o
 	mv slicer-poly bin/slicer-poly
 

@@ -175,22 +175,14 @@ fun parseTes tesfile stin lab nasc =
 		      | getSmls (x :: xs) l =
 			let val next = LA.nextLabel l
 			    val regs = getRegion line x n
-			    (*val _    = D.printdebug2 ("(1) dir:" ^ dir ^ "\n" ^ "file:" ^ x)*)
 			    val {dir = d, file = f} = OS.Path.splitDirFile x
 			    val dir' = OS.Path.concat (dir, d)
 			    val newfile = OS.Path.joinDirFile {dir = dir', file = f}
 				handle OS.Path.InvalidArc => ""
-			    (*val _       = D.printdebug2 ("newfile:" ^ newfile)*)
 			    val af      = A.ProgOneFile (A.AFile (newfile, regs, l, next), next)
 			    val (l', afs) = getSmls xs next
 			in (l', af :: afs)
 			end
-		    (*if String.isSuffix ".sml" x orelse String.isSuffix ".tes" x
-		      then
-			  if OS.FileSys.access (x, [OS.FileSys.A_READ])
-			  then x :: getSmls xs
-			  else raise ParsingError (n, [("", "file does not exist", [getRegion line x n])])
-		      else raise ParsingError (n, [("", "not a '.sml' or '.tes' file", [getRegion line x n])])*)
 
 		    (* strips out spaces, tabs, and new line characters, puts the words from 'line' in a list *)
 		    val toks = String.tokens (fn #" "  => true

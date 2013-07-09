@@ -28,7 +28,7 @@ datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST 
 datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP
 
 (* used to generate random colors for brackets of labelled program output *)
-val rand = Random.rand (0,6)
+(* val rand = Random.rand (0,6) *)
 
 (* below are ansi escape sequences, which can be used to colour
  * the output of text in terminals. Note that not all terminals
@@ -129,7 +129,7 @@ fun printDebugFeature file EQUALITY_TYPES stringFunction =
 fun printLabelledProgramString(x) =
     let
 	val texColors = ["black", "red", "green", "blue", "cyan", "magenta", "yellow"]
-	val randomNumber = Random.randNat rand
+	val randomNumber = 4 (*Random.randNat rand*)
 	val colorChosen = List.nth (texColors, (randomNumber mod (List.length texColors)))
     in
 	"{\\color{" ^ colorChosen ^ "}\\Bigg[}" ^ x ^ "{\\color{" ^ colorChosen ^ "}\\Bigg]}"
