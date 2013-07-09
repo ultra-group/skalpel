@@ -629,6 +629,5 @@ fun smlTesStrArgs strArgs =
 fun smlnjEntryPoint (binaryName, argumentList) = smlTesStrArgs (foldr (fn (x,y)=>x^" "^y) "" argumentList)
 
 fun smltesstr str = smlTesStrArgs ("--output true -b 1 " ^ str)
-fun smlnjHook (str, strList) = smlTesStrArgs (foldl (op ^) "" strList)
 
 end
