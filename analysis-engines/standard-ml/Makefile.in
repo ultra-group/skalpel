@@ -23,7 +23,6 @@
 #                 to generate the configure script)
 ######################################################################
 
-CMDLINEDIR = command-line
 prefix=@prefix@
 TMPDIR=/tmp
 
@@ -63,32 +62,32 @@ gen-parse:
 	mv parse/MLB.grm.sml parse/MLB-mlton.grm.sml
 	mv parse/MLB.grm.sig parse/MLB-mlton.grm.sig
 
-smlnj-bin: gen-parse
+smlnj-bin: gen-cm-sources gen-parse
 	cp RunSlicer.sml RunSlicer.sml.original
 	sed s/"val SKALPEL_VERSION = \"VERSION_HERE\""/"val SKALPEL_VERSION = \"Built with SML\/NJ on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/skalpel\", Slicer.smlnjEntryPoint);" | sml
 	heap2exec ${TMPDIR}/skalpel.x86-linux ${TMPDIR}/skalpel
 	mkdir -p bin
-	mv ${TMPDIR}/slicer bin/skalpel
+	mv ${TMPDIR}/skalpel bin/skalpel
 	mv RunSlicer.sml.original RunSlicer.sml
 
 mlton-base: gen-parse
 	cp mlton-control.sml.in mlton-control.sml
 	cp RunSlicer.sml RunSlicer.sml.original
-	sed s/"val SKALPEL_VERSION = \"VERSION_HERE\""/"val SKALPEL_VERSION = \"Built with MLton on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
+	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with MLton on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 
 
-mlton-bin: mlton-base
+mlton-bin: gen-mlb-sources mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 	mkdir -p bin
 	mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
 	mv RunSlicer.sml.original RunSlicer.sml
 
-polyml-bin: gen-parse
+polyml-bin: gen-poly-sources gen-parse
 	cp RunSlicer.sml RunSlicer.sml.original
-	sed s/"val SKALPEL_VERSION = \"VERSION_HERE\""/"val SKALPEL_VERSION = \"Built with Poly\/ML on `date`. Skalpel version: `git rev-parse HEAD`"\"/ RunSlicer.sml > RunSlicer.sml.tmp
+	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with Poly\/ML on `date`. Skalpel version: `git rev-parse HEAD`"\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 	poly < sources.poly
 	cc -o skalpel skalpel.o -lpolymain -lpolyml
@@ -96,6 +95,36 @@ polyml-bin: gen-parse
 	mkdir -p bin
 	mv skalpel bin/skalpel
 	mv RunSlicer.sml.original RunSlicer.sml
+
+################################################################################
+#                          Generating sources.* files                          #
+################################################################################
+
+gen-cm-sources:
+	echo "Library" > sources.cm
+	cat build-files/exported-structures >> sources.cm
+	echo "is" >> sources.cm
+	cat build-files/smlnj-libraries >> sources.cm
+	cat build-files/sources.tes >> sources.cm
+
+gen-mlb-sources:
+	echo "local" > sources.mlb
+	cat build-files/mlton-libraries >> sources.mlb
+	cat build-files/sources.tes >> sources.mlb
+	echo "in" >> sources.mlb
+	cat build-files/exported-structures >> sources.mlb
+	echo "mlton-control.sml" >> sources.mlb
+	echo "end" >> sources.mlb
+
+gen-poly-sources:
+	cat build-files/polyml-libraries > sources.poly
+	cat build-files/sources.tes | sed s/^/"use \""/ | sed s/$$/"\";"/ >> sources.poly
+	echo "use \"mlton-control.sml.in\";" >> sources.poly
+	echo "TextIO.flushOut TextIO.stdOut;" >> sources.poly
+	echo "PolyML.export(\"skalpel\", slicerPoly);" >> sources.poly
+
+
+
 
 ################################################################################
 #                          Extra tools (e.g. webdemo)                          #
@@ -110,15 +139,10 @@ mlton-bin-webdemo: mlton-base
 bin/cmtodot: PGOps.sml
 	make cmtodot
 
-## cmtodot generates a cmtodot binary to transform a cm file into a dot file.
 cmtodot:
-	# creates the heap image file
 	@echo "use \"PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtodot\", cmToDot);" | sml
-	# creates the normal executable
 	heap2exec ${TMPDIR}/cmtodot.x86-linux ${TMPDIR}/cmtodot
-	# makes implementation directory
 	mkdir -p bin
-	# copies the executable to the implementation directory
 	mv ${TMPDIR}/cmtodot bin/cmtodot
 
 sml-tes-deps:
@@ -128,9 +152,7 @@ sml-tes-deps:
 	mv tmp-makefile Makefile
 
 mlton-profile: mlton-base
-	#echo "val _ = Slicer.setsol 8;" >> mlton-control.sml
 	echo "val _ = slicerpp ();" >> mlton-control.sml
-	#mlton -profile alloc -profile-branch true -profile-stack true -profile-val true sources.mlb
 	mlton -verbose 3 -profile ${MLTONPROFOP} -profile-branch true -profile-stack true -profile-val true sources.mlb
 	./sources -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
 	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-`date +%Y-%m-%d`
@@ -189,12 +211,6 @@ clean:
 	rm -f parse/*.lex.sml
 	# generated from mlton-control.sml.in
 	rm -f mlton-control.sml
-	# man pages
-	rm -f ${CMDLINEDIR}/skalpel-legend.1.gz
-	rm -f ${CMDLINEDIR}/skalpel.1.gz
-	rm -f ${CMDLINEDIR}/skalpel-bin.1.gz
-	rm -f ${CMDLINEDIR}/skalpel-bin
-	rm -f ${CMDLINEDIR}/skalpel-perl-to-bash.1.gz
 	# removes the .cm folder created by CM and the files created by the lexer and parser
 	rm -rf bin/
 	rm -rf .cm cbt-sets/.cm                              # .cm directories
