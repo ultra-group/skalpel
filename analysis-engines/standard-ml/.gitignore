@@ -27,10 +27,9 @@ MLB-mlton.grm.sml
 MLB-mlton.lex.sml
 Makefile
 bin
-sources
+sources.cm
 sources.mlb
-sources.tes
-sources.dot
+sources.poly
 thelibrary.sml
 script
 mlton-control.sml
