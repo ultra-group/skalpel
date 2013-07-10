@@ -50,21 +50,39 @@ structure D   = Debug
 
 val analysingBasis : bool ref = ref false
 
-(* error shoud be called state or end_state ad S.state should be called context.
- * An error (end_state) is either a success or an error.  Our constraint solver
- * terminates in one of these states.  It terminates in a success state given
- * solvable constaints and returns its current context.  It terminates in an
- * error state given unsolvable constraint and returns an error as well as the
- * current context. *)
+(** Represents unification termination states.
+ * Our constraint solver terminates in either one of two states:
+ * \arg \b Success (of type S.state). Represents success, and holds
+ * information about the current constaint solving context in its
+ * argument.
+ * \arg \b Error (of type ERR.error * S.state). Represents an error, will
+ * return a a pair of the error located and the current constraint
+ * solving context.
+ * This is represented in the theoretical presentation (including a
+ * state used to represent that solving is still in progress) as
+ * follows:
+ * \f[\METAunifterm \in \SETunifterm ::= \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\METAcsenv^\prime} \mid \CONSunifsuccess \mid \CONSuniferror{\METAerror}\f]
+ *)
+
 datatype error = Success of S.state
                | Error   of ERR.error * S.state
 
-(* These datatypes are used by the occurs check.
- * We check that given a CT, a CS, or a CR term, the variable does not
- * occur nested in the type. *)
+(** Used when checking for circularity errors, holds the type variable
+ * that occurs on the right hand side of the circularity check with
+ * label information. Has the following constructors:
+ * \arg \b T. To hold type variable annotated with extended labels.
+ * \arg \b S. To hold row variables annotated with extended labels.
+ * \arg \b R. To hold field variables annotated with extended labels. *)
 datatype occty = T  of T.typeVar  EL.extLab
                | S  of T.rowVar EL.extLab
                | R  of T.fieldVar EL.extLab
+
+(** Used when checking for circularity errors, holds a pair of a
+ * variable and a type which should not contain that variable.
+ * There are three constructors:
+ * \arg \b CT. A constructor where the pair is of type of #Ty.typeVar and #Ty.type
+ * \arg \b CS. A constructor where the pair is of type of #Ty.rowVar and #Ty.rowType
+ * \arg \b CT. A constructor where the pair is of type of #Ty.fieldVar and #Ty.fieldType *)
 datatype cocc  = CT of T.typeVar  * T.ty
                | CS of T.rowVar * T.rowType
                | CR of T.fieldVar * T.fieldType
@@ -76,11 +94,18 @@ datatype 'a sbind = BINDOUT                  (* the binding has been discarded  
 		  | BINDPOL of 'a E.bind     (* we kept the binding but weakened the poly field   *)
 		  | BINDDUM of 'a E.bind     (* the binding has been transformed into a dummy one *)
 
+(** Represents which Skalpel entity is using the unification algorithm (e.g.\ the enumerator).
+ * There are three potential users of the unification algorithm:
+ * \arg \b MIN. Represents that the unification algorithm is being used by the minimisation algorithm.
+ * \arg \b ENUM. Represents that the unification algorithm is being used by the enumeration algorithm.
+ * \arg \b DBENUM. Represents that the unification algorithm is being used
+ *  by the enumeration algorithm when dealing with the test datatbase. *)
 datatype user = MIN of ERR.error
 	      | ENUM
 	      | DBENUM
 
 
+(** A map of type function variables to type functions *)
 type tfun = T.typeFunction OM.map
 
 (* This is used to pass errors to the constraint solver from
@@ -88,16 +113,21 @@ type tfun = T.typeFunction OM.map
 exception errorfound of ERR.error
 
 
-(* printing *)
-
+(** \fn printCocc coccConstructor
+ * \param coccConstructor A constructor of the datatype #cocc.
+ * \returns String representation of the parameter value.  *)
 fun printCocc (CT (tv, ty))  = "CT(" ^ T.printTypeVar  tv ^ "," ^ T.printty    ty ^ ")"
   | printCocc (CS (sv, sq))  = "CS(" ^ T.printRowVar sv ^ "," ^ T.printseqty sq ^ ")"
   | printCocc (CR (rv, rt))  = "CR(" ^ T.printFieldVar rv ^ "," ^ T.printFieldType rt ^ ")"
 
+(** \fn printOccty occtyConstructor
+ * \param occtyConstructor A constructor of the datatype #occty.
+ * \returns String representation of the parameter value. *)
 fun printOccty (T x) = "T" ^ EL.printExtLab' x T.printTypeVar
   | printOccty (S x) = "S" ^ EL.printExtLab' x T.printRowVar
   | printOccty (R x) = "R" ^ EL.printExtLab' x T.printFieldVar
 
+(** some text *)
 fun printOcctyList [] = ""
   | printOcctyList (x :: xs) = printOccty x ^ "\n" ^ printOcctyList xs
 
@@ -2155,25 +2185,30 @@ fun unif env filters user =
 		 else foch (ERR.consPreError ERR.dummyId labs deps EK.Circularity stts) (c (var1, sem1)) vars depth lab
 	    else occursGenList c var1 var2 sem1 labs stts deps vars depth lab fget fdecomp foc
 
-	fun foccurs c [] n l = true (* true because we have to add c to the state *)
-	  | foccurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTypeVar  S.getValStateTv decomptyty  foccurs
-	  | foccurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqRowVar S.getValStateSq decomptysq  foccurs
-	  | foccurs (c as (CR (var1, sem))) [R (var2, labs, stts, deps)] 0 l = occursGenZero CR var1 var2 sem labs stts deps l T.eqFieldVar S.getValStateRt decomptyfield foccurs
-	  | foccurs (c as (CT (var1, sem))) (var :: xs) n l =
+	(** The function which checks for circularity errors.
+	 * We can see this concept being represented in the theory in rule \f$\unifruleuacca\f$ of the theory below. Note that a side condition of this rule is that \f$\METAvar \neq \METAcsterm \wedge y = \METAunifstatetyCal(x^{\METAcdepset}) \wedge \METAvar \notin \MEMdom{\METAunifstatetyCal}\f$.
+	 * \f[\unifruleuacca\ \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\csou{\METAvar}{\METAcsterm}}  \fra  \CONSuniferror{\lag\CONSuniferrorcircularity,\MEMdepsetSYMB(y)\rag}\text{, if } \METAvar\in\MEMvarsetSYMB(y)\backslash \SETcsgenenv \wedge\ \MEMundepSYMB(y)\ {\neq}\ v\f]
+	 * This function is called by #fsimplify while solving equality constraints.
+	 *)
+	fun occurs c [] n l = true (* true because we have to add c to the state *)
+	  | occurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTypeVar  S.getValStateTv decomptyty  occurs
+	  | occurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqRowVar S.getValStateSq decomptysq  occurs
+	  | occurs (c as (CR (var1, sem))) [R (var2, labs, stts, deps)] 0 l = occursGenZero CR var1 var2 sem labs stts deps l T.eqFieldVar S.getValStateRt decomptyfield occurs
+	  | occurs (c as (CT (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 T (var2, labs, stts, deps) => occursGenListEq CT var1 var2 sem labs stts deps xs n l T.eqTypeVar S.getValStateTv decomptyty foccurs handleOccurs
-	       | S (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq  foccurs
-	       | R (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield foccurs)
-	  | foccurs (c as (CS (var1, sem))) (var :: xs) n l =
+		 T (var2, labs, stts, deps) => occursGenListEq CT var1 var2 sem labs stts deps xs n l T.eqTypeVar S.getValStateTv decomptyty occurs handleOccurs
+	       | S (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq  occurs
+	       | R (var2, labs, stts, deps) => occursGenList CT var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield occurs)
+	  | occurs (c as (CS (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqRowVar S.getValStateSq decomptysq foccurs handleOccurs
-	       | T (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty  foccurs
-	       | R (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield foccurs)
-	  | foccurs (c as (CR (var1, sem))) (var :: xs) n l =
+		 S (var2, labs, stts, deps) => occursGenListEq CS var1 var2 sem labs stts deps xs n l T.eqRowVar S.getValStateSq decomptysq occurs handleOccurs
+	       | T (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty  occurs
+	       | R (var2, labs, stts, deps) => occursGenList CS var1 var2 sem labs stts deps xs n l S.getValStateRt decomptyfield occurs)
+	  | occurs (c as (CR (var1, sem))) (var :: xs) n l =
 	    (case var of
-		 R (var2, labs, stts, deps) => occursGenListEq CR var1 var2 sem labs stts deps xs n l T.eqFieldVar S.getValStateRt decomptyfield foccurs handleOccurs
-	       | T (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty foccurs
-	       | S (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq foccurs)
+		 R (var2, labs, stts, deps) => occursGenListEq CR var1 var2 sem labs stts deps xs n l T.eqFieldVar S.getValStateRt decomptyfield occurs handleOccurs
+	       | T (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateTv decomptyty occurs
+	       | S (var2, labs, stts, deps) => occursGenList CR var1 var2 sem labs stts deps xs n l S.getValStateSq decomptysq occurs)
 
 	and handleOccurs err c xs n l =
 	    if bcontinue
@@ -2188,17 +2223,6 @@ fun unif env filters user =
 	 * speed it up anyway because it occasionally takes over 10% of the unification
 	 * time.
 	 *)
-
-	(*val occurs_time = ref (0 : LargeInt.int)*)
-
-	fun occurs cocc occtyl n l =
-	    let (*val timer = VT.startTimer ()*)
-		val ret = foccurs cocc occtyl n l
-		(*val t = VT.getMilliTime timer*)
-		(*val _ = occurs_time := !occurs_time + t*)
-	    in ret
-	    end
-
 
 	(*val temp_time = ref (0 : LargeInt.int)*)
 

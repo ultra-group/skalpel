@@ -34,7 +34,7 @@
 
 \input{macros-steven}
 
-\title{Skalpel 0.8 User Guide}
+\title{Skalpel User Guide (Repository Version)}
 \date{\today}
 
 \begin{document}
@@ -98,7 +98,7 @@ below command as root:
 
 \texttt{\# dpkg -i $<$package\_name$>$}
 
-\subsection {Archive Installation}
+\subsection {Archive or Repository Installation}
 \label{archive-installation}
 
 A \texttt{.tar.gz} archive has been prepared for users who for
@@ -136,10 +136,20 @@ already exist or the system does not have the necessary dependancies
 to build Skalpel. Install all dependancies that were listed as missing
 by the configure script and then run the configure script
 again. Otherwise, if the configure script has succeeded, run
-\texttt{make mlton-bin}, which will build the \texttt{skalpel} binary
-using MLton.
+\texttt{make}, which will present various ways Skalpel can be
+built. Currently, we support building with the MLton, SML/NJ and
+Poly/ML compilers. Some known issues that can occur during
+installation are listed below.
 
-Note that when compiling with MLton, this error may occur:
+\begin{itemize}
+\item When compiling using Poly/ML, we need the SML/NJ library to be
+  available. By default, we look at the location supplied by the MLton
+  compiler (/usr/lib/mlton/sml/smlnj-lib). Users using a different
+  path should edit the \texttt{build-files/polyml-libraries} file and
+  change the \texttt{prefix} field.
+
+\item When using json-lib.mlb from the MLton distribution of the
+  SML/NJ library, this error may occur:
 
 \begin{tabular}{l}
 \noindent Error: /usr/lib/mlton/sml/smlnj-lib/JSON/json-lib.mlb 19.35 File\\
@@ -154,11 +164,7 @@ folder provided in the source repository of the SML/NJ compiler into
 file with the error in it (json-lib.mlb) above to
 \$(SML\_LIB)/smlnj-lib/ml-lpt/lib/ml-lpt-lib.mlb. This should fix the
 problem.
-
-
-To then install Skalpel system-wide (or to a prefix if one was specified as
-an argument to the configure script), run the \texttt{make install}
-command (with root permissions if appropriate).
+\end{itemize}
 
 \section{Windows}
 
