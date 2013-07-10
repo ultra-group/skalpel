@@ -22,6 +22,18 @@
  *      the signature Slicer.
  *)
 
+(** \mainpage My Personal Index Page
+ *
+ * \section intro_sec Introduction
+ *
+ * This is the introduction.
+ *
+ * \section install_sec Installation
+ *
+ * \subsection step1 Step 1: Opening the box
+ *
+ * etc...
+ *)
 
 structure Slicer : SLICER = struct
 
@@ -46,10 +58,10 @@ val myfilehtml     = Tester.myfilehtml
 datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
-(* do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "VERSION_HERE"
+(** do not change the below line! We change it using sed in the makefile and insert the git hash *)
+val SKALPEL_VERSION = "Built with MLton on Tue Jul  9 18:13:32 BST 2013. Skalpel version: 306fd5174ade79cd2d1cc99cf9c4c1c72a27d769"
 
-(* takes a boolean value b, if true then we are generating a binary for the web demo *)
+(** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
 
 (* Enhance these messages with the messages from EH.DeadBranch (failure of the slicer)
