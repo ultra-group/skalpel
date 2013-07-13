@@ -37,7 +37,8 @@
 # the current date in the format YEAR-MONTH-DAY-HOUR-MINUTE
 date=`date '+%Y-%m-%d'`
 
-repoDir='/u1/pg/jp95/repos/skalpel'
+repoDir=`mktemp -d`
+echo "created temp repo dir: $repoDir"
 
 # directory for the skalpel binary
 skalpelBin="$repoDir/analysis-engines/standard-ml/bin/skalpel"
@@ -55,6 +56,8 @@ testFrameworkDir="$repoDir/testing"
 deadLinksTestFilename="skalpel-dead-links-$date"
 analysisTestMasterFilename="skalpel-engine-test"
 deadLinksTestMasterFilename="skalpel-dead-links"
+compMltonTestMasterFilename="skalpel-mlton-compilation"
+compPolyTestMasterFilename="skalpel-polyml-compilation"
 
 # createt the output directory
 testingDir="$repoDir/testing/test-results"
@@ -65,29 +68,37 @@ masterDir="$repoDir/testing/master-test-files"
 #                run various tests on areas of the Skalpel project
 ################################################################################
 
+# clone the repository and build the skalpel binary
+polyRepoDir=`mktemp -d`
+echo "cloning repository and building the skalpel binary (poly/ml)..."
+polyCompilationLog=`mktemp`
+tempBuildFile=`mktemp`
+currentDir=`pwd`
+(cd /tmp; git clone https://git.gitorious.org/skalpel/skalpel.git $polyRepoDir &>$polyCompilationLog)
+cd $polyRepoDir/analysis-engines/standard-ml
+sed s:"val prefix.*":"val prefix = \"/u1/pg/jp95/software-64/mlton-20100608/build/lib/sml\";": build-files/polyml-libraries > $tempBuildFile
+mv $tempBuildFile build-files/polyml-libraries
+autoconf &> $polyCompilationLog
+./configure &> $polyCompilationLog
+make polyml-bin &> $polyCompilationLog
+
+# clone the repository and build the skalpel binary
+echo "cloning repository and building the skalpel binary (mlton)..."
+compilationLog=`mktemp`
+currentDir=`pwd`
+(cd /tmp; git clone https://git.gitorious.org/skalpel/skalpel.git $repoDir &>$compilationLog)
+cd $repoDir/analysis-engines/standard-ml
+autoconf &> $compilationLog
+./configure &> $compilationLog
+make mlton-bin &> $compilationLog
+
 # this is created for the dead links output, this directory is removed at the end
 mkdir -p $outputDir
-
-# navigate to the skalpel repository, and pull the latest changes
-# jpirie: Actually, it would be nice if the test framework started from a fresh
-#         clone of the repository each time, as that's what our users would do
-echo "updating the skalpel repository..."
-pullLog=`mktemp`
-(cd $repoDir; git pull http master &>$pullLog)
-
-# remove the old skalpel binary so we's sure we have new results
-echo "removing existing skalpel analysis engine binary..."
-rm -f "$skalpelBin"
-
-# rebuild the skalpel binary
-echo "building the skalpel binary..."
-compilationLog=`mktemp`
-(cd "$repoDir/analysis-engines/standard-ml"; make mlton-bin-gen &> $compilationLog)
 
 # run the analysis engine tests
 echo "running analysis engine tests..."
 analysisTestsLog=`mktemp`
-$skalpelBin -b 2 $basisFile -c $analysisTestDir &> $analysisTestsLog
+$skalpelBin -d NO_COLOURS -b 2 $basisFile -c $analysisTestDir &> $analysisTestsLog
 
 # check for any dead links in the webdemo
 # NOTE: We can't currently do this here because we are not on the webserver,
@@ -95,7 +106,7 @@ $skalpelBin -b 2 $basisFile -c $analysisTestDir &> $analysisTestsLog
 # $testFrameworkDir/scripts/check-webdemo-links.sh > $outputDir/$deadLinksTestFilename 2> $outputDir/$deadLinksTestFilename-errors
 
 # wait 5 minutes for other tests to be completed
-sleep 300
+# sleep 300
 
 ################################################################################
 #      create the e-mail to send out to the Skalpel project developers
@@ -103,7 +114,7 @@ sleep 300
 
 # create a new temporary file to put the e-mail into
 mailFile=`mktemp`
-echo "creating mailFile at location $mailFile..."
+echo "creating mail file at location $mailFile..."
 
 # construct the e-mail text
 echo -e "This is an automated message sent from the Skalpel test framework.\n" > $mailFile
@@ -120,9 +131,31 @@ echo -e "The most recent commit message of the skalpel repository is directly be
 
 (cd $repoDir; git log | head -n 6 >> $mailFile)
 
-echo -e "\n\n****************************************\n       Updating Repository Log         \n****************************************" >> $mailFile
+echo -e "\n\n"
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                  Analysis Engine Compilation Diff (MLton)                  *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
 
-cat $pullLog >> $mailFile
+diff $masterDir/$compMltonTestMasterFilename $compilationLog >> $mailFile
+
+echo -e "\n\n"
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                 Analysis Engine Compilation Diff (Poly/ML)                 *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+
+diff $masterDir/$compPolyTestMasterFilename $polyCompilationLog >> $mailFile
+
+echo -e "\n\n"
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                 Analysis Engine Compilation Log (Poly/ML)                  *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+
+cat $polyCompilationLog >> $mailFile
+
+echo -e"\n\n"
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                  Analysis Engine Compilation Log (MLton)                   *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
 
 echo -e "\n\n****************************************\n    Analysis Engine Compilation Log         \n****************************************" >> $mailFile
 
@@ -161,8 +194,9 @@ else
 fi
 
 # apparently you can't send mail to non-HW adresses with this. There's probably a way around that though.
-cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
+# also add jbw@macs.hw.ac.uk
+# cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk
 
 # remove the temporary files
-rm -f $mailFile $compilationLog $analysisTestsLog
-rm -rf $testingDir
+# rm -f $mailFile $compilationLog $analysisTestsLog
+

@@ -1,0 +1,3212 @@
+cat build-files/polyml-libraries > sources.poly
+cat build-files/sources.tes | sed s/^/"use \""/ | sed s/$/"\";"/ >> sources.poly
+echo "use \"mlton-control.sml.in\";" >> sources.poly
+echo "TextIO.flushOut TextIO.stdOut;" >> sources.poly
+echo "PolyML.export(\"skalpel\", slicerPoly);" >> sources.poly
+mllex  parse/ML.lex
+
+Number of states = 464
+Number of distinct rows = 338
+Approx. memory size of trans. table = 348816 bytes
+mlyacc parse/ML.grm
+2 shift/reduce conflicts
+sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
+mv parse/ML.grm.sml.tmp parse/ML.grm.sml
+mllex  parse/MLB.lex
+
+Number of states = 89
+Number of distinct rows = 59
+Approx. memory size of trans. table = 7611 bytes
+mlyacc parse/MLB.grm
+start symbol used on the rhs of 3 rules
+mv parse/ML.lex.sml parse/ML-mlton.lex.sml
+mv parse/ML.grm.sml parse/ML-mlton.grm.sml
+mv parse/ML.grm.sig parse/ML-mlton.grm.sig
+mv parse/MLB.lex.sml parse/MLB-mlton.lex.sml
+mv parse/MLB.grm.sml parse/MLB-mlton.grm.sml
+mv parse/MLB.grm.sig parse/MLB-mlton.grm.sig
+cp RunSlicer.sml RunSlicer.sml.original
+sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with Poly\/ML on `date`. Skalpel version: `git rev-parse HEAD`"\"/ RunSlicer.sml > RunSlicer.sml.tmp
+mv RunSlicer.sml.tmp RunSlicer.sml
+poly < sources.poly
+Poly/ML 5.5.0 Release
+> val prefix = "/u1/pg/jp95/software-64/mlton-20100608/build/lib/sml": string
+> > signature ORD_KEY =
+  sig type ord_key val compare : ord_key * ord_key -> order end
+val it = (): unit
+> signature ORD_MAP =
+  sig
+    val unionWithi :
+     (Key.ord_key * 'a * 'a -> 'a) -> 'a map * 'a map -> 'a map
+    val unionWith : ('a * 'a -> 'a) -> 'a map * 'a map -> 'a map
+    val singleton : Key.ord_key * 'a -> 'a map
+    val remove : 'a map * Key.ord_key -> 'a map * 'a
+    val numItems : 'a map -> int
+    val mergeWithi :
+     (Key.ord_key * 'a option * 'b option -> 'c option) ->
+       'a map * 'b map -> 'c map
+    val mergeWith :
+     ('a option * 'b option -> 'c option) -> 'a map * 'b map -> 'c map
+    val mapi : (Key.ord_key * 'a -> 'b) -> 'a map -> 'b map
+    val mapPartiali : (Key.ord_key * 'a -> 'b option) -> 'a map -> 'b map
+    val mapPartial : ('a -> 'b option) -> 'a map -> 'b map
+    type 'a map
+    val map : ('a -> 'b) -> 'a map -> 'b map
+    val lookup : 'a map * Key.ord_key -> 'a
+    val listKeys : 'a map -> Key.ord_key list
+    val listItemsi : 'a map -> (Key.ord_key * 'a) list
+    val listItems : 'a map -> 'a list
+    val isEmpty : 'a map -> bool
+    val intersectWithi :
+     (Key.ord_key * 'a * 'b -> 'c) -> 'a map * 'b map -> 'c map
+    val intersectWith : ('a * 'b -> 'c) -> 'a map * 'b map -> 'c map
+    val insert' : (Key.ord_key * 'a) * 'a map -> 'a map
+    val insert : 'a map * Key.ord_key * 'a -> 'a map
+    val inDomain : 'a map * Key.ord_key -> bool
+    val foldri : (Key.ord_key * 'a * 'b -> 'b) -> 'b -> 'a map -> 'b
+    val foldr : ('a * 'b -> 'b) -> 'b -> 'a map -> 'b
+    val foldli : (Key.ord_key * 'a * 'b -> 'b) -> 'b -> 'a map -> 'b
+    val foldl : ('a * 'b -> 'b) -> 'b -> 'a map -> 'b
+    val firsti : 'a map -> (Key.ord_key * 'a) option
+    val first : 'a map -> 'a option
+    val find : 'a map * Key.ord_key -> 'a option
+    val filteri : (Key.ord_key * 'a -> bool) -> 'a map -> 'a map
+    val filter : ('a -> bool) -> 'a map -> 'a map
+    val empty : 'a map
+    val collate : ('a * 'a -> order) -> 'a map * 'a map -> order
+    val appi : (Key.ord_key * 'a -> unit) -> 'a map -> unit
+    val app : ('a -> unit) -> 'a map -> unit
+    structure Key : ORD_KEY
+  end
+val it = (): unit
+> signature ORD_SET =
+  sig
+    val union : set * set -> set
+    val singleton : item -> set
+    type set
+    val partition : (item -> bool) -> set -> set * set
+    val numItems : set -> int
+    val member : set * item -> bool
+    val map : (item -> item) -> set -> set
+    val listItems : set -> item list
+    type item
+    val isSubset : set * set -> bool
+    val isEmpty : set -> bool
+    val intersection : set * set -> set
+    val fromList : item list -> set
+    val foldr : (item * 'a -> 'a) -> 'a -> set -> 'a
+    val foldl : (item * 'a -> 'a) -> 'a -> set -> 'a
+    val find : (item -> bool) -> set -> item option
+    val filter : (item -> bool) -> set -> set
+    val exists : (item -> bool) -> set -> bool
+    val equal : set * set -> bool
+    val empty : set
+    val difference : set * set -> set
+    val delete : set * item -> set
+    val compare : set * set -> order
+    val app : (item -> unit) -> set -> unit
+    val addList : set * item list -> set
+    val add' : item * set -> set
+    val add : set * item -> set
+    structure Key : ORD_KEY
+  end
+val it = (): unit
+> signature LIB_BASE =
+  sig
+    val version : {date: string, system: string, version_id: int list}
+    val failure : {msg: string, func: string, module: string} -> 'a
+    val banner : string
+    exception Unimplemented of string
+    exception NotFound
+    exception Impossible of string
+  end
+val it = (): unit
+> structure LibBase : LIB_BASE
+val it = (): unit
+> functor BinarySetFn (K : ORD_KEY) : ORD_SET
+val it = (): unit
+> functor BinaryMapFn (K : ORD_KEY) : ORD_MAP
+val it = (): unit
+> signature SPLAY_TREE =
+  sig
+    datatype 'a splay =
+      SplayNil
+    | SplayObj of {left: 'a splay, right: 'a splay, value: 'a}
+    val splay : ('a -> order) * 'a splay -> order * 'a splay
+    val join : 'a splay * 'a splay -> 'a splay
+  end
+val it = (): unit
+> structure SplayTree : SPLAY_TREE
+val it = (): unit
+> functor SplayMapFn (K : ORD_KEY) : ORD_MAP
+val it = (): unit
+> functor SplaySetFn (K : ORD_KEY) : ORD_SET
+val it = (): unit
+> signature FIFO =
+  sig
+    val peek : 'a fifo -> 'a option
+    val next : 'a fifo -> ('a * 'a fifo) option
+    val map : ('a -> 'b) -> 'a fifo -> 'b fifo
+    val length : 'a fifo -> int
+    val isEmpty : 'a fifo -> bool
+    val head : 'a fifo -> 'a
+    val foldr : ('a * 'b -> 'b) -> 'b -> 'a fifo -> 'b
+    val foldl : ('a * 'b -> 'b) -> 'b -> 'a fifo -> 'b
+    type 'a fifo
+    val enqueue : 'a fifo * 'a -> 'a fifo
+    val empty : 'a fifo
+    val dequeue : 'a fifo -> 'a fifo * 'a
+    val delete : 'a fifo * ('a -> bool) -> 'a fifo
+    val contents : 'a fifo -> 'a list
+    val app : ('a -> unit) -> 'a fifo -> unit
+    exception Dequeue
+  end
+val it = (): unit
+> structure Fifo : FIFO
+val it = (): unit
+> structure IntListSet : ORD_SET
+val it = (): unit
+> functor RedBlackSetFn (K : ORD_KEY) : ORD_SET
+val it = (): unit
+> functor RedBlackSetFn (K : ORD_KEY) : ORD_SET
+val it = (): unit
+> signature UTF8 =
+  sig
+    eqtype wchar
+    val toString : wchar -> string
+    val toAscii : wchar -> char
+    val size : string -> int
+    val maxCodePoint : wchar
+    val isAscii : wchar -> bool
+    val getu : (char, 'a) StringCvt.reader -> (wchar, 'a) StringCvt.reader
+    val fromAscii : char -> wchar
+    val fold : (wchar * 'a -> 'a) -> 'a -> string -> 'a
+    val explode : string -> wchar list
+    val encode : wchar -> string
+    exception Incomplete
+  end
+val it = (): unit
+> structure UTF8 : UTF8
+val it = (): unit
+> structure JSON :
+  sig
+    datatype value =
+      ARRAY of value list
+    | BOOL of bool
+    | FLOAT of real
+    | INT of int
+    | NULL
+    | OBJECT of (string * value) list
+    | STRING of string
+  end
+val it = (): unit
+> structure JSONTokens :
+  sig
+    datatype token =
+      COLON
+    | COMMA
+    | EOF
+    | FLOAT of real
+    | INT of int
+    | KW_false
+    | KW_null
+    | KW_true
+    | ...
+    val toString : token -> string
+  end
+val it = (): unit
+> structure AntlrStreamPos :
+  sig
+    val toString : sourcemap -> pos -> string
+    val spanToString : sourcemap -> span -> string
+    type span
+    type sourcemap
+    type sourceloc
+    val sourceLoc : sourcemap -> pos -> sourceloc
+    val same : sourcemap * sourcemap -> bool
+    val resynch : sourcemap -> pos * sourceloc -> unit
+    eqtype pos
+    val mkSourcemap' : string -> sourcemap
+    val mkSourcemap : unit -> sourcemap
+    val markNewLine : sourcemap -> pos -> unit
+    val lineNo : sourcemap -> pos -> int
+    val forward : pos * int -> pos
+    val fileName : sourcemap -> pos -> string option
+    val colNo : sourcemap -> pos -> int
+    exception PosMustIncrease
+  end
+val it = (): unit
+> structure ULexBuffer :
+  sig
+    val subtract : stream * stream -> substring
+    type stream
+    val mkStream : int * (unit -> string) -> stream
+    val lastWasNL : stream -> bool
+    val getpos : stream -> int
+    val getc : stream -> (char * stream) option
+    val eof : stream -> bool
+  end
+val it = (): unit
+> Warning- in '/u1/pg/jp95/software-64/mlton-20100608/build/lib/sml/smlnj-lib/JSON/json.lex.sml', line 20.
+Pattern is not exhaustive.
+Found near val SOME (w, _) = Word.scan StringCvt.HEX Substring.getc digits
+structure JSONLexer :
+  sig
+    datatype yystart_state = INITIAL | S
+    type tok
+    type strm = prestrm * yystart_state
+    val streamifyReader :
+     ('a -> (char * 'a) option) -> 'a -> prestrm * yystart_state
+    val streamifyInstream : TextIO.instream -> prestrm * yystart_state
+    val streamify : (unit -> string) -> prestrm * yystart_state
+    type span = AntlrStreamPos.span
+    datatype prestrm =
+      STRM of
+        ULexBuffer.stream *
+    (yystart_state * tok * span * prestrm * yystart_state) option ref
+    eqtype pos
+    val lex :
+     AntlrStreamPos.sourcemap ->
+       prestrm * yystart_state ->
+       JSONTokens.token * (pos * pos) * (prestrm * yystart_state)
+    val getPos : prestrm * 'a -> pos
+    structure UserDeclarations :
+    sig
+      val sbuf : string list ref
+      type lex_result
+      val int : string -> T.token
+      val float : string -> T.token
+      val finishString : unit -> T.token
+      val eof : unit -> T.token
+      val addUChr : string -> unit
+      val addStr : string -> unit
+      structure T :
+      sig
+        datatype token = COLON | COMMA | EOF | FLOAT of real | ...
+        val toString : token -> string
+      end
+    end
+  end
+val it = (): unit
+> structure JSONParser :
+  sig
+    val parseFile : string -> JSON.value
+    val parse : TextIO.instream -> JSON.value
+  end
+val it = (): unit
+> signature ARG_LEXER =
+  sig
+    val makeLexer :
+     (int -> string) ->
+       UserDeclarations.arg ->
+       unit ->
+       (UserDeclarations.svalue, UserDeclarations.pos) UserDeclarations.token
+    structure UserDeclarations :
+    sig type ('a, 'b) token type svalue type pos type arg end
+  end
+signature ARG_PARSER =
+  sig
+    type svalue
+    val sameToken :
+     (svalue, pos) Token.token * (svalue, pos) Token.token -> bool
+    type result
+    type pos
+    val parse :
+     int * (svalue, pos) Token.token Stream.stream *
+     (string * pos * pos -> unit) * arg ->
+       result * (svalue, pos) Token.token Stream.stream
+    val makeLexer :
+     (int -> string) -> lexarg -> (svalue, pos) Token.token Stream.stream
+    type lexarg
+    type arg
+    structure Token : TOKEN
+    structure Stream : STREAM
+    exception ParseError
+  end
+signature LEXER =
+  sig
+    val makeLexer :
+     (int -> string) ->
+       unit ->
+       (UserDeclarations.svalue, UserDeclarations.pos) UserDeclarations.token
+    structure UserDeclarations :
+    sig type ('a, 'b) token type svalue type pos end
+  end
+signature LR_PARSER =
+  sig
+    val parse :
+     {ec:
+       {error: string * 'a * 'a -> unit,
+         terms: LrTable.term list,
+         noShift: LrTable.term -> bool,
+         is_keyword: LrTable.term -> bool,
+         errtermvalue: LrTable.term -> 'b, showTerminal: ..., ...},
+       arg: 'c,
+       void: 'b,
+       lexer: ('b, 'a) Token.token Stream.stream,
+       table: LrTable.table,
+       saction: int * ... -> LrTable.nonterm * ..., lookahead: int} ->
+       'b * ('b, 'a) Token.token Stream.stream
+    structure Token : TOKEN
+    structure Stream : STREAM
+    exception ParseError
+    structure LrTable : LR_TABLE
+  end
+signature LR_TABLE =
+  sig
+    datatype term = T of int
+    type table
+    datatype state = STATE of int
+    datatype ('a, 'b) pairlist = EMPTY | PAIR of 'a * 'b * ('a, 'b) pairlist
+    val numStates : table -> int
+    val numRules : table -> int
+    datatype nonterm = NT of int
+    val mkLrTable :
+     {gotos: (nonterm, state) pairlist array,
+       actions: ((term, action) pairlist * action) array,
+       numRules: int, numStates: int, initialState: state} -> table
+    val initialState : table -> state
+    val goto : table -> state * nonterm -> state
+    val describeGoto : table -> state -> (nonterm, state) pairlist
+    val describeActions : table -> state -> (term, action) pairlist * action
+    datatype action = ACCEPT | ERROR | REDUCE of int | SHIFT of state
+    val action : table -> state * term -> action
+    exception Goto of state * nonterm
+  end
+signature PARSER =
+  sig
+    type svalue
+    val sameToken :
+     (svalue, pos) Token.token * (svalue, pos) Token.token -> bool
+    type result
+    type pos
+    val parse :
+     int * (svalue, pos) Token.token Stream.stream *
+     (string * pos * pos -> unit) * arg ->
+       result * (svalue, pos) Token.token Stream.stream
+    val makeLexer :
+     (int -> string) -> (svalue, pos) Token.token Stream.stream
+    type arg
+    structure Token : TOKEN
+    structure Stream : STREAM
+    exception ParseError
+  end
+signature PARSER_DATA =
+  sig
+    val table : LrTable.table
+    type svalue
+    type result
+    type pos
+    type arg
+    structure Token : TOKEN
+    structure LrTable : LR_TABLE
+    structure EC :
+    sig
+      val terms : LrTable.term list
+      val showTerminal : LrTable.term -> string
+      val preferred_change : (LrTable.term list * LrTable.term list) list
+      val noShift : LrTable.term -> bool
+      val is_keyword : LrTable.term -> bool
+      val errtermvalue : LrTable.term -> svalue
+    end
+    structure Actions :
+    sig
+      val void : svalue
+      val extract : svalue -> result
+      val actions :
+       int * pos * (LrTable.state * (svalue * pos * pos)) list * arg ->
+         LrTable.nonterm * (svalue * pos * pos) *
+       (LrTable.state * (svalue * pos * pos)) list
+    end
+  end
+signature STREAM =
+  sig
+    val streamify : (unit -> 'a) -> 'a stream
+    type 'a stream
+    val get : 'a stream -> 'a * 'a stream
+    val cons : 'a * 'a stream -> 'a stream
+  end
+signature TOKEN =
+  sig
+    datatype ('a, 'b) token = TOKEN of LrTable.term * ('a * 'b * 'b)
+    val sameToken : ('a, 'b) token * ('a, 'b) token -> bool
+    structure LrTable : LR_TABLE
+  end
+val it = (): unit
+> functor Join (
+  sig
+    structure ParserData : PARSER_DATA
+    structure LrParser : LR_PARSER
+    structure Lex : LEXER
+  end) : PARSER
+functor JoinWithArg (
+  sig
+    structure ParserData : PARSER_DATA
+    structure LrParser : LR_PARSER
+    structure Lex : ARG_LEXER
+  end) : ARG_PARSER
+val it = (): unit
+> structure LrTable : LR_TABLE
+val it = (): unit
+> structure Stream : STREAM
+val it = (): unit
+> signature FIFO =
+  sig
+    type 'a queue
+    val put : 'a * 'a queue -> 'a queue
+    val get : 'a queue -> 'a * 'a queue
+    val empty : 'a queue
+    exception Empty
+  end
+structure LrParser : LR_PARSER
+val it = (): unit
+> structure SymbSlice :
+  sig
+    val verticalFork : string
+    val unitT2 : string
+    val unitT1 : string
+    val straightLine : string
+    val sprparen : string
+    val splparen : string
+    val rdotsLatex : string
+    val rdots : string
+    val ldotsLatex : string
+    val ldots : string
+    val dots : string
+    val bottomLeftCurve : string
+  end
+val it = (): unit
+> signature SOLUTION =
+  sig
+    val toString : unit -> string
+    val toInt : sol -> int
+    datatype sol =
+      SOL1
+    | SOL2
+    | SOL3
+    | SOL4
+    | SOL5
+    | SOL6
+    | SOL7
+    | SOL8
+    | SOL9
+    val smaller : sol -> sol -> bool
+    val setSol : sol -> unit
+    val isAtLeast : sol -> bool
+    val getSol : unit -> sol
+    val fromInt : int -> sol
+  end
+val it = (): unit
+> structure Solution : SOLUTION
+val it = (): unit
+> signature TOOLS =
+  sig
+    val union : ''a list -> ''a list -> ''a list
+    val subseteq : ''a list -> ''a list -> bool
+    val remove : ''a -> ''a list -> bool * ''a list
+    val printlist : ''a list -> (''a -> string) -> string
+    val isin : ''a -> ''a list -> bool
+    val inter : ''a list -> ''a list -> ''a list
+    val disjoint : ''a list -> ''a list -> bool
+    val delocc : ''a list -> ''a list
+  end
+val it = (): unit
+> structure Tools : TOOLS
+val it = (): unit
+> signature DEBUG =
+  sig
+    val underlineColors :
+     {red: string,
+       blue: string,
+       cyan: string,
+       black: string,
+       green: string, white: string, purple: string, yellow: string} ref
+    val textReset : string ref
+    val sep2' : string
+    val sep1' : string
+    val printdebug2 : string -> unit
+    val printdebug1 : string -> unit
+    val printReset : string -> unit
+    val printLabelledProgramString : string -> string
+    val printDebugFeature :
+     debugFiles -> debugFeature -> (unit -> string) -> unit
+    val oneRunOnly : bool ref
+    val leafInBoxColors :
+     {red: string,
+       blue: string,
+       cyan: string,
+       black: string,
+       green: string, white: string, purple: string, yellow: string} ref
+    val enableDebugFeature : debugFeature -> unit
+    val debugProgramLabelling : bool ref
+    datatype debugFiles =
+      AZE
+    | BLANK
+    | ENV
+    | JSON
+    | LABEL
+    | MLGRM
+    | PARSER
+    | RUN
+    | TEST
+    | ...
+    datatype debugFeature =
+      BASIS_LABELLING
+    | CONSTRAINT_GENERATION
+    | CONSTRAINT_PATH
+    | CONSTRAINT_SOLVING
+    | EQUALITY_TYPES
+    | PARSING
+    | PROGRAM_LABELLING
+    | STATE
+    | TEMP
+    | ...
+    val debugBasis : bool ref
+    val debug : bool ref
+    val colors :
+     {red: string,
+       blue: string,
+       cyan: string,
+       black: string,
+       green: string, white: string, purple: string, yellow: string} ref
+    val checkOneRunOnly : unit -> unit
+    val boldColors :
+     {red: string,
+       blue: string,
+       cyan: string,
+       black: string,
+       green: string, white: string, purple: string, yellow: string} ref
+    val backgroundColors :
+     {red: string,
+       blue: string,
+       cyan: string,
+       black: string,
+       green: string, white: string, purple: string, yellow: string} ref
+  end
+val it = (): unit
+> structure Debug : DEBUG
+val it = (): unit
+> signature ERROR_HANDLER =
+  sig
+    val msg : string -> string
+    exception TODO of string
+    exception DeadBranch of string
+  end
+val it = (): unit
+> structure ErrorHandler : ERROR_HANDLER
+val it = (): unit
+> signature VTIMER =
+  sig
+    type timer
+    val stillMilliTime : timer -> int -> bool
+    val stillMicroTime : timer -> int -> bool
+    val startTimer : unit -> timer
+    val milliToString : string -> timer -> string
+    val microToString : string -> timer -> string
+    val getMilliTime : timer -> int
+    val getMicroTime : timer -> int
+  end
+val it = (): unit
+> structure VTimer : VTIMER
+val it = (): unit
+> signature REG =
+  sig
+    val upReg : region -> region
+    val upPos : pos -> pos
+    val strictInfReg : region -> region -> bool
+    val strictInfPos : pos -> pos -> bool
+    val setTabSize : int -> unit
+    type region
+    val printSmlReg : region -> string
+    val printRegList : region list -> string
+    val printReg : region -> string
+    val printPos : pos -> string
+    val printLispReg : region -> string
+    val printJsonReg : region -> string
+    type pos
+    val overlapReg : region -> region -> bool
+    val isVisList : region list -> bool
+    val isReg : region -> bool
+    val infReg : region -> region -> bool
+    val infPos : pos -> pos -> bool
+    val inclRegList : region list -> region -> bool
+    val inclReg : region -> region -> bool
+    val getTo : region -> pos
+    val getTabSize : unit -> int
+    val getRegionList : pos -> pos -> region list
+    val getPosLine : pos -> int
+    val getPosCol : pos -> int
+    val getFrom : region -> pos
+    val getAllPos : region -> int * int * int * int
+    val fusionReg : region -> region -> region
+    val downRegRight : region -> region
+    val downReg : region -> region
+    val downPos : pos -> pos
+    val consReg : pos -> pos -> region
+    val checkSameRegs : region -> region -> bool
+    val areEqualRegs : region list -> region list -> bool
+    val addString : pos -> string -> pos
+  end
+val it = (): unit
+> structure Reg : REG
+val it = (): unit
+> signature LABEL =
+  sig
+    val unions : labels list -> labels
+    val union : labels -> labels -> labels
+    val toString : labels -> string
+    val toList : labels -> int list
+    val toInt : label -> int
+    val subseteq : labels -> labels -> bool
+    val subset : labels -> labels -> bool
+    val splitIn2' : labels -> labels * labels
+    val splitIn2 : labels -> labels * labels
+    val split2 : label -> label -> labels -> labels * labels
+    val split : label -> labels -> labels * labels
+    val singleton : label -> labels
+    val setNextLab : label -> unit
+    val resetNext : unit -> unit
+    val remFirst : labels -> label option * labels
+    val printLab : label -> string
+    val ord : label list -> labels
+    val nextLabel : label -> label
+    val nextLabN : label -> int -> label
+    val min : label -> label -> label
+    val length : labels -> int
+    type labels
+    type label
+    val isinone : label -> labels -> bool
+    val isin : label -> labels -> bool
+    val isSingle : labels -> bool
+    val isEmpty : labels -> bool
+    val inter : labels -> labels -> labels
+    val fromInt : int -> label
+    val foldr : (label * 'a -> 'a) -> 'a -> labels -> 'a
+    val firstLab : label
+    val exsubseteq : labels -> labels list -> bool
+    val eq : label -> label -> bool
+    val empty : labels
+    val dummyLab : label
+    val disjoint : labels -> labels -> bool
+    val diff : labels -> labels -> labels
+    val delete : label -> labels -> labels
+    val cons : label -> labels -> labels
+    val compareLab : label * label -> order
+    val compare : labels * labels -> order
+    val builtinLab : label
+  end
+val it = (): unit
+> structure OrdKey : ORD_KEY
+val it = (): unit
+> structure Label : LABEL
+structure Label2 : LABEL
+val it = (): unit
+> signature ID =
+  sig
+    val updateAssoc : string -> assoc -> id * assoc
+    val union : set -> set -> set
+    val toString : set -> string
+    val toList : set -> id list
+    val toInt : id -> int
+    val singleton : id -> set
+    type set
+    val resetIds : unit -> unit
+    val printLidSt : lid -> assoc -> string
+    val printLidOut : lid -> string
+    val printLid' : lid -> assoc -> string
+    val printLid : lid -> string
+    val printJsonLidOut : lid -> string
+    val printJsonAssoc : assoc -> string
+    val printIdList : id list -> string
+    val printIdL' : labelledId -> assoc -> string
+    val printIdL : labelledId -> string
+    val printId' : id -> assoc -> string
+    val printId : id -> string
+    val printAssoc' : assoc -> string
+    val printAssoc : assoc -> string
+    val outAssoc : assoc -> assocOut
+    val ord : id list -> set
+    val lookupSt : string -> assoc -> id option
+    val lookupId : id -> assoc -> string option
+    datatype lid = ID of labelledId | LID of labelledId * lid * Label.label
+    type labelledId
+    val isin : id -> set -> bool
+    val isLong : lid -> bool
+    val isEmpty : set -> bool
+    val inter : set -> set -> set
+    val inAssoc : assocOut -> assoc
+    val idToLid : id -> Label.label -> lid
+    type id
+    val getTopLab : lid -> Label.label
+    val getTopIdl : lid -> labelledId
+    val getSubLid : lid -> id -> Label.label -> lid option
+    val getLidOut : lid -> labelledId list * labelledId
+    val getLeftId : lid -> labelledId
+    val getLabs : lid -> Label.labels
+    val getLabId : lid -> Label.label
+    val fromInt : int -> id
+    val freshId : unit -> id
+    val foldr : (id * 'a -> 'a) -> 'a -> set -> 'a
+    val foldl : (id * 'a -> 'a) -> 'a -> set -> 'a
+    val eqId : id -> id -> bool
+    val empty : set
+    val emAssoc : assoc
+    val dummyId : id
+    val difference : set -> set -> set
+    val consLidOp : id -> Label.label -> Label.label -> lid option -> lid
+    val compare : id * id -> order
+    type assocOut
+    type assoc
+    val app : (id -> unit) -> set -> unit
+    val add : id -> set -> set
+  end
+val it = (): unit
+> structure OrdStr : ORD_KEY
+val it = (): unit
+> structure Id : ID
+val it = (): unit
+> signature LONGID =
+  sig
+    val unions : set list -> set
+    val union : set -> set -> set
+    val toStringOut : set -> string
+    val toStringListSt : set -> Id.assoc -> string
+    val toStringList : set -> Id.assoc -> string list
+    val toString : set -> string
+    val toOutList : set -> keyOut list
+    val toList : set -> key list
+    val toJsonStringOut : set -> string
+    val subseteq : set -> set -> bool
+    val subset : set -> set -> bool
+    val singleton : key -> set
+    val sing : Id.id -> Label.label -> set
+    type set
+    val ord : key list -> set
+    val length : set -> int
+    type keyOut
+    type key
+    val isin : Id.lid -> set -> bool
+    val isSingle : set -> bool
+    val isEmpty : set -> bool
+    val inter : set -> set -> set
+    val inSet : keyOut list -> set
+    val foldr : (Id.lid * 'a -> 'a) -> 'a -> set -> 'a
+    val foldl : (Id.lid * 'a -> 'a) -> 'a -> set -> 'a
+    val equal : set -> set -> bool
+    val empty : set
+    val disjShort : Id.set -> set -> bool
+    val difference : set -> set -> set
+    val diffShort : Id.set -> set -> set
+    val buildKey : Id.lid -> key
+    val add : key -> set -> set
+  end
+val it = (): unit
+> structure OrdLid : ORD_KEY
+val it = (): unit
+> structure LongId : LONGID
+val it = (): unit
+> structure OrdLabLid : ORD_KEY
+val it = (): unit
+> structure OrdId : ORD_KEY
+val it = (): unit
+> signature ORDSET =
+  sig
+    val toString : ordset -> string
+    val toList : ordset -> elt list
+    val subseteqin : ordset -> ordsets -> bool
+    val subseteq : ordset -> ordset -> bool
+    val subset : ordset -> ordset -> bool
+    val splitList : elt -> ordset -> ordset * ordset
+    val splitInterv : elt -> elt -> ordset -> ordset * ordset
+    val splitInTwo2 : ordset -> ordset * ordset
+    val splitInTwo1 : ordset -> ordset * ordset
+    val singleton : elt -> ordset
+    val setnextlab : int -> unit
+    val restrictLim : ordset -> elt -> ordset
+    val remfirst : ordset -> elt option * ordset
+    val printelt : elt -> string
+    type ordsets
+    type ordset
+    val ord : elt list -> ordset
+    val length : ordset -> int
+    type labels
+    eqtype label
+    val isinone : elt -> ordset -> bool
+    val isin : elt -> ordset -> bool
+    val isSingle : ordset -> bool
+    val isEmpty : ordset -> bool
+    val inter : ordset -> ordset -> ordset
+    val getpairss : ordset list -> ordset list
+    val getpairs : ordset -> ordset -> ordset list
+    val getlab : unit -> label
+    val getfirst : ordset -> elt option
+    val foldr : (elt * 'a -> 'a) -> 'a -> ordset -> 'a
+    val foldl : (elt * 'a -> 'a) -> 'a -> ordset -> 'a
+    val firstlab : elt
+    val exsubseteq : ordset -> ordsets -> bool
+    val equal : ordset -> ordset -> bool
+    val empty : ordset
+    eqtype elt
+    val dummylab : elt
+    val disjoint : ordset -> ordset -> bool
+    val difference : ordset -> ordset -> ordset
+    val delete : elt -> ordset -> ordset
+    val cons : elt -> ordset -> ordset
+    val concats : ordsets -> ordset
+    val concatop : ordset option -> ordset -> ordset
+    val concat : ordset -> ordset -> ordset
+  end
+val it = (): unit
+> structure OrdSet : ORDSET
+val it = (): unit
+> structure OrdIdl : ORD_KEY
+val it = (): unit
+> signature ASTSML =
+  sig
+    datatype valdescone =
+      ValDescOne of labid * labtype * Reg.region * Label.label * next
+    | ValDescOneDots of part list
+    datatype valdesc =
+      ValDesc of valdescone list * Reg.region list * next
+    | ValDescDots of part list
+    datatype valbindseq =
+      ValBindSeq of valbindcore list * Reg.region list * next
+    | ValBindSeqDots of part list
+    datatype valbindcore =
+      ValBindCore of labpat * labexp * Reg.region * Label.label * next
+    | ValBindCoreDots of part list
+    datatype valbind =
+      ValBind of valbindseq
+    | ValBindDots of part list
+    | ValBindRec of valbindseq * Reg.region * Label.label * next
+    datatype typevarseq =
+      TypeVarSeqDots of typevar list
+    | TypeVarSeqEm of Reg.region * Label.label * next
+    | TypeVarSeqOne of typevar * Reg.region * Label.label * next
+    | TypeVarSeqSeq of labtypevar list * Reg.region list * Label.label * next
+    datatype typevar =
+      EqualityTypeVar of string * Id.id * Reg.region * Label.label * next
+    | TypeVar of string * Id.id * Reg.region * Label.label * next
+    | TypeVarDots
+    datatype types =
+      TypeArrow of labtype * labtype * Reg.region * Label.label * next
+    | TypeDots of part list
+    | TypeOneVar of typevar
+    | TypeParen of labtype * Reg.region * Reg.region * Label.label * next
+    | TypeRecord of
+        tyfield list * Reg.region list * Reg.region list * Label.label * next
+    | TypeSlRec of tyfield list * Reg.region list * Label.label * next
+    | TypeTuple of labtype list * Reg.region list * ...
+    | TypeTyCon of typeRow * ...
+    datatype typeRow =
+      TypeRowDots of part list
+    | TypeRowEm of Reg.region * Label.label * next
+    | TypeRowOne of types * Reg.region list * Label.label * next
+    | TypeRowSeq of labtype list * Reg.region list * Label.label * next
+    datatype typdescone =
+      TypDescOne of datname * Label.label * next
+    | TypDescOneDots of part list
+    datatype typdesc =
+      TypDesc of typdescone list * Reg.region list * next
+    | TypDescDots of part list
+    datatype typbindseq =
+      TypBindSeq of typbind list * Reg.region list * next
+    | TypBindSeqDots of part list
+    datatype typbind =
+      TypBind of datname * labtype * Reg.region * Label.label * next
+    | TypBindDots of part list
+    datatype tylab =
+      TyLab of string * Reg.region * Label.label * next
+    | TyLabDots
+    datatype tyfield =
+      TyField of tylab * labtype * Reg.region * Label.label * next
+    | TyFieldDots of part list
+    datatype tycon =
+      TyCon of string * Id.id * Reg.region * Label.label * next
+    | TyConDots
+    datatype tyclassseq =
+      TyClassSeqDots of part list
+    | TyClassSeqEm of Reg.region * Label.label * next
+    | TyClassSeqOne of tyclass * Reg.region list * Label.label * next
+    | TyClassSeqSeq of labtyclass list * Reg.region list * Label.label * next
+    datatype tyclass =
+      TyClassCl of labclass * Reg.region * Label.label * next
+    | TyClassDots of part list
+    | TyClassTy of types * Label.label * next
+    datatype topdecone =
+      TopDecOneDec of atopdec * next
+    | TopDecOneDots of part list
+    | TopDecOneTes of smltes * next
+    datatype topdec = TopDec of topdecone list | TopDecDots of part list
+    datatype tdrdescone =
+      TdrDescOne of datname * labtype * Reg.region * Label.label * next
+    | TdrDescOneDots of part list
+    datatype tdrdesc =
+      TdrDesc of tdrdescone list * Reg.region list * next
+    | TdrDescDots of part list
+    datatype strid =
+      StrId of string * Id.id * Reg.region * Label.label * next
+    | StrIdDots
+    datatype strexp =
+      StrExpBasic of strdec * Reg.region list * Label.label * next
+    | StrExpDots of part list
+    | StrExpFDec of funid * strdec * Reg.region list * Label.label * next
+    | StrExpFExp of funid * labstrexp * Reg.region list * Label.label * next
+    | StrExpId of longstrid * Label.label * next
+    | StrExpLocal of strdec * labstrexp * Reg.region list * ...
+    | StrExpOp of labstrexp * labsigexp * ...
+    | StrExpTr of labstrexp * ...
+    datatype strdescone =
+      StrDescOne of strid * labsigexp * Reg.region * Label.label * next
+    | StrDescOneDots of part list
+    datatype strdesc =
+      StrDesc of strdescone list * Reg.region list * next
+    | StrDescDots of part list
+    datatype strdecone =
+      StrDecOneDec of decs
+    | StrDecOneDots of part list
+    | StrDecOneFun of funbind * Reg.region * Label.label * next
+    | StrDecOneLoc of strdec * strdec * Reg.region list * Label.label * next
+    | StrDecOneStr of strbind * Reg.region * next
+    datatype strdec =
+      StrDec of strdecone list * Label.label * next
+    | StrDecDots of part list
+    datatype strbindone =
+      StrBindOne of strid * labstrexp * Reg.region * Label.label * next
+    | StrBindOneDots of part list
+    | StrBindOneOp of
+        strid * labsigexp * labstrexp * Reg.region list * Label.label * next
+    | StrBindOneTr of
+        strid * labsigexp * labstrexp * Reg.region list * Label.label * next
+    datatype strbind =
+      StrBind of strbindone list * Reg.region list * next
+    | StrBindDots of part list
+    datatype specone =
+      SpecDat of datdesc * Reg.region * Label.label * next
+    | SpecEqtype of typdesc * Reg.region * Label.label * next
+    | SpecException of excdesc * Reg.region * Label.label * next
+    | SpecInc of labsigexp * Reg.region * Label.label * next
+    | SpecIsi of sigidseq * Reg.region * Label.label * next
+    | SpecOneDots of part list
+    | SpecRep of tycon * longtycon * ...
+    | SpecSha of spec * ...
+    | SpecSsi of ...
+    | ...
+    datatype spec = Spec of specone list * next | SpecDots of part list
+    datatype smltes =
+      SmlTesCBas of Reg.region list * Label.label * next
+    | SmlTesDec of atopdec * Reg.region list * next
+    | SmlTesDots of part list
+    | SmlTesQuote of abool * Reg.region list * next
+    | SmlTesSBas of afile * Reg.region list * next
+    | SmlTesSpec of spec * Reg.region list * next
+    | SmlTesType of string * Reg.region list * next
+    | SmlTesUse of afile * ...
+    datatype sigidseq =
+      SigIdSeq of sigid list * next
+    | SigIdSeqDots of part list
+    val sigidToLid : sigid -> Id.lid option
+    datatype sigid =
+      SigId of string * Id.id * Reg.region * Label.label * next
+    | SigIdDots
+    datatype sigexp =
+      SigExpBasic of spec * Reg.region list * Label.label * next
+    | SigExpDots of part list
+    | SigExpId of sigid * Label.label * next
+    | SigExpRea of
+        labsigexp * ltreadesc * Reg.region list * Label.label * next
+    datatype sigdec =
+      SigDec of sigbind * Reg.region * next
+    | SigDecDots of part list
+    datatype sigbindone =
+      SigBindOne of sigid * labsigexp * Reg.region * Label.label * next
+    | SigBindOneDots of part list
+    datatype sigbind =
+      SigBind of sigbindone list * Reg.region list * next
+    | SigBindDots of part list
+    val shortLongId : longid -> bool
+    val setDecPrint : bool -> unit
+    datatype seqexp =
+      SeqExp of
+        labexp list * labexp * Reg.region * Reg.region list * Label.label *
+    next
+    | SeqExpDots of part list
+    | SeqExpSl of part list * labexp * Reg.region * Label.label * next
+    datatype scon =
+      SconChar of string * Id.id * Reg.region * Label.label * next
+    | SconDots
+    | SconInt of string * Id.id * Reg.region * Label.label * next
+    | SconReal of string * Id.id * Reg.region * Label.label * next
+    | SconString of string * Id.id * Reg.region * Label.label * next
+    | SconWord of string * Id.id * Reg.region * ...
+    datatype quote =
+      Antiquote of exp * Reg.region list * Label.label * next
+    | Quote of string * Reg.region * Label.label * next
+    | QuoteDots of part list
+    datatype progs = Progs of (prog * file * bas * next) list
+    datatype progone =
+      ProgOneDec of topdec
+    | ProgOneDots of part list
+    | ProgOneExp of exp * Id.id * Reg.region * Label.label * next
+    | ProgOneFile of afile * next
+    | ProgOneParse of string * Reg.region list * Label.label * next
+    datatype prog = Prog of progone list | ProgDots of part list
+    val printAstProgs : progs -> string
+    val printAstLongId : longid -> string
+    val printAstDec : dec -> string
+    datatype pcon =
+      PconBool of string * Id.id * Reg.region * Label.label * next
+    | PconDots
+    | PconNil of string * Id.id * Reg.region * Label.label * next
+    | PconRef of string * Id.id * Reg.region * Label.label * next
+    datatype patfield =
+      PatField of
+        tylab * labpat * Reg.region * Reg.region list * Label.label * next
+    | PatFieldAs of labidty * labpat * Reg.region * Label.label * next
+    | PatFieldDots of part list
+    | PatFieldId of identty * next
+    | PatFieldWild of Reg.region * Label.label * next
+    datatype pat =
+      PatApp of
+        longid * atpat * Reg.region list * Reg.region * Label.label * next
+    | PatAs of labidty * labpat * Reg.region * Label.label * next
+    | PatAtPat of atpat
+    | PatConsList of
+        Id.id * labpat * labpat * Reg.region * Label.label * next
+    | PatDots of part list
+    | PatOp of string * Id.id * labpat * ...
+    | PatTyped of labpat * labtype * ...
+    datatype part =
+      PartClass of class
+    | PartDec of dec
+    | PartExp of exp
+    | PartIdTy of identty
+    | PartLgid of longid
+    | PartLgsid of longstrid
+    | PartPat of pat
+    | PartSeq of typeRow
+    | PartSigd of sigdec
+    | ...
+    type packs
+    type next
+    datatype mrule =
+      Mrule of labpat * labexp * Reg.region * Label.label * next
+    | MruleDots of part list
+    datatype match =
+      Match of mrule list * Reg.region list * next
+    | MatchDots of part list
+    datatype ltreadescone =
+      LTReaDOne of ldatname * labtype * Reg.region list * Label.label * next
+    | LTReaDOneDots of part list
+    datatype ltreadesc =
+      LTReaDesc of ltreadescone list * Reg.region list * Label.label * next
+    | LTReaDescDots of part list
+    datatype longtyconeq =
+      LongTyConEq of longtycon list * Reg.region list * Label.label * next
+    | LongTyConEqDots of part list
+    val longtyconToLid : longtycon -> Id.lid option
+    datatype longtycon =
+      LongTyConDots of part list
+    | LongTyConId of tycon
+    | LongTyConQual of strid * longtycon * Reg.region * Label.label * next
+    datatype longstrseq =
+      LongStrSeq of longstrid list * next
+    | LongStrSeqDots of part list
+    datatype longstrideq =
+      LongStrIdEq of longstrid list * Reg.region list * next
+    | LongStrIdEqDots of part list
+    val longstridToLid : longstrid -> Id.lid option
+    datatype longstrid =
+      LongStrIdDots of part list
+    | LongStrIdId of strid
+    | LongStrIdQual of strid * longstrid * Reg.region * Label.label * next
+    val longidToPcon : longid -> pcon option
+    val longidToLid : longid -> Id.lid option
+    val longidIsPcon : longid -> bool
+    datatype longid =
+      LongIdDots of part list
+    | LongIdId of ident
+    | LongIdQual of strid * longid * Reg.region * Label.label * next
+    datatype ldatname =
+      LDatName of typevarseq * longtycon * Reg.region list * next
+    | LDatNameDots
+    datatype labtypevar =
+      LabTypeVar of typevar * Reg.region list * Label.label * next
+    | LabTypeVarDots of typevar list
+    datatype labtype =
+      LabType of types * Reg.region list * Label.label * next
+    | LabTypeDots of part list
+    datatype labtyclass =
+      LabTyClass of tyclass * Reg.region list * Label.label * next
+    | LabTyClassDots of part list
+    datatype labstrexp =
+      LabStrExp of
+        strexp * Reg.region list * Reg.region list * Label.label * next
+    | LabStrExpDots of part list
+    datatype labsigexp =
+      LabSigExp of
+        sigexp * Reg.region list * Reg.region list * Label.label * next
+    | LabSigExpDots of part list
+    datatype labpat =
+      LabPat of pat * Reg.region list * Reg.region list * Label.label * next
+    | LabPatDots of part list
+    datatype labidty =
+      LabIdTy of identty * Reg.region list * Label.label * next
+    | LabIdTyDots of part list
+    datatype labid =
+      LabId of ident * Reg.region list * Label.label * next
+    | LabIdDots of part list
+    datatype labfmatch =
+      LabFMatch of fmatch * Reg.region list * Label.label * next
+    | LabFMatchDots
+    | LabFMatchSl of fmatch * next
+    datatype labexp =
+      LabExp of exp * Reg.region list * Reg.region list * Label.label * next
+    | LabExpDots of part list
+    datatype labclass =
+      LabClass of class * Reg.region list * Label.label * next
+    | LabClassDots of part list
+    datatype labatpat =
+      LabAtPat of atpat * Reg.region * Label.label * next
+    | LabAtPatDots of part list
+    val isPatScon : scon -> Label.label option
+    val isLongIdent : longid -> bool
+    val isExpFnValBindSeq : valbindseq -> Label.labels list
+    val isClearBasisProg : prog -> bool
+    datatype identty =
+      IdentTyDots of part list
+    | IdentTyId of ident
+    | IdentTyTy of labid * labtype * Reg.region * Label.label * next
+    datatype identseq =
+      IdentSeq of ident list * next
+    | IdentSeqDots of part list
+    datatype ident =
+      Ident of string * Id.id * Reg.region * Label.label * next
+    | IdentDots
+    | IdentPcon of pcon
+    val getlabstLabIdTy :
+     labidty -> (Label.label * Label.label * string) option
+    val getlabstIdentTy :
+     identty -> (Label.label * Label.label * string) option
+    val getlabstIdent : ident -> (Label.label * Label.label * string) option
+    val getlabidTyCon : tycon -> Id.labelledId option
+    val getlabidStrId : strid -> Id.labelledId option
+    val getlabidLabclass : labclass -> Id.labelledId option
+    val getlabidLabId : labid -> Id.labelledId option
+    val getlabidIdent : ident -> Id.labelledId option
+    val getlabelsLabIdTy : labidty -> Label.labels
+    val getlabTypeVarseq : typevarseq -> Label.labels
+    val getlabLDatName : ldatname -> Label.labels
+    val getlabDatName : datname -> Label.labels
+    val getValDescOneNext : valdescone -> next option
+    val getValBindCoreNext : valbindcore -> next option
+    val getTypeVarValDesc : valdesc -> typevar list
+    val getTypeVarValBind : valbind -> typevar list
+    val getTypeVarTypeVarSeq : typevarseq -> typevar list
+    val getTypeVarType : types -> typevar list
+    val getTypeVarSigExp : sigexp -> typevar list
+    val getTypeVarSeqNext : typevarseq -> next option
+    val getTypeVarProgs : progs -> typevar list
+    val getTypeVarProg : prog -> typevar list
+    val getTypeVarNext : typevar -> next option
+    val getTypeVarLabType : labtype -> typevar list
+    val getTypeVarLabExp : labexp -> typevar list
+    val getTypeVarLDatName : ldatname -> typevar list
+    val getTypeVarFValBind : fvalbind -> typevar list
+    val getTypeVarExp : exp -> typevar list
+    val getTypeVarDatName : datname -> typevar list
+    val getTypeVarConbindseq : conbindseq -> typevar list
+    val getTypeVarConDesc : condesc -> typevar list
+    val getTypeNext : types -> next option
+    val getTypDescOneNext : typdescone -> next option
+    val getTypBindSeqNext : typbindseq -> next option
+    val getTypBindNext : typbind -> next option
+    val getTyLabNext : tylab -> next option
+    val getTyFieldNext : tyfield -> next option
+    val getTyConNext : tycon -> next option
+    val getTopDecOneNext : topdecone -> next option
+    val getTopDecOneListNext : topdecone list -> next option
+    val getTopDecOneFirst : topdecone -> Label.label option
+    val getTopDecNext : topdec -> next option
+    val getTdrDescOneNext : tdrdescone -> next option
+    val getStrIdNext : strid -> next option
+    val getStrExpNext : strexp -> next option
+    val getStrDescOneNext : strdescone -> next option
+    val getStrDecOneNext : strdecone -> next option
+    val getStrDecNext : strdec -> next option
+    val getStrBONext : strbindone -> next option
+    val getSpecOneNext : specone -> next option
+    val getSpecNext : spec -> next option
+    val getSigIdNext : sigid -> next option
+    val getSigExpNext : sigexp -> next option
+    val getSigBONext : sigbindone -> next option
+    val getQuoteNext : quote -> next option
+    val getProgOneNext : progone -> next option
+    val getProgOneListNext : progone list -> next option
+    val getProgOneFirst : progone -> Label.label option
+    val getProgNext : prog -> next option
+    val getProgFirst : prog -> Label.label option
+    val getPatNext : pat -> next option
+    val getPatFieldNext : patfield -> next option
+    val getPartNext : part -> next option
+    val getPartListNext : part list -> next option
+    val getNonBasProgs : progs -> progs
+    val getNamesIdentSeq : identseq -> string list
+    val getMruleNext : mrule -> next option
+    val getLongTyConNext : longtycon -> next option
+    val getLongStrIdNext : longstrid -> next option
+    val getLongIdNext : longid -> next option
+    val getLabsFValLab : fvalbindone -> Label.label list list
+    val getLabelsIdLabId : labid -> (Label.label * Label.label) option
+    val getLabelLabId : labid -> Label.labels
+    val getLabTypeVarNext : labtypevar -> next option
+    val getLabTypeNext : labtype -> next option
+    val getLabTyClassNext : labtyclass -> next option
+    val getLabStrExpNext : labstrexp -> next option
+    val getLabSigExpNext : labsigexp -> next option
+    val getLabPatNext : labpat -> next option
+    val getLabIdTyNext : labidty -> next option
+    val getLabIdNext : labid -> next option
+    val getLabFMatchNext : labfmatch -> next option
+    val getLabExpNext : labexp -> next option
+    val getLabClassNext : labclass -> next option
+    val getLTReaDOneNext : ltreadescone -> next option
+    val getLDatNameNext : ldatname -> next option
+    val getIdentTyNext : identty -> next option
+    val getIdentNext : ident -> next option
+    val getFunIdNext : funid -> next option
+    val getFunBONext : funbindone -> next option
+    val getFVBOneNext : fvalbindone -> next option
+    val getFVBCoreNext : fvalbindcore -> next option
+    val getFMatchTyNext : fmatchty -> next option
+    val getFMatchNext : fmatch -> next option
+    val getExpNext : exp -> next option
+    val getExpFieldNext : expfield -> next option
+    val getExcDescOneNext : excdescone -> next option
+    val getExBindNext : exbind -> next option
+    val getDecsNext : decs -> next option
+    val getDecPrint : unit -> bool
+    val getDecNext : dec -> next option
+    val getDatNameNext : datname -> next option
+    val getDatDescOneNext : datdescone -> next option
+    val getDatBindSeqNext : datbindseq -> next option
+    val getDatBindNext : datbind -> next option
+    val getConDescOneNext : condescone -> next option
+    val getConBindNext : conbind -> next option
+    val getClassNext : class -> next option
+    val getAtPatNext : atpat -> next option
+    datatype fvalbindone =
+      FVBOneDots of part list
+    | FValBindOne of fvalbindcore list * Reg.region list * Label.label * next
+    datatype fvalbindcore =
+      FVBCoreDots of part list
+    | FValBindCore of fmatchty * labexp * Reg.region * Label.label * next
+    datatype fvalbind =
+      FValBind of fvalbindone list * Reg.region list * next
+    | FValBindDots of part list
+    datatype funid =
+      FunId of string * Id.id * Reg.region * Label.label * next
+    | FunIdDots
+    datatype funbindone =
+      FunBindO of
+        funid * strid * labsigexp * labstrexp * Reg.region list *
+    Label.label * next
+    | FunBindODots of part list
+    | FunBindOO of
+        funid * strid * labsigexp * labsigexp * labstrexp * Reg.region list *
+    ...
+    | FunBindOS of
+        funid * spec * labstrexp * Reg.region list * Label.label * next
+    | FunBindOSO of funid * spec * labsigexp * labstrexp * ...
+    | FunBindOST of funid * spec * labsigexp * ...
+    | FunBindOT of funid * strid * ...
+    datatype funbind =
+      FunBind of funbindone list * Reg.region list * next
+    | FunBindDots of part list
+    datatype fmatchty =
+      FMatchT of labfmatch
+    | FMatchTDots
+    | FMatchTTy of labfmatch * labtype * Reg.region * Label.label * next
+    datatype fmatch =
+      FMatchApp of
+        fmatch * labatpat * Reg.region list * Reg.region * Label.label * next
+    | FMatchDots
+    | FMatchId of ident * bool * Reg.region
+    | FMatchNoApp of fmatch * next
+    | FMatchSlApp of fmatch * labatpat * next
+    eqtype file
+    val extractFilesProg : prog -> (string * Reg.region * bool) list
+    datatype expfield =
+      ExpField of
+        tylab * labexp * Reg.region * Reg.region list * Label.label * next
+    | ExpFieldDots of part list
+    datatype exp =
+      ExpAnd of labexp * labexp * Reg.region * Label.label * next
+    | ExpApp of
+        exp * atexp * Reg.region list * Reg.region * Reg.region *
+    Label.label * next
+    | ExpAtExp of atexp
+    | ExpCase of
+        labexp * match * Reg.region * Reg.region * Label.label * next
+    | ExpConsList of Id.id * labexp * labexp * Reg.region * ...
+    | ExpDots of part list
+    | ExpFn of match * Reg.region * ...
+    | ExpHandle of labexp * ...
+    | ExpIte of ...
+    | ...
+    datatype excdescone =
+      ExcDescOf of labid * labtype * Reg.region * Label.label * next
+    | ExcDescOne of ident * Label.label * next
+    | ExcDescOneDots of part list
+    datatype excdesc =
+      ExcDesc of excdescone list * Reg.region list * next
+    | ExcDescDots of part list
+    datatype exbindseq =
+      ExBindSeq of exbind list * Reg.region list * next
+    | ExBindSeqDots of part list
+    datatype exbind =
+      ExBind of ident * Label.label * next
+    | ExBindDots of part list
+    | ExBindEq of labid * longid * Reg.region * Label.label * next
+    | ExBindNo of ident * next
+    | ExBindOf of labid * labtype * Reg.region * Label.label * next
+    datatype decs = Decs of dec list * next | DecsDots of part list
+    val decPrint : bool ref
+    datatype dec =
+      DecAbsType of datbindseq * decs * Reg.region list * Label.label * next
+    | DecAbsWith of
+        datbindseq * typbindseq * decs * Reg.region list * Label.label * next
+    | DecClass of labclass * tyclassseq * Reg.region * Label.label * next
+    | DecDatRep of tycon * longtycon * Reg.region list * Label.label * next
+    | DecDatType of datbindseq * Reg.region * next
+    | DecDatWith of datbindseq * typbindseq * Reg.region list * ...
+    | DecDots of part list
+    | DecEx of exbindseq * ...
+    | DecFVal of ...
+    | ...
+    datatype datname =
+      DatName of typevarseq * tycon * Reg.region list * next
+    | DatNameDots
+    datatype datdescone =
+      DatDescOne of datname * condesc * Reg.region * Label.label * next
+    | DatDescOneDots of part list
+    datatype datdesc =
+      DatDesc of datdescone list * Reg.region list * next
+    | DatDescDots of part list
+    datatype datbindseq =
+      DatBindSeq of datbind list * Reg.region list * next
+    | DatBindSeqDots of part list
+    datatype datbind =
+      DatBind of datname * conbindseq * Reg.region * Label.label * next
+    | DatBindDots of part list
+    datatype condescone =
+      ConDescOneDots of part list
+    | ConDescOneId of ident * next
+    | ConDescOneNoOf of ident * next
+    | ConDescOneOf of labid * labtype * Reg.region * Label.label * next
+    datatype condesc =
+      ConDesc of condescone list * Reg.region list * next
+    | ConDescDots of part list
+    datatype conbindseq =
+      ConBindSeq of conbind list
+    | ConBindSeqDots of part list
+    datatype conbind =
+      ConBind of ident * next
+    | ConBindDots of part list
+    | ConBindNoOf of ident * next
+    | ConBindOf of labid * labtype * Reg.region * Label.label * next
+    val combineProg : prog -> prog -> prog
+    datatype class =
+      Class of string * Id.id * Reg.region * Label.label * next
+    | ClassDots
+    eqtype bas
+    datatype atpat =
+      AtPatDots of part list
+    | AtPatId of longid
+    | AtPatList of labpat list * Reg.region list * Label.label * next
+    | AtPatOr of labpat list * Reg.region list * Label.label * next
+    | AtPatParen of labpat * Reg.region * Reg.region * Label.label * next
+    | AtPatRecord of patfield list * Reg.region list * Reg.region list * ...
+    | AtPatScon of scon
+    | AtPatTuple of labpat list * ...
+    | AtPatWild of ...
+    datatype atopdec =
+      ATopDecDots of part list
+    | ATopDecSig of sigdec
+    | ATopDecStr of strdec
+    datatype atexp =
+      AtExpDLet of decs * seqexp * Reg.region list * Label.label * next
+    | AtExpDots of part list
+    | AtExpId of longid
+    | AtExpLet of decs * labexp * Reg.region list * Label.label * next
+    | AtExpList of labexp list * Reg.region list * Label.label * next
+    | AtExpParen of labexp * Reg.region * Reg.region * ...
+    | AtExpProj of tylab * Reg.region * ...
+    | AtExpQuote of quote list * ...
+    | AtExpRecord of ...
+    | ...
+    datatype afile =
+      AFile of file * Reg.region * Label.label * next
+    | AFileDots
+    datatype abool =
+      ABool of string * Reg.region * Label.label * next
+    | ABoolDots
+  end
+val it = (): unit
+> structure AstSML : ASTSML
+val it = (): unit
+> structure AstMLB :
+  sig
+    datatype nonTerm =
+      NT_BASBIND
+    | NT_BASDEC
+    | NT_BASEXP
+    | NT_BASFUN
+    | NT_BASID
+    | NT_BASODEC
+    | NT_BASSIG
+    | NT_BASSTR
+    | ...
+    datatype nodeType =
+      ERROR of string
+    | FILE of file
+    | IDENT of I.id
+    | NORMAL of nonTerm * caseRule
+    type files = (string * code) list
+    eqtype file
+    datatype code = NODE of nodeType * code list * R.region list * L.label
+    datatype caseRule =
+      CR_BASBIND
+    | CR_BASDEC
+    | CR_BASEXPBAS
+    | CR_BASEXPID
+    | CR_BASEXPLET
+    | CR_BASFUN
+    | CR_BASFUNEQ
+    | CR_BASID
+    | ...
+    eqtype bas
+    structure R : REG
+    structure L : LABEL
+    structure I : ID
+  end
+val it = (): unit
+> signature ASTTEST = sig val genNewProgs : unit -> string end
+val it = (): unit
+> structure AstTest : ASTTEST
+val it = (): unit
+> signature PPP =
+  sig
+    val use : string -> unit
+    val unsilence_compiler : unit -> unit
+    val silence_compiler : unit -> unit
+    val readAst : string -> AstSML.progs
+    val prettyPrintAst : AstSML.progs -> string
+    val data_tmp : data option ref
+    type data
+  end
+val it = (): unit
+> structure Ppp : PPP
+val it = (): unit
+> signature SLICING =
+  sig
+    val toString : AstSML.progs -> string
+    val slice : AstSML.progs -> Label.labels -> AstSML.progs
+    val printSlices : AstSML.progs list -> string
+    val printSlice : AstSML.progs -> bool -> string
+    val printOneSlice : AstSML.progs -> bool -> string -> string
+    val getDots : unit -> string * string * string * string * string
+  end
+val it = (): unit
+> structure Slicing : SLICING
+val it = (): unit
+> signature PARSER =
+  sig
+    val parse :
+     string ->
+       TextIO.instream ->
+       Label.label -> Id.assoc -> AstSML.prog * Label.label * Id.assoc
+    type messages
+    val convertToFull :
+     string -> Reg.region option -> string list -> string option * messages
+    val consProgs :
+     string list ->
+       string list ->
+       Label.label ->
+       Id.assoc -> int -> bool -> AstSML.progs * Label.label * Id.assoc * int
+  end
+val it = (): unit
+> signature LEXDEFS =
+  sig
+    val setQuotation : bool -> unit
+    val handleLex : ('a -> 'b) -> 'a -> 'b
+    val getQuotation : unit -> bool
+    exception UnclosedString of string * Reg.region list
+    exception UnclosedComment of string * Reg.region list
+    exception LexError of string * string * Reg.region list
+    exception ClosedComment of string * Reg.region list
+    exception BadCharacter of string * Reg.region list
+  end
+val it = (): unit
+> signature COMMENT =
+  sig
+    val resetQ : unit -> unit
+    val reset : unit -> unit
+    val opeQ : Reg.pos -> unit
+    val ope : Reg.pos -> unit
+    val isClosedQ : unit -> bool
+    val isClosed : unit -> bool
+    val getTopQ : unit -> Reg.pos option
+    val getTop : unit -> Reg.pos option
+    val closeQ : unit -> unit
+    val close : unit -> unit
+  end
+val it = (): unit
+> structure Comment : COMMENT
+val it = (): unit
+> structure LexDefs : LEXDEFS
+val it = (): unit
+> signature MLB_LRVALS =
+  sig structure Tokens : MLB_TOKENS structure ParserData : PARSER_DATA end
+signature MLB_TOKENS =
+  sig
+    type ('a, 'b) token
+    type svalue
+    val STRUCTURE : 'a * 'a -> (svalue, 'a) token
+    val SMLFILE : string * 'a * 'a -> (svalue, 'a) token
+    val SIGNATURE : 'a * 'a -> (svalue, 'a) token
+    val SIGFILE : string * 'a * 'a -> (svalue, 'a) token
+    val SEMICOLON : 'a * 'a -> (svalue, 'a) token
+    val OPEN : 'a * 'a -> (svalue, 'a) token
+    val MLBFILE : string * 'a * 'a -> (svalue, 'a) token
+    val LOCAL : 'a * 'a -> (svalue, 'a) token
+    val LET : 'a * 'a -> (svalue, 'a) token
+    val IN : 'a * 'a -> (svalue, 'a) token
+    val ID : string * 'a * 'a -> (svalue, 'a) token
+    val FUNFILE : string * 'a * 'a -> (svalue, 'a) token
+    val FUNCTOR : 'a * 'a -> (svalue, 'a) token
+    val EQUALOP : 'a * 'a -> (svalue, 'a) token
+    val EOF : 'a * 'a -> (svalue, 'a) token
+    val END : 'a * 'a -> (svalue, 'a) token
+    val BASIS : 'a * 'a -> (svalue, 'a) token
+    val BAS : 'a * 'a -> (svalue, 'a) token
+    val AND : 'a * 'a -> (svalue, 'a) token
+  end
+val it = (): unit
+> functor MLBLexFun (sig structure Tokens : MLB_TOKENS end) :
+  sig
+    val makeLexer :
+     (int -> string) ->
+       string * (int * int) ref ->
+       unit -> (Tokens.svalue, int * int) Tokens.token
+    structure YYPosInt : INTEGER
+    structure UserDeclarations :
+    sig
+      val tokenWithString :
+       (string * ('a * int) * ('a * int) -> 'b) ->
+         string -> 'c * ('a * int) ref -> 'b
+      type ('a, 'b) token
+      val token :
+       (('a * int) * ('a * int) -> 'b) -> string -> 'c * ('a * int) ref -> 'b
+      type svalue
+      val skip : string -> 'a * R.pos ref -> unit
+      type pos = int * int
+      val newline : 'a * (int * int) ref -> unit
+      type lexresult = (svalue, pos) token
+      val error : (string * R.pos ref) * string -> unit
+      val eof : string * 'a ref -> (svalue, 'a) token
+      val consCommentRegions : R.pos -> R.region list
+      val closedComment : string * R.pos ref -> 'a
+      type arg = string * pos ref
+      structure T : MLB_TOKENS
+      structure R : REG
+      structure L : LEXDEFS
+      structure C : COMMENT
+    end
+    exception LexError
+    structure Internal :
+    sig
+      datatype yyfinstate = N of int
+      val tab : {fin: yyfinstate list, trans: string} vector
+      type statedata = {fin: yyfinstate list, trans: string}
+      type result = UserDeclarations.lexresult
+      structure StartStates :
+      sig
+        datatype yystartstate = STARTSTATE of int
+        val INITIAL : yystartstate
+        val COMMENT : yystartstate
+      end
+      exception LexerError
+    end
+  end
+val it = (): unit
+> functor MLBLrValsFun (sig structure Token : TOKEN end) :
+  sig structure Tokens : MLB_TOKENS structure ParserData : PARSER_DATA end
+val it = (): unit
+> signature ML_LRVALS =
+  sig structure Tokens : ML_TOKENS structure ParserData : PARSER_DATA end
+signature ML_TOKENS =
+  sig
+    type ('a, 'b) token
+    type svalue
+    val WORD : string * 'a * 'a -> (svalue, 'a) token
+    val WITHTYPE : 'a * 'a -> (svalue, 'a) token
+    val WITH : 'a * 'a -> (svalue, 'a) token
+    val WILDCARD : 'a * 'a -> (svalue, 'a) token
+    val WILD : 'a * 'a -> (svalue, 'a) token
+    val WHILE : 'a * 'a -> (svalue, 'a) token
+    val WHERE : 'a * 'a -> (svalue, 'a) token
+    val VAL : 'a * 'a -> (svalue, 'a) token
+    val TYPEVAR : string * 'a * 'a -> (svalue, 'a) token
+    val TYPEARROW : 'a * 'a -> (svalue, 'a) token
+    val TYPE : 'a * 'a -> (svalue, 'a) token
+    val THEN : 'a * 'a -> (svalue, 'a) token
+    val STUSE : 'a * 'a -> (svalue, 'a) token
+    val STTYPE : 'a * 'a -> (svalue, 'a) token
+    val STSPEC : 'a * 'a -> (svalue, 'a) token
+    val STSBAS : 'a * 'a -> (svalue, 'a) token
+    val STRUCTURE : 'a * 'a -> (svalue, 'a) token
+    val STRUCT : 'a * 'a -> (svalue, 'a) token
+    val STRING : string * 'a * 'a -> (svalue, 'a) token
+    val STQUOTE : 'a * 'a -> (svalue, 'a) token
+    val STEND : 'a * 'a -> (svalue, 'a) token
+    val STDEC : 'a * 'a -> (svalue, 'a) token
+    val STCBAS : 'a * 'a -> (svalue, 'a) token
+    val STAR : 'a * 'a -> (svalue, 'a) token
+    val SIGNATURE : 'a * 'a -> (svalue, 'a) token
+    val SIG : 'a * 'a -> (svalue, 'a) token
+    val SHARP : 'a * 'a -> (svalue, 'a) token
+    val SHARING : 'a * 'a -> (svalue, 'a) token
+    val SEMICOLON : 'a * 'a -> (svalue, 'a) token
+    val SEAL : 'a * 'a -> (svalue, 'a) token
+    val RPAREN : 'a * 'a -> (svalue, 'a) token
+    val RLIST : 'a * 'a -> (svalue, 'a) token
+    val REC : 'a * 'a -> (svalue, 'a) token
+    val REAL : string * 'a * 'a -> (svalue, 'a) token
+    val RBRACE : 'a * 'a -> (svalue, 'a) token
+    val RAISE : 'a * 'a -> (svalue, 'a) token
+    val QUOTE : string * 'a * 'a -> (svalue, 'a) token
+    val QQVALUE : string * 'a * 'a -> (svalue, 'a) token
+    val PIPE : 'a * 'a -> (svalue, 'a) token
+    val OVERLOAD : 'a * 'a -> (svalue, 'a) token
+    val ORELSE : 'a * 'a -> (svalue, 'a) token
+    val OPEN : 'a * 'a -> (svalue, 'a) token
+    val OP : 'a * 'a -> (svalue, 'a) token
+    val OF : 'a * 'a -> (svalue, 'a) token
+    val NUM : string * 'a * 'a -> (svalue, 'a) token
+    val NONFIX : 'a * 'a -> (svalue, 'a) token
+    val LPAREN : 'a * 'a -> (svalue, 'a) token
+    val LONGID : string * 'a * 'a -> (svalue, 'a) token
+    val LOCAL : 'a * 'a -> (svalue, 'a) token
+    val LLIST : 'a * 'a -> (svalue, 'a) token
+    val LET : 'a * 'a -> (svalue, 'a) token
+    val LBRACE : 'a * 'a -> (svalue, 'a) token
+    val INT : string * 'a * 'a -> (svalue, 'a) token
+    val INID : string * 'a * 'a -> (svalue, 'a) token
+    val INFIXR : 'a * 'a -> (svalue, 'a) token
+    val INFIX : 'a * 'a -> (svalue, 'a) token
+    val INCLUDE : 'a * 'a -> (svalue, 'a) token
+    val IN : 'a * 'a -> (svalue, 'a) token
+    val IF : 'a * 'a -> (svalue, 'a) token
+    val ID : string * 'a * 'a -> (svalue, 'a) token
+    val HANDLE : 'a * 'a -> (svalue, 'a) token
+    val FUNCTOR : 'a * 'a -> (svalue, 'a) token
+    val FUN : 'a * 'a -> (svalue, 'a) token
+    val FN : 'a * 'a -> (svalue, 'a) token
+    val FILE : string * 'a * 'a -> (svalue, 'a) token
+    val EXCEPTION : 'a * 'a -> (svalue, 'a) token
+    val EQUOTE : string * 'a * 'a -> (svalue, 'a) token
+    val EQUALOP : 'a * 'a -> (svalue, 'a) token
+    val EQTYPEVAR : string * 'a * 'a -> (svalue, 'a) token
+    val EQTYPE : 'a * 'a -> (svalue, 'a) token
+    val EQDATATYPE : 'a * 'a -> (svalue, 'a) token
+    val EOF : 'a * 'a -> (svalue, 'a) token
+    val END : 'a * 'a -> (svalue, 'a) token
+    val ELSE : 'a * 'a -> (svalue, 'a) token
+    val DO : 'a * 'a -> (svalue, 'a) token
+    val DATATYPE : 'a * 'a -> (svalue, 'a) token
+    val DARROW : 'a * 'a -> (svalue, 'a) token
+    val COMMA : 'a * 'a -> (svalue, 'a) token
+    val COLON : 'a * 'a -> (svalue, 'a) token
+    val CHAR : string * 'a * 'a -> (svalue, 'a) token
+    val CASE : 'a * 'a -> (svalue, 'a) token
+    val BQUOTE : 'a * 'a -> (svalue, 'a) token
+    val AS : 'a * 'a -> (svalue, 'a) token
+    val AQUOTE : string * 'a * 'a -> (svalue, 'a) token
+    val ANDALSO : 'a * 'a -> (svalue, 'a) token
+    val AND : 'a * 'a -> (svalue, 'a) token
+    val ABSTYPE : 'a * 'a -> (svalue, 'a) token
+  end
+val it = (): unit
+> functor MLLexFun (sig structure Tokens : ML_TOKENS end) :
+  sig
+    val makeLexer :
+     (int -> string) ->
+       string * (int * int) ref ->
+       unit -> (Tokens.svalue, int * int) Tokens.token
+    structure YYPosInt : INTEGER
+    structure UserDeclarations :
+    sig
+      val unclosedString : string * R.pos ref -> unit
+      val tokenWithStringSTRING : 'a * (int * int) ref -> (svalue, pos) token
+      val tokenWithStringAQ :
+       ('a * ('b * int) * ('b * int) -> 'c) ->
+         string -> 'a -> 'd * ('b * int) ref -> 'c
+      val tokenWithString :
+       (string * ('a * int) * ('a * int) -> 'b) ->
+         string -> 'c * ('a * int) ref -> 'b
+      type ('a, 'b) token
+      val token :
+       (('a * int) * ('a * int) -> 'b) -> string -> 'c * ('a * int) ref -> 'b
+      type svalue
+      val stringToChar : string -> string
+      val startQuotedString : 'a * pos ref -> bool -> unit
+      val skip : string -> 'a * R.pos ref -> unit
+      val reset : unit -> unit
+      val raiseError : exn -> 'a
+      val quotedString : (pos * bool * bool * string) ref
+      type pos = int * int
+      val newline : 'a * (int * int) ref -> unit
+      val makeString : string list ref -> string
+      type lexresult = (svalue, pos) token
+      val initQuotedString : pos * bool * bool * string
+      val error : (string * R.pos ref) * string -> unit
+      val eof : string * 'a ref -> (svalue, 'a) token
+      val containQuote : string -> bool
+      val consRegions : R.pos -> R.region list
+      val consCommentRegions : R.pos -> R.region list
+      val closedComment : string * R.pos ref -> 'a
+      val charlist : string list ref
+      val badchar : string * R.pos ref -> unit
+      type arg = string * pos ref
+      val addString :
+       string list ref * string * ('a * ('b * int) ref) -> unit
+      val addQuotedString : string * string * ('a * ('b * int) ref) -> unit
+      val addChar : string list ref * char * ('a * ('b * int) ref) -> unit
+      structure T : ML_TOKENS
+      structure R : REG
+      structure L : LEXDEFS
+      structure C : COMMENT
+    end
+    exception LexError
+    structure Internal :
+    sig
+      datatype yyfinstate = N of int
+      val tab : {fin: yyfinstate list, trans: int vector} vector
+      type statedata = {fin: yyfinstate list, trans: int vector}
+      type result = UserDeclarations.lexresult
+      structure StartStates :
+      sig
+        datatype yystartstate = STARTSTATE of int
+        val STUSE : yystartstate
+        val STRI : yystartstate
+        val STRD : yystartstate
+        val STDEC : yystartstate
+        val QUOTE : yystartstate
+        val INITIAL : yystartstate
+        val ESCSTRI : yystartstate
+        val ESCSTRD : yystartstate
+        val COMMENT : yystartstate
+        val BACKQUOTE : yystartstate
+        val AQUOTE : yystartstate
+        val ANTIQUOTE : yystartstate
+      end
+      exception LexerError
+    end
+  end
+val it = (): unit
+> signature PARSEDEFS =
+  sig
+    val setErrorHandler : errorHandler -> unit
+    val resetErrorHandler : unit -> unit
+    val mkErrorHandler : bool -> string -> Reg.region list -> errorHandler
+    val getErrorHandler : unit -> errorHandler
+    type errorHandler
+    exception ParseError of string * Reg.region list
+  end
+val it = (): unit
+> structure ParseDefs : PARSEDEFS
+val it = (): unit
+> signature INFIX =
+  sig
+    datatype 'a tree =
+      L of 'a pack
+    | N of packstr * 'a tree * 'a tree
+    | O of packstr
+    val rmScope : Label.label -> unit
+    val rmInfix : string -> unit
+    val reset : unit -> unit
+    type packstr
+    type 'a pack
+    val newScope : Label.label -> unit
+    val isInfix : string -> bool
+    val getRight : 'a tree -> Reg.region
+    val getLeft : 'a tree -> Reg.region
+    val convert : 'a tree list -> 'a tree
+    val addInfixR : string -> int -> unit
+    val addInfixL : string -> int -> unit
+  end
+val it = (): unit
+> structure Infix : INFIX
+val it = (): unit
+> functor MLLrValsFun (sig structure Token : TOKEN end) :
+  sig structure Tokens : ML_TOKENS structure ParserData : PARSER_DATA end
+val it = (): unit
+> structure Parser : PARSER
+val it = (): unit
+> signature EXTLAB =
+  sig
+    val updExtLabL : 'a extLab -> Label.labels -> 'a extLab
+    val updExtLabE : 'a extLab -> Label.labels -> 'a extLab
+    val updExtLabD : 'a extLab -> LongId.set -> 'a extLab
+    val updExtLab :
+     'a extLab -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
+    val unionExtLab : 'a extLab -> 'b extLab -> ('a * 'b -> 'c) -> 'c extLab
+    val stripExtLab : 'a extLab list -> 'a list
+    val resetExtLab : 'a extLab -> 'a extLab
+    val printExtLab' : 'a extLab -> ('a -> string) -> string
+    val printExtLab : 'a extLab -> ('a -> string) -> Id.assoc -> string
+    val mapExtLab : 'a extLab -> ('a -> 'b) -> 'b extLab
+    val initExtLab : 'a -> Label.label -> 'a extLab
+    val getExtLabT : 'a extLab -> 'a
+    val getExtLabL : 'a extLab -> Label.labels
+    val getExtLabE : 'a extLab -> Label.labels
+    val getExtLabD : 'a extLab -> LongId.set
+    type 'a extLab
+    val consExtLab :
+     'a -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
+  end
+val it = (): unit
+> structure ExtLab : EXTLAB
+val it = (): unit
+> signature EXPANS =
+  sig
+    val printnonexp : nonexp -> string
+    val printexpans : expans -> string
+    datatype nonexp = Expans of expans list | Nonexp
+    val getLabsExpans : expans -> Label.labels * Id.lid option
+    val genOneExpdep : Id.id -> Label.label -> nonexp
+    val genOneExpans : Label.label -> nonexp
+    val genMulExpans : Label.label list -> nonexp
+    datatype expans =
+      Expdep of Id.lid * Label.labels
+    | Expexp of Label.labels
+    val composeNonexp : nonexp list -> nonexp
+    val addnonexp : nonexp -> Label.label -> nonexp
+  end
+val it = (): unit
+> structure Expans : EXPANS
+val it = (): unit
+> signature CLASSID =
+  sig
+    datatype vid = CO0 | CO1 | CON | DA0 | DA1 | DAT | EX0 | EX1 | EXC | ...
+    val toString : class -> string
+    val resetClVar : unit -> unit
+    val newClassVar : unit -> class
+    val consVRC : unit -> class
+    val consVAL : unit -> class
+    val consTYVAR : unit -> class
+    val consTYCON : unit -> class
+    val consSTR : unit -> class
+    val consSIG : unit -> class
+    val consREC : unit -> class
+    val consPAT : unit -> class
+    val consOC : unit -> class
+    val consFUNC : unit -> class
+    val consEXC : unit -> class
+    val consEX1 : unit -> class
+    val consEX0 : unit -> class
+    val consDAT : unit -> class
+    val consDA1 : unit -> class
+    val consDA0 : unit -> class
+    val consCON : unit -> class
+    val consCO1 : unit -> class
+    val consCO0 : unit -> class
+    val consANY : unit -> class
+    val classvarToInt : classvar -> int
+    type classvar
+    val classToVRC : class -> class
+    val classToREC : class -> class
+    val classToPAT : class -> class
+    val classToEX1 : class -> class
+    val classToEX0 : class -> class
+    val classToDAT : class -> class
+    val classToDA1 : class -> class
+    val classToDA0 : class -> class
+    val classToANY : class -> class
+    val classIsVRC : class -> bool
+    val classIsVID : class -> bool
+    val classIsVAR : class -> bool
+    val classIsVAL : class -> bool
+    val classIsTYCON : class -> bool
+    val classIsSTR : class -> bool
+    val classIsSIG : class -> bool
+    val classIsREC : class -> bool
+    val classIsPAT : class -> bool
+    val classIsOC : class -> bool
+    val classIsEXC : class -> bool
+    val classIsEX0 : class -> bool
+    val classIsDAT : class -> bool
+    val classIsDA0 : class -> bool
+    val classIsCON : class -> bool
+    val classIsANY : class -> bool
+    datatype class =
+      ANY
+    | CLVAR of classvar
+    | FUNC
+    | OC
+    | SIG
+    | STR
+    | TYCON
+    | TYVAR
+    | VID of vid
+  end
+val it = (): unit
+> structure ClassId : CLASSID
+val it = (): unit
+> signature POLY =
+  sig
+    val toString : poly -> string
+    val toPoly : poly -> poly
+    val polyToMono : poly -> Label.labels -> poly
+    datatype poly = MONO of mono list | POLY
+    datatype mono = EXPANS of Expans.expans | MONBIN of Label.labels
+    val mergePoly : poly -> poly -> poly
+    val isPoly : poly -> bool
+    val isMono : poly -> bool
+    val getLabsPoly : poly -> Label.labels * Label.labels * LongId.set
+    val getLabsMono : mono -> Label.labels * Label.labels * LongId.set
+    val fromPolyToNonexp : poly -> Expans.nonexp
+    val fromNonexpToPoly : Expans.nonexp -> poly
+  end
+val it = (): unit
+> structure Poly : POLY
+val it = (): unit
+> signature TY =
+  sig
+    val typenames : string list
+    val typenameVarToInt : typenameVar -> int
+    type typenameVar
+    datatype typenameType =
+      NC of typename * constructorKind * Label.label
+    | TYPENAME_DEPENDANCY of typenameType ExtLab.extLab
+    | TYPENAME_VAR of typenameVar
+    val typenameToInt : typename -> int
+    val typenameFromInt : int -> typename
+    type typename
+    val typeVarToInt : typeVar -> int
+    type typeVar
+    val typeFunctionVarToInt : typeFunctionVar -> int
+    type typeFunctionVar
+    datatype typeFunction =
+      TFC of rowType * ty * Label.label
+    | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
+    | TYPE_FUNCTION_VAR of typeFunctionVar
+    datatype ty =
+      APPLICATION of typeFunction * rowType * Label.label
+    | EXPLICIT_TYPE_VAR of Id.id * typeVar * Label.label * equalityType
+    | GEN of ty list ref
+    | TYPE_CONSTRUCTOR of typenameType * rowType * Label.label * equalityType
+    | TYPE_DEPENDANCY of ty ExtLab.extLab
+    | TYPE_POLY of rowType * idor * poly * ...
+    | TYPE_VAR of typeVar * extv * ...
+    val tntyToTyCon : typenameType -> typename
+    val stripEqualityVariables_sequenceType :
+     rowType -> Label.labels -> equalityTypeVar list * Label.labels
+    val stripEqualityVariables :
+     ty -> Label.labels -> equalityTypeVar list * Label.labels
+    val stripDepsSq : rowType -> rowType ExtLab.extLab
+    val rowVarToInt : rowVar -> int
+    type rowVar
+    datatype rowType =
+      ROW_C of fieldType list * flex * Label.label
+    | ROW_DEPENDANCY of rowType ExtLab.extLab
+    | ROW_VAR of rowVar
+    val resetnexts : unit -> unit
+    val printtylist : ty list -> string
+    val printtyf' : typeFunction -> string
+    val printtyf : typeFunction -> string
+    val printty' : ty -> string
+    val printty : ty -> string
+    val printtnty' : typenameType -> string
+    val printtnty : typenameType -> string
+    val printsmltn : typename -> string
+    val printsmllc : fieldName -> string
+    val printseqty' : rowType -> string
+    val printseqty : rowType -> string
+    val printlabty : labelType -> string
+    val printflex : flex -> string
+    val printfieldtylist : fieldType list -> string
+    val printfieldty' : fieldType -> string
+    val printTypenameVar : typenameVar -> string
+    val printTypenameAssoc : typename -> Id.assoc -> string
+    val printTypename' : typename -> string
+    val printTypename : typename -> string
+    val printTypeVarList : typeVar list -> string
+    val printTypeVar : typeVar -> string
+    val printRowVarList : rowVar list -> string
+    val printRowVar : rowVar -> string
+    val printFieldVar : fieldVar -> string
+    val printFieldType : fieldType -> string
+    val printFieldName : fieldName -> string
+    val printEqualityTypeVarList : equalityTypeVar list -> string
+    val printEqualityTypeVar : equalityTypeVar -> string
+    val printEqualityTypeStatus : equalityTypeStatus -> string
+    val printEqualityType : equalityType -> string
+    datatype poly = MONO | POLY
+    datatype orKind =
+      CONSTANT of string * Id.id * Label.label
+    | VALUE of Id.labelledId
+    val noflex : unit -> flex
+    val newTYPE_VAR : unit -> ty
+    val newTYPE_FUNCTION_VAR : unit -> typeFunction
+    val newROW_VAR : unit -> rowType
+    val newFIELD_VAR : unit -> fieldType
+    datatype names =
+      DUMTYPENAME of typename
+    | MAYTYPENAME
+    | NOTTYPENAME
+    | TYPENAME of typename
+    val labelVarToInt : labelVar -> int
+    type labelVar
+    datatype labelType =
+      LABEL_DEPENDANCY of labelType ExtLab.extLab
+    | LABEL_VAR of labelVar
+    | LC of fieldName * Label.label
+    val labelBuiltinTyf : typeFunction -> Label.label -> typeFunction
+    val labelBuiltinTy : ty -> Label.label -> ty
+    val isflex : flex -> bool
+    val isVarTypename : typenameType -> bool
+    val isTypename : typeFunction -> names ExtLab.extLab
+    val isTyV : ty -> bool
+    val isTyC : ty -> bool
+    val isShallowSeq : rowType -> bool
+    val isPoly : poly -> bool
+    val isPatTy : typenameType -> bool
+    val isExcTy : typenameType -> bool
+    val isDecTy : typenameType -> bool
+    val isBaseTy : typenameType -> bool
+    val isBase' : typename -> bool
+    val isBase : typename -> bool
+    val isArrowTy : typenameType -> bool
+    val idorToInt : idor -> int
+    type idor
+    val getrowVar : unit -> rowVar
+    val getidor : unit -> idor
+    val getflex : flex -> Label.label
+    val getTypenameVar : unit -> rowVar
+    val getTypenameType : ty -> typenameType option
+    val getTypenameString : string -> typename
+    val getTypename : typeFunction -> typename option
+    val getTypeVarsTy : ty -> explicitTypeVar list
+    val getTypeVar : unit -> typeVar
+    val getTyLab : ty -> Label.label option
+    val getLabelVar : unit -> labelVar
+    val getFieldVar : unit -> fieldVar
+    val freshidor : unit -> idor
+    val freshTypenameVar : unit -> typenameVar
+    val freshTypename : unit -> typename
+    val freshTypeVar : unit -> typeVar
+    val freshTypeFunctionVar : unit -> typeFunctionVar
+    val freshRowVar : unit -> rowVar
+    val freshLabelVar : unit -> labelVar
+    val freshFieldVar : unit -> fieldVar
+    val freshEqualityTypeVar : unit -> equalityTypeVar
+    type flex
+    val fieldVarToInt : fieldVar -> int
+    type fieldVar
+    datatype fieldType =
+      FC of labelType * ty * Label.label
+    | FIELD_DEPENDANCY of fieldType ExtLab.extLab
+    | FIELD_NO_OVERLOAD
+    | FIELD_VAR of fieldVar
+    eqtype fieldName
+    type extv
+    type explicitTypeVar
+    val equalityTypeVarToInt : equalityTypeVar -> int
+    type equalityTypeVar
+    datatype equalityTypeStatus = EQUALITY_TYPE | NOT_EQUALITY_TYPE | UNKNOWN
+    datatype equalityType =
+      EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
+    | EQUALITY_TYPE_ON_TYPE of ty
+    | EQUALITY_TYPE_STATUS of equalityTypeStatus
+    | EQUALITY_TYPE_TYPENAME of equalityTypeVar list
+    | EQUALITY_TYPE_VAR of equalityTypeVar
+    | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
+    val eqTypenameVar : typenameVar -> typenameVar -> bool
+    val eqTypename : typename -> typename -> bool
+    val eqTypeVar : typeVar -> typeVar -> bool
+    val eqRowVar : rowVar -> rowVar -> bool
+    val eqLabelVar : labelVar -> labelVar -> bool
+    val eqIdor : idor -> idor -> bool
+    val eqFieldVar : fieldVar -> fieldVar -> bool
+    val eqEqualityTypeVar : equalityTypeVar -> equalityTypeVar -> bool
+    val constyword' : Label.label -> constructorKind -> ty
+    val constyword : Label.label -> ty
+    val constyvector' : typeVar -> Label.label -> constructorKind -> ty
+    val constyvector : typeVar -> Label.label -> ty
+    val constyunit' : Label.label -> constructorKind -> ty
+    val constyunit : Label.label -> ty
+    val constytupleWithTheta : ty list -> Label.label -> ty
+    val constytupleWithEquality :
+     typeVar list -> equalityType -> Label.label -> ty
+    val constytuple' : typeVar list -> Label.label -> constructorKind -> ty
+    val constytuple : typeVar list -> Label.label -> ty
+    val constysubstring' : Label.label -> constructorKind -> ty
+    val constysubstring : Label.label -> ty
+    val constystring' : Label.label -> constructorKind -> ty
+    val constystring : Label.label -> ty
+    val constyref' : typeVar -> Label.label -> constructorKind -> ty
+    val constyref : typeVar -> Label.label -> ty
+    val constyrecord' :
+     fieldVar list ->
+       Label.label option -> Label.label -> constructorKind -> ty
+    val constyrecord :
+     fieldVar list -> Label.label option -> Label.label -> ty
+    val constyreal' : Label.label -> constructorKind -> ty
+    val constyreal : Label.label -> ty
+    val constyorder' : Label.label -> constructorKind -> ty
+    val constyorder : Label.label -> ty
+    val constyoption' : typeVar -> Label.label -> constructorKind -> ty
+    val constyoption : typeVar -> Label.label -> ty
+    val constynewcons' : Label.label -> constructorKind -> ty
+    val constynewcons : Label.label -> ty
+    val constylist' : typeVar -> Label.label -> constructorKind -> ty
+    val constylist : typeVar -> Label.label -> ty
+    val constyint' : Label.label -> constructorKind -> ty
+    val constyint : Label.label -> ty
+    val constyfrag' : typeVar -> Label.label -> constructorKind -> ty
+    val constyfrag : typeVar -> Label.label -> ty
+    val constyexception' : Label.label -> constructorKind -> ty
+    val constyexception : Label.label -> ty
+    val constychar' : Label.label -> constructorKind -> ty
+    val constychar : Label.label -> ty
+    val constybool' : Label.label -> constructorKind -> ty
+    val constybool : Label.label -> ty
+    val constyarrowTyped : ty -> ty -> Label.label -> ty
+    val constyarrow'Typed : ty -> ty -> Label.label -> constructorKind -> ty
+    val constyarrow'Eq :
+     typeVar ->
+       typeVar -> Label.label -> constructorKind -> equalityType -> ty
+    val constyarrow' :
+     typeVar -> typeVar -> Label.label -> constructorKind -> ty
+    val constyarrow : typeVar -> typeVar -> Label.label -> ty
+    val constyarray' : typeVar -> Label.label -> constructorKind -> ty
+    val constyarray : typeVar -> Label.label -> ty
+    val constupleTyped : ty list -> Label.label -> fieldType list
+    val constuple : typeVar list -> Label.label -> fieldType list
+    datatype constructorKind =
+      BUILTIN_BASIS_CONS
+    | DECLARATION_CONS of Id.id
+    | OTHER_CONS
+    | PATTERN_CONS
+    val consflex : Label.label -> flex
+    val consTypenameVar : Label.label -> ty
+    val consTyTupleTy : ty list -> Label.label -> constructorKind -> ty
+    val consTyArrowTy : ty -> ty -> Label.label -> constructorKind -> ty
+    val consTYPE_VARwithEQ : typeVar -> equalityType -> ty
+    val consTYPE_VAR : typeVar -> ty
+    val consTYPE_FUNCTION_VAR : typeFunctionVar -> typeFunction
+    val consROW_VAR : rowVar -> rowType
+    val consEQUALITY_TYPE_VAR_LIST : equalityTypeVar list -> equalityType
+    val consEQUALITY_TYPE_VAR : equalityTypeVar -> equalityType
+    val DUMMYTYPENAME : typename
+    val CONSREAL : typename
+    val CONSARROW : typename
+  end
+val it = (): unit
+> structure Ty : TY
+val it = (): unit
+> signature CONSID =
+  sig
+    val updPoly : 'a bind -> Poly.poly -> 'a bind
+    val updClass : 'a bind -> ClassId.class -> 'a bind
+    val toVRC : 'a bind -> 'a bind
+    val toREC : 'a bind -> 'a bind
+    val toPolyBind : 'a bind -> 'a bind
+    val toPAT : 'a bind -> 'a bind
+    val toMonoBind : 'a bind -> Label.labels -> 'a bind
+    val toEX1 : 'a bind -> 'a bind
+    val toEX0 : 'a bind -> 'a bind
+    val toDAT : 'a bind -> 'a bind
+    val toDA1 : 'a bind -> 'a bind
+    val toDA0 : 'a bind -> 'a bind
+    val toCLS : 'a bind -> ClassId.class -> 'a bind
+    val resetPoly : 'a bind -> 'a bind
+    val printBind' : 'a bind -> ('a -> string) -> string
+    val printBind : 'a bind -> ('a -> string) -> Id.assoc -> string
+    val mapBind : 'a bind -> ('a -> 'b) -> 'b bind
+    val isVAL : 'a bind -> bool
+    val isREC : 'a bind -> bool
+    val isPAT : 'a bind -> bool
+    val isEX0 : 'a bind -> bool
+    val isDA0 : 'a bind -> bool
+    val getTypeVars : Ty.ty bind -> Ty.explicitTypeVar list
+    val getTypeVar : Ty.ty bind -> Ty.typeVar option
+    val getBindT : 'a bind -> 'a
+    val getBindP : 'a bind -> Poly.poly
+    val getBindL : 'a bind -> Label.label
+    val getBindI : 'a bind -> Id.id
+    val getBindEqualityTypeVar : 'a bind -> Ty.equalityTypeVar
+    val getBindC : 'a bind -> ClassId.class
+    val consBindPoly :
+     Id.id ->
+       'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> 'a bind
+    val consBindMono :
+     Id.id ->
+       'a -> Ty.equalityTypeVar -> ClassId.class -> Label.label -> 'a bind
+    val consBind :
+     Id.id ->
+       'a ->
+       Ty.equalityTypeVar ->
+       ClassId.class -> Label.label -> Poly.poly -> 'a bind
+    val closeBind : 'a bind -> Expans.nonexp -> 'a bind
+    type 'a bind
+  end
+val it = (): unit
+> structure ConsId : CONSID
+val it = (): unit
+> signature ENV =
+  sig
+    type varEnv
+    val updateValueIds : varEnv -> env -> env
+    val updateTypeNames : typeEnv -> env -> env
+    val updateStructs : strenv -> env -> env
+    val updateOverloadingClasses : overloadingClassesEnv -> env -> env
+    val updateInfoTypeNames : typeNameMap -> env -> env
+    val updateILab : Label.label -> env -> env
+    val updateIComplete : bool -> env -> env
+    val updateIArgOfFunctor : bool -> env -> env
+    val updateExplicitTypeVars : typeVarEnv -> env -> env
+    val unionEnvList : 'a genericEnv list -> 'a genericEnv
+    val unionEnv : env list -> env
+    val unionContextSensitiveSyntaxErrors :
+     contextSensitiveSyntaxError list -> contextSensitiveSyntaxError
+    val unionConstraintsList : constraints list -> constraints
+    val uOEnv : openEnv list -> openEnv
+    type typeVarEnv
+    type typeNameMap
+    datatype typeNameKind = DATATYPE | TYPE
+    type typeName
+    type typeEnv
+    val toTYCONTypeNameEnv :
+     typeEnv -> varEnv -> bool -> Label.labels -> typeEnv
+    val toRECValueIds : varEnv -> Label.labels -> varEnv
+    val toPolyValueIds : varEnv -> varEnv
+    val toPATValueIds : varEnv -> Label.labels -> varEnv
+    val toMonoValueIds : varEnv -> Label.labels -> varEnv
+    val toEX1ValueIds : varEnv -> Label.labels -> varEnv
+    val toEX0ValueIds : varEnv -> Label.labels -> varEnv
+    val toDATValueIds : varEnv -> Label.labels -> varEnv
+    val toDA1ValueIds : varEnv -> Label.labels -> varEnv
+    val toDA0ValueIds : varEnv -> Label.labels -> varEnv
+    val toCLSValueIds : varEnv -> class -> Label.labels -> varEnv
+    type strenv
+    val singleConstraint : Label.label * oneConstraint -> constraints
+    val singcsts : Label.label * oneConstraint list -> constraints
+    val singcsss :
+     oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
+    val singcss :
+     oneContextSensitiveSyntaxError -> contextSensitiveSyntaxError
+    val singOEnv : openSem -> openEnv
+    type sigenv
+    type shabind
+    val resetEnvVar : unit -> unit
+    val pushExtEnv : env -> Label.labels -> Label.labels -> LongId.set -> env
+    val projValueIds : varEnv -> env
+    val projStructs : strenv -> env
+    val projSigs : sigenv -> env
+    val projOverloadingClasses : overloadingClassesEnv -> env
+    val projOpns : openEnv -> env
+    val projFunctors : funenv -> env
+    val projExplicitTypeVars : typeVarEnv -> env
+    val printTnKind : typeNameKind -> string
+    val printOneConstraint : oneConstraint -> string
+    val printOneAccessor : accessor -> string
+    val printEnvVar : envVar -> string
+    val printEnv : env -> string -> string
+    val printConstraints : constraints -> string
+    val plusproj : 'a genericEnv -> Id.id -> 'a bind list
+    val plusenv : 'a genericEnv -> 'a genericEnv -> 'a genericEnv
+    val plusEnv : env -> env -> env
+    type overloadingClassesEnv
+    type openSem
+    datatype openKind = DATATYPE_REPLICATION | INCLUDED_SIG | OPENED_STRUCT
+    type 'a openEnvMap
+    type openEnv
+    datatype oneContextSensitiveSyntaxError =
+      CSSAPPL of Label.labels
+    | CSSCVAR of Label.labels
+    | CSSECON of Label.labels
+    | CSSEVAR of Label.labels
+    | CSSFARG of Label.labels
+    | CSSFNAM of Label.labels
+    | CSSFREC of Label.labels
+    | CSSFREE of Label.labels
+    | CSSINCL of Label.labels
+    | ...
+    datatype oneConstraint =
+      ACCESSOR_CONSTRAINT of accessor
+    | ENV_CONSTRAINT of (env * env) ExtLab.extLab
+    | EQUALITY_TYPE_CONSTRAINT of
+        (Ty.equalityType * Ty.equalityType) ExtLab.extLab
+    | FIELD_CONSTRAINT of (Ty.fieldType * Ty.fieldType) ExtLab.extLab
+    | FUNCTION_TYPE_CONSTRAINT of
+        (Ty.typeFunction * Ty.typeFunction) ExtLab.extLab
+    | FUNCTOR_CONSTRAINT of evfbind
+    | IDENTIFIER_CLASS_CONSTRAINT of (class * class) ExtLab.extLab
+    | LABEL_CONSTRAINT of ... ExtLab.extLab
+    | LET_CONSTRAINT of env
+    | ...
+    val newEnvVar : Label.label -> env
+    datatype names =
+      DUMTYPENAME of typeName
+    | MAYTYPENAME
+    | NOTTYPENAME of Id.id ExtLab.extLab
+    | TYPENAME of typeName ExtLab.extLab
+    datatype matchKind = OPAQUE | TRANSLUCENT
+    val mapenv : ('a -> 'a) -> 'a envMap -> 'a envMap
+    type longTypeConsBinder
+    val isMonoBind : 'a bind -> bool
+    val isEmptyIdEnv : 'a envMap -> bool
+    val isEmptyEnv : env -> bool
+    val isENV_VAR : env -> bool
+    val isENV_CONS : env -> bool
+    val initValueIDAccessor : Ty.ty accessorId -> Label.label -> accessor
+    val initTypenameConstraint :
+     Ty.typenameType -> Ty.typenameType -> Label.label -> oneConstraint
+    val initTypeConstraint : Ty.ty -> Ty.ty -> Label.label -> oneConstraint
+    val initRowConstraint :
+     Ty.rowType -> Ty.rowType -> Label.label -> oneConstraint
+    val initLabelConstraint :
+     Ty.labelType -> Ty.labelType -> Label.label -> oneConstraint
+    val initFunctionTypeConstraint :
+     Ty.typeFunction -> Ty.typeFunction -> Label.label -> oneConstraint
+    val initFieldConstraint :
+     Ty.fieldType -> Ty.fieldType -> Label.label -> oneConstraint
+    val initEqualityTypeConstraint :
+     Ty.equalityType -> Ty.equalityType -> Label.label -> oneConstraint
+    val initEqualityTypeAccessor :
+     Ty.equalityType accessorId -> Label.label -> accessor
+    val initEnvConstraint : env -> env -> Label.label -> oneConstraint
+    val initClassConstraint : class -> class -> Label.label -> oneConstraint
+    type infoEnv
+    val hasEnvVar : env -> bool
+    val getnbcsttop : envContextSensitiveSyntaxPair -> int
+    val getnbcst : envContextSensitiveSyntaxPair -> int
+    val getnbcss : envContextSensitiveSyntaxPair -> int
+    val getnbcs : envContextSensitiveSyntaxPair -> int
+    val getbindings : env -> Label.labels list * Label.labels
+    val getValueIds : env -> varEnv
+    val getTypeNames : typeEnv -> names list
+    val getTypeNameEnv : env -> typeEnv
+    val getStructs : env -> strenv
+    val getSigs : env -> sigenv
+    val getOverloadingClasses : env -> overloadingClassesEnv
+    val getLabsIdsEnv : env -> int -> (int * int) list * Label.labels
+    val getLabEnv : env -> Label.label
+    val getInfo : env -> infoEnv
+    val getITypeNames : env -> typeNameMap
+    val getILab : env -> Label.label
+    val getIComplete : env -> bool
+    val getIArgOfFunctor : env -> bool
+    val getFunctors : env -> funenv
+    val getExplicitTypeVars : env -> typeVarEnv
+    val getEnvVar : unit -> envVar
+    val getConstraintItems : constraints -> oneConstraint list list
+    val getBindT : 'a bind -> 'a
+    val getBindP : 'a bind -> Poly.poly
+    val getBindL : 'a bind -> Label.label
+    val getBindI : 'a bind -> Id.id
+    val getBindEqualityTypeVar : 'a bind -> Ty.equalityTypeVar
+    val getBindC : 'a bind -> class
+    type 'a genericEnv
+    val genValueIDAccessor :
+     Ty.ty accessorId ->
+       Label.labels -> Label.labels -> LongId.set -> accessor
+    val genLongEnv : Id.lid -> Ty.typeFunction -> constraints * env
+    val genCstTyAll :
+     Ty.ty ->
+       Ty.ty -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstTnAll :
+     Ty.typenameType ->
+       Ty.typenameType ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstTfAll :
+     Ty.typeFunction ->
+       Ty.typeFunction ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstSqAll :
+     Ty.rowType ->
+       Ty.rowType ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstRtAll :
+     Ty.fieldType ->
+       Ty.fieldType ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstLtAll :
+     Ty.labelType ->
+       Ty.labelType ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstEvAll :
+     env ->
+       env -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstEqAll :
+     Ty.equalityType ->
+       Ty.equalityType ->
+       Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstClAll :
+     class ->
+       class -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genAccItEm : Ty.typeFunction accessorId -> Label.label -> accessor
+    val genAccIsEm : env accessorId -> Label.label -> accessor
+    val genAccIoEm : Ty.rowType accessorId -> Label.label -> accessor
+    val genAccIiEm : env accessorId -> Label.label -> accessor
+    val genAccIfEm : funsem accessorId -> Label.label -> accessor
+    val genAccIeEm : Ty.ty accessorId -> Label.label -> accessor
+    type funsem
+    type funenv
+    val freshEnvVar : unit -> envVar
+    val foldrienv : (Id.id * 'a * 'b -> 'b) -> 'b -> 'a envMap -> 'b
+    val foldlicst :
+     (int * oneConstraint list * 'a -> 'a) -> 'a -> constraints -> 'a
+    val foldlOEnv : (openSem * 'a -> 'a) -> 'a -> openEnv -> 'a
+    val filterEnv : env -> Label.labels -> env
+    type extstr
+    type extsig
+    type extovc
+    type extfun
+    type extVar
+    type extType
+    type explicitTypeVar
+    type evsbind
+    type evfbind
+    val eqEnvVar : envVar -> envVar -> bool
+    val envsToSeq : env list -> env
+    val envVarToInt : envVar -> int
+    eqtype envVar
+    val envToBind : 'a genericEnv -> 'a bind list
+    type 'a envMap
+    type envContextSensitiveSyntaxPair
+    datatype env =
+      CONSTRAINT_ENV of constraints
+    | DATATYPE_CONSTRUCTOR_ENV of Id.labelledId * env
+    | ENVDEP of env ExtLab.extLab
+    | ENVFIL of string * env * (unit -> env)
+    | ENVOPN of openEnv
+    | ENVPOL of typeVarEnv * env
+    | ENVPTY of string
+    | ENVSHA of env * env
+    | ENVWHR of ...
+    | ...
+    val emvar : varEnv
+    val emtyp : typeEnv
+    val emtv : typeVarEnv
+    val emstr : strenv
+    val emsig : sigenv
+    val emptyMap : 'a envMap
+    val emptyEnv : env
+    val emptyContextSensitiveSyntaxError : contextSensitiveSyntaxError
+    val emptyConstraint : constraints
+    val emopn : openEnv
+    val emoc : overloadingClassesEnv
+    val emnfo : infoEnv
+    val emfun : funenv
+    val dom : 'a envMap -> Id.set
+    val createOpaqueEqualityConstraints :
+     env -> Label.label -> env * oneConstraint list
+    type contextSensitiveSyntaxError
+    datatype constraints = CONSTRAINTS of oneConstraint list constraintMap
+    type 'a constraintMap
+    val conscsts :
+     Label.label * oneConstraint list -> constraints -> constraints
+    val consSingleEnv : Id.id * 'a -> 'a envMap
+    val consInfo : Label.label -> bool -> typeNameMap -> bool -> infoEnv
+    val consEnvTypeNames : typeEnv -> env
+    val consEnvConstructor :
+     varEnv ->
+       typeEnv ->
+       typeVarEnv ->
+       strenv -> sigenv -> funenv -> overloadingClassesEnv -> infoEnv -> env
+    val consENV_VAR : envVar -> Label.label -> env
+    val consConstraint :
+     Label.label * oneConstraint -> constraints -> constraints
+    val consBindPoly :
+     {id: Id.id,
+       typeOfId: 'a,
+       classOfId: class,
+       equalityTypeVar: Ty.equalityTypeVar, labelOfConstraint: Label.label}
+       -> 'a bind
+    val consBindMono :
+     Id.id -> 'a -> Ty.equalityTypeVar -> class -> Label.label -> 'a bind
+    val consBind :
+     Id.id ->
+       'a ->
+       Ty.equalityTypeVar -> class -> Label.label -> Poly.poly -> 'a bind
+    val consAccessorId :
+     Id.lid ->
+       Ty.equalityTypeVar -> 'a -> class -> Label.label -> 'a accessorId
+    val completeEnv : env -> bool
+    val closeValueIds : varEnv -> Expans.nonexp -> varEnv
+    type class
+    val bindToEnv : 'a bind list -> 'a genericEnv
+    type 'a bind
+    val appOEnv : (openSem -> unit) -> openEnv -> unit
+    val allEqualValueIds : varEnv -> constraints
+    val addenv : Id.id * 'a -> 'a envMap -> 'a envMap
+    val addOEnv : openSem -> openEnv -> openEnv
+    type 'a accessorId
+    datatype accessor =
+      EQUALITY_TYPE_ACCESSOR of Ty.equalityType accessorId ExtLab.extLab
+    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.ty accessorId ExtLab.extLab
+    | FUNCTOR_ACCESSOR of (env * env) accessorId ExtLab.extLab
+    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType accessorId ExtLab.extLab
+    | SIGNATURE_ACCESSOR of env accessorId ExtLab.extLab
+    | STRUCTURE_ACCESSOR of env accessorId ExtLab.extLab
+    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction accessorId ExtLab.extLab
+    | VALUEID_ACCESSOR of Ty.ty accessorId ExtLab.extLab
+  end
+val it = (): unit
+> structure Env : ENV
+val it = (): unit
+> signature ANALYZE =
+  sig
+    val generateConstraints :
+     AstSML.progs -> int -> Env.envContextSensitiveSyntaxPair
+    val fullConsGen :
+     AstSML.progs -> Id.assoc -> int -> Env.envContextSensitiveSyntaxPair
+    val buildin :
+     Env.envContextSensitiveSyntaxPair ->
+       Id.assoc -> bool -> Env.envContextSensitiveSyntaxPair
+  end
+val it = (): unit
+> signature OP =
+  sig val getOpType : Id.assoc -> Env.varEnv * Env.constraints end
+val it = (): unit
+> structure Op : OP
+val it = (): unit
+> signature NAME =
+  sig val getTypename : Id.assoc -> Env.typeEnv * Env.constraints end
+val it = (): unit
+> structure Name : NAME
+val it = (): unit
+> signature VALUEPOL =
+  sig
+    val nonexpLabExp : AstSML.labexp -> Expans.nonexp
+    val nonexpExp : AstSML.exp -> Expans.nonexp
+  end
+val it = (): unit
+> structure ValuePol : VALUEPOL
+val it = (): unit
+> structure Analyze : ANALYZE
+val it = (): unit
+> signature ERRORKIND =
+  sig
+    type unmerr
+    eqtype typename
+    type tnerr
+    type synerr
+    type specerr
+    type recerr
+    val printSmlErrKind : kind -> string
+    val printJsonErrKind : kind -> string
+    val printErrKind : kind -> Id.assoc -> string * string
+    type laberr
+    eqtype label
+    datatype kind =
+      AppNotApp
+    | ArityClash of arrerr * arrerr
+    | AsPatVar
+    | Circularity
+    | ConIsVar of synerr
+    | ConsArgNApp of label * label
+    | ConsNArgApp of label * label
+    | DatIsExc of synerr
+    | DatTypClash of ...
+    | ...
+    val issyn : kind -> bool
+    val issem : kind -> bool
+    type idserr
+    type iderr
+    eqtype id
+    type arrerr
+  end
+val it = (): unit
+> structure ErrorKind : ERRORKIND
+val it = (): unit
+> signature EXTREG =
+  sig
+    eqtype weight
+    datatype treeReg =
+      H of Reg.region * color * weight
+    | L of Reg.region * color * weight
+    | N of Reg.region * color * weight * treeReg list
+    val simplify : regs -> bool -> regs
+    type regs
+    val printSmlExtRegs : regs -> string
+    val printPerlExtRegs : regs -> string
+    val printOneRegs : regs -> string
+    val printLispExtRegs : regs -> string
+    val printJsonExtRegs : regs -> string
+    val printBashExtRegs : regs -> unit
+    val getpos_progs : AstSML.progs -> ErrorKind.kind * Label.labels -> regs
+    val getExtRegLine : int -> treeReg list -> treeReg list
+    type fileReg
+    eqtype file
+    val delNegRegs : regs -> regs
+    val consWeightRegs : regs -> regs -> regs * regs
+    datatype color = Blue | Green | Orange | Purple | Red | Yellow
+    val checkSimRegs : regs -> regs -> bool
+    val checkSameRegs : regs -> regs -> bool
+  end
+val it = (): unit
+> structure ExtReg : EXTREG
+val it = (): unit
+> signature ERROR =
+  sig
+    type times
+    val stripDummys : error -> error
+    val stripDummy : error -> error
+    val setT : error -> int -> error
+    val setSlices : AstSML.progs -> error list -> error list
+    val setSlice : AstSML.progs -> error -> error
+    val setS : error -> AstSML.progs -> error
+    val setRegs : error list -> bool -> error list
+    val setReg : error -> bool -> error
+    val setR : error -> ExtReg.regs -> error
+    val setM : error -> bool -> error
+    val setL : error -> Label.labels -> error
+    val setK : error -> ErrorKind.kind -> error
+    val setI : error -> id -> error
+    val setF : error -> Label.labels -> error
+    val setE : error -> id list -> error
+    val setD : error -> LongId.set -> error
+    val setB : error -> bool -> error
+    val sepsemsyn : error list -> error list * error list
+    val resetError : unit -> unit
+    val removeBasisSlice : string -> string
+    val recordSpeTreat : error list -> error list
+    val printOneXmlErrTuple :
+     error ->
+       string ->
+       bool ->
+       int -> string * string * string * string * string * string * ...
+    val printOneXmlErr : error -> string -> bool -> string
+    val printOneSmlErr :
+     error ->
+       bool ->
+       int -> string * string * string * string * string * string * string
+    val printOnePerlErr :
+     error ->
+       Id.assoc ->
+       bool ->
+       int -> string * string * string * string * string * string * string
+    val printOneLispErr :
+     error ->
+       Id.assoc ->
+       bool ->
+       int -> string * string * string * string * string * string * ...
+    val printOneJsonErr :
+     error ->
+       bool ->
+       int -> string * string * string * string * string * string * string
+    val printOneBashErr : error -> Id.assoc -> bool -> int -> unit
+    val orderErrors : error list -> error list
+    val mindone' : error list -> error -> error option * error list
+    val mindone : error list -> error -> error option * error list
+    val labelError :
+     error -> Label.labels -> Label.labels -> LongId.set -> error
+    val idToInt : id -> int
+    type id
+    val getT : error -> int
+    val getS : error -> AstSML.progs
+    val getR : error -> ExtReg.regs
+    val getNewErrors : error list -> error list -> error list
+    val getMinErrors : error list -> error list
+    val getMergedErrors : error list -> error list
+    val getM : error -> bool
+    val getL : error -> Label.labels
+    val getK : error -> ErrorKind.kind
+    val getI : error -> id
+    val getF : error -> Label.labels
+    val getErrorList : error list -> int -> error option
+    val getError : unit -> id
+    val getE : error -> id list
+    val getD : error -> LongId.set
+    val getB : error -> bool
+    val freshError : unit -> id
+    type export'
+    type export
+    type error
+    val dummyId : id
+    val consWeight : error list -> error list -> error list
+    val consPreError :
+     id ->
+       Label.labels -> LongId.set -> ErrorKind.kind -> Label.labels -> error
+    val consErrorNoRB :
+     id -> Label.labels -> LongId.set -> ErrorKind.kind -> error
+    val consErrorNoR :
+     id ->
+       Label.labels -> LongId.set -> ErrorKind.kind -> Label.labels -> error
+    val consError :
+     id ->
+       Label.labels ->
+       LongId.set ->
+       ErrorKind.kind ->
+       Label.labels ->
+       bool -> id list -> int -> AstSML.progs -> ExtReg.regs -> ...
+    val alreadyone : error list -> error -> bool
+  end
+val it = (): unit
+> structure Error : ERROR
+val it = (): unit
+> signature TAG =
+  sig
+    val getTitle : string -> string
+    val getSpace : unit -> string
+    val getETag : unit -> string
+    val getBreakTag : unit -> string
+    val getBTag : ExtReg.color -> int -> int -> string
+  end
+val it = (): unit
+> structure Tag : TAG
+structure Tag2 : TAG
+val it = (): unit
+> signature HTML =
+  sig
+    val transformErrSl :
+     string ->
+       string option ->
+       Error.error list ->
+       Id.assoc ->
+       AstSML.progs -> bool -> bool -> int -> (string -> string) -> unit
+    val setstylecss : int -> unit
+  end
+val it = (): unit
+> functor Html (TA : TAG) : HTML
+val it = (): unit
+> signature JsonParser =
+  sig
+    val parseTestControlFile : string -> string list
+    val parseTest : string -> error
+    type oneerror
+    type error
+  end
+val it = (): unit
+> structure JsonParser : JsonParser
+val it = (): unit
+> signature SEARCHSPACE =
+  sig
+    type searchSpace
+    val getSuccess : searchSpace -> Label.labels list
+    val getOneFilter : searchSpace -> (Label.labels * searchSpace) option
+    val flatLabs : Label.labels -> searchSpace
+    val emSearchSpace : searchSpace
+    val buildFilters :
+     Label.labels -> Label.labels -> searchSpace -> bool -> searchSpace
+    val addSuccess : Label.labels -> searchSpace -> searchSpace
+  end
+val it = (): unit
+> structure SearchSpace : SEARCHSPACE
+structure SearchSpace' : SEARCHSPACE
+structure SearchSpaceRbs : SEARCHSPACE
+val it = (): unit
+> signature STATE =
+  sig
+    val updateStateTv : state -> Ty.typeVar -> stTv -> unit
+    val updateStateTn : state -> Ty.typenameVar -> stTn -> unit
+    val updateStateTf : state -> Ty.typeFunctionVar -> stTf -> unit
+    val updateStateSq : state -> Ty.rowVar -> stSq -> unit
+    val updateStateRt : state -> Ty.fieldVar -> stRt -> unit
+    val updateStateOr : state -> Ty.idor -> stOr -> unit
+    val updateStateLt : state -> Ty.labelVar -> stLt -> unit
+    val updateStateGe : state -> Ty.typeVar -> stGe -> unit
+    val updateStateFr : state -> Id.labelledId -> unit
+    val updateStateFo : state -> Id.labelledId -> unit
+    val updateStateEv : state -> int -> stEv -> unit
+    val updateStateEq : state -> Ty.equalityTypeVar -> stEq -> unit
+    val updateStateCl : state -> ClassId.classvar -> stCl -> unit
+    val updateRecOne :
+     state ->
+       stRc -> Env.oneConstraint list * ErrorKind.recerr ExtLab.extLab list
+    val updateRec :
+     state -> Env.oneConstraint list * ErrorKind.recerr ExtLab.extLab list
+    val updateDatCons : state -> Id.labelledId -> Env.env -> unit
+    type state
+    type stTv
+    type stTn
+    type stTf
+    type stSq
+    type stRt
+    type stRc
+    type stOr
+    type stNa
+    type stLt
+    type stGe
+    type stEv
+    type stEq
+    type stCl
+    type stAr
+    val replaceStateEq : state -> Ty.equalityTypeVar -> stEq -> unit
+    val remEnvFromState :
+     bool -> Ty.typeVar list * stNa list -> state -> unit
+    type rcty
+    val pushEnvToState :
+     bool -> Env.env -> state -> Ty.typeVar list * stNa list
+    val printStateEq : state -> string
+    val printState : state -> string
+    type paths
+    type path
+    val isInGe : state -> Ty.typeVar -> bool
+    val isEmpty : state -> bool
+    val isAName : Ty.typename -> state -> bool
+    val initState : unit -> state
+    val hasEnvVar : state -> bool
+    val getValStateTv : state -> Ty.typeVar -> stTv option
+    val getValStateTn : state -> Ty.typenameVar -> stTn option
+    val getValStateTf : state -> Ty.typeFunctionVar -> stTf option
+    val getValStateSq : state -> Ty.rowVar -> stSq option
+    val getValStateRt : state -> Ty.fieldVar -> stRt option
+    val getValStateOr : state -> Ty.idor -> stOr option
+    val getValStateLt : state -> Ty.labelVar -> stLt option
+    val getValStateIdVa :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extVar * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdTy :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extType * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdTv :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.explicitTypeVar * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdSt :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extstr * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdSi :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extsig * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdOc :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extovc * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateIdFu :
+     state ->
+       Id.lid ->
+       bool ->
+       (Env.extfun * bool) option *
+     (Id.labelledId * Env.env ExtLab.extLab) option * bool
+    val getValStateGe : state -> Ty.typeVar -> stGe option
+    val getValStateFree : state -> (Id.labelledId * bool) list
+    val getValStateEv : state -> int -> stEv option
+    val getValStateEq : state -> Ty.equalityTypeVar -> stEq option
+    val getValStateCl : state -> ClassId.classvar -> stCl option
+    val getValStateAr : state -> Id.lid -> Label.label option -> stAr
+    val getDomTv : state -> OrdSet.ordset
+    val getDomGe : state -> OrdSet.ordset
+  end
+val it = (): unit
+> signature FILTER =
+  sig
+    val toString : filters -> string
+    val testtodos : filters -> Label.labels -> bool
+    val testtodo : filters -> Label.label -> bool
+    val testonetodos : filters -> Label.labels -> bool
+    datatype state = BIND | IN | OUT
+    val getStateLabs : filters -> Label.labels -> state
+    val getStateLab : filters -> Label.label -> state
+    val filtertodos : filters -> Label.labels -> Label.labels
+    type filters
+    type filter
+    val cons : filter -> filter -> filters
+    val addLab : filters -> Label.label -> filters
+  end
+val it = (): unit
+> structure Filter : FILTER
+val it = (): unit
+> signature UNIF =
+  sig
+    datatype user = DBENUM | ENUM | MIN of Error.error
+    val unif : Env.env -> Filter.filters -> user -> error
+    datatype error = Error of Error.error * S.state | Success of S.state
+    structure S : STATE
+  end
+val it = (): unit
+> signature FRESH =
+  sig
+    type state
+    val freshTypenameVar : Ty.typenameVar -> state -> Ty.typenameVar
+    val freshTypeVar : Ty.typeVar -> state -> Ty.typeVar
+    val freshTypeFunctionVar :
+     Ty.typeFunctionVar -> state -> Ty.typeFunctionVar
+    val freshRowVar : Ty.rowVar -> state -> Ty.rowVar
+    val freshLabVar : Ty.labelVar -> state -> Ty.labelVar
+    val freshIdOr : Ty.idor -> state -> Ty.idor
+    val freshFieldVar : Ty.fieldVar -> state -> Ty.fieldVar
+    val freshEnvVar : int -> state -> int
+    val finitState : unit -> state
+  end
+val it = (): unit
+> structure Fresh : FRESH
+val it = (): unit
+> functor Unif (S : STATE) : UNIF
+val it = (): unit
+> structure StateEnv : STATE
+val it = (): unit
+> signature MIN =
+  sig
+    val minimizeallkind :
+     Error.error list ->
+       Env.envContextSensitiveSyntaxPair ->
+       AstSML.packs ->
+       VTimer.timer -> Error.export' option -> int -> Error.error list
+    val minimize :
+     Error.error ->
+       Env.envContextSensitiveSyntaxPair ->
+       AstSML.packs ->
+       VTimer.timer -> Error.export' option -> int -> Error.error * int
+  end
+val it = (): unit
+> structure Min : MIN
+val it = (): unit
+> functor Enum (SS : SEARCHSPACE) :
+  sig
+    val runEnum :
+     env * contextSensitiveSyntaxError ->
+       ERR.error list ->
+       SS.searchSpace ->
+       int ->
+       VT.timer ->
+       AstSML.progs * Label.label * Id.assoc ->
+       (ERR.error list -> ...) option -> int -> ERR.error list * ...
+    val reorderFilters4 : 'a list -> 'a list
+    val reorderFilters3 : 'a list -> 'a list
+    val reorderFilters2 : 'a list -> 'a list
+    val reorderFilters1 : 'a -> 'a
+    val reorderFilters : 'a -> 'a
+    val printfilters : L.labels list -> string
+    val preEnum :
+     'a * E.oneContextSensitiveSyntaxError list ->
+       AstSML.progs * 'b * 'c -> ERR.error list * SS.searchSpace
+    val occtodo : L.labels list -> unit
+    exception occextodo
+    exception occexdone
+    val occdone : (L.labels * L.labels * 'a) list -> unit
+    val newFreeErr :
+     ('a * L.label) * bool -> VT.timer -> AstSML.progs * 'b * 'c -> ERR.error
+    val mintodo3' :
+     L.labels -> L.labels list -> L.labels -> L.labels list -> L.labels list
+    val mintodo3 :
+     L.labels -> L.labels list -> L.labels -> L.labels list -> L.labels list
+    val mintodo2 : L.labels -> L.labels list -> L.labels -> L.labels list
+    val mintodo1 : L.labels -> L.labels list -> L.labels -> L.labels list
+    val minone :
+     ERR.error list ->
+       ERR.error ->
+       Env.envContextSensitiveSyntaxPair ->
+       VTimer.timer ->
+       AstSML.progs * Label.label * Id.assoc ->
+       FI.filter -> L.labels * ERR.error option * ERR.error list
+    val minfilter : 'a -> 'a list -> 'a list
+    val minOne :
+     ERR.error list ->
+       ERR.error ->
+       Env.envContextSensitiveSyntaxPair ->
+       VTimer.timer ->
+       AstSML.progs * Label.label * Id.assoc ->
+       FI.filter -> (ERR.error list -> ...) option -> int -> L.labels * ...
+    val initEnum :
+     env * contextSensitiveSyntaxError ->
+       ERR.error list ->
+       SS.searchSpace ->
+       VT.timer ->
+       AstSML.progs * Label.label * Id.assoc ->
+       (ERR.error list -> ... -> ...) option ->
+       int -> ERR.error list * ERR.error list * ...
+    val flatset : L.labels -> L.labels list
+    val enumdisjoint : L.labels -> ERR.error list -> Label.labels option
+    val enum4 :
+     env * contextSensitiveSyntaxError ->
+       ERR.error list ->
+       SS.searchSpace ->
+       int -> AstSML.progs * Label.label * Id.assoc -> ERR.error list * bool
+    val enum :
+     env * contextSensitiveSyntaxError ->
+       ERR.error list ->
+       SS.searchSpace ->
+       int -> AstSML.progs * Label.label * Id.assoc -> ERR.error list * bool
+    val addFrees :
+     ERR.error list ->
+       (('a * L.label) * bool) list ->
+       VT.timer -> AstSML.progs * 'b * 'c -> ERR.error list * ERR.error list
+    val addFree :
+     ERR.error list ->
+       ('a * L.label) * bool ->
+       VT.timer -> AstSML.progs * 'b * 'c -> ERR.error list * ERR.error list
+    structure VT : VTIMER
+    structure U : UNIF
+    structure SE : STATE
+    structure S : SLICING
+    structure M : MIN
+    structure L : LABEL
+    structure I : ID
+    structure FI : FILTER
+    structure ERR : ERROR
+    structure EK : ERRORKIND
+    structure EH : ERROR_HANDLER
+    structure E : ENV
+    structure D : DEBUG
+    structure CD : LONGID
+  end
+val it = (): unit
+> signature SLICEROPTARGS =
+  sig
+    datatype ('a, 'b) opt_key_arg =
+      BASOP of int
+    | BCS of int
+    | DEV of bool
+    | FILEBAS of string
+    | FILEHTML of string
+    | FILEIN of string
+    | FILEJSON of string
+    | FILELISP of string
+    | FILEPERL of string
+    | ...
+    val optArg :
+     ('a, 'b) opt_key_arg list list ->
+       {bcs: bool,
+       dev: bool,
+       min: bool,
+       sol: int, tab: int, basOp: int, fileIn: string, fileBas: string, ...}
+  end
+val it = (): unit
+> structure SlicerOptArgs : SLICEROPTARGS
+val it = (): unit
+> signature TESTER =
+  sig
+    val vinnie : int -> unit
+    val timelimit : int ref
+    val testFolder : string ref
+    type 'a temptype
+    val slicing :
+     string ->
+       string list ->
+       Error.export ->
+       int -> bool -> bool -> bool -> bool -> int -> int -> int
+    val settimelimit : int -> unit
+    val setstylecss : int -> unit
+    val setsol : int -> unit
+    val setTabSize : int -> unit
+    val printsol : unit -> unit
+    val printTypables : unit -> unit
+    val notimelimit : int
+    val mytimelimit : int
+    val myfilehtml : string
+    val myfilebas : string ref
+    val listTests : unit -> unit
+    val gettimelimit : unit -> int
+    val getsol : unit -> int
+    val getTabSize : unit -> int
+    val getLastSlices : unit -> string list
+    val getLastRegs : unit -> ExtReg.regs list
+    val getLastMin : unit -> bool
+    val generateTests : int -> int -> unit
+    val error : JsonParser.error
+    val debuggingXML : string temptype
+    val debuggingSML : string temptype
+    val debuggingPERL : string temptype
+    val debuggingLISP : string temptype
+    val debuggingJSON : string temptype
+    val debuggingHTML :
+     Error.error list ->
+       AstSML.packs ->
+       bool ->
+       Error.times ->
+       Env.envContextSensitiveSyntaxPair ->
+       Label.label -> bool -> string -> bool -> int -> ...
+    val debuggingBASH : unit temptype
+    type 'a debug
+    val convertErrors : JsonParser.error -> string -> unit
+    val checktests : int list -> unit
+  end
+val it = (): unit
+> structure Tester : TESTER
+val it = (): unit
+> signature SLICER =
+  sig
+    val smltesstr : string -> OS.Process.status
+    val smlteslight :
+     ('a, 'b) SlicerOptArgs.opt_key_arg list -> OS.Process.status
+    val smltesdev :
+     ('a, 'b) SlicerOptArgs.opt_key_arg list -> OS.Process.status
+    val smltes :
+     {bcs: bool,
+       dev: bool,
+       min: bool,
+       sol: int, tab: int, basOp: int, fileIn: string, fileBas: string, ...}
+       -> OS.Process.status
+    val smlnjEntryPoint : string * string list -> OS.Process.status
+    val smlTesStrArgs : string -> OS.Process.status
+    val setWebDemo : bool -> unit
+    datatype ('a, 'b) opt_key_arg =
+      BASOP of int
+    | BCS of int
+    | DEV of bool
+    | FILEBAS of string
+    | FILEHTML of string
+    | FILEIN of string
+    | FILEJSON of string
+    | FILELISP of string
+    | FILEPERL of string
+    | ...
+    val optArg :
+     ('a, 'b) opt_key_arg list list ->
+       {bcs: bool,
+       dev: bool,
+       min: bool,
+       sol: int, tab: int, basOp: int, fileIn: string, fileBas: string, ...}
+    val listtests : bool -> unit
+    val generateTests : int -> int -> unit
+    val error : JsonParser.error
+    val convertErrors : JsonParser.error -> string -> unit
+    val commslicerp :
+     string ->
+       string list ->
+       string ->
+       string -> string -> string -> string -> int -> int -> int -> unit
+  end
+val it = (): unit
+> structure Slicer : SLICER
+val it = (): unit
+> structure Args : SLICEROPTARGS
+structure EH : ERROR_HANDLER
+val printArgs = fn: string list -> unit
+val printName = fn: string -> unit
+val genslicer = fn: unit -> unit
+val myslicer = fn: unit -> unit
+val slicerGen = fn: string list -> 'a -> OS.Process.status
+val slicerPoly = fn: unit -> 'a
+val slicerpp = fn: unit -> OS.Process.status
+val it = (): unit
+> val it = (): unit
+> val it = (): unit
+> cc -o skalpel skalpel.o -lpolymain -lpolyml
+rm skalpel.o
+mkdir -p bin
+mv skalpel bin/skalpel
+mv RunSlicer.sml.original RunSlicer.sml
