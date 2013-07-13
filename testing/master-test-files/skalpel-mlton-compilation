@@ -1,0 +1,41 @@
+echo "local" > sources.mlb
+cat build-files/mlton-libraries >> sources.mlb
+cat build-files/sources.tes >> sources.mlb
+echo "in" >> sources.mlb
+cat build-files/exported-structures >> sources.mlb
+echo "mlton-control.sml" >> sources.mlb
+echo "end" >> sources.mlb
+mllex  parse/ML.lex
+
+Number of states = 464
+Number of distinct rows = 338
+Approx. memory size of trans. table = 348816 bytes
+mlyacc parse/ML.grm
+2 shift/reduce conflicts
+sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
+mv parse/ML.grm.sml.tmp parse/ML.grm.sml
+mllex  parse/MLB.lex
+
+Number of states = 89
+Number of distinct rows = 59
+Approx. memory size of trans. table = 7611 bytes
+mlyacc parse/MLB.grm
+start symbol used on the rhs of 3 rules
+mv parse/ML.lex.sml parse/ML-mlton.lex.sml
+mv parse/ML.grm.sml parse/ML-mlton.grm.sml
+mv parse/ML.grm.sig parse/ML-mlton.grm.sig
+mv parse/MLB.lex.sml parse/MLB-mlton.lex.sml
+mv parse/MLB.grm.sml parse/MLB-mlton.grm.sml
+mv parse/MLB.grm.sig parse/MLB-mlton.grm.sig
+cp mlton-control.sml.in mlton-control.sml
+cp RunSlicer.sml RunSlicer.sml.original
+sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with MLton on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
+mv RunSlicer.sml.tmp RunSlicer.sml
+echo "val _ = slicerpp ();" >> mlton-control.sml
+mkdir -p bin
+mlton -prefer-abs-paths true -show-def-use skalpel.du -output bin/skalpel sources.mlb
+Warning: /u1/pg/jp95/software-64/mlton-20100608/build/lib/sml/smlnj-lib/JSON/json.lex.sml 20.6.
+  Declaration is not exhaustive.
+    missing pattern: NONE
+    in: SOME (w, _) = Word.scan StringCvt.HEX Substring.getc digits
+mv RunSlicer.sml.original RunSlicer.sml
