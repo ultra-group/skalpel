@@ -131,45 +131,66 @@ echo -e "The most recent commit message of the skalpel repository is directly be
 
 (cd $repoDir; git log | head -n 6 >> $mailFile)
 
-echo -e "\n\n"
+echo -e "\n" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
 echo -e "*                  Analysis Engine Compilation Diff (MLton)                  *" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
+diffOutput=`diff $masterDir/$compMltonTestMasterFilename $compilationLog`
+
+if [ "${diffOutput}" = "" ]
+then
+echo "No difference between master file and output generated."  >> $mailFile
+else
 diff $masterDir/$compMltonTestMasterFilename $compilationLog >> $mailFile
+fi
 
-echo -e "\n\n"
+
+echo -e "\n" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
 echo -e "*                 Analysis Engine Compilation Diff (Poly/ML)                 *" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
+diffOutput=`diff $masterDir/$compPolyTestMasterFilename $polyCompilationLog`
+
+if [ "${diffOutput}" = "" ]
+then
+echo "No difference between master file and output generated."  >> $mailFile
+else
 diff $masterDir/$compPolyTestMasterFilename $polyCompilationLog >> $mailFile
+fi
 
-echo -e "\n\n"
+echo -e "\n" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
-echo -e "*                 Analysis Engine Compilation Log (Poly/ML)                  *" >> $mailFile
+echo -e "*                          Analysis Engine Version                           *" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
-
-cat $polyCompilationLog >> $mailFile
-
-echo -e"\n\n"
-echo -e "******************************************************************************" >> $mailFile
-echo -e "*                  Analysis Engine Compilation Log (MLton)                   *" >> $mailFile
-echo -e "******************************************************************************" >> $mailFile
-
-echo -e "\n\n****************************************\n    Analysis Engine Compilation Log         \n****************************************" >> $mailFile
-
-cat $compilationLog >> $mailFile
-
-echo -e "\n\n****************************************\n      Analysis Engine Version          \n****************************************" >> $mailFile
+echo -e ""  >> $mailFile
 
 echo `$skalpelBin -v` >> $mailFile
 
-echo -e "\n\n******************************\n  Analysis Engine Tests Diff     \n******************************" >> $mailFile
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                         Analysis Engine Tests Diff                         *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
+diffOutput=`diff $masterDir/$analysisTestMasterFilename $analysisTestsLog`
+
+if [ "${diffOutput}" = "" ]
+then
+echo "No difference between master file and output generated."  >> $mailFile
+else
 diff $masterDir/$analysisTestMasterFilename $analysisTestsLog >> $mailFile
+fi
 
-echo -e "\n\n******************************\n  Website Broken Links Diff   \n******************************" >> $mailFile
+
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                         Website Broken Links Diff                          *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
 # check that the webserver produced a log
 if [ -f "$outputDir/$deadLinksTestFilename" ]
@@ -179,11 +200,35 @@ else
     echo "An error has been detected: The webserver has not produced a log of broken website links." >> $mailFile
 fi
 
-echo -e "\n\n******************************\n  Analysis Engine Tests Log     \n******************************" >> $mailFile
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                  Analysis Engine Compilation Log (MLton)                   *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
+
+cat $compilationLog >> $mailFile
+
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                 Analysis Engine Compilation Log (Poly/ML)                  *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
+
+cat $polyCompilationLog >> $mailFile
+
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                         Analysis Engine Tests Log                          *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
 cat $analysisTestsLog >> $mailFile
 
-echo -e "\n\n******************************\n  Website Broken Links Log   \n******************************" >> $mailFile
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "*                          Website Broken Links Log                          *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
 
 # check that the webserver produced a log
 if [ -f "$outputDir/$deadLinksTestFilename" ]
