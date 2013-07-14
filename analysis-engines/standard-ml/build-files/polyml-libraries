@@ -1,4 +1,4 @@
-val prefix   = "/usr/lib/mlton/sml";
+val prefix   = "/u1/pg/jp95/software-64/mlton-20100608/build/lib/sml";
 
 use (prefix ^ "/smlnj-lib/Util/ord-key-sig.sml");
 use (prefix ^ "/smlnj-lib/Util/ord-map-sig.sml");
