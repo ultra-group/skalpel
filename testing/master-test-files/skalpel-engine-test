@@ -1,8 +1,32 @@
 [begin database checking]
+equality-types/single-tick-in-value-declarations.sml OK
+equality-types/datatype-constructor-typable-but-typename-not.sml OK
+equality-types/datatype-argument-test.sml OK
+equality-types/function-type-test.sml OK
+equality-types/ref-test.sml OK
+equality-types/non-eqtype-in-signature-used-outside-as-eqtype.sml OK
+equality-types/functor-with-signature-of-structure-visible.sml OK
+equality-types/functor-signature-test.sml more than OK
+equality-types/op-equals.sml OK
+equality-types/signature-equality-constraint.sml OK
+equality-types/functor-with-tuples.sml OK
+equality-types/function-type-specified-as-equality.sml OK
+equality-types/datatype-constructor-in-structure-with-sig.sml OK
+equality-types/burried-constraints.sml OK
+equality-types/argument-test.sml OK
+equality-types/anonymous-functions-with-arrow-type.sml OK
+equality-types/basic-anonymous-function.sml OK
+equality-types/opaque-signature-illegal-equality-test.sml more than OK
+equality-types/eqtype-vs-real-cross-real.sml OK
+equality-types/anonymous-function-with-type-annotation.sml OK
+equality-types/opaque-and-translucent-signatures.sml OK
+equality-types/where-clause-clash-with-sig.sml OK
+equality-types/type-then-fully-defined-in-structure.sml OK
+equality-types/basic-eqtype-translucent.sml OK but slower
 equality-types/tuple-with-function-call-inside.sml OK
 equality-types/basic-tuple-example.sml OK
 equality-types/basic-equality-type-in-signature.sml more than OK
-equality-types/function-return-types.sml OK
+equality-types/function-return-types.sml OK but slower
 equality-types/basic-real-greater-than-real.sml OK
 equality-types/basic-real-equals-real.sml OK
 equality-types/binding-of-another-binding.sml OK but slower
@@ -188,7 +212,7 @@ numbered/code175.sml OK
 PROBLEM: numbered/code176.sml: TO CHECK!!!!
 numbered/code177.sml OK
 numbered/code178.sml OK
-numbered/code179.sml OK
+PROBLEM: numbered/code179.sml: a slice has not been found (Error UID = 0)
 numbered/code180.sml OK
 numbered/code181.sml OK
 numbered/code182.sml OK
@@ -542,13 +566,13 @@ PROBLEM: numbered/code562.sml: TO CHECK!!!!
 numbered/code563.sml OK
 numbered/code564.sml OK
 numbered/code565.sml OK
-[longest test: numbered/code531.sml (5401)]
-[OK      tests: 353]
+[longest test: numbered/code287.sml (5439)]
+[OK      tests: 376]
 [deps    tests: 14]
-[failing tests: 50]
+[failing tests: 51]
 [tocheck tests: 125]
 [todo    tests: 0]
 [dead    tests: 1]
 [format  tests: 0]
 [sol     tests: 0]
-[end database checking (276224ms)]
+[end database checking (406297ms)]
