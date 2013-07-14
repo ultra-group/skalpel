@@ -111,11 +111,6 @@ signature TESTER = sig
     val getLastSlices : unit   -> string list
     val getLastMin    : unit   -> bool
 
-    (* TO HANDLE THE DIFFERENT BRANCHES *)
-    val setsol        : int    -> unit
-    val getsol        : unit   -> int
-    val printsol      : unit   -> unit
-
     (* STYLE OF THE HTML PAGES GENERATED *)
     val setstylecss   : int    -> unit
 

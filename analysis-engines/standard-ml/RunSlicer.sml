@@ -59,7 +59,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Tue Jul  9 18:13:32 BST 2013. Skalpel version: 306fd5174ade79cd2d1cc99cf9c4c1c72a27d769"
+val SKALPEL_VERSION = "Built with MLton on Sat Jul 13 20:21:50 BST 2013. Skalpel version: 9773a19efca456abf832734d4927f5d033971e05"
 
 (** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -88,7 +88,7 @@ fun finishedPerlMessage2 msg =
       | _  => finishedPerlM ("slicer encountered an internal bug, " ^ msg)
 
 
-(* takes the basis flag and a file to be used as the basis*)
+(* takes the basis flag and a file to be used as the basis *)
 fun getFileBasAndNum nenv filebas =
     (OS.FileSys.fileSize filebas;
      case nenv of
@@ -96,7 +96,7 @@ fun getFileBasAndNum nenv filebas =
        | _ => (nenv, ""))
     handle OS.SysErr (str, opt) => (case nenv of 2 => 1 | _ => nenv, "")
 
-(* called by preslicer' if Tester.slicergen returns NONE*)
+(* called by preslicer' if Tester.slicergen returns NONE *)
 fun getDebugProblem () =
     let fun f () = "PROBLEM!\n"
     in (f, f, f, f, f, f)
@@ -105,6 +105,7 @@ fun getDebugProblem () =
 (* remove this when test database is converted to json format *)
 
 fun convertErrors currentError newName = Tester.convertErrors currentError newName
+
 fun generateTests min max = Tester.generateTests min max
 
 (* pass false to get the range of tests (eg [1-565])
@@ -220,8 +221,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading (List.hd filesin)
 
 	(* get various information from Tester, such as solution number *)
-	val tmpsol = Tester.getsol ()
-	val _      = Tester.setsol sol
+	val tmpsol = 9
 	val tmptab = Tester.getTabSize ()
 	val _      = Option.map (fn t => Tester.setTabSize t) tab
 	val tmptm  = Tester.gettimelimit ()
@@ -246,7 +246,6 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	(* if the slicer didn't fail, print the lisp/perl messages *)
 	val fmlisp = if bfm then finishedLispMessage1 msg else finishedLispMessage2 msg
 	val fmperl = if bfm then finishedPerlMessage1 msg else finishedPerlMessage2 msg
-	val _ = Tester.setsol tmpsol
 	val _ = Option.map (fn _ => Tester.setTabSize tmptab) tab
 	val _ = Tester.settimelimit tmptm
 
@@ -264,7 +263,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
     in ()
     end
 
-(* calls commslicerp', if we are not developing (¬dev) then the error is
+(* calls commslicerp', if we are not developing (not dev) then the error is
  * handled, otherwise we leave the error so we can debug *)
 fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
     if dev
@@ -274,13 +273,13 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
 (* called by the emacs interface; sets no tab and uses the solution from sol in
  * utils/Solution.sml *)
 fun commslicerp  filebas filesin filehtml filexml filesml filelisp fileperl nenv time basisoverloading =
-    slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl nenv time NONE (Tester.getsol ()) true false false 1 basisoverloading
+    slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl nenv time NONE 9 true false false 1 basisoverloading
 
 (* the full version of the slicer function with all arguments *)
 fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp, fileperl, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
     let
 	val mtl = Int.fromLarge Tester.mytimelimit
-	val mso = Tester.getsol ()
+	val mso = 9
 	val nop = Int.fromString  basop         handle Overflow => SOME 2
 	val n   = Option.valOf    nop           handle Option   => 2
 	val top = Int.fromString  tlim          handle Overflow => SOME mtl

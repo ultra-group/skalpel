@@ -63,7 +63,6 @@ val analysingBasis : bool ref = ref false
  * follows:
  * \f[\METAunifterm \in \SETunifterm ::= \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\METAcsenv^\prime} \mid \CONSunifsuccess \mid \CONSuniferror{\METAerror}\f]
  *)
-
 datatype error = Success of S.state
                | Error   of ERR.error * S.state
 
@@ -2185,11 +2184,12 @@ fun unif env filters user =
 		 else foch (ERR.consPreError ERR.dummyId labs deps EK.Circularity stts) (c (var1, sem1)) vars depth lab
 	    else occursGenList c var1 var2 sem1 labs stts deps vars depth lab fget fdecomp foc
 
+
 	(** The function which checks for circularity errors.
+	 * coccValue occtyList depth myinformation.
 	 * We can see this concept being represented in the theory in rule \f$\unifruleuacca\f$ of the theory below. Note that a side condition of this rule is that \f$\METAvar \neq \METAcsterm \wedge y = \METAunifstatetyCal(x^{\METAcdepset}) \wedge \METAvar \notin \MEMdom{\METAunifstatetyCal}\f$.
 	 * \f[\unifruleuacca\ \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\csou{\METAvar}{\METAcsterm}}  \fra  \CONSuniferror{\lag\CONSuniferrorcircularity,\MEMdepsetSYMB(y)\rag}\text{, if } \METAvar\in\MEMvarsetSYMB(y)\backslash \SETcsgenenv \wedge\ \MEMundepSYMB(y)\ {\neq}\ v\f]
-	 * This function is called by #fsimplify while solving equality constraints.
-	 *)
+	 * This function is called by #fsimplify while solving equality constraints. *)
 	fun occurs c [] n l = true (* true because we have to add c to the state *)
 	  | occurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTypeVar  S.getValStateTv decomptyty  occurs
 	  | occurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqRowVar S.getValStateSq decomptysq  occurs
@@ -3671,7 +3671,7 @@ fun unif env filters user =
 		       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type variable exists in the state, recursing on new constraints.")
 		       (* get the extra labels that might be in the state ge so that the equality type error has all the labels in place *)
 		       val _ = case ty' of T.TYPE_DEPENDANCY(T.TYPE_VAR(tv', _, _, T.EQUALITY_TYPE_VAR eqtv'),_,_,_) =>
-					   (* here we want to take the labels that are associated with mapping tv' |-> tv ∈ StateGe and put then in eqtv' *)
+					   (* here we want to take the labels that are associated with mapping tv' |-> tv \in StateGe and put then in eqtv' *)
 					   (case S.getValStateGe state tv'
 					    of SOME (typeVarGe, labsGe, sttsGe, depsGe)  =>
 					     (* put labsGe in eqtv' mapping in StateEQ *)
@@ -4398,15 +4398,15 @@ fun unif env filters user =
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: an equality type variable α is being assigned to a
-	   *                list of equality type variables β. This happens in the
+	   * pattern match: an equality type variable A is being assigned to a
+	   *                list of equality type variables B. This happens in the
 	   *                event of solving records, where the equality type variable
 	   *                for the record as a whole depends on what status values the
 	   *                equaltiy type variables for each record field turn out to be.
 	   *
-	   * action: if α ∉ dom state, then insert mapping α -> EQUALITY_TYPE_VAR_LIST(β).
-	   *         if α -> γ ∈ state for some EQUALITY_TYPE_STATUS γ, do nothing.
-	   *         if α -> δ ∈ state for some other pattern δ, raise an exception.
+	   * action: if A \notin dom state, then insert mapping A -> EQUALITY_TYPE_VAR_LIST(B).
+	   *         if A ->  \in state for some EQUALITY_TYPE_STATUS C, do nothing.
+	   *         if A -> D \in state for some other pattern D, raise an exception.
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR_LIST recordInformation), ls, deps, ids)):: cs') l =
 	    let
@@ -4454,19 +4454,19 @@ fun unif env filters user =
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: an equality type variable α is being assigned to an
-	   *                equality type status β.
+	   * pattern match: an equality type variable A is being assigned to an
+	   *                equality type status B.
 	   *
 	   * action: we check if the equality type variable already exists in
 	   *         the state map. If it does not, we update the state map. If
 	   *         it is already listed in the state map as being dependant on
-	   *         an equality type status γ, then we check β against γ (if
+	   *         an equality type status C, then we check B against C (if
 	   *         they are different, an error is generated). If instead the
 	   *         equality type variable is listed in the state map as being
-	   *         dependant on another equality type variable δ, we replace
-	   *         the state map entry of α to be of equality type status β,
-	   *         then we generate a constraint where δ is of equaltiy type
-	   *         status β and include that constraint in the recursive
+	   *         dependant on another equality type variable D, we replace
+	   *         the state map entry of A to be of equality type status B,
+	   *         then we generate a constraint where D is of equaltiy type
+	   *         status B and include that constraint in the recursive
 	   *         constraint solving call.
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
@@ -4623,18 +4623,18 @@ fun unif env filters user =
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: two equality type variables α and β are constrained
+	   * pattern match: two equality type variables A and B are constrained
 	   * to be equal
 	   *
 	   * action: if the two equality type variables are actually the same
 	   * number, then recurse on the remaining constraints to be solved. If
-	   * β is not in the state map, then update the state so that β is
-	   * dependant on α. If β is in the state map and it's constrained to a
-	   * status γ, then create a constraint where α is constrained to
-	   * equalty type status γ, then recurse to solve this (and all other)
-	   * constraints. In the case where β exists in the state and is
-	   * constrained to some other equality type variable δ, we constrain α
-	   * to be dependant on δ and recurse to solve.
+	   * B is not in the state map, then update the state so that B is
+	   * dependant on A. If B is in the state map and it's constrained to a
+	   * status C, then create a constraint where A is constrained to
+	   * equalty type status C, then recurse to solve this (and all other)
+	   * constraints. In the case where B exists in the state and is
+	   * constrained to some other equality type variable D, we constrain A
+	   * to be dependant on D and recurse to solve.
 	   *
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, equalityTypeVar2 as T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l =
