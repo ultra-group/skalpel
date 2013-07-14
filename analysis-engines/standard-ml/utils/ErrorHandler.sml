@@ -18,23 +18,21 @@
  *  o Date:        25 May 2010
  *  o File name:   ErrorHandler.sml
  *  o Description: Defines the structure ErrorHandler which has signature
- *      ERROR_HANDLER, to deal with exceptions.
+ *      ERRORHANDLER, to deal with exceptions.
  *      Note that the SML/NJ structure LibBase does the job.
  *)
 
+(** Has the signature ERROR_HANDLER, handles errors occurring when running Skalpel. *)
+structure ErrorHandler :> ERROR_HANDLER =
+struct
 
-structure ErrorHandler :> ERROR_HANDLER = struct
-
-(* for general kinds of problems, eg something which should be
-   >= 0 is actually -1 *)
+(** Raised when a problem is encountered during execution of Skalpel. *)
 exception DeadBranch of string
 
-(* for exceptions which are thrown as something isn't implemented yet *)
+(** Used when we reach code for features we do not yet handle. *)
 exception TODO of string
 
+(** Prints the given string argument, then returns it. *)
 fun msg st = (print st; st)
-
-(* raises the DeadBranch exception with the given string *)
-fun throw st = raise DeadBranch st
 
 end

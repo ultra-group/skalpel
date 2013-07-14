@@ -21,13 +21,10 @@
  *      exceptions.
  *)
 
-
+(** The signature ERROR_HANDLER, used by the structure refstruct{ErrorHandler}. *)
 signature ERROR_HANDLER = sig
 
-    (* general problems *)
     exception DeadBranch of string
-
-    (* for exceptions we throw when we are still developing something *)
     exception TODO of string
 
     val msg : string -> string

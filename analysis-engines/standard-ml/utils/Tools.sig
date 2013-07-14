@@ -27,7 +27,7 @@
  *      functions to deal with lists.
  *)
 
-
+(** The signature TOOLS, used by the structure refstruct{Tools}. *)
 signature TOOLS = sig
 
     val isin      : ''a      -> ''a list -> bool

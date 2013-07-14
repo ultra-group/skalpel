@@ -21,7 +21,7 @@
  *      of the functions that serve as interface with the slicer.
  *)
 
-
+(** The signature SLICER, used by the structure refstruct{Slicer}. *)
 signature SLICER = sig
 
     (* remove this when the test database is converted to json format *)

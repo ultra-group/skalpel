@@ -1,6 +1,4 @@
 utils/SymbSlice.sml
-utils/Solution.sig
-utils/Solution.sml
 utils/Tools.sig
 utils/Tools.sml
 utils/Debug.sig

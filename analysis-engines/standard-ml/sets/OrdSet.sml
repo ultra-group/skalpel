@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -29,16 +23,7 @@
 
 structure OrdSet :> ORDSET = struct
 
-(*structure S = IntCBTSet
-structure S = IntCBTHCSet
-structure S = IntCBTHCSet2
-structure S = IntCBTHCSet3*)
-
-(*structure S = IntListSet*)
 structure S = BinarySetFn (OrdKey)
-(*structure S = SplaySetFn (OrdKey)*)
-
-(* val debugString = S.debugString *)
 
 (* type declarations *)
 type elt     = S.item
@@ -47,14 +32,10 @@ type ordsets = S.set list
 type label   = elt
 type labels  = ordset
 
-
 (* Printing *)
-
-
 fun printsetgen xs f = "[" ^ #1 (S.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 fun printelt l = Int.toString l
 fun toString set = printsetgen set printelt
-
 
 (* label values and functions *)
 val dummylab = 0
@@ -76,6 +57,7 @@ val toList    = S.listItems
 (* typical set funtions *)
 fun delete x set = S.delete (set, x) handle LibBase.NotFound => set
 
+(** Returns the first element in a set *)
 fun getfirst set = S.find (fn _ => true) set
 
 fun remfirst set =
@@ -86,26 +68,37 @@ fun remfirst set =
 	 | SOME x => (SOME x, delete x set)
     end
 
+(** Tests whether a set has only one element.
+ * \returns True if the set only has one element, false otherwise. *)
 fun isSingle ll = length ll = 1
 
+(** Given two sets, tests whether they are equal.
+ * \returns True if the sets are equal, false otherwise. *)
 fun equal set1 set2 = S.equal (set1, set2)
 
+(** Unions two sets. *)
 fun concat set1 set2 = S.union (set1, set2)
 
 fun concatop setop set = case setop of NONE => set | SOME x => S.union (x, set)
 
 fun concats xs = List.foldr (fn (x, xs) => concat x xs) S.empty xs
 
+(* Given a value and a set, will add a value to that set. *)
 fun cons x set = S.add' (x, set)
 
 fun ord xs = S.addList (S.empty, xs)
 
+(* Calculates the intersection of two sets. *)
 fun inter set1 set2 = S.intersection (set1, set2)
 
 fun interList list set = toList (inter (ord list) set)
 
+(** Given two sets, will test that the first set is a subset of the second.
+ * \returns True if the first set is a subset of the second, false otherwise. *)
 fun subseteq set1 set2 = S.isSubset (set1, set2)
 
+(** Given two sets, will test that the first set is a scrict subset of the second.
+ * \returns True if the first set is a scrict subset of the second, false otherwise. *)
 fun subset set1 set2 = S.isSubset (set1, set2) andalso S.numItems set1 < S.numItems set2 (*not (S.equal (set1, set2))*)
 
 (* it is true is one of the element of the second argument is a subseteq of the first argument *)
@@ -117,12 +110,8 @@ fun subseteqin y []        = false
   | subseteqin y [x]       = if subseteq y x then true else false
   | subseteqin y (x :: xs) = if subseteq y x then true else subseteqin y xs
 
-(**
-  param e: 'a
-  param le: 'a list
-  returns b: boolean
-  such that b iff e in le
-*)
+(** Given a value and a set will check whether the value is a member of the set.
+ * \returns True if the element is a member of the set, false otherwise. *)
 fun isin x set = S.member (set, x)
 
 (**
@@ -133,19 +122,22 @@ fun isin x set = S.member (set, x)
   and forall l' in lll, l' < l
   and forall l' in llr, l' >= l
 *)
+(** Splits a set into two sets, based on a value given as an argument.
+ * Given a value V and a set, will return a pair of sets - the values
+ * in the set which are greater than or equal to V, and the values in
+ * the set which are less than V. *)
 fun splitList x set = S.partition (fn y => case S.Key.compare (x, y) of
 					       LESS    => false
 					     | EQUAL   => false
 					     | GREATER => true) set
 
-(**
-  param ll1: int list
-  param ll2: int list
-  returns ll: int list
-  such that ll2 \ ll1 = ll
-*)
+(** Given two sets s1 and s2, with return s2 \ s1. *)
 fun difference set1 set2 = S.difference (set2, set1)
 
+(** Given two sets, will check whether they are disjoint.
+ * \returns True if the sets given in the arguments are disjoint,
+ * false otherwise.
+ *)
 fun disjoint set1 set2 = S.isEmpty (S.intersection (set1, set2))
 
 fun isinone l ll = isin l ll andalso length ll = 1

@@ -21,25 +21,15 @@
  *                 closing of comments and quotations.
  *)
 
-
-(*SKALPEL-USE Region.sig*)
-(*SKALPEL-SPEC structure Reg : REG*)
-
+(** The signature COMMENT, used by the structure refstruct{Comment}. *)
 signature COMMENT = sig
 
-    (*? This is a basic structure which contains two stacks, one for
-       comments and the other for quotations. The usual functions for
-       use with stacks are involved here: ope (push), close (pop),
-       isClosed (is stack empty?), reset (clear stack), getTop (peak). ?*)
-
-    (* The below are for comment backets *)
     val ope      : Reg.pos -> unit
     val close    : unit    -> unit
     val isClosed : unit    -> bool
     val reset    : unit    -> unit
     val getTop   : unit    -> Reg.pos option
 
-    (* The below are for quotations *)
     val opeQ      : Reg.pos -> unit
     val closeQ    : unit    -> unit
     val isClosedQ : unit    -> bool

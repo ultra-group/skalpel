@@ -21,7 +21,7 @@
  *      the functor Unif that contains our unification algorithm.
  *)
 
-
+(** The signature UNIF, used by the structure refstruct{Unif}. *)
 signature UNIF = sig
 
     structure S : STATE

@@ -130,7 +130,7 @@ gen-poly-sources:
 #                          Extra tools (e.g. webdemo)                          #
 ################################################################################
 
-mlton-bin-webdemo: mlton-base
+mlton-bin-webdemo: gen-mlb-sources mlton-base
 	echo "val _ = Slicer.setWebDemo true;" >> mlton-control.sml
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 	mkdir -p bin
@@ -151,10 +151,11 @@ sml-tes-deps:
 	cat Makefile | sed "s/^\(# END  : ml-makedepend\)/\tmake smlnj-bin\n\1/" > tmp-makefile
 	mv tmp-makefile Makefile
 
-mlton-profile: mlton-base
+mlton-profile: gen-mlb-sources mlton-base
 	echo "val _ = slicerpp ();" >> mlton-control.sml
 	mlton -verbose 3 -profile ${MLTONPROFOP} -profile-branch true -profile-stack true -profile-val true sources.mlb
-	./sources -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
+	mv sources bin/skalpel-profiling
+	./bin/skalpel-profiling -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
 	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-`date +%Y-%m-%d`
 	mv RunSlicer.sml.original RunSlicer.sml
 
