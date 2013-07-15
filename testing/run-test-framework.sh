@@ -37,6 +37,7 @@
 # the current date in the format YEAR-MONTH-DAY-HOUR-MINUTE
 date=`date '+%Y-%m-%d'`
 
+# WARNING: the contents of $repoDir are passed to rm -rf at the end of this script.
 repoDir=`mktemp -d`
 echo "created temp repo dir: $repoDir"
 
@@ -60,8 +61,7 @@ compMltonTestMasterFilename="skalpel-mlton-compilation"
 compPolyTestMasterFilename="skalpel-polyml-compilation"
 
 # createt the output directory
-testingDir="$repoDir/testing/test-results"
-outputDir="$testingDir/$date"
+resultsDir="$HOME/repos/skalpel/testing/test-results/`date '+%Y-%m-%d'`"
 masterDir="$repoDir/testing/master-test-files"
 
 ################################################################################
@@ -69,6 +69,7 @@ masterDir="$repoDir/testing/master-test-files"
 ################################################################################
 
 # clone the repository and build the skalpel binary
+# WARNING: the contents of $polyRepoDir are passed to rm -rf at the end of this script.
 polyRepoDir=`mktemp -d`
 echo "cloning repository and building the skalpel binary (poly/ml)..."
 polyCompilationLog=`mktemp`
@@ -93,7 +94,7 @@ autoconf &> $compilationLog
 make mlton-bin &> $compilationLog
 
 # this is created for the dead links output, this directory is removed at the end
-mkdir -p $outputDir
+mkdir -p $resultsDir
 
 # run the analysis engine tests
 echo "running analysis engine tests..."
@@ -103,7 +104,7 @@ $skalpelBin -d NO_COLOURS -b 2 $basisFile -c $analysisTestDir &> $analysisTestsL
 # check for any dead links in the webdemo
 # NOTE: We can't currently do this here because we are not on the webserver,
 #       therefore for the moment this is done via a web server cron job
-# $testFrameworkDir/scripts/check-webdemo-links.sh > $outputDir/$deadLinksTestFilename 2> $outputDir/$deadLinksTestFilename-errors
+# $testFrameworkDir/scripts/check-webdemo-links.sh > $resultsDir/$deadLinksTestFilename 2> $resultsDir/$deadLinksTestFilename-errors
 
 # wait 5 minutes for other tests to be completed
 # sleep 300
@@ -172,6 +173,21 @@ echo `$skalpelBin -v` >> $mailFile
 
 echo -e "\n" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
+echo -e "*                         Website Broken Links Diff                          *" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
+echo -e "" >> $mailFile
+
+# check that the webserver produced a log
+if [ -f "$resultsDir/$deadLinksTestFilename" ]
+then
+    diff $masterDir/$deadLinksTestMasterFilename $resultsDir/$deadLinksTestFilename >> $mailFile
+else
+    echo "An error has been detected: The webserver has not produced a log of broken website links." >> $mailFile
+fi
+
+
+echo -e "\n" >> $mailFile
+echo -e "******************************************************************************" >> $mailFile
 echo -e "*                         Analysis Engine Tests Diff                         *" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
 echo -e "" >> $mailFile
@@ -183,21 +199,6 @@ then
 echo "No difference between master file and output generated."  >> $mailFile
 else
 diff $masterDir/$analysisTestMasterFilename $analysisTestsLog >> $mailFile
-fi
-
-
-echo -e "\n" >> $mailFile
-echo -e "******************************************************************************" >> $mailFile
-echo -e "*                         Website Broken Links Diff                          *" >> $mailFile
-echo -e "******************************************************************************" >> $mailFile
-echo -e "" >> $mailFile
-
-# check that the webserver produced a log
-if [ -f "$outputDir/$deadLinksTestFilename" ]
-then
-    diff $masterDir/$deadLinksTestMasterFilename $outputDir/$deadLinksTestFilename >> $mailFile
-else
-    echo "An error has been detected: The webserver has not produced a log of broken website links." >> $mailFile
 fi
 
 echo -e "\n" >> $mailFile
@@ -214,7 +215,13 @@ echo -e "*                 Analysis Engine Compilation Log (Poly/ML)            
 echo -e "******************************************************************************" >> $mailFile
 echo -e "" >> $mailFile
 
-cat $polyCompilationLog >> $mailFile
+head -n 50 $polyCompilationLog >> $mailFile
+echo "..." >> $mailFile
+echo "..." >> $mailFile
+echo "[ Intermediate part of log ommitted due to its size ]" >> $mailFile
+echo "..." >> $mailFile
+echo "..." >> $mailFile
+tail -n 30 $polyCompilationLog >> $mailFile
 
 echo -e "\n" >> $mailFile
 echo -e "******************************************************************************" >> $mailFile
@@ -231,17 +238,18 @@ echo -e "***********************************************************************
 echo -e "" >> $mailFile
 
 # check that the webserver produced a log
-if [ -f "$outputDir/$deadLinksTestFilename" ]
+if [ -f "$resultsDir/$deadLinksTestFilename" ]
 then
-    cat $outputDir/$deadLinksTestFilename >> $mailFile
+    cat $resultsDir/$deadLinksTestFilename >> $mailFile
 else
     echo "An error has been detected: The webserver has not produced a log of broken website links." >> $mailFile
 fi
 
+cp $mailFile $resultsDir/test-results
+
 # apparently you can't send mail to non-HW adresses with this. There's probably a way around that though.
-# also add jbw@macs.hw.ac.uk
-# cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk
+cat $mailFile | mail -s "Skalpel daily test $date" jp95@macs.hw.ac.uk jbw@macs.hw.ac.uk
 
 # remove the temporary files
-# rm -f $mailFile $compilationLog $analysisTestsLog
+rm -rf $polyRepoDir $repoDir $mailFile $polyCompilationLog $compilationLog $analysisTestsLog
 
