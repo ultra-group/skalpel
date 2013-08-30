@@ -27,7 +27,8 @@ MLB-mlton.grm.sml
 MLB-mlton.lex.sml
 Makefile
 bin
-sources
+RunSlicer.sml.original
+sources*
 thelibrary.sml
 script
 mlton-control.sml

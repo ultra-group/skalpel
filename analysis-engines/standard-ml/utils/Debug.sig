@@ -21,7 +21,7 @@
  *      messages.
  *)
 
-
+(** A signature used by refstruct{Debug}, used to aid debugging of Skalpel. *)
 signature DEBUG = sig
 
     datatype debugFiles = JSON     (* JsonParser.sml *)
@@ -65,7 +65,7 @@ signature DEBUG = sig
 
     val printReset : string -> unit
 
-    val printDebugFeature : debugFiles -> debugFeature -> (unit -> string) -> unit
+    val printDebug : debugFiles -> debugFeature -> (unit -> string) -> unit
 
     val printLabelledProgramString : string -> string
 

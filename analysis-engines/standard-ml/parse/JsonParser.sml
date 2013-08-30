@@ -351,25 +351,25 @@ fun parseTest testfile =
 		  | str => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind: "^str^")")
 	    end
 
-	fun getErrors (JSON.ARRAY []) = (D.printDebugFeature D.JSON D.PARSING (fn _ => "finished parsing errors object!"); [])
+	fun getErrors (JSON.ARRAY []) = (D.printDebug D.JSON D.PARSING (fn _ => "finished parsing errors object!"); [])
 	  | getErrors (JSON.ARRAY(h::t)) =
 	    let
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing errors object. Getting a new error...")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the identifier...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "parsing errors object. Getting a new error...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the identifier...")
 		val id  = getInt(findIdVal h "identifier")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the labels...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the labels...")
 		val lab = (getInt(findIdVal (findIdVal h "labels") "count"), getIntArray(findIdVal(findIdVal h "labels") "labelNumbers"))
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the assumptions...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the assumptions...")
 		val assump = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")) (* first part of tuple always empty list? *)
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the kind...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the kind...")
 		val k   = parseKind (findIdVal h "kind")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the slice...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the slice...")
 		val sl  = getString(findIdVal h "slice")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the time...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the time...")
 		val tm  = getIntInf(findIdVal h "time")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting the regions...")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the regions...")
 		val r   = parseRegions (findIdVal h "regions")
-		val _   = D.printDebugFeature D.JSON D.PARSING (fn _ => "done with this error")
+		val _   = D.printDebug D.JSON D.PARSING (fn _ => "done with this error")
 	    in
 		{identifier  = id,
 		 labels      = lab,
@@ -382,64 +382,64 @@ fun parseTest testfile =
 	  | getErrors _ = raise EH.DeadBranch ("Format error with JSON test file (getErrors got something other than an array)")
 
 	val test = NJJP.parseFile testfile handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^testfile^"\n")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'errors' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'errors' object...")
 	val (errorList, test) = getObject test "errors"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'time' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'time' object...")
 	val (timeObj, test) = getObject test "time"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'tyvar' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'tyvar' object...")
 	val (tyvarObj, test) = getObject test "tyvar"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'ident' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'ident' object...")
 	val (identObj, test) = getObject test "ident"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'constraint' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'constraint' object...")
 	val (constraintObj, test) = getObject test "constraint"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'labels' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'labels' object...")
 	val (labels, test) = getObject test "labels"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'minimisation' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'minimisation' object...")
 	val (minimisation, test) = getObject test "minimisation"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'solution' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'solution' object...")
 	val (solution, test) = getObject test "solution"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'basis' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'basis' object...")
 	val (basis, test) = getObject test "basis"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'timelimit' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'timelimit' object...")
 	val (timelimit, test) = getObject test "timelimit"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'labelling' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'labelling' object...")
 	val (labelling, test) = getObject test "labelling"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting final object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting final object...")
 	val (final, test) = getObject test "final"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'name' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'name' object...")
 	val (name, test) = getObject test "name"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "top level json objects correct!")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing lower level objects...")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting all errors...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "top level json objects correct!")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing lower level objects...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting all errors...")
 	val errs = getErrors errorList
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "skipping time, will get that at the end...")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting tyvar...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "skipping time, will get that at the end...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting tyvar...")
 	val tv = (getInt(findIdVal tyvarObj "tyvar"), getTyvars(findIdVal tyvarObj "assoc"))
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting ident...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting ident...")
 	(* val idnt = getTyvars(findIdVal tyvarObj "assoc") *)
 	val idnt = getTyvars(identObj)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting constraint...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting constraint...")
 	val cst = {total = getInt((findIdVal constraintObj "total")),
 		   top = getInt((findIdVal constraintObj "top")),
 		   syntactic = getInt((findIdVal constraintObj "syntactic"))}
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting labels...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting labels...")
 	val lab = getInt(labels)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting minimisation...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting minimisation...")
 	val min = getBool(minimisation)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting solution...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting solution...")
 	val sol = getInt(solution)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting basis...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting basis...")
 	val bas = getInt(basis)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting timelimit...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting timelimit...")
 	val tm = getIntInf(timelimit)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting labelling...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting labelling...")
 	val lbing = getString(labelling)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting final...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting final...")
 	val fin = getBool(final)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting name...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting name...")
 	val nm = getString(name)
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "got everything, new getting time...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "got everything, new getting time...")
     in
 	ref (SOME {
 	     errors = errs,
@@ -456,20 +456,20 @@ fun parseTest testfile =
 
 fun parseTestControlFile fileLocation =
     let
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing test control file...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing test control file...")
 	fun stripTestPaths (JSON.ARRAY([])) = []
 	  | stripTestPaths (JSON.ARRAY(h::t)) = ((getString h)::(stripTestPaths (JSON.ARRAY t)))
 	  | stripTestPaths _ = raise EH.DeadBranch ("JSON format incorrect for file: "^fileLocation^"\n")
 
 	val testControl = NJJP.parseFile fileLocation handle _ => raise EH.DeadBranch ("Cannot parse test control JSON file: "^fileLocation^"\n")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting 'test-list' object...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'test-list' object...")
 	val (testList, testControl) = getObject testControl "test-list"
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "top level json objects correct!")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "parsing lower level objects...")
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "getting test-list...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "top level json objects correct!")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing lower level objects...")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting test-list...")
 	val testPaths = stripTestPaths testList
-	val _ = D.printDebugFeature D.JSON D.PARSING (fn _ => "done!")
+	val _ = D.printDebug D.JSON D.PARSING (fn _ => "done!")
     in
 	testPaths
     end

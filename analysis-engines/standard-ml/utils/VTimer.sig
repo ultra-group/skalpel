@@ -26,7 +26,7 @@
  *  o Description: Defines the signature VTIMER, a timer.
  *)
 
-
+(** The signature VTIMER, used by the structure refstruct{VTimer}. *)
 signature VTIMER = sig
 
     type timer

@@ -63,6 +63,7 @@ val analysingBasis : bool ref = ref false
  * follows:
  * \f[\METAunifterm \in \SETunifterm ::= \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\METAcsenv^\prime} \mid \CONSunifsuccess \mid \CONSuniferror{\METAerror}\f]
  *)
+
 datatype error = Success of S.state
                | Error   of ERR.error * S.state
 
@@ -622,7 +623,7 @@ fun getTypeNameKindOfId state id =
 		(* returns the type name kind *)
 		#2 bindPortion
 	    end
-	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
+	  | NONE => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
     end
 
 fun get state id =
@@ -639,7 +640,7 @@ fun get state id =
 		(* returns the type name kind *)
 		#2 bindPortion
 	    end
-	  | NONE => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
+	  | NONE => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
     end
 
 (* ------ Type freshning ------ *)
@@ -2184,12 +2185,11 @@ fun unif env filters user =
 		 else foch (ERR.consPreError ERR.dummyId labs deps EK.Circularity stts) (c (var1, sem1)) vars depth lab
 	    else occursGenList c var1 var2 sem1 labs stts deps vars depth lab fget fdecomp foc
 
-
 	(** The function which checks for circularity errors.
-	 * coccValue occtyList depth myinformation.
 	 * We can see this concept being represented in the theory in rule \f$\unifruleuacca\f$ of the theory below. Note that a side condition of this rule is that \f$\METAvar \neq \METAcsterm \wedge y = \METAunifstatetyCal(x^{\METAcdepset}) \wedge \METAvar \notin \MEMdom{\METAunifstatetyCal}\f$.
 	 * \f[\unifruleuacca\ \CONSunifenv{\METAtoseq{\METAcsenv}}{\METAcdepset}{\METAmono}{\METAstack}{\csou{\METAvar}{\METAcsterm}}  \fra  \CONSuniferror{\lag\CONSuniferrorcircularity,\MEMdepsetSYMB(y)\rag}\text{, if } \METAvar\in\MEMvarsetSYMB(y)\backslash \SETcsgenenv \wedge\ \MEMundepSYMB(y)\ {\neq}\ v\f]
-	 * This function is called by #fsimplify while solving equality constraints. *)
+	 * This function is called by #fsimplify while solving equality constraints.
+	 *)
 	fun occurs c [] n l = true (* true because we have to add c to the state *)
 	  | occurs (c as (CT (var1, sem))) [T (var2, labs, stts, deps)] 0 l = occursGenZero CT var1 var2 sem labs stts deps l T.eqTypeVar  S.getValStateTv decomptyty  occurs
 	  | occurs (c as (CS (var1, sem))) [S (var2, labs, stts, deps)] 0 l = occursGenZero CS var1 var2 sem labs stts deps l T.eqRowVar S.getValStateSq decomptysq  occurs
@@ -2722,7 +2722,7 @@ fun unif env filters user =
 	     end
 	     handle errorfound err => handleSolveEnv err envsha)
 	  | solveenv (envsig as E.SIGNATURE_ENV (e1, e2, kind)) bmon =
-	    (let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("solving a signature environment"));
+	    (let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("solving a signature environment"));
 		 val env0 = buildFEnv e1 state false
 		 val env2 = buildFEnv e2 state true
 		 val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")
@@ -2745,7 +2745,7 @@ fun unif env filters user =
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
-			ENUM => (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("[Skalpel: analysing " ^ file ^ "]\n"));
+			ENUM => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => ("[Skalpel: analysing " ^ file ^ "]\n"));
 				 if (String.isSubstring "basis.sml" file)
 				 then analysingBasis := true
 				 else analysingBasis := false)
@@ -2859,15 +2859,15 @@ fun unif env filters user =
 	(* ====== ACCESSOR SOLVER ====== *)
 
 	and solveacc (acc as E.VALUEID_ACCESSOR ({lid, equalityTypeVar = equalityTypeVarAccessor, sem, class, lab}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving the following VALUEID_ACCESSOR accessor:\n"^(#purple (!D.colors))^(E.printOneAccessor acc));
+	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving the following VALUEID_ACCESSOR accessor:\n"^(#purple (!D.colors))^(E.printOneAccessor acc));
 	    (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
 		 (case S.getValStateIdVa state lid false of
 		      (SOME (({id, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = CL.ANY}, labs', _, _), _), _, _) =>
-		      (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder))); fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l)
+		      (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder))); fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l)
 		    | (SOME (({id = bindId, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
-		      (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder)));
+		      (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder)));
 		       fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l;
 
 		       (* if the sem portion is a type variable, it might contain an equality type variable which should be constrained correctly *)
@@ -2903,12 +2903,12 @@ fun unif env filters user =
 		      else let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			       val labs1 = L.union labs0 (I.getLabs lid)
 			       (*val timer = VT.startTimer ()*)
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind = "^(T.printty bind)^"\n")
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind = "^(T.printty bind)^"\n")
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind1 = "^(T.printty bind1)^"\n")
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind1 = "^(T.printty bind1)^"\n")
 			       (*val _     = temp_time := !temp_time + (VT.getMilliTime timer)*)
 			       val bind2 = T.labelBuiltinTy bind1 lab
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind2= "^(T.printty bind2)^"\n")
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind2= "^(T.printty bind2)^"\n")
 
 			       val _ = case cl of
 					   CL.VID(CL.DA1) =>
@@ -2920,8 +2920,8 @@ fun unif env filters user =
 								if T.typenameToInt arrow = 1
 								then
 								    (* let val newTy = freshty (T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,a,b),T.ROW_C([T.FC(c,T.TYPE_VAR(rhsTypeVar,d,e,eqtvSem),f),T.FC(g,h,i)],j,k),l,m),n,p,q))	NONE (F.finitState ()) false *)
-								    (* 	val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Old ty: "^(T.printty existingEntry)) *)
-								    (* 	val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Made fresh ty: "^(T.printty newTy)) *)
+								    (* 	val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Old ty: "^(T.printty existingEntry)) *)
+								    (* 	val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Made fresh ty: "^(T.printty newTy)) *)
 								    (* in *)
 									(* fsimplify [E.genCstTyAll newTy bind2 labs1 stts0 deps0] l *) (* () *)
 								    fsimplify [E.EQUALITY_TYPE_CONSTRAINT (((eqtvSem, (T.consEQUALITY_TYPE_VAR eqtvR)), L.union depLabs labs1, stts0, deps0))] l
@@ -2937,21 +2937,21 @@ fun unif env filters user =
 
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts deps0
 			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs1, stts, deps)
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
-			       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   in fsimplify [equalityTypeConstraint, c1, c2] l
 			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "case 2");
+		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "case 2");
 		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
 		    | (NONE, _, false) => (* FREE ID *)
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "in this case, it is suspected we have a free identifier");
+		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "in this case, it is suspected we have a free identifier");
 		      handleFreeIdent lid false)
 		    | _ => ())
 	       | SOME (lid', false) => ()))
 	  | solveacc (currentConstraint as E.EXPLICIT_TYPEVAR_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneAccessor currentConstraint));
+	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneAccessor currentConstraint));
 	     (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -2968,7 +2968,7 @@ fun unif env filters user =
 			  (*val _   = D.printdebug2 (T.printty ty1 ^ "\n" ^ T.printty ty2)*)
 			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
 			  val c2  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVar) (T.consEQUALITY_TYPE_VAR eqtvBind) l
-			  val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binder, made new constraints:"^(E.printOneConstraint c)^(E.printOneConstraint c2));
+			  val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binder, made new constraints:"^(E.printOneConstraint c)^(E.printOneConstraint c2));
 		      in fsimplify [c, c2] l
 		      end
 		    | _ => ())
@@ -2976,7 +2976,7 @@ fun unif env filters user =
 
 	  | solveacc (E.EQUALITY_TYPE_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
 	    let
-		val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor. Labels = " ^ L.toString labs)
+		val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor. Labels = " ^ L.toString labs)
 		(* val _ = print ("the state is: "^(S.printState state)^"\n\n\n"); *)
 	    in
 		case filterLid lid filters of
@@ -2986,10 +2986,10 @@ fun unif env filters user =
 			 (SOME (({id, bind, equalityTypeVar, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		       | (SOME (({id, bind, equalityTypeVar, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
 			 let
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("sem = "^(T.printEqualityType sem)^"\n"))
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("id = "^(Int.toString (I.toInt id))^"\n"))
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("bind = "^(T.printty bind)^"\n\n\n"))
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("label of binder = "^(Label.printLab l)^"\n\n\n"))
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("sem = "^(T.printEqualityType sem)^"\n"))
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("id = "^(Int.toString (I.toInt id))^"\n"))
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("bind = "^(T.printty bind)^"\n\n\n"))
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("label of binder = "^(Label.printLab l)^"\n\n\n"))
 
 			     val _ = case bind of
 					 T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(_,_,_,T.EQUALITY_TYPE_VAR(x)),_,_,_) =>
@@ -3010,9 +3010,9 @@ fun unif env filters user =
 					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(h)) lab of
 					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
 					     let
-						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripping equality type variables = " ^ L.toString labels))
+						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripping equality type variables = " ^ L.toString labels))
 						 val newConstraintLabels = L.union labels (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))
-						 val _  = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString newConstraintLabels))
+						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString newConstraintLabels))
 					     in
 						 fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), newConstraintLabels, deps, ids) ] l
 					     end
@@ -3034,7 +3034,7 @@ fun unif env filters user =
 	    end
 
 	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, equalityTypeVar = eqTypeVarAccessor, sem, class, lab = accessorLabel}, labs, stts, deps)) l =
-	    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor. Labels = " ^ L.toString labs);
+	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor. Labels = " ^ L.toString labs);
 	     case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3057,7 +3057,7 @@ fun unif env filters user =
 		      in fsimplify [c] l
 		      end
 		    | (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
-		      let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^"): "^(T.printtyf bind))
+		      let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^"): "^(T.printtyf bind))
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  (* we constrain the equality type variable of the accessor to be equal to the equality type variable of the binder
@@ -3175,7 +3175,7 @@ fun unif env filters user =
 		     val lab2  = E.getLabEnv env
 		     val ek    = EK.Unmatched ((L.toInt lab1, I.toInt id1), idlabs, L.toInt lab2)
 		 in
-		     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected - long identifier not found in structure");
+		     (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected - long identifier not found in structure");
 		     handleSimplify (ERR.consPreError ERR.dummyId labs0 deps0 ek stts0) [] l)
 		 end
 	    else ()
@@ -3362,7 +3362,7 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc1 as T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), tc2 as T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 		orelse
 		(T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3378,7 +3378,7 @@ fun unif env filters user =
 		 then let val ek  = EK.ConsArgNApp (L.toInt l1, L.toInt l2)
 			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
 		      in
-			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (1)");
+			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (1)");
 			   handleSimplify err cs' l)
 		      end
 		 else if (T.isArrowTy tn1 andalso T.isPatTy tn1 andalso T.isVarTypename tn2)
@@ -3391,7 +3391,7 @@ fun unif env filters user =
 		 then let val ek  = EK.ConsNArgApp (L.toInt l1, L.toInt l2)
 			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
 		      in
-			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (2)");
+			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (2)");
 			   handleSimplify err cs' l)
 		      end
 		 else let val name1 = T.tntyToTyCon tn1
@@ -3408,7 +3408,7 @@ fun unif env filters user =
 				else ()*)
 		      (*val _ = D.printdebug2 (S.printState state)*)
 		      in
-			  (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (3). Joining labels = "^L.toString ls);
+			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (3). Joining labels = "^L.toString ls);
 			  handleSimplify err cs' l)
 		      end
 	     else
@@ -3419,18 +3419,18 @@ fun unif env filters user =
 		     fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((nc1 as T.NC (tn1, b1, l1), nc2 as T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqTypename tn1 tn2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt tn1), (L.toInt l2, T.typenameToInt tn2))
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
 		  in
-		      (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a typename constraint of two T.NC constructors. Labs " ^ (L.toString ls));
+		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a typename constraint of two T.NC constructors. Labs " ^ (L.toString ls));
 		       handleSimplify err cs' l)
 		  end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((rc1 as T.ROW_C (rtl1, b1, l1), rc2 as T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val n1 = length rtl1
 		val n2 = length rtl2
 	    (*val _  = D.printdebug2 ("-("  ^ (O.printelt l1)   ^
@@ -3456,7 +3456,7 @@ fun unif env filters user =
 		    in case err of
 			   [] => fsimplify (cs'' @ cs') l
 			 | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] =>
-			   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (1)");
+			   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (1)");
 			   handleSimplify (ERR.consPreError ERR.dummyId
 							    ell
 							    eids
@@ -3469,17 +3469,17 @@ fun unif env filters user =
                else let val ek  = EK.ArityClash ((L.toInt l1, n1), (L.toInt l2, n2))
 			val err = ERR.consPreError ERR.dummyId ls ids ek deps
 		    in
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (2)");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (2)");
 			 handleSimplify err cs' l)
 		    end
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
-			let val _   = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "tv1 not in the state. Adding dependancy.")
+			let val _   = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "tv1 not in the state. Adding dependancy.")
 			    val t = T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq2)
 			    val t = case eq2 of
 			     		T.EQUALITY_TYPE_STATUS(T.UNKNOWN) => T.TYPE_VAR (tv2, if Option.isSome b2 then b2 else b1, p2, eq1)
@@ -3492,7 +3492,7 @@ fun unif env filters user =
 			in fsimplify cs' l
 			end
 		      | SOME ty =>
-			let val _   = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found tv1 in the state mapped to "^(T.printty ty)^". Recursing now.")
+			let val _   = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found tv1 in the state mapped to "^(T.printty ty)^". Recursing now.")
 			    val bop = if Option.isSome b2 then b2 else b1
 			     val t = case eq2 of
 			     		T.EQUALITY_TYPE_STATUS(T.UNKNOWN) => T.TYPE_VAR (tv2, bop, p2, eq1)
@@ -3515,31 +3515,31 @@ fun unif env filters user =
 			else let val ek  = EK.TyConsClash ((L.toInt lab1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt lab2, T.typenameToInt (T.DUMMYTYPENAME)))
 				 val err = ERR.consPreError ERR.dummyId ls ids ek deps
 			     in
-				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type variables");
+				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type variables");
 				  handleSimplify err cs' l)
 			     end
 		      | _ => continue ()
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n1, tv1, l1, eqtv1), T.EXPLICIT_TYPE_VAR (n2, tv2, l2, eqtv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if I.eqId n1 n2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
 		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
-		  in (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two explicit type variables");
+		  in (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two explicit type variables");
 		      handleSimplify err cs' l)
 		  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, _), T.TYPE_CONSTRUCTOR (tn, _, l2, _)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps
 	    in
-		(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type constructor");
+		(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type constructor");
 		handleSimplify err cs' l)
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, T.TYPENAME_VAR tnv2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqTypenameVar tnv1 tnv2
 	    then fsimplify cs' l
 	    else (case S.getValStateTn state tnv1 of
@@ -3554,7 +3554,7 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2 as (T.ROW_VAR sqv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqRowVar sqv1 sqv2
 	     then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
@@ -3570,7 +3570,7 @@ fun unif env filters user =
                       end))
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
@@ -3586,7 +3586,7 @@ fun unif env filters user =
 			(* We should raise another error here:
 			 * something like, signature too general. *)
 			in
-			    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of a type variable");
+			    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of a type variable");
 			     handleSimplify err cs' l)
 			end
 		    else ()
@@ -3608,7 +3608,7 @@ fun unif env filters user =
 			       let
 				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
 				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.cons lab2 (L.cons l ls), deps, ids)
-				   (* val _ = D.printDebugFeature D.UNIF D.TEMP (fn _ => if (!(sigVsStr)) orelse (!(sigVsStrTyp)) then "TRUE!" else "") *)
+				   (* val _ = D.printDebug D.UNIF D.TEMP (fn _ => if (!(sigVsStr)) orelse (!(sigVsStrTyp)) then "TRUE!" else "") *)
 			       in
 				   (* if the context dependancies are not empty, then that means that we are checking that the type var and
 				    * type constructor match, based on other information we inferred from another type var. For example:
@@ -3643,7 +3643,7 @@ fun unif env filters user =
 			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (T.TYPENAME_DEPENDANCY(T.NC(_,_,typenameLab),typenameDepLab,_,_),T.ROW_DEPENDANCY(rowConstruction,rowDependancyLabs,_,_),typeConstructorLab,_)) =>
 			       let
  				   val (strippedEqualityVars, strippedEqualityLabels) = T.stripEqualityVariables_sequenceType rowConstruction L.empty
-				   val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "stripped equality type variables and found: "^(T.printEqualityTypeVarList strippedEqualityVars)^" with labels: "^(L.toString strippedEqualityLabels))
+				   val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "stripped equality type variables and found: "^(T.printEqualityTypeVarList strippedEqualityVars)^" with labels: "^(L.toString strippedEqualityLabels))
 				   val newConstraints = List.map (fn newEqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR newEqtv), L.union typenameDepLab (L.union rowDependancyLabs (L.union strippedEqualityLabels (L.cons typeConstructorLab (L.cons l (L.cons typenameLab ls))))), deps, ids)) strippedEqualityVars
 			       in
 				   newConstraints@cs'
@@ -3657,7 +3657,7 @@ fun unif env filters user =
 		   (* we don't have it in the state, let's put it in the state map *)
 		   let (* here we have to update statege (we know that ty is not a variable) *)
 		       (*val _ = BI.updateMono state tv ty ls deps ids*)
-		       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "No existing map entry for type variable. Adding entry.")
+		       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "No existing map entry for type variable. Adding entry.")
 		       val _ = reportGenError ()
 		       val (rho, n) = decomptyty ty ls deps ids
 		       val _ = if occurs (CT (tv, ty)) rho n l
@@ -3668,10 +3668,10 @@ fun unif env filters user =
 		 | SOME ty' =>
  		   (* we have seen this type variable before *)
 		   let
-		       val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type variable exists in the state, recursing on new constraints.")
+		       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type variable exists in the state, recursing on new constraints.")
 		       (* get the extra labels that might be in the state ge so that the equality type error has all the labels in place *)
 		       val _ = case ty' of T.TYPE_DEPENDANCY(T.TYPE_VAR(tv', _, _, T.EQUALITY_TYPE_VAR eqtv'),_,_,_) =>
-					   (* here we want to take the labels that are associated with mapping tv' |-> tv \in StateGe and put then in eqtv' *)
+					   (* here we want to take the labels that are associated with mapping tv' |-> tv ∈ StateGe and put then in eqtv' *)
 					   (case S.getValStateGe state tv'
 					    of SOME (typeVarGe, labsGe, sttsGe, depsGe)  =>
 					     (* put labsGe in eqtv' mapping in StateEQ *)
@@ -3686,7 +3686,7 @@ fun unif env filters user =
 		   end
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, tnty2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTn state tnv1 of
 		 NONE =>
 		 let val _ = S.updateStateTn state tnv1 (T.TYPENAME_DEPENDANCY (tnty2, ls, deps, ids))
@@ -3696,7 +3696,7 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -3710,7 +3710,7 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.FIELD_CONSTRAINT ((T.FIELD_VAR rv, rt as T.FC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateRt state rv of
 		 NONE =>
 		 let val (rho, n) = decomptyfield rt ls deps ids
@@ -3721,7 +3721,7 @@ fun unif env filters user =
 		 in case err of
 			[] => fsimplify (cs'' @ cs') l
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a field constraint of a field variable and a field construction");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a field constraint of a field variable and a field construction");
 			 handleSimplify (ERR.consPreError ERR.dummyId
 							 ell
 							 eids
@@ -3735,7 +3735,7 @@ fun unif env filters user =
 	  (* we update and store *)
 	  (* if it's 2 variables we raise deadbranch, same if it's 2 cons *)
 	  | fsimplify ((currentConstraint as E.LABEL_CONSTRAINT ((T.LABEL_VAR lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateLt state lv of
 		 NONE =>
 		 let val _ = S.updateStateLt state lv (T.LABEL_DEPENDANCY (lt, ls, deps, ids))
@@ -3743,7 +3743,7 @@ fun unif env filters user =
 		 in case err of
 			[] => fsimplify (cs'' @ cs') l
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a label constraint of a label variable and a label construction");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a label constraint of a label variable and a label construction");
 			 handleSimplify (ERR.consPreError ERR.dummyId
 							  ell
 							  eids
@@ -3755,7 +3755,7 @@ fun unif env filters user =
 		 end
                | SOME lt' => raise EH.DeadBranch "")
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_VAR tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
@@ -3764,7 +3764,7 @@ fun unif env filters user =
                  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val labs = L.cons lab1 (L.cons lab2 ls)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
 		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
@@ -3775,7 +3775,7 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun checkTn tnty labs stts deps seq =
 		    case tnty of
 			T.TYPENAME_VAR _ => fsimplify cs' l
@@ -3799,7 +3799,7 @@ fun unif env filters user =
 				   val deps' = CD.union deps deps2
 				   val err   = ERR.consPreError ERR.dummyId labs' deps' kind stts'
 			       in
-				   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of a type constructor and a type poly");
+				   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of a type constructor and a type poly");
 				    handleSimplify err cs' l)
 			       end
 			     | ([], true, _) => fsimplify cs' l
@@ -3839,7 +3839,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, x, poly, orKind, l2, eqtv2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
@@ -3855,7 +3855,7 @@ fun unif env filters user =
 			val stts' = L.union  stts1 deps
 			val deps' = CD.union deps1 ids
 		    in
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type poly");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type poly");
 			 handleSimplify (ERR.consPreError ERR.dummyId labs' deps' kind stts') cs' l)
 		    end
 	       else
@@ -3867,7 +3867,7 @@ fun unif env filters user =
 							      ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
 							     ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
@@ -3883,7 +3883,7 @@ fun unif env filters user =
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
 			     in
-				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (1)");
+				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (1)");
 				  handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | (T.CONSTANT (st1, id1, lab1), T.VALUE (id2, lab2)) =>
@@ -3896,7 +3896,7 @@ fun unif env filters user =
 							    tnerrs2,
 							    (L.toInt lab1, I.toInt id1, st1),
 							    tnerrs1)
-			     in (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (2)");
+			     in (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (2)");
 				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | (T.VALUE (id1, lab1), T.CONSTANT (st2, id2, lab2)) =>
@@ -3910,7 +3910,7 @@ fun unif env filters user =
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
 			     in
-				 (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (3)");
+				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (3)");
 				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
 			     end
 			   | _ => fsimplify cs' l)
@@ -3992,7 +3992,7 @@ fun unif env filters user =
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    ((* if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
+	    ((* if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
 	     if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
@@ -4005,7 +4005,7 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev, lab), env), ls, deps, ids)) :: cs') l =
-	    ((* if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
+	    ((* if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
 	     case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -4018,7 +4018,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((env1 as E.ENV_CONS _, env2 as E.ENV_CONS _), ls, deps, ids)) :: cs') l =
 	    let
-		(* val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
+		(* val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
 		val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
@@ -4046,16 +4046,16 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_VAR tfv, typeFunction), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
 		 NONE =>
-		 let val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is not in the state, inserting mapping.")
+		 let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is not in the state, inserting mapping.")
 		     val _ = S.updateStateTf state tfv (collapseTf typeFunction labs stts deps)
 		 in fsimplify cs' l
 		 end
 	       | SOME typeFunction' =>
 		 let
-		     val _ = D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is in the state, mapped to: "^(T.printtyf typeFunction'))
+		     val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is in the state, mapped to: "^(T.printtyf typeFunction'))
 		     val typeFunction' = case typeFunction' of
 					     T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(_)),lab),labs,stts,cds) =>
 					     if L.length stts > 0
@@ -4073,7 +4073,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
 		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
 	    in fsimplify (c1 :: c2 :: cs') l
@@ -4081,7 +4081,7 @@ fun unif env filters user =
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction1, typeFunction2 as T.TYPE_FUNCTION_VAR tfv), labs, stts, deps)) :: cs') l =
 	    fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction2, typeFunction1), labs, stts, deps)) :: cs') l
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR clvar, cl), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateCl state clvar of
 		 NONE =>
 		 let val _ = S.updateStateCl state clvar (cl, labs, stts, deps)
@@ -4097,11 +4097,11 @@ fun unif env filters user =
 	    fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun genError kind =
 		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts
 		    in
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an identifier class constraint of two CL.VID constructors");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an identifier class constraint of two CL.VID constructors");
 			 handleSimplify err cs' l)
 		    end
 	    in case (vid1, vid2) of
@@ -4211,16 +4211,16 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((currentConstraint as E.LET_CONSTRAINT env) :: cs') l =
 	    let
-		(* val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
+		(* val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
 		val _ = solveenv env false
 	    in fsimplify cs' l
 	    end
 
 	  | fsimplify ((currentConstraint as E.SIGNATURE_CONSTRAINT (signatureEnvVar, translucentEnvVar, structureEnvVar, opaqueEnvVar, lab)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val btest = FI.testtodo filters lab
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "btest is: "^(Bool.toString btest)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "btest is: "^(Bool.toString btest)) else ()
 	    in if btest
 	       then let val env0 = buildFEnv (E.consENV_VAR signatureEnvVar lab) state false
 			(*(2010-06-15)Why do we need to refresh the signature/structure? Because we don't have proper type schemes and type functions? *)
@@ -4269,14 +4269,14 @@ fun unif env filters user =
 		    in fsimplify cs' l
 		    end
 		    handle errorfound err =>
-			   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while solving a signature constraint");
+			   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while solving a signature constraint");
 			    handleSimplify err cs' l)
 	       else fsimplify cs' l
 	    end
 
 	  | fsimplify ((currentConstraint as E.FUNCTOR_CONSTRAINT (ev1, ev2, ev3, ev4, lab)) :: cs') l =
 	    (* functor: ev1 -> ev2, argument : ev3, result ev4 *)
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if FI.testtodo filters lab
 	    then let val env1 = buildFEnv (E.consENV_VAR ev1 lab) state false
 		     val env2 = buildFEnv (E.consENV_VAR ev2 lab) state true
@@ -4298,13 +4298,13 @@ fun unif env filters user =
 		 in fsimplify cs' l
 		 end
 		 handle errorfound err =>
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a functor constraint");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a functor constraint");
 			 handleSimplify err cs' l)
 	    else fsimplify cs' l)
 	  | fsimplify ((currentConstraint as E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in env as I've done for WHR. *)
 	    (* 0: signature, 1: returned, 2: sharing *)
-	    (if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	    if FI.testtodo filters lab
 	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev0 lab) state false
 		     val env2 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev2 lab) state false
@@ -4331,13 +4331,13 @@ fun unif env filters user =
 		 in fsimplify cs' l
 		 end
 		 handle errorfound err =>
-			(D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a sharing constraint");
+			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a sharing constraint");
 			 handleSimplify err cs' l)
 	    else fsimplify cs' l)
 	  (**)
 	  | fsimplify ((currentConstraint as E.ACCESSOR_CONSTRAINT acc) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 	    in
 		(solveacc acc l; fsimplify cs' l)
 	    end
@@ -4398,21 +4398,21 @@ fun unif env filters user =
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: an equality type variable A is being assigned to a
-	   *                list of equality type variables B. This happens in the
+	   * pattern match: an equality type variable α is being assigned to a
+	   *                list of equality type variables β. This happens in the
 	   *                event of solving records, where the equality type variable
 	   *                for the record as a whole depends on what status values the
 	   *                equaltiy type variables for each record field turn out to be.
 	   *
-	   * action: if A \notin dom state, then insert mapping A -> EQUALITY_TYPE_VAR_LIST(B).
-	   *         if A ->  \in state for some EQUALITY_TYPE_STATUS C, do nothing.
-	   *         if A -> D \in state for some other pattern D, raise an exception.
+	   * action: if α ∉ dom state, then insert mapping α -> EQUALITY_TYPE_VAR_LIST(β).
+	   *         if α -> γ ∈ state for some EQUALITY_TYPE_STATUS γ, do nothing.
+	   *         if α -> δ ∈ state for some other pattern δ, raise an exception.
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR_LIST recordInformation), ls, deps, ids)):: cs') l =
 	    let
 		(* print debugging information only if we are not currently handling the basis *)
 		val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
+			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ "EQUALITY_TYPE_VAR_LIST[" ^ T.printEqualityTypeVarList (recordInformation) ^ "]"
 										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
@@ -4424,7 +4424,7 @@ fun unif env filters user =
 		    NONE =>
 	  	    (* we haven't seen this equality type variable before, so let's put it in *)
 		    let
-			val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Not seen this equality type variable before. Adding this constraint to the state environment.")
+			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Not seen this equality type variable before. Adding this constraint to the state environment.")
 			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST recordInformation), (L.cons l ls), deps, ids), [])
 		    in
 			fsimplify cs' l
@@ -4433,54 +4433,54 @@ fun unif env filters user =
 		    (* the equality type variable is mapped to a status in the map
 		     * all equality type variables in the recordInformation list also need to be constrained to this status *)
 		    let
-			val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type variable discoverd in map to have status " ^ T.printEqualityTypeStatus statusInMap ^ "! Mapping constraint to this status over EQAULITY_TYPE_VAR_LIST")
+			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type variable discoverd in map to have status " ^ T.printEqualityTypeStatus statusInMap ^ "! Mapping constraint to this status over EQAULITY_TYPE_VAR_LIST")
 			val constraints = List.map (fn eqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS statusInMap), L.cons l (L.union resultLabels ls), L.union resultDeps deps, ids)) recordInformation
 		    in
 			fsimplify (constraints@cs') l
 		    end
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR eqtv'), resultLabels, resultDeps, resultIds), recordInformation') =>
 		    let
-			val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "\n*****\n*****\nWARNING: equaltiy type variable already exists in map when creating mapping from equality type variable to a list of other equality type variables. Adding variable in map to list it depends on and unioning deps.\n*****\n*****")
+			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "\n*****\n*****\nWARNING: equaltiy type variable already exists in map when creating mapping from equality type variable to a list of other equality type variables. Adding variable in map to list it depends on and unioning deps.\n*****\n*****")
 			val _ = S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.cons l (L.union resultLabels ls)), L.union resultDeps deps, ids), [])
 			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.cons l (L.union resultLabels ls)), L.union resultDeps deps, ids), [])
 		    in
 			fsimplify cs' l
 		    end
 		  | SOME (x as T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR_LIST eqtvList), resultLabels, resultDeps, resultIds), recordInformation') =>
-		    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "\n*****\n*****\nWARNING: unhandled case (warning because we don't care in this case?): "^(T.printEqualityType x)^"\n*****\n*****"); fsimplify cs' l)
+		    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "\n*****\n*****\nWARNING: unhandled case (warning because we don't care in this case?): "^(T.printEqualityType x)^"\n*****\n*****"); fsimplify cs' l)
 		  | SOME (somethingMysterious,_) => raise EH.DeadBranch ("Impossible case occurred when constraining an equality type variable to an equality type variable list: "^(T.printEqualityType somethingMysterious))
 	    end
 
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: an equality type variable A is being assigned to an
-	   *                equality type status B.
+	   * pattern match: an equality type variable α is being assigned to an
+	   *                equality type status β.
 	   *
 	   * action: we check if the equality type variable already exists in
 	   *         the state map. If it does not, we update the state map. If
 	   *         it is already listed in the state map as being dependant on
-	   *         an equality type status C, then we check B against C (if
+	   *         an equality type status γ, then we check β against γ (if
 	   *         they are different, an error is generated). If instead the
 	   *         equality type variable is listed in the state map as being
-	   *         dependant on another equality type variable D, we replace
-	   *         the state map entry of A to be of equality type status B,
-	   *         then we generate a constraint where D is of equaltiy type
-	   *         status B and include that constraint in the recursive
+	   *         dependant on another equality type variable δ, we replace
+	   *         the state map entry of α to be of equality type status β,
+	   *         then we generate a constraint where δ is of equaltiy type
+	   *         status β and include that constraint in the recursive
 	   *         constraint solving call.
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
 	    let
 		(* print debugging information only if we are not currently handling the basis *)
 		val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
+			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeStatus)
 										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
 			else ()
 
 		val deps = if (status = T.UNKNOWN)
-			   then (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "status is UNKNOWN, we don't care about deps. Resetting to empty deps.)"); L.empty)
+			   then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "status is UNKNOWN, we don't care about deps. Resetting to empty deps.)"); L.empty)
 			   else deps
 	    in
 		(* check whether the equality type variable already exists in the state map *)
@@ -4490,9 +4490,9 @@ fun unif env filters user =
 		    NONE =>
 		    let
 			val _ = if Label.length ls = 1
-				then (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (unioning ls with deps in deps field as deps are empty)");
+				then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (unioning ls with deps in deps field as deps are empty)");
 				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), L.union ls deps, ids), []))
-				else (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (more than one label in ls, not altering deps)");
+				else (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (more than one label in ls, not altering deps)");
 				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), deps, ids), []))
 		    in
 			fsimplify cs' l
@@ -4501,20 +4501,20 @@ fun unif env filters user =
 		  (* we've seen this equality type variable before and it's constrained to an equality type status, we need to check these
 		   * stauts values against one another *)
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_STATUS statusInMap), resultLabels, resultDeps, resultIds), recordInformation) =>
-		    (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "status already exists in the map for equality type variable ("^(T.printEqualityTypeStatus statusInMap)^")! Checking for equaliy type error...");
+		    (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "status already exists in the map for equality type variable ("^(T.printEqualityTypeStatus statusInMap)^")! Checking for equaliy type error...");
 		     (* if the status assigned to the equality type variable in the map is the same as the status we're constraining
 		      * it to, then that's alright. *)
 	  	     if statusInMap = status
-		     then (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Status in state same as status seen right now. Skipping over.");
+		     then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Status in state same as status seen right now. Skipping over.");
 			   fsimplify cs' l)
 		     else if status = T.UNKNOWN
 		     then
-			 (D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Status seen right now is UNKNOWN but another status already exists in state. Skipping over. ");
+			 (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Status seen right now is UNKNOWN but another status already exists in state. Skipping over. ");
 			 fsimplify cs' l)
 		     else if statusInMap = T.UNKNOWN
 		     then
 			 let
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Status in map is UNKNOWN but right now it is something other than UNKNOWN. Replacing entry and unioning label information.")
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Status in map is UNKNOWN but right now it is something other than UNKNOWN. Replacing entry and unioning label information.")
 			     val _ = case L.length ls of
 					 (* we now have an equality type status so THIS label is the real endpoint, overwrite the deps *)
 					 1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, ls, ids), recordInformation)
@@ -4534,7 +4534,7 @@ fun unif env filters user =
 			 (* otherwise, an equality type variable is constrained to be both an EQUALITY_TYPE and NOT_EQUALITY_TYPE. Generate an error! *)
 	  		 let
 			     val _ = ("deps = "^(L.toString deps)^", resultDeps = "^(L.toString resultDeps))
-			     val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^
 											  ", ls = "^(L.toString (L.union resultLabels ls))^", deps = "^(L.toString (L.union deps resultDeps))^"\n")
 
 			     (* jpirie: we are doing the unioning twice, once above and once below, do this only one *)
@@ -4548,7 +4548,7 @@ fun unif env filters user =
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
 					     val error  = ERR.consPreError ERR.dummyId (L.cons l (L.union resultLabels ls)) ids errorKind (L.union deps resultDeps)
 	  				 in
-					     (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable ("^(T.printEqualityType equalityTypeVar)^") and a status ("^(T.printEqualityTypeStatus status)^"). Labels: "^(L.toString (L.union resultLabels ls)));
+					     (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable ("^(T.printEqualityType equalityTypeVar)^") and a status ("^(T.printEqualityTypeStatus status)^"). Labels: "^(L.toString (L.union resultLabels ls)));
 					      handleSimplify error cs' l)
 					 end
 				       | [l1] => raise EH.DeadBranch ("Only got one endpoint label for an equality type error: "^(Int.toString l1))
@@ -4577,13 +4577,13 @@ fun unif env filters user =
 			end
 		  | SOME (x,y) =>
 		    (* i used to have a case that if the status was unknown I would generate a TODO here but it breaks tests, so I'm leaving in the text warning *)
-		    (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "\n*****\n*****\nWARNING: unhandled case (warning because status UNKNOWN): "^(T.printEqualityType x)^"\n*****\n*****");
+		    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "\n*****\n*****\nWARNING: unhandled case (warning because status UNKNOWN): "^(T.printEqualityType x)^"\n*****\n*****");
 		     fsimplify cs' l)
 	    end
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (tyterm)), ls, deps, ids)):: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 
 		val cs' = (case tyterm of
 			     (T.TYPE_VAR (tv, extv, poly, eqtv)) =>
@@ -4615,7 +4615,7 @@ fun unif env filters user =
 			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE))), L.union ls depLabels, L.cons l deps, ids)::cs')
 			     | _ =>
 			      if (not (!analysingBasis))
-			      then (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Warning, ignoring constraint: "^(E.printOneConstraint currentConstraint)); cs')
+			      then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Warning, ignoring constraint: "^(E.printOneConstraint currentConstraint)); cs')
 			      else cs')
 	    in fsimplify cs' l
 	    end
@@ -4623,25 +4623,25 @@ fun unif env filters user =
 	  (*
 	   * constraint solving - equality types
 	   *
-	   * pattern match: two equality type variables A and B are constrained
+	   * pattern match: two equality type variables α and β are constrained
 	   * to be equal
 	   *
 	   * action: if the two equality type variables are actually the same
 	   * number, then recurse on the remaining constraints to be solved. If
-	   * B is not in the state map, then update the state so that B is
-	   * dependant on A. If B is in the state map and it's constrained to a
-	   * status C, then create a constraint where A is constrained to
-	   * equalty type status C, then recurse to solve this (and all other)
-	   * constraints. In the case where B exists in the state and is
-	   * constrained to some other equality type variable D, we constrain A
-	   * to be dependant on D and recurse to solve.
+	   * β is not in the state map, then update the state so that β is
+	   * dependant on α. If β is in the state map and it's constrained to a
+	   * status γ, then create a constraint where α is constrained to
+	   * equalty type status γ, then recurse to solve this (and all other)
+	   * constraints. In the case where β exists in the state and is
+	   * constrained to some other equality type variable δ, we constrain α
+	   * to be dependant on δ and recurse to solve.
 	   *
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, equalityTypeVar2 as T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l =
 	    let
 		(* only print debugging output for files which are not the basis *)
 	  	val _ = if (not (!analysingBasis))
-			then D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
+			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar1)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar2)
 										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
@@ -4682,7 +4682,7 @@ fun unif env filters user =
 		      | SOME(T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR mapEqualityTypeVar, labs, stts, cd), recordInformation) =>
 			let
 			    (* should this EVER happen? *)
-			    val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
+			    val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
 											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR mapEqualityTypeVar))^". Replacing entry in map and unioning labels and deps.")
 			    (* this does seem to happen. I think what we want to do is create constraint equalityTypeVar1 |-> mapEqualityTypeVar *)
 			    (* this constraint breaks another tuple test when used on its own! The state map also needs to be updated. *)
@@ -4693,7 +4693,7 @@ fun unif env filters user =
 
 		      | SOME(T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR_LIST recordInformation), ls', deps', ids'),_) =>
 			let
-			    val _ = D.printDebugFeature D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
+			    val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
 											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR_LIST recordInformation))^". Creating constraint to this list.")
 			    val newConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR_LIST recordInformation), L.union ls ls', L.union deps deps', ids')
 			in  fsimplify (newConstraint::cs') l
@@ -4703,7 +4703,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT(((T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_TYPENAME(eqtvList)),labs,stts,ids)))::cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val _ = case S.getValStateEq state eqtv of
 			    NONE =>
  			    S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME (eqtvList), labs, stts, ids), [])
@@ -4784,19 +4784,19 @@ fun unif env filters user =
 	val _ = sigVsStrTypOFF ()
 	val ret = run (E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env))
 	    handle errorex err =>
-		   (D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => "handling errorex - an error has been detected during unification");
+		   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "handling errorex - an error has been detected during unification");
 		    if L.isin L.builtinLab (ERR.getL err)
 		    then Error (ERR.setB (ERR.stripDummys err) true,  state)
 		    else Error (ERR.setB (ERR.stripDummy  err) false, state))
     in
 	let
-	    val _ = D.printDebugFeature D.UNIF D.STATE (fn _ => S.printState state)
+	    val _ = D.printDebug D.UNIF D.STATE (fn _ => S.printState state)
 	    val _ = case ret of
-			Error _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^
+			Error _ => D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^
 											    "\n################################################################################\n"^
 											    "#              returning error status from unification algorithm               #\n"^
 											    "################################################################################")
-		      | Success _ => D.printDebugFeature D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#green (!D.colors))^
+		      | Success _ => D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#green (!D.colors))^
 											      "\n################################################################################\n"^
 											      "#             returning success status from unification algorithm              #\n"^
 											      "################################################################################")

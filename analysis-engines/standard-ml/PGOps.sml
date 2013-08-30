@@ -82,44 +82,6 @@ end
 
 structure M = BinarySetFn(OrdFile)
 
-(*structure PGOps : PG_OPS = struct
-
-    type ('lib, 'env, 'sym, 'syms, 'export, 'misc) context =
-	 { Ops : { Sgn: 'misc -> string -> 'misc * 'sym,
-		   Str: 'misc -> string -> 'misc * 'sym,
-		   Fct: 'misc -> string -> 'misc * 'sym,
-		   Imp: 'misc -> 'lib * 'syms -> 'misc * 'env,
-		   Com: 'misc -> string * 'env * 'syms * bool -> 'misc * 'env,
-		   Mer: 'misc -> 'env list -> 'misc * 'env,
-		   Fil: 'misc -> 'env * 'syms -> 'misc * 'env,
-		   Syms: 'misc -> 'sym list -> 'misc * 'syms,
-		   Exp: 'misc -> 'env -> 'export },
-	   Misc: 'misc }
-
-    local
-	fun generic { Ops = Ops as { Sgn, Str, Fct,
-				     Imp, Com, Mer, Fil, Syms, Exp },
-		      Misc }
-		    sel args =
-	    let val (Misc', res) = sel Ops Misc args
-	    in ({ Ops = Ops, Misc = Misc' }, res)
-	    end
-    in
-    fun sgn c s(*one signature name*) = generic c #Sgn s
-    fun str c s(*one structure name*) = generic c #Str s
-    fun fct c s(*one functor name*) = generic c #Fct s
-    fun syms c sl(*list of structures*) = generic c #Syms sl
-    fun import c l ss = generic c #Imp (l, ss)
-    fun compile c s(*name of the file*) e(*used files*) ss(*defined structures*) = generic c #Com (s, e, ss, false)
-    fun ncompile c s e ss = generic c #Com (s, e, ss, true)
-    fun merge c el(*list of files*) = generic c #Mer el
-    fun filter c e ss = generic c #Fil (e, ss)
-    fun export { Ops = { Sgn, Str, Fct, Imp, Com, Mer, Fil, Syms, Exp },
-		 Misc } e =
-	Exp Misc e
-    end
-end*)
-
 (* prints deps for a given file *)
 fun printDeps file deps =
     print (file ^ ":" ^ stringListToString deps ^ "\n")
@@ -225,18 +187,6 @@ fun checkCMFile file =
     end
     handle ErrorFile st => raise ErrorFile st
 	 | SysErr => raise ErrorFile "input file does not exist\n"
-
-(*fun checkTESFile file =
-    let fun getPref () =
-	    String.substring (file, 0, (String.size file) - 4)
-	    handle Subscript => raise ErrorFile ""
-    in if String.isSuffix ".tes" file
-       then (if OS.FileSys.isDir file orelse OS.FileSys.isLink file
-	     then raise ErrorFile "output file is not a file\n"
-	     else getPref ())
-	    handle SysErr => getPref ()
-       else raise ErrorFile "output file is not a .tes file\n"
-    end*)
 
 fun checkFileOut file suffix =
     let fun getPref () =

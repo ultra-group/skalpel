@@ -27,7 +27,7 @@
  *      features such as parsing and pretty printing.
  *)
 
-
+(** The signature PPP, used by both refstruct{Ppp} structures. *)
 signature PPP = sig
 
     type data

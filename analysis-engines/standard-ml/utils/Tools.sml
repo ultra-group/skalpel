@@ -1,5 +1,4 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,7 +11,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -22,7 +21,7 @@
  *      TOOLS and defines some useful functions to deal with lists.
  *)
 
-(* Has the signature TOOLS, defines some basic operations such as union and set membership. *)
+(** Has the signature TOOLS, defines some basic operations such as union and set membership. *)
 structure Tools :> TOOLS = struct
 
 (** Checks if an argument x is already a member of list xs. *)
@@ -38,7 +37,7 @@ fun subseteq []        _  = true
 fun disjoint []        ys = true
   | disjoint (x :: xs) ys = not (isin x ys) andalso disjoint xs ys
 
-(** Returns intersection of two lists. *)
+(** Returns interse"ction of two lists. *)
 fun inter xs ys = List.filter (fn x => isin x ys) xs
 
 (** \fn union list1 list2

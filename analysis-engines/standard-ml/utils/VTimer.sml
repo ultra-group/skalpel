@@ -27,40 +27,38 @@
  *      VTIMER.
  *)
 
-
+(** Has the signature VTIMER, defines interactions with timers. *)
 structure VTimer :> VTIMER = struct
 
 structure SY = SymbSlice
 
+(** Defines the timer type, containing two timers counting both CPU time, and real time taken. *)
 type timer = {real : Timer.real_timer,
 	      cpu  : Timer.cpu_timer}
 
-(* starts both timers *)
+(** Starts both the Real and CPU timers. *)
 fun startTimer () = {real = Timer.startRealTimer (),
 		     cpu  = Timer.startCPUTimer ()}
 
-(* returns the times taken *)
-fun getTime1 (timer : timer) = Timer.checkRealTimer (#real timer)
-fun getTime2 (timer : timer) =
-    let val {usr, sys} = Timer.checkCPUTimer (#cpu timer)
-    in Time.+ (usr, sys)
-    end
+(** Returns the time the timer has been running in seconds. *)
+fun getTime (timer : timer) = Timer.checkRealTimer (#real timer)
 
-fun getTime timer = getTime1 timer
-(* We might want to use getTime2 instead. *)
-
-(* gives the time in miliseconds - *10^(-3) *)
+(** Returns the time the timer has been running in miliseconds. *)
 fun getMilliTime timer = Time.toMilliseconds (getTime timer)
 
-(* gives the time in microseconds - *10^(-6) *)
+(** Returns the time the timer has been running in microseconds. *)
 fun getMicroTime timer = Time.toMicroseconds (getTime timer)
 
-(* determines if the timers are still running *)
+(** Checks whether given a timer and a time limit in miliseconds, the timer in has ran over the limit. *)
 fun stillMilliTime timer limit = getMilliTime timer > limit
+
+(** Checks whether given a timer and a time limit in microseconds, the timer in has ran over the limit. *)
 fun stillMicroTime timer limit = getMicroTime timer > limit
 
-(* convercts times to strings *)
+(** Converts milisecond time report to a strings. *)
 fun milliToString st timer = st ^ LargeInt.toString (getMilliTime timer) ^ SY.unitT1
+
+(** Converts microsecond time report to a strings. *)
 fun microToString st timer = st ^ LargeInt.toString (getMicroTime timer) ^ SY.unitT2
 
 end

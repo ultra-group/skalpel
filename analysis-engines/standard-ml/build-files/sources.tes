@@ -95,8 +95,6 @@ enum/StateEnv.sml
 enum/Minimisation.sig
 enum/Minimisation.sml
 enum/Enumeration.sml
-SlicerOptArgs.sig
-SlicerOptArgs.sml
 Tester.sig
 Tester.sml
 RunSlicer.sig

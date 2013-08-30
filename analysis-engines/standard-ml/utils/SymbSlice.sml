@@ -17,49 +17,46 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   SymbSlice.sml
- *  o Description: Defines the structure SymbSlice that contains the
- *      different symbols used by our slicer such as the extra symbols
- *      used in slices.
  *)
 
-
+(** Contains the different symbols used by our slicer such as the extra symbols used in slices.
+ * There are also symbols defined here which are used in the debug framework. *)
 structure SymbSlice = struct
 
+(** Dot characters - the string "..". *)
 val dots     = ".."
 
-(* mathematical left angle bracket- ⟨ *)
+(** Mathematical left angle bracket: \f$\langle\f$. *)
 val ldots    = "\226\159\168"
+
+(** Mathematical left angle bracket in latex: \f$\langle\f$. *)
 val ldotsLatex = "\\langle"
 
-(* mathematical right angle bracket- ⟩ *)
+(** Mathematical right angle bracket: \f$\rangle\f$. *)
 val rdots    = "\226\159\169"
+
+(** Mathematical right angle bracket in latex: \f$\rangle\f$. *)
 val rdotsLatex = "\\rangle"
 
-(* left white square bracket- 〚 *)
+(** Left white square bracket.  *)
 val splparen = "\227\128\154"
 
-(* right white square bracket- 〛 *)
+(** Right white square bracket. *)
 val sprparen = "\227\128\155"
 
-(* box drawing characters *)
-
+(** Bottom left box drawing character *)
 val bottomLeftCurve = "\226\149\176"
+
+(** Horiontal line box drawing character. *)
 val straightLine = "\226\148\128"
+
+(** Vertical fork box drawing character. *)
 val verticalFork = "\226\148\156"
 
+(** Miliseconds string (ms). *)
 val unitT1 = "ms"
 
-(* mu - µ *)
+(** The mu symbol (\f$\mu\f$). *)
 val unitT2 = "\194\181s"
-
-(* some other symbols, currently unused *)
-(*val dots     = ".."
-val ldots    = "⟨" (*"\226\159\168"*) (*"⧼"*) (*\226\167\188*) (*"〈"*) (*"〚"*) (*\227\128\154*) (*"〈"*) (*\226\140\169*) (*"⦑"*)
-val rdots    = "⟩" (*"\226\159\169"*) (*"⧽"*) (*\226\167\189*) (*"〉"*) (*"〛"*) (*\227\128\155*) (*"〉"*) (*\226\140\170*) (*"⦒"*)
-val splparen = "〚" (*"\227\128\154"*) (*"〘"*) (*\227\128\152*) (*"〈"*) (*"⦉"*)
-val sprparen = "〛" (*"\227\128\155"*) (*"〙"*) (*\227\128\153*) (*"〉"*) (*"⦊"*)
-
-val unitT1 = "ms"
-val unitT2 = "µs"*)
 
 end
