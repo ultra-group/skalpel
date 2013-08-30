@@ -227,9 +227,9 @@ fun createOneErrFileAlready file fop =
 fun convertToFull file fop fnames =
     case tokenizeSt file of
 	[x] => (let
-		    val _ = D.printDebugFeature D.PARSER D.PARSING (fn _ => "Getting full path of "^x^"...\n")
+		    val _ = D.printDebug D.PARSER D.PARSING (fn _ => "Getting full path of "^x^"...\n")
 		    val f = OS.FileSys.fullPath x
-		    val _ = D.printDebugFeature D.PARSER D.PARSING (fn _ => "Opening file with full path: "^x)
+		    val _ = D.printDebug D.PARSER D.PARSING (fn _ => "Opening file with full path: "^x)
 		in if OS.FileSys.isDir f orelse OS.FileSys.isLink f
 		   then createOneErrFileAccess file fop
 		   else if Tools.isin f fnames
@@ -279,7 +279,7 @@ fun clearBasisFiles files false = files
 (* consProgsSml handles the non basis files *)
 fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
   | consProgsSml ((file, opf, bas) :: files) n nasc fnames webdemo =
-    (D.printDebugFeature D.PARSER D.PARSING (fn _ => "[Skalpel: parsing file: "^file^"]\n");
+    (D.printDebug D.PARSER D.PARSING (fn _ => "[Skalpel: parsing file: "^file^"]\n");
     case convertToFull file opf fnames of
 	(NONE, xs) =>
 	(* we carry on, so that if a file is not found eg in SKALPEL-USE-FIE, then the
@@ -332,9 +332,9 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 	(* print out labelled basis and non-basis files as per the user requested *)
 	val skalpelDebugValue = !(D.debug)
 	val _ = D.debug := !(D.debugBasis)
-	val _ = D.printDebugFeature D.PARSER D.BASIS_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))
+	val _ = D.printDebug D.PARSER D.BASIS_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))
 	val _ = D.debug := skalpelDebugValue
-	val _ = D.printDebugFeature D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs nonBasisProgs) true)^"\n"))
+	val _ = D.printDebug D.PARSER D.PROGRAM_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs nonBasisProgs) true)^"\n"))
     in (A.Progs progs, m, masc, basisVal')
     end
 

@@ -1,42 +1,39 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
- * Copyright 2011 Heriot-Watt University
+(* Copyright 2009 2010 2011 2013 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Region.sml
- *  o Description: Defines the structure Reg which has signature REG
- *      and is used to deal with user code regions.
  *)
 
-
+(** Adds supports for representing section of ML code, called regions.
+ * Opaquely constrained by the refstruct{REG} signature. *)
 structure Reg :> REG = struct
 
 structure EH = ErrorHandler
 
-(* pos is represented by a line number and a character number *)
+(** A pair of integers - represenst a line number and a character number. *)
 type pos    = int * int
 
 (* a region is FROM a line number + character TO a line number + character *)
+(** A record representing a region.
+ * Has the following fields:
+ * \arg \b from. Of type #pos, represents the beginning of the region.
+ * \arg \b to. Of type #pos, represents the end of the region.
+ *)
 type region = {from : pos, to : pos}
 
 val tabBool   = ref false
@@ -49,7 +46,10 @@ fun getTab () =
 	 in while !n < !tabSize do (s := !s ^ " "; n := !n + 1); !s
 	 end
 
+(** Accessor function for the #tabSize. *)
 fun getTabSize () = !tabSize
+
+(** Modifier function for #tabSize *)
 fun setTabSize ts = (tabBool := true; tabSize := ts)
 
 fun addString (l, c) s =
@@ -61,40 +61,43 @@ fun addString (l, c) s =
 		 else s
     in (l, c + String.size s') end
 
-(* constructs a region givin two pairs of integers *)
+(** Given two arguments of type #pos, builds a region. *)
 fun consReg  p1 p2 = {from = p1, to = p2}
 
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
-(* support for printing a position *)
+(** Prints the #pos argument that has been given as <line>.<character>. *)
 fun printPos (a, b) = Int.toString a ^ "." ^ Int.toString b
 
-(* prints the position as a pair *)
+(** Prints the #pos argument that has been given as a pair. *)
 fun printSmlPos (a, b) = "(" ^ Int.toString a ^ "," ^ Int.toString b ^ ")"
 
-(* support for printing a region. from and to are of type pos, so they are each a pair of integers *)
+(** Prints a #region. *)
 fun printReg {from, to} = "(" ^ printPos from ^ "," ^ printPos to ^ ")"
 
-(* prints a region as a record (as it is represented internally) *)
+(** Prints a region as a record (as it is represented internally). *)
 fun printSmlReg {from, to} =
     "{from=" ^ printSmlPos from ^
     ",to="   ^ printSmlPos to   ^
     "}"
 
+(** Prints a region in JSON format. *)
 fun printJsonReg {from=(fromLine, fromColumn), to=(toLine, toColumn)} =
     "\"fromLine\": " ^ Int.toString(fromLine) ^ ", " ^
     "\"fromColumn\": " ^ Int.toString(fromColumn) ^ ", " ^
     "\"toLine\": " ^ Int.toString(toLine) ^ ", " ^
     "\"toColumn\": " ^ Int.toString(toColumn)
 
+(** Prints a region in LISP format. *)
 fun printLispReg {from = (x1, y1), to = (x2, y2)} =
     "(" ^ Int.toString x2 ^ " " ^ Int.toString y1 ^
     " " ^ Int.toString x2 ^ " " ^ Int.toString y2 ^
     ")"
 
+(** Prints a list of regions. *)
 fun printRegList xs = printlistgen xs printReg
 
-(* verify that two regions are the same *)
+(** Verifies that two regions given as arguments are the same *)
 fun checkSameRegs ({from = (l1, c1), to = (l2, c2)} : region)
 		  ({from = (l3, c3), to = (l4, c4)} : region) =
     l1 = l3 andalso c1 = c3 andalso l2 = l4 andalso c2 = c4

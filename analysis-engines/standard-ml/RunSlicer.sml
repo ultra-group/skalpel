@@ -59,7 +59,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Sat Jul 13 20:21:50 BST 2013. Skalpel version: 9773a19efca456abf832734d4927f5d033971e05"
+val SKALPEL_VERSION = "Built with MLton on Sun Jul 14 18:27:50 BST 2013. Skalpel version: a6bb21232eecbcb84737b4ec22a3707fd364a76a"
 
 (** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -341,13 +341,6 @@ fun smltes ({fileBas     : string,
 		Bool.toString (bcs),
 		Int.toString  (searchSpace)]
 
-
-(* we open SlicerOptArgs so that the user does not have to open the
- * structure themselves to start using optional arguments to the
- * slicer. *)
-open SlicerOptArgs
-
-
 fun printLegend () =
     let
 	val indent=""
@@ -395,21 +388,12 @@ fun printLegend () =
 	)
     end
 
-(* Same as smltes but takes a list of parameters instead of a record *)
-fun smlteslight list = smltes (optArg [list])
-
-(* Same as smlteslight but with some default options *)
-fun smltesdev list = smlteslight (list @ [BASOP 2, FILEBAS "../lib/basis.sml", FILEIN "test-prog.sml", DEV true])
-
 (* A function which has been created so that the slicer can be used
  * in various ways without the need to program a new function every
  * time. Parameters have been kept mostly the same as the cmd-line
  * interface to avoid confusion.
  *
  * Currently assumes there are no spaces in any directories.
- *
- * This has been replaced by SlicerOptArgs, and should be removed at
- * some stage.
  *)
 fun smlTesStrArgs strArgs =
     let
@@ -636,9 +620,20 @@ fun smlTesStrArgs strArgs =
     end
     handle Fail _ => OS.Process.failure
 
+fun slicerGen [] name =
+    smlTesStrArgs ""
+  | slicerGen args name =
+    smlTesStrArgs (foldr (fn (a,b) => a^" "^b) "" args)
+
+(******************************************************************************
+ *                           Entry point functions                            *
+ ******************************************************************************)
 
 fun smlnjEntryPoint (binaryName, argumentList) = smlTesStrArgs (foldr (fn (x,y)=>x^" "^y) "" argumentList)
 
-fun smltesstr str = smlTesStrArgs ("--output true -b 1 " ^ str)
+fun mltonEntryPoint () = slicerGen (CommandLine.arguments ()) (CommandLine.name ()) handle EH.DeadBranch str => (print ("Error: "^str); OS.Process.failure)
+
+fun polymlEntryPoint () = OS.Process.exit (slicerGen (CommandLine.arguments ()) (CommandLine.name ());
+					   OS.Process.success)
 
 end

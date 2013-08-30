@@ -41,6 +41,8 @@ signature SLICER = sig
     val setWebDemo         : bool -> unit
 
     val smlnjEntryPoint          :   string * string list -> OS.Process.status
+    val mltonEntryPoint          :  unit -> OS.Process.status
+    val polymlEntryPoint         :  unit -> unit
 
     val commslicerp        : string      -> (* basis file       *)
     			     string list -> (* input files      *)
@@ -75,22 +77,5 @@ signature SLICER = sig
     val smlTesStrArgs : string -> OS.Process.status
 
     val error : JsonParser.error
-
-    (*val smltes             : string -> OS.Process.status*)
-
-    val smlteslight          : ('a,'b) SlicerOptArgs.opt_key_arg list -> OS.Process.status
-
-    val smltesdev            : ('a,'b) SlicerOptArgs.opt_key_arg list -> OS.Process.status
-
-    val smltesstr            : string -> OS.Process.status
-
-    include SLICEROPTARGS
-
-    (*val getFreeIdentifiers : string
-			     -> bool
-                             -> {freeConstructors       : string list,
-				 freeTyNames            : string list,
-				 freeUnknownIdentifiers : string list,
-				 maybeFreeConstructors  : string list}*)
 
 end

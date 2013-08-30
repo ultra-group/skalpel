@@ -50,6 +50,7 @@ structure VT  = VTimer
 structure PP  = Ppp
 structure EH  = ErrorHandler
 structure ERR = Error
+structure SOL = Solution
 structure CDS = SplaySetFn(OrdStr)
 structure JP  = JsonParser
 
@@ -139,6 +140,10 @@ fun settimelimit tm = timelimit := tm
 fun gettimelimit _  = !timelimit
 
 fun setstylecss n = H.setstylecss n
+
+fun setsol   n  = SOL.setSol (SOL.fromInt n)
+fun getsol   () = SOL.toInt (SOL.getSol ())
+fun printsol () = print (SOL.toString () ^ "\n")
 
 fun getTabSize () = R.getTabSize ()
 fun setTabSize ts = R.setTabSize ts
@@ -279,7 +284,7 @@ fun debuggingXML errl
 	val (stt1, stt2, stt3, stt4, stt5) = timesToStr (t1, t2, t3, t4, t5)
         (*val std = begsep ^ "<minimisation val=\"" ^ Bool.toString bmin ^ "\"/>\n"*)
         val stu = begsep ^ "<basis val=\"" ^ Int.toString nenv ^ "\"/>\n"
-        val sts = begsep ^ "<solution val=\"" ^ Int.toString (9) ^ "\"/>\n"
+        val sts = begsep ^ "<solution val=\"" ^ Int.toString (SOL.toInt (SOL.getSol ())) ^ "\"/>\n"
         val stt = begsep ^ "<timelimit val=\"" ^ Int.toString (Int.fromLarge (gettimelimit ())) ^ "\"/>\n"
         val stf = begsep ^ "<time " ^ stt1 ^ " " ^ stt2 ^ " " ^ stt3 ^ " " ^ stt4 ^ " " ^ stt5 ^ "/>\n"
         val stg = begsep ^ "<tyvar nb=\"" ^ Int.toString (T.typeVarToInt (T.getTypeVar ())) ^ "\"" ^
@@ -325,7 +330,7 @@ fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair ini
 		  labels       = (L.toInt m) - (L.toInt initlab),
 		  minimisation = bmin,
 		  basis        = nenv,
-		  solution     = 9,
+		  solution     = SOL.toInt (SOL.getSol ()),
 		  timelimit    = gettimelimit (),
 		  labelling    = ""(*A.printAstProgs ast*),
 		  final        = bfinal,
@@ -519,7 +524,7 @@ fun debuggingSML errl
         val stb = newsep ^ "labelling    = \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val std = newsep ^ "minimisation = " ^ Bool.toString bmin
         val stu = newsep ^ "basis        = " ^ Int.toString nenv
-	val sts = newsep ^ "solution     = " ^ Int.toString (9)
+	val sts = newsep ^ "solution     = " ^ Int.toString (SOL.toInt (SOL.getSol ()))
         val stt = newsep ^ "timelimit    = " ^ Int.toString (Int.fromLarge (gettimelimit ()))
         val stj = newsep ^ "final        = " ^ Bool.toString bfinal
         val stk = newsep ^ "name         = \"" ^ name  ^ "\""
@@ -583,7 +588,7 @@ fun debuggingJSON errl
         val labelling = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val minimisation = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
         val basis = newsep ^ "\"basis\"        : " ^ Int.toString nenv
-	val solution = newsep ^ "\"solution\"     : " ^ Int.toString (9)
+	val solution = newsep ^ "\"solution\"     : " ^ Int.toString (SOL.toInt (SOL.getSol ()))
         val timelimit = newsep ^ "\"timelimit\"    : " ^ Int.toString (Int.fromLarge (gettimelimit ()))
         val final = newsep ^ "\"final\"        : " ^ Bool.toString bfinal
         val name = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
@@ -818,7 +823,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 		val times   = (timeCG, timeEN, timeEN, timeEN, timeEN)
 		val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
 		val berr    = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
-		val _       = D.printDebugFeature D.TEST D.TESTING (fn _ => jsonOutput)
+		val _       = D.printDebug D.TEST D.TESTING (fn _ => jsonOutput)
 		val _       = if bcs then print (Env.printEnv env "" ^ "\n") else ()
 		val _       = assignError (berr "")
 	    in counter
@@ -1098,10 +1103,10 @@ fun compareErrors2 [] [] (true,  id) = ()
 	(SOME (id', slice', cds', regs'), ys') =>
 	if compareCDS cds cds'
 	then compareErrors2 xs ys' bid           (* context dependancies are fine *)
-	else (D.printDebugFeature D.TEST D.TESTING (fn _ => "Difference in context dependancies. In database: "^(printCD cds)^". Discovered: "^(printCD cds')^".");
+	else (D.printDebug D.TEST D.TESTING (fn _ => "Difference in context dependancies. In database: "^(printCD cds)^". Discovered: "^(printCD cds')^".");
 	      compareErrors2 xs ys' (false, id))   (* context dependancies are different *)
       (* we didn't find the slice, we failed this test *)
-      | (NONE, _)  => (D.printDebugFeature D.TEST D.TESTING (fn _ => "cannot find database slice:\n"^slice^ "\nfound in this execution:\n"^
+      | (NONE, _)  => (D.printDebug D.TEST D.TESTING (fn _ => "cannot find database slice:\n"^slice^ "\nfound in this execution:\n"^
 							    (List.foldr (fn (x,y) => x^"\n"^y) "" ((List.map (fn (id, slice, cds, regs) => slice) ys))));
 		       raise MissingTest (Int.toString id)) (* means new algo is less efficient or at least one error is different *)
 
@@ -1226,7 +1231,7 @@ fun checktests listtests =
 					errs2
 			val bend2 = tenum2 - tcg2 > localtimelimit
 			val _     = updLongest x tenum2
-			val sol2  = 9
+			val sol2  = SOL.toInt (SOL.getSol ())
 			val _     = if sol1 > sol2 then raise NewerTest else ()
 			(* we want to compare the slices and the context dependencies *)
 			val  _   = compareErrors (bend1, sls1) (bend2, sls2)
