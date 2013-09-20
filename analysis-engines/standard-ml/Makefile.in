@@ -79,7 +79,7 @@ mlton-base: gen-parse
 
 
 mlton-bin: gen-mlb-sources mlton-base
-	echo "val _ = Slicer.mltonEntryPoint ();" >> build-files/mlton-control.sml
+	echo "val _ = Slicer.mltonEntryPoint ();" > build-files/mlton-control.sml
 	mkdir -p bin
 	mlton -prefer-abs-paths true -output bin/skalpel sources.mlb
 	mv RunSlicer.sml.original RunSlicer.sml

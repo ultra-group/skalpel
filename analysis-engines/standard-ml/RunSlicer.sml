@@ -59,7 +59,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Sun Jul 14 18:27:50 BST 2013. Skalpel version: a6bb21232eecbcb84737b4ec22a3707fd364a76a"
+val SKALPEL_VERSION = "Built with MLton on Wed Sep 18 12:03:48 BST 2013. Skalpel version: 98a15b35909ab31a83e70ab2dd44699b195a0683"
 
 (** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -241,6 +241,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 			      handle EH.DeadBranch st => (TextIO.output (TextIO.stdErr, ("the slicer encountered an impossible case: "^st^"\n")); (false, st))
 				   | EH.TODO str => (TextIO.output (TextIO.stdErr, "TODO raised: " ^ str ^ "\n"); (false, str))
 				   | Fail st => (TextIO.output (TextIO.stdErr, "Error: " ^ st ^ "\n"); (false, ""))
+				   | Subscript => (TextIO.output (TextIO.stdErr, "Error: Subscript\n"); (false, ""))
 				   | _ => (TextIO.output (TextIO.stdErr, "the slicer failed for some reason\n"); (false, ""))
 
 	(* if the slicer didn't fail, print the lisp/perl messages *)
@@ -311,35 +312,6 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
     in OS.Process.success
     end
   | slicerFull _ = (print("Incorrect arguments specified. Run with --help to see arguments list"); OS.Process.failure)
-
-(* smltes will take in a record constructed by SlicerOptArgs and give
- * the output to slicerFull. The default arguments for this can be
- * found in the SlicerOptArgs file. *)
-fun smltes ({fileBas     : string,
-	     fileIn      : string,
-	     fileHtml    : string,
-	     fileXml     : string,
-	     fileSml     : string,
-	     fileJson    : string,
-	     fileLisp    : string,
-	     filePerl    : string,
-	     tab         : int,
-	     sol         : int,
-	     min         : bool,
-	     dev         : bool,
-	     bcs         : bool,
-	     searchSpace : int,
-	     basOp       : int,
-	     timeLim     : int}) =
-    slicerFull [fileBas, fileIn, fileHtml, fileXml, fileSml, fileJson, fileLisp, filePerl,
-		Int.toString  (basOp),
-		Int.toString  (timeLim),
-		Int.toString  (tab),
-		Int.toString  (sol),
-		Bool.toString (min),
-		Bool.toString (dev),
-		Bool.toString (bcs),
-		Int.toString  (searchSpace)]
 
 fun printLegend () =
     let

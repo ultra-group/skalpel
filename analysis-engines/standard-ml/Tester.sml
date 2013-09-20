@@ -50,7 +50,6 @@ structure VT  = VTimer
 structure PP  = Ppp
 structure EH  = ErrorHandler
 structure ERR = Error
-structure SOL = Solution
 structure CDS = SplaySetFn(OrdStr)
 structure JP  = JsonParser
 
@@ -104,7 +103,6 @@ exception ToomuchTest           (* The slicer found more errors than before when
 exception NotmuchTest           (* The slicer didn't run out of time and didn't find as much errors as before  *)
 exception RegsTest              (* Regions are wrong for a slice                                               *)
 exception TocheckTest           (* A test has been recorded but the slices are not correct yet                 *)
-exception NewerTest             (* The slicer currently uses an older SOL than the one used to record the test *)
 
 val sep        = "    "
 val emacstab   = "        "
@@ -140,10 +138,6 @@ fun settimelimit tm = timelimit := tm
 fun gettimelimit _  = !timelimit
 
 fun setstylecss n = H.setstylecss n
-
-fun setsol   n  = SOL.setSol (SOL.fromInt n)
-fun getsol   () = SOL.toInt (SOL.getSol ())
-fun printsol () = print (SOL.toString () ^ "\n")
 
 fun getTabSize () = R.getTabSize ()
 fun setTabSize ts = R.setTabSize ts
@@ -284,7 +278,7 @@ fun debuggingXML errl
 	val (stt1, stt2, stt3, stt4, stt5) = timesToStr (t1, t2, t3, t4, t5)
         (*val std = begsep ^ "<minimisation val=\"" ^ Bool.toString bmin ^ "\"/>\n"*)
         val stu = begsep ^ "<basis val=\"" ^ Int.toString nenv ^ "\"/>\n"
-        val sts = begsep ^ "<solution val=\"" ^ Int.toString (SOL.toInt (SOL.getSol ())) ^ "\"/>\n"
+        val sts = begsep ^ "<solution val=\"9\"/>\n"
         val stt = begsep ^ "<timelimit val=\"" ^ Int.toString (Int.fromLarge (gettimelimit ())) ^ "\"/>\n"
         val stf = begsep ^ "<time " ^ stt1 ^ " " ^ stt2 ^ " " ^ stt3 ^ " " ^ stt4 ^ " " ^ stt5 ^ "/>\n"
         val stg = begsep ^ "<tyvar nb=\"" ^ Int.toString (T.typeVarToInt (T.getTypeVar ())) ^ "\"" ^
@@ -330,7 +324,7 @@ fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair ini
 		  labels       = (L.toInt m) - (L.toInt initlab),
 		  minimisation = bmin,
 		  basis        = nenv,
-		  solution     = SOL.toInt (SOL.getSol ()),
+		  solution     = 9,
 		  timelimit    = gettimelimit (),
 		  labelling    = ""(*A.printAstProgs ast*),
 		  final        = bfinal,
@@ -524,7 +518,7 @@ fun debuggingSML errl
         val stb = newsep ^ "labelling    = \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val std = newsep ^ "minimisation = " ^ Bool.toString bmin
         val stu = newsep ^ "basis        = " ^ Int.toString nenv
-	val sts = newsep ^ "solution     = " ^ Int.toString (SOL.toInt (SOL.getSol ()))
+	val sts = newsep ^ "solution     = 9"
         val stt = newsep ^ "timelimit    = " ^ Int.toString (Int.fromLarge (gettimelimit ()))
         val stj = newsep ^ "final        = " ^ Bool.toString bfinal
         val stk = newsep ^ "name         = \"" ^ name  ^ "\""
@@ -588,7 +582,7 @@ fun debuggingJSON errl
         val labelling = newsep ^ "\"labelling\"    : \"" (*^ transfun2 (A.printAstProgs ast)*) ^ "\""
         val minimisation = newsep ^ "\"minimisation\" : " ^ Bool.toString bmin
         val basis = newsep ^ "\"basis\"        : " ^ Int.toString nenv
-	val solution = newsep ^ "\"solution\"     : " ^ Int.toString (SOL.toInt (SOL.getSol ()))
+	val solution = newsep ^ "\"solution\"     : 9"
         val timelimit = newsep ^ "\"timelimit\"    : " ^ Int.toString (Int.fromLarge (gettimelimit ()))
         val final = newsep ^ "\"final\"        : " ^ Bool.toString bfinal
         val name = newsep ^ "\"name\"         : \"" ^ name  ^ "\""
@@ -845,18 +839,10 @@ fun initialise filebas filesin nenv bprint =
 	    consProgs filebas nenv filesin initlab I.emAssoc webdemo
 	(*val _ = D.printdebug2 (I.printAssoc ascid)*)
 	val parse = (progs, m, ascid)
-	(*val stmin = TextIO.openIn filein
-	val parse as (ast, m, (asc, ascid)) = P.f (filein, stmin) initlab
-	    handle P.ParsingError (x, y) => dummyparsing x y initlab*)
-        (*val _ = TextIO.closeIn stmin*)
-	(*val _ = D.printdebug2 (A.printAstProgs progs)*)
-	(*val _ = D.printdebug2 (PP.prettyPrintAst (A.getNonBasProgs progs))*)
-	(*val _ = D.printdebug2 (PP.prettyPrintAst progs)*)
 	val _ = L.setNextLab m
 	(* Generation of the constraints *)
 	val _ = if bprint then print "constraint generation...\n" else ()
         val envContextSensitiveSyntaxPair as (env, css) = AN.fullConsGen progs ascid nenv
-	(*val _ = D.printdebug2 (EV.printEnv env "")*)
         val t1 = VT.getMilliTime timer
     in (initlab, parse, envContextSensitiveSyntaxPair, timer, t1)
     end
@@ -1147,7 +1133,6 @@ fun messageBad        test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ "\n"
 fun messageBetter     test    = (#green (!D.colors)) ^  test ^ " more than OK\n"
 fun messageSlow       test    = (#green (!D.colors)) ^ test ^ " OK but slower\n"
 fun messageOK         test    = (#green (!D.colors)) ^ test ^ " OK\n"
-fun messageNewer      test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": test recorded with a newer SOL\n"
 fun messageDeadBranch test st = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
 fun messageTodo       test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": TODO: "
 
@@ -1231,8 +1216,7 @@ fun checktests listtests =
 					errs2
 			val bend2 = tenum2 - tcg2 > localtimelimit
 			val _     = updLongest x tenum2
-			val sol2  = SOL.toInt (SOL.getSol ())
-			val _     = if sol1 > sol2 then raise NewerTest else ()
+			val sol2  = 9
 			(* we want to compare the slices and the context dependencies *)
 			val  _   = compareErrors (bend1, sls1) (bend2, sls2)
 		    in plustest oktests; outputDB (messageOK x) stout
@@ -1251,8 +1235,7 @@ fun checktests listtests =
 		  | RegsTest         => (plustest badtests;   outputDB (messageRegs       x)    stout)
 		  | TocheckTest      => (plustest checktests; outputDB (messageTocheck    x)    stout)
 		  | EH.DeadBranch st => (plustest deadtests;  outputDB (messageDeadBranch x st) stout)
-		  | EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       x)^st^"\n")    stout)
-		  | NewerTest        => (plustest newertests; outputDB (messageNewer      x)    stout));
+		  | EH.TODO st          => (plustest todotests;  outputDB ((messageTodo       x)^st^"\n")    stout));
 	    run xs)
 
 	val _ = run testList

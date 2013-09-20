@@ -56,7 +56,7 @@ type eqType          = bool
 (* int for typename but string for labcons because not in any environment *)
 type typename     = int (* 1: arrow, 2: record, ... *)
 type fieldName    = string
-type idor       = int (* jpirie: give this a meaningful name *)
+type idor       = int
 (* if we have ... in a record then that makes it flexible, that's called a
  * flexible record pattern. Sometimes just called flex records, it's equivalent
  * to having all the missing fields there with wildcard for pattern inside the

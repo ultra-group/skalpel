@@ -77,86 +77,89 @@ fun dummyparsing messages lab nasc =
     in (A.Prog progonelist, m, nasc)
     end
 
-(*fun parseMLB file stm n nasc =
-      let val error = ref false
-	  (* lexer argument: file name and start position *)
-	  val lexarg = (file, ref (1, 1))
-	  (* create a stream of lexical tokens *)
-	  val lexstream = MLBParser.makeLexer
-			      (fn n => TextIO.inputN(stm, n)) lexarg
-	  (* initial parsing error messages *)
-	  val _ = messages := []
-	  (* a function for reporting syntax errors *)
-	  fun syntaxError (msg, from, to) =
-	      (fn extmsg => (error := true; addmessage extmsg))
-		  (file ^ ":"  ^ R.printPos from ^ "-" ^ R.printPos to ^ ": " ^  msg,
-		   msg,
-		   [R.consReg from to])
-	  (* build the AST, parameterized by its lowest node label *)
-	  val (astFunction, _) =
-	      LD.handleLex MLBParser.parse (15, lexstream, syntaxError, ())
-	  (* label the nodes starting from n, the second parameter is the typevar substitution *)
-	  val (ast, (m, asc)) = astFunction (n, nasc)
-      in if !error
-	 then dummyparsing (!messages) n nasc (*raise ParsingError (n, (!messages))*)
-	 else (ast, m, asc)
-      end
-      handle LD.LexError x => dummyparsing [x] n nasc (*raise ParsingError (n, [x]) (* can we still get those? *)*)
-	   | ParseError   => dummyparsing (!messages) n nasc (*raise ParsingError (n, (!messages)) (* can we still get those? *)*)
- *)
-
 fun parse file inputStream nextNodeLabel nasc =
     let
-	(* if the parser throws an exception, we can use this to see how far we got *)
-	val posref = ref (1,1)
-    in
-	let val error = ref false
-	    (* lexer argument: file name and start position *)
-	    val lexarg = (file, posref)
-	    (* create a stream of lexical tokens *)
-	    val lexstream = MLParser.makeLexer
-				(fn n => TextIO.inputN(inputStream, n)) lexarg
-	    (* initial parsing error messages *)
-	    val _ = messages := []
-	    (* a function for reporting syntax errors *)
-	    fun syntaxError (msg, from, to) =
-		(fn extmsg => (error := true; addmessage extmsg))
-		    (file ^ ":"  ^ R.printPos from ^ "-" ^ R.printPos to ^ ": " ^  msg,
-		     msg,
-		     [R.consReg from to])
-	    (* build the AST, parameterized by its lowest node label *)
-	    val (astFunction, testing) =
-		LD.handleLex MLParser.parse (15, lexstream, syntaxError, ())
-	    (* label the nodes starting from n, the second parameter is the typevar substitution *)
-	    val (ast, (m, asc)) = astFunction (nextNodeLabel, nasc)
-	    val (flag, str, reg) = PD.getErrorHandler ()
-	in if !error
-	   then dummyparsing (!messages) nextNodeLabel nasc
-	   else if flag
-	   then raise PD.ParseError (str, reg)
-	   else (ast, m, asc)
-	end
-	handle LD.LexError x            => (TextIO.output (TextIO.stdErr, "Error: LexError\n") ; dummyparsing [x] nextNodeLabel nasc)
-	     | PD.ParseError (msg, reg) => (TextIO.output (TextIO.stdErr, "Error: ParseError\n"); dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
-	     | _ => (print (". Region = ("^(Int.toString(#1(!posref)))^", "^(Int.toString(#2(!posref)))^")\n");
-		     if (#2(!posref) = 1)
-		     then (dummyparsing [(
-			   "syntax error",
-			   "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
-			   [{from= (#1(!posref)-1, #2(!posref)), (* highlight something for start of line regions *)
-			     to= (#1(!posref)-1, #2(!posref)+999)}])]
-					nextNodeLabel nasc)
-		     else dummyparsing [(
-			  "syntax error",
-			  "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
-			  [{from= (#1(!posref), #2(!posref) -1), (* highlight something for end of line regions *)
-			    to= !posref}])]
-				       nextNodeLabel nasc)
+	(** Stores our position in the file as we are parsing. If the parser explodes we can use this to see how far we got.
+	 * Initially set to ref (1,1) indicating the start of the file. Probably we should have a better way to extract this
+         * information from the parser? *)
+	val posref = ref (1,1) in let
+
+	val error = ref false
+	(* lexer argument: file name and start position *)
+	val lexarg = (file, posref)
+	(* create a stream of lexical tokens *)
+	val lexstream = MLParser.makeLexer
+			    (fn n => TextIO.inputN(inputStream, n)) lexarg
+	(* initial parsing error messages *)
+	val _ = messages := []
+
+	(* a function for reporting syntax errors *)
+	fun syntaxError (msg, from, to) =
+	    (fn extmsg => (error := true; addmessage extmsg))
+		(file ^ ":"  ^ R.printPos from ^ "-" ^ R.printPos to ^ ": " ^  msg,
+		 msg,
+		 [R.consReg from to])
+
+	(* the first part returned, the 'term', is an integer. *)
+	fun printToken (LrParser.Token.TOKEN x) =
+	    let
+		fun printRegion (point1, point2) = ("(" ^ (Int.toString point1) ^ "," ^ (Int.toString point2) ^ ")")
+	    	val term = #1 x
+	    	val (p1,p2,p3) = #2 x
+	    in
+	    	(* print p1; *)
+	    	print ((printRegion p2) ^ " " ^ (printRegion p3))
+	    end
+
+	fun printAllTokens lexstream =
+	    let
+		val (topToken,remainingStream) = MLBParser.Stream.get lexstream
+		val _ = (print "New token: "; printToken topToken)
+	    in
+		printAllTokens remainingStream
+	    end
+
+	(* build the AST, parameterized by its lowest node label *)
+	val (astFunction, testing) =
+	    LD.handleLex MLParser.parse (15, lexstream, syntaxError, ())
+	    (* handle _ => (TextIO.output (TextIO.stdErr, "Error: Unknown exception caught during parsing.\n"); *)
+	    (* 				   print "----\nMessages: "; *)
+	    (* 				   printmessages(); *)
+	    (* 				   (* print "\n----\nToken(s): "; *) *)
+	    (* 				   (* printAllTokens lexstream; *) *)
+	    (* 				   (* printToken (#1 (MLBParser.Stream.get(lexstream))); *) *)
+	    (* 				   (* printToken (#1(MLBParser.Stream.get(#2 (MLBParser.Stream.get(lexstream))))); *) *)
+	    (* 				   print "\n----\n"; *)
+	    (* 				   raise LrParser.ParseError) *)
+
+
+	(* label the nodes starting from n, the second parameter is the typevar substitution *)
+	val (ast, (m, asc)) = astFunction (nextNodeLabel, nasc)
+	val (flag, str, reg) = PD.getErrorHandler ()
+    in if !error
+       then dummyparsing (!messages) nextNodeLabel nasc
+       else if flag
+       then raise PD.ParseError (str, reg)
+       else (ast, m, asc)
+    end
+    handle LD.LexError x            => (TextIO.output (TextIO.stdErr, "Error: LexError\n") ; dummyparsing [x] nextNodeLabel nasc)
+	 | PD.ParseError (msg, reg) => (TextIO.output (TextIO.stdErr, "Error: ParseError\n"); dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
+	 | _ => (TextIO.output (TextIO.stdErr, "Error: Unknown catch-all exception raised.\n");
+		 if (#2(!posref) = 1)
+	 	 then (dummyparsing [("syntax error",
+	 			      "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
+	 			      [{from= (#1(!posref)-1, #2(!posref)), (* highlight something for start of line regions *)
+	 				to= (#1(!posref)-1, #2(!posref)+999)}])]
+	 			    nextNodeLabel nasc)
+	 	 else dummyparsing [("syntax error",
+	 			     "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
+	 			     [{from= (#1(!posref), #2(!posref) -1), (* highlight something for end of line regions *)
+	 			       to= !posref}])]
+	 			   nextNodeLabel nasc)
     end
 
 fun parseTes tesfile stin lab nasc =
     let val {dir, file} = OS.Path.splitDirFile tesfile
-	(*val _ = D.printdebug2 ("dir:" ^ dir ^ "\n" ^ "file:" ^ file)*)
 	fun getRegion st sub n =
 	    let val (pref, _) = Substring.position sub (Substring.full st)
 		val pref = Substring.string pref
@@ -254,9 +257,7 @@ fun treatAFile file n nasc webdemo =
 	    (* TES FILES *)
 	    then parseTes file instr n nasc
 	    (* OTHER FILES SUCH AS SML FILES *)
-	    else (*if String.isSuffix ".mlb" file
-		   then parseMLB file instr n nasc
-		   else*) parse file instr n nasc
+	    else parse file instr n nasc
 	val xs  = if webdemo
 		  then []
 		  else newFilesRegToTreat (A.extractFilesProg prog)

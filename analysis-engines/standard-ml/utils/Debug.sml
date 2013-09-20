@@ -33,9 +33,10 @@ structure Debug :> DEBUG = struct
  * \arg \b RUN. For debugging in RunSlicer.sml
  * \arg \b ENV. For debugging in Env.sml
  * \arg \b TEST. For debugging in Tester.sml
+ * \arg \b LEXER. For debugging in ML.lex
  * \arg \b PARSER. For debugging in Parser.sml
  * \arg \b BLANK. For when a filename is not to be printed. *)
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER | BLANK
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER | LEXER | BLANK
 
 (** Represents the file that debugging is taking place in.
  * Constructors include:
@@ -152,6 +153,7 @@ fun printFilename JSON   = "JsonParser.sml"
   | printFilename RUN    = "Run.sml"
   | printFilename ENV    = "Env.sml"
   | printFilename TEST   = "Tester.sml"
+  | printFilename LEXER  = "ML.lex"
   | printFilename PARSER = "Parser.sml"
   | printFilename BLANK = ""
 
@@ -181,9 +183,12 @@ fun printDebug file EQUALITY_TYPES stringFunction =
   | printDebug file PROGRAM_LABELLING stringFunction =
     if (!debug) andalso (!debugProgramLabelling) then
 	let
+	    (** The filename to output the skalpel labelled program to. *)
 	    val filename = (case OS.Process.getEnv "SKALPEL_LABELLED_PROGRAM" of
 			      NONE => (print "Warning: Environment variable SKALPEL_LABELLED_PROGRAM not set! Defaulting to: /tmp/skalpel-labelled-program.tex"; "/tmp/skalpel-labelled-program.tex")
 			    | SOME file => file)
+
+	    (** Output stream for printing the labelled program *)
 	    val outputStream = TextIO.openOut filename
 	in
 	    (TextIO.output (outputStream, stringFunction());
@@ -208,8 +213,11 @@ fun printDebug file EQUALITY_TYPES stringFunction =
 (** Prints a labelled program string in a random color. *)
 fun printLabelledProgramString(x) =
     let
+	(** A list of latex colors that can be used. *)
 	val texColors = ["black", "red", "green", "blue", "cyan", "magenta", "yellow"]
+	(** Random number. Currently a constrant, want to move away from colours here anyway. *)
 	val randomNumber = 4 (*Random.randNat rand*)
+	(** The colour chosen for the current bracket that is being printed. Deprecated. *)
 	val colorChosen = List.nth (texColors, (randomNumber mod (List.length texColors)))
     in
 	"{\\color{" ^ colorChosen ^ "}\\Bigg[}" ^ x ^ "{\\color{" ^ colorChosen ^ "}\\Bigg]}"
@@ -236,10 +244,10 @@ val debugbool1 = false
 val debugbool2 = true
 
 (** A deprecated debug printing functions which prints its argument if #debugbool1 is enabled.
- * \deprecated *)
+ * \deprecated The printDebug function should be used now. *)
 fun printdebug1 st = if debugbool1 then print st else ()
 (** A deprecated debug printing functions which prints its argument with separator strings if #debugbool2 is enabled.
- * \deprecated *)
+ * \deprecated The printDebug function should be used now. *)
 fun printdebug2 st =
     if debugbool2
     then print (sep1' ^ st ^ sep2' ^ "\n")

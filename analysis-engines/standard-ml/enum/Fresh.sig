@@ -17,18 +17,15 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Fresh.sig
- *  o Description: Defines the signature FRESH.
  *)
 
-
+(** The signature for variable freshening. *)
 signature FRESH = sig
 
     type state
 
-    (* initialises the state *)
     val finitState : unit -> state
 
-    (* generates fresh variables *)
     val freshTypeVar            : Ty.typeVar     -> state -> Ty.typeVar
     val freshTypeFunctionVar    : Ty.typeFunctionVar    -> state -> Ty.typeFunctionVar
     val freshTypenameVar        : Ty.typenameVar -> state -> Ty.typenameVar

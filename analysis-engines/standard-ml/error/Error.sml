@@ -92,40 +92,6 @@ fun printLabReg xs =
 	xs
 	(fn (l, rl) => "(" ^ L.printLab l ^ "," ^ R.printRegList rl ^ ")")
 
-
-(*
-fun printErrBisBis [] _ = ""
-  | printErrBisBis ((x as {id, labs, deps, ek, rem}) :: xs) ast =
-    let
-	val regs = A.getpos_prog ast labs
-    in
-        "<ERROR"
-        ^ " labels="      ^ printLabReg regs
-        ^ " regions="     ^ "[" ^ R.printRegList (foldl (fn ((_, x), y) => x @ y) [] regs) ^ "]"
-        ^ " assumptions=" ^ L.toString deps
-        ^ " typeerror="   ^ #2 (EK.printErrKind ek)
-        ^ ">"
-        ^ "\n"
-        ^ (printErrBisBis xs ast)
-    end
-*)
-
-(*
-fun printErrBis [] _ = ""
-  | printErrBis ((x as {id, labs, deps, ek, rem}) :: xs) ast =
-    let
-	val regs = A.getpos_prog ast labs
-    in
-        "<ERROR"
-        ^ " labels="      ^ printLabReg regs
-        ^ " assumptions=" ^ L.toString deps
-        ^ " typeerror="   ^ #2 (EK.printErrKind ek)
-        ^ ">"
-        ^ "\n"
-        ^ (printErrBis xs ast)
-    end
-*)
-
 (* turns the character into a string *)
 fun transfun1 #"\""    = "\\\""
   | transfun1 #"\227"  = "\227" (* sequence ldots and rdots *)
@@ -314,43 +280,7 @@ fun printOneBashErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 	 else if List.length cdStringList = 1
 	 then printReset( (#yellow (!D.underlineColors)) ^ "\nContext Dependency:" ^ (!D.textReset) ^ " " ^ cd ^ " is neither a type nor an exception constructor.\n")
 	 else printReset( (#yellow (!D.underlineColors)) ^ "\nContext Dependencies:" ^ (!D.textReset) ^ " " ^ cd ^ " are neither datatype nor exception constructors.\n"))
-
-    (* (id, cd, ek, rm, slice, *)
-       (* 	(if basisoverloading = 0 *)
-       (* 	 then "regions     => [" ^ ER.printPerlExtRegs (List.filter (fn (name, regs) => (if (String.isSubstring "basis.sml" name) then false else true)) regs) ^ "]" *)
-       (* 	 else "regions     => [" ^ ER.printPerlExtRegs regs ^ "]") *)
-       (* 	, mn) *)
     end
-
-(*
-fun printErr [] = ""
-  | printErr ((x as {id, labs, deps, ek}) :: xs) =
-    "<ERROR"
-    ^ " labels="      ^ L.toString labs
-    ^ " assumptions=" ^ L.toString deps
-    ^ " typeerror="   ^ #2 (EK.printErrKind ek)
-    ^ ">"
-    ^ "\n"
-    ^ (printErr xs)
-*)
-
-(*
-fun printErrorBisBis [] _ = "<NOERROR>"
-  | printErrorBisBis err ast = printErrBisBis err ast
-*)
-
-(*
-fun printErrorBis [] _ = "<NOERROR>"
-  | printErrorBis err ast = printErrBis err ast
-*)
-
-(*
-fun printError []  = "<NOERROR>"
-  | printError err = printErr err
-*)
-
-
-(*********************************************************************)
 
 
 val idError = ref 0

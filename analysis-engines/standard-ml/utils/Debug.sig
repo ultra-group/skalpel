@@ -24,17 +24,18 @@
 (** A signature used by refstruct{Debug}, used to aid debugging of Skalpel. *)
 signature DEBUG = sig
 
-    datatype debugFiles = JSON     (* JsonParser.sml *)
-			| UNIF     (* Unification.sml *)
-			| LABEL    (* Label.sml *)
-			| TY       (* Ty.sml *)
-			| MLGRM    (* ML.grm *)
-			| AZE      (* Analyze.sml *)
-			| TEST     (* Tester.sml *)
-			| RUN      (* RunSlicer.sml *)
-			| ENV      (* Env.sml *)
-			| PARSER   (* Parser.sml *)
-			| BLANK    (* empty string *)
+    datatype debugFiles = JSON
+			| UNIF
+			| LABEL
+			| TY
+			| MLGRM
+			| AZE
+			| TEST
+			| RUN
+			| ENV
+			| PARSER
+			| BLANK
+			| LEXER
 
     val debugProgramLabelling : bool ref
     val oneRunOnly : bool ref

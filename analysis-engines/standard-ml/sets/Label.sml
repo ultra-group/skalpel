@@ -17,56 +17,52 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        22 June 2010
  *  o File name:   Label.sml
- *  o Description: This file defines the signature structure Label.
- *      It has signature LABEL and is used to deal with labels.
  *)
 
-
-(*SKALPEL-USE-FILE ../utils/sources.tes*)
-(*SKALPEL-USE-FILE OrdKey.sml*)
-(*SKALPEL-USE-FILE Label.sig*)
-
-
+(** Opaquely constraned by LABEL and is used to represent program locations. *)
 structure Label :> LABEL = struct
 
-(*structure S = IntCBTSet
-structure S = IntCBTHCSet
-structure S = IntCBTHCSet2
-structure S = IntCBTHCSet3*)
-
-(*structure S = IntListSet*)
-(*structure S = SplaySetFn (OrdKey)*)
 structure S  = BinarySetFn (OrdKey)
 structure EH = ErrorHandler
 structure D  = Debug
 
-(* val debugString = S.debugString *)
-
-(* label is a program position *)
+(** A program position. Declared to be of type S.item. *)
 type label  = S.item
+
+(** A set of program position, declared as an S.set. *)
 type labels = S.set
 
-
-(* Printing *)
-
-
+(** Prints a set of labels. *)
 fun printsetgen xs f = "[" ^ #1 (S.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
+
+(** Prints out a label
+ * Uses Int.toString. *)
 fun printLab l = Int.toString l
+
+(** Pritns out a set of labels using #printsetgen. *)
 fun toString set = printsetgen set printLab
 
-
-(* *********** *)
-
+(** A dummy label, we represent this with the number 0. *)
 val dummyLab   = 0
+
+(** A built-in label, represented by the number 1. *)
 val builtinLab = 1
+
+(** The first number to start labelling from, set to 2. *)
 val firstLab   = 2
+
+(** A reference to the next label that we can use which hasn't been used before.
+ * Initially set to be a reference to #firstLab but updated by #setNextLab. *)
 val nextlab    = ref firstLab
 
-(* set and get functions for labels *)
+(** Sets the #nextlab variabe to the number passed in as an argument. *)
 fun setNextLab n = nextlab := n
+
+(** Accesser function for #nextlab. *)
 fun getlab    () = !nextlab
 
-(* generates a new label *)
+(** Returns the number of a fresh label.
+ * Returns the value of #nextlab and increments its value by one. *)
 fun freshlab  () =
     let
 	val x = !nextlab
@@ -74,44 +70,57 @@ fun freshlab  () =
 	(nextlab := !nextlab + 1; x)
     end
 
-(* resets the next label back to the firstLab value (constant) *)
+(** Resets the #nextlab back to the #firstLab value (constant). *)
 fun resetNext () = setNextLab firstLab
 
+(** The empty label set. *)
 val empty     = S.empty
+
+(** Folding right over labels. *)
 val foldr     = S.foldr
+
+(** Folding left over labels. *)
 val foldl     = S.foldl
+
+(** A function to test whether a label set is empty. *)
 val isEmpty   = S.isEmpty
+
+(** For determining the length of a label set. *)
 val length    = S.numItems
+
+(** A singleton value. *)
 val singleton = S.singleton
+
+(** Function for turning a set of labels into a list of labels. *)
 val toList    = S.listItems
 
-(* returns an integer from a value of type Label.label *)
+(** Returns an integer from a value of type Label.label. *)
 fun toInt   lab = lab
 
-(* returns a label of type Label.label given an integer *)
+(** Returns a label of type Label.label given an integer. *)
 fun fromInt lab = lab
 
-(* increments the label counter *)
+(** Increments the label counter by one. *)
 fun nextLabel lab = lab + 1
 
-(* gets the nth next label number *)
+(** Gets the nth next label number. *)
 fun nextLabN lab 0 = lab
   | nextLabN lab n = if n < 0 then raise EH.DeadBranch "" else (nextLabN lab (n-1)) + 1
 
-(* removes element x frmo the set set *)
+(** Removes an element from a set. *)
 fun delete x set = S.delete (set, x) handle LibBase.NotFound => set
 
-(* checks whether two labels are equal *)
+(** Tests whether two labels are equal.
+ * \returns true if the labels are equal, false otherwise *)
 fun eq x (y : label) = (x = y)
 
-(* finds which label is of a lesser value *)
+(** Given two integers, returns the lowest vaulue one. *)
 fun min x y = Int.min (x, y)
 
-(* returns the first element that it finds by passing in a function which
- * will always return true *)
+(** Returns the first value in the set given as an argument. *)
 fun getfirst set = S.find (fn _ => true) set
 
-(* removes the first element that it finds in the set *)
+(** Removes the first element in a set given as an argument. *)
 fun remFirst set =
     let val elt = getfirst set
     in case elt of
@@ -119,92 +128,87 @@ fun remFirst set =
 	 | SOME x => (SOME x, delete x set)
     end
 
-(* checks that the set ll has only one element *)
+(** Checks that the set given as an argument has only one element. *)
 fun isSingle ll = length ll = 1
 
-(* determines if two sets are equal *)
+(** Determines if two sets are equal. *)
 fun equal set1 set2 = S.equal (set1, set2)
 
-(* union of sets *)
+(** Unions sets. *)
 fun union set1 set2 = S.union (set1, set2)
 
-(* adds setop (an OPTION) to set, if NONE then just returns original set *)
+(** Adds setop (an OPTION) to set, if NONE then just returns original set. *)
 fun unionop setop set = case setop of NONE => set | SOME x => S.union (x, set)
 
-(* generalised union *)
+(** Generalised union. *)
 fun unions sets =
     (List.foldr (fn (set1, set2) => union set1 set2)
 		(List.hd sets)
 		(List.tl sets))
     handle Empty => S.empty
 
-(* adds x to the set set. The output order is different in this case *)
+(** Adds an element to a set given as an argument. *)
 fun cons x set = S.add' (x, set)
 
-(* creates a new list from xs *)
+(** Creates a new set given a list of elements. *)
 fun ord xs = S.addList (S.empty, xs)
 
-(* return the intersection of two sets *)
+(** Return the intersection of two sets. *)
 fun inter set1 set2 = S.intersection (set1, set2)
 
+(** Returns the intersection of a list and a set as a list. *)
 fun interList list set = toList (inter (ord list) set)
 
-(* checks if set1 is a subset of set2 *)
+(** Tests if the set in the first argument is a subset of the set given as the second argument. *)
 fun subseteq set1 set2 = S.isSubset (set1, set2)
 
-(* checks if set1 is a *strict* subset of set2 *)
+(** Tests if the set in the first argument is a \b script subset of the set given as the second argument. *)
 fun subset set1 set2 = S.isSubset (set1, set2) andalso S.numItems set1 < S.numItems set2
 
-(* it is true if one of the element of the second argument is a subseteq of the first argument *)
+(** Tests that all elements in 'sets' are a subset of 'set'. *)
 fun exsubseteq set sets = List.exists (fn set' => subseteq set' set) sets
 
+(** Test sthat 'set' is a subsets of all sets in the 'sets' argument. *)
 fun subseteqin set sets = List.exists (fn set' => subseteq set set') sets
 
-(* checks whether x is in set *)
+(** Tests whether an element is in a set. *)
 fun isin x set = S.member (set, x)
 
-(**
-  param l: int
-  param ll: int list
-  returns (lll, llr): (int list * int list)
-  such that ll = lll @ llr
-  and forall l' in lll, l' < l
-  and forall l' in llr, l' >= l
-*)
+(** Splits a list into two pieces.
+ * \returns (lll,llr) s.t. $\forall$ l' in lll, l' < x and $\forall$ l' in llr, l' >= x *)
 fun split x set = S.partition (fn y => case S.Key.compare (x, y) of
 					       LESS    => false
 					     | EQUAL   => false
 					     | GREATER => true) set
 
-(* returns the set difference (set2 \ set1) *)
+(** Returns the set difference (set2 \ set1). *)
 fun diff set1 set2 = S.difference (set2, set1)
 
-(* returns whether any members of set1 are in set2 *)
+(** Returns whether any members of set1 are in set2. *)
 fun disjoint set1 set2 = S.isEmpty (S.intersection (set1, set2))
 
-(* checks whether l is equal to ll where ll has only one element *)
-(* can't this just be done with l=ll? *)
+(** Checks whether l is equal to ll where ll has only one element. *)
 fun isinone l ll = isin l ll andalso length ll = 1
 
-fun getpairs set1 set2 = foldr (fn (x, y) =>
-				   (foldr (fn (u, v) => (ord [x, u]) :: v) [] set1) @ y)
-			       []
-			       set2
-
-fun getpairss sets = #1 (List.foldr (fn (set, (pairs, sets)) =>
-					((getpairs set sets) @ pairs, union set sets))
-				    ([], empty)
-				    sets)
-
+(** Returns elements of a set that are less than the value specified in the 'lim' argument. *)
 fun restrictLim set lim = S.filter (fn x => if x < lim then true else false) set
 
+(** Splits a set into two halves (using ceil and the '/' operator). *)
 fun splitIn2 set =
-    let fun push elt pset = pset := S.add (!pset, elt)
+    let
+	(** Adds an element 'elt' to the set 'pset'. *)
+	fun push elt pset = pset := S.add (!pset, elt)
+	(** Increments the counter argument. *)
 	fun next counter  = counter := !counter + 1
+	(** Find the total number of items in the set. *)
 	val total = S.numItems set
+	(** Locate the midpoint. *)
 	val half  = ceil (Real.fromInt total / Real.fromInt 2)
+	(** Set the first half value initially to a ref of the empty set. *)
 	val fst   = ref S.empty
+	(** A counter used to track how many elements we have moved into #fst so far. *)
 	val count = ref 0
+	(** Second half of the set that we are splitting in two. *)
 	val snd   = S.filter (fn elt => if !count < half
 					then (next count;
 					      push elt fst;
@@ -213,13 +217,22 @@ fun splitIn2 set =
     in (!fst, snd)
     end
 
+(** Splits a set into two halves (using div). *)
 fun splitIn2' set =
-    let fun push elt pset = pset := S.add (!pset, elt)
+    let
+	(** Adds an element 'elt' to the set 'pset'. *)
+	fun push elt pset = pset := S.add (!pset, elt)
+	(** Increments the counter argument. *)
 	fun next counter  = counter := !counter + 1
+	(** Find the total number of items in the set. *)
 	val total = S.numItems set
+	(** Locate the midpoint. *)
 	val half  = total div 2
+	(** Set the first half value initially to a ref of the empty set. *)
 	val fst   = ref S.empty
+	(** A counter used to track how many elements we have moved into #fst so far. *)
 	val count = ref 0
+	(** Second half of the set that we are splitting in two. *)
 	val snd   = S.filter (fn elt => if !count < half
 					then (next count;
 					      push elt fst;
@@ -228,61 +241,84 @@ fun splitIn2' set =
     in (!fst, snd)
     end
 
+(** Splits the set argument into two by setting those less than the value in 'next' in one half and the rest in the other half. *)
 fun split2 first next set =
     (S.filter (fn x => x >= first andalso x < next) set,
      S.filter (fn x => x < first orelse x >= next) set)
 
+(** Compares two labels using Int.compare. *)
 fun compareLab (lab1, lab2) = Int.compare (lab1, lab2)
+
+(** Compares two sets of labels. *)
 fun compare (set1, set2) = S.compare (set1, set2)
 
 end
 
 
-
-(* INTEGER SET - FOR THE SAKE OF TESTING THE SLICER *)
-
+(** A label set using integers (using ord_key). *)
 structure Label2 :> LABEL = struct
 
 structure O  = OrdKey
 structure S  = SplayMapFn(O)
 structure EH = ErrorHandler
 
+(** Using an ord_key for the type of label. *)
 type label  = O.ord_key
+
+(** A map of labels. *)
 type map    = label S.map
+
 type labels = {from : map, to : map, size : int}
 
 exception DONE of bool
 
+(** A dummy label, represented by 0. *)
 val dummyLab   = 0
+
+(** A built-in label, reperesnted by 1. *)
 val builtinLab = 1
+
+(** The first label that we use when assigning to progarm points, set to 2. *)
 val firstLab   = 2
 
+(** Converts a label to an integer. *)
 fun toInt   lab = lab
+
+(** Converts from an integer to a label. *)
 fun fromInt lab = lab
 
+(** Returns the next fresh label.
+ * Initially set to #firstLab. *)
 val nextlab = ref firstLab
+
+(** Increments the argument by one. *)
 fun nextLabel lab = lab + 1
 
 fun nextLabN lab 0 = lab
   | nextLabN lab n = if n < 0 then raise EH.DeadBranch "" else (nextLabN lab (n-1)) + 1
 
+(** Sets the #nextlab value to be the same as the argument. *)
 fun setNextLab lab = nextlab := lab
+
+(** Resets the #nextlab value to #firstLab. *)
 fun resetNext () = setNextLab firstLab
 
+(** Tests whether two labels are equal. *)
 fun eq lab1 (lab2 : label) = (lab1 = lab2)
+
+(** Returns the smaller of the two labels given as arguments. *)
 fun min lab1 lab2 = Int.min (lab1, lab2)
 
+(** The empty set of labels. *)
 val empty = let val map : map = S.empty in {from = map, to = map, size = 0} end
 
-(* jpirie: remove this, it's no longer needed for this approarch *)
-val eqTypeLabels = ref empty
-val eqTypeWordLabels = ref empty
-
+(** Returns a set of labels with just one element - the argument. *)
 fun singleton lab =
     let val map = S.insert (S.empty, lab, lab)
     in {from = map, to = map, size = 1}
     end
 
+(** Tests whether the argument label is in the labels argument. *)
 fun isin lab (labels as {from = mfrom, to = mto, size}) =
     (S.appi (fn (f, t) =>
 		if lab < f
@@ -294,6 +330,7 @@ fun isin lab (labels as {from = mfrom, to = mto, size}) =
      false)
     handle DONE b => b
 
+(** Tests that the 'lab' argument is present in the labals set, and that the size of the labels is 1. *)
 fun isinone lab (labels as {from = mfrom, to = mto, size}) =
     isin lab labels andalso size = 1
 
@@ -328,300 +365,72 @@ fun add f t labels =
 	     (S.empty, false, false)
 	     labels
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun delete lab (labels as {from = mfrom, to = mto, size}) = raise EH.TODO "no description, raised in the 'delete' function of Label.sml"
 
+(** Returns whether or not a set of labels is empty. *)
 fun isEmpty  {from, to, size} = (size = 0)
 fun isSingle {from, to, size} =
     size = 1 andalso S.foldli (fn (f, t, b) => b andalso f = t) true from
+
+(** Returns legth of a set of labels. *)
 fun length   {from, to, size} =
     S.foldli (fn (f, t, n) => n + (t - f + 1)) 0 from
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun union labels {from, to, size} =
     S.foldli (fn (f, t, {from, to, size}) => raise EH.TODO "no description, raised in the 'union' function of Label.sml")
 	     labels
 	     from
 
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun diff     labels1 labels2 = raise EH.TODO "no description, raised in the 'diff' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun inter    labels1 labels2 = raise EH.TODO "no description, raised in the 'inter' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun disjoint labels1 labels2 = raise EH.TODO "no description, raised in the 'disjoint' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun subset   labels1 labels2 = raise EH.TODO "no description, raised in the 'subset' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun subseteq labels1 labels2 = raise EH.TODO "no description, raised in the 'subseteq' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun split  lab labels = raise EH.TODO "no description, raised in the 'split' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun split2 lab1 lab2 labels = raise EH.TODO "no description, raised in the 'split2' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun splitIn2  labels = raise EH.TODO "no description, raised in the 'splitIn2' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun splitIn2' labels = raise EH.TODO "no description, raised in the 'splitIn2'' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun compareLab (lab1, lab2) = raise EH.TODO "no description, raised in the 'compareLab' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun compare (set1, set2) = raise EH.TODO "no description, raised in the 'compare' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun ord    labelss = raise EH.TODO "no description, raised in the 'ord' function of Label.sml"
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun unions labelss = raise EH.TODO "no description, raised in the 'unions' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun toList labels = raise EH.TODO "no description, raised in the 'toList' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun remFirst labels = raise EH.TODO "no description, raised in the 'remFirst' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun foldr f init labels = raise EH.TODO "no description, raised in the 'foldr' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun exsubseteq labels labelss = raise EH.TODO "no description, raised in the 'exsubseteq' function of Label.sml"
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun printLab lab = Int.toString lab
 
+(** A dummy function declared to satisfy the signature, raises an exception. *)
 fun toString labels = raise EH.TODO "no description, raised in the 'toString' function of Label.sml"
 
 
 end
-
-
-
-(* INTEGER SET - FOR THE SAKE OF TESTING THE SLICER *)
-
-(*structure Label3 :> LABEL = struct
-
-structure O  = OrdKey
-structure S  = SplayMapFn(O)
-structure EH = ErrorHandler
-
-type label  = O.ord_key
-type map    = (label * label ref) S.map
-
-(* We represent {1,2,3,4,7,8,10} as ({1->(4,SOME(7)),7->(8,SOME(10)),10->(10,NONE)},3) *)
-
-type labels = {sets : map, size : int}
-
-exception DONE of bool
-exception UPD  of labels
-
-val dummyLab   = 0
-val builtinLab = 1
-val firstLab   = 2
-
-fun toInt   lab = lab
-fun fromInt lab = lab
-
-val nextlab = ref firstLab
-fun nextLabel lab = lab + 1
-
-fun nextLabN lab 0 = lab
-  | nextLabN lab n = if n < 0 then raise EH.DeadBranch "" else (nextLabN lab (n-1)) + 1
-
-fun setNextLab lab = nextlab := lab
-fun resetNext () = setNextLab firstLab
-
-fun eq lab1 (lab2 : label) = (lab1 = lab2)
-fun min lab1 lab2 = Int.min (lab1, lab2)
-
-val empty = let val map : map = S.empty in {sets = map, size = 0} end
-
-fun singleton lab =
-    let val map = S.insert (S.empty, lab, (lab, NONE))
-    in {sets = map, size = 1}
-    end
-
-fun isin lab (labels as {sets, size}) =
-    (S.appi (fn (from, (to, next)) =>
-		if lab < from
-		then raise DONE false
-		else if from <= lab andalso lab <= to
-		then raise DONE true
-		else ())
-	    sets;
-     false)
-    handle DONE b => b
-
-fun isinone lab (labels as {sets, size}) =
-    isin lab labels andalso size = 1
-
-fun cons lab (labels as {sets, size}) =
-    (S.appi (fn (from, (to, SOME next)) =>
-		if lab < from - 1
-		then raise UPD {sets = S.insert (sets, lab, (lab, SOME from)), size = size + 1}
-		else if lab = from - 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, lab, (to, SOME next))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab >= from andalso lab <= to
-		then raise UPD labels
-		else if lab = to + 1 andalso lab < next - 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (lab, SOME next))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab = to + 1 andalso lab = next - 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val (sets2, tn) = S.remove (sets1, next)
-			 val sets3 = S.insert (sets2, from, tn)
-		     in raise UPD {sets = sets3, size = size - 1}
-		     end
-		else if lab > to + 1 andalso lab < next - 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (to, SOME lab))
-			 val sets3 = S.insert (sets2, lab, (lab, SOME next))
-		     in raise UPD {sets = sets3, size = size + 1}
-		     end
-		else ()
-	      | (from, (to, NONE)) =>
-		if lab < from - 1
-		then raise UPD {sets = S.insert (sets, lab, (lab, SOME from)), size = size + 1}
-		else if lab = from - 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, lab, (to, NONE))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab >= from andalso lab <= to
-		then raise UPD labels
-		else if lab = to + 1
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (lab, NONE))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (to, SOME lab))
-			 val sets3 = S.insert (sets2, lab, (lab, NONE))
-		     in raise UPD {sets = sets3, size = size + 1}
-		     end)
-	    sets;
-     (* if not UPD is raised then it means that the label set is empty *)
-     singleton lab)
-    handle UPD labels => labels
-
-fun delete lab (labels as {sets, size}) =
-    (S.appi (fn (from, (to, SOME next)) =>
-		if lab < from
-		then raise UPD labels
-		else if lab = from andalso from = to
-		then let val sets1 = #1 (S.remove (sets, from))
-		     in raise UPD {sets = sets1, size = size - 1}
-		     end
-		else if lab = from andalso from < to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from + 1, (to, SOME next))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab > from andalso lab = to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (to - 1, SOME next))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab > from andalso lab < to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (lab - 1, SOME (lab + 1)))
-			 val sets3 = S.insert (sets2, lab + 1, (to, SOME next))
-		     in raise UPD {sets = sets3, size = size + 1}
-		     end
-		else if lab > to andalso lab < next
-		then raise UPD labels
-		else if lab = next
-		then case S.find (sets, next) of
-			 NONE => raise EH.DeadBranch ""
-		       | SOME (to2, next2) =>
-			 if next = to2
-			 then let val sets1 = #1 (S.remove (sets, next))
-				  val sets2 = #1 (S.remove (sets1, from))
-				  val sets3 = S.insert (sets2, from, (to, next2))
-			      in raise UPD {sets = sets3, size = size - 1}
-			      end
-			 else let val sets1 = #1 (S.remove (sets, next))
-				  val sets2 = #1 (S.remove (sets1, from))
-				  val sets3 = S.insert (sets2, from, (to, SOME (lab + 1)))
-				  val sets4 = S.insert (sets3, next, (to2, next2))
-			      in raise UPD {sets = sets4, size = size}
-			      end
-		else ()
-	      | (from, (to, NONE)) =>
-		if lab < from
-		then raise UPD labels
-		else if lab = from andalso from = to
-		then let val sets1 = #1 (S.remove (sets, from))
-		     in raise UPD {sets = sets1, size = size - 1}
-		     end
-		else if lab = from andalso from < to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from + 1, (to, NONE))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab > from andalso lab = to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (to - 1, NONE))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if lab > from andalso lab < to
-		then let val sets1 = #1 (S.remove (sets, from))
-			 val sets2 = S.insert (sets1, from, (lab - 1, SOME (lab + 1)))
-			 val sets3 = S.insert (sets2, lab + 1, (to, NONE))
-		     in raise UPD {sets = sets3, size = size + 1}
-		     end
-		else ())
-	    sets;
-     labels)
-    handle UPD labels => labels
-
-fun add from to (labels as {sets, size}) =
-    (S.appi (fn (from1, (to1, SOME next)) =>
-		if to < from1 - 1
-		then let val sets1 = S.insert (sets, from, (to, SOME from1))
-		     in raise UPD {sets = sets1, size = size + 1}
-		     end
-		else if to < next - 1 andalso from <= to1 + 1
-		then let val min   = Int.min (from, from1)
-			 val max   = Int.max (to, to1)
-			 val sets1 = #1 (S.remove (sets, from1))
-			 val sets2 = S.insert (sets1, min, (max, SOME next))
-		     in raise UPD {sets = sets2, size = size}
-		     end
-		else if from > to1 + 1 andalso to < next - 1
-		then let val sets1 = #1 (S.remove (sets, from1))
-			 val sets2 = S.insert (sets1, from1, (to1, SOME from))
-			 val sets3 = S.insert (sets2, from, (to, SOME next))
-		     in raise UPD {sets = sets3, size = size + 1}
-		     end
-		else ()
-	      | (from1, (to1, NONE)) => ())
-	    sets;
-     labels)
-    handle UPD labels => labels
-
-fun union labels {sets, size} =
-    S.foldli (fn (from, to, {sets, size}) => raise EH.TODO)
-	     labels
-	     sets
-
-fun isEmpty  {sets, size} = (size = 0)
-fun isSingle {sets, size} =
-    size = 1 andalso S.foldli (fn (from, (to, _), b) => from = to andalso b) true sets
-fun length   {sets, size} =
-    S.foldli (fn (from, (to, _), n) => n + (to - from + 1)) 0 sets
-
-fun diff     labels1 labels2 = raise EH.TODO
-fun inter    labels1 labels2 = raise EH.TODO
-fun disjoint labels1 labels2 = raise EH.TODO
-fun subset   labels1 labels2 = raise EH.TODO
-fun subseteq labels1 labels2 = raise EH.TODO
-
-fun split  lab labels = raise EH.TODO
-fun split2 lab1 lab2 labels = raise EH.TODO
-fun splitIn2  labels = raise EH.TODO
-fun splitIn2' labels = raise EH.TODO
-
-fun compareLab (lab1, lab2) = raise EH.TODO
-fun compare (set1, set2) = raise EH.TODO
-
-fun ord    labelss = raise EH.TODO
-fun unions labelss = raise EH.TODO
-
-fun toList labels = raise EH.TODO
-
-fun remFirst labels = raise EH.TODO
-
-fun foldr f init labels = raise EH.TODO
-
-fun exsubseteq labels labelss = raise EH.TODO
-
-fun printLab lab = Int.toString lab
-
-fun toString labels = raise EH.TODO
-
-end*)

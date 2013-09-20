@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -27,22 +21,19 @@
  *      sets of intergers.
  *)
 
-
+(** A signature for ordered sets. *)
 signature ORDSET = sig
 
-    (* operations on ordered lists of integers *)
-
-    type elt     = int (* IntListSet.item *)
-    type label   = elt     (* a label (program point) *)
-    type ordset  (* = IntListSet.set *)
+    type elt     = int
+    type label   = elt
+    type ordset
     type ordsets = ordset list
-    type labels  = ordset  (* set of labels *)
+    type labels  = ordset
 
     val dummylab     : elt
     val firstlab     : elt
     val getlab       : unit -> label
     val setnextlab   : int  -> unit
-    (*val freshlab     : unit -> label*)
     val empty        : ordset
     val isEmpty      : ordset   -> bool
     val isSingle     : ordset   -> bool
@@ -60,7 +51,6 @@ signature ORDSET = sig
     val delete       : elt      -> ordset  -> ordset
     val concat       : ordset   -> ordset  -> ordset
     val inter        : ordset   -> ordset  -> ordset
-    (*val interList    : elt list -> ordset  -> elt list*)
     val difference   : ordset   -> ordset  -> ordset
     val getpairs     : ordset   -> ordset  -> ordset list
     val concatop     : ordset option -> ordset -> ordset
@@ -69,7 +59,6 @@ signature ORDSET = sig
     val subseteq     : ordset   -> ordset  -> bool
     val subset       : ordset   -> ordset  -> bool
     val disjoint     : ordset   -> ordset  -> bool
-    (* true if one element of the second argument is a subseteq of the first argument *)
     val exsubseteq   : ordset   -> ordsets -> bool
     val subseteqin   : ordset   -> ordsets -> bool
     val isin         : elt      -> ordset  -> bool

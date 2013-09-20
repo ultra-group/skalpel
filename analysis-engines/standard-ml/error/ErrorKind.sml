@@ -17,32 +17,40 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   ErrorKind.sml
- *  o Description: Contains the definition of the different kinds of
- *      errors handled by our slicer.  The file defines the structure
- *      ErrorKind which has the signature ERRORKIND.
  *)
 
-
+(** Contains the definition of the different kinds of errors handled by our slicer (opaquely constrained by refstruct{ERRORKIND}). *)
 structure ErrorKind :> ERRORKIND = struct
 
-(* abbreviate structure names *)
 structure T  = Ty
 structure I  = Id
 structure L  = Label
 structure EH = ErrorHandler
 
-(* declare some types (mostly for errors!) *)
+(** External label: integer instead of Label.label. *)
 type label    = int
+(** External id: integer instead of Id.id. *)
 type id       = int
+(** External tyname: integer instead of Ty.tyname. *)
 type typename   = int
+(** A field name in a record. *)
 type laberr   = (label * string) list
+(** A record error: the first laberr are for the clashing fields in two clashing records, the last two ones are for the common fields. *)
 type recerr   = laberr * laberr * laberr * laberr
+
+(** An identifier in a structure or signature or where clause. *)
 type specerr  = label * id
+(** The arity of a sequence. *)
 type arrerr   = label * int
+(** An identifier. *)
 type iderr    = label * id
+(** A constant. *)
 type idserr   = label * id * string
+(** A type constructor. *)
 type tnerr    = label * typename
+(** An unmatched error for a identifier not declared in a structure/signature. *)
 type unmerr   = specerr * specerr list * label
+(** A snytactic error? *)
 type synerr   = (int list * int) option
 
 (* in the Overload errors, need to add the labels associated with the overloading classes. *)
@@ -54,6 +62,51 @@ type synerr   = (int list * int) option
  *          there also. Furthermore, changes need to be made in JsonParser.sml, which also
  *          has a list of these type constructors
  ************************************************************)
+
+(** A datatype containing all of all the different kinds of error that Skalpel can represent.
+ * Currently includes the following list:
+ * \arg Circularity.
+ * \arg Overload.
+ * \arg OverloadCst.
+ * \arg OverloadClash.
+ * \arg OverloadIdCst.
+ * \arg ArityClash.
+ * \arg TyConsClash.
+ * \arg EqTypeRequired.
+ * \arg NotGenClash.
+ * \arg TooGenSig.
+ * \arg TyFunClash.
+ * \arg LabTyClash.
+ * \arg Unmatched.
+ * \arg UnbWhere.
+ * \arg DatTypClash.
+ * \arg ConsArgNApp.
+ * \arg ConsNArgApp.
+ * \arg MissConsSig.
+ * \arg MissConsStr.
+ * \arg MultiOcc.
+ * \arg ValVarApp.
+ * \arg ExcIsVar.
+ * \arg ExcIsDat.
+ * \arg ConIsVar.
+ * \arg DatIsExc.
+ * \arg TypeVarBind.
+ * \arg Warning.
+ * \arg Parsing.
+ * \arg NonFlexWhere.
+ * \arg IllFormedWhere.
+ * \arg RigidWhere.
+ * \arg Inclusion.
+ * \arg AppNotApp.
+ * \arg DiffFunName.
+ * \arg DiffNbArgFun.
+ * \arg FreeTypeVarTop.
+ * \arg AsPatVar.
+ * \arg FnRecExp.
+ * \arg RealInPat.
+ * \arg FreeIdent.
+ * \arg FreeOpen.
+ *)
 datatype kind = Circularity
 	      | Overload       of iderr  * tnerr * tnerr list (* value iderr overloaded to tnerrlist used on tnerr     *)
 	      | OverloadCst    of idserr * tnerr * tnerr list (* constant idserr overloaded to tnerrlist used on tnerr *)
@@ -67,7 +120,6 @@ datatype kind = Circularity
 	      | TyFunClash     of iderr  * tnerr
 	      | LabTyClash     of recerr
 	      | Unmatched      of unmerr
-	      (*| UnbIdSig      of unmerr*)
 	      | UnbWhere       of unmerr
               | DatTypClash    of id * label * label
 	      | ConsArgNApp    of label * label
@@ -97,26 +149,29 @@ datatype kind = Circularity
 	      | FreeIdent
 	      | FreeOpen
 
+(** Converts a #label value to a string. *)
 fun printLab lab = Int.toString lab
 
+(** Pritns out a list. *)
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(** Tests whether the string given as an argument is an arithmetic operator, either +,-,* or /. *)
 fun isArithOp x =
     (x="+" orelse x="-" orelse x="*" orelse x="/")
 
 (* PRINTING FOR LISP *)
 
-fun printasmpop NONE = "-"
-  | printasmpop (SOME (nl, n)) = (foldr (fn (x, y) => (Int.toString x) ^ "." ^ y) "" nl) ^ (Int.toString n)
-
+(** Gets the string of an identifier. *)
 fun getSt n asc = I.printId' (I.fromInt n) asc
 
+(** Attems to remove a field name from a record. *)
 fun removeFieldName _ [] = (false, [])
   | removeFieldName (st : string) ((x as (_, st')) :: xs) =
     if st = st'
     then (true, xs)
     else (fn (b, xs') => (b, x :: xs')) (removeFieldName st xs)
 
+(** Compares the field names of a record, returns true if the fields match, false otherwise. *)
 fun compareFieldNames [] [] = true
   | compareFieldNames [] _  = false
   | compareFieldNames ((_, st) :: xs) ys =
@@ -125,6 +180,7 @@ fun compareFieldNames [] [] = true
     in b andalso compareFieldNames xs zs
     end
 
+(** Used to print the fields of a record *)
 fun printFields xs =
     "{" ^
     #1 (foldr
@@ -133,18 +189,13 @@ fun printFields xs =
 	    xs) ^
     "}"
 
-fun printLabTypenames [] = ""
-  | printLabTypenames [(l, tn)] = T.printTypename' tn
-  | printLabTypenames ((l, tn) :: xs) = T.printTypename' tn ^ ", " ^ printLabTypenames xs
-
+(** Prits an error kind. *)
 fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (Overload ((lid, id), (l, tn), ltns)) asc =
     ("OVE",
      "Variable "
      ^ getSt id asc
      ^ " overloaded to a list of types not including "
-     (*^ printLabTypenames ltns
-      ^ " not defined at type "*)
      ^ T.printTypename' (T.typenameFromInt tn))
   | printErrKind (OverloadCst ((lid, id, str), (l, tn), ltns)) asc =
     ("OVC",
@@ -287,8 +338,6 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind FreeIdent       _ = ("IDE", "Free identifier")
   | printErrKind FreeOpen        _ = ("IDE", "Free opened or replicated identifier (hidding some context)")
 
-(* SML PRINTING *)
-
 fun printSmlAsmpStr []        = ""
   | printSmlAsmpStr [x]       = Int.toString x
   | printSmlAsmpStr (x :: xs) = Int.toString x ^ "," ^ printSmlAsmpStr xs
@@ -299,36 +348,44 @@ fun printSmlAsmpOp NONE           = "NONE"
 fun printJsonAsmpOp NONE           = "\"asmpOp\": \"NONE\"}"
   | printJsonAsmpOp (SOME (nl, n)) = "\"asmpOp\": {\"synerrList\": [" ^ printSmlAsmpStr nl ^ "], \"synerrInt\": " ^ Int.toString n ^ "}}"
 
+(** Printing a record clash (SML format). *)
 fun printSmlLabErr []              = ""
   | printSmlLabErr [(l, st)]       = "(" ^ printLab l ^ ",\"" ^ st ^ "\")"
   | printSmlLabErr ((l, st) :: xs) = "(" ^ printLab l ^ ",\"" ^ st ^ "\")," ^ printSmlLabErr xs
 
+(** Printing a record clash (JSON format). *)
 fun printJsonLabErr []              = ""
   | printJsonLabErr [(l, st)]       = "{ \"label\": " ^ printLab l ^ ", \"string\": \"" ^ st ^ "\" }"
   | printJsonLabErr ((l, st) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"string\": \"" ^ st ^ "\" }, " ^ printJsonLabErr xs
 
+(** Printing unmatched errors (SML format). *)
 fun printSmlUnm []             = ""
   | printSmlUnm [(l, n)]       = "(" ^ printLab l ^ "," ^ Int.toString n ^ ")"
   | printSmlUnm ((l, n) :: xs) = "(" ^ printLab l ^ "," ^ Int.toString n ^ ")," ^ printSmlUnm xs
 
+(** Printing unmatched errors (JSON format). *)
 fun printJsonUnm []             = ""
   | printJsonUnm [(l, n)]       = "{ \"label\": " ^ printLab l ^ ", \"id\": " ^ Int.toString n ^ " }"
   | printJsonUnm ((l, n) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"id\": " ^ Int.toString n ^ " }," ^ printJsonUnm xs
 
 
+(** Prints typenames in SML format. *)
 fun printSmlLabTypenames []              = ""
   | printSmlLabTypenames [(l, tn)]       = "(" ^ printLab l ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ ")"
   | printSmlLabTypenames ((l, tn) :: xs) = "(" ^ printLab l ^ "," ^ T.printsmltn (T.typenameFromInt tn) ^ ")," ^ printSmlLabTypenames xs
 
+(** Prints typenames in JSON format. *)
 fun printJsonLabTypenames []             = ""
   | printJsonLabTypenames [(l, tn)]       = "{ \"label\": " ^ printLab l ^ ", \"Typename\": " ^ T.printsmltn (T.typenameFromInt tn) ^ "}"
   | printJsonLabTypenames ((l, tn) :: xs) = "{ \"label\": " ^ printLab l ^ ", \"Typename\": " ^ T.printsmltn (T.typenameFromInt tn) ^ "}, " ^ printJsonLabTypenames xs
 
+(** Escapes a string. *)
 val transfun = fn #"\n" => ""
 		| #"\\" => "\\\\"
 		| #"\"" => "\\\""
 		| x     => Char.toString x
 
+(** Prints an error kind in SML format. *)
 fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind (Overload ((id, lid), (l, tn), ltns)) =
     "ErrorKind.Overload("
@@ -433,7 +490,7 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
   | printSmlErrKind FreeIdent       = "ErrorKind.FreeIdent"
   | printSmlErrKind FreeOpen        = "ErrorKind.FreeOpen"
 
-
+(** Prints an error kind in JSON format. *)
 fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\"}"
   | printJsonErrKind (Overload ((id, lid), (l, tn), ltns)) =
     "{\"errorKindName\": \"ErrorKind.Overload\", \"errorKindInfo\": {"
@@ -541,6 +598,7 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind FreeIdent       = "{\"errorKindName\": \"ErrorKind.FreeIdent\"}"
   | printJsonErrKind FreeOpen        = "{\"errorKindName\": \"ErrorKind.FreeOpen\"}"
 
+(** Returns whether the error kind is semantic/syntactic - true for semantic, false for syntactic. *)
 fun issem Circularity        = true
   | issem (Overload       _) = true
   | issem (OverloadCst    _) = true
@@ -583,10 +641,11 @@ fun issem Circularity        = true
   | issem FreeIdent          = false
   | issem FreeOpen           = false
 
+(** Returns whether the error kind is syntactic - true for syntactic, false for syntactic.
+ * Uses NOT(#issem (argument)) to compute return value. *)
 fun issyn x = not (issem x)
 
-(* We use this function when minimising an arity error because these two labels will
- * stay in the minimal error. *)
+(** We use this function when minimising an arity error because these two labels will stay in the minimal error. *)
 fun getLabsEk (ArityClash ((lab1, _), (lab2, _))) = L.ord [L.fromInt lab1, L.fromInt lab2]
   | getLabsEk _ = L.empty
 

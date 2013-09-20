@@ -22,14 +22,11 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Name.sig
- *  o Description: Defines the signature NAME to generate the builtin types
- *      of some type constructors.
  *)
 
-
+(** Signature for structure building built-in types of some type constructors. *)
 signature NAME = sig
 
-    (* binds top level names *)
     val getTypename : Id.assoc -> Env.typeEnv * Env.constraints
 
 end

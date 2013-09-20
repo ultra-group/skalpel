@@ -26,8 +26,6 @@ sets/OrdIdl.sml
 ast/AstSML.sig
 ast/AstSML.sml
 ast/AstMLB.sml
-ast/AstTest.sig
-ast/AstTest.sml
 ppp/PPP.sig
 ppp/PPP-mlton.sml
 slicing/Slice.sig
