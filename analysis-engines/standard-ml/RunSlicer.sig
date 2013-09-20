@@ -56,24 +56,6 @@ signature SLICER = sig
     			     int         -> (* basis overloading         *)
     			     unit
 
-    (*function which turns optional arguments to full list of arguments for the slicer*)
-    val smltes            : ({fileBas     : string,
-			      tab         : int,
-			      sol         : int,
-			      min         : bool,
-			      dev         : bool,
-			      bcs         : bool,
-			      searchSpace : int,
-			      fileIn      : string,
-			      fileHtml    : string,
-			      fileXml     : string,
-			      fileSml     : string,
-			      fileJson    : string,
-			      fileLisp    : string,
-			      filePerl    : string,
-			      basOp       : int,
-			      timeLim     : int}) -> OS.Process.status
-
     val smlTesStrArgs : string -> OS.Process.status
 
     val error : JsonParser.error

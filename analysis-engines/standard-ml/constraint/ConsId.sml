@@ -102,37 +102,6 @@ fun toCLS {id, bind, class, equalityTypeVar, lab, poly} cls = consBind id bind e
 
 fun mapBind {id, bind, equalityTypeVar, class, lab, poly} f = consBind id (f bind) equalityTypeVar class lab poly
 
-(* COMPLEX TRANSFORMATIONS *)
-
-(*fun toCONlab  {id, bind, class, lab, poly} l    = consBind id bind (CL.classToCON class) lab poly
-fun toEXClab  {id, bind, class, lab, poly} l    = consBind id bind (CL.classToEXC class) lab (P.polyToMono poly (L.ord [l, lab]))
-(*fun toVALlabs {id, bind, class, lab, poly} labs = consBind id bind (CL.classToVAL class) lab poly (* that for the "as" *)*)
-fun toPATlabs {id, bind, class, lab, poly} labs = consBind id bind (CL.classToPAT class) lab poly
-fun toREClabs {id, bind, class, lab, poly} labs = consBind id bind (CL.classToREC class) lab poly
-(*fun toDATcons {id, bind, class, lab, poly} cons = consBind id bind (CL.classToDATcons class cons)     lab poly*)
-(*fun toSTRstr  {id, bind, class, lab, poly} str  = consBind id bind (CL.classToSTRstr  class str)      lab poly
-fun toSIGstr  {id, bind, class, lab, poly} str  = consBind id bind (CL.classToSIGstr  class str)      lab poly*)*)
-
-
-(* returns the labels associated to an as in a pattern that constrain
- * an identifier to be a value variable *)
-(*fun getPATval x = CL.getClassPATval (getBindC x)*)
-
-
-(* These functions returns the constructors of a datatype and raises
- * and exception if the constrained id is not for a datatype *)
-
-(*fun getDATcons x = CL.getClassDATcons (getBindC x)*)
-
-
-(* generation of monomorphic constraints with special care of REC *)
-
-(*fun genMonREC x labs =
-    let val (l, labs1) = getREClabs x
-	val labs2 = if L.isEmpty labs1 then L.singleton l else labs1
-    in L.foldr (fn (x, y) => (P.MONBIN (L.cons x labs)) :: y) [] labs2 end*)
-
-
 (* update an identifier constraint with information on the expansiveness
  * of the bound expression *)
 fun closeBind {id, bind, equalityTypeVar, class, lab, poly} clos =
@@ -163,23 +132,6 @@ fun getlabExtChkExc xs =
 	      else raise EH.DeadBranch "")
 	  []
 	  xs
-
-
-(* gather the labels of RECs in a set of extended type variables *)
-(*fun getlabExtChkRec xs =
-    foldr
-	(fn (x, y) =>
-	    case CL.getClassREC (getBindC x) of
-		SOME (ll, rf) => L.concat (Option.getOpt (rf, ll)) y
-	      (*let
-		   val st = A.getSetStatusNonexp nonexp
-	       in if L.isEmpty st
-		  then L.concat ll y
-		  else L.concat st y
-	       end*)
-	      | NONE => y)
-	L.empty
-	xs*)
 
 
 (* PRINTING SECTION *)

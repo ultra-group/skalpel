@@ -25,6 +25,7 @@ structure L = LexDefs
 structure C = Comment
 structure T = Tokens
 structure R = Reg
+structure D = Debug
 
 type pos           = int * int
 type svalue        = T.svalue
@@ -325,7 +326,8 @@ stUseFile    = ([^\*\ \n\t]*(\*[^\)])?)*;
 <INITIAL,STDEC> "["          => (token T.LLIST      yytext arg);
 <INITIAL,STDEC> "]"          => (token T.RLIST      yytext arg);
 <INITIAL,STDEC> ","          => (token T.COMMA      yytext arg);
-<INITIAL,STDEC> "("          => (if not (C.isClosedQ())
+<INITIAL,STDEC> "("          => (D.printDebug D.LEXER D.PARSING (fn _ => "Detected opening bracket in <INITIAL,STDEC>.");
+				 if not (C.isClosedQ())
                                  then C.opeQ (!(#2 arg))
                                  else ();
 				 token T.LPAREN yytext arg);

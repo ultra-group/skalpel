@@ -106,6 +106,12 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 
 %name ML
 
+%keyword ABSTYPE AND AS CASE DATATYPE ELSE END
+  EQTYPE EXCEPTION  DO  DARROW  FN  FUN  FUNCTOR  HANDLE
+  IF IN INCLUDE  INFIX  INFIXR  LET  LOCAL  NONFIX  OF  OP
+  OPEN OVERLOAD  RAISE  REC  SHARING  SIG  SIGNATURE  STRUCT
+  STRUCTURE THEN TYPE VAL WHILE WHERE WITH WITHTYPE
+  ORELSE ANDALSO
 
 %term
   LLIST
@@ -423,7 +429,8 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 prog :
   progonelist
     (fn nasc =>
-	let val (tdl, masc) = progonelist nasc
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in prog: progonelist. Returning A.Prog.");
+	    val (tdl, masc) = progonelist nasc
 	in (A.Prog tdl, masc)
 	end)
 
@@ -1438,7 +1445,8 @@ scon :
 	end)
 | INT
     (fn (n, nasc) =>
-	let val reg = R.consReg INTleft INTright
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in scon: INT. Returning A.SconInt.");
+	    val reg = R.consReg INTleft INTright
 	    val (v, masc) = updateAscId "Int" nasc
 	in (A.SconInt (INT, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
@@ -2745,7 +2753,8 @@ neexplist :
 labexp :
   exp
     (fn (n, asc) =>
-	let val (e, (m, asc')) = exp (L.nextLabel n, asc)
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in labexp: exp. Returning A.LabExp.");
+	    val (e, (m, asc')) = exp (L.nextLabel n, asc)
 	    val re = [R.consReg expleft expright]
 	in (fn rs => A.LabExp (e, rs, re, n, m), (m, asc'))
 	end)
@@ -2843,7 +2852,8 @@ atexp :
 	end)
 | LET decs IN labexp END
     (fn (n, asc) =>
-	let val _ = F.newScope n
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in atexp: LET decs IN labexp END. Returning A.AtExpLet.");
+	    val _ = F.newScope n
 	    val (d, masc) = decs (L.nextLabel n, asc)
 	    val (e, (p, asc')) = labexp masc
 	    val _ = F.rmScope n
@@ -2856,7 +2866,8 @@ atexp :
 	end)
 | LET decs IN seqexp END
     (fn (n, asc) =>
-	let val _ = F.newScope n
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in atexp: LET decs IN seqexp END. Returning A.AtExpDLet.");
+	    val _ = F.newScope n
 	    val (d, masc) = decs (L.nextLabel n, asc)
 	    val (s, (p, asc')) = seqexp masc
 	    val _ = F.rmScope n
@@ -3086,7 +3097,8 @@ exp :
 	end)
 | IF labexp THEN labexp ELSE labexp
     (fn (n, asc) =>
-	let val (e1, (n1, asc1)) = labexp1 (L.nextLabel n, asc)
+	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected: IF labexp THEN labexp ELSE labexp. Returning A.ExpIte.");
+	    val (e1, (n1, asc1)) = labexp1 (L.nextLabel n, asc)
 	    val (e2, (n2, asc2)) = labexp2 (n1, asc1)
 	    val (e3, (n3, asc3)) = labexp3 (n2, asc2)
 	    val reg1 = R.consReg IFleft IFright
@@ -3095,7 +3107,6 @@ exp :
 	    val rle1 = (getRegion IFright labexp1left) @ (getRegion labexp1right THENleft)
 	    val rle2 = (getRegion THENright labexp2left) @ (getRegion labexp2right ELSEleft)
 	    val rle3 = getRegion ELSEright labexp3left
-	    val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected: IF labexp THEN labexp ELSE labexp. Returning A.ExpIte.");
 	in (A.ExpIte (e1 rle1, e2 rle2, e3 rle3, [reg1, reg2, reg3], n, n3), (n3, asc3))
 	end)
 | WHILE labexp DO labexp
@@ -3200,14 +3211,6 @@ labpat :
 	in (fn rs => A.LabPat (p, rs, rp, n, m), (m, asc'))
 	end)
 
-(*labpatcpx :
-  patcpx
-    (fn (n, asc) =>
-	let val (p, (m, asc')) = patcpx (L.nextLabel n, asc)
-	    val rp = [R.consReg patcpxleft patcpxright]
-	in (fn rs => A.LabPat (p, rs, rp, n, m), (m, asc'))
-	end)*)
-
 identty :
   ident
     (fn nasc =>
@@ -3280,289 +3283,6 @@ patfieldopt :
     (fn nasc => (([], []), nasc))
 | patfield
     (patfield)
-
-(*atpat' :
-  WILD
-    (fn (n, asc) =>
-	let val reg = R.consReg WILDleft WILDright
-	in (A.AtPatWild (reg, n), (n, asc))
-	end)
-| scon
-    (fn nasc =>
-	let val (sc, masc) = scon nasc
-	in (A.AtPatScon sc, masc)
-	end)
-| LPAREN RPAREN
-    (fn (n, asc) =>
-	let val reg = R.consReg LPARENleft RPARENright
-	in (A.AtPatTuple ([], [reg], n, L.nextLabel n), (L.nextLabel n, asc))
-	end)
-| LPAREN atpattuple RPAREN
-    (fn (n, asc) =>
-	let val ((tt, regl', regsc), (m, asc')) = atpattuple (L.nextLabel n, asc)
-	    val reg1 = R.consReg LPARENleft LPARENleft
-	    val reg2 = R.consReg RPARENleft RPARENleft
-	    val regl = reg1 :: regl' @ [reg2]
-	    val rl = getRegion LPARENright atpattupleleft
-	    val rr = getRegion atpattupleright RPARENleft
-	in (A.AtPatTuple (tt rl rr, regl, n, m), (m, asc'))
-	end)
-| LPAREN labpator RPAREN
-    (fn (n, nasc) =>
-	let val ((xs, rs), (m, masc)) = labpator (L.nextLabel n, nasc)
-	    val reg1 = R.consReg LPARENleft LPARENright
-	    val reg2 = R.consReg RPARENleft RPARENright
-	    val regs = reg1 :: rs @ [reg2]
-	    val rl   = getRegion LPARENright labpatorleft
-	    val rr   = getRegion labpatorright RPARENleft
-	in (A.AtPatOr (xs rl rr, regs, n, m), (m, masc))
-	end)
-| LBRACE patfieldopt RBRACE
-    (fn (n, asc) =>
-	let val ((prl, regl), (m, asc')) = patfieldopt (L.nextLabel n, asc)
-	    val reg1 = R.consReg LBRACEleft LBRACEright
-	    val reg2 = R.consReg RBRACEleft RBRACEright
-	in (A.AtPatRecord (prl, [reg1, reg2], regl, n, m), (m, asc'))
-	end)
-| LPAREN labpat RPAREN
-    (fn (n, asc) =>
-	let val (pt, (m, asc')) = labpat (L.nextLabel n, asc)
-	    val reg1 = R.consReg LPARENleft LPARENleft
-	    val reg2 = R.consReg RPARENleft RPARENleft
-	    val rlp  = (getRegion LPARENright labpatleft) @ (getRegion labpatright RPARENleft)
-	in (A.AtPatParen (pt rlp, reg1, reg2, n, m), (m, asc'))
-	end)
-| LLIST patlist RLIST
-    (fn (n, asc) =>
-	let val ((ps, regl'), (m, asc')) = patlist (L.nextLabel n, asc)
-	    val reg1 = R.consReg LLISTleft LLISTleft
-	    val reg2 = R.consReg RLISTleft RLISTleft
-	    val regl = reg1 :: regl' @ [reg2]
-	    val rl   = getRegion LLISTright patlistleft
-	    val rr   = getRegion patlistright RLISTleft
-	in (A.AtPatList (ps rl rr, regl, n, m), (m, asc'))
-	end)
-
-atpat :
-  atpat'
-    (atpat')
-| longidid
-    (fn nasc =>
-	let val (id, masc) = longidid nasc
-	in (A.AtPatId id, masc)
-	end)
-| OP longid
-    (fn nasc =>
-	let val (id, masc) = longid nasc
-	in (A.AtPatId id, masc)
-	end)
-
-
-coltylist :
-  COLON labtype
-    (let val reg = R.consReg COLONleft COLONright
-	 val rt  = getRegion COLONright labtypeleft
-	 val r   = R.consReg labtypeleft labtyperight
-     in fn rl => [(labtype, reg, rt, rl, r)]
-     end)
-| COLON labtype coltylist
-    (let
-	 val reg   = R.consReg COLONleft COLONright
-	 val rt    = getRegion COLONright labtypeleft
-	 val r     = R.consReg labtypeleft labtyperight
-	 val rr    = getRegion labtyperight coltylistleft
-	 val compl = coltylist
-     in fn rl => (labtype, reg, rt, rl, r) :: (compl rr)
-     end)
-
-patsp :
-  atpat'
-    (fn nasc =>
-	let val (ap, masc) = atpat' nasc
-	in (A.PatAtPat ap, masc)
-	end)
-| longidid atpat
-    (fn (n, asc) =>
-	let val (id, masc) = longidid (L.nextLabel n, asc)
-	    val (ap, (p, asc')) = atpat masc
-	    val reg = getRegion longididright atpatleft
-	    val ra  = R.consReg atpatleft atpatright
-	in (A.PatApp (id, ap, reg, ra, n, p), (p, asc'))
-	end)
-| OP longid atpat
-    (fn (n, asc) =>
-	let val (id, masc) = longid (L.nextLabel n, asc)
-	    val (ap, (p, asc')) = atpat masc
-	    val reg = getRegion longidright atpatleft
-	    val ra  = R.consReg atpatleft atpatright
-	in (A.PatApp (id, ap, reg, ra, n, p), (p, asc'))
-	end)
-
-patcpx :
-  ident AS labpat
-    (fn (n, asc) =>
-	let val (id, (m, ascm)) = ident (L.nextLabN n 2, asc)
-	    val (lp, (p, ascp)) = labpat (m, ascm)
-	    val reg = R.consReg ASleft ASright
-	    val rlp = getRegion ASright labpatleft
-	    val rli = getRegion identright ASleft
-	in (A.PatAs (A.LabIdTy (A.IdentTyId id, rli, L.nextLabel n, m), lp rlp, reg, n, p), (p, ascp))
-	end)
-| OP ident AS labpat
-    (fn (n, asc) =>
-	let val (id, (m, ascm)) = ident (L.nextLabN n 2, asc)
-	    val (lp, (p, ascp)) = labpat (m, ascm)
-	    val reg = R.consReg ASleft ASright
-	    val rlp = getRegion ASright labpatleft
-	    val rli = getRegion identright ASleft
-	in (A.PatAs (A.LabIdTy (A.IdentTyId id, rli, L.nextLabel n, m), lp rlp, reg, n, p), (p, ascp))
-	end)
-| ident COLON labtype AS labpat
-    (fn (n, asc) =>
-	let val (id, (q, ascq)) = ident (L.nextLabN n 4, asc)
-	    val (ty, (m, ascm)) = labtype (q, ascq)
-	    val (lp, (p, ascp)) = labpat (m, ascm)
-	    val reg1 = R.consReg COLONleft COLONright
-	    val reg2 = R.consReg ASleft ASright
-	    val rt   = getRegion COLONright labtypeleft
-	    val rp   = getRegion ASright labpatleft
-	    val rl   = getRegion labtyperight ASleft
-	    val ri   = getRegion identright COLONleft
-	in (A.PatAs (A.LabIdTy (A.IdentTyTy (A.LabId (id, ri, L.nextLabN n 3, q), ty rt, reg1, L.nextLabN n 2, m), rl, L.nextLabel n, m), lp rp, reg2, n, p), (p, ascp))
-	end)
-| OP ident COLON labtype AS labpat
-    (fn (n, asc) =>
-	let val (id, (q, ascq)) = ident (L.nextLabN n 4, asc)
-	    val (ty, (m, ascm)) = labtype (q, ascq)
-	    val (lp, (p, ascp)) = labpat (m, ascm)
-	    val reg1 = R.consReg COLONleft COLONright
-	    val reg2 = R.consReg ASleft ASright
-	    val rt   = getRegion COLONright labtypeleft
-	    val rp   = getRegion ASright labpatleft
-	    val rl   = getRegion labtyperight ASleft
-	    val ri   = getRegion identright COLONleft
-	in (A.PatAs (A.LabIdTy (A.IdentTyTy (A.LabId (id, ri, L.nextLabN n 3, q), ty rt, reg1, L.nextLabN n 2, m), rl, L.nextLabel n, m), lp rp, reg2, n, p), (p, ascp))
-	end)
-| ident
-    (fn nasc =>
-	let val (id, masc) = ident nasc
-	in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
-	end)
-| OP ident
-    (fn nasc =>
-	let val (id, masc) = ident nasc
-	in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
-	end)
-| longid'
-    (fn nasc =>
-	let val (lid, masc) = longid' nasc
-	in (A.PatAtPat (A.AtPatId lid), masc)
-	end)
-| OP longid'
-    (fn nasc =>
-	let val (lid, masc) = longid' nasc
-	in (A.PatAtPat (A.AtPatId lid), masc)
-	end)
-| patsp
-    (patsp)
-| patsp coltylist
-    (fn nasc =>
-	let val fps = fn u => patsp u
-	    val compl = coltylist (getRegion patspright coltylistleft)
-	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
-				fn (n, asc) =>
-				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
-				       val (ty, (p, asc'')) = fty (m, asc')
-				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
-				   end)
-			    fps
-			    compl
-	in fpa nasc
-	end)
-| ident coltylist
-    (fn nasc =>
-	let val fps = fn u =>
-			 let val (id, masc) = ident u
-			 in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
-			 end
-	    val compl = coltylist (getRegion identright coltylistleft)
-	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
-				fn (n, asc) =>
-				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
-				       val (ty, (p, asc'')) = fty (m, asc')
-				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
-				   end)
-			    fps
-			    compl
-	in fpa nasc
-	end)
-| OP ident coltylist
-    (fn nasc =>
-	let val fps = fn u =>
-			 let val (id, masc) = ident u
-			 in (A.PatAtPat (A.AtPatId (A.LongIdId id)), masc)
-			 end
-	    val compl = coltylist (getRegion identright coltylistleft)
-	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
-				fn (n, asc) =>
-				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
-				       val (ty, (p, asc'')) = fty (m, asc')
-				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
-				   end)
-			    fps
-			    compl
-	in fpa nasc
-	end)
-| longid' coltylist
-    (fn nasc =>
-	let val fps = fn u =>
-			 let val (lid, masc) = longid' u
-			 in (A.PatAtPat (A.AtPatId lid), masc)
-			 end
-	    val compl = coltylist (getRegion longid'right coltylistleft)
-	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
-				fn (n, asc) =>
-				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
-				       val (ty, (p, asc'')) = fty (m, asc')
-				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
-				   end)
-			    fps
-			    compl
-	in fpa nasc
-	end)
-| OP longid' coltylist
-    (fn nasc =>
-	let val fps = fn u =>
-			 let val (lid, masc) = longid' u
-			 in (A.PatAtPat (A.AtPatId lid), masc)
-			 end
-	    val compl = coltylist (getRegion longid'right coltylistleft)
-	    val fpa = foldl (fn ((fty, reg, rt, rp, r), y) =>
-				fn (n, asc) =>
-				   let val (pa, (m, asc')) = y (L.nextLabN n 2, asc)
-				       val (ty, (p, asc'')) = fty (m, asc')
-				   in (A.PatTyped (A.LabPat (pa, rp, [], L.nextLabel n, m), ty rt, reg, n, p), (p, asc''))
-				   end)
-			    fps
-			    compl
-	in fpa nasc
-	end)
-
-pat :
-  patcpx
-    (patcpx)
-| labpatcpx CONSLIST labpat
-    (fn (n, nasc) =>
-	let val (v, masc)       = updateAscId "::" nasc
-	    val (pax, pasc)     = labpatcpx (L.nextLabel n, masc)
-	    val (pa, (p, qasc)) = labpat pasc
-            val reg = R.consReg CONSLISTleft CONSLISTright
-	    val rp1 = getRegion labpatcpxright CONSLISTleft
-	    val rp2 = getRegion CONSLISTright labpatleft
-	in (A.PatConsList (v, pax rp1, pa rp2, reg, n, p), (p, qasc))
-	end)*)
-
-(* New stuff *)
 
 pat :
   labpat AS labpat

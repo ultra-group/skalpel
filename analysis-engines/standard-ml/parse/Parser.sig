@@ -57,9 +57,4 @@ signature PARSER = sig
 			string list       -> (* the list of file names already parsed *)
 			string option * messages
 
-    (*val dummyparsing : messages ->
-			 int      ->
-			 Ty.assoc * Id.assoc ->
-			 AstSML.prog * int * (Ty.assoc * Id.assoc)*)
-
 end

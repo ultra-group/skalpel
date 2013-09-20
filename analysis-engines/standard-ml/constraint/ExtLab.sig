@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        18 August 2010
  *  o File name:   ExtLab.sig
- *  o Description: Defines the EXTLAB signature which is the signature
- *      of forms extended with dependencies (labels, value identifiers).
  *)
 
-
+(** Defines the EXTLAB signature which is the signature of forms extended with dependencies (labels, value identifiers). *)
 signature EXTLAB = sig
 
     type 'a extLab = 'a           *
@@ -41,9 +39,9 @@ signature EXTLAB = sig
     val stripExtLab  : 'a extLab list -> 'a list
     val unionExtLab  : 'a extLab -> 'b extLab -> ('a * 'b -> 'c) -> 'c extLab
     val updExtLab    : 'a extLab -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
-    val updExtLabL   : 'a extLab -> Label.labels -> 'a extLab (* update the labs part *)
-    val updExtLabE   : 'a extLab -> Label.labels -> 'a extLab (* update the stts part *)
-    val updExtLabD   : 'a extLab -> LongId.set   -> 'a extLab (* update the deps part *)
+    val updExtLabL   : 'a extLab -> Label.labels -> 'a extLab
+    val updExtLabE   : 'a extLab -> Label.labels -> 'a extLab
+    val updExtLabD   : 'a extLab -> LongId.set   -> 'a extLab
     val resetExtLab  : 'a extLab -> 'a extLab
 
     val printExtLab' : 'a extLab      ->

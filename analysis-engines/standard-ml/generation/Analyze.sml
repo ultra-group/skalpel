@@ -41,19 +41,24 @@ structure EH = ErrorHandler
 structure D  = Debug
 structure SS = SymbSlice
 
-(* TODO: true if we want to have recursive types.  This is for the future *)
+(** A type which can be set to true if we want to have recursive types, this is for the future. *)
 val rectype = false
 
+(** A string which is used to tell users they are using a partially supported feature. *)
 val notFullySt  = "not been fully implemented yet"
+(** A string to tell users we have poor support for a feature.*)
 val poorlySt    = "not been implemented yet"
+(** A string sent to users when they are using an implemented feature. *)
 val implementSt = "not been implemented yet"
 val cannotSt    = "cannot be rebound"
 
-(* Singular *)
+(** Creates a message for the user with a single program label to tell them we have no support for a feature (singular). *)
 fun sorryCsS    l x = E.CSSPARS (L.singleton l, "sorry, '" ^ x ^ "' has "  ^ implementSt)
-(* Plurial *)
+(** Creates a message for the user with a single program label to tell them we have no support for a feature (plural). *)
 fun sorryCsP    l x = E.CSSPARS (L.singleton l, "sorry, '" ^ x ^ "' have " ^ implementSt)
+(** Creates a message for the user with a single program label to tell them we have poor support for a feature (plural). *)
 fun poorlyCs    l x = E.CSSWARN (L.singleton l, "sorry, '" ^ x ^ "' has "  ^ poorlySt)
+(** Creates a message for the user with a single program label to tell them we have some support for a feature (plural). *)
 fun notFullyCs  l x = E.CSSWARN (L.singleton l, "sorry, '" ^ x ^ "' has "  ^ notFullySt)
 (* cannot be rebound *)
 fun reboundCs   l x = E.CSSPARS (L.singleton l, x ^ " " ^ cannotSt)
@@ -76,9 +81,7 @@ fun clearRebound css =
 		      | x => SOME x)
 		    css
 
-(* this is a function used to show the program flow through the constraint generator
- * results are visible when using the CONSTRAINT_PATH debug parameter
- *)
+(** A function which converts the identation argument to the constraint generation function into spaces. *)
 fun convertIndentToSpaces indent =
     let
 	fun convertFunction [#"X"] = [#"X"] (* a dummy placeholder character for functions not supported yet *)
@@ -93,8 +96,7 @@ fun convertIndentToSpaces indent =
 	String.implode (convertFunction (String.explode indent))
     end
 
-(* maps a function over a list while using a sensible indentation level for the debug
- * feature -d CONSTRAINT_PATH *)
+(** Maps a function over a list while using a sensible indentation level for the debug feature -d CONSTRAINT_PATH. *)
 fun mapIndent f indent [] = [] |
     mapIndent f indent [h] = [f (indent^SS.bottomLeftCurve^SS.straightLine) h] |
     mapIndent f indent (h::t) = (f (indent^SS.verticalFork^SS.straightLine) h)::(mapIndent f indent t)
@@ -272,6 +274,7 @@ fun createDiffNbArgFuns fvalbindones =
 	  E.emptyContextSensitiveSyntaxError
 	  fvalbindones
 
+(** 
 fun unzipThree xs = foldr (fn ((x, y, z), (xs, ys, zs)) => (x :: xs, y :: ys, z :: zs))
 			  ([], [], [])
 			  xs
@@ -309,9 +312,12 @@ fun generateConstraints' prog pack nenv =
 
 	val benv = case nenv of 2 => true | _ => false
 
+   (** A ref value, set to true if we are currently generating constraints for the basis. *)
 	val isBasis = ref false
 
+   (* Sets the #isBasis ref to the value given as an argument. *)
 	fun setBasis x = isBasis := x
+   (** Accessor function for #setBasis. *)
 	fun getBasis _ = !isBasis
 
 	val typenamesTop : string list ref = ref T.typenames
@@ -1522,8 +1528,9 @@ fun generateConstraints' prog pack nenv =
 	       in (tv, T.freshEqualityTypeVar (), vids, E.consConstraint (lab, c) cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	       end
 	     | f_atpat indent (A.AtPatParen (labpat, _, _, lab, _)) =
-	       let val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.AtPatParan")
-		   val (tv, eqtv, vids, cst, contextSensitiveSyntaxError) = f_labpat "X" labpat
+	       let val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.AtPatParen")
+		   val indent = convertIndentToSpaces indent
+		   val (tv, eqtv, vids, cst, contextSensitiveSyntaxError) = f_labpat (indent^SS.bottomLeftCurve^SS.straightLine) labpat
 		   val tv' = T.freshTypeVar ()
 		   val c   = E.initTypeConstraint (T.consTYPE_VAR tv') (T.consTYPE_VAR tv) lab
 	       in (tv', T.freshEqualityTypeVar (), vids, E.consConstraint (lab, c) cst, contextSensitiveSyntaxError)
@@ -3175,11 +3182,10 @@ fun generateConstraints' prog pack nenv =
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
 		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c) cst)
 		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR ev' lab) lab))
-		   val css' = if getBasis ()
-			      then E.emptyContextSensitiveSyntaxError
-			      else E.singcss (sorryCsS lab "include")
+		   val css' = E.emptyContextSensitiveSyntaxError
 	       in (env2, css')
 	       end
+	     (* Can multiple signature can be included at a time, perhaps in some extension? *)
 	     | f_specone indent (A.SpecIsi (_, _, lab, _)) =
 	       let val css = if getBasis ()
 			     then E.emptyContextSensitiveSyntaxError

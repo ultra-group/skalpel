@@ -36,8 +36,13 @@ type pos    = int * int
  *)
 type region = {from : pos, to : pos}
 
+(** if prefixing spaces to strings, this is set to true. *)
 val tabBool   = ref false
+
+(** Specifies the number of spaces a tab will be. *)
 val tabSize   = ref 8
+
+(** Returns a string with spaces equal to the tab length. *)
 fun getTab () =
     if !tabSize < 0
     then ""
@@ -52,6 +57,7 @@ fun getTabSize () = !tabSize
 (** Modifier function for #tabSize *)
 fun setTabSize ts = (tabBool := true; tabSize := ts)
 
+(** Ensures the whitespace in the strings returned is consistent with user code. *)
 fun addString (l, c) s =
     let val s' = if !tabBool
 		 then String.translate
@@ -64,6 +70,7 @@ fun addString (l, c) s =
 (** Given two arguments of type #pos, builds a region. *)
 fun consReg  p1 p2 = {from = p1, to = p2}
 
+(** Prints out a list of strings. *)
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
 (** Prints the #pos argument that has been given as <line>.<character>. *)
@@ -97,27 +104,31 @@ fun printLispReg {from = (x1, y1), to = (x2, y2)} =
 (** Prints a list of regions. *)
 fun printRegList xs = printlistgen xs printReg
 
-(** Verifies that two regions given as arguments are the same *)
+(** Verifies that two regions given as arguments are the same. *)
 fun checkSameRegs ({from = (l1, c1), to = (l2, c2)} : region)
 		  ({from = (l3, c3), to = (l4, c4)} : region) =
     l1 = l3 andalso c1 = c3 andalso l2 = l4 andalso c2 = c4
 
-(* checks that the (l1, c1) region comes before (l2, c2) *)
+(** Checks that the line/column in the first region comes before the second. *)
 fun infPos (line1, column1) (line2, column2) =
     line1 < line2 orelse (line1 = line2 andalso column1 <= column2)
 
-(* same as infPos, though in this case region 2 may not start at the end of region 1 *)
+(** Same as infPos, though in this case region two may not start where region 1 finishes. *)
 fun strictInfPos (line1, column1) (line2, column2) =
     line1 < line2 orelse (line1 = line2 andalso column1 < column2)
 
-(* increments the column number by one *)
+(** Increments the column number by one. *)
 fun upPos   (line, column) = (line, column + 1)
+
+(** Decrements the column number by one. *)
 fun downPos (line, column) = (line, column - 1)
 
-(* Generates regions for blank spaces that may contain empty lines. *)
-(* For now we also have some uses of it for labexp and labpat but it should disapear. *)
+(** Generates regions for blank spaces that may contain empty lines. *)
+(** \deprecated For now we also have some uses of it for labexp and labpat but it should disapear. *)
 fun getRegionList (left as (l1, c1)) (right as (l2, c2)) =
-    let fun endlines n c =
+    let
+	(** Used when we are dealiing with a region which does not terminate on the line we are currently on. *)
+	fun endlines n c =
 	    if l2 < n
 	    then raise EH.DeadBranch ""
 	    else if n = l2
@@ -131,13 +142,13 @@ fun getRegionList (left as (l1, c1)) (right as (l2, c2)) =
        else [consReg (upPos left) (downPos right)]
     end
 
-(* checks for two overlapping regions *)
+(** Given two regions as arguments, will check whether they overlap. *)
 fun overlapReg {from = p1, to = p2} {from = p1', to = p2'} =
     (strictInfPos p1 p1' andalso infPos p1' p2 andalso strictInfPos p2 p2')
     orelse
     (strictInfPos p1' p1 andalso infPos p1 p2' andalso strictInfPos p2' p2)
 
-(* combines two regions into one region *)
+(** Combines two regions into one region. *)
 fun fusionReg {from = p1, to = p2} {from = p1', to = p2'} =
     if infPos p1 p1'
     then if infPos p2 p2'
@@ -147,39 +158,51 @@ fun fusionReg {from = p1, to = p2} {from = p1', to = p2'} =
     then {from = p1', to = p2'}
     else {from = p1', to = p2}
 
-(* checks if two regions intersect *)
+(** Checks if two regions intersect. *)
 fun infReg {from = p1, to = p2} {from = p3, to = p4} =
     infPos p2 p3
 
-(* checks if two regions intersect, and one does not immediately follow the other *)
+(** Checks if two regions intersect, and one does not immediately follow the other. *)
 fun strictInfReg {from = p1, to = p2} {from = p3, to = p4} =
     strictInfPos p2 p3
 
+(** Tests whether one region includes another. *)
 fun inclReg {from = p1, to = p2} {from = p3, to = p4} =
     infPos p3 p1 andalso infPos p2 p4
 
+(** Given a list of regions L and a region as arguments R, will check that all regions in L are sub-regions of R. *)
 fun inclRegList [] _ = true
   | inclRegList (r' :: rs) r = inclReg r' r andalso inclRegList rs r
 
+(** Given a region, increments the finishing column number. *)
 fun upReg        {from = p1, to = p2} = {from = p1,         to = upPos p2}
+(** Given a region, decrements the beginning of the region's row number. *)
 fun downReg      {from = p1, to = p2} = {from = downPos p1, to = p2}
+(** Given a region, decrements the finishing column number. *)
 fun downRegRight {from = p1, to = p2} = {from = p1,         to = downPos p2}
 
-(* grabs where the region starts or where the region ends, respectively *)
+(** Returns the starting location of the region. *)
 fun getFrom {from, to} = from
+
+(** Returns the 'to' location of the region. *)
 fun getTo   {from, to} = to
 
-(* returns the line number or the column number of the pair, respectively *)
+(** Returns the line of the line/column tuple. *)
 fun getPosLine (line, _) = line
+
+(** Returns the column of the line/column tuple. *)
 fun getPosCol  (_, column) = column
 
+(** Given a region, returns a four tuple of start line * start column * to line * to column. *)
 fun getAllPos {from = (l1, c1), to = (l2, c2)} = (l1, c1, l2, c2)
 
-(* checks that r is a feasible region (that from <= to) *)
+(** Checks that r is a feasible region (that from <= to) *)
 fun isReg r = infPos (getFrom r) (getTo r)
+
+(** Given a list of regions, checks they are all valid using isReg. *)
 fun isVisList rs = case rs of [] => false | [r] => isReg r | _ => true
 
-(* returns a list of all regions that are in a specified line *)
+(** Returns a list of all regions that are in a specified line *)
 fun getRegsLine _ [] = ([], [])
   | getRegsLine (line : int) (r :: rs) =
     let
@@ -189,13 +212,14 @@ fun getRegsLine _ [] = ([], [])
        else (rs1, r :: rs2)
     end
 
-(* removes a region from a list of regions *)
+(** Removes a region from a list of regions. *)
 fun removeReg r [] = (false, [])
   | removeReg r (r' :: rs) =
     if checkSameRegs r r'
     then (true, rs)
     else (fn (b, rs') => (b, r :: rs')) (removeReg r rs)
 
+(** Tests whether two lists of regions are the same. *)
 fun areEqualRegs [] [] = true
   | areEqualRegs [] _  = false
   | areEqualRegs _  [] = false

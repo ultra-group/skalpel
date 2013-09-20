@@ -21,17 +21,24 @@
  *      tagged with a label.
  *)
 
-
+(** A key that can be used in maps, defining a type of a key and a comparison function.
+ * Translucently constrained by the refstruct{ORD_KEY} signature. *)
 structure OrdIdl : ORD_KEY = struct
 
 (* shorten names of structures *)
 structure I = Id
 structure L = Label
 
-(* new type ord_key which is a pair of an id and a label *)
+(** Set the new key type to be a labelled identifier (#Id.labelledId) *)
 type ord_key = I.labelledId
 
-(* function to compare two things of type ord_key *)
+(** \fn compare (ordkeyValue1,ordkeyValue2)
+ * A comparison function which will compare two ord_key values.
+ * Uses #Id.compare to compare the id of each key first,
+ * then checks the labels
+ * \param ord_keyValue1 First key to compare.
+ * \param ord_keyValue2 Second key to compare.
+ * *)
 fun compare ((id1, lab1), (id2, lab2)) =
     case I.compare (id1, id2) of
 	EQUAL => L.compareLab (lab1, lab2)
