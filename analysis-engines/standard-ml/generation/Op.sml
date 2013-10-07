@@ -1,9 +1,5 @@
 (* Copyright 2009 2010 2011 2012 Heriot-Watt University
  *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Op.sml
- *  o Description: Defines the structure Op which has signature OP and
- *      is used to generate builtin types of some operators.
  *)
 
-
+(** Defines the structure Op which has signature OP and is used to generate builtin types of some operators (constrained opaqualy by refstruct{OP}). *)
 structure Op :> OP = struct
 
 (* shorten the names of some structures *)
@@ -36,15 +30,15 @@ structure L  = Label
 structure CL = ClassId
 structure EH = ErrorHandler
 
-(* operators taking two arguments *)
+(** Operators taking two arguments. *)
 val binaryst = ["=", "<>", ">", "<", ">=", "<=",
 		"+", "-", "*", "/", "div", "mod",
 		"@", "^", ":=", "o", "::", "before"]
 
-(* one argument applied to each operator only *)
+(** One argument applied to each operator only. *)
 val unaryst  = ["~", "!"]
 
-(* return the item in the slay map mapped by x *)
+(** Return the item in the splay map mapped by x. *)
 fun binaryid assoc = List.mapPartial
 			 (fn x => case I.lookupSt x assoc of
 				      NONE => NONE
@@ -57,9 +51,9 @@ fun unaryid assoc  = List.mapPartial
 			 unaryst
 
 fun getOpType ascid =
-    (* returns three tuple of type on the left,
-     * type on the right, and type of the operator *)
-    let fun getTyBinaryOp "=old" l =
+    let
+	(** Returns three tuple of type on the left, type on the right, and type of the operator. *)
+	fun getTyBinaryOp "=old" l =
 	    let val tl = T.constyint'  l T.BUILTIN_BASIS_CONS
 		val tr = T.constyint'  l T.BUILTIN_BASIS_CONS
 		val to = T.constybool' l T.BUILTIN_BASIS_CONS

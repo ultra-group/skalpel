@@ -17,14 +17,11 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Parser.sml
- *  o Description: Defines the structure Parser which has signature
- *      PARSER and is used to parse SML code and basis files.
  *)
 
-
+(** Used to parse SML code and basis files, opaquely constrained by refstruct{PARSER}. *)
 structure Parser :> PARSER = struct
 
-(* shorten the same of structures we use *)
 structure A  = AstSML
 structure R  = Reg
 structure D  = Debug
@@ -33,37 +30,35 @@ structure PD = ParseDefs
 structure LD = LexDefs
 structure LA = Label
 structure EH = ErrorHandler
-
-(* currently used to hold information about syntax errors *)
-type messages      = (string * string * R.region list) list
-
-(*exception ParsingError of int * messages*)
-
 structure MLLrVals = MLLrValsFun(structure Token      = LrParser.Token)
 structure MLLex    = MLLexFun   (structure Tokens     = MLLrVals.Tokens)
 structure MLParser = JoinWithArg(structure ParserData = MLLrVals.ParserData
                                  structure Lex        = MLLex
                                  structure LrParser   = LrParser)
-
 structure MLBLrVals = MLBLrValsFun(structure Token      = LrParser.Token)
 structure MLBLex    = MLBLexFun   (structure Tokens     = MLBLrVals.Tokens)
 structure MLBParser = JoinWithArg (structure ParserData = MLBLrVals.ParserData
                                    structure Lex        = MLBLex
                                    structure LrParser   = LrParser)
 
-(* Turn that to true if compiling for the Online Demo.
- * This is so that the SKALPEL loading files are then ignored. *)
+(** Used to hold information about syntax errors. *)
+type messages      = (string * string * R.region list) list
+
+(** Set to true in the case we are compiling a binary for the webdemo, this is so that the Skalpel loading files are then ignored. *)
 val webdemo = ref false
 
-(* set/get methods for webdemo flag *)
+(** Set function for #webdemo. *)
 fun setWebdemo b = webdemo := b
+(** Accessor function for the #webdemo value. *)
 fun getWebdemo _ = !webdemo
 
-(* sets a val for holding information about syntax errors *)
+(** Holds information about syntax errors. *)
 val messages : messages ref = ref []
 
-(* add and print functions for the messages list *)
+(** Adds an error msg 'msg' to the #messages value. *)
 fun addmessage msg = messages := (!messages) @ [msg]
+
+(** Prints the messages we received during parsing. *)
 fun printmessages _ = app (fn (x, _, _) => print (x ^ "\n")) (!messages)
 
 fun formatmessages messages lab =
@@ -77,6 +72,12 @@ fun dummyparsing messages lab nasc =
     in (A.Prog progonelist, m, nasc)
     end
 
+(** Parses an SML file.
+ * \param filename of the file we are parsing
+ * \param an input stream
+ * \param the next node label
+ * \param an association list
+ *)
 fun parse file inputStream nextNodeLabel nasc =
     let
 	(** Stores our position in the file as we are parsing. If the parser explodes we can use this to see how far we got.
@@ -84,42 +85,42 @@ fun parse file inputStream nextNodeLabel nasc =
          * information from the parser? *)
 	val posref = ref (1,1) in let
 
+	(** A ref value which is set to true whenever we detect a parsing error. *)
 	val error = ref false
-	(* lexer argument: file name and start position *)
+	(** The lexer argument, a pair of the file name and start position. *)
 	val lexarg = (file, posref)
-	(* create a stream of lexical tokens *)
-	val lexstream = MLParser.makeLexer
-			    (fn n => TextIO.inputN(inputStream, n)) lexarg
-	(* initial parsing error messages *)
+	(* Creaes a stream of lexical tokens by calling makeLexer. *)
+	val lexstream = MLParser.makeLexer (fn n => TextIO.inputN(inputStream, n)) lexarg
+
+	(** Set the initial parsing error messages to empty. *)
 	val _ = messages := []
 
-	(* a function for reporting syntax errors *)
-	fun syntaxError (msg, from, to) =
-	    (fn extmsg => (error := true; addmessage extmsg))
-		(file ^ ":"  ^ R.printPos from ^ "-" ^ R.printPos to ^ ": " ^  msg,
-		 msg,
-		 [R.consReg from to])
+	(** A function for reporting syntax errors, sets the #error flag to true, and adds the message given as an argument to the #messages list using #addmessage. *)
+	fun syntaxError (msg, from, to) = (fn extmsg => (error := true; addmessage extmsg))
+					      (file ^ ":"  ^ R.printPos from ^ "-" ^ R.printPos to ^ ": " ^  msg, msg, [R.consReg from to])
 
-	(* the first part returned, the 'term', is an integer. *)
-	fun printToken (LrParser.Token.TOKEN x) =
-	    let
-		fun printRegion (point1, point2) = ("(" ^ (Int.toString point1) ^ "," ^ (Int.toString point2) ^ ")")
-	    	val term = #1 x
-	    	val (p1,p2,p3) = #2 x
-	    in
-	    	(* print p1; *)
-	    	print ((printRegion p2) ^ " " ^ (printRegion p3))
-	    end
-
+	(** Prints all tokens in a lexstream. *)
 	fun printAllTokens lexstream =
 	    let
+		(** Prints a single token. *)
+		fun printToken (LrParser.Token.TOKEN x) =
+		    let
+			fun printRegion (point1, point2) = ("(" ^ (Int.toString point1) ^ "," ^ (Int.toString point2) ^ ")")
+	    		val term = #1 x
+	    		val (p1,p2,p3) = #2 x
+		    in
+	    		(* print p1; *)
+	    		print ((printRegion p2) ^ " " ^ (printRegion p3))
+		    end
+
+		(** Gets the top token and the remaining part of the stream as a pair. *)
 		val (topToken,remainingStream) = MLBParser.Stream.get lexstream
 		val _ = (print "New token: "; printToken topToken)
 	    in
 		printAllTokens remainingStream
 	    end
 
-	(* build the AST, parameterized by its lowest node label *)
+	(** Parse the lexical stream of tokens and build up an abstract syntax tree. *)
 	val (astFunction, testing) =
 	    LD.handleLex MLParser.parse (15, lexstream, syntaxError, ())
 	    (* handle _ => (TextIO.output (TextIO.stdErr, "Error: Unknown exception caught during parsing.\n"); *)
@@ -133,31 +134,33 @@ fun parse file inputStream nextNodeLabel nasc =
 	    (* 				   raise LrParser.ParseError) *)
 
 
-	(* label the nodes starting from n, the second parameter is the typevar substitution *)
+	(** Label the nodes starting from n, the second parameter is the typevar substitution. *)
 	val (ast, (m, asc)) = astFunction (nextNodeLabel, nasc)
 	val (flag, str, reg) = PD.getErrorHandler ()
-    in if !error
-       then dummyparsing (!messages) nextNodeLabel nasc
-       else if flag
-       then raise PD.ParseError (str, reg)
-       else (ast, m, asc)
+    in
+	if !error
+	then dummyparsing (!messages) nextNodeLabel nasc
+	else if flag
+	then raise PD.ParseError (str, reg)
+	else (ast, m, asc)
     end
     handle LD.LexError x            => (TextIO.output (TextIO.stdErr, "Error: LexError\n") ; dummyparsing [x] nextNodeLabel nasc)
-	 | PD.ParseError (msg, reg) => (TextIO.output (TextIO.stdErr, "Error: ParseError\n"); dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
-	 | _ => (TextIO.output (TextIO.stdErr, "Error: Unknown catch-all exception raised.\n");
-		 if (#2(!posref) = 1)
-	 	 then (dummyparsing [("syntax error",
-	 			      "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
-	 			      [{from= (#1(!posref)-1, #2(!posref)), (* highlight something for start of line regions *)
-	 				to= (#1(!posref)-1, #2(!posref)+999)}])]
-	 			    nextNodeLabel nasc)
-	 	 else dummyparsing [("syntax error",
-	 			     "our parser threw an exception, there is an error somewhere in the file (likely close) prior to the end of the highlighted region",
-	 			     [{from= (#1(!posref), #2(!posref) -1), (* highlight something for end of line regions *)
-	 			       to= !posref}])]
-	 			   nextNodeLabel nasc)
+    	 | PD.ParseError (msg, reg) => (TextIO.output (TextIO.stdErr, "Error: ParseError\n"); dummyparsing [(msg, msg, reg)] nextNodeLabel nasc)
+    	 | _ => (TextIO.output (TextIO.stdErr, "Error: Unknown catch-all exception raised.\n");
+    		 if (#2(!posref) = 1)
+    	 	 then (dummyparsing [("syntax error",
+    	 			      "our parser threw an exception, there is an error somewhere in the file (likely close) prior to or inside of the highlighted region",
+    	 			      [{from= (#1(!posref)-1, #2(!posref)), (* highlight something for start of line regions *)
+    	 				to= (#1(!posref)-1, #2(!posref)+999)}])]
+    	 			    nextNodeLabel nasc)
+    	 	 else dummyparsing [("syntax error",
+    	 			     "our parser threw an exception, there is an error somewhere in the file (likely close) prior to or inside the highlighted region",
+    	 			     [{from= (#1(!posref), #2(!posref) -1), (* highlight something for line edn regions *)
+    	 			       to= !posref}])]
+    	 			   nextNodeLabel nasc)
     end
 
+(** For parsing .tes control files. *)
 fun parseTes tesfile stin lab nasc =
     let val {dir, file} = OS.Path.splitDirFile tesfile
 	fun getRegion st sub n =
@@ -200,15 +203,14 @@ fun parseTes tesfile stin lab nasc =
     in (A.Prog afs, nxt, nasc)
     end
 
-(* gets rid of tabs and newline characters from input string st *)
-(* we need to keep spaces, as we should support file paths with spaces *)
+(** Gets rid of tabs and newline characters from input string st (we need to keep spaces, as we should support file paths with spaces). *)
 fun tokenizeSt st =
     String.tokens (fn #"\t" => true
 		    | #"\n" => true
 		    | _     => false) st
 
 
-(* complains if the user specifies a file which is actually not a file *)
+(** Complains if the user specifies a file which does not exist. *)
 fun createOneErrFileAccess file fop =
     (NONE,
      [("",
@@ -217,7 +219,7 @@ fun createOneErrFileAccess file fop =
 	   NONE => []
 	 | SOME r => [r])])
 
-(* complains if file is already in list fnames below convertToFull function *)
+(** Complains if file is already in list #fnames below convertToFull function. *)
 fun createOneErrFileAlready file fop =
     (NONE,
      [("",
@@ -226,7 +228,7 @@ fun createOneErrFileAlready file fop =
 	   NONE => []
 	 | SOME r => [r])])
 
-(* echos more accurate errors for what the user has stated to be a file *)
+(** Echos more accurate errors for what the user has stated to be a file. *)
 fun convertToFull file fop fnames =
     case tokenizeSt file of
 	[x] => (let
@@ -239,15 +241,13 @@ fun convertToFull file fop fnames =
 		   then createOneErrFileAlready f fop
 		   else (SOME f, [])
 		end
-		handle OS.SysErr (str,_) => (TextIO.output (TextIO.stdErr, "OS.SysErr was raised with string: \""^str^"\" on file "^file^"\n");
+		 handle OS.SysErr (str,_) => (TextIO.output (TextIO.stdErr, "OS.SysErr was raised with string: \""^str^"\" on file "^file^"\n");
 					     createOneErrFileAccess file fop))
       | _ => createOneErrFileAccess file fop
 
-(* returns a list of three-tuples with [(<file>, NONE, bas), ...]
- * isBasis is set to true or false depending on whether the file is the basis or not *)
 fun newFilesToTreat files isBasis = map (fn f => (f, NONE, isBasis)) files
 
-(* same as newFilesToTreat, but uses region information as an Option *)
+(** Same as #newFilesToTreat, but uses region information as an Option. *)
 fun newFilesRegToTreat xs = map (fn (f, r, b) => (f, SOME r, b)) xs
 
 fun treatAFile file n nasc webdemo =
@@ -270,6 +270,7 @@ fun treatAFile file n nasc webdemo =
 	   in print (message ^ "\n"); raise EH.DeadBranch message
 	   end
 
+(** Removes the basis file from the file list given as input. *)
 fun clearBasisFiles files false = files
   | clearBasisFiles [] true = []
   | clearBasisFiles ((prog, file, true, next) :: files) true =
@@ -277,7 +278,7 @@ fun clearBasisFiles files false = files
   | clearBasisFiles ((prog, file, false, next) :: files) true =
     (prog, file, false, next) :: (clearBasisFiles files true)
 
-(* consProgsSml handles the non basis files *)
+(** Handles the non basis files. *)
 fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
   | consProgsSml ((file, opf, bas) :: files) n nasc fnames webdemo =
     (D.printDebug D.PARSER D.PARSING (fn _ => "[Skalpel: parsing file: "^file^"]\n");
@@ -303,7 +304,7 @@ fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
 	    qasc)
 	end)
 
-(* returns the first basisVal that it can find in a given list *)
+(** Returns the first basisVal that it can find in a given list. *)
 fun checkABas [] = false
   | checkABas ((_, _, basisVal, _) :: xs) = basisVal orelse checkABas xs
 

@@ -11,7 +11,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli, Christian Haack
  *  o Affiliation: Heriot-Watt University, MACS
@@ -107,7 +107,7 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 %name ML
 
 %keyword ABSTYPE AND AS CASE DATATYPE ELSE END
-  EQTYPE EXCEPTION  DO  DARROW  FN  FUN  FUNCTOR  HANDLE
+  EQTYPE EXCEPTION  DO  FN  FUN  FUNCTOR  HANDLE
   IF IN INCLUDE  INFIX  INFIXR  LET  LOCAL  NONFIX  OF  OP
   OPEN OVERLOAD  RAISE  REC  SHARING  SIG  SIGNATURE  STRUCT
   STRUCTURE THEN TYPE VAL WHILE WHERE WITH WITHTYPE
@@ -381,7 +381,7 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 %right COMMA
 %right AND
 %right TYPEARROW
-%right DARROW
+%left DARROW
 %left  STAR
 %left  DO
 %left  ELSE
@@ -391,25 +391,9 @@ fun explodeTyCon st ascid n beg = explodeIdGen st
 %right ANDALSO
 %right AS
 %left  COLON
-
-
-%change           -> VAL
-      |           -> THEN
-      |           -> ELSE
-      |           -> LPAREN
-      |           -> SEMICOLON
-      | DARROW    -> EQUALOP
-      | EQUALOP   -> DARROW
-      | AND       -> ANDALSO
-      | COLON     -> OF
-      | SEMICOLON -> COMMA
-      | COMMA     -> SEMICOLON
-      |           -> IN ID END
-      |           -> ELSE ID
-
+%left SEMICOLON
 
 %pos R.pos
-
 
 %eop EOF
 
@@ -2719,6 +2703,15 @@ labexpseq :
 	    val rr' = getRegion SEMICOLONright labexpseqleft
 	in ((fn rl => fn rr => (e (rl @ rl')) :: (el rr' rr), reg :: rl, r), (p, pasc))
 	end)
+| labexp SEMICOLON
+    (fn nasc =>
+	let val (e1, masc) = labexp nasc
+	    val (e2, pasc) = labexp masc
+	    val reg = R.consReg SEMICOLONleft SEMICOLONright
+	    val rl' = getRegion labexpright SEMICOLONleft
+	    val rr' = getRegion SEMICOLONright labexpleft
+	in raise PD.ParseError ("Expected expression following SEMICOLON", [reg])
+	end)
 
 seqexp :
   labexpseq
@@ -2864,6 +2857,7 @@ atexp :
 	    val rle2 = getRegion labexpright ENDleft
 	in (A.AtExpLet (d, e (rle1 @ rle2), [reg1, reg2, reg3], n, p), (p, asc'))
 	end)
+
 | LET decs IN seqexp END
     (fn (n, asc) =>
 	let val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "pattern detected in atexp: LET decs IN seqexp END. Returning A.AtExpDLet.");

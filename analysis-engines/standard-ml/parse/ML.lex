@@ -476,6 +476,8 @@ stUseFile    = ([^\*\ \n\t]*(\*[^\)])?)*;
 				 continue ());
 <STRI,STRD> "\\r"            => (addQuotedString ("\r", yytext, arg);
 				 continue ());
+<STRI,STRD> "\\^"            => (addQuotedString ("^", yytext, arg);
+				 continue ());
 <STRI,STRD> "\\\\"           => (addQuotedString ("\\", yytext, arg);
 				 continue ());
 <STRI,STRD> "\\\""           => (addQuotedString ("\"", yytext, arg);

@@ -376,6 +376,10 @@ and printFunSemList xs     = printlistgen xs (fn (x, y) => "(" ^ printExtEnv x ^
 and printSigEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printStrEnv     xs ind = printGenEnv xs (ind ^ "  ") printExtEnvList
 and printFunEnv     xs ind = printGenEnv xs ind printFunSemList
+
+(** Produces a string representation of an environment.
+ * \param An environment
+ * \param An indentation level. *)
 and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) ind =
     "\n" ^ ind ^ "ENV_CONS{valueIds:" ^ printVarEnv valueIds ind ^
     "\n" ^ ind ^ " typeNames:" ^ printTypeEnv typeNames ind ^
@@ -568,8 +572,12 @@ fun updateInfoArgOfFunctor argOfFunctor {lab, complete, infoTypeNames, argOfFunc
 fun updateValueIds valueIds (ENV_CONS {valueIds = _, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
     consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
   | updateValueIds _ _ = raise EH.DeadBranch ""
-fun updateTypeNames typeNames (ENV_CONS {valueIds, typeNames = _, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
-    consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+fun updateTypeNames typeNames (ENV_CONS {valueIds, typeNames = typeNamesOld, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) =
+    let
+	val _ = D.printDebug D.ENV D.TEMP (fn _ => "updateTypeNames has been called. Old typenames are:\n" ^ (printTypeEnv typeNames "") ^ "\n and the new typenames are:\n" ^ (printTypeEnv typeNames ""))
+    in
+	consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
+    end
   | updateTypeNames _ _ = raise EH.DeadBranch ""
 fun updateExplicitTypeVars explicitTypeVars (ENV_CONS {valueIds, typeNames, explicitTypeVars = _, structs, sigs, functors, overloadingClasses, info}) =
     consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
@@ -605,8 +613,9 @@ fun updateIArgOfFunctor argOfFunctor (ENV_CONS {valueIds, typeNames, explicitTyp
 
 fun projValueIds idG = updateValueIds idG emptyEnv
 
-(* constructs an empty env with typeNames *)
-fun consEnvTypeNames idT = updateTypeNames idT emptyEnv
+(** Constructs an environment containing the typenames in idT using the empty environment.  *)
+fun consEnvTypeNames idT = (D.printDebug D.ENV D.TEMP (fn _ => "Calling updateTypeNames with an empty environment and argument: " ^ (printTypeEnv idT ""));
+			    updateTypeNames idT emptyEnv)
 
 fun projExplicitTypeVars idV = updateExplicitTypeVars idV emptyEnv
 fun projStructs idS = updateStructs idS emptyEnv
@@ -639,7 +648,7 @@ fun isEmptyEnv (env as ENV_CONS _) =
 
 fun addenv  (v, semty) env = envOrdMap.insert (env,       v, semty)
 
-(* a function which will take an key and a value and construct a new map for envs, with a mapping of that key to that value inside it *)
+(** Takes an key and a value and construct a new map for envs, with a mapping of that key to that value inside it. *)
 fun consSingleEnv (v, semty)     = envOrdMap.insert (envOrdMap.empty, v, semty)
 
 fun findenv id env = envOrdMap.find (env, id)
@@ -1173,7 +1182,7 @@ fun getTypeNames typeNames =
  * that we are in fact dealing with an opaque signature *)
 fun createOpaqueEqualityConstraints env lab =
     let
-	val equalityTypeVarsToFreshen = ref []
+ 	val equalityTypeVarsToFreshen = ref []
 
 	fun freshenEqualityTypeVar eqtv =
 	    let
@@ -1415,7 +1424,7 @@ and filterEnv (env as ENV_CONS _) labs =
        | (NONE,      NONE)      => NONE)
   | filterEnv (env as ENVTOP) _ = SOME env
 
-(* Filters the constraintss that are not in the label set *)
+(** Filters the constraintss that are not in the label set. *)
 val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateIComplete false emptyEnv | SOME env' => env'
 
 end

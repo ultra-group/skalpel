@@ -1,34 +1,27 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Html.sml
- *  o Description: Defines the functor Html which has signature HTML
- *      and takes an argument of signature TAG.  The tags can be HTML
- *      tags as well as other tags.
+ *  o Description: 
  *)
 
-
+(** Defines the functor Html which has signature HTML and takes an argument of signature TAG.
+ * The tags can be HTML tags as well as other tags. *)
 functor Html (TA : TAG) :> HTML =
 struct
 
@@ -44,27 +37,33 @@ structure ER  = ExtReg
 structure EH  = ErrorHandler
 structure ERR = Error
 
-(* three different css style sheets that we can set *)
+(** A filepath to a CSS style sheet. *)
 val stylecss0 = "../lib/style.css"
+(** A filepath to a CSS style sheet. *)
 val stylecss1 = "../lib/style1.css"
+(** A filepath to a CSS style sheet. *)
 val stylecss2 = "../lib/style2.css"
+
+(** A ref value to the CSS sheet we wish to use (set to #stypecss2). *)
 val stylecss =  ref stylecss2
 
-(* sets a style sheet (changes the ref value of stylecss) *)
+(** Sets a style sheet (changes the ref value of stylecss). *)
 fun setstylecss 1 = stylecss := stylecss1
   | setstylecss 2 = stylecss := stylecss2
   | setstylecss _ = ()
 
-(* space and new line characters specified in the structure passed to this functor, TA *)
+(* Space character specified in the structure passed to this functor. *)
 val space = TA.getSpace ()
+(* New line character specified in the structure passed to this functor. *)
 val nline = TA.getBreakTag ()
 
-(* 1 tab = 8 spaces *)
+(** A tab, set to be the concatenation of eight #space values. *)
 val mytab = space ^ space ^
 	    space ^ space ^
 	    space ^ space ^
 	    space ^ space
 
+(** Translates \t to #mytab, " " to #space, etc. *)
 val transfun = fn #"\t" => mytab
 		| #" "  => space
 		| #"\n" => ""
@@ -72,9 +71,11 @@ val transfun = fn #"\t" => mytab
 		| #"\"" => "\""
 		| x     => Char.toString x
 
-(* returns part of a line - range (from, lgth) in string 'line' *)
+(** Returns part of a line - range (from, lgth) in string 'line'. *)
 fun getPartLine line from lgth n =
-    let val st = "ERROR:\n"   ^
+    let
+	(** An error string used if the subscript exception is raised while executing #getPartLine. *)
+	val st = "ERROR:\n"   ^
 		 "  line:   " ^ line              ^ "\n" ^
 		 "  from:   " ^ Int.toString from ^ "\n" ^
 		 "  length: " ^ Int.toString lgth ^ "\n" ^
@@ -239,19 +240,6 @@ fun transform2' stin stout eregs bas _ =
 	in ()
 	end
 
-
-(*fun findSt xs asc = #1 (O.foldr
-			    (fn (x, (y, b)) =>
-				((O.printeltst x asc)
-				 ^ (if b then ", " else "")
-				 ^ y, true))
-			    ("", false)
-			    xs)
-
-fun longAsmp (nl, v) asc =
-    (foldr (fn (x, y) => (O.printeltst x asc) ^ "." ^ y) "" nl)
-    ^ (O.printeltst v asc)*)
-
 fun getRestrictions _ (EK.MultiOcc   (SOME x)) asc = raise EH.DeadBranch "No multiocc error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
   | getRestrictions _ (EK.ValVarApp  (SOME x)) asc = raise EH.DeadBranch "No applied value variable in pattern error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
   | getRestrictions _ (EK.ConIsVar   (SOME x)) asc = raise EH.DeadBranch "No Constructor is a value variable error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
@@ -265,19 +253,23 @@ fun getRestrictions _ (EK.MultiOcc   (SOME x)) asc = raise EH.DeadBranch "No mul
 							 then CD.toStringListSt asmp asc ^ " is not a datatype/exception constructor"
 							 else CD.toStringListSt asmp asc ^ " are not datatype/exception constructors"
 
-(* gathers the lengths of each line and stres them in a list of tuples (lineNumber, length) *)
+(** Gathers the lengths of each line and stres them in a list of tuples (lineNumber, length). *)
 fun linesLengths file =
-    let val stm = TextIO.openIn file
+    let
+        (** A file stream. *)
+        val stm = TextIO.openIn file
+        (**  Returns a list of tuples (lineNumber, length) given a starting line number. *)
 	fun count n =
 	    case TextIO.inputLine stm of
 		NONE      => []
 	      | SOME line => (n, size line) :: (count (n+1))
+   (** Calls #count with an argument of 1.*)
 	val ret = count 1
 	val _   = TextIO.closeIn stm
     in ret
     end
 
-(* returns the number of characters in line n *)
+(** Returns the number of characters in line n. *)
 fun getSize [] _ = NONE
   | getSize ((n : int, s) :: xs) m =
     if n = m
@@ -334,13 +326,13 @@ fun sliceToHtml sl =
 	  | #"\169" => "\169"
 	  | x => Char.toString x) sl
 
-(* checks that a file supplied to be the basis is likely to be valid *)
+(** Checks that a file supplied to be the basis is likely to be valid. *)
 fun checkIsBas filebas (file : string) =
     case filebas of
 	NONE => false
       | SOME f => f = file
 
-(* outputs string st to an output stream *)
+(** Outputs string st to an output stream. *)
 fun printTagged stout btag st =
     if btag
     then TextIO.output (stout, st)
@@ -348,10 +340,10 @@ fun printTagged stout btag st =
 
 fun treatOneRegs stout filebas btag (file, regs) basisoverloading =
     let
-	(* we transform the regions because a region coming from a parsing errors
-         * are not always on one line
-	 * maybe we should do that out of this structure but in Tester *)
+	(** We transform the regions because a region coming from a parsing errors are not always on one line.
+	 * maybe we should do that out of this structure but in Tester. *)
 	val regs' = lineByLine regs (linesLengths file)
+   (** A file stream. *)
 	val stin  = TextIO.openIn file
 	val f = #file (OS.Path.splitDirFile file)
     in
@@ -364,20 +356,21 @@ fun treatOneRegs stout filebas btag (file, regs) basisoverloading =
 	 TextIO.closeIn stin)
     end
 
+(** Maps treatOneRegs over a list of regions. *)
 fun treatRegs stout filebas btag xs basisoverloading =
     app (fn x => treatOneRegs stout filebas btag x basisoverloading) xs
 
-(* get the classification of the error - such as free identifier *)
+(** Get the classification of the error - such as free identifier. *)
 fun getKind err ascid btag =
     TA.getTitle (#2 (EK.printErrKind (ERR.getK err) ascid))
 
-(* returns the context dependencies for a given error *)
+(** Returns the context dependencies for a given error. *)
 fun getDependencies err ascid btag =
     TA.getTitle "Context dependencies" ^
     " " ^
     getRestrictions (ERR.getD err) (ERR.getK err) ascid
 
-(* prints out a slice of a program *)
+(** Prints out a slice of a program. *)
 fun getSlice err btag ascid basisoverloading removeBasisSlice =
     let
 	val sl = S.printSlice (ERR.getS err) true
@@ -392,13 +385,15 @@ fun getSlice err btag ascid basisoverloading removeBasisSlice =
 	(if btag then "</code>"   else "")
     end
 
-(* forms the enumerated output html files (<name>-n.html) *)
+(** Forms the enumerated output html files (<name>-n.html). *)
 fun transformOneErr stout filebas fileout err ascid btag basisoverloading removeBasisSlice =
     let (*val _       = D.printdebug2 (I.printAssoc ascid)*)
 	(*val _       = D.printdebug2 (ERR.printOneXmlErr err "" false)*)
+  (** The kind of the error (found by calling #getKind). *)
 	val stkind  = getKind         err ascid btag
 	(*val _       = D.printdebug2 (stkind)*)
 	val stdeps  = getDependencies err ascid btag
+  (** Holds the slice of the error (found by calling #getSlice). *)
 	val stslice = getSlice        err       btag ascid basisoverloading removeBasisSlice
 	val _ = printTagged
 		    stout btag
@@ -440,12 +435,16 @@ fun transformOneErr stout filebas fileout err ascid btag basisoverloading remove
     in ()
     end
 
-(* transforms an error slice into an HTML-representataion *)
+(** Transforms an error slice into an HTML-representation. *)
 fun transformErrSl fileout filebas errs ascid _ bhead btag basisoverloading removeBasisSlice =
     let val stout = TextIO.openOut fileout
+  (** Meta tag. **)
 	val code  = "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
+  (** Style tag. *)
 	val style = "<link href=\"" ^ !stylecss ^  "\" rel=\"stylesheet\" type=\"text/css\" />"
+  (** An h3 tag. *)
 	val errb  = "<h3>SML-TES found "
+  (** Closes an h3 tag and adds a break (br tag). *)
 	val erre  = "</h3>\n<br/>\n\n"
 	val _ = if bhead
 		then TextIO.output (stout, "<head>\n" ^ style ^ "\n" ^ code ^ "\n</head>\n<body>\n\n")
@@ -457,6 +456,7 @@ fun transformErrSl fileout filebas errs ascid _ bhead btag basisoverloading remo
 		       | 1 => TextIO.output (stout, errb ^ "1 error:" ^ erre)
 		       | n => TextIO.output (stout, errb ^ Int.toString n ^ " errors:" ^ erre)
 		else ()
+  (** Calls #transformOneErr on each of the elements in the list given as an argument. *)
 	fun f xs = app (fn x => transformOneErr
 				    stout
 				    filebas

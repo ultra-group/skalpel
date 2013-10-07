@@ -10,7 +10,8 @@
 *
 * 77
 *
-* Please note you should not use List.nth or List.length to accomplish this task.
+* Please note you should *not* use any basis library functions
+* (i.e. List.nth) to accomplish this task.
 *)
 
 

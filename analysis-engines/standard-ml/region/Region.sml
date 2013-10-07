@@ -123,8 +123,8 @@ fun upPos   (line, column) = (line, column + 1)
 (** Decrements the column number by one. *)
 fun downPos (line, column) = (line, column - 1)
 
-(** Generates regions for blank spaces that may contain empty lines. *)
-(** \deprecated For now we also have some uses of it for labexp and labpat but it should disapear. *)
+(** Generates regions for blank spaces that may contain empty lines.
+ * \deprecated For now we also have some uses of it for labexp and labpat but it should disapear. *)
 fun getRegionList (left as (l1, c1)) (right as (l2, c2)) =
     let
 	(** Used when we are dealiing with a region which does not terminate on the line we are currently on. *)

@@ -13,15 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli
+ *  o Authors:     Vincent Rahli, John Pirie
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Error.sml
- *  o Description: Contains the definition of a type error.  The file
- *      defines the structure Error which has the signature ERROR.
  *)
 
-
+(** Contains the definition of a type error, This file defines the structure Error which has the signature ERROR. *)
 structure Error :> ERROR = struct
 
 (* abbreviate the names of structures *)

@@ -1,31 +1,26 @@
 (* Copyright 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        16 July 2010
  *  o File name:   ValuePol.sml
- *  o Description: Deals with the value polymorphism restriction.
+ *
  *)
 
-
+(** Deals with the value polymorphism restriction, constrained opaquely by refstruct{VALUEPOL}. *)
 structure ValuePol :> VALUEPOL = struct
 
 (* abbreviate the names of the structures we use *)
@@ -35,7 +30,7 @@ structure X  = Expans
 structure L  = Label
 structure EH = ErrorHandler
 
-(* will return the top label of any of the scon constructors of the ast *)
+(** Returns the top label of any of the scon constructors of the ast. *)
 fun toplabScon (A.SconInt    (_, _, _, l, _)) = [l]
   | toplabScon (A.SconWord   (_, _, _, l, _)) = [l]
   | toplabScon (A.SconReal   (_, _, _, l, _)) = [l]
@@ -43,30 +38,23 @@ fun toplabScon (A.SconInt    (_, _, _, l, _)) = [l]
   | toplabScon (A.SconChar   (_, _, _, l, _)) = [l]
   | toplabScon SconDots                     = []
 
-(* returns top label of any of the pcon constructors in the ast *)
+(** Returns the top label of any of the pcon constructors in the ast. *)
 and toplabPcon (A.PconBool (_, _, _, l, _)) = [l]
   | toplabPcon (A.PconNil  (_, _, _, l, _)) = [l]
   | toplabPcon (A.PconRef  (_, _, _, l, _)) = [l]
   | toplabPcon A.PconDots                   = []
 
-(* returns the top label of any of the ident constructors in the ast *)
+(** Returns the top label of any of the ident constructors in the ast. *)
 and toplabIdent (A.Ident (_, _, _, l, _)) = [l]
   | toplabIdent (A.IdentPcon pc)          = toplabPcon pc
   | toplabIdent A.IdentDots               = []
 
-(* returns the top label of any of the longid constructors in the ast
-*)
+(** Returns the top label of any of the longid constructors in the ast. *)
 and toplabLongId (A.LongIdQual (_, _, _, l, _)) = [l]
   | toplabLongId (A.LongIdId id)                = toplabIdent id
   | toplabLongId (A.LongIdDots _)               = []
 
-(*
-fun toplabSeqExp (A.SeqExp (_, _, _, _, l, _)) = [l]
-  | toplabSeqExp (A.SeqExpSl (_, _, _, l, _))  = [l]
-  | toplabSeqExp (A.SeqExpDots _)              = []
-*)
-
-(* returns the top label of any of the atomic expressions (atexp) constructors in the ast *)
+(** Returns the top label of any of the atomic expressions (atexp) constructors in the ast. *)
 fun toplabAtExp (A.AtExpId id)                    = toplabLongId id
   | toplabAtExp (A.AtExpScon sc)                  = toplabScon sc
   | toplabAtExp (A.AtExpTuple (_, _, l, _))       = [l]
@@ -81,8 +69,7 @@ fun toplabAtExp (A.AtExpId id)                    = toplabLongId id
   | toplabAtExp (A.AtExpQuote (_, _, l, _))       = [l]
   | toplabAtExp (A.AtExpDots _)                   = []
 
-(* returns the top label of any of the expression (exp) constructors
-in the ast *)
+(** Returns the top label of any of the expression (exp) constructors in the ast. *)
 and toplabExp (A.ExpAtExp ae)                    = toplabAtExp ae
   | toplabExp (A.ExpFn (_, _, l, _))             = [l]
   | toplabExp (A.ExpApp (_, _, _, _, _, l, _))   = [l]
@@ -98,17 +85,11 @@ and toplabExp (A.ExpAtExp ae)                    = toplabAtExp ae
   | toplabExp (A.ExpHandle (_, _, _, l, _))      = [l]
   | toplabExp (A.ExpDots _)                      = []
 
-(* returns the top label of any of the labexp constructors in the ast *)
+(** Returns the top label of any of the labexp constructors in the ast. *)
 and toplabLabExp (A.LabExp (e, _, _, l, _)) = l :: (toplabExp e)
   | toplabLabExp (A.LabExpDots _)           = []
 
-
-(*fun allpairs l1 l2 = List.concat (map (fn x => map (fn y => x @ y) l2) l1)*)
-
-(* TODO: we should have labels for all the dots along with false *)
-(* if true then the two other components should be empty         *)
-
-(* ruterns a constructor from the Expans structure for atomic expressions *)
+(** Returns expansiveness of an atomic expression. *)
 fun nonexpAtExp (A.AtExpId id)                    = X.Nonexp
   | nonexpAtExp (A.AtExpScon _)                   = X.Nonexp
   | nonexpAtExp (A.AtExpTuple (lel, _, l, _))     = X.addnonexp (nonexpLabExpList lel) l
@@ -123,20 +104,20 @@ fun nonexpAtExp (A.AtExpId id)                    = X.Nonexp
   | nonexpAtExp (A.AtExpQuote (_, _, l, _))       = X.genOneExpans l (*(2010-06-24) I don't know if they are actually expansive but I couldn't find the info in the smlnj source code (only looked for 5min) *)
   | nonexpAtExp (A.AtExpDots _)                   = X.Expans []
 
-(* the rest of these functions follow the same idea *)
+(** Returns expansiveness of a "SeqExp". *)
 and nonexpSeqExp (A.SeqExp (_, _, _, _, l, _)) = X.genOneExpans l
   | nonexpSeqExp (A.SeqExpSl (_, _, _, l, _))  = X.genOneExpans l
   | nonexpSeqExp (A.SeqExpDots _)              = X.Expans []
 
-
+(** Returns expansiveness of a a labelled expression. *)
 and nonexpLabExp (A.LabExp (e, _, _, l, _)) = X.addnonexp (nonexpExp e) l
   | nonexpLabExp (A.LabExpDots _)           = X.Expans []
 
-
+(** Returns expansiveness of #Ast.ExpField. *)
 and nonexpExpField (A.ExpField (_, e, _, _, l, _)) = X.addnonexp (nonexpLabExp e) l
   | nonexpExpField (A.ExpFieldDots _)              = X.Expans []
 
-
+(** Returns expansiveness of an expression. *)
 and nonexpExp (A.ExpAtExp ae)                      = nonexpAtExp ae
   | nonexpExp (A.ExpFn _)                          = X.Nonexp
   | nonexpExp (A.ExpApp (e, ae, _, _, _, l, _))    = X.addnonexp (X.composeNonexp [nonexpConExp e, nonexpAtExp ae]) l
@@ -152,7 +133,7 @@ and nonexpExp (A.ExpAtExp ae)                      = nonexpAtExp ae
   | nonexpExp (A.ExpHandle (_, _, _, l, _))        = X.genOneExpans l
   | nonexpExp (A.ExpDots _)                        = X.Expans []
 
-
+(** Returns expansiveness of an atomic expression. *)
 and nonexpConExp (A.ExpAtExp (A.AtExpParen (e, _, _, l, _))) = X.addnonexp (nonexpDonLabExp e) l
   | nonexpConExp (A.ExpAtExp (A.AtExpId id))                 = nonexpConLongId id
   | nonexpConExp e                                           = X.genMulExpans (toplabExp e)
@@ -164,9 +145,11 @@ and nonexpConLabExp (A.LabExp (A.ExpAtExp (A.AtExpParen (e, _, _, l, _)), _, _, 
 and nonexpDonLabExp (A.LabExp (A.ExpTyped (e, _, _, l, _), _, _, k, _)) = X.addnonexp (X.addnonexp (nonexpConLabExp e) l) k
   | nonexpDonLabExp e                                                   = nonexpConLabExp e
 
+(** Returns expansiveness of a structure expression. *)
 and nonExpConStrId (A.StrId (_, v, _, l, _)) = SOME (v, l)
   | nonExpConStrId A.StrIdDots               = NONE
 
+(** Returns expansiveness of a #Ast.LongIdQual. *)
 and nonexpConLongId (A.LongIdQual (sid, lid, _, lab, _)) =
     (case nonexpConLongId lid of
 	 X.Nonexp               => X.Nonexp
@@ -183,10 +166,12 @@ and nonexpConLongId (A.LongIdQual (sid, lid, _, lab, _)) =
   | nonexpConLongId (A.LongIdId id)                      = nonexpConIdent id
   | nonexpConLongId (A.LongIdDots _)                     = X.Expans []
 
+(** Returns expansiveness of an identifier. *)
 and nonexpConIdent (A.Ident (_, n, _, l, _)) = X.genOneExpdep n l (* it is expansive if the identifier is a value variable *)
   | nonexpConIdent (A.IdentPcon pc)          = nonexpConPcon pc
   | nonexpConIdent A.IdentDots               = X.Expans []
 
+(** Retuns expansiveness of a A.Pcon* ast constuctors. *)
 and nonexpConPcon (A.PconBool _)               = X.Nonexp
   | nonexpConPcon (A.PconNil  _)               = X.Nonexp
   | nonexpConPcon (A.PconRef (_, _, _, l, _))  = X.genOneExpans l

@@ -74,6 +74,7 @@ signature TY = sig
 
 	 and equalityTypeStatus = EQUALITY_TYPE
 				| NOT_EQUALITY_TYPE
+				| SIG_TYPE
 				| UNKNOWN
 
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar

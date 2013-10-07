@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Op.sig
- *  o Description: Defines the signature OP, for builtin types of some
- *      operators.
  *)
 
-
+(** Defines the signature OP, for builtin types of some operators.*)
 signature OP = sig
 
     val getOpType :  Id.assoc -> Env.varEnv * Env.constraints
