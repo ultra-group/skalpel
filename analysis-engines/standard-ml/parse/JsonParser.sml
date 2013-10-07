@@ -17,19 +17,27 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        05 November 2011
  *  o File name:   RunSlicer.sml
- *  o Description: Parses the test answer JSON files
  *)
 
-structure JsonParser : JsonParser =
+(** Parses the test answer JSON files, translucently constrained by refstruct{JSONPARSER}. *)
+structure JsonParser : JSONPARSER =
 struct
 
-(* the sml/nj library structure *)
 structure NJJP = JSONParser
 structure EH = ErrorHandler
 structure EK = ErrorKind
 structure D  = Debug
 
-(* the type which we use to represent a singular error *)
+(** A type which we use to represent a singular error, a record with seven fields.
+ * Record fields are as follows:
+ * \arg labels A tuple of an int and an int list.
+ * \arg assumptions ?
+ * \arg kind The error kind (#ErrorKind.kind).
+ * \arg slice The program slice of the error.
+ * \arg time Execution time.
+ * \arg identifier Unique identifier of the error, (~1 if can't do that?).
+ * \arg regions The regions attributed o the error (#ExtReg.regs).
+ * *)
 type oneerror = {labels       : int * int list,
 		 assumptions  : LongId.keyOut list,
 		 kind         : ErrorKind.kind,
@@ -38,7 +46,20 @@ type oneerror = {labels       : int * int list,
 		 identifier   : int,
 		 regions      : ExtReg.regs}
 
-(* the type we use to represent the errors in the input program *)
+(** A type used to represent all errors in an input program, a record option ref with 13 fields.
+ * \arg errors A list of errors that occured (#oneerror list).
+ * \arg time A record containing fields 'analysis', 'enumeration', 'minimisation', 'slicing' and 'html', indicating time taken to run a test.
+ * \arg tyvar A pair of an integer and an #Id.assocOut.
+ * \arg ident An #Id.assocOut.
+ * \arg constraint A record with three fields 'syntactic', 'top' and 'total'.
+ * \arg labels A single integer (just the one?).
+ * \arg minimisation A boolean indicating whether the slice is minimal.
+ * \arg solution The solution that the test is used with. Now deprecated, and always set to 9.
+ * \arg basis An integer corresponding to what level of basis was used (0 = none, 1 = internal, 2 = full).
+ * \arg timelimit The timelimit specified for the test to run.
+ * \arg labelling A string.
+ * \arg final A boolean.
+ * \arg name The name of the program. *)
 type error = {errors       : oneerror list,
 	      time         : {analysis     : LargeInt.int,
 			      enumeration  : LargeInt.int,
@@ -59,12 +80,14 @@ type error = {errors       : oneerror list,
               final        : bool,
 	      name         : string} option ref
 
-
-(* strips out a JSON object name and returns the value and the rest of the JSON object list *)
+(** Strips out a JSON object name and returns the value and the rest of the JSON object list. *)
 fun getObject (JSON.OBJECT objectList) expectedString =
     let
+	(** Returns the name inside a (name, value) JSON pair. *)
 	fun getName (name, _)        = name
+	(** Returns the vlue inside a (name, value) JSON pair. *)
 	fun getValue (_, value) = value
+	(** The top level object. *)
 	val head = List.hd objectList
     in
 	if (getName head) = expectedString
@@ -73,36 +96,46 @@ fun getObject (JSON.OBJECT objectList) expectedString =
     end
   | getObject _ _                    = raise EH.DeadBranch ("Format error with JSON test file (getObject got something other than an object)")
 
-(* changes something of type JSON.STRING to a string *)
+(** Changes something of type JSON.STRING to a string. *)
 fun getString    (JSON.STRING value) = value
   | getString      _                 = raise EH.DeadBranch ("Format error with JSON test file (getString got something other than a string)")
 
+(** Parses a test file. *)
 fun parseTest testfile =
     let
+	(** Handles a JSON.NULL value. *)
 	fun getNull      (JSON.NULL)         = ()
 	  | getNull      _                   = raise EH.DeadBranch ("Format error with JSON test file (getNull got something other than NULL)")
+	(** Returns the boolean in a JSON.BOOL value. *)
 	fun getBool      (JSON.BOOL value)   = value
 	  | getBool      _                   = raise EH.DeadBranch ("Format error with JSON test file (getBool got something other than a bool)")
+	(** Returns the integer in a JSON.INT value, casting from IntInf. *)
 	fun getInt       (JSON.INT value)    = (IntInf.toInt value:int)
 	  | getInt      _                    = raise EH.DeadBranch ("Format error with JSON test file (getInt got something other than an int)")
+	(** Returns the array in a JSON.ARRAY value. *)
 	fun getIntArray  (JSON.ARRAY [])     = []
 	  | getIntArray  (JSON.ARRAY (h::t)) = (getInt h::(getIntArray (JSON.ARRAY t)))
 	  | getIntArray      _               = raise EH.DeadBranch ("Format error with JSON test file (getIntArray got something other than an array)")
+	(** Returns the integer in a JSON.INT value. *)
 	fun getIntInf    (JSON.INT value)    = value
 	  | getIntInf      _                 = raise EH.DeadBranch ("Format error with JSON test file (getIntInf got something other than an int)")
+	(** Returns the fload in a JSON.FLOAT value. *)
 	fun getFloat     (JSON.FLOAT value)  = value
 	  | getFloat      _                  = raise EH.DeadBranch ("Format error with JSON test file (getFloat got something other than a float)")
+	(** Returns the string array in a JSON.ARRAY value. *)
 	fun getStrArray  (JSON.ARRAY [])     = []
 	  | getStrArray  (JSON.ARRAY (h::t)) = (getString h::(getStrArray (JSON.ARRAY t)))
 	  | getStrArray      _               = raise EH.DeadBranch ("Format error with JSON test file (getStrArray got something other than an array)")
 
+	(** Gets the next object in the JSON array. *)
 	fun getNextObject (JSON.OBJECT([])) = raise EH.DeadBranch ("Format error with JSON test file (no next object)")
 	  | getNextObject (JSON.OBJECT(((id,value)::t))) = (id, value)
 	  | getNextObject _ = raise EH.DeadBranch ("Format error with JSON test file (getNextObject got something other than an object)")
 
-	(* finds a value with a given identifier in an object *)
+	(** Finds a value with a given identifier in an object. *)
 	fun findIdVal (JSON.OBJECT(object)) id =
 	    let
+		(** The object id of the next object in the JSON.OBJECT container. *)
 		val (objectId, objectValue) = getNextObject (JSON.OBJECT(object))
 	    in
 		if id=objectId
@@ -111,27 +144,40 @@ fun parseTest testfile =
 	    end
 	  | findIdVal _ _ = raise EH.DeadBranch ("Format error with JSON test file (findIdVal got something other than an object)")
 
+	(** Gets the type variables stored in the JSON array. *)
 	fun getTyvars    (JSON.ARRAY ([]))   = []
 	  | getTyvars    (JSON.ARRAY (h::t)) = ((getInt(findIdVal h "id"), getString(findIdVal h "str"))::(getTyvars (JSON.ARRAY t)))
 	  | getTyvars    _                   = raise EH.DeadBranch ("Format error with JSON test file (getTyvars got something other than an array)")
 
+	(** Parses the regions stated in the test file. *)
 	fun parseRegions (JSON.ARRAY []) = []
 	  | parseRegions (JSON.ARRAY(h::t)) =
 	    let
+		(** Gets the file name of the test. *)
 		val (fileName, rest) = getObject h "fileName"
+		(** Gets the regions of the test. *)
 		val (fileRegions, _) = getObject rest "regionList"
 
+		(** Parses the file regions contained in the JSON file, contained in a JSON.ARRAY. *)
 		fun parseFileRegions (JSON.ARRAY []) = []
 		  | parseFileRegions (JSON.ARRAY(h::t)) =
 		    let
+			(** Gets the node type. *)
 			val (nodeType, rest) = getObject h "nodeType"
+			(** Gets the 'from' line. *)
 			val (fromLine, rest) = getObject rest "fromLine"
+			(** Gets the 'from' column. *)
 			val (fromColumn, rest) = getObject rest "fromColumn"
+			(** Gets the 'to' line. *)
 			val (toLine, rest) = getObject rest "toLine"
+			(** Gets the 'to' column. *)
 			val (toColumn, rest) = getObject rest "toColumn"
+			(** Gets the colour of the node. *)
 			val (color, rest) = getObject rest "color"
+			(** Gets the weight of the node. *)
 			val (weight, rest) = getObject rest "weight"
 
+			(** Translates the colour given in the test file to the ExtReg associated colour. *)
 			fun getColor "B"   = ExtReg.Blue
 			  | getColor "R"    = ExtReg.Red
 			  | getColor "P" = ExtReg.Purple
@@ -152,10 +198,13 @@ fun parseTest testfile =
 	    end
 	  | parseRegions _ = raise EH.DeadBranch ("Format error with JSON test file (parseRegions got something other than an array)")
 
+	(** Parses an error kind. *)
 	fun parseKind object =
 	    let
+		(** Gets the error kind name. *)
 		val (ek, rest) = getObject object "errorKindName"
 
+		(** Gets the typename list. *)
 		fun getTnerrList (JSON.ARRAY [])    = []
 		  | getTnerrList (JSON.ARRAY(h::t)) =
 		    let
@@ -176,7 +225,7 @@ fun parseTest testfile =
 		    end
 		  | getRecErr _ = raise EH.DeadBranch ("Format error with JSON test file (getRecErr got something other than an array)")
 
-		(* for the specerr list part of unmerr *)
+		(** For the specerr list part of unmerr. *)
 		fun getUnmErr (JSON.ARRAY []) = []
 		  | getUnmErr (JSON.ARRAY (h::t)) =
 		    let
@@ -351,6 +400,7 @@ fun parseTest testfile =
 		  | str => raise EH.DeadBranch ("Format error with JSON test file (unknown error kind: "^str^")")
 	    end
 
+	(** Parses the errors inside a test file. *)
 	fun getErrors (JSON.ARRAY []) = (D.printDebug D.JSON D.PARSING (fn _ => "finished parsing errors object!"); [])
 	  | getErrors (JSON.ARRAY(h::t)) =
 	    let
@@ -362,12 +412,16 @@ fun parseTest testfile =
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the assumptions...")
 		val assump = List.map (fn x => ([], x)) (getIntArray (findIdVal h "assumptions")) (* first part of tuple always empty list? *)
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the kind...")
+		(** The error kind. *)
 		val k   = parseKind (findIdVal h "kind")
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the slice...")
+		(** The slice of the error. *)
 		val sl  = getString(findIdVal h "slice")
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the time...")
+		(** The time taken to find the error. *)
 		val tm  = getIntInf(findIdVal h "time")
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "getting the regions...")
+		(** The regions of the error. *)
 		val r   = parseRegions (findIdVal h "regions")
 		val _   = D.printDebug D.JSON D.PARSING (fn _ => "done with this error")
 	    in
@@ -381,63 +435,88 @@ fun parseTest testfile =
 	    end
 	  | getErrors _ = raise EH.DeadBranch ("Format error with JSON test file (getErrors got something other than an array)")
 
+	(** A value containing the result of calling the SML/NJ JSON parser on the test file. *)
 	val test = NJJP.parseFile testfile handle _ => raise EH.DeadBranch ("Cannot parse JSON file: "^testfile^"\n")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'errors' object...")
+	(** The errors object. *)
 	val (errorList, test) = getObject test "errors"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'time' object...")
+	(** The time object. *)
 	val (timeObj, test) = getObject test "time"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'tyvar' object...")
+	(** The type variable object. *)
 	val (tyvarObj, test) = getObject test "tyvar"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'ident' object...")
+	(** The idintefier object. *)
 	val (identObj, test) = getObject test "ident"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'constraint' object...")
+	(** The constraint object. *)
 	val (constraintObj, test) = getObject test "constraint"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'labels' object...")
+	(** The labels object. *)
 	val (labels, test) = getObject test "labels"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'minimisation' object...")
+	(** The minimisation object. *)
 	val (minimisation, test) = getObject test "minimisation"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'solution' object...")
+	(** \deprecated The solution object. *)
 	val (solution, test) = getObject test "solution"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'basis' object...")
+	(** The basis object. *)
 	val (basis, test) = getObject test "basis"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'timelimit' object...")
+	(** The timelimit object. *)
 	val (timelimit, test) = getObject test "timelimit"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'labelling' object...")
+	(** The labelling object. *)
 	val (labelling, test) = getObject test "labelling"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting final object...")
+	(** The 'final' object. *)
 	val (final, test) = getObject test "final"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'name' object...")
+	(** The name object. *)
 	val (name, test) = getObject test "name"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "top level json objects correct!")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing lower level objects...")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting all errors...")
+	(** The errors inside the test file. *)
 	val errs = getErrors errorList
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "skipping time, will get that at the end...")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting tyvar...")
+	(** The type variables inside the test file. *)
 	val tv = (getInt(findIdVal tyvarObj "tyvar"), getTyvars(findIdVal tyvarObj "assoc"))
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting ident...")
-	(* val idnt = getTyvars(findIdVal tyvarObj "assoc") *)
+	(** The type variables inside the test file. *)
 	val idnt = getTyvars(identObj)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting constraint...")
+	(** The constraint. *)
 	val cst = {total = getInt((findIdVal constraintObj "total")),
 		   top = getInt((findIdVal constraintObj "top")),
 		   syntactic = getInt((findIdVal constraintObj "syntactic"))}
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting labels...")
+	(** The integer version of the label. *)
 	val lab = getInt(labels)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting minimisation...")
+	(** The boolean version of the minimisation state. *)
 	val min = getBool(minimisation)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting solution...")
+	(** The integer of the solution. *)
 	val sol = getInt(solution)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting basis...")
+	(** The integer of the basis used. *)
 	val bas = getInt(basis)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting timelimit...")
+	(** The timelimit. *)
 	val tm = getIntInf(timelimit)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting labelling...")
+	(** The labelling. *)
 	val lbing = getString(labelling)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting final...")
+	(** The boolean version of the 'final' field. *)
 	val fin = getBool(final)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting name...")
+	(** The name of the test. *)
 	val nm = getString(name)
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "got everything, new getting time...")
     in
@@ -454,20 +533,26 @@ fun parseTest testfile =
 	    })
     end
 
+(** Parses the test control file which states where all the the tests live. *)
 fun parseTestControlFile fileLocation =
     let
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing test control file...")
+
+	(** Gets string versions of the JSON object test paths stated in the control file. *)
 	fun stripTestPaths (JSON.ARRAY([])) = []
 	  | stripTestPaths (JSON.ARRAY(h::t)) = ((getString h)::(stripTestPaths (JSON.ARRAY t)))
 	  | stripTestPaths _ = raise EH.DeadBranch ("JSON format incorrect for file: "^fileLocation^"\n")
 
+	(** Holds result of calling the SML/N parser on the test control file. *)
 	val testControl = NJJP.parseFile fileLocation handle _ => raise EH.DeadBranch ("Cannot parse test control JSON file: "^fileLocation^"\n")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "checking top-level objects of json file...")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting 'test-list' object...")
+	(** The specified list of tests. *)
 	val (testList, testControl) = getObject testControl "test-list"
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "top level json objects correct!")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "parsing lower level objects...")
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "getting test-list...")
+	(** Holds the string versions of the test paths gathered by calling #stripTestPaths. *)
 	val testPaths = stripTestPaths testList
 	val _ = D.printDebug D.JSON D.PARSING (fn _ => "done!")
     in

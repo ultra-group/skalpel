@@ -17,13 +17,11 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        05 November 2011
  *  o File name:   ParseJson.sml
- *  o Description: Definition of a parser which parses the test answer JSON files
  *)
 
-signature JsonParser =
+(** A signature used by refstruct{JsonParser} to parse test answer JSON files. *)
+signature JSONPARSER =
 sig
-    (*(2010-03-04)An error should also contain the id of the error
-     * We should also include the solution used when the error was recorded. *)
     type oneerror
 
     type error = {errors       : {labels       : int * int list,
@@ -31,7 +29,7 @@ sig
 				  kind         : ErrorKind.kind,
 				  slice        : string,
 				  time         : LargeInt.int,
-				  identifier   : int,           (* unique identifier of the error, ~1 if can't do that.*)
+				  identifier   : int,
 				  regions      : ExtReg.regs} list,
 		  time         : {analysis     : LargeInt.int,
 				  enumeration  : LargeInt.int,

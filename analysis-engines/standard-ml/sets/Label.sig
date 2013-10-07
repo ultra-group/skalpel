@@ -29,6 +29,9 @@ signature LABEL = sig
     val builtinLab : label
     val firstLab   : label
 
+    val unionSizes : int list ref
+    val nextlab    : label ref
+
     val toInt      : label -> int
     val fromInt    : int   -> label
 

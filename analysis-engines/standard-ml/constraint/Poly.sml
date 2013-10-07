@@ -1,23 +1,17 @@
-(* Copyright 2009 Heriot-Watt University
- * Copyright 2010 Heriot-Watt University
+(* Copyright 2009 2010 Heriot-Watt University
  *
- *
- * This file is part of the ULTRA SML Type Error Slicer (SMLTES) -
- * a Type Error Slicer for Standard ML written by the ULTRA Group of
- * Heriot-Watt University, Edinburgh.
- *
- * SMLTES is a free software: you can redistribute it and/or modify
+ * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMLTES is distributed in the hope that it will be useful,
+ * Skalpel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with SMLTES.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  o Authors:     Vincent Rahli
  *  o Affiliation: Heriot-Watt University, MACS
@@ -27,7 +21,7 @@
  *      This structure is to deal with polymorphism/monomorphism.
  *)
 
-
+(** A structure used to distinguish polymorphic and monomorphic terms, constrained opaquely by refstruct{POLY}. *)
 structure Poly :> POLY = struct
 
 (* shorten names of structures *)
@@ -36,13 +30,22 @@ structure L  = Label
 structure CD = LongId
 structure EH = ErrorHandler
 
-(* monomorphic and polymorphic terms *)
+(** A monomorphic term with two constructors for how the monomorphism is enforced.
+ * Constructors are:
+ * \arg EXPANS of #Expans.expans. For when an expansiveness constraint forcing the monomorphism.
+ * \arg MONOBIN of #Label.labels. Labels forcing the monomorphism e.g. an exception. *)
 datatype mono = EXPANS of X.expans
 	      | MONBIN of L.labels
+
+(** Represents whether an expression is monomorphic or polymorphic.
+ * Constructors are as follows:
+ * \arg POLY. Represents a polymorphic expression.
+ * \arg MONO of #mono list. Represents a monomorphic expression, argument explains why expression is monomorphic.
+ *)
 datatype poly = POLY
 	      | MONO of mono list
 
-(* returns the labels of a mono term *)
+(** Returns the labels of a monomorphic term. *)
 fun getLabsMono (EXPANS expans) =
     let val (labs, lidop) = X.getLabsExpans expans
     in case lidop of
@@ -51,7 +54,7 @@ fun getLabsMono (EXPANS expans) =
     end
   | getLabsMono (MONBIN labs)   = (labs, L.empty, CD.empty)
 
-(* returns the labels of a polymorphic term *)
+(** Returns the labels of a polymorphic term. *)
 fun getLabsPoly POLY         = (L.empty, L.empty, CD.empty)
   | getLabsPoly (MONO monos) =
     foldr (fn (mono, (labs, stts, deps)) =>
@@ -63,71 +66,60 @@ fun getLabsPoly POLY         = (L.empty, L.empty, CD.empty)
 	  (L.empty, L.empty, CD.empty)
 	  monos
 
-(* turns a non expansive term into a polymorphic term *)
+(** Turns a non expansive term into a polymorphic term. *)
 fun fromNonexpToPoly X.Nonexp = POLY
   | fromNonexpToPoly (X.Expans xs) = MONO (map (fn x => EXPANS x) xs)
 
+(** Turns a monomorphic expresison to a #Expans.expans value. *)
 fun fromMonoToNonexp (EXPANS x) = SOME x
   | fromMonoToNonexp (MONBIN _) = NONE
 
+(** Turns a polymorphic expresison to a #Expans.expans value. *)
 fun fromPolyToNonexp POLY = X.Nonexp
   | fromPolyToNonexp (MONO xs) =
     (case List.mapPartial (fn x => fromMonoToNonexp x) xs of
 	 [] => X.Nonexp
        | ys => X.Expans ys)
 
-(* merges two polymorphic expressions togethers *)
+(** Merges two polymorphic expressions togethers. *)
 fun mergePoly POLY x = x
   | mergePoly x POLY = x
   | mergePoly (MONO xs) (MONO ys) = MONO (xs @ ys)
 
+(** Turns a polymorphic expresison into a monomorphic one, given some labels. *)
 fun polyToMono POLY labs = MONO [MONBIN labs]
   | polyToMono _    _    = raise EH.DeadBranch ""
 
+(** Gets all expression constructed with #MONOBIN. *)
 fun allMonBin mons = List.all (fn (MONBIN _) => true | _ => false) mons
 
-fun toPoly (MONO xs) = if allMonBin xs
-		       then POLY
-		       else MONO xs
+(** Turns a monomorphic expression into a polymorphic one. *)
+fun toPoly (MONO xs) = if allMonBin xs then POLY else MONO xs
   | toPoly POLY = POLY
 
-(*fun genMonBin labs = MONO [MONBIN labs]*)
-
-
-(*fun restrictMono (EXPANS expans) set =
-    (SOME (EXPANS (Option.valOf (X.restrictExpans expans set)))
-     handle Option => NONE)
-  | restrictMono (x as (MONBIN _)) _ = SOME x
-
-fun restrictPoly POLY      _   = POLY
-  | restrictPoly (MONO xs) set =
-    (case List.mapPartial (fn x => restrictMono x set) xs of
-	 [] => POLY
-       | ys => MONO ys)*)
-
-
-(* true if poly is POLY *)
-
+(** Returns true if expression is polymorphic, false otherwise. *)
 fun isPoly POLY = true
   | isPoly _    = false
 
+(** Returns true if the expresion is monomorphic, false otherwise. *)
 fun isMono POLY = false
   | isMono _    = true
 
-
-(* PRINTING SECTION *)
-
-
+(** Prints a #mono expression. *)
 fun printMono (EXPANS exp)  = "EXPANS(" ^ X.printexpans exp ^ ")"
   | printMono (MONBIN labs) = "MONBIN(" ^ L.toString labs   ^ ")"
 
+(** Prints a list of values, given a print function and a list . *)
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(** Prints a list of monomorphic expressions. *)
 fun printMonoList xs = printlistgen xs printMono
 
+(** Prints a polymorphic/monomorphic expression. *)
 fun printPoly POLY      = "POLY"
   | printPoly (MONO xs) = "MONO(" ^ printMonoList xs ^ ")"
 
+(** Prints a #poly value. *)
 fun toString poly = printPoly poly
 
 end

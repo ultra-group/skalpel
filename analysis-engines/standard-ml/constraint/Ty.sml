@@ -157,6 +157,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 	  * NOT_EQUALITY_TYPE: definitely not an equality type *)
 	 and equalityTypeStatus = EQUALITY_TYPE
 				| NOT_EQUALITY_TYPE
+				| SIG_TYPE
 				| UNKNOWN
 
 
@@ -800,6 +801,7 @@ fun printEqualityTypeStatus status =
     case status of
 	EQUALITY_TYPE => "EQUALITY_TYPE"
       | NOT_EQUALITY_TYPE => "NOT_EQUALITY_TYPE"
+      | SIG_TYPE => "SIG_TYPE"
       | UNKNOWN => "UNKNOWN"
 fun printFieldName   fieldName  = fieldName
 fun printlabel     l   = "l"   ^ L.printLab l

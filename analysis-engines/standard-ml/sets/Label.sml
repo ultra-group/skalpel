@@ -32,6 +32,8 @@ type label  = S.item
 (** A set of program position, declared as an S.set. *)
 type labels = S.set
 
+val unionSizes = ref []
+
 (** Prints a set of labels. *)
 fun printsetgen xs f = "[" ^ #1 (S.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
@@ -135,7 +137,13 @@ fun isSingle ll = length ll = 1
 fun equal set1 set2 = S.equal (set1, set2)
 
 (** Unions sets. *)
-fun union set1 set2 = S.union (set1, set2)
+fun union set1 set2 =
+    let
+	val combinedSize = (length set1) + (length set2)
+	val _ = unionSizes := (combinedSize::(!unionSizes))
+    in
+	S.union (set1, set2)
+    end
 
 (** Adds setop (an OPTION) to set, if NONE then just returns original set. *)
 fun unionop setop set = case setop of NONE => set | SOME x => S.union (x, set)
@@ -267,6 +275,8 @@ type label  = O.ord_key
 
 (** A map of labels. *)
 type map    = label S.map
+
+val unionSizes = ref []
 
 type labels = {from : map, to : map, size : int}
 

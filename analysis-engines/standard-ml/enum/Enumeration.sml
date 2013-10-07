@@ -23,8 +23,6 @@
 
 functor Enum (SS : SEARCHSPACE) = struct
 
-(* STRUCTURES *)
-
 structure I   = Id
 structure E   = Env
 structure M   = Min
@@ -40,34 +38,8 @@ structure VT  = VTimer
 structure EH  = ErrorHandler
 structure ERR = Error
 
-(* EXCEPTIONS *)
-
 exception occextodo
 exception occexdone
-
-(* FUNCTIONS *)
-
-(* printing *)
-
-(*fun filter [] _ = []
-  | filter cs [] = cs
-  | filter ((c as (lab, cst)) :: cs) (x :: xs) =
-    if lab = x
-    then filter cs xs
-    else
-	if lab < x
-	then c :: (filter cs (x :: xs))
-        else filter (c :: cs) xs
-
-fun projlab [] _ = []
-  | projlab _ [] = []
-  | projlab ((c as (lab, cst)) :: cs) (x :: xs) =
-    if lab = x
-    then c :: (projlab cs xs)
-    else
-	if lab < x
-	then projlab cs (x :: xs)
-        else projlab (c :: cs) xs*)
 
 fun flatset xs = L.foldr (fn (x, y) => (L.singleton x) :: y) [] xs
 
@@ -151,16 +123,6 @@ fun enumdisjoint _ [] = NONE
 		   SOME (ERR.getL err))
 	     else enumdisjoint x ys
 
-(* update some special filters: the ones that record when unification will succeed *)
-(*fun minfilter x [] = [x]
-  | minfilter x (y :: ys) =
-    if L.subseteq x y
-    then (D.printdebug2 ("(1)"); x :: ys)
-    else
-	if L.subset y x
-	then (D.printdebug2 ("(2)");  y :: ys)
-	else y :: (minfilter x ys)*)
-(*fun minfilter x xs = if L.isSingle x then x :: xs else xs*)
 (* It seems that all these checkings are for nothing *)
 fun minfilter x xs = x :: xs
 
@@ -222,146 +184,6 @@ fun minOne errs err envcss timer parse filer NONE counter =
 fun printfilters [] = ""
   | printfilters [x] = L.toString x
   | printfilters (x :: xs) = L.toString x ^ "  " ^ printfilters xs
-
-(*********************************************************************)
-(* vincent's one - doesn't use tail recursion - can we improve that? *)
-(* the list grows too quickly *)
-(*fun mintodo2 labl labll labl' =
-    let
-	fun g _ [] = []
-	  | g y (x :: xs) =
-	    let
-		val xss = g y xs
-	    in
-		if L.disjoint y x
-		then foldr
-			 (fn (u, v) =>
-			     if L.exsubseteq u v
-			     then v
-			     else u :: v)
-			 xss
-			 (map (fn u => L.cons u x) y)
-		else
-		    if L.subseteqin x xss
-		    then xss
-		    else x :: xss
-	    end
-    in g labl' (labl :: labll)
-    end
-
-fun mintodo3 labl labll labl' =
-    let
-	fun g _ ys [] = ys
-	  | g y ys (x :: xs) =
-	    if L.disjoint y x
-	    then
-		let
-		    val xx  = map (fn u => L.cons u x) y
-		    val xx' = foldl (fn (u, v) => if L.subseteqin u ys then v else u :: v) [] xx
-		in (g y (xx' @ ys) xs)
-		end
-	    else
-		if L.subseteqin x ys
-		then g y ys xs
-		else g y (x :: ys) xs
-    in List.rev (g labl' [] (labl :: labll))
-    end*)
-(*********************************************************************)
-
-(*
-fun enum1 cs csm timelimit =
-    let val timer = VT.startTimer ()
-	fun run errl labll =
-	    case labll of
-		[]        => (errl, false)
-	      | (x :: xs) =>
-		if VT.stillMilliTime timer timelimit
-		then (errl, true)
-		else (case enumdisjoint x errl of (* we do that instead of running again the minimization - only diff with the previous algo *)
-			  SOME y => run errl (mintodo2 x xs y)
-			| NONE   =>
-			  case U1.unif cs (FI.cons NONE (SOME x)) of
-			      U1.Success _  => run errl xs (* if the vars of y = (filter cs x) are disjoint from the vars of cs \ y then we can remove y from cs - it might not be worth testing that *)
-			    | U1.Error (err, _) =>
-			      let
-				  (* the whole procedure is time consuming *)
-				  (*val _ = occdone errl*)
-				  (*val _ = occtodo labll*)
-				  (*val _ = print ((printError errl) ^ "\n--\n" ^ (printlabss labll) ^ "\n--------\n")*)
-				  (*val _ = print "-\n"*)
-				  (*val _ = print "+EB "*)
-				  val errl' = #2 (ERR.mindone errl err)
-				  (*val _ = print "+EM "*)
-				  (*val _ = print "+\n"*)
-				  val labll' = mintodo2 x xs (ERR.getL err)
-			      (*val _ = print ("-" ^ (Int.toString (List.length labll')))*)
-			      (*val _ = print "+EE "*)
-			      (*val _ = print "++\n"*)
-			      in run errl' labll'
-			      end)
-    in case U1.unif cs (FI.cons NONE NONE) of
-	   U1.Success state => ((*D.printdebug2 ((S1.printState state) ^ "*********\n");*)
-				(*D.printdebug2 ("--SUCCESS\n");*)
-				(csm, false))
-	 | U1.Error (err, _) => run (#2 (ERR.mindone csm err)) (flatset (ERR.getL err))
-    end
-
-fun enum2 cs csm timelimit =
-    let val timer = VT.startTimer ()
-	fun run errl labll =
-	    case labll of
-		[]        => (errl, false)
-	      | (x :: xs) =>
-		if VT.stillMilliTime timer timelimit
-		then (errl, true)
-		else case enumdisjoint x errl of (* we do that instead of running again the unification - only diff with the previous algo *)
-			 SOME y => run errl (mintodo2 x xs y)
-		       | NONE   =>
-			 case U2.unif cs (FI.cons NONE (SOME x)) of
-			     U2.Success _                        => run errl xs (* if the vars of y = (filter cs x) are disjoint from the vars of cs \ y then we can remove y from cs - it might not be worth testing that *)
-			   | U2.Error (err, _) =>
-			     let val errl' = #2 (ERR.mindone errl err)
-				 val labll' = mintodo2 x xs (ERR.getL err)
-			     in run errl' labll'
-			     end
-    in case U2.unif cs (FI.cons NONE NONE) of
-	   U2.Success state => (csm, false)
-	 | U2.Error (err, _) => run (#2 (ERR.mindone csm err)) (flatset (ERR.getL err))
-    end
-
-fun enum3 cs csm timelimit =
-    let val done = []
-        val timer = VT.startTimer ()
-	(* found:   are the found errors so far         *)
-	(* filters: is the set of filters still to test *)
-	(* done:    is the set of unsuccessful filters  *)
-	fun run found filters done =
-	    case filters of
-		[]        => (found, done, false)
-	      | (x :: xs) =>
-		if VT.stillMilliTime timer timelimit
-		then (found, done, true)
-		else ((*D.printdebug2 ("-+-+-\n" ^ printfilters filters ^ "\n-+-+-\n");*)
-		      (*D.printdebug2 ("--" ^ L.toString x ^ "\n");*)
-		      case enumdisjoint x found of (* we do that instead of running again the unification - only diff with the previous algo *)
-			  SOME y => run found (mintodo3 x xs y done) done
-			| NONE   =>
-			  (case U2.unif cs (FI.cons NONE (SOME x)) of
-			       U2.Success _ => run found xs (minfilter x done)
-			     (* if the vars of y = (filter cs x) are disjoint from the vars of cs \ y then we can remove y from cs - it might not be worth testing that *)
-			     | U2.Error (err, _) =>
-			       let (*val _ = D.printdebug2 ("--" ^ L.toString labs' ^ "\n")*)
-				   val found' = #2 (ERR.mindone found err)
-				   val filters' = mintodo3 x xs (ERR.getL err) done
-			       in run found' filters' done
-			       end))
-    in case U2.unif cs (FI.cons NONE NONE) of
-	   U2.Success state => (csm, done, false)
-	 | U2.Error (err, _) => (run (#2 (ERR.mindone csm err))
-				     (flatset (ERR.getL err))
-				     done)
-    end
-*)
 
 (* returns filters just as they were *)
 fun reorderFilters1 filters = filters

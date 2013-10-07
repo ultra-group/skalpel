@@ -116,6 +116,7 @@ fun mapIndent f indent [] = [] |
  * enforce these types. *)
 fun buildin (env, css) ascid true =
     let val (typeNameEnv, cst1) = NA.getTypename ascid
+	val _ = D.printDebug D.AZE D.TEMP (fn _ => "In buildin. typeNameEnv is:\n" ^ (E.printTypeEnv typeNameEnv ""))
 	val (vids, cst2) = OP.getOpType ascid
 	val cst  = E.unionConstraintsList [cst1, cst2]
 	val env' = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.ENVPOL (E.emtv, E.updateTypeNames typeNameEnv (E.projValueIds vids)))
@@ -274,7 +275,7 @@ fun createDiffNbArgFuns fvalbindones =
 	  E.emptyContextSensitiveSyntaxError
 	  fvalbindones
 
-(** 
+(**)
 fun unzipThree xs = foldr (fn ((x, y, z), (xs, ys, zs)) => (x :: xs, y :: ys, z :: zs))
 			  ([], [], [])
 			  xs
@@ -314,6 +315,9 @@ fun generateConstraints' prog pack nenv =
 
    (** A ref value, set to true if we are currently generating constraints for the basis. *)
 	val isBasis = ref false
+
+   (** A ref value, set to true if we are currently generating constraints for the basis. *)
+	val isBasisStruct = ref false
 
    (* Sets the #isBasis ref to the value given as an argument. *)
 	fun setBasis x = isBasis := x
@@ -451,7 +455,10 @@ fun generateConstraints' prog pack nenv =
 	    * creates a binding for the name of a structure (done with E.consBindPoly)
 	    *)
 	   and f_strid indent (A.StrId (s, v, _, lab, _)) =
-	       (D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.StrId");
+	       (D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.StrId for (str=" ^ s ^ ")");
+		if s = "Basis" andalso getBasis()
+		then isBasisStruct := true
+		else ();
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.emstr, E.emptyConstraint, E.emptyContextSensitiveSyntaxError)
 	       else let val ev1  = E.freshEnvVar ()
@@ -2073,7 +2080,7 @@ fun generateConstraints' prog pack nenv =
 	       in (env, E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* f_tyconbind: For creating binders for type constructors. For example,
+	   (** f_tyconbind: For creating binders for type constructors. For example,
 	    *
 	    * datatype Operators = ADD | IF | LESS_THAN
 	    * type mytype = int
@@ -2086,7 +2093,7 @@ fun generateConstraints' prog pack nenv =
 	    *)
 	   and f_tyconbind indent (A.TyCon (str, id, _, lab, _)) =
 	       let
-		   val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TyCon (str=\""^str^"\")")
+		   val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.TyCon (str=\""^str^"\", id = "^(I.printId id)^")")
 		   (* generate new type variable, row variable and type function variable *)
 		   val freshTypeVar         = T.freshTypeVar  ()
 		   val freshEqualityTypeVar  = T.freshEqualityTypeVar  ()
@@ -2096,7 +2103,7 @@ fun generateConstraints' prog pack nenv =
 
 		   val _ = D.printDebug D.AZE D.EQUALITY_TYPES (fn _ => "created equality type variable for type constructor binding - "^(T.printEqualityTypeVar freshEqualityTypeVar))
 
-		   (* constructs an environment from the id of the type constructor typename to a polymorphic binding *
+		   (** An environment constructed from the id of the type constructor typename to a polymorphic binding *
 		    * the type of the binding will be (T.TYPEFUNCTIONVAR, E.typeNameKind, ref (SplayMapFn (OrdId).map, bool)) *)
 		   val typeNameEnv = E.consSingleEnv (id,
 						      (* this is the binder that is looked up by structures when looking up type constructors
@@ -3183,6 +3190,7 @@ fun generateConstraints' prog pack nenv =
 		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c) cst)
 		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR ev' lab) lab))
 		   val css' = E.emptyContextSensitiveSyntaxError
+		   val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "Generated the following constraint for an include spec:\n" ^ (E.printOneConstraint c))
 	       in (env2, css')
 	       end
 	     (* Can multiple signature can be included at a time, perhaps in some extension? *)
@@ -3314,6 +3322,7 @@ fun generateConstraints' prog pack nenv =
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.unionConstraintsList [cst1, cst2]), E.CONSTRAINT_ENV cst)
 		   val cst' = E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env)
 		   val css  = E.unionContextSensitiveSyntaxErrors [css1, css2, css3]
+		   val _ = isBasisStruct := false
 	       in (strs, E.unionConstraintsList [cst3, cst'], css)
 	       end
 	     (* structure binding using a translucent signature *)
@@ -3558,7 +3567,6 @@ fun generateConstraints' prog pack nenv =
 		   val ev' = E.freshEnvVar ()
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
 		   val newConstraints = E.consConstraint(lab, c) cst
-		   val _   = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for f_labsigexp:\n"^E.printConstraints(newConstraints))
 	       in (ev', E.consConstraint(lab, c) cst, css)
 	       end
 	     | f_labsigexp indent (A.LabSigExpDots pl) =
@@ -3789,9 +3797,11 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.env, Env.cst, Env.css) *)
 	   and f_sigdec indent (A.SigDec (sigbind, _, _)) =
-	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigDec")
-		   val (sigs, cst, css) = f_sigbind indent sigbind
+	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SigDec")
+		   val indent = convertIndentToSpaces indent
+		   val (sigs, cst, css) = f_sigbind (indent^SS.bottomLeftCurve^SS.straightLine) sigbind
 		   val env = E.ROW_ENV (E.CONSTRAINT_ENV cst, E.projSigs sigs)
+		   val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => ("Generated the following constraints for a SigDec:\n" ^ (E.printEnv env "")))
 	       in (env, css)
 	       end
 	     | f_sigdec indent (A.SigDecDots pl) =

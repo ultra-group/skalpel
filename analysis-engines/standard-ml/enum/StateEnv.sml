@@ -180,29 +180,7 @@ fun printStateRec srec = printlistgen (!srec) printOneSavedRec
 
 fun printenv x = E.printEnv x ""
 
-(*fun printOneStateId onestate f =
-    ME.foldri (fn (k, stack, y) =>
-		  I.printId k   ^ " : " ^ S.toString stack f ^ "\n"  ^ y)
-	      ""
-	      (!onestate)*)
-
-(*(* we would need a Id.assoc here instead of I.emAssoc*)
-fun printStTy stty = EL.printExtLab' stty E.printExtTy
-fun printStSt stst = EL.printExtLab' stst E.printExtEnv*)
-
 fun printStateId renv = "State Id:\n"^(E.printEnv (!renv) ""  ^ "\n")
-
-(*fun printStateFr ub =
-    MT.foldri (fn (k, x, y) =>
-		  I.printLid k ^ " : " ^
-		  printlistgen x (fn x => EL.printExtLab' x CL.toString) ^ "\n" ^ y)
-	      ""
-	      (!ub)*)
-
-(*fun printStateUb {tc, ap} =
-    "State TC:" ^ printStateFr tc ^ "\n" ^
-    "State AP:" ^ printStateFr ap ^ "\n"*)
-
 
 fun printStateNa stna =
     "[" ^ #1 (NA.foldr (fn (exttn, (st, del)) =>
@@ -623,95 +601,12 @@ fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
     (print (E.printEnv env "");
      raise EH.DeadBranch "There shouldn't be such an env in the unification env")
 
-(*(*(2010-03-01)The boolean bdown is true if in case of an env var
- * we wanna use the structure stored in the class to create a dummy binding
- * for a long identifier.*)
-fun getValStateId state (I.ID (id, _)) fstate _ _ =
-    (getValOneEnv (fstate state) id, NONE) (* Should we add lab to the labels? *)
-  | getValStateId state (x as I.LID ((id, l1), lid, l2)) _ (fenv, fget, fisin, finj) bdown =
-    (case getValOneEnv (getStateIdSt state) id of
-	 [] => (NONE, NONE)
-       | [({id, scope, bind, lab, poly, class}, labs, sts, cds)] =>
-	 (case E.followPath lid bind of
-	      (env as E.ENVCON _, id, lab, NONE, labs') =>
-	      (case List.find (fn x => true) (E.plusproj (fenv env) id) of
-		   SOME ext => (SOME (E.updExtLab ext labs sts cds), NONE)
-		 (*(2010-02-24)Below, the SOME part is returned so that we can report
-		  * an unmatched error: id not found in env. *)
-		 | _ => (NONE, SOME (C.consBindPoly id env (CL.consSTR ()) lab,
-				     L.cons l1 (L.cons l2 (L.union labs' labs)),
-				     sts,
-				     cds)))
-	    | (env as E.ENVCON _, id, lab, SOME _, labs') =>
-	      (* If it is a ENVCON and we haven't got to the end of the lid then id is missing in env. *)
-	      (NONE, SOME (C.consBindPoly id env (CL.consSTR ()) lab,
-			   L.cons l1 (L.cons l2 (L.union labs' labs)),
-			   sts,
-			   cds))
-	    | (env, id, lab, lidop, labs') =>
-	      (case CL.followPath lid (CL.getClassSTR class) of
-		   (str, i, l, b) => (* If b andalso id is in str then we generate a dummy first SOME *)
-		   if bdown andalso b andalso isIdInStr str i fisin
-		   then (SOME (fget str i l), NONE)
-		   else (NONE, SOME (C.consBindPoly id env (CL.consSTRstr str) lab,
-				     L.cons l1 (L.cons l2 (L.union labs' labs)),
-				     sts,
-				     cds))))
-       | _ => raise EH.DeadBranch "No more that one binding per identifier in the unification env")
-(* MARK *)*)
-
 (* gets various fields from the record holding the env *)
 fun selVa env = E.getValueIds env
 fun selTy env = E.getTypeNameEnv env
 fun selSt env = E.getStructs env
 fun selSi env = E.getSigs env
 fun selOc env = E.getOverloadingClasses env
-
-(* TODO: we have to do the same for types, structures and signatures. *)
-(* The env as to be a ENVCON.  We update everything which is not in env. *)
-(*(2010-02-24)Why are the label sets not empty?????*)
-(*fun getBindGen id lab f1 f2 =
-    (C.consBindPoly id (f1 ()) (f2 ()) lab, L.empty, L.empty, CD.empty)*)
-
-(*fun getBindRe id lab = getBindGen id lab T.consNewV  CL.consAVIr
-fun getBindCo id lab = getBindGen id lab T.consNewV  CL.consAVIc
-fun getBindVa id lab = getBindGen id lab T.consNewV  CL.consAVI (*CL.consAVI*)
-fun getBindTy id lab = getBindGen id lab T.consNewV  CL.consDAT (*(2010-03-02)type function because no cons?!*)
-fun getBindSt id lab = getBindGen id lab E.newEnvVar CL.consSTR
-fun getBindOc id lab = getBindGen id lab T.consNewS  CL.consOC*)
-
-(*fun getBindVa' (CL.ENV strenv) id lab =
-    if CL.isInStrRe id strenv
-    then getBindRe id lab
-    else if CL.isInStrCo id strenv
-    then getBindCo id lab
-    else if CL.isInStrVa id strenv
-    then getBindVa id lab
-    else raise EH.DeadBranch ""
-  | getBindVa' _ _ _ = raise EH.DeadBranch ""
-fun getBindSt' (CL.ENV strenv) id lab =
-    (case CL.getMap id (CL.getStrEnvSt strenv) of
-	 SOME str => getBindGen id lab E.newEnvVar (CL.consSTRstr' str)
-       | _ => raise EH.DeadBranch "")
-  | getBindSt' _ _ _ = raise EH.DeadBranch ""
-fun getBindTy' (CL.ENV strenv) id lab =
-    (case CL.getMap id (CL.getStrEnvTy strenv) of
-	 SOME cons => getBindGen id lab T.consNewV (CL.consDATcons' cons)
-       | _ => raise EH.DeadBranch "")
-  | getBindTy' _ _ _ = raise EH.DeadBranch ""
-(*fun getBindTy' _ id lab = getBindTy id lab*)
-fun getBindOc' _ id lab = getBindGen id lab T.consNewS CL.consOC
-fun getBindSi' _ _ _ = raise EH.DeadBranch ""
-
-fun injSt x = E.INJSTR x
-fun injSi _ = raise EH.DeadBranch ""
-fun injOc _ = raise EH.DeadBranch ""*)
-
-(*val packSelVa = (selVa, getBindVa', CL.isInStrVas, E.INJVID)
-val packSelTy = (selTy, getBindTy', CL.isInStrTy,  E.INJTYP)
-val packSelSt = (selSt, getBindSt', CL.isInStrSt,  injSt)
-val packSelSi = (selSi, getBindSi', CL.isInStrSi,  injSi)
-val packSelOc = (selOc, getBindOc', CL.isInStrOc,  injOc)*)
 
 fun getValStateId' state lid fenv = getValStateId (!(getStateId state)) lid state fenv L.empty L.empty CD.empty
 
@@ -722,47 +617,6 @@ fun getValStateIdSt state lid bdown = getValStateId' state lid getStateIdSt (*pa
 fun getValStateIdSi state lid bdown = getValStateId' state lid getStateIdSi (*packSelSi bdown*)
 fun getValStateIdOc state lid bdown = getValStateId' state lid getStateIdOc (*packSelOc bdown*)
 fun getValStateIdFu state lid bdown = getValStateId' state lid getStateIdFu (*packSelOc bdown*)
-
-(*fun getValStateTc state lid = Option.getOpt (MT.find (!(getStateTc state), lid), [])
-fun getValStateAp state lid = Option.getOpt (MT.find (!(getStateAp state), lid), [])
-fun getValStateApFirst state lid = List.find (fn _ => true) (getValStateAp state lid)*)
-
-(*fun updateStateTc state lid (x as (cl, labs, sts, deps)) =
-    let val xs  = getValStateTc state lid
-	val cst = map (fn (cl', labs', sts', deps') =>
-			  E.genCstClAll cl cl'
-					(L.union labs labs')
-					(L.union sts  sts')
-					(CD.union deps deps')) xs
-	val onestate = getStateTc state
-	val _ = onestate := (MT.insert (!onestate, lid, x :: xs))
-    in cst end
-
-fun updateStateAp state lid (x as (cl, labs, sts, deps)) =
-    let val xs  = getValStateAp state lid
-	(*val cst = map (fn (cl', labs', sts', deps') =>
-			  E.genCstClAll cl cl'
-					(L.union labs labs')
-					(L.union sts  sts')
-					(CD.union deps deps')) xs*)
-	val onestate = getStateAp state
-	val _ = onestate := (MT.insert (!onestate, lid, x :: xs))
-    in [](*cst*) end*)
-
-(*fun deleteStateIdGen state key fget =
-    let val onestate = fget state
-    in case ME.find (!onestate, key) of
-	   NONE => ()
-	 | SOME stack =>
-	   let val _ = S.pop stack
-	   in if S.isEmpty stack
-	      then onestate := (#1 (ME.remove (!onestate, key)))
-		   handle LibBase.NotFound => ()
-	      else ()
-	   end
-    end (* if we pop and it is empty, we remove the entry from the map *)*)
-
-
 
 fun deleteStateGeDeps state key dep =
     let val statege = getStateGe state
@@ -783,70 +637,6 @@ fun deleteStateGe state key =
     let val v = T.typeVarToInt key
     in deleteStateGeDeps state v v
     end
-
-(*fun deleteStateGe state key =
-    let val statege = getStateGe state
-	val v = T.typeVarToInt key
-	val  _ = D.printdebug2 ("[delete] " ^ Int.toString v)
-    in case getValOneState statege v of
-	   NONE => ()
-	 | SOME {resp, deps} =>
-	   (O.foldr (fn (tv, _) => deleteStateGeDeps state tv v) () deps;
-	    statege := (#1 (MS.remove (!statege, v))))
-	   handle LibBase.NotFound => ()
-    end*)
-
-
-(*(* Removes a monomorphic binding *)
-fun deleteStateGe state key value =
-    let val onestate = getStateGe state
-    in case getValOneState onestate key of
-	   NONE => (onestate := (#1 (MS.remove (!onestate, key)))
-		    handle LibBase.NotFound => ())
-	 | SOME ([], labs1, sts1, cds1) =>
-	   let val (_, labs2, sts2, cds2) = value
-	       val labs = L.diff labs2 labs1
-	       val sts  = L.diff sts2  sts1
-	       val cds  = CD.difference cds2  cds1
-	   in if L.isEmpty labs
-	      then onestate := (#1 (MS.remove (!onestate, key)))
-		   handle LibBase.NotFound => ()
-	      else onestate := (MS.insert (!onestate, key, ([], labs, sts, cds)))
-	   end
-	 | _ => raise EH.DeadBranch ""
-    (* because this function is used for explicit type vars and that for those
-     * there is no dependent monomorphic type var. *)
-    end*)
-
-(*fun eraseStateGe state key =
-    let val onestate = getStateGe state
-	val (onestate', value) = MS.remove (!onestate, key)
-	val _ = onestate := onestate'
-	val _ = app (fn y => eraseStateGe state (T.typeVarToInt y)) (#1 value)
-    in ()
-    end
-    handle LibBase.NotFound => ()*)
-
-(*fun resetState state =
-    let fun freset (x, _, _, _) = (x, L.empty, L.empty, CD.empty)
-	fun freset' onestate = onestate := (MS.map freset (!onestate))
-	val _ = freset' (getStateTv state)
-	val _ = freset' (getStateTn state)
-	val _ = freset' (getStateSq state)
-	val _ = freset' (getStateRt state)
-	val _ = freset' (getStateLt state)
-	val _ = freset' (getStateEv state)
-	val _ = freset' (getStateGe state)
-	val _ = freset' (getStateCl state)
-	val _ = freset' (getStateOr state)
-	val _ = (getStateRc state) :=
-		map (fn (x, _, _, _) =>
-			(x, L.empty, L.empty, CD.empty))
-		    (!(getStateRc state))
-    in ()
-    end*)
-
-
 
 fun updateDatCons state (id, lab) (env as E.ENV_CONS _) =
     (case getValStateIdTy state (I.idToLid id lab) true of
@@ -881,12 +671,6 @@ fun initStateSe () =
 	ev = aev,
 	cl = acl}
     end
-
-(*fun initStateUb () =
-    let val tc = ref MT.empty
-	val ap = ref MT.empty
-    in {tc = tc, ap = ap}
-    end*)
 
 fun initState () =
     let val ase = initStateSe ()
@@ -1525,4 +1309,3 @@ fun generalise state tvl =
 
 end
 
-(*structure State = State1*)

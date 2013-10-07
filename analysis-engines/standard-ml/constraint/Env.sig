@@ -385,6 +385,7 @@ signature ENV = sig
     val createOpaqueEqualityConstraints : env -> Label.label -> (env * oneConstraint list)
 
     val printEnv     : env    -> string -> string
+    val printTypeEnv : typeEnv    -> string -> string
     val printTnKind  : typeNameKind -> string
     val printEnvVar  : envVar -> string
     val printConstraints : constraints -> string

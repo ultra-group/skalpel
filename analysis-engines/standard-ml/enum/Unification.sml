@@ -1557,7 +1557,7 @@ fun genTypeFunctionGenEnv genenv state tfun dom b genfun =
 	([], E.emptyMap)
 	genenv
 
-(* This is actually used for matchings structure/signature and for sharing *)
+(** Used for matching structures and signatures and for sharing. *)
 fun genTypeFunctionEnv (env as E.ENV_CONS _) state tfun dom b =
     let val tns =
 	    if b
@@ -1791,8 +1791,7 @@ and applyTypeFunctionExtFun extfun tfun =
 		     true
 
 
-(* Matching signature/where clause *)
-
+(** Used for handling of the 'where' SML keyword. Could this be used to repalce matchSigStr? *)
 fun matchWhereEnv envsig NONE state = (OM.empty, true)
   | matchWhereEnv (envsig as E.ENV_CONS _) (SOME ({lid = I.ID (idTc, labTc), equalityTypeVar, sem, class, lab}, labs, stts, deps)) state =
     let val tmap = OM.empty
@@ -3189,12 +3188,12 @@ fun unif env filters user =
 	    else ()
 
 
-	(* Generalises the structure env2 so that it is equal to
-	 * the signature env1.
-	 * For functors, b is always true and bfun will be false. *)
+	(** Handles the matching of structures and signatures to check that all types etc are declared.
+	 * Generalises the structure env2 so that it is equal to the signature env1. For functors, b is
+	 * always true and bfun will be false. *)
 	and matchSigStr env1 env2 l filters labs stts deps bfun err =
-	    let (*val _ = D.printdebug2 ("signature\n" ^ E.printEnv env1 "")*)
-		(*val _ = D.printdebug2 ("structure\n" ^ E.printEnv env2 "")*)
+	    let
+		val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Matching signature: "^(E.printEnv env1 "") ^ "\n\n with structure: " ^ (E.printEnv env2 ""));
 		(* etv is for the signature *)
 		(* if there is nothing corresponding in the structure, it's an error *)
 		(* btype is true if we are currently composing for types. *)
@@ -3204,7 +3203,6 @@ fun unif env filters user =
 			     val lab'  = E.getLabEnv env2
 			     val labs2 = L.cons l (L.union labs1 labs)
 			     val ek    = EK.Unmatched ((L.toInt lab, I.toInt id), idlabs, L.toInt lab')
-			 (*val _     = D.printdebug2 (E.printEnv env2 "")*)
 			 in raise errorfound (ERR.consPreError ERR.dummyId labs2 deps ek stts)
 			 end
 		    else ()
@@ -3340,8 +3338,7 @@ fun unif env filters user =
 	    end
 
 
-	(* ====== EQUALITY CONSTRAINT SOLVER ====== *)
-
+	(** The equality constraint solver *)
 	and fsimplify [] l = ()
 	  (**)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
