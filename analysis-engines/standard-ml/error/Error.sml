@@ -40,10 +40,10 @@ structure CD = LongId
 (* declare some new types *)
 type id      = int
 type error   = {id   : id,
-		labs : L.labels,
+		labs : (L.label, bool) L.labels,
 		deps : CD.set,
 		ek   : EK.kind,
-		rf   : L.labels,
+		rf   : (L.label, bool) L.labels,
 		bb   : bool,
 		rem  : id list,
 		time : LargeInt.int,
@@ -296,7 +296,7 @@ val dummyId = 0
 (* The initial value for the "rem" field of an error *)
 val initRem   = []
 (* The initial value for the "rf" field of an error *)
-val initRf    = L.empty
+val initRf    = L.empty ()
 (* The dummy time value *)
 val initTime  = Int.toLarge ~1
 (* The dummy slice *)

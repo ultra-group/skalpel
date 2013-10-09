@@ -1666,23 +1666,23 @@ fun longidToPcon (LongIdQual (_, lid, _, _, _)) =
 
 fun getlabIdent (Ident (_, _, _, l, _))   = L.singleton l
   | getlabIdent (IdentPcon pc)            = getlabPcon pc
-  | getlabIdent IdentDots                 = L.empty
+  | getlabIdent IdentDots                 = (L.empty ())
 
 and getlabPcon (PconBool (_, _, _, l, _)) = L.singleton l
   | getlabPcon (PconNil  (_, _, _, l, _)) = L.singleton l
   | getlabPcon (PconRef  (_, _, _, l, _)) = L.singleton l
-  | getlabPcon PconDots                   = L.empty
+  | getlabPcon PconDots                   = (L.empty ())
 
 fun getlabTypeVarseq (TypeVarSeqOne (_, _, l, _)) = L.singleton l
   | getlabTypeVarseq (TypeVarSeqEm (_, l, _))     = L.singleton l
   | getlabTypeVarseq (TypeVarSeqSeq (_, _, l, _)) = L.singleton l
-  | getlabTypeVarseq (TypeVarSeqDots _)           = L.empty
+  | getlabTypeVarseq (TypeVarSeqDots _)           = (L.empty ())
 
 fun getlabDatName (DatName (tvs, _, _, _)) = getlabTypeVarseq tvs
-  | getlabDatName DatNameDots              = L.empty
+  | getlabDatName DatNameDots              = (L.empty ())
 
 fun getlabLDatName (LDatName (tvs, _, _, _)) = getlabTypeVarseq tvs
-  | getlabLDatName LDatNameDots              = L.empty
+  | getlabLDatName LDatNameDots              = (L.empty ())
 
 
 (* get labels of a labidty *)
@@ -1691,23 +1691,23 @@ fun getlabLDatName (LDatName (tvs, _, _, _)) = getlabTypeVarseq tvs
 (*fun getlabelsPcon (PconBool (_, _, _, l, _)) = L.singleton l
   | getlabelsPcon (PconNil  (_, _, _, l, _)) = L.singleton l
   | getlabelsPcon (PconRef  (_, _, _, l, _)) = L.singleton l
-  | getlabelsPcon PconDots                   = L.empty
+  | getlabelsPcon PconDots                   = (L.empty ())
 
 fun getlabelsIdent (Ident (_, _, _, l, _))   = L.singleton l
   | getlabelsIdent (IdentPcon pc)            = getlabelsPcon pc
-  | getlabelsIdent IdentDots                 = L.empty*)
+  | getlabelsIdent IdentDots                 = (L.empty ())*)
 
-fun getlabelsIdent _ = L.empty
+fun getlabelsIdent _ = (L.empty ())
 
 fun getlabelsLabId (LabId (id, _, l, _)) = L.cons l (getlabelsIdent id)
-  | getlabelsLabId (LabIdDots _)         = L.empty
+  | getlabelsLabId (LabIdDots _)         = (L.empty ())
 
 fun getlabelsIdentTy (IdentTyId id)               = getlabelsIdent id
   | getlabelsIdentTy (IdentTyTy (id, _, _, l, _)) = L.cons l (getlabelsLabId id)
-  | getlabelsIdentTy (IdentTyDots _)              = L.empty
+  | getlabelsIdentTy (IdentTyDots _)              = (L.empty ())
 
 fun getlabelsLabIdTy (LabIdTy (id, _, l, _)) = L.cons l (getlabelsIdentTy id)
-  | getlabelsLabIdTy (LabIdTyDots _)         = L.empty
+  | getlabelsLabIdTy (LabIdTyDots _)         = (L.empty ())
 
 
 
@@ -1767,7 +1767,7 @@ fun getlabidLabclass (LabClass (class, _, _, _)) = getlabidClass class
 (* Extract the label from a labid *)
 
 fun getLabelLabId (LabId (_, _, lab, _)) = L.singleton lab
-  | getLabelLabId (LabIdDots _)          = L.empty
+  | getLabelLabId (LabIdDots _)          = (L.empty ())
 
 
 (* Extract the ident label from a labid *)
@@ -3046,20 +3046,20 @@ fun isExpFnScon (SconInt    (_, _, _, l, _)) = L.singleton l
   | isExpFnScon (SconReal   (_, _, _, l, _)) = L.singleton l
   | isExpFnScon (SconString (_, _, _, l, _)) = L.singleton l
   | isExpFnScon (SconChar   (_, _, _, l, _)) = L.singleton l
-  | isExpFnScon SconDots                     = L.empty
+  | isExpFnScon SconDots                     = (L.empty ())
 
 fun isExpFnPcon (PconBool (_, _, _, l, _)) = L.singleton l
   | isExpFnPcon (PconNil  (_, _, _, l, _)) = L.singleton l
   | isExpFnPcon (PconRef  (_, _, _, l, _)) = L.singleton l
-  | isExpFnPcon PconDots                   = L.empty
+  | isExpFnPcon PconDots                   = (L.empty ())
 
 fun isExpFnId (Ident (_, _, _, l, _)) = L.singleton l
   | isExpFnId (IdentPcon pc)          = isExpFnPcon pc
-  | isExpFnId IdentDots               = L.empty
+  | isExpFnId IdentDots               = (L.empty ())
 
 fun isExpFnLongId (LongIdQual (_, _, _, l, _)) = L.singleton l
   | isExpFnLongId (LongIdId id)                = isExpFnId id
-  | isExpFnLongId (LongIdDots _)               = L.empty
+  | isExpFnLongId (LongIdDots _)               = (L.empty ())
 
 fun isExpFnLabExp (LabExp (exp, _, _, l, _)) =
     let
@@ -3068,10 +3068,10 @@ fun isExpFnLabExp (LabExp (exp, _, _, l, _)) =
        then labs
        else L.cons l labs
     end
-  | isExpFnLabExp (LabExpDots _)          = L.empty
+  | isExpFnLabExp (LabExpDots _)          = (L.empty ())
 
 and isExpFnExp (ExpAtExp exp)                   = isExpFnAtExp exp
-  | isExpFnExp (ExpFn _)                        = L.empty
+  | isExpFnExp (ExpFn _)                        = (L.empty ())
   | isExpFnExp (ExpApp (_, _, _, _, _, l, _))   = L.singleton l
   | isExpFnExp (ExpCase (_, _, _, _, l, _))     = L.singleton l
   | isExpFnExp (ExpConsList (_, _, _, _, l, _)) = L.singleton l
@@ -3083,7 +3083,7 @@ and isExpFnExp (ExpAtExp exp)                   = isExpFnAtExp exp
   | isExpFnExp (ExpWhile (_, _, _, _, l, _))    = L.singleton l
   | isExpFnExp (ExpRaise (_, _, l, _))          = L.singleton l
   | isExpFnExp (ExpHandle (_, _, _, l, _))      = L.singleton l
-  | isExpFnExp (ExpDots _)                      = L.empty
+  | isExpFnExp (ExpDots _)                      = (L.empty ())
 
 and isExpFnAtExp (AtExpId id)                  = isExpFnLongId id
   | isExpFnAtExp (AtExpScon sc)                = isExpFnScon sc
@@ -3103,7 +3103,7 @@ and isExpFnAtExp (AtExpId id)                  = isExpFnLongId id
   | isExpFnAtExp (AtExpProj (_, _, _, l, _))   = L.singleton l
   | isExpFnAtExp (AtExpSeq (_, _, l, _))       = L.singleton l
   | isExpFnAtExp (AtExpQuote (_, _, l, _))     = L.singleton l
-  | isExpFnAtExp (AtExpDots _)                 = L.empty
+  | isExpFnAtExp (AtExpDots _)                 = (L.empty ())
 
 (* returns labels *)
 fun isExpFnValBindCore (ValBindCore (_, exp, _, l, _)) =
@@ -3113,7 +3113,7 @@ fun isExpFnValBindCore (ValBindCore (_, exp, _, l, _)) =
        then labs
        else L.cons l labs
     end
-  | isExpFnValBindCore (ValBindCoreDots _)             = L.empty
+  | isExpFnValBindCore (ValBindCoreDots _)             = (L.empty ())
 
 (* returns a list of labels *)
 fun isExpFnValBindSeq (ValBindSeq (xs, _, _)) =

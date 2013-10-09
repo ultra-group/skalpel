@@ -23,24 +23,24 @@
 signature EXTLAB = sig
 
     type 'a extLab = 'a           *
-		     Label.labels *
-		     Label.labels *
+		     (Label.label, bool) Label.labels *
+		     (Label.label, bool) Label.labels *
 		     LongId.set
 
     val getExtLabT   : 'a extLab -> 'a
-    val getExtLabL   : 'a extLab -> Label.labels
-    val getExtLabE   : 'a extLab -> Label.labels
+    val getExtLabL   : 'a extLab -> (Label.label, bool) Label.labels
+    val getExtLabE   : 'a extLab -> (Label.label, bool) Label.labels
     val getExtLabD   : 'a extLab -> LongId.set
 
     val initExtLab   : 'a -> Label.label -> 'a extLab
-    val consExtLab   : 'a -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
+    val consExtLab   : 'a -> (Label.label, bool) Label.labels -> (Label.label, bool) Label.labels -> LongId.set -> 'a extLab
 
     val mapExtLab    : 'a extLab -> ('a -> 'b) -> 'b extLab
     val stripExtLab  : 'a extLab list -> 'a list
     val unionExtLab  : 'a extLab -> 'b extLab -> ('a * 'b -> 'c) -> 'c extLab
-    val updExtLab    : 'a extLab -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
-    val updExtLabL   : 'a extLab -> Label.labels -> 'a extLab
-    val updExtLabE   : 'a extLab -> Label.labels -> 'a extLab
+    val updExtLab    : 'a extLab -> (Label.label, bool) Label.labels -> (Label.label, bool) Label.labels -> LongId.set -> 'a extLab
+    val updExtLabL   : 'a extLab -> (Label.label, bool) Label.labels -> 'a extLab
+    val updExtLabE   : 'a extLab -> (Label.label, bool) Label.labels -> 'a extLab
     val updExtLabD   : 'a extLab -> LongId.set   -> 'a extLab
     val resetExtLab  : 'a extLab -> 'a extLab
 

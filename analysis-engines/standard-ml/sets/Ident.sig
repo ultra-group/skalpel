@@ -36,7 +36,7 @@ signature ID = sig
     val compare     : id * id -> order
     val eqId        : id -> id -> bool
 
-    val getLabs     : lid -> Label.labels
+    val getLabs     : lid -> (Label.label, bool) Label.labels
     val getTopLab   : lid -> Label.label
     val getLabId    : lid -> Label.label
     val getTopIdl   : lid -> labelledId

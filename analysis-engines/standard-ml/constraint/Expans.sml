@@ -55,8 +55,8 @@ structure L = Label
 (** Holds expansive and non-expansive expressions (see top of file/doc page)
  * The I.lid value in the Expdep constructor is the identifier that makes the expression expansive.
  *)
-datatype expans = Expexp of L.labels
-		| Expdep of I.lid * L.labels
+datatype expans = Expexp of (L.label, bool) L.labels
+		| Expdep of I.lid * (L.label, bool) L.labels
 
 (** For non expansive expressions (constructor #nonexp) as well as expansive
  * expressions (constructor #expans). An #expans takes a list because there

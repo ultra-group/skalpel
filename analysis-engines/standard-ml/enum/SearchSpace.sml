@@ -40,12 +40,12 @@ structure SearchSpace :> SEARCHSPACE = struct
 
 structure L = Label
 
-structure LabSet = struct type ord_key = L.labels val compare = L.compare end
+structure LabSet = struct type ord_key = (L.label, bool) L.labels val compare = L.compare end
 structure SL = BinarySetFn(LabSet) (* Set Labels *)
 
 (* space   is the actual search space and
  * success is the filters for which the solver succeeded. *)
-type searchSpace = {space : L.labels list, success : SL.set}
+type searchSpace = {space : (L.label, bool) L.labels list, success : SL.set}
 
 (* Success is the set of filters for which we haven't found any error,
  * meaning that for each filter in success, the filtering of the constraint
@@ -139,7 +139,7 @@ fun invComp EQUAL   = EQUAL
   | invComp LESS    = GREATER
   | invComp GREATER = LESS
 
-structure LabSet = struct type ord_key = L.labels val compare = invComp o L.compare end
+structure LabSet = struct type ord_key = (L.label, bool) L.labels val compare = invComp o L.compare end
 structure SL = BinarySetFn(LabSet) (* Set Labels *)
 
 type searchSpace = {space : SL.set, success : SL.set}
@@ -205,7 +205,7 @@ structure SearchSpaceRbs :> SEARCHSPACE = struct
 
 structure L = Label
 
-structure LabSet = struct type ord_key = L.labels val compare = L.compare end
+structure LabSet = struct type ord_key = (L.label, bool) L.labels val compare = L.compare end
 structure SL = BinarySetFn(LabSet) (* Set Labels *)
 
 structure rbs = RedBlackSetFn(LabSet)

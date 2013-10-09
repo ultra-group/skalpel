@@ -301,7 +301,7 @@ fun getValStateGe state x =
 	 | SOME {resp, deps} =>
 	   SOME (MS.foldr (fn ((_, labs1, stts1, deps1), (_, labs2, stts2, deps2)) =>
 			      (x, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2))
-			  (x, L.empty, L.empty, CD.empty)
+			  (x, L.empty (), L.empty (), CD.empty)
 			  resp)
     end
 
@@ -537,7 +537,7 @@ fun updateStateFr state lid =
     end
 
 fun isAName tyname state =
-    NA.member (!(getStateNa state), (tyname, L.empty, L.empty, CD.empty))
+    NA.member (!(getStateNa state), (tyname, L.empty (), L.empty (), CD.empty))
 
 (* ACCESS TO THE ENV *)
 
@@ -608,7 +608,7 @@ fun selSt env = E.getStructs env
 fun selSi env = E.getSigs env
 fun selOc env = E.getOverloadingClasses env
 
-fun getValStateId' state lid fenv = getValStateId (!(getStateId state)) lid state fenv L.empty L.empty CD.empty
+fun getValStateId' state lid fenv = getValStateId (!(getStateId state)) lid state fenv (L.empty ()) (L.empty ()) CD.empty
 
 fun getValStateIdVa state lid bdown = getValStateId' state lid getStateIdVa (*packSelVa bdown*)
 fun getValStateIdTv state lid bdown = getValStateId' state lid getStateIdTv (*packSelTy bdown*)
@@ -792,7 +792,7 @@ fun plusState state1 state2 =
 
 fun reportLabTyClashLC (T.LABEL_VAR _) = NONE
   | reportLabTyClashLC (T.LC (lc, lab)) =
-    SOME (L.toInt lab, lc, L.empty, L.empty, CD.empty)
+    SOME (L.toInt lab, lc, L.empty (), L.empty (), CD.empty)
   | reportLabTyClashLC (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
     (case reportLabTyClashLC lt of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
@@ -826,7 +826,7 @@ fun reportLabTyClash fields =
 		  in ((lab, lc) :: list, labs1, stts1, deps1)
 		  end
 		| NONE => (list, labs, stts, deps))
-	  ([], L.empty, L.empty, CD.empty)
+	  ([], L.empty (), L.empty (), CD.empty)
 	  fields
 
 fun reportRcty xs =
@@ -836,7 +836,7 @@ fun reportRcty xs =
 		  val deps0 = CD.union deps1 deps2
 	      in ((L.toInt lab, lc) :: list, labs0, stts0, deps0)
 	      end)
-	  ([], L.empty, L.empty, CD.empty)
+	  ([], L.empty (), L.empty (), CD.empty)
 	  xs
 
 fun interEmpty rtl1 rtl2 =
@@ -873,7 +873,7 @@ fun isComplete []                         = true
 
 fun getFieldNameLC lc0 (T.LC (lc, lab)) =
     if lc0 = lc
-    then SOME (lab, lc, L.empty, L.empty, CD.empty)
+    then SOME (lab, lc, L.empty (), L.empty (), CD.empty)
     else NONE
   | getFieldNameLC lc0 (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
     (case getFieldNameLC lc0 lt of
@@ -1186,7 +1186,7 @@ fun pushEnvToState bempty env state =
 	     (*val tyvars  = map (fn v as (tv, _, _, _) => (updateStateGe state tv v; tv))
 				 (getMonoTyVars env state)*)
 	     (*val _ = D.printdebug2 (T.printTypeVarlist tyvars)*)
-	     val tns     = map (fn {id, lab, kind, name} => (name, L.empty, L.empty, CD.empty)) (getAllTns env state)
+	     val tns     = map (fn {id, lab, kind, name} => (name, L.empty (), L.empty (), CD.empty)) (getAllTns env state)
 	     val statena = getStateNa state
 	     val _       = statena := NA.addList (!statena, tns)
 	     val stateid = getStateId state

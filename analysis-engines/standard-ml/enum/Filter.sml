@@ -27,7 +27,7 @@ structure L  = Label
 structure LM = SplayMapFn(OrdKey)
 
 (** A filter is defined as an option of #Label.labels. *)
-type filter    = L.labels option
+type filter    = (L.label, bool) L.labels option
 
 (** Filters is a record, we have keep, and bind, each of type #filter.
  * \arg keep: the labels we wish to keep.
@@ -116,7 +116,7 @@ fun testonetodos filters ll =
 (** Filters the label set. *)
 fun filtertodos filters ll =
     L.foldr (fn (x, xs) => if testtodo filters x then L.cons x xs else xs)
-	    L.empty
+	    (L.empty ())
 	    ll
 
 (** Converts a #filter to a string. *)

@@ -133,7 +133,7 @@ fun minone errs err envcss timer (parse as (ast, _, _)) filter =
 	  app (fn err => D.printdebug2 (ERR.printOneXmlErr err "" true))
 	      (ERR.setSlices ast errs);
 	  raise EH.DeadBranch "";
-	  (L.empty, SOME err, errs))
+	  ((L.empty ()), SOME err, errs))
     (* should we return labs (in err) only for the first one? *)
     else let (*val _ = D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true)*)
              (*val _ = raise EH.DeadBranch ""*)
@@ -218,7 +218,7 @@ fun newFreeErr (free as ((id, lab), b)) timer (ast, _, _) =
 	val time = VT.getMilliTime timer
 	val labs = L.singleton lab
 	val ek   = if b then EK.FreeOpen else EK.FreeIdent
-	val err1 = ERR.consPreError id labs CD.empty ek L.empty
+	val err1 = ERR.consPreError id labs CD.empty ek (L.empty ())
 	val err2 = ERR.setT (ERR.setReg (ERR.setSlice ast err1) true) time
     in err2
     end
@@ -385,7 +385,7 @@ fun preEnum (envcss as (env, css)) (ast, _, _) =
 					| _ => L.union (ERR.getL err) labs
 		      in (errs', labs')
 		      end)
-		  ([], L.empty)
+		  ([], (L.empty ()))
 		  (List.mapPartial conv css)
     (* in a file without syntax errors, errsynt is empty and labs is also empty, creating the initial filter? *)
     in (errsynt, SS.flatLabs labs) (* enum cs errsynt (flatset labs) timelimit program*)

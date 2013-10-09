@@ -35,7 +35,7 @@ structure EH = ErrorHandler
  * \arg EXPANS of #Expans.expans. For when an expansiveness constraint forcing the monomorphism.
  * \arg MONOBIN of #Label.labels. Labels forcing the monomorphism e.g. an exception. *)
 datatype mono = EXPANS of X.expans
-	      | MONBIN of L.labels
+	      | MONBIN of (L.label, bool) L.labels
 
 (** Represents whether an expression is monomorphic or polymorphic.
  * Constructors are as follows:
@@ -52,10 +52,10 @@ fun getLabsMono (EXPANS expans) =
 	   NONE => (labs, labs, CD.empty)
 	 | SOME lid => (labs, labs, CD.singleton (CD.buildKey lid))
     end
-  | getLabsMono (MONBIN labs)   = (labs, L.empty, CD.empty)
+  | getLabsMono (MONBIN labs)   = (labs, (L.empty ()), CD.empty)
 
 (** Returns the labels of a polymorphic term. *)
-fun getLabsPoly POLY         = (L.empty, L.empty, CD.empty)
+fun getLabsPoly POLY         = ((L.empty ()), (L.empty ()), CD.empty)
   | getLabsPoly (MONO monos) =
     foldr (fn (mono, (labs, stts, deps)) =>
 	      let val (labs', stts', deps') = getLabsMono mono
@@ -63,7 +63,7 @@ fun getLabsPoly POLY         = (L.empty, L.empty, CD.empty)
 		  L.union  stts stts',
 		  CD.union deps deps')
 	      end)
-	  (L.empty, L.empty, CD.empty)
+	  ((L.empty ()), (L.empty ()), CD.empty)
 	  monos
 
 (** Turns a non expansive term into a polymorphic term. *)

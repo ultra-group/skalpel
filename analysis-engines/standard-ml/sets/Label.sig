@@ -23,13 +23,14 @@
 signature LABEL = sig
 
     type label
-    type labels
+    type ('a, 'b) labels
+
+    val unionSizes : int list ref
 
     val dummyLab   : label
     val builtinLab : label
     val firstLab   : label
 
-    val unionSizes : int list ref
     val nextlab    : label ref
 
     val toInt      : label -> int
@@ -44,46 +45,38 @@ signature LABEL = sig
     val eq         : label -> label -> bool
     val min        : label -> label -> label
 
-    val singleton  : label -> labels
-    val cons       : label -> labels -> labels
-    val delete     : label -> labels -> labels
-    val isin       : label -> labels -> bool
-    val isinone    : label -> labels -> bool
+    val singleton  : label -> (label, bool) labels
+    val cons       : label -> (label, bool) labels -> (label, bool) labels
+    val delete     : label -> (label, bool) labels -> (label, bool) labels
+    val isin       : label -> (label, bool) labels -> bool
+    val isinone    : label -> (label, bool) labels -> bool
 
-    val split      : label -> labels -> labels * labels
-    val split2     : label -> label -> labels -> labels * labels
-    val splitIn2   : labels -> labels * labels
-    val splitIn2'  : labels -> labels * labels
+    val split      : label -> (label, bool) labels -> (label, bool) labels * (label, bool) labels
+    val split2     : label -> label -> (label, bool) labels -> (label, bool) labels * (label, bool) labels
+    val splitIn2   : (label, bool) labels -> (label, bool) labels * (label, bool) labels
 
-    val empty      : labels
+    val empty      : unit -> (label, bool) labels
 
-    val isEmpty    : labels -> bool
-    val isSingle   : labels -> bool
-    val length     : labels -> int
+    val isEmpty    : (label, bool) labels -> bool
+    val isSingle   : (label, bool) labels -> bool
+    val length     : (label, bool) labels -> int
 
-    val union      : labels -> labels -> labels
-    val diff       : labels -> labels -> labels
-    val inter      : labels -> labels -> labels
-    val disjoint   : labels -> labels -> bool
-    val subset     : labels -> labels -> bool
-    val subseteq   : labels -> labels -> bool
-
+    val union      : (label, bool) labels -> (label, bool) labels -> (label, bool) labels
+    val diff       : (label, bool) labels -> (label, bool) labels -> (label, bool) labels
+    val inter      : (label, bool) labels -> (label, bool) labels -> (label, bool) labels
+    val disjoint   : (label, bool) labels -> (label, bool) labels -> bool
+    val subset     : (label, bool) labels -> (label, bool) labels -> bool
+    val subseteq   : (label, bool) labels -> (label, bool) labels -> bool
     val compareLab : label  * label  -> order
-    val compare    : labels * labels -> order
-
-    val ord        : label  list -> labels
-
-    val unions     : labels list -> labels
-
-    val toList     : labels -> int list
-
-    val remFirst   : labels -> label option * labels
-
-    val foldr      : (label * 'a -> 'a) -> 'a -> labels -> 'a
-
-    val exsubseteq : labels -> labels list -> bool
+    val compare    : (label, bool) labels * (label, bool) labels -> order
+    val ord        : label  list -> (label, bool) labels
+    val unions     : (label, bool) labels list -> (label, bool) labels
+    val toList     : (label, bool) labels -> int list
+    val remFirst   : (label, bool) labels -> label option * (label, bool) labels
+    val foldr      : (label * 'a -> 'a) -> 'a -> (label, bool) labels -> 'a
+    val exsubseteq : (label, bool) labels -> (label, bool) labels list -> bool
 
     val printLab   : label  -> string
-    val toString   : labels -> string
+    val toString   : (label, bool) labels -> string
 
 end

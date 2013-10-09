@@ -822,15 +822,15 @@ signature ASTSML = sig
     val getProgOneFirst   : progone   -> Label.label option
     val getProgFirst      : prog      -> Label.label option
 
-    val getlabTypeVarseq     : typevarseq     -> Label.labels
+    val getlabTypeVarseq     : typevarseq     -> (Label.label, bool) Label.labels
 
-    (*val getlabIdent        : ident        -> Label.labels*)
-    val getlabDatName      : datname      -> Label.labels
-    val getlabLDatName     : ldatname     -> Label.labels
+    (*val getlabIdent        : ident        -> (Label.label, bool) Label.labels*)
+    val getlabDatName      : datname      -> (Label.label, bool) Label.labels
+    val getlabLDatName     : ldatname     -> (Label.label, bool) Label.labels
 
     (* the next one is used by f_pat for an "as" pattern             *)
     (* to get the labels associated to to id on the left of the "as" *)
-    val getlabelsLabIdTy   : labidty      -> Label.labels
+    val getlabelsLabIdTy   : labidty      -> (Label.label, bool) Label.labels
 
     (* these are used to deal with field patterns *)
     val getlabstLabIdTy    : labidty      -> (Label.label * Label.label * string) option
@@ -847,7 +847,7 @@ signature ASTSML = sig
     val getlabidLabclass   : labclass     -> Id.labelledId option
 
     (* Extract the top label of a labid *)
-    val getLabelLabId      : labid        -> Label.labels
+    val getLabelLabId      : labid        -> (Label.label, bool) Label.labels
     (* Extract the labid/ident labels of a labid *)
     val getLabelsIdLabId   : labid        -> (Label.label * Label.label) option
 
@@ -897,7 +897,7 @@ signature ASTSML = sig
     val getTypeVarTypeVarSeq : typevarseq     -> typevar list
 
     (* returns the labels of the expressions which are not functions *)
-    val isExpFnValBindSeq  : valbindseq   -> Label.labels list
+    val isExpFnValBindSeq  : valbindseq   -> (Label.label, bool) Label.labels list
     val isPatScon          : scon         -> Label.label option
 
     val extractFilesProg   : prog -> (string * Reg.region * bool) list

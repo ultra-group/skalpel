@@ -22,7 +22,7 @@
 (** Represents filters (label sets), used by refstruct{Filter} *)
 signature FILTER = sig
 
-    type filter  = Label.labels option
+    type filter  = (Label.label, bool) Label.labels option
     type filters = {keep : filter,
 		    bind : filter}
 
@@ -37,13 +37,13 @@ signature FILTER = sig
     val testtodo      : filters -> Label.label -> bool
 
     val getStateLab   : filters -> Label.label  -> state
-    val getStateLabs  : filters -> Label.labels -> state
+    val getStateLabs  : filters -> (Label.label, bool) Label.labels -> state
 
-    val testtodos     : filters -> Label.labels -> bool
+    val testtodos     : filters -> (Label.label, bool) Label.labels -> bool
 
-    val testonetodos  : filters -> Label.labels -> bool
+    val testonetodos  : filters -> (Label.label, bool) Label.labels -> bool
 
-    val filtertodos   : filters -> Label.labels -> Label.labels
+    val filtertodos   : filters -> (Label.label, bool) Label.labels -> (Label.label, bool) Label.labels
 
     val toString      : filters -> string
 

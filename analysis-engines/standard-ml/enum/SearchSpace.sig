@@ -27,10 +27,10 @@ signature SEARCHSPACE = sig
     type searchSpace
 
     val emSearchSpace : searchSpace
-    val flatLabs      : Label.labels -> searchSpace
-    val getOneFilter  : searchSpace -> (Label.labels * searchSpace) option
-    val buildFilters  : Label.labels -> Label.labels -> searchSpace -> bool -> searchSpace
-    val getSuccess    : searchSpace -> Label.labels list
-    val addSuccess    : Label.labels -> searchSpace -> searchSpace
+    val flatLabs      : (Label.label, bool) Label.labels -> searchSpace
+    val getOneFilter  : searchSpace -> ((Label.label, bool) Label.labels * searchSpace) option
+    val buildFilters  : (Label.label, bool) Label.labels -> (Label.label, bool) Label.labels -> searchSpace -> bool -> searchSpace
+    val getSuccess    : searchSpace -> (Label.label, bool) Label.labels list
+    val addSuccess    : (Label.label, bool) Label.labels -> searchSpace -> searchSpace
 
 end

@@ -24,7 +24,7 @@
 
 signature SLICING = sig
 
-    val slice            : AstSML.progs -> Label.labels -> AstSML.progs
+    val slice            : AstSML.progs -> (Label.label, bool) Label.labels -> AstSML.progs
     val printSlice       : AstSML.progs -> bool -> string
     val printOneSlice    : AstSML.progs -> bool -> string -> string
     (*val printOneSmlSlice : AstSML.progs -> string*)

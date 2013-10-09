@@ -113,9 +113,9 @@ fun toDA1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equal
 (** Changes a #bind value to update the class field by using #ClassId.classToDAT on it. *)
 fun toDAT {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToDAT class) lab poly
 (** Changes a #bind value to update the class field by using #ClassId.classToEX0 on it. *)
-fun toEX0 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX0 class) lab (P.polyToMono poly L.empty)
+fun toEX0 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX0 class) lab (P.polyToMono poly (L.empty ()))
 (** Changes a #bind value to update the class field by using #ClassId.classToEX1 on it. *)
-fun toEX1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX1 class) lab (P.polyToMono poly L.empty)
+fun toEX1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX1 class) lab (P.polyToMono poly (L.empty ()))
 
 (** Given a #bind value and a class value, constructs a new binding with that class value, throwing away the old one. *)
 fun toCLS {id, bind, class, equalityTypeVar, lab, poly} cls = consBind id bind equalityTypeVar cls lab poly
@@ -138,7 +138,7 @@ fun closeBind {id, bind, equalityTypeVar, class, lab, poly} clos =
 (** Gather the labels in a set of extended type variables. *)
 fun getlabExtChk xs =
     foldr (fn (x, y) => L.cons (getBindL x) y)
-	  L.empty
+	  (L.empty ())
 	  xs
 
 

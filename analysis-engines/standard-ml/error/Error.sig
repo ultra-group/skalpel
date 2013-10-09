@@ -34,10 +34,10 @@ signature ERROR = sig
      * time : time to enumerate the error
      * min  : true if the error is minimal and false if it is in the process of being minimised *)
     type error    = {id   : id,
-		     labs : Label.labels,
+		     labs : (Label.label, bool) Label.labels,
 		     deps : LongId.set,
 		     ek   : ErrorKind.kind,
-		     rf   : Label.labels,
+		     rf   : (Label.label, bool) Label.labels,
 		     bb   : bool,
 		     rem  : id list,
 		     time : LargeInt.int,
@@ -80,11 +80,11 @@ signature ERROR = sig
 
     (* Accessors *)
     val getI             : error -> id                (* I for Identifier           *)
-    val getL             : error -> Label.labels      (* L for Labels               *)
+    val getL             : error -> (Label.label, bool) Label.labels      (* L for Labels               *)
     val getD             : error -> LongId.set        (* D for context Dependencies *)
     val getK             : error -> ErrorKind.kind    (* K for Kind of the error    *)
     val getE             : error -> id list           (* E for errors to be Errase  *)
-    val getF             : error -> Label.labels      (* F for bound Function       *)
+    val getF             : error -> (Label.label, bool) Label.labels      (* F for bound Function       *)
     val getB             : error -> bool              (* B for Builtin basis        *)
     val getT             : error -> LargeInt.int      (* T for Time                 *)
     val getS             : error -> AstSML.progs      (* S for Slice                *)
@@ -93,11 +93,11 @@ signature ERROR = sig
 
     (* Modifiers *)
     val setI             : error -> id             -> error
-    val setL             : error -> Label.labels   -> error
+    val setL             : error -> (Label.label, bool) Label.labels   -> error
     val setD             : error -> LongId.set     -> error
     val setK             : error -> ErrorKind.kind -> error
     val setE             : error -> id list        -> error
-    val setF             : error -> Label.labels   -> error
+    val setF             : error -> (Label.label, bool) Label.labels   -> error
     val setB             : error -> bool           -> error
     val setT             : error -> LargeInt.int   -> error
     val setS             : error -> AstSML.progs   -> error
@@ -106,10 +106,10 @@ signature ERROR = sig
 
     (* Constructors *)
     val consError        : id                ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   LongId.set        ->
 			   ErrorKind.kind    ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   bool              ->
 			   id list           ->
 			   LargeInt.int      ->
@@ -119,22 +119,22 @@ signature ERROR = sig
 			   error
 
     val consPreError     : id                ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   LongId.set        ->
 			   ErrorKind.kind    ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   error
 
 
     val consErrorNoR     : id                ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   LongId.set        ->
 			   ErrorKind.kind    ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   error
 
     val consErrorNoRB    : id                ->
-			   Label.labels      ->
+			   (Label.label, bool) Label.labels      ->
 			   LongId.set        ->
 			   ErrorKind.kind    ->
 			   error
@@ -158,7 +158,7 @@ signature ERROR = sig
     val mindone'         : error list -> error -> error option * error list
     val getErrorList     : error list -> int -> error option
 
-    val labelError       : error -> Label.labels -> Label.labels -> LongId.set -> error
+    val labelError       : error -> (Label.label, bool) Label.labels -> (Label.label, bool) Label.labels -> LongId.set -> error
 
     val idToInt          : id -> int
 

@@ -647,6 +647,6 @@ fun issyn x = not (issem x)
 
 (** We use this function when minimising an arity error because these two labels will stay in the minimal error. *)
 fun getLabsEk (ArityClash ((lab1, _), (lab2, _))) = L.ord [L.fromInt lab1, L.fromInt lab2]
-  | getLabsEk _ = L.empty
+  | getLabsEk _ = L.empty ()
 
 end

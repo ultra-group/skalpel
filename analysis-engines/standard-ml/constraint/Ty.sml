@@ -310,10 +310,10 @@ fun stripDepsTf (tf as TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1)) =
 	CD.union deps1 deps2)
     end
   | stripDepsTf (tf as TYPE_FUNCTION_VAR _) =
-    (tf, L.empty, L.empty, CD.empty)
+    (tf, (L.empty ()), (L.empty ()), CD.empty)
 
-and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
-  | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
+and stripDepsTy (ty as TYPE_VAR _) = (ty, (L.empty ()), (L.empty ()), CD.empty)
+  | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, (L.empty ()), (L.empty ()), CD.empty)
   | stripDepsTy (ty as TYPE_CONSTRUCTOR(tn, sq, lab, _)) =
     let val (tn', labs1, stts1, deps1) = stripDepsTn tn
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
@@ -343,7 +343,7 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
 			  L.union  stts stts',
 			  CD.union deps deps')
 		      end)
-		  ([], L.empty, L.empty, CD.empty)
+		  ([], (L.empty ()), (L.empty ()), CD.empty)
 		  (!tyr)
     in tyr := tys;
        (GEN tyr, labs, stts, deps)
@@ -354,7 +354,7 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
     end
 
 (* strip the dependencies off a row type *)
-and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
+and stripDepsSq (sq as ROW_VAR _) = (sq, (L.empty ()), (L.empty ()), CD.empty)
   | stripDepsSq (sq as ROW_C (fields, flex, lab)) =
     let val (fields', labs, stts, deps) =
 	    foldr (fn (field, (fields, labs, stts, deps)) =>
@@ -364,7 +364,7 @@ and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
 			  L.union  stts stts',
 			  CD.union deps deps')
 		      end)
-		  ([], L.empty, L.empty, CD.empty)
+		  ([], (L.empty ()), (L.empty ()), CD.empty)
 		  fields
     in (ROW_C (fields', flex, lab), labs, stts, deps)
     end
@@ -373,7 +373,7 @@ and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
     in (sq2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
+and stripDepsRt (rt as FIELD_VAR _) = (rt, (L.empty ()), (L.empty ()), CD.empty)
   | stripDepsRt (rt as FC (lt, ty, lab)) =
     let val (lt', labs1, stts1, deps1) = stripDepsLt lt
 	val (ty', labs2, stts2, deps2) = stripDepsTy ty
@@ -386,17 +386,17 @@ and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
     let val (rt2, labs2, stts2, deps2) = stripDepsRt rt1
     in (rt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
-  | stripDepsRt RO = (RO, L.empty, L.empty, CD.empty)
+  | stripDepsRt RO = (RO, (L.empty ()), (L.empty ()), CD.empty)
 
-and stripDepsLt (lt as LABEL_VAR _) = (lt, L.empty, L.empty, CD.empty)
-  | stripDepsLt (lt as LC _) = (lt, L.empty, L.empty, CD.empty)
+and stripDepsLt (lt as LABEL_VAR _) = (lt, (L.empty ()), (L.empty ()), CD.empty)
+  | stripDepsLt (lt as LC _) = (lt, (L.empty ()), (L.empty ()), CD.empty)
   | stripDepsLt (lt as LABEL_DEPENDANCY (lt1, labs1, stts1, deps1)) =
     let val (lt2, labs2, stts2, deps2) = stripDepsLt lt1
     in (lt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-and stripDepsTn (tn as TYPENAME_VAR _) = (tn, L.empty, L.empty, CD.empty)
-  | stripDepsTn (tn as NC _) = (tn, L.empty, L.empty, CD.empty)
+and stripDepsTn (tn as TYPENAME_VAR _) = (tn, (L.empty ()), (L.empty ()), CD.empty)
+  | stripDepsTn (tn as NC _) = (tn, (L.empty ()), (L.empty ()), CD.empty)
   | stripDepsTn (tn as TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1)) =
     let val (tn2, labs2, stts2, deps2) = stripDepsTn tn1
     in (tn2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
@@ -754,8 +754,8 @@ and getTypeVarstyseq (ROW_VAR _)                       = S.empty
 and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
   | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
   | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
-and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
-  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
+and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, ((L.empty ()), (L.empty ()), CD.empty))
+  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, ((L.empty ()), (L.empty ()), CD.empty)) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _, _))             = getTypeVarstyseq sq
   | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
   | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _, _))        = getTypeVarstyseq sq

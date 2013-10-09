@@ -22,13 +22,13 @@
 (** Defines the signature EXPANS which is the signature to deal with expansive/non-expansive expressions. *)
 signature EXPANS = sig
 
-    datatype expans = Expexp of Label.labels
-		    | Expdep of Id.lid * Label.labels
+    datatype expans = Expexp of (Label.label, bool) Label.labels
+		    | Expdep of Id.lid * (Label.label, bool) Label.labels
 
     datatype nonexp = Nonexp
 		    | Expans of expans list
 
-    val getLabsExpans      : expans       -> Label.labels * Id.lid option
+    val getLabsExpans      : expans       -> (Label.label, bool) Label.labels * Id.lid option
     val addnonexp          : nonexp       -> Label.label -> nonexp
     val genOneExpdep       : Id.id        -> Label.label -> nonexp
     val genOneExpans       : Label.label  -> nonexp

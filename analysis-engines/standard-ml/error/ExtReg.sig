@@ -55,7 +55,7 @@ signature EXTREG = sig
     (* the Boolean has to be true if we want to merge consecutive similar regions *)
     val simplify         : regs -> bool -> regs
     (* What are the labels used for? *)
-    val getpos_progs     : AstSML.progs -> (ErrorKind.kind * Label.labels) -> regs
+    val getpos_progs     : AstSML.progs -> (ErrorKind.kind * (Label.label, bool) Label.labels) -> regs
 
     val printOneRegs     : regs -> string
     val printSmlExtRegs  : regs -> string

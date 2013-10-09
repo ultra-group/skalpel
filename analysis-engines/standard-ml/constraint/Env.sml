@@ -238,21 +238,21 @@ type funenv = funsem genericEnv
 (* oneContextSensitiveSyntaxError
  * these used to be in the env but they got moved out
  * they are now separate because the usualyl get passed through *)
-datatype oneContextSensitiveSyntaxError = CSSMULT of Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
-					| CSSCVAR of Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
-					| CSSEVAR of Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
-					| CSSECON of Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
-					| CSSINCL of Label.labels (* for non inclusion of type variable in dataptype         *)
-					| CSSAPPL of Label.labels (* for applied and not applied value in pattern            *)
-					| CSSFNAM of Label.labels (* for different function names                            *)
-					| CSSFARG of Label.labels (* a function with different number of arguments           *)
-					| CSSTYVA of Label.labels (* free type variable at top-level                         *)
-					| CSSLEFT of Label.labels (* ident to left of as in pattern must be a variable       *)
-					| CSSFREC of Label.labels (* expressions within rec value bindings must be functions *)
-					| CSSREAL of Label.labels (* reals cannot occur within patterns                      *)
-					| CSSFREE of Label.labels (* free identifier                                         *)
-					| CSSWARN of Label.labels * string (* for a warning *)
-					| CSSPARS of Label.labels * string (* for a parsing problem *)
+datatype oneContextSensitiveSyntaxError = CSSMULT of (Label.label,bool) Label.labels (* for a multi occurrence - the 'id list' is then always empty *)
+					| CSSCVAR of (Label.label,bool) Label.labels (* for applied identifiers in patterns that should be constructors but are variables *)
+					| CSSEVAR of (Label.label,bool) Label.labels (* for identifiers in exception bindings that should be exceptions but are variables *)
+					| CSSECON of (Label.label,bool) Label.labels (* for identifiers in exception bindings that should be exceptions but are datatype constructors *)
+					| CSSINCL of (Label.label,bool) Label.labels (* for non inclusion of type variable in dataptype         *)
+					| CSSAPPL of (Label.label,bool) Label.labels (* for applied and not applied value in pattern            *)
+					| CSSFNAM of (Label.label,bool) Label.labels (* for different function names                            *)
+					| CSSFARG of (Label.label,bool) Label.labels (* a function with different number of arguments           *)
+					| CSSTYVA of (Label.label,bool) Label.labels (* free type variable at top-level                         *)
+					| CSSLEFT of (Label.label,bool) Label.labels (* ident to left of as in pattern must be a variable       *)
+					| CSSFREC of (Label.label,bool) Label.labels (* expressions within rec value bindings must be functions *)
+					| CSSREAL of (Label.label,bool) Label.labels (* reals cannot occur within patterns                      *)
+					| CSSFREE of (Label.label,bool) Label.labels (* free identifier                                         *)
+					| CSSWARN of (Label.label,bool) Label.labels * string (* for a warning *)
+					| CSSPARS of (Label.label,bool) Label.labels * string (* for a parsing problem *)
 type contextSensitiveSyntaxError       = oneContextSensitiveSyntaxError list
 
 type envContextSensitiveSyntaxPair = env * contextSensitiveSyntaxError
@@ -877,11 +877,11 @@ fun getnbcs (env, css) = (getnbcstenv env) + (getnbcss' css)
 fun getlabsidenv idenv =
     envOrdMap.foldr
 	(fn (sem, labs) => L.union (L.ord (map (fn (x, _, _, _) => C.getBindL x) sem)) labs)
-	L.empty
+	(L.empty ())
 	idenv
 
 fun getlabopenEnv openEnv =
-    OMO.foldl (fn ((_, lab, _), set) => L.cons lab set) L.empty openEnv
+    OMO.foldl (fn ((_, lab, _), set) => L.cons lab set) (L.empty ()) openEnv
 
 fun combineLabsEnv (outlabs1, inlabs1) (outlabs2, inlabs2) =
     (outlabs1 @ outlabs2, L.union inlabs1 inlabs2)
@@ -895,44 +895,44 @@ fun getlabsenv (env as ENV_CONS _) =
 	val labsFunctors = getlabsidenv (getFunctors env)
 	val labsOverloadingClasses = getlabsidenv (getOverloadingClasses env)
 	(*(2010-04-06)Functors and type variables ?*)
-    in ([L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses]], L.empty)
+    in ([L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses]], (L.empty ()))
     end
   | getlabsenv (ROW_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (LOCAL_ENV (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVSHA (env1, env2))    = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (SIGNATURE_ENV (env1, env2, _)) = combineLabsEnv (getlabsenv env1) (getlabsenv env2)
   | getlabsenv (ENVWHR (env, _))        = getlabsenv env (*Don't we want to get the label of the longTypeConsBinder?*)
-  | getlabsenv (ENVPOL (typeVarEnv, env))   = combineLabsEnv ([getlabsidenv typeVarEnv], L.empty) (getlabsenv env)
+  | getlabsenv (ENVPOL (typeVarEnv, env))   = combineLabsEnv ([getlabsidenv typeVarEnv], (L.empty ())) (getlabsenv env)
   | getlabsenv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env))      = getlabsenv env
-  | getlabsenv (ENVOPN openEnv)          = ([getlabopenEnv openEnv], L.empty)
+  | getlabsenv (ENVOPN openEnv)          = ([getlabopenEnv openEnv], (L.empty ()))
   | getlabsenv (ENVDEP eenv)            = getlabsenv (EL.getExtLabT eenv)
   | getlabsenv (FUNCTOR_ENV cst)             = getlabscst cst
   | getlabsenv (CONSTRAINT_ENV cst)             = getlabscst cst
-  | getlabsenv (ENV_VAR _)               = ([], L.empty)
-  | getlabsenv (ENVPTY _)               = ([], L.empty)
+  | getlabsenv (ENV_VAR _)               = ([], (L.empty ()))
+  | getlabsenv (ENVPTY _)               = ([], (L.empty ()))
   | getlabsenv (ENVFIL (f, env, strm))  = combineLabsEnv (getlabsenv env) (getlabsenv (strm ()))
-  | getlabsenv ENVTOP                   = ([], L.empty)
-and getlabcsbindocst (TYPE_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (FUNCTION_TYPE_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (TYPENAME_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (ROW_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (EQUALITY_TYPE_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (FIELD_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (LABEL_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (ENV_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (IDENTIFIER_CLASS_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (ACCESSOR_CONSTRAINT _)   = ([], L.empty)
+  | getlabsenv ENVTOP                   = ([], (L.empty ()))
+and getlabcsbindocst (TYPE_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (FUNCTION_TYPE_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (TYPENAME_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (ROW_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (EQUALITY_TYPE_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (FIELD_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (LABEL_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (ENV_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (IDENTIFIER_CLASS_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (ACCESSOR_CONSTRAINT _)   = ([], (L.empty ()))
   | getlabcsbindocst (LET_CONSTRAINT env) = getlabsenv env
-  | getlabcsbindocst (SIGNATURE_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (FUNCTOR_CONSTRAINT _)   = ([], L.empty)
-  | getlabcsbindocst (SHARING_CONSTRAINT _)   = ([], L.empty)
+  | getlabcsbindocst (SIGNATURE_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (FUNCTOR_CONSTRAINT _)   = ([], (L.empty ()))
+  | getlabcsbindocst (SHARING_CONSTRAINT _)   = ([], (L.empty ()))
 and getlabscst cst =
     foldricst
 	(fn (_, ocstl, labsenv) =>
 	    foldr (fn (oneConstraint, labsenv) => combineLabsEnv (getlabcsbindocst oneConstraint) labsenv)
 		  labsenv
 		  ocstl)
-	([], L.empty)
+	([], (L.empty ()))
 	cst
 and getbindings env = getlabsenv env
 
@@ -952,7 +952,7 @@ fun genCstClAll x1 x2 labs sts cds = IDENTIFIER_CLASS_CONSTRAINT (genCstAllGen x
 fun genValueIDAccessor x labs sts cds = VALUEID_ACCESSOR (EL.consExtLab x labs sts cds)
 
 (* initTypeConstraint - return type oneConstraint
- * x1 and x2 here are of type T.ty, lab is of type Label.labels
+ * x1 and x2 here are of type T.ty, lab is of type (Label.label,bool) Label.labels
  * x1 appears to be the type variable that you are constraing
  * x2 appears to be what you are constraining x1 to be
  *
@@ -989,42 +989,42 @@ fun toPolyValueIds valueIds =
 	   valueIds
 
 fun toRECValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toREC) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toREC) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toPATValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toPAT) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toPAT) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toEX0ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX0) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX0) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toEX1ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX1) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX1) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toDA0ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA0) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA0) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toDA1ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA1) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA1) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toDATValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDAT) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDAT) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 fun toCLSValueIds valueIds cls labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x (fn x => C.toCLS x cls)) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x (fn x => C.toCLS x cls)) labs (L.empty ()) CD.empty) sems)
 	   valueIds
 
 (* We have DAT here because this is only used for datatypes and datatype descriptions. *)
 (* WARNING: typeNames here may not be typeNames! It's this env that's been going around! *)
 fun toTYCONTypeNameEnv typeNames cons b labs =
     let fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DATATYPE, ref (cons, b)))
-    in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)
+    in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs (L.empty ()) CD.empty) sems)
 	      typeNames
     end
 
@@ -1113,7 +1113,7 @@ fun getLabsIdsGenEnv idenv =
 			    end)
 			(lids, labs)
 			semty)
-	      ([], L.empty)
+	      ([], (L.empty ()))
 	      idenv
 
 (* Returns the ids (as integers) of an env along with the associated labels.
@@ -1130,7 +1130,7 @@ fun getLabsIdsEnv (env as ENV_CONS _) n =
     in (idlabsValueIds @ idlabsTyps @ idlabsExplicitTypeVars @ idlabsStructs @ idlabsSigs @ idlabsFunctors @ idlabsOverloadingClasses,
 	L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses])
     end
-  | getLabsIdsEnv _ _ = raise EH.DeadBranch "" (*([], L.empty)*)
+  | getLabsIdsEnv _ _ = raise EH.DeadBranch "" (*([], (L.empty ()))*)
 
 
 (* Returns the label associated to a env (dummylab if not an ENV_CONS).
@@ -1178,11 +1178,12 @@ fun getTypeNames typeNames =
 	      typeNames
 
 (* a function which will create NOT_EQUALITY_TYPE constaints for types used
- * in an opaque signature. Called at constraint generation time when we see
+ * in an opaque signature. Called at constraint generation time
+ *  (jpirie: really? Not sure about that...) when we see
  * that we are in fact dealing with an opaque signature *)
 fun createOpaqueEqualityConstraints env lab =
     let
- 	val equalityTypeVarsToFreshen = ref []
+	val equalityTypeVarsToFreshen = ref []
 
 	fun freshenEqualityTypeVar eqtv =
 	    let
