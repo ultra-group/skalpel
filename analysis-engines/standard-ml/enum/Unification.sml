@@ -227,7 +227,7 @@ fun decorateCst' (E.ROW_CONSTRAINT x) labs stts deps = E.ROW_CONSTRAINT (EL.updE
   | decorateCst' (E.TYPE_CONSTRAINT x) labs stts deps = E.TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.FUNCTION_TYPE_CONSTRAINT x) labs stts deps = E.FUNCTION_TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singleConstraint (L.dummyLab, c))) "");
-				     raise EH.DeadBranch "")
+				     raise EH.DeadBranch "DeadBranch1")
 
 fun decorateCst xs labs stts deps =
     map (fn x => decorateCst' x labs stts deps) xs
@@ -349,8 +349,8 @@ and isAllTn (T.NC _) = true
 
 fun mergeFindInOrLists [] list = list
   | mergeFindInOrLists list [] = list
-  | mergeFindInOrLists ((T.TYPE_VAR _, _) :: x :: _) _ = raise EH.DeadBranch ""
-  | mergeFindInOrLists _ ((T.TYPE_VAR _, _) :: x :: _) = raise EH.DeadBranch ""
+  | mergeFindInOrLists ((T.TYPE_VAR _, _) :: x :: _) _ = raise EH.DeadBranch "DeadBranch2"
+  | mergeFindInOrLists _ ((T.TYPE_VAR _, _) :: x :: _) = raise EH.DeadBranch "DeadBranch3"
   | mergeFindInOrLists list [(T.TYPE_VAR _, _)] = list (* list cannot be empty *)
   | mergeFindInOrLists [(T.TYPE_VAR _, _)] list = list (* list cannot be empty *)
   | mergeFindInOrLists list1 list2 = list1 @ list2
@@ -378,17 +378,17 @@ and findInOrSq tn path (T.ROW_C (rtl, _, _)) =
 			    (* haven't found anything because of var *)
 			    ([], true, false)   => (x, true, z)
 			  (* impossible *)
-			  | ([], true, true)    => raise EH.DeadBranch ""
+			  | ([], true, true)    => raise EH.DeadBranch "DeadBranch4"
 			  (* haven't found anything *)
 			  | ([], false, false)  => (x, y, z)
 			  (* impossible *)
-			  | ([], false, true)   => raise EH.DeadBranch ""
+			  | ([], false, true)   => raise EH.DeadBranch "DeadBranch5"
 			  (* found a type construction *)
 			  | (list, true, true)  => (mergeFindInOrLists x list, true, true)
 			  (* found a variable *)
 			  | (list, true, false) => (mergeFindInOrLists x list, true, z)
 			  (* impossible *)
-			  | (_, false, _)       => raise EH.DeadBranch ""
+			  | (_, false, _)       => raise EH.DeadBranch "DeadBranch6"
 		in (triple, c + 1)
 		end)
 	    (([], false, false), 0)
@@ -535,6 +535,119 @@ and isFullOrTn (T.NC (name, _, _)) = true
 fun isFullOr seq = isFullOrSeq seq
 
 
+fun duplicateIdCheck state env =
+    let
+	fun getListEnvs (E.ROW_ENV(E.ROW_ENV e1, E.ROW_ENV e2)) = (getListEnvs (E.ROW_ENV e1)) @ (getListEnvs (E.ROW_ENV e2))
+	  | getListEnvs (E.ROW_ENV(E.ROW_ENV e1, e2)) =
+	    (case e2 of
+		(E.CONSTRAINT_ENV x) => (getListEnvs (E.ROW_ENV e1)) @ [x]
+	      | _ => (getListEnvs (E.ROW_ENV e1)))
+	  | getListEnvs (E.ROW_ENV(e1, E.ROW_ENV e2)) =
+	    (case e1 of
+		 E.CONSTRAINT_ENV x => [x] @ (getListEnvs (E.ROW_ENV e2))
+	       | _ => (getListEnvs (E.ROW_ENV e2)))
+	  | getListEnvs (E.ROW_ENV(e1, e2)) =
+	    (case (e1, e2) of
+		 (E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y) => [x] @ [y]
+	       | (E.CONSTRAINT_ENV x, _) => [x]
+	       | (_, E.CONSTRAINT_ENV y) => [y]
+	       | (env1, env2) => (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "IGNORING: " ^ (E.printEnv env1 "") ^ "...... and ......" ^ (E.printEnv env2 ""))); []))
+	  | getListEnvs (E.ENV_VAR (ev, lab)) =
+	    (case S.getValStateEv state ev of
+		 NONE => (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "No state entry for environment variable, skipping.")); [])
+	       | SOME ev => getListEnvs ev)
+	  | getListEnvs env = (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "IGNORING: " ^ (E.printEnv env ""))); [])
+
+	fun printConstraintItems [] = ""
+	  | printConstraintItems (h::h2::t) = "[" ^ E.printOneConstraintList h ^ "], " ^ (printConstraintItems (h2::t))
+	  | printConstraintItems (h::t) = "[" ^ E.printOneConstraintList h ^ "]"
+
+	fun flattenList [] = []
+	 |  flattenList (h::t) = h@(flattenList t)
+
+	fun parseEnvCons (env as E.ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) labs =
+	    let
+		val (ids,idLabs) = E.getLabsIdsEnv env
+	    in
+		[(ids, L.union idLabs labs)]
+	    end
+	  | parseEnvCons _ _ = raise EH.DeadBranch "Expected an environment constructor but got something else (unification algorithm)."
+
+	fun parseRows (E.ROW_ENV (_, E.ENVDEP (E.ENV_CONS consValue, labs,_,_))) labels =
+	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
+	     parseEnvCons (E.ENV_CONS consValue) (L.union labs labels))
+	  | parseRows (E.ROW_ENV (_, E.ENV_CONS consValue)) labels =
+	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
+	     parseEnvCons (E.ENV_CONS consValue) labels)
+	  | parseRows (E.ROW_ENV (E.ENV_CONS consValue, _)) labels =
+	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
+	     parseEnvCons (E.ENV_CONS consValue) labels)
+	  | parseRows (E.ROW_ENV (r1, r2)) labels = (parseRows r1 labels) @ (parseRows r2 labels)
+	  | parseRows env _ = (D.printDebug D.UNIF D.TEMP (fn _ => "Ignoring environment: " ^ (E.printEnv env "")); [])
+
+	fun printIdTupleList [] = ""
+	  | printIdTupleList ((int1,int2)::t) = "(" ^ (Int.toString int1) ^ "," ^ (Int.toString int2) ^ "), " ^ (printIdTupleList t)
+
+	fun printListOfLists [] = ""
+	  | printListOfLists ((idTupleList,labels)::t) = "([" ^ (printIdTupleList idTupleList) ^ "], " ^ (L.toString labels) ^ "), " ^ (printListOfLists t)
+
+	fun parseIncludeSpec state (envvar as E.ENV_VAR (ev, evlab)) labs =
+	    (D.printDebug D.UNIF D.STATE (fn _ => S.printState state);
+	     D.printDebug D.UNIF D.TEMP (fn _ => "Parsing the ENVVAR now: " ^ (E.printEnv envvar ""));
+	     case S.getValStateEv state ev of
+		 NONE => []
+	       | SOME (E.ENVDEP(E.ENV_VAR(ev, lab), depLabs, _, _)) => parseIncludeSpec state (E.ENV_VAR(ev, lab)) (L.cons lab (L.cons evlab (L.union labs depLabs)))
+	       | SOME (E.ENVDEP(E.ENV_CONS consValue, depLabs, _, _)) =>
+		 let
+		     val _ = D.printDebug D.UNIF D.TEMP (fn _ => "Found an ENV_CONS value: " ^ E.printEnv (E.ENV_CONS consValue) "")
+		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab (L.union labs depLabs))
+		 in
+		     (D.printDebug D.UNIF D.TEMP (fn _ => "Returning value: " ^ (printListOfLists x));
+		      x)
+		 end
+	       | SOME (E.ENV_CONS consValue) =>
+		 let
+		     val _ = D.printDebug D.UNIF D.TEMP (fn _ => "Found an ENV_CONS value: " ^ E.printEnv (E.ENV_CONS consValue) "")
+		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab labs)
+		 in
+		     (D.printDebug D.UNIF D.TEMP (fn _ => "Returning value: " ^ (printListOfLists x));
+		      x)
+		 end
+	       | SOME (E.ROW_ENV (r1, r2)) => parseRows (E.ROW_ENV (r1,r2)) (L.cons evlab labs)
+	       | SOME x  => raise EH.DeadBranch ("While following a chain of environment variables values to environment constructors, got something which wasn't an environment constructor: " ^ (E.printEnv x "")))
+	  | parseIncludeSpec _ _ _ = raise EH.DeadBranch "While looking for duplicate typename specificaions in signatures, found something which isn't an ENV_VAR which should only be an ENV_VAR."
+
+	fun extractIdentifiers state (E.ENV_CONSTRAINT((_ ,E.ROW_ENV (x)),labs,_,_)) =
+	    parseRows (E.ROW_ENV x) labs
+	  | extractIdentifiers state (E.ENV_CONSTRAINT ((E.NO_DUPLICATE_ID, envvar),labs,_,_)) =
+	    parseIncludeSpec state envvar labs
+	  | extractIdentifiers _ oneConstraint = (D.printDebug D.UNIF D.TEMP (fn _ => "Ignoring constraint: " ^ (E.printOneConstraint oneConstraint)); [])
+
+	(** Holds a list of #E.constraints values. *)
+ 	val envList = getListEnvs env
+	(** Holds a list of ENV_CONSTRAINT values. *)
+	val constraintItems = flattenList (flattenList (List.map (E.getConstraintItems) envList))
+	val _ = D.printDebug D.UNIF D.TEMP (fn _ => (#green(!D.colors)) ^ "[" ^ (E.printOneConstraintList constraintItems) ^ "]")
+	val identifierList = List.map (extractIdentifiers state) constraintItems
+	val listOfLists = foldr (op @) [] identifierList
+	val _ = D.printDebug D.UNIF D.TEMP (fn _ => (#cyan(!D.colors)) ^ "Gathered all identifiers: " ^ (printListOfLists listOfLists));
+
+	(** A list of triples of an identifier, a label (endpoint), and a set of labels (contributing). *)
+	fun formatIdentifiers [] = []
+	  | formatIdentifiers ((idLabelList,labels)::t) =
+	    let
+		fun parseIdLabelList [] _ = []
+		  | parseIdLabelList ((label,id)::t) labels =
+		    (id, L.fromInt label, L.cons (L.fromInt label) labels) :: (parseIdLabelList t labels)
+	    in
+		(parseIdLabelList idLabelList labels) @ (formatIdentifiers t)
+	    end
+
+	val identifiers = formatIdentifiers listOfLists
+    in
+	identifiers
+    end
+
 (* New matching of or/seq structures *)
 
 fun concatOptList (list1, b1) (list2, b2) =
@@ -576,7 +689,7 @@ fun tryToMatchOrsSq path (T.ROW_VAR _) sq2 = (([], false), ([], true), true)
 and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _, _))) sq =
     (case tryToMatchOrsTn path tn sq of
 	 (list as (x :: _), true)  => (([(t, path)], true), (list, true), true)
-       | (list as (x :: _), false) => raise EH.DeadBranch ""
+       | (list as (x :: _), false) => raise EH.DeadBranch "DeadBranch7"
        | ([], true)                => (([(t, path)], true), ([], false), true)
        | ([], false)               => (([], false), ([], false), false))
   | tryToMatchOrsTy path (T.TYPE_POLY (sq, _, _, _, _, _)) sq2 = tryToMatchOrsSq path sq sq2
@@ -589,12 +702,12 @@ and tryToMatchOrsTn path (T.NC (name, _, _)) sq =
     (case findInOrSq name [] sq of
 	 ([], true, _)                   => ([], true)                (* Something isn't complete *)
        | ([], false, _)                  => ([], false)               (* No match                 *)
-       | (list, false, _)                => raise EH.DeadBranch ""    (* Shouldn't happen         *)
+       | (list, false, _)                => raise EH.DeadBranch "DeadBranch8"    (* Shouldn't happen         *)
        | ([(T.TYPE_VAR _, _)], true, false)     => ([], true)                (* We found a match         *)
-       | ([(T.TYPE_VAR _, _)], true, true)      => raise EH.DeadBranch ""    (* Shouldn't happen         *)
-       | (((T.TYPE_VAR _, _) :: _), _, _)       => raise EH.DeadBranch ""    (* Shouldn't happen         *)
+       | ([(T.TYPE_VAR _, _)], true, true)      => raise EH.DeadBranch "DeadBranch9"    (* Shouldn't happen         *)
+       | (((T.TYPE_VAR _, _) :: _), _, _)       => raise EH.DeadBranch "DeadBranch10"    (* Shouldn't happen         *)
        | (list, true, true)              => (list, true)              (* We found a match         *)
-       | (list, true, false)             => raise EH.DeadBranch "")   (* Shouldn't happen         *)
+       | (list, true, false)             => raise EH.DeadBranch "DeadBranch11")   (* Shouldn't happen         *)
   | tryToMatchOrsTn path (T.TYPENAME_DEPENDANCY etn) sq = tryToMatchOrsTn path (EL.getExtLabT etn) sq
   | tryToMatchOrsTn path (T.TYPENAME_VAR _) sq = ([], true)
 
@@ -742,6 +855,7 @@ fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev sta
     end
   | freshenv (E.TOP_LEVEL_ENV)   tvl state bstr = E.TOP_LEVEL_ENV
   | freshenv (E.ENVPOL _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.NO_DUPLICATE_ID) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.LOCAL_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVWHR _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVSHA _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
@@ -980,7 +1094,7 @@ fun buildEnv (E.ENV_VAR (ev, lab)) state fresh bstr =
     let val env1 = buildEnv env0 state fresh bstr
     in E.pushExtEnv env1 labs0 stts0 deps0
     end
-  | buildEnv env state fresh bstr = (D.printdebug2 (E.printEnv env ""); raise EH.DeadBranch "")
+  | buildEnv env state fresh bstr = (D.printdebug2 (E.printEnv env ""); raise EH.DeadBranch "DeadBranch12")
 and buildEnv' env state fresh dom bmon bstr = buildEnv env state fresh bstr
 
 fun buildFEnv env state bstr = buildEnv env state (SOME (F.finitState ())) bstr
@@ -997,7 +1111,7 @@ fun getExplicitTyVars vids tyvs state =
 	(* NOTE: tyvs' is tyvs without the dummy bindings. *)
 	fun getLabsTyvs id = case E.plusproj tyvs' id of
 				 [bind] => EL.getExtLabL bind
-			       | _ => raise EH.DeadBranch ""
+			       | _ => raise EH.DeadBranch "DeadBranch13"
 	val dom = E.dom tyvs'
 	fun searchTy (T.TYPE_VAR _) = NONE
 	  | searchTy (T.EXPLICIT_TYPE_VAR (id, _, lab, _)) =
@@ -1234,6 +1348,8 @@ fun getAllTypeFunctionEnv (env as E.ENV_CONS _) =
   | getAllTypeFunctionEnv (E.SIGNATURE_ENV _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTypeFunctionEnv (E.ENVPTY _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTypeFunctionEnv (E.ENVFIL _) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTypeFunctionEnv (E.NO_DUPLICATE_ID) = raise EH.DeadBranch "This should have been built by now"
+
 
 and getAllTypeFunctionStrEnv strenv =
     E.foldrienv
@@ -1307,6 +1423,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
   | getTypeFunctionEnv (E.SIGNATURE_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnv (E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnv (E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTypeFunctionEnv (E.NO_DUPLICATE_ID) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
 and getTypeFunctionExtEnv extenv extenv' =
     let (*val labs = L.union  (EL.getExtLabL extenv) (EL.getExtLabL extenv')
@@ -1425,6 +1542,7 @@ fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
   | getTypeFunctionEnvSha (E.SIGNATURE_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnvSha (E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnvSha (E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTypeFunctionEnvSha (E.NO_DUPLICATE_ID) _ = raise EH.DeadBranch "This should have been built by now"
 
 and getTypeFunctionShaExtEnv extenv extenv' =
     let (*val labs = EL.getExtLabL extenv'
@@ -1609,6 +1727,7 @@ fun genTypeFunctionEnv (env as E.ENV_CONS _) state tfun dom b =
   | genTypeFunctionEnv (x as E.SIGNATURE_ENV _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTypeFunctionEnv (x as E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTypeFunctionEnv (x as E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTypeFunctionEnv (x as E.NO_DUPLICATE_ID) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
 and genTypeFunctionExtEnv extenv state tfun dom b =
     genTypeFunctionExtGen extenv tfun (fn env => fn _ => fn _ => genTypeFunctionEnv env state tfun dom b) true
@@ -1775,6 +1894,7 @@ fun applyTypeFunctionEnv (env as E.ENV_CONS _) tfun =
   | applyTypeFunctionEnv (x as E.SIGNATURE_ENV _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTypeFunctionEnv (x as E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTypeFunctionEnv (x as E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTypeFunctionEnv (x as E.NO_DUPLICATE_ID) _ = raise EH.DeadBranch "This should have been built by now"
 
 and applyTypeFunctionExtEnv extenv tfun =
     applyTypeFunctionExtGen extenv tfun (fn env => fn tfun => fn _ => applyTypeFunctionEnv env tfun) true
@@ -1799,7 +1919,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	   [] => (* There is no machting in the signature *)
 	   if E.getIComplete envsig andalso not (CL.classIsANY class)
 	   (* If the signature is complete then we need to raise a unmatched error. *)
-	   then let val (idlabs, labs1) = E.getLabsIdsEnv envsig 1
+	   then let val (idlabs, labs1) = E.getLabsIdsEnv envsig
 		    val lab'  = E.getLabEnv envsig
 		    val labs2 = L.cons lab' (L.union labs1 labs)
 		    val ek    = EK.UnbWhere ((L.toInt labTc, I.toInt idTc), idlabs, L.toInt lab')
@@ -1885,7 +2005,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	 [] => (* There is no machting in the signature *)
 	 if E.getIComplete envsig
 	 (* If the signature is complete then we need to raise a unmatched error. *)
-	 then let val (idlabs, labs1) = E.getLabsIdsEnv envsig 1
+	 then let val (idlabs, labs1) = E.getLabsIdsEnv envsig
 		  val lab'  = E.getLabEnv envsig
 		  val labs2 = L.cons lab' (L.union labs1 labs)
 		  val ek    = EK.UnbWhere ((L.toInt lab1, I.toInt id), idlabs, L.toInt lab')
@@ -1934,6 +2054,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
   | matchWhereEnv (E.SIGNATURE_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.NO_DUPLICATE_ID) _ _ = raise EH.DeadBranch "This should have been built by now"
 
 (* Env renamening *)
 
@@ -2043,6 +2164,7 @@ and renameenv (env as E.ENV_CONS _) state ren =
   | renameenv (E.CONSTRAINT_ENV _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.NO_DUPLICATE_ID) _ _ = raise EH.DeadBranch "This should have been built by now"
 and renameextstr extstr state ren = renameextgen extstr state ren renameenv
 and renameextfun extfun state ren = renameextgen extfun state ren (fn (x, y) => fn state => fn ren => (renameenv x state ren, renameenv y state ren))
 and renamestrenv strenv state ren =
@@ -2442,7 +2564,6 @@ fun unif env filters user =
 	     (*FI.getStateLab filters (E.getBindL bind)*) of
 		FI.IN   => let val (tyf, tnKind, cons) = E.getBindT bind
 			       val tyf' = buildtypeFunction tyf state I.empty false false
-			   (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ I.printId (E.getBindI bind) ^ "\n" ^ T.printtyf tyf ^ "\n" ^ T.printtyf tyf')*)
 			   in BINDIN (C.mapBind btyp (fn _ => (tyf', tnKind, cons)),
 				      labs,
 				      stts,
@@ -2532,7 +2653,7 @@ fun unif env filters user =
 		    end
 	       else ()
 	    end
-	  | genMultiError _ _ = raise EH.DeadBranch ""
+	  | genMultiError _ _ = raise EH.DeadBranch "DeadBranch14"
 
 	(* NOTE: the difference between solvegenenv' and solvegenenv is that
 	 * solvegenenv' records only one binder per identifier. *)
@@ -2632,7 +2753,6 @@ fun unif env filters user =
 		    (* NOTE: Should only contain ValueIds's so we only deal with them. *)
 		    let val dom  = E.dom (E.getExplicitTypeVars env1)
 			val vids = buildVarEnv (E.toPolyValueIds (E.getValueIds env)) state dom bmon
-		    (*val _    = D.printdebug2 (S.printState state)*)
 		    (*val _    = D.printdebug2 (E.printEnv env "")*)
 		    (*val _    = D.printdebug2 (E.printEnv (E.projValueIds vids) "")*)
 		    in case getExplicitTyVars vids (E.getExplicitTypeVars env1) state of
@@ -2655,7 +2775,7 @@ fun unif env filters user =
 			val env'  = checkTyVars env labs2 stts2 deps2
 		    in E.pushExtEnv env' labs1 stts1 deps1
 		    end
-		  | checkTyVars _ _ _ _ = raise EH.DeadBranch ""
+		  | checkTyVars _ _ _ _ = raise EH.DeadBranch "DeadBranch15"
 	    in checkTyVars env' L.empty L.empty CD.empty
 	    end
 	  | solveenv (E.DATATYPE_CONSTRUCTOR_ENV (idlab, env)) bmon =
@@ -2741,6 +2861,7 @@ fun unif env filters user =
 	     handle errorfound err => handleSolveEnv err envsig)
 	  | solveenv E.TOP_LEVEL_ENV bmon = raise EH.TODO "no description, raised in the 'solveenv' function of Unification.sml"
 	  | solveenv (E.ENVPTY st) bmon = raise EH.TODO "no description, raised in the 'solveenv' function of Unification.sml"
+	  | solveenv (E.NO_DUPLICATE_ID) bmon = raise EH.DeadBranch "no description, raised in the 'solveenv' function of Unification.sml"
 	  | solveenv (E.ENVFIL (file, env, strm)) bmon =
 	    let val _ =
 		    case user of
@@ -2976,7 +3097,6 @@ fun unif env filters user =
 	  | solveacc (E.EQUALITY_TYPE_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
 	    let
 		val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor. Labels = " ^ L.toString labs)
-		(* val _ = print ("the state is: "^(S.printState state)^"\n\n\n"); *)
 	    in
 		case filterLid lid filters of
 		    NONE => ()
@@ -3042,7 +3162,6 @@ fun unif env filters user =
 		      (*(2010-06-16)We used to return () but we need to do something
 		       * else to catch the arity errors.*)
 		      (*let val (tf, labs', stts', deps') = buildTypeFunctionAr state bind lab L.empty L.empty CD.empty
-			    (*val _ = D.printdebug2 (S.printState state)*)
 			    (*val _ = D.printdebug2 (T.printtyf bind)*)
 			    val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			    val c = E.genCstTfAll sem tf (L.union labs0 (I.getLabs lid)) stts0 deps0
@@ -3096,7 +3215,6 @@ fun unif env filters user =
 			 val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
 			 val labs1 = L.union labs0 (I.getLabs lid)
 			 val c     = E.genCstSqAll sem bind labs1 stts0 deps0
-		     (*val _     = D.printdebug2 (S.printState state)*)
 		     (*val _     = D.printdebug2 (T.printseqty sem ^ "\n" ^ T.printseqty bind)*)
 		     in fsimplify [c] l
 		     end
@@ -3153,7 +3271,6 @@ fun unif env filters user =
 			  val labs1 = L.union labs0 (I.getLabs lid)
 			  val c1 = E.genCstEvAll env1 env3 labs1 stts0 deps0
 			  val c2 = E.genCstEvAll env2 env4 labs1 stts0 deps0
-		      (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv env2 "" ^ "\n" ^ E.printEnv env4 "" ^ "\n")*)
 		      in fsimplify [c1, c2] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
@@ -3168,7 +3285,7 @@ fun unif env filters user =
 			    ((id1, lab1), (env, labs', stts', deps'))
 			    l =
 	    if completeEnv env err
-	    then let val (idlabs, labs1) = E.getLabsIdsEnv env 2
+	    then let val (idlabs, labs1) = E.getLabsIdsEnv env
 		     val labs2 = L.union (I.getLabs lid) (L.union labs labs1)
 		     val (labs0, stts0, deps0) = unionLabs (labs2, stts, deps) (labs', stts', deps')
 		     val lab2  = E.getLabEnv env
@@ -3199,7 +3316,7 @@ fun unif env filters user =
 		(* btype is true if we are currently composing for types. *)
 		fun genError lab id labs stts deps =
 		    if completeEnv env2 err (*labs*)
-		    then let val (idlabs, labs1) = E.getLabsIdsEnv env2 1
+		    then let val (idlabs, labs1) = E.getLabsIdsEnv env2
 			     val lab'  = E.getLabEnv env2
 			     val labs2 = L.cons l (L.union labs1 labs)
 			     val ek    = EK.Unmatched ((L.toInt lab, I.toInt id), idlabs, L.toInt lab')
@@ -3403,7 +3520,6 @@ fun unif env filters user =
 		      (*val _ = if T.isVarTypename tn1 orelse T.isVarTypename tn2
 				then D.printdebug2 ("foo")
 				else ()*)
-		      (*val _ = D.printdebug2 (S.printState state)*)
 		      in
 			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (3). Joining labels = "^L.toString ls);
 			  handleSimplify err cs' l)
@@ -3461,7 +3577,7 @@ fun unif env filters user =
 							    edeps)
 					  cs'
 					  l)
-			 | _ => raise EH.DeadBranch ""
+			 | _ => raise EH.DeadBranch "DeadBranch16"
 		    end
                else let val ek  = EK.ArityClash ((L.toInt l1, n1), (L.toInt l2, n2))
 			val err = ERR.consPreError ERR.dummyId ls ids ek deps
@@ -3574,9 +3690,9 @@ fun unif env filters user =
 		       andalso isSigVsStr () (* We're dealing with constraints on signature vs. structure *)
 		       andalso T.isTyC ty
 		    then (* we're dealing with a too general signature's structure *)
-			let val l1  = #2 (Option.valOf b)           handle Option => raise EH.DeadBranch ""
-			    val l2  = Option.valOf (T.getTyLab  ty) handle Option => raise EH.DeadBranch ""
-			    val tn  = Option.valOf (T.getTypenameType ty) handle Option => raise EH.DeadBranch ""
+			let val l1  = #2 (Option.valOf b)           handle Option => raise EH.DeadBranch "DeadBranch17"
+			    val l2  = Option.valOf (T.getTyLab  ty) handle Option => raise EH.DeadBranch "DeadBranch18"
+			    val tn  = Option.valOf (T.getTypenameType ty) handle Option => raise EH.DeadBranch "DeadBranch19"
 			    val fek = if isSigVsStrTyp () then EK.TyFunClash else EK.NotGenClash
 			    val ek  = fek ((L.toInt l1, T.typeVarToInt tv), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 			    val err = ERR.consPreError ERR.dummyId ls ids ek deps
@@ -3726,9 +3842,9 @@ fun unif env filters user =
 							 edeps)
 				       cs'
 				       l)
-		      | _  => raise EH.DeadBranch ""
+		      | _  => raise EH.DeadBranch "DeadBranch20"
 		 end
-               | SOME rt' => raise EH.DeadBranch "")
+               | SOME rt' => raise EH.DeadBranch "DeadBranch21")
 	  (* we update and store *)
 	  (* if it's 2 variables we raise deadbranch, same if it's 2 cons *)
 	  | fsimplify ((currentConstraint as E.LABEL_CONSTRAINT ((T.LABEL_VAR lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
@@ -3748,9 +3864,9 @@ fun unif env filters user =
 							  edeps)
 					cs'
 					l)
-		      | _  => raise EH.DeadBranch ""
+		      | _  => raise EH.DeadBranch "DeadBranch22"
 		 end
-               | SOME lt' => raise EH.DeadBranch "")
+               | SOME lt' => raise EH.DeadBranch "DeadBranch23")
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_VAR tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
 	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
@@ -3804,7 +3920,7 @@ fun unif env filters user =
 			       let val _ = S.updateStateOr state idor ([path], labs, stts, deps)
 				   val c = E.genCstTyAll tc t labs stts deps
 			       in fsimplify (c :: cs') l end
-			     | _ => raise EH.DeadBranch ""
+			     | _ => raise EH.DeadBranch "DeadBranch24"
 			end
 		      | T.TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1) => checkTn tn1
 								   (L.union labs labs1)
@@ -3816,7 +3932,7 @@ fun unif env filters user =
 		(
 		case S.getValStateOr state idor of
 		   NONE => checkTn tnty ls deps ids sq'
-		 | SOME ([], _, _, _) => raise EH.DeadBranch ""
+		 | SOME ([], _, _, _) => raise EH.DeadBranch "DeadBranch25"
 		 | SOME ([path], ls', deps', ids') =>
 		   (case gotoInOrSq path sq' of
 			NONE => fsimplify cs' l
@@ -3858,8 +3974,8 @@ fun unif env filters user =
 	       else
 		   fsimplify cs' l
 	    end
-	  | fsimplify ((E.FIELD_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.LABEL_CONSTRAINT _) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.FIELD_CONSTRAINT _) :: cs') l = raise EH.DeadBranch "DeadBranch26"
+	  | fsimplify ((E.LABEL_CONSTRAINT _) :: cs') l = raise EH.DeadBranch "DeadBranch27"
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((ty1 as T.TYPE_POLY (sq1, i1, poly1, orKind1, lab1, eq1),
 							      ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
 							     ls, deps, ids)) :: cs') l =
@@ -3961,8 +4077,8 @@ fun unif env filters user =
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
-		 | (_, SOME ([], _, _, _)) => raise EH.DeadBranch ""
-		 | (SOME ([], _, _, _), _) => raise EH.DeadBranch ""
+		 | (_, SOME ([], _, _, _)) => raise EH.DeadBranch "DeadBranch28"
+		 | (SOME ([], _, _, _), _) => raise EH.DeadBranch "DeadBranch29"
 		 | (NONE, SOME (paths2, ls2, deps2, ids2)) =>
 		   match sq1
 			 (selectPaths paths2 sq2)
@@ -3989,7 +4105,7 @@ fun unif env filters user =
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    ((* if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
@@ -4001,8 +4117,34 @@ fun unif env filters user =
                       let val c = E.genCstEvAll env (E.ENV_VAR (ev2, lab2)) ls deps ids
                       in fsimplify (c :: cs') l
                       end))
+	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.NO_DUPLICATE_ID, env), ls, deps, ids)) :: cs') l =
+	    let
+		val _ = D.printDebug D.UNIF D.STATE (fn _ => S.printState state)
+		val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors)) ^ "checking environment for duplicate identifiers: " ^ (E.printEnv env ""))
+
+		fun findDuplicates [] = ()
+		  | findDuplicates ((id,label,labels)::t) =
+		    let
+			val duplicates = List.filter (fn (filterId, filterLabel, filterLabels) => id = filterId andalso (L.toInt label) <> (L.toInt filterLabel)) t
+		    in
+			case duplicates of
+			    [] => ()
+			  | ((filterId,filterLabel,filterLabels)::t) =>
+			    let
+				val errorKind   = EK.DuplicateId ((L.toInt label, id), (L.toInt filterLabel,filterId))
+				val error  = ERR.consPreError ERR.dummyId (L.cons filterLabel (L.cons label (L.cons l (L.union ls (L.union filterLabels labels))))) ids errorKind L.empty
+	  		    in
+				handleSimplify error cs' l
+			    end
+		    end
+
+		val duplicates = duplicateIdCheck state env
+	    in
+		(findDuplicates duplicates;
+		 fsimplify cs' l)
+	    end
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev, lab), env), ls, deps, ids)) :: cs') l =
-	    ((* if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else (); *)
+	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -4015,7 +4157,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((env1 as E.ENV_CONS _, env2 as E.ENV_CONS _), ls, deps, ids)) :: cs') l =
 	    let
-		(* val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
+		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
@@ -4193,18 +4335,18 @@ fun unif env filters user =
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC,    CL.OC),    _, _, _)) :: cs') l = fsimplify cs' l
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.ANY, _),   _, _, _)) :: cs') l = fsimplify cs' l
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.ANY),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYCON), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYVAR), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, _), _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.STR),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.SIG),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG, _),   _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.FUNC),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC, _),  _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.OC),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC, _),    _, _, _)) :: cs') l = raise EH.DeadBranch ""
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYCON), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch30"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, _), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch31"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYVAR), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch32"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, _), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch33"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.STR),   _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch34"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR, _),   _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch35"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.SIG),   _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch36"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG, _),   _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch37"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.FUNC),  _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch38"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC, _),  _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch39"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.OC),    _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch40"
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC, _),    _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch41"
 	  (**)
 	  | fsimplify ((currentConstraint as E.LET_CONSTRAINT env) :: cs') l =
 	    let
@@ -4318,12 +4460,10 @@ fun unif env filters user =
 							  (CD.union deps deps'))
 					   tfun
 		     val (cs0, env1) = genTypeFunctionEnv' env0 state tfun false
-		     (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv (E.consENV_VAR ev0 lab) "" ^ "\n" ^ E.printEnv env0 "")*)
 		     (* Do we need this switch here? *)
 		     val _ = sigVsStrON ()
 		     val _ = fsimplify (decorateCst cs0 (L.singleton lab) L.empty CD.empty) l
 		     val _ = sigVsStrOFF ()
-		     (*val _ = D.printdebug2 (S.printState state ^ "\n" ^ E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "" ^ "\n" ^ E.printEnv env1 "")*)
 		     val _ = S.updateStateEv state ev1 (E.pushExtEnv env1 (L.singleton lab) L.empty CD.empty)
 		 in fsimplify cs' l
 		 end

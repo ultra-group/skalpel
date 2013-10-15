@@ -463,7 +463,7 @@ fun updateStateGe state key value =
 		    in if List.null tyvars
 		       then ()
 		       else case getValStateGe state key of
-				NONE => raise EH.DeadBranch ""
+				NONE => raise EH.DeadBranch "DeadBranch70"
 			      | SOME (_, labs, stts, deps) =>
 				let val _ = app (fn (v, labs', stts', deps') =>
 						    let val labs0 = L.union  labs labs'
@@ -473,7 +473,7 @@ fun updateStateGe state key value =
 						    end)
 						tyvars
 				    val _ = case getValOneState statege v of
-						NONE => raise EH.DeadBranch ""
+						NONE => raise EH.DeadBranch "DeadBranch71"
 					      | SOME {resp, deps} =>
 						let val deps' = foldr (fn ((tv, _, _, _), deps) =>
 									  O.cons (T.typeVarToInt tv) deps)
@@ -506,7 +506,7 @@ fun updateStateTv state key value =
 						end)
 					    tyvars
 				val _ = case getValOneState statege v of
-					    NONE => raise EH.DeadBranch ""
+					    NONE => raise EH.DeadBranch "DeadBranch72"
 					  | SOME {resp, deps} =>
 					    let val deps' = foldr (fn ((tv, _, _, _), deps) =>
 								      O.cons (T.typeVarToInt tv) deps)
@@ -621,14 +621,14 @@ fun getValStateIdFu state lid bdown = getValStateId' state lid getStateIdFu (*pa
 fun deleteStateGeDeps state key dep =
     let val statege = getStateGe state
     in case getValOneState statege key of
-	   NONE => raise EH.DeadBranch ""
+	   NONE => raise EH.DeadBranch "DeadBranch73"
 	 | SOME {resp, deps} =>
 	   let val resp' = #1 (MS.remove (resp, dep))
-		   handle LibBase.NotFound => raise EH.DeadBranch ""
+		   handle LibBase.NotFound => raise EH.DeadBranch "DeadBranch74"
 	   in if MS.isEmpty resp'
 	      then (statege := #1 (MS.remove (!statege, key));
 		    O.foldr (fn (tv, _) => deleteStateGeDeps state tv key) () deps)
-		   handle LibBase.NotFound => raise EH.DeadBranch ""
+		   handle LibBase.NotFound => raise EH.DeadBranch "DeadBranch75"
 	      else statege := (MS.insert (!statege, key, {resp = resp', deps = deps}))
 	   end
     end
@@ -1094,7 +1094,7 @@ fun getAllTns (env as E.ENV_CONS _) state =
 	 NONE => []
        | SOME env => getAllTns env state)
   | getAllTns (E.ENVDEP extenv) state = getAllTns (EL.getExtLabT extenv) state
-  | getAllTns _ _ = raise EH.DeadBranch ""
+  | getAllTns _ _ = raise EH.DeadBranch "DeadBranch76"
 
 fun combineTyVars monos1 monos2 =
     MS.unionWith (fn ((tv1, labs1, stts1, deps1), (tv2, labs2, stts2, deps2)) =>
@@ -1157,7 +1157,7 @@ fun getMonoTyVars (env as E.ENV_CONS _) state =
        | SOME env => getMonoTyVars env state)
   | getMonoTyVars (E.ENVDEP extenv) state = getMonoTyVars (EL.getExtLabT extenv) state
   (* We should also pass the dependencies down *)
-  | getMonoTyVars _ _ = raise EH.DeadBranch ""
+  | getMonoTyVars _ _ = raise EH.DeadBranch "DeadBranch77"
 
 and getMonoTyVarsStrEnv strenv state =
     E.foldrienv (fn (_, binds, monos) =>

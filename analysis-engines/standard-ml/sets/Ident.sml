@@ -22,6 +22,7 @@
 (** Deals with identifiers, opaquely constrained by ID. *)
 structure Id :> ID = struct
 
+structure D  = Debug
 structure L  = Label
 structure S  = BinarySetFn(OrdKey) (* S stands for Set *)
 structure IS = SplayMapFn(OrdKey) (* int    -> string *)
@@ -40,7 +41,10 @@ type labelledId = id * L.label
 datatype lid  = ID  of labelledId
 	      | LID of labelledId * lid * L.label
 
-
+(** Our association record with two fields.
+ * \arg assocId - A map from integers to string values.
+ * \arg assocSt - A map from strings to integer values.
+ *)
 type assoc    = {assocId : string IS.map, assocSt : int SI.map}
 
 (** We need assocOut to check the testcase database, assocOut is the same as assoc. *)
@@ -167,12 +171,14 @@ fun updateAssoc str (assoc as {assocId, assocSt}) =
     case SI.find (assocSt, str) of
 	NONE =>
 	let
+	    val _ = D.printDebug D.BLANK D.TEMP (fn _ => "Didn't find \"" ^ str ^ "\" in association map.")
 	    val id       = freshId ()
 	    val assocSt' = SI.insert (assocSt, str, id)
 	    val assocId' = IS.insert (assocId, id, str)
 	in (id, {assocId = assocId', assocSt = assocSt'})
 	end
-      | SOME id => (id, assoc)
+      | SOME id => (D.printDebug D.BLANK D.TEMP (fn _ => "Found \"" ^ str ^ "\" in association map.");
+		    (id, assoc))
 
 (** Finds an identifier given an integer in the binary tree. *)
 fun lookupId id {assocId, assocSt} = IS.find (assocId, id)

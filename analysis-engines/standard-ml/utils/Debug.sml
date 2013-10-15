@@ -33,10 +33,11 @@ structure Debug :> DEBUG = struct
  * \arg \b RUN. For debugging in RunSlicer.sml
  * \arg \b ENV. For debugging in Env.sml
  * \arg \b TEST. For debugging in Tester.sml
+ * \arg \b MIN. For debugging in Minimisation.sml
  * \arg \b LEXER. For debugging in ML.lex
  * \arg \b PARSER. For debugging in Parser.sml
  * \arg \b BLANK. For when a filename is not to be printed. *)
-datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER | LEXER | BLANK
+datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST | PARSER | LEXER | BLANK | MIN
 
 (** Represents the file that debugging is taking place in.
  * Constructors include:
@@ -50,11 +51,12 @@ datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST 
  * \arg \b PARSING. For debugging parser.
  * \arg \b STATE. Debugging information for the state (unifiers).
  * \arg \b PROGRAM_LABLELLING. Outputs a labelled program in latex format.
+ * \arg \b MINIMISATION. Prints out minimisation information.
  * \arg \b BASIS_LABELLING. Gives a labelled basis output in latex to
  *  file specified in environment variable $SKALPEL_LABELLED_BASIS.
  * \arg \b TEMP. For debugging of temporary values. Debug statements
  *  with these values should \b not exist for long. *)
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP | MINIMISATION
 
 (* used to generate random colors for brackets of labelled program output *)
 (* val rand = Random.rand (0,6) *)
@@ -102,6 +104,9 @@ val debugTemp                 : bool ref = ref false
 (** A boolean enabled to view equality type debug statements. *)
 val debugEqualityTypes        : bool ref = ref false
 
+(** A boolean enabled to view minimisation debug statements. *)
+val debugMinimisation         : bool ref = ref false
+
 (** A boolean enabled to view constraint path debug statements. *)
 val debugConstraintPath       : bool ref = ref false
 
@@ -140,8 +145,9 @@ fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature PARSING = debugParsing := true
   | enableDebugFeature TESTING = debugTesting := true
   | enableDebugFeature STATE = debugState     := true
-  | enableDebugFeature PROGRAM_LABELLING = debugProgramLabelling     := true
-  | enableDebugFeature BASIS_LABELLING   = debugBasisLabelling       := true
+  | enableDebugFeature PROGRAM_LABELLING = debugProgramLabelling := true
+  | enableDebugFeature BASIS_LABELLING   = debugBasisLabelling   := true
+  | enableDebugFeature MINIMISATION      = debugMinimisation     := true
 
 (** Given a constructor of #debugFiles, prints the filename it stands to represent. *)
 fun printFilename JSON   = "JsonParser.sml"
@@ -155,7 +161,8 @@ fun printFilename JSON   = "JsonParser.sml"
   | printFilename TEST   = "Tester.sml"
   | printFilename LEXER  = "ML.lex"
   | printFilename PARSER = "Parser.sml"
-  | printFilename BLANK = ""
+  | printFilename MIN    = "Minimisation.sml"
+  | printFilename BLANK  = ""
 
 (** Prints out a debug statement.
  * \param file. A #debugFiles constructor.
@@ -168,6 +175,8 @@ fun printFilename JSON   = "JsonParser.sml"
  *  Note that when printing the state we only do it once, otherwise it would take terribly long to debug anything. *)
 fun printDebug file EQUALITY_TYPES stringFunction =
     if (!debug) andalso (!debugEqualityTypes) then print ("(EQUALITY_TYPES) "^printFilename file^": " ^ (stringFunction ()) ^ !textReset ^ "\n") else ()
+  | printDebug file MINIMISATION stringFunction =
+    if (!debug) andalso (!debugConstraintGeneration) then print ("(MINIMISATION) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n") else ()
   | printDebug file CONSTRAINT_GENERATION stringFunction =
     if (!debug) andalso (!debugConstraintGeneration) then print ("(CONSTRAINT_GENERATION) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n") else ()
   | printDebug file TEMP stringFunction =
@@ -208,7 +217,7 @@ fun printDebug file EQUALITY_TYPES stringFunction =
 	end
     else ()
   | printDebug file STATE stringFunction =
-    if (!debug) andalso (!debugState) then (print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n"); debugState := false)  else ()
+    if (!debug) andalso (!debugState) then (print ("(STATE) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n") (*; debugState := false *))  else ()
 
 (** Prints a labelled program string in a random color. *)
 fun printLabelledProgramString(x) =

@@ -128,12 +128,13 @@ fun minfilter x xs = x :: xs
 
 fun minone errs err envcss timer (parse as (ast, _, _)) filter =
     if ERR.alreadyone errs err
-    then (D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true ^ "\n" ^
-		 L.toString (FI.filtertodos (FI.cons filter NONE) (ERR.getL err)));
-	  app (fn err => D.printdebug2 (ERR.printOneXmlErr err "" true))
-	      (ERR.setSlices ast errs);
-	  raise EH.DeadBranch "";
-	  (L.empty, SOME err, errs))
+    then ((* D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true ^ "\n" ^ *)
+    	  (* 	 L.toString (FI.filtertodos (FI.cons filter NONE) (ERR.getL err))); *)
+    	  (* app (fn err => D.printdebug2 (ERR.printOneXmlErr err "" true)) *)
+    	  (*     (ERR.setSlices ast errs); *)
+    	  (* raise EH.DeadBranch "DeadBranch78"; *)
+	  (L.empty, NONE, errs)
+    	  (* (L.empty, SOME err, errs) *))
     (* should we return labs (in err) only for the first one? *)
     else let (*val _ = D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true)*)
              (*val _ = raise EH.DeadBranch ""*)
@@ -145,12 +146,12 @@ fun minone errs err envcss timer (parse as (ast, _, _)) filter =
 	     val labs = ERR.getL err3
 	     val outs = L.diff (FI.filtertodos (FI.cons NONE filter) labs) labs
 	     val _    = if L.isEmpty outs
-			then ()
-			else (D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err3) "" true ^ "\n" ^
-					     FI.toString (FI.cons NONE filter) ^ "\n" ^
-					     L.toString labs ^ "\n" ^
-					     L.toString outs);
-			      raise EH.DeadBranch "")
+	     		then ()
+	     		else (D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err3) "" true ^ "\n" ^
+	     				     FI.toString (FI.cons NONE filter) ^ "\n" ^
+	     				     L.toString labs ^ "\n" ^
+	     				     L.toString outs);
+	     		      raise EH.DeadBranch "DeadBranch79")
 	     val (newerr, errs') = ERR.mindone errs err3
 	 (*val _ = D.printdebug2 (case newerr of NONE => raise EH.DeadBranch ""
 					       | SOME err => ERR.printOneErr err "")*)

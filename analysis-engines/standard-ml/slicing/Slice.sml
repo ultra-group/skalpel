@@ -5310,8 +5310,8 @@ fun slice prog labels =
 	    then
 		let
 		    val slell = sl_sl_labexplist (el @ [e]) (L.delete l ll)
-		    val sle   = List.hd (List.rev slell) handle Empty => raise EH.DeadBranch ""
-		    val slel  = List.tl (List.rev slell) handle Empty => raise EH.DeadBranch ""
+		    val sle   = List.hd (List.rev slell) handle Empty => raise EH.DeadBranch "DeadBranch81"
+		    val slel  = List.tl (List.rev slell) handle Empty => raise EH.DeadBranch "DeadBranch82"
 		in A.SeqExpSl (flattenLabExp slel, sle, r, l, n)
 		end
 	    else A.SeqExpDots (flattenLabExp (sl_labexplist (el @ [e]) ll))
@@ -5982,7 +5982,7 @@ fun slice prog labels =
 	and sl_strdecone (A.StrDecOneDec d) ll =
 	    (case sl_decs d ll of
 		 A.DecsDots pl => A.StrDecOneDots pl
-	       | _               => raise EH.DeadBranch "") (* a decs returns only dots *)
+	       | _               => raise EH.DeadBranch "DeadBranch83") (* a decs returns only dots *)
 	  | sl_strdecone (A.StrDecOneStr (sb, r, n)) ll =
 	    (case sl_strbind sb ll of
 		 A.StrBindDots x => A.StrDecOneDots x

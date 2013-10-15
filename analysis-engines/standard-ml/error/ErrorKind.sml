@@ -126,6 +126,7 @@ datatype kind = Circularity
 	      | ConsNArgApp    of label * label
 	      | MissConsSig    of (label * id) * (label * id) list
 	      | MissConsStr    of (label * id) * (label * id) list
+	      | DuplicateId    of iderr * iderr
 	      | MultiOcc       of synerr
 	      | ValVarApp      of synerr
 	      | ExcIsVar       of synerr
@@ -268,7 +269,7 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
 	then case ll3 of
 		 [] => ""
 	       | _ => " (shared fields: " ^ printFields ll3 ^ ") "
-	else raise EH.DeadBranch ""))
+	else raise EH.DeadBranch "DeadBranch42"))
   | printErrKind (Unmatched ((l, n), ls, _)) asc =
     ("UNM",
      "Unmatched specification "
@@ -311,6 +312,11 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
      ^ getSt id1 asc
      ^ "'s type has been replaced by a type that is not a type name"
      ^ " and therefore cannot be replaced again")
+  | printErrKind (DuplicateId ((lab1, id1), (lab2, id2))) asc =
+    ("DID",
+     "The identifier '"
+     ^ getSt id1 asc
+     ^ "' is defined more than once in a signature.")
   | printErrKind (IllFormedWhere ((lab1, id1), (lab2, id2))) asc =
     ("NFW",
      "The identifier "
@@ -461,6 +467,10 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
     "ErrorKind.ConsArgNApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
   | printSmlErrKind (ConsNArgApp (l1, l2)) =
     "ErrorKind.ConsNArgApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+  | printSmlErrKind (DuplicateId ((lab1, id1), (lab2, id2))) =
+    "ErrorKind.DuplicateId(" ^
+    "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
+    "(" ^ printLab lab2 ^ "," ^ Int.toString id2 ^ "))"
   | printSmlErrKind (NonFlexWhere ((lab1, id1), (lab2, id2))) =
     "ErrorKind.NonFlexWhere(" ^
     "(" ^ printLab lab1 ^ "," ^ Int.toString id1 ^ ")," ^
@@ -573,6 +583,10 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
     "{\"errorKindName\": \"ErrorKind.NonFlexWhere\", \"errorKindInfo\": {"
     ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
     ^ ", \"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
+  | printJsonErrKind (DuplicateId ((lab1, id1), (lab2, id2))) =
+    "{\"errorKindName\": \"ErrorKind.DuplicateId\", \"errorKindInfo\": {"
+    ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
+    ^ ", \"iderr2Label\": " ^ printLab lab2 ^ ", \"iderr2Id\": " ^ Int.toString id2 ^ "}}"
   | printJsonErrKind (IllFormedWhere ((lab1, id1), (lab2, id2))) =
     "{\"errorKindName\": \"ErrorKind.IllFormedWhere\", \"errorKindInfo\": {"
     ^ "\"iderr1Label\": " ^ printLab lab1 ^ ", \"iderr1Id\": " ^ Int.toString id1
@@ -606,6 +620,7 @@ fun issem Circularity        = true
   | issem (OverloadIdCst  _) = true
   | issem (Unmatched      _) = true (* we can't never find a smaller one though *)
   | issem (UnbWhere       _) = true (* same as unmachted *)
+  | issem (DuplicateId    _) = true
   | issem (MissConsSig    _) = true
   | issem (MissConsStr    _) = true
   | issem (ArityClash     _) = true

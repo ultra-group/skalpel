@@ -587,7 +587,7 @@ fun inclExtRegList [] _ = true
   | inclExtRegList (r' :: rs) r = R.inclReg (getReg r') r andalso inclExtRegList rs r
 
 (* returns the biggest column from a list of extended regions *)
-fun getEndExtRegList [] = raise EH.DeadBranch ""
+fun getEndExtRegList [] = raise EH.DeadBranch "DeadBranch54"
   | getEndExtRegList [x] = R.getPosCol (R.getTo (getReg x))
   | getEndExtRegList (x :: xs) =
     let val c1 = R.getPosCol (R.getTo (getReg x))
@@ -753,7 +753,7 @@ fun simplify rl bmerge = (* bmerge is true if we want to merge regions *)
 	    then x :: (f t xs)
 	    else (*if R.inclReg (getReg x) r
 	    then (*(N (r, c, w, treatTree (x :: tl))) ::*) xss  (* Hack for infix operators - to fix *)
-	    else*) (print (R.printRegList [r, getReg x]); raise EH.DeadBranch "")
+	    else*) (print (R.printRegList [r, getReg x]); raise EH.DeadBranch "DeadBranch55")
 	  | f (t as (H (r, c, w))) (xss as (x :: xs)) =
 	    if R.infReg r (getReg x)
 	    then t :: xss
@@ -763,20 +763,20 @@ fun simplify rl bmerge = (* bmerge is true if we want to merge regions *)
 	    then (pushBar (getReg x) r c (getWeight x) w) @ xs
 	    else ((* Debug.printdebug2 (q`^(% r) ^(% (getReg x))`); *)
 		  Debug.printdebug2 (R.printReg r ^ " " ^ R.printReg (getReg x));
-		  (*f x xs*) raise EH.DeadBranch "")
+		  (*f x xs*) raise EH.DeadBranch "DeadBranch56")
 	  (*else (Debug.printdebug2 ((printExtReg x "") ^ "\n"); raise EH.DeadBranch "")*)
 	  | f (t as (L (r, c, w))) (xss as ((t' as (H (r', c', w'))) :: xs)) =
 	    if R.strictInfReg r r'
 	    then t :: xss
 	    else if R.infReg r' r
 	    then t' :: (f t xs)
-	    else raise EH.DeadBranch ""
+	    else raise EH.DeadBranch "DeadBranch57"
 	  | f (t as (L (r, c, w))) (xss as ((t' as (N (r', c', w', tl'))) :: xs)) =
 	    if R.strictInfReg r r'
 	    then t :: xss
 	    else if R.strictInfReg r' r
 	    then t' :: (f t xs)
-	    else raise EH.DeadBranch ""
+	    else raise EH.DeadBranch "DeadBranch58"
 	  | f (t as (L (r, Red,    w))) ((t' as (L (r', Red,    w'))) :: xs) = sameSame  t t' r r' xs Red    w w' f bmerge
 	  | f (t as (L (r, Orange, w))) ((t' as (L (r', Orange, w'))) :: xs) = sameSame  t t' r r' xs Orange w w' f bmerge
 	  | f (t as (L (r, Blue,   w))) ((t' as (L (r', Blue,   w'))) :: xs) = sameSame  t t' r r' xs Blue   w w' f bmerge
@@ -805,8 +805,8 @@ fun simplify rl bmerge = (* bmerge is true if we want to merge regions *)
 	  | f (t as (L (r, Blue,   w))) ((t' as (L (r', Green,  w'))) :: xs) = notEndEnd t t' r r' xs Blue   Green  w w' f (* this should not happen - DeadBranch? *)
 	  | f (t as (L (r, Green,  w))) ((t' as (L (r', Blue,   w'))) :: xs) = notEndEnd t t' r r' xs Green  Blue   w w' f (* this should not happen - DeadBranch? *)
 	  | f (t as (L (r, Green,  w))) ((t' as (L (r', Purple, w'))) :: xs) = notEndEnd t t' r r' xs Green  Purple w w' f (* this should not happen - DeadBranch? *)
-	  | f (L (_, Yellow, _)) _        = raise EH.DeadBranch ""
-	  | f _ ((L (_, Yellow, _)) :: _) = raise EH.DeadBranch ""
+	  | f (L (_, Yellow, _)) _        = raise EH.DeadBranch "DeadBranch59"
+	  | f _ ((L (_, Yellow, _)) :: _) = raise EH.DeadBranch "DeadBranch60"
 	and treatTree xs = foldl (fn (a, b) => f a b) [] xs
 	fun treatRegs [] = []
 	  | treatRegs ((file, regs) :: xs) =
@@ -819,16 +819,17 @@ fun getCol' _ EK.Circularity                      = Red
   | getCol' _ (EK.MultiOcc   _)                   = Red
   | getCol' _ (EK.ValVarApp  _)                   = Red
   | getCol' _ (EK.ExcIsVar   _)                   = Red
+  | getCol' _ (EK.DuplicateId _)                  = Red
   | getCol' _ (EK.ExcIsDat   _)                   = Red
   | getCol' _ (EK.ConIsVar   _)                   = Red
   | getCol' _ (EK.DatIsExc   _)                   = Red
-  | getCol' _ (EK.TypeVarBind  _)                   = Red
+  | getCol' _ (EK.TypeVarBind  _)                 = Red
   | getCol' _ EK.RigidWhere                       = Red
   | getCol' _ EK.Inclusion                        = Red
   | getCol' _ EK.AppNotApp                        = Red
   | getCol' _ EK.DiffFunName                      = Red
   | getCol' _ EK.DiffNbArgFun                     = Red
-  | getCol' _ EK.FreeTypeVarTop                     = Red
+  | getCol' _ EK.FreeTypeVarTop                   = Red
   | getCol' _ EK.AsPatVar                         = Red
   | getCol' _ EK.FnRecExp                         = Red
   | getCol' _ EK.RealInPat                        = Red
@@ -933,7 +934,7 @@ fun highlightEmptyUnmatched regs l ((EK.Unmatched (_, ls, lab)), _) =
        andalso lab <> (L.toInt L.dummyLab) (* when lab is not useful, it can be dummy *)
     then let val (r1, r2) = case regs of
 				[r1, r2] => (r1, r2)
-			      | _ => raise EH.DeadBranch ""
+			      | _ => raise EH.DeadBranch "DeadBranch61"
 	     val r = R.consReg (R.upPos (R.getTo r1)) (R.downPos (R.getFrom r2))
 	 in [L (r, Purple, 1)]
 	 end
@@ -944,7 +945,7 @@ fun highlightEmptyUnmatched regs l ((EK.Unmatched (_, ls, lab)), _) =
        andalso lab <> (L.toInt L.dummyLab) (* when lab is not useful, it can be dummy *)
     then let val (r1, r2) = case regs of
 				[r1, r2] => (r1, r2)
-			      | _ => raise EH.DeadBranch ""
+			      | _ => raise EH.DeadBranch "DeadBranch62"
 	     val r = R.consReg (R.upPos (R.getTo r1)) (R.downPos (R.getFrom r2))
 	 in [L (r, Purple, 1)]
 	 end
@@ -994,7 +995,7 @@ fun trickTyCon reg regl =
     in cons regs1 regs2
     end*)
 
-fun createRegsComponentsTuple [] = raise EH.DeadBranch ""
+fun createRegsComponentsTuple [] = raise EH.DeadBranch "DeadBranch63"
   | createRegsComponentsTuple [r] = []
   | createRegsComponentsTuple (r1 :: r2 :: rs) =
     let val posF = R.upPos (R.getTo r1)
@@ -1755,7 +1756,7 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
 
 and getpos_typeRow (A.TypeRowOne (ty, rs, l, _)) ll =
     let val gpp = getpos_type ty ll
-	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "" (*trickTyCon r gpp*)
+	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "DeadBranch64" (*trickTyCon r gpp*)
 	(*val gpp' = splitRegsToPushInN rs gpp (getCol l ll) 1*)
     in (*gpp'*) [N (r', getCol l ll, 1, gpp)]
     end
@@ -2006,7 +2007,7 @@ and getpos_labtyclass (A.LabTyClass (t, rl, l, _)) ll =
 
 and getpos_tyclassseq (A.TyClassSeqOne (ty, rs, l, _)) ll =
     let val gpp = getpos_tyclass ty ll
-	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch ""
+	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "DeadBranch65"
     in [N (r', getCol l ll, 1, gpp)]
     end
   | getpos_tyclassseq (A.TyClassSeqEm (r, l, _))       ll = [H (r, getCol l ll, 1)]
@@ -2100,7 +2101,7 @@ and getpos_labexplist [] _         _ = []
 	val fgpp = fn y => getpos_labexplist el ll y
     in case x of
 	   NONE => gp @ (fgpp x)
-	 | SOME ([], _, _) => raise EH.DeadBranch ""
+	 | SOME ([], _, _) => raise EH.DeadBranch "DeadBranch66"
 	 | SOME (r :: rs, n, l) =>
 	   (highlightTupleInRecClash r gp n l ll 1) @ (fgpp (SOME (rs, n + 1, l)))
     end
@@ -2299,7 +2300,7 @@ and getpos_labpatlist []        _  _ = []
 	val fgpp = fn y => getpos_labpatlist pl ll y
     in case x of
 	   NONE => gp @ (fgpp x)
-	 | SOME ([], _, _) => raise EH.DeadBranch ""
+	 | SOME ([], _, _) => raise EH.DeadBranch "DeadBranch67"
 	 | SOME (r :: rs, n, l) =>
 	   (highlightTupleInRecClash r gp n l ll 1) @ (fgpp (SOME (rs, n + 1, l)))
     end
@@ -2347,7 +2348,7 @@ and getpos_patfield (A.PatField (tl, p, r, rl, l, _)) ll   =
 
 and getpos_patfieldlist xs ll = foldr (fn (x, y) => (getpos_patfield x ll) @ y) [] xs
 
-and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch ""
+and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch "68"
   | getpos_atpat (A.AtPatId id) ll                      = getpos_longid id ll
   | getpos_atpat (A.AtPatScon sc) ll                    = getpos_scon sc ll
   | getpos_atpat (A.AtPatTuple (pal, rl, l, _))      ll =

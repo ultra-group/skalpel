@@ -527,8 +527,8 @@ fun generateConstraints' prog pack nenv =
 	     | f_sigid A.SigIdDots = (E.freshEnvVar (), E.emptyConstraint)
 
 	   (* RETURNS: (Env.envvar, Env.sigenv, Env.cst) *)
-	   and f_sigidbind (A.SigId (s, v, _, lab, _)) =
-	       (D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigId (f_sigidbind function)");
+	   and f_sigidbind (A.SigId (s, v, _, lab, _)) indent =
+	       (D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SigId (f_sigidbind function)");
 	       if String.isPrefix "_" s
 	       then (E.freshEnvVar (), E.emsig, E.emptyConstraint)
 	       else let val ev1  = E.freshEnvVar ()
@@ -541,7 +541,7 @@ fun generateConstraints' prog pack nenv =
 			val c    = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
 		    in (ev1, sigs, E.singleConstraint (lab, c))
 		    end)
-	     | f_sigidbind A.SigIdDots = (E.freshEnvVar (), E.emsig, E.emptyConstraint)
+	     | f_sigidbind A.SigIdDots _ = (E.freshEnvVar (), E.emsig, E.emptyConstraint)
 
 	   (*
 	    * f_longidexp
@@ -1320,7 +1320,6 @@ fun generateConstraints' prog pack nenv =
 		   val c4 =  E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVar2) (T.consEQUALITY_TYPE_VAR eqTypeVar) lab
 
 
-		   val _ = D.printDebug D.AZE D.TEMP (fn _ => (#red (!D.colors))^"Constraint interested in: "^(E.printOneConstraint c1)^". cst1 ="^(E.printConstraints cst1))
 		   val (c1, c2) = case (E.getConstraintItems cst1) of
 				      [[E.ROW_CONSTRAINT((_,T.ROW_C([],_,_)),_,_,_)]] =>
 				      (D.printDebug D.AZE D.TEMP (fn _ => (#red (!D.colors))^"Detected type with no arguments!");
@@ -3178,8 +3177,6 @@ fun generateConstraints' prog pack nenv =
 		   val c2   = E.initEnvConstraint (E.consENV_VAR ev2 lab) (E.consENV_VAR ev1 lab) lab
 		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(L.dummyLab, c1) (E.singleConstraint (lab, c2)))
 		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR ev2 lab) lab))
-		   (*val _ = D.printdebug2 (L.printLab lab)*)
-		   (*val _ = D.printdebug2 (E.printEnv env "")*)
 	       in (env2, css)
 	       end
 	     | f_specone indent (A.SpecInc (labsigexp, _, lab, _)) =
@@ -3187,10 +3184,11 @@ fun generateConstraints' prog pack nenv =
 		   val (ev, cst, css) = f_labsigexp indent labsigexp
 		   val ev'  = E.freshEnvVar ()
 		   val c    = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
-		   val env1 = E.CONSTRAINT_ENV (E.consConstraint(lab, c) cst)
+		   val duplicateId = E.initEnvConstraint E.NO_DUPLICATE_ID (E.consENV_VAR ev' lab) lab
+		   val env1 = E.CONSTRAINT_ENV (E.consConstraint (lab,duplicateId) (E.consConstraint(lab, c) cst))
 		   val env2 = E.ROW_ENV (env1, E.ENVDEP (EL.initExtLab (E.consENV_VAR ev' lab) lab))
 		   val css' = E.emptyContextSensitiveSyntaxError
-		   val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "Generated the following constraint for an include spec:\n" ^ (E.printOneConstraint c))
+		   val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "Generated the following constraint for an include spec:\n" ^ (E.printOneConstraint duplicateId))
 	       in (env2, css')
 	       end
 	     (* Can multiple signature can be included at a time, perhaps in some extension? *)
@@ -3575,11 +3573,16 @@ fun generateConstraints' prog pack nenv =
 	       in (ev, E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.emptyContextSensitiveSyntaxError)
 	       end
 
-	   (* RETURNS: (Env.envvar, Env.cst, Env.css) *)
+	   (** A signature expression, which can be one of three forms.
+	    * \arg #AstSML.SigExpBasic.
+	    * \arg #AstSML.SigExpID.
+	    * \arg #AstSML.SigExpRea.
+	    * \returns (Env.envvar, Env.cst, Env.css) *)
 	   and f_sigexp indent (A.SigExpBasic (spec, _, lab, _)) =
 	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SigExpBasic")
 		   val indent = convertIndentToSpaces indent
 		   val (env, css) = f_spec indent spec (* we don't modify indent information here, it's done later as spec is a list *)
+		   val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "f_spec constraints: " ^ E.printEnv env "")
 		   val env = E.updateILab lab env
 		   val ev1 = E.freshEnvVar ()
 		   val ev2 = E.freshEnvVar ()
@@ -3597,7 +3600,8 @@ fun generateConstraints' prog pack nenv =
 		    * type parts of the specification, so we need to be able to go
 		    * through the specifications' constraints.  *)
 		   val c2  = E.initEnvConstraint (E.consENV_VAR ev2 lab) (E.consENV_VAR ev1 lab) lab
-	       in (ev2, E.consConstraint(L.dummyLab, c1) (E.singleConstraint (lab, c2)), css)
+		   val duplicateId = E.initEnvConstraint E.NO_DUPLICATE_ID env lab
+	       in (ev2, E.consConstraint (lab, duplicateId) (E.consConstraint(L.dummyLab, c1) (E.singleConstraint (lab, c2))), css)
 	       end
 	     | f_sigexp indent (A.SigExpId (sigid, lab, _)) =
 	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.StrExpId")
@@ -3606,19 +3610,6 @@ fun generateConstraints' prog pack nenv =
 		   val c   = E.initEnvConstraint (E.consENV_VAR ev' lab) (E.consENV_VAR ev lab) lab
 	       in (ev', E.consConstraint(lab, c) cst, E.emptyContextSensitiveSyntaxError)
 	       end
-	     (*| f_sigexp (A.SigExpRea (labsigexp, rea, _, lab, _)) =
-	       let val (ev1, cst1, css1) = f_labsigexp labsigexp
-		   (*(2010-07-07)We shouldn't do that for the where clauses as they are in fact
-		    * rows of where clauses and here we treat them as a bloc without any
-		    * precedence, which is going to pose problem at constraint solving. *)
-		   val (env2, cst2, css2) = f_ltreadesc rea
-		   val ev  = E.freshEnvVar ()
-		   val ev' = E.freshEnvVar ()
-		   val c1  = E.initEnvConstraint (E.consENV_VAR ev lab) (E.ROW_ENV (E.CONSTRAINT_ENV cst2, env2)) lab
-		   val c2  = E.SIGNATURE_CONSTRAINT (ev1, SOME ev', ev, NONE, lab, E.WHR)
-		   val env = E.ROW_ENV (E.CONSTRAINT_ENV (E.consConstraint(lab, c1) cst1), E.CONSTRAINT_ENV (E.singleConstraint (lab, c2)))
-	       in (ev', E.singleConstraint (L.dummyLab, E.LET_CONSTRAINT env), E.unionContextSensitiveSyntaxErrors [css1, css2])
-	       end*)
 	     | f_sigexp indent (A.SigExpRea (labsigexp, rea, _, lab, _)) =
 	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigExpRea")
 		   val (ev1, cst1, css1) = f_labsigexp indent labsigexp
@@ -3641,11 +3632,12 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.sigenv, Env.cst, Env.css) *)
 	   and f_sigbindone indent (A.SigBindOne (sigid, labsigexp, _, lab, _)) =
-	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigBindOne")
-		   val (ev1, sigs, cst1) = f_sigidbind sigid
-		   val (ev2, cst2, css2) = f_labsigexp indent labsigexp
-		   val c = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
-	       in (sigs, E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2]), css2)
+	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SigBindOne")
+		   val indent = convertIndentToSpaces indent
+		   val (ev1, sigs, cst1) = f_sigidbind sigid (indent^(indent^SS.verticalFork^SS.straightLine))
+		   val (ev2, cst2, css2) = f_labsigexp (indent^(indent^SS.bottomLeftCurve^SS.straightLine)) labsigexp
+		   val c  = E.initEnvConstraint (E.consENV_VAR ev1 lab) (E.consENV_VAR ev2 lab) lab
+	       in (sigs, (E.consConstraint(lab, c) (E.unionConstraintsList [cst1, cst2])), css2)
 	       end
 	     | f_sigbindone indent (A.SigBindOneDots pl) =
 	       let val env = f_partlist pl
@@ -3654,7 +3646,8 @@ fun generateConstraints' prog pack nenv =
 
 	   (* RETURNS: (Env.sigenv, Env.cst, Env.css) *)
 	   and f_sigbind indent (A.SigBind (sigbinds, _, _)) =
-	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SigBind")
+	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SigBind")
+		   val indent = convertIndentToSpaces indent
 		   val (sigss, csts, csss) = unzipThree (map (f_sigbindone indent) sigbinds)
 		   val sigs = E.unionEnvList sigss
 		   val cst  = E.unionConstraintsList csts

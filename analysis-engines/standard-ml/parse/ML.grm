@@ -55,8 +55,8 @@ fun createId st left right n ascid =
 
 fun explodeIdGen st ascid n beg f1 f2 f3 =
     let val tks = List.rev (String.tokens (fn #"." => true | _ => false) st)
-	val id  = List.hd tks handle Empty => raise EH.DeadBranch ""
-	val idl = List.rev (List.tl tks) handle Empty => raise EH.DeadBranch ""
+	val id  = List.hd tks handle Empty => raise EH.DeadBranch "DeadBranch89"
+	val idl = List.rev (List.tl tks) handle Empty => raise EH.DeadBranch "DeadBranch90"
 	fun create [] n asc beg =
 	    let val (c, l) = beg
 		val reg = R.consReg beg (c, l + (String.size id) - 1)
@@ -1457,7 +1457,7 @@ scon :
 	let val reg = R.consReg CHARleft CHARright
 	    val (v, masc) = updateAscId "Char" nasc
 	    val st  = String.substring (CHAR, 2, (String.size CHAR) - 3)
-		handle Subscript => raise EH.DeadBranch ""
+		handle Subscript => raise EH.DeadBranch "DeadBranch91"
 	in (A.SconChar (CHAR, v, reg, n, L.nextLabel n), (L.nextLabel n, masc))
 	end)
 
@@ -1774,21 +1774,21 @@ tupty :
     (fn (n, asc) =>
 	let val (ct, rl, sr) = typetuple
 	in case ct of
-	       []   => raise EH.DeadBranch ""
+	       []   => raise EH.DeadBranch "DeadBranch92"
 	     | [ty] => ty (n, asc)
 	     | _    =>
 	       let
-		   fun reorderreg []             = raise EH.DeadBranch ""
+		   fun reorderreg []             = raise EH.DeadBranch "DeadBranch93"
 		     | reorderreg [x]            = [x]
 		     | reorderreg (x :: y :: xs) = (x @ y) :: (reorderreg xs)
-		   val rl' = case rl of [] => raise EH.DeadBranch "" | (x :: xs) => x :: (reorderreg xs)
+		   val rl' = case rl of [] => raise EH.DeadBranch "DeadBranch94" | (x :: xs) => x :: (reorderreg xs)
 		   fun labct ((ct, rs), (ctl, n, asc)) =
 		       let
 			   val (t, (m, asc')) = ct (L.nextLabel n, asc)
 		       in ((A.LabType (t, rs, n, m)) :: ctl, m, asc')
 		       end
 		   val (ctl, m, asc') = foldl labct ([], L.nextLabel n, asc) (ListPair.zip (ct, rl'))
-		       handle UnequalLengths => raise EH.DeadBranch ""
+		       handle UnequalLengths => raise EH.DeadBranch "DeadBranch95"
 	       in (A.TypeTuple (List.rev ctl, sr, n, m), (m, asc'))
 	       end
 	end)
@@ -2193,7 +2193,7 @@ labatpats :
 fmatch :
   labatpats
     (fn nasc =>
-	let fun cons masc [] = raise EH.DeadBranch ""
+	let fun cons masc [] = raise EH.DeadBranch "DeadBranch96"
 	      | cons (m, masc) [(labatpat, from, to)] =
 		let val (labatpat, (p, pasc)) = labatpat (m, masc)
 		    val reg = R.consReg from to
@@ -2243,7 +2243,7 @@ fmatch :
 				     val fmatchapp = A.FMatchApp (fmatchid, labatpat, [], rpat, m, r)
 				 in (fmatchapp, (r, rasc), to2)
 				 end
-			       | _ => raise EH.DeadBranch ""
+			       | _ => raise EH.DeadBranch "DeadBranch97"
 			  end
 		     else cons' (m, masc) (List.rev labatpats)
 		   | _ => cons' (m, masc) (List.rev labatpats))
@@ -2465,12 +2465,12 @@ dec :
 d_opt :
   INT
     (Option.valOf (Int.fromString INT)
-     handle Option   => raise EH.DeadBranch ""
-	  | Overflow => raise EH.DeadBranch "")
+     handle Option   => raise EH.DeadBranch "DeadBranch98"
+	  | Overflow => raise EH.DeadBranch "DeadBranch99")
 | NUM
     (Option.valOf (Int.fromString NUM)
-     handle Option   => raise EH.DeadBranch ""
-	  | Overflow => raise EH.DeadBranch "")
+     handle Option   => raise EH.DeadBranch "DeadBranch100"
+	  | Overflow => raise EH.DeadBranch "DeadBranch101")
 |   (0)
 
 dec' :
@@ -2718,8 +2718,8 @@ seqexp :
     (fn (n, asc) =>
 	let val ((ell', rs, r), (m, asc')) = labexpseq (L.nextLabel n, asc)
 	    val ell  = fn rl => fn rr => ell' rl rr
-	    val e    = fn rr => List.hd (List.rev (ell [] rr)) handle Empty => raise EH.DeadBranch ""
-	    val el   = fn rl => List.rev (List.tl (List.rev (ell rl []))) handle Empty => raise EH.DeadBranch ""
+	    val e    = fn rr => List.hd (List.rev (ell [] rr)) handle Empty => raise EH.DeadBranch "DeadBranch102"
+	    val el   = fn rl => List.rev (List.tl (List.rev (ell rl []))) handle Empty => raise EH.DeadBranch "DeadBranch103"
 	in (fn rl => fn rr => A.SeqExp (el rl, e rr, r, rs, n, m), (m, asc'))
 	end)
 
@@ -2956,7 +2956,7 @@ infexp :
 	    	let val (e, (m, masc)) = exp (L.nextLabel n, nasc)
 		in (fn rs => A.LabExp (e, rs, [reg], n, m), (m, masc))
 		end
-	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch ""
+	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch "DeadBranch104"
 	      | cons2 (F.N ((st, r), t1, t2)) (n, nasc) =
 		let val (e, (m, masc)) = cons1 (F.N ((st, r), t1, t2)) (L.nextLabel n, nasc)
 		    val rl = getRegion (R.getFrom (F.getLeft t1)) (R.getTo (F.getRight t2))
@@ -2964,7 +2964,7 @@ infexp :
 		end
 
 	    and cons1 (F.L (exp, reg)) nasc = exp nasc
-	      | cons1 (F.O _) _ = raise EH.DeadBranch ""
+	      | cons1 (F.O _) _ = raise EH.DeadBranch "DeadBranch105"
 	      | cons1 (F.N ((st, r), t1, t2)) (n, nasc) =
 		let val (v, masc) = updateAscId st nasc
 		    val (e1, (n1, asc1)) = cons2 t1 (L.nextLabel n, masc)
@@ -2985,7 +2985,7 @@ infexp :
 		end
 	      | toAtExp (F.N _) _ = raise EH.DeadBranch "there should be no node at this stage yet"
 
-	    fun toApp [] nasc = raise EH.DeadBranch ""
+	    fun toApp [] nasc = raise EH.DeadBranch "DeadBranch106"
 	      | toApp [atexp] nasc =
 		let val (ae, masc, reg) = atexp nasc
 		in (A.ExpAtExp ae, masc, reg)
@@ -3339,7 +3339,7 @@ infpat :
 	    	let val (p, (m, masc)) = pat (L.nextLabel n, nasc)
 		in (fn rs => A.LabPat (p, rs, [reg], n, m), (m, masc))
 		end
-	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch ""
+	      | cons2 (F.O (st, r)) nasc = raise EH.DeadBranch "DeadBranch107"
 	      | cons2 (F.N ((st, r), t1, t2)) (n, nasc) =
 		let val (p, (m, masc)) = cons1 (F.N ((st, r), t1, t2)) (L.nextLabel n, nasc)
 		    val rl = getRegion (R.getFrom (F.getLeft t1)) (R.getTo (F.getRight t2))
@@ -3347,7 +3347,7 @@ infpat :
 		end
 
 	    and cons1 (F.L (pat, reg)) nasc = pat nasc
-	      | cons1 (F.O _) _ = raise EH.DeadBranch ""
+	      | cons1 (F.O _) _ = raise EH.DeadBranch "DeadBranch108"
 	      | cons1 (F.N ((st, r), t1, t2)) (n, nasc) =
 		let val (v, masc) = updateAscId st nasc
 		    val (p1, (n1, asc1)) = cons2 t1 (L.nextLabel n, masc)
@@ -3368,7 +3368,7 @@ infpat :
 		end
 	      | toAtPat (F.N _) _ = raise EH.DeadBranch "there should be no node at this stage yet"
 
-	    fun toApp [] nasc = raise EH.DeadBranch ""
+	    fun toApp [] nasc = raise EH.DeadBranch "DeadBranch109"
 	      | toApp [atpat] nasc =
 		let val (ap, masc, reg) = atpat nasc
 		in (A.PatAtPat ap, masc, reg)

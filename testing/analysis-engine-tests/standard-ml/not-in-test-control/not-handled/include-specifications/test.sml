@@ -4,11 +4,9 @@
 
 
 signature S = sig
-    type a
+    type a = int
+    type a = bool
+    type b = string
+    type c = bool and a = int
+    eqtype z
 end
-
-signature S2 = sig
-    type a
-    include S
-end
-

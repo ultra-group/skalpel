@@ -36,6 +36,7 @@ signature DEBUG = sig
 			| PARSER
 			| BLANK
 			| LEXER
+			| MIN
 
     val debugProgramLabelling : bool ref
     val oneRunOnly : bool ref
@@ -50,6 +51,7 @@ signature DEBUG = sig
 			  | STATE
 			  | PROGRAM_LABELLING
 			  | BASIS_LABELLING
+			  | MINIMISATION
 			  | TEMP                    (* temporary output, this should be cleaned up regularly! *)
 
     val sep1' : string
