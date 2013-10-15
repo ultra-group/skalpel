@@ -169,7 +169,7 @@ fun getOpType ascid =
 		val to = T.constylist' tv l T.BUILTIN_BASIS_CONS
 	    in (tl, tr, to)
 	    end
-	  | getTyBinaryOp __ = raise EH.DeadBranch ""
+	  | getTyBinaryOp __ = raise EH.DeadBranch "DeadBranch110"
 	fun getTyUnaryOp "~" l =
 	    let val ti = T.constyint' l T.BUILTIN_BASIS_CONS
 		val to = T.constyint' l T.BUILTIN_BASIS_CONS

@@ -1,0 +1,80 @@
+% Copyright 2013 Heriot-Watt University
+%
+% Permission is granted to copy, distribute and/or modify this document
+% under the terms of the GNU Free Documentation License, Version 1.3 or
+% any later version published by the Free Software Foundation; with no
+% Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+% copy of the license is included in the section entitled "GNU Free
+% Documentation License".
+
+\documentclass{article}
+
+\setlength{\parskip}{10pt}
+
+\author{John Pirie}
+\title{Participating in an Experiment to Evaluate the Effectiveness of Skalpel}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+Thanks for agreeing to take part in an experiment to evaluate the
+effectiveness of Skalpel, a type error diagnosis tool! This sheet
+provides some information you need to know.
+
+This experiment consists of 14 small test cases, which you will work
+through one by one. The first four are warm-up tests, which your test
+invigilator will work through with you, and allow you to familiarize
+with the experiment framework. The experiment tests are split into two
+groups, with half of them you will solve any type errors you make with
+the aid of the compiler, and the other half with the aid of
+Skalpel. All syntax errors are reported by Skalpel. With the exception
+of the warm up tests, no hints can be provided.
+
+You may write any additional helper functions you wish, but no basis
+library functions may be used unless it is stated at the top of the
+test file that this is permitted, e.g. List.map. No other X server
+windows should be opened during the test, and interaction should be
+made with the terminal running the experiment framework and the basic
+text editor only. Most test files have regions of code which you may
+not edit, and these are clearly marked. Please do not edit code in
+these regions, or do something essentially equivalent (such as
+redefine the function with slightly different semantics later in the
+code).
+
+You may skip a test after a period of time attempting the problem has
+passed, simply ask the test invigilator. You may also stop the
+experiment at any time, and you do not need to supply a reason.
+
+A small SML cheat sheet is given below.
+
+\begin{tabular}{ll}
+Empty list & []\\
+List with one element (x) & [x]\\
+List construction & ::\\
+String concatenation operator & \^{} \\
+Append list y to list x & x@y\\
+Pattern for decomposing a list into a head and a tail & (h::t)\\
+Tuple notation: & $(x_1, x_2, ..., x_n)$\\
+String & \texttt{"This is a string"} \\
+Type variable & 'a\\
+Identity function & (fn x =$>$ x)\\
+\end{tabular}
+
+\noindent Function: String.implode\\
+Signature: char list -$>$ string\\
+Description: Generates a string from the argument.\\
+
+\noindent Function: String.explode\\
+Signature: string -$>$ char list\\
+Description: Returns a list of characters in the argument string.\\
+
+\noindent Function: List.rev\\
+Signature: 'a list -$>$ 'a list\\
+Description: Reverses a list.\\
+
+\noindent Function: Int.toString\\
+Signature: int -$>$ string\\
+Description: Returns the integer argument as a string.\\
+\end{document}

@@ -255,7 +255,7 @@ in
     findStartBasisSlice sl
 end
 
-(* prints one error in perl format *)
+(** Prints an error to stdout in bash format. *)
 fun printOneBashErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid bslice basisoverloading =
     let
 	val cdStringList = (CD.toStringList deps ascid)
@@ -449,7 +449,7 @@ fun fusionerr {id = id1, labs = labs1, deps = deps1,
      sl   = initSlice,
      regs = initRegs,
      min  = true}
-  | fusionerr _ _ = raise EH.DeadBranch ""
+  | fusionerr _ _ = raise EH.DeadBranch "DeadBranch69"
 
 (* multi minimal record errors at once *)
 (* returns: (keep, remove)             *)

@@ -59,7 +59,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Mon Oct  7 13:15:07 BST 2013. Skalpel version: 27adf61f8af9c7f29ad1ff40924d472ef01a0dc9"
+val SKALPEL_VERSION = "Built with MLton on Tue Oct 15 15:49:10 BST 2013. Skalpel version: c1f141ee51b0cd718b88e893143e8b889b96a1ac"
 
 (** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -419,6 +419,7 @@ fun smlTesStrArgs strArgs =
 				    \       BASIS \t applies debugging flags also to the basis file\n\
 				    \       BASIS_LABELLING <filename> \t gives a labelled basis output in latex to file specified in environment variable $SKALPEL_LABELLED_BASIS\n\
 				    \       EQUALITY_TYPES \t debugging information for equality types\n\
+				    \       MINIMISATION \t debugging information for the minimisation algorithm\n\
 				    \    -bo <0 | 1> If set to 1, hides basis slice in overloading errors\n\
 				    \    -tab <tabwidth> define the tab width in user code regions\n\
 				    \    -sol <solution> define solution to use (default 9)\n\
@@ -504,6 +505,7 @@ fun smlTesStrArgs strArgs =
 					D.backgroundColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
 					D.textReset := "")
 		     | "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
+		     | "MINIMISATION" => (D.debug := true; D.enableDebugFeature D.MINIMISATION)
 		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
 		     | "BASIS_LABELLING" => (D.debug := true; D.enableDebugFeature D.BASIS_LABELLING)
 		     | "BASIS" => (D.debug := true; D.debugBasis := true)

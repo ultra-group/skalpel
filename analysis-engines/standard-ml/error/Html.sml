@@ -81,7 +81,7 @@ fun getPartLine line from lgth n =
 		 "  length: " ^ Int.toString lgth ^ "\n" ^
 		 "  who:    " ^ Int.toString n    ^ "\n"
     in String.substring (line, from, lgth)
-       handle Subscript => (print st; raise EH.DeadBranch "")
+       handle Subscript => (print st; raise EH.DeadBranch "DeadBranch45")
     end
 
 fun transform stin stout regl bas (curNb, curLine) =
@@ -102,7 +102,7 @@ fun transform stin stout regl bas (curNb, curLine) =
 	    end
 	  | treatLine line ((r as (ER.H ({from = (l1, c1), to = (l2, c2)}, col, w))) :: rs) n =
 	    let val st = String.translate transfun (getPartLine line n (c1 - n - 1) 14)
-		val _  = if c1 = c2 then () else raise EH.DeadBranch ""
+		val _  = if c1 = c2 then () else raise EH.DeadBranch "DeadBranch46"
 	    in st
 	       ^ TA.getBTag col w 1
 	       ^ TA.getETag ()
@@ -148,7 +148,7 @@ fun readAndPrintLines stin stout curLine topLineOp curCol line bas =
 	if curLine = topLine
 	then (curCol, line)
 	else if curLine > topLine
-	then raise EH.DeadBranch ""
+	then raise EH.DeadBranch "DeadBranch47"
 	else (if bas andalso curCol = 0
 	      then ()
 	      else TextIO.output (stout, String.translate transfun line ^ nline);
@@ -166,7 +166,7 @@ fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
 	 in transform2 stin stout regl bas (l1, curCol1) line1
 	 end
     else if l1 < curLine
-    then raise EH.DeadBranch ""
+    then raise EH.DeadBranch "DeadBranch48"
     else (* l1 = curLine *)
 	let val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 21)
 	    val _     = TextIO.output (stout, st1)
@@ -187,9 +187,9 @@ fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
 	 in transform2 stin stout regl bas (l1, curCol1) line1
 	 end
     else if l1 < curLine
-    then raise EH.DeadBranch ""
+    then raise EH.DeadBranch "DeadBranch49"
     else (* l1 = curLine *)
-	let val _     = if c1 = c2 andalso l1 = l2 then () else raise EH.DeadBranch ""
+	let val _     = if c1 = c2 andalso l1 = l2 then () else raise EH.DeadBranch "DeadBranch50"
 	    val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 31)
 	    val _     = TextIO.output (stout, st1)
 	    val _     = TextIO.output (stout, TA.getBTag col w 1)
@@ -213,7 +213,7 @@ fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
 	 in transform2 stin stout regl bas (l1, curCol1) line1
 	 end
     else if l1 < curLine
-    then raise EH.DeadBranch ""
+    then raise EH.DeadBranch "DeadBranch51"
     else (* l1 = curLine *)
 	let val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 41)
 	    val _     = TextIO.output (stout, st1)
@@ -284,9 +284,9 @@ fun lineByLineReg reg assoc =
     in if l1 = l2
        then [reg]
        else if l1 > l2
-       then raise EH.DeadBranch ""
+       then raise EH.DeadBranch "DeadBranch52"
        else let val col   = Option.valOf (getSize assoc l1)
-		    handle Option => raise EH.DeadBranch ""
+		    handle Option => raise EH.DeadBranch "DeadBranch53"
 		val reg'  = R.consReg p1 (l1, col)
 		val reg'' = R.consReg (l1+1, 1) p2
 		val regs  = lineByLineReg reg'' assoc

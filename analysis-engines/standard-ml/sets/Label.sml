@@ -39,7 +39,7 @@ fun printsetgen xs f = "[" ^ #1 (S.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) 
 
 (** Prints out a label
  * Uses Int.toString. *)
-fun printLab l = Int.toString l
+fun printLab l = "l" ^ Int.toString l
 
 (** Pritns out a set of labels using #printsetgen. *)
 fun toString set = printsetgen set printLab

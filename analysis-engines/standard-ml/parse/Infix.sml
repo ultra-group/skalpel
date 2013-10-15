@@ -146,11 +146,11 @@ fun getRight (L (_, r))    = r
 (*(* convert a list of string to a list of leaves *)
 fun preConvert xs = map (fn x => L x) xs*)
 
-fun convertGen []     _ _ = raise EH.DeadBranch ""
+fun convertGen []     _ _ = raise EH.DeadBranch "DeadBranch84"
   | convertGen [x]    _ _ = [x]
   | convertGen [_, O (str, _)] _ _ = raise EH.DeadBranch ("Infix operator " ^ str ^ " not applied to a pair of terms")
   | convertGen [O (str, _), _] _ _ = raise EH.DeadBranch ("Infix operator " ^ str ^ " not applied to a pair of terms")
-  | convertGen [_, _] _ _ = raise EH.DeadBranch ""
+  | convertGen [_, _] _ _ = raise EH.DeadBranch "DeadBranch85"
   | convertGen (x :: (z as O (str, r)) :: y :: xs) assoc prec =
     (case getOperator str of
 	 NONE => raise EH.DeadBranch (str ^ " should be an infix operator")
@@ -162,8 +162,8 @@ fun convertGen []     _ _ = raise EH.DeadBranch ""
 	      in convertGen (node :: xs) assoc prec
 	      end
 	 else x :: z :: (convertGen (y :: xs) assoc prec))
-  | convertGen (x :: (N _) :: y :: xs) _ _ = raise EH.DeadBranch ""
-  | convertGen (x :: (L _) :: y :: xs) _ _ = raise EH.DeadBranch ""
+  | convertGen (x :: (N _) :: y :: xs) _ _ = raise EH.DeadBranch "DeadBranch86"
+  | convertGen (x :: (L _) :: y :: xs) _ _ = raise EH.DeadBranch "DeadBranch87"
 
 fun convertGen' tokens prec =
     let val tokens1 = convertGen tokens LEFT prec
@@ -215,7 +215,7 @@ fun convert' x = (convert0 o
 fun convert xs =
     case convert' xs of
 	[x] => x
-      | _   => raise EH.DeadBranch ""
+      | _   => raise EH.DeadBranch "DeadBranch88"
 
 
 end

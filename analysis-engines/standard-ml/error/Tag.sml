@@ -49,7 +49,7 @@ fun getClash col weight kindReg =
 	    case kindReg of 0 => "a" (* ER.L *)
 			  | 1 => "c" (* ER.H *)
 			  | 2 => "b" (* ER.N *)
-			  | _ => raise EH.DeadBranch ""
+			  | _ => raise EH.DeadBranch "DeadBranch43"
     in clCol ^ clKindReg(* ^ clW*)
     end
 
@@ -102,7 +102,7 @@ fun getClash col weight kindReg =
 	of 0 => clCol (* ER.L *)
 	 | 1 => ""    (* ER.H *)
 	 | 2 => ""    (* ER.N *)
-	 | _ => raise EH.DeadBranch ""
+	 | _ => raise EH.DeadBranch "DeadBranch44"
     end
 
 (** Beginning tag. *)

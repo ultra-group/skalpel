@@ -124,6 +124,7 @@ signature ENV = sig
 			| ENVPTY of string
 			| ENVFIL of string * env * (unit -> env)
 			| TOP_LEVEL_ENV
+			| NO_DUPLICATE_ID
 
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accessorId ExtLab.extLab
 			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.ty    accessorId ExtLab.extLab
@@ -287,7 +288,7 @@ signature ENV = sig
 
     val isENV_CONS          : env -> bool
 
-    val getLabsIdsEnv : env -> int -> (int * int) list * Label.labels
+    val getLabsIdsEnv : env -> (int * int) list * Label.labels
 
     val getLabEnv     : env -> Label.label
 
@@ -343,6 +344,7 @@ signature ENV = sig
     val singcsss         : oneContextSensitiveSyntaxError list -> contextSensitiveSyntaxError
     val singcsts         : (Label.label * oneConstraint list) -> constraints
     val unionContextSensitiveSyntaxErrors: contextSensitiveSyntaxError list -> contextSensitiveSyntaxError
+    val unionConstraints     : constraints -> constraints -> constraints
     val unionConstraintsList : constraints list -> constraints
     val getnbcs          : envContextSensitiveSyntaxPair -> int
     val getnbcss         : envContextSensitiveSyntaxPair -> int
@@ -389,6 +391,7 @@ signature ENV = sig
     val printTnKind  : typeNameKind -> string
     val printEnvVar  : envVar -> string
     val printConstraints : constraints -> string
+    val printOneConstraintList : oneConstraint list -> string
     val printOneConstraint : oneConstraint -> string
     val printOneAccessor : accessor -> string
 end

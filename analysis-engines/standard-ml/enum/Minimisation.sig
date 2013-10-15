@@ -29,20 +29,20 @@
 
 signature MIN = sig
 
-    val minimizeallkind  : Error.error list       ->
-			   Env.envContextSensitiveSyntaxPair             ->
-			   AstSML.packs           ->
-			   VTimer.timer           ->
-			   (Error.export') option ->
-			   int                    ->
+    val minimizeallkind  : Error.error list                   ->
+			   Env.envContextSensitiveSyntaxPair  ->
+			   AstSML.packs                       ->
+			   VTimer.timer                       ->
+			   (Error.export') option             ->
+			   int                                ->
 			   Error.error list
 
-    val minimize         : Error.error            ->
-			   Env.envContextSensitiveSyntaxPair             ->
-			   AstSML.packs           ->
-			   VTimer.timer           ->
-			   (Error.export') option ->
-			   int                    ->
+    val minimize         : Error.error                       ->
+			   Env.envContextSensitiveSyntaxPair ->
+			   AstSML.packs                      ->
+			   VTimer.timer                      ->
+			   (Error.export') option            ->
+			   int                               ->
 			   Error.error * int
 
 end

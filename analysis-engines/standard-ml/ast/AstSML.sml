@@ -3171,7 +3171,7 @@ fun extractFilesProg (Prog xs) = foldr (fn (x, y) => (extractFilesProgOne x) @ y
 
 
 fun combineProg (Prog xs) (Prog ys) = Prog (xs @ ys)
-  | combineProg _ _ = raise EH.DeadBranch ""
+  | combineProg _ _ = raise EH.DeadBranch "80"
 
 
 (**)
