@@ -44,9 +44,6 @@ structure MT = SplayMapFn(OrdLabLid) (* Map TyCon *)
  * with the same name are free, only one of them is reported. *)
 structure SL = BinarySetFn(OrdIdl) (* Set LongIds *)
 
-(*structure ME = SplayMapFn(OrdId)  (* Map Env   *)*)
-(*structure OM = BinaryMapFn (OrdKey)*)
-
 (* type definitions *)
 type path  = int list
 type paths = path list
@@ -349,73 +346,6 @@ fun isInGe state tv = Option.isSome (MS.find (!(getStateGe state), T.typeVarToIn
 
 (* UPDATING OF THE UNIFIER *)
 
-
-(*fun gettyvarsfieldty (T.FIELD_VAR rv) state labs stts deps=
-    (case getValStateRt state rv of
-	 NONE => []
-       | SOME (field, labs', stts', deps') =>
-	 gettyvarsfieldty field
-			state
-			(L.union  labs labs')
-			(L.union  stts stts')
-			(CD.union deps deps'))
-  | gettyvarsfieldty (T.FC (_, ty, _)) state labs stts deps =
-    gettyvarsty ty state labs stts deps
-and gettyvarstyseq (T.ROW_VAR sv) state labs stts deps =
-    (case getValStateSq state sv of
-	 NONE => []
-       | SOME (seq, labs', stts', deps') =>
-	 gettyvarstyseq seq
-			state
-			(L.union labs labs')
-			(L.union stts stts')
-			(CD.union deps deps'))
-  | gettyvarstyseq (T.ROW_C (fields, _, _)) state labs stts deps =
-    List.concat (map (fn field => gettyvarsfieldty field state labs stts deps) fields)
-and gettyvarstytf (T.TFV tfv) state labs stts deps =
-    (case getValStateTf state tfv of
-	 NONE => []
-       | SOME (tf, labs', stts', deps') =>
-	 gettyvarstytf tf
-		       state
-		       (L.union labs labs')
-		       (L.union stts stts')
-		       (CD.union deps deps'))
-  | gettyvarstytf (T.TFC (sq, ty, _)) state labs stts deps =
-    (gettyvarstyseq sq state labs stts deps) @
-    (gettyvarsty ty state labs stts deps)
-and gettyvarsty (T.V  (v, _, _)) state labs stts deps =
-    let val x = (v, labs, stts, deps)
-    in case getValStateTv state v of
-	   NONE => [x]
-	 | SOME (ty, labs', stts', deps') =>
-	   x :: (gettyvarsty ty
-			     state
-			     (L.union labs labs')
-			     (L.union stts stts')
-			     (CD.union deps deps'))
-    end
-  | gettyvarsty (T.E (_, v, _)) state labs stts deps =
-    let val x = (v, labs, stts, deps)
-    in case getValStateTv state v of
-	   NONE => [x]
-	 | SOME (ty, labs', stts', deps') =>
-	   x :: (gettyvarsty ty
-			     state
-			     (L.union labs labs')
-			     (L.union stts stts')
-			     (CD.union deps deps'))
-    end
-  | gettyvarsty (T.C (_, sq, _)) state labs stts deps =
-    gettyvarstyseq sq state labs stts deps
-  | gettyvarsty (T.A (tf, sq, _)) state labs stts deps  =
-    (gettyvarstytf tf state labs stts deps) @
-    (gettyvarstyseq sq state labs stts deps)
-  | gettyvarsty (T.OR (sq, _, _, _)) state labs stts deps =
-    gettyvarstyseq sq state labs stts deps
-  | gettyvarsty (T.GEN ty) state labs stts deps = []*)
-
-
 fun combine x1 x2 = EL.unionExtLab x1 x2 (fn x => x)
 
 fun updateOneState onestate x y = onestate := (MS.insert (!onestate, x, y))
@@ -540,14 +470,6 @@ fun isAName tyname state =
     NA.member (!(getStateNa state), (tyname, L.empty (), L.empty (), CD.empty))
 
 (* ACCESS TO THE ENV *)
-
-(*fun getValOneEnv onestate x = E.plusproj onestate x*)
-
-(*fun consIdToBind {id, scope, bind, class, lab, poly} =
-    C.consBind id [] bind class lab poly*)
-
-(*fun isIdInStr (CL.ENV strenv) id fisin = fisin id strenv
-  | isIdInStr _ _ _ = false*)
 
 fun updateFoundVal NONE _ = NONE
   | updateFoundVal (SOME (bind, b1)) b2 = SOME (bind, b1 orelse b2)
@@ -682,8 +604,6 @@ fun initState () =
 	val aar = ref MT.empty
 	val afr = ref SL.empty
 	val afo = ref SL.empty
-	(*val acl = ref MS.empty*)
-	(*val aub = initStateUb ()*)
     in {se = ase,
 	id = aid,
 	na = ana,
@@ -693,91 +613,7 @@ fun initState () =
 	ar = aar,
 	fr = afr,
 	fo = afo}
-	(*ub = aub,*)
-	(*cl = acl,*)
     end
-
-(*fun copyStateSe state =
-    {tv = ref (!(getStateTv state)),
-     tf = ref (!(getStateTf state)),
-     tn = ref (!(getStateTn state)),
-     sq = ref (!(getStateSq state)),
-     rt = ref (!(getStateRt state)),
-     lt = ref (!(getStateLt state)),
-     ev = ref (!(getStateEv state)),
-     cl = ref (!(getStateCl state))}
-
-(*fun copyStateUb state =
-    {tc = ref (!(getStateTc state)),
-     ap = ref (!(getStateAp state))}*)
-
-fun copyState state =
-    {se = copyStateSe state,
-     (*ub = copyStateUb state,*)
-     id = ref (!(getStateId state)),
-     rc = ref (!(getStateRc state)),
-     ge = ref (!(getStateGe state)),
-     (*cl = ref (!(getStateCl state)),*)
-     or = ref (!(getStateOr state))}*)
-(*
-(* combinestates state1 state2 conbines the two states into the first one *)
-fun combineStates state1 state2 =
-    let
-	val cs = ref []
-	fun modif onestate1 onestate2 fcs =
-	    onestate1 :=
-	    (MS.unionWith
-		 (fn (SOME (ty1, labs1, deps1, asmp1), SOME (ty2, labs2, deps2, asmp2)) =>
-		     let
-			 val labs = L.union labs1 labs2
-			 val deps = L.union deps1 deps2
-			 val asmp = L.union asmp1 asmp2
-		     in (cs := (fcs (ty1, ty2, labs, deps, asmp)) :: (!cs); NONE)
-		     end
-		   | (x as (SOME _), NONE) => x
-		   | (_, x)  => x)
-		 (!onestate1, !onestate2))
-	fun modif' onestate1 onestate2 =
-	    onestate1 :=
-	    (MS.unionWith
-		 (fn (SOME (labs1, asmp1), SOME (labs2, asmp2)) =>
-		     SOME (L.union labs1 labs2, L.union asmp1 asmp2)
-		   | (x as (SOME _), NONE) => x
-		   | (_, x)  => x)
-		 (!onestate1, !onestate2))
-	val _ = modif (getStateTv state1) (getStateTv state2) E.LCST
-	val _ = modif (getStateTn state1) (getStateTn state2) E.LCSN
-	val _ =	modif (getStateSq state1) (getStateSq state2) E.LCSS
-	val _ = modif (getStateRt state1) (getStateRt state2) E.LCSR
-	val _ = modif (getStateLt state1) (getStateLt state2) E.LCSL
-	val _ = modif (getStateEv state1) (getStateEv state2) E.LCSENV
-	val _ = (getStateRc state1) := (!(getStateRc state1)) @ (!(getStateRc state2))
-	val _ = modif' (getStateGe state1) (getStateGe state2)
-    (* don't we combine for OR? *)
-    in !cs
-    end
-*)
-
-(*
-fun plusState state1 state2 =
-    let
-	fun modif onestate1 onestate2 =
-	    onestate1 := (MS.unionWith
-			      (fn (x as (SOME _), NONE) => x
-				| (_, x)  => x)
-			      (!onestate1, !onestate2))
-	val _ = modif (getStateTv state1) (getStateTv state2)
-	val _ = modif (getStateTn state1) (getStateTn state2)
-	val _ =	modif (getStateSq state1) (getStateSq state2)
-	val _ = modif (getStateRt state1) (getStateRt state2)
-	val _ = modif (getStateLt state1) (getStateLt state2)
-	val _ = modif (getStateEv state1) (getStateEv state2)
-	val _ = (getStateRc state1) := (!(getStateRc state1)) @ (!(getStateRc state2))
-	val _ = modif (getStateGe state1) (getStateGe state2)
-    in ()
-    end
-*)
-
 
 (* TO HANDLE RECORDS *)
 
@@ -1216,96 +1052,6 @@ fun remEnvFromState bempty (tyvars, tns) state =
 
 fun hasEnvVar state = E.hasEnvVar (!(getStateId state))
 
-
-(*
-(* UNFINISHED STUFF *)
-fun removelablabty (T.LABEL_VAR lv) state = T.LABEL_VAR (removelabvar lv (fgetStateLt state) T.removelablabvar)
-  | removelablabty labty     _     = labty
-
-fun removelabtyname (T.NV var) state = T.NV (removelabvar var (fgetStateTn state) T.removelabtynamevar)
-  | removelabtyname tnty       _     = tnty
-
-fun removelabfieldty (T.FIELD_VAR rv)          _   state = T.FIELD_VAR (removelabvar rv (fgetStateRt state) T.removelabfieldvar)
-  | removelabfieldty (T.FC (lt, ty, l)) tvl state = T.FC (removelablabty lt state, removelabty ty tvl state, l)
-and removelabtyseq (T.ROW_VAR var)         _   state = T.ROW_VAR (removelabvar var (fgetStateSq state) T.removelabseqvar)
-  | removelabtyseq (T.ROW_C (trl, b, l)) tvl state = T.ROW_C (map (fn rt => removelabfieldty rt tvl state) trl, b, l)
-and removelabty (T.V tv)              _   = (T.V tv, L.empty, L.empty)
-  | removelabty (T.E (n, tv, l))      lab =
-    if lab = l
-    then (T.V (T.freshtyvar ()), L.empty, L.empty)
-    else (T.E (n, tv, l), L.singleton l, L.empty)
-  | removelabty (T.C   (tn, sq, l))   lab =
-    if lab = l
-    then (T.V (T.freshtyvar ()), L.empty, L.empty)
-    else
-    T.C   (removelabtyname tn     state, removelabtyseq sq tvl state, l)
-  | removelabty (T.Abs (sq, ty, l))   lab = T.Abs (removelabtyseq  sq tvl state, removelabty    ty tvl state, l)
-  | removelabty (T.App (sq, ty, l))   lab = T.App (removelabtyseq  sq tvl state, removelabty    ty tvl state, l)
-
-fun deleteTvNode state lab =
-    let
-	val state' = copyState state
-	val _ =
-	    (getStateTv state') :=
-	    (MS.map
-		 (fn (x as (SOME (ty, ll, asmp))) =>
-		     if L.isin lab ll
-		     then SOME (removelabty ty lab)
-		     else x
-		   | NONE => NONE)
-		 (!onestate1, !onestate2))
-    in state'
-    end
-*)
-
-(******************************************************)
-
-(*
-fun finitState _ = Array.array (T.gettyvar (), NONE)
-fun freshvar x onestate =
-    (case Array.sub (onestate, x) of
-	 NONE   => let val y = T.freshtyvar ()
-		   in (Array.update (onestate, x, SOME y); y) end
-       | SOME y => y)
-
-fun generalisety (T.V tv) _ _ = T.V tv
-  | generalisety (T.E (n, tv, l)) tvl state =
-    if L.isin n tvl
-    then T.V (freshvar tv state)
-    else T.E (n, tv, l)
-  | generalisety (T.C (tn, sq, l)) tvl state =
-    T.C (tn, generaliseseqty sq tvl state, l)
-  | generalisety (T.App (sq, ty, l)) tvl state =
-    let val sq' = generaliseseqty sq tvl state
-	val ty' = generalisety    ty tvl  state
-    in T.App (sq', ty', l) end
-  | generalisety (T.Abs (sq, ty, l)) tvl state =
-    let val sq' = generaliseseqty sq tvl state
-	val ty' = generalisety    ty tvl state
-    in T.Abs (sq', ty', l) end
-and generaliseseqty (T.ROW_VAR sv) _ _ = T.ROW_VAR sv
-  | generaliseseqty (T.ROW_C (rtl, flex, l)) tvl state =
-    T.ROW_C (map (fn rt => generalisefieldty rt tvl state) rtl, flex, l)
-and generalisefieldty (T.FIELD_VAR rv) _ _ = T.FIELD_VAR rv
-  | generalisefieldty (T.FC (lt, ty, l)) tvl state =
-    T.FC (lt, generalisety ty tvl state, l)
-
-fun generalise state tvl =
-    let
-	fun modif onestate fgen =
-	    onestate :=
-	    (MS.map
-		 (fn (SOME (x, ll, asmp)) => SOME (fgen x tvl (finitState ()), ll, asmp)
-		   | NONE => NONE)
-		 (!onestate))
-	val _ = modif (getStateTv state) generalisety
-	val _ =	modif (getStateSq state) generaliseseqty
-	val _ = modif (getStateRt state) generalisefieldty
-    (* TODO: need to generalise strc too!! *)
-    (* TODO: need to generalise stge too!! *)
-    in ()
-    end
-*)
 
 end
 

@@ -56,6 +56,7 @@ signature LABEL = sig
     val splitIn2   : (label, bool) labels -> (label, bool) labels * (label, bool) labels
 
     val empty      : unit -> (label, bool) labels
+    val bigEmpty   : unit -> (label, bool) labels
 
     val isEmpty    : (label, bool) labels -> bool
     val isSingle   : (label, bool) labels -> bool

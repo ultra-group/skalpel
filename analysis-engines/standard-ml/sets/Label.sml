@@ -108,7 +108,8 @@ fun freshlab  () =
 (** An exception raised when we don't find an element in the hash table. *)
 exception noneHere
 
-fun empty () = S.mkTable (Word.fromInt, (op =)) (15, noneHere)
+fun empty () = S.mkTable (Word.fromInt, (op =)) (5, noneHere)
+fun bigEmpty () = S.mkTable (Word.fromInt, (op =)) (50, noneHere)
 
 (** Adds an element to a set given as an argument. *)
 fun cons key hashTable =
@@ -164,13 +165,10 @@ fun toList table =
 	getKeys (S.listItemsi table)
     end
 
-(** Creates a new hash table. *)
-fun newTable () = S.mkTable (Word.fromInt, (op =)) (15, noneHere)
-
 (** Inserts a label into an (empty ()) hash table, returning the table. *)
 fun singleton key =
     let
-	val table = newTable ()
+	val table = empty ()
 	val _ = S.insert table (key, true)
     in
 	table
@@ -191,21 +189,25 @@ fun isinone key ll = case S.find ll key of NONE => false | _ => (S.numItems ll =
 (** Unions sets. *)
 fun union hashTable1 hashTable2 =
     let
-	val newHT1 = S.copy hashTable1
+	val length1 = S.numItems hashTable1
+	val length2 = S.numItems hashTable2
+	val temp = HashTable.mkTable (Word.fromInt, (op =)) (Int.max(length1,length2), noneHere)
 	val _ = unionSizes := (((length hashTable1) + (length hashTable2))::(!unionSizes))
-	val _ = S.appi (fn (x,y) => S.insert newHT1 (x,y)) hashTable2
+	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable1
+	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable2
     in
-	newHT1
+	temp
     end
 
 (** Generalised union. *)
 fun unions list =
     let
-	val table = newTable ()
+	val size = List.foldl (fn (set,rest) => Int.max (length set,rest)) 0 list
+	val newTable = S.mkTable (Word.fromInt, (op =)) (size, noneHere)
 	fun unions' table [] = table
 	  | unions' table (h::t) = unions' (union table h) t
     in
-	unions' table list
+	unions' newTable list
     end
 
 (** Tests all tables in 'tables' is a subset of 'table'. *)
@@ -215,7 +217,7 @@ fun exsubseteq table [] = true
 (** Creates a new hash table given a list of keys. *)
 fun ord list =
     let
-	val table = newTable ()
+	val table = empty ()
 	val _ = List.map (fn x => S.insert table (x,true)) list
     in
 	table
