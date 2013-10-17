@@ -168,7 +168,7 @@ fun toList table =
 (** Inserts a label into an (empty ()) hash table, returning the table. *)
 fun singleton key =
     let
-	val table = empty ()
+	val table = S.mkTable (Word.fromInt, (op =)) (1, noneHere)
 	val _ = S.insert table (key, true)
     in
 	table
