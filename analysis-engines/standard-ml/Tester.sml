@@ -823,18 +823,18 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 	    in counter
 	    end
        else (print ("Number of union operations: " ^ (Int.toString (List.length (!L.unionSizes))) ^ "\n");
-	     let
-		 val x = List.foldl (op +) 0 (!L.unionSizes)
-		 val avg = x div (List.length (!L.unionSizes))
+	     (* let *)
+	     (* 	 val x = List.foldl (op +) 0 (!L.unionSizes) *)
+	     (* 	 val avg = x div (List.length (!L.unionSizes)) *)
 
-		 fun findMax max [] = max
-		   | findMax max (h::t) = if h > max then findMax h t else findMax max t
-		 val max = findMax 0 (!L.unionSizes)
-	     in
-		 (print ("Next label number: " ^ (L.printLab (!L.nextlab)) ^ "\n");
-		  print ("Average combined union set length: " ^ (Int.toString avg) ^ "\n");
-		  print ("Maximum combined union set length: " ^ (Int.toString max) ^ "\n"))
-	     end;
+	     (* 	 fun findMax max [] = max *)
+	     (* 	   | findMax max (h::t) = if h > max then findMax h t else findMax max t *)
+	     (* 	 val max = findMax 0 (!L.unionSizes) *)
+	     (* in *)
+	     (* 	 (print ("Next label number: " ^ (L.printLab (!L.nextlab)) ^ "\n"); *)
+	     (* 	  print ("Average combined union set length: " ^ (Int.toString avg) ^ "\n"); *)
+	     (* 	  print ("Maximum combined union set length: " ^ (Int.toString max) ^ "\n")) *)
+	     (* end; *)
 	     counter)
     end
 

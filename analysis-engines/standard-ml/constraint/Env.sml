@@ -1252,7 +1252,7 @@ fun testlab lab labs = L.eq lab L.dummyLab
 		       orelse L.eq lab L.builtinLab
 		       orelse L.isin lab labs
 
-fun testlabs labs1 labs2 = L.subseteq labs1 (L.cons L.dummyLab (L.cons L.builtinLab labs2))
+fun testlabs labs1 labs2 = L.subseteq labs1 (L.unionsCons [L.dummyLab, L.builtinLab] [labs2])
 
 fun filterIdEnv idenv labs =
     envOrdMap.foldri (fn (id, sem, (idenv, complete)) =>

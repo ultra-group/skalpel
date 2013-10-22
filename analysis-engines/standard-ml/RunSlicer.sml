@@ -59,7 +59,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Tue Oct 22 00:50:15 BST 2013. Skalpel version: d873dc18260215f956e4ea36b782e91908ca106a"
+val SKALPEL_VERSION = "Built with MLton on Tue Oct 22 23:18:37 BST 2013. Skalpel version: 2263b32214e87f55a6d4b8e9d065edfa474e3556"
 
 (** takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b

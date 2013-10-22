@@ -75,8 +75,7 @@ fun getLeftId (ID labelledId)                = labelledId
 
 (** Returns a record containing label information. *)
 fun getLabs (ID i) = getLabIdL i
-  | getLabs (LID (i, lid, l)) =
-    L.cons l (L.union (getLabIdL i) (getLabs lid))
+  | getLabs (LID (i, lid, l)) = L.unionsCons [l] [(getLabIdL i), (getLabs lid)]
 
 (** Check if id1=id2 and l1=l1 in ID (id1, l1) id2 l2, and return an option with that result *)
 fun getSubLid (x as ID (id, lab)) i l =

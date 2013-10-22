@@ -37,7 +37,7 @@ type label = int
 fun printLab l = Int.toString l
 
 (** A set of program position, declared as an S.set. *)
-type ('a, 'b) labels = ('a, 'b) S.hash_table
+type ('a, 'b) labels = ('a, 'b) S.hash_table option
 
 (** A dummy label, represeneted by the number 0. *)
 val dummyLab = 0
@@ -65,20 +65,24 @@ fun compareLab (lab1, lab2) = Int.compare (lab1, lab2)
 fun nextLabel lab = lab + 1
 
 (** Tests if the hash table has only one element. *)
-fun isSingle labelMap = (S.numItems labelMap) = 1
+fun isSingle NONE = false
+  | isSingle (SOME labelMap) = (S.numItems labelMap) = 1
 
 (** Gets the nth next label number. *)
 fun nextLabN lab 0 = lab
   | nextLabN lab n = if n < 0 then raise EH.DeadBranch "" else (nextLabN lab (n-1)) + 1
 
 (** Tests whether a map of labels is empty. *)
-fun isEmpty labelMap = (S.numItems labelMap) = 0
+fun isEmpty NONE = true
+  | isEmpty (SOME labelMap) = (S.numItems labelMap) = 0
 
 (** Sets the #nextlab value to be the same as the argument. *)
 fun setNextLab lab = nextlab := lab
 
 (** Gets the length of a map of labels to booleans. *)
-val length = S.numItems
+val length = fn x => case x of
+			 NONE => 0
+		       | SOME y => S.numItems y
 
 (** Given two labels, returns the lowest vaulue one using Int.min. *)
 fun min x y = Int.min (x, y)
@@ -90,7 +94,8 @@ fun resetNext () = setNextLab firstLab
 fun toInt   lab = lab
 
 (** Tests whether a label is in the hash table. *)
-fun isin key table = case S.find table key of NONE => false | _ => true
+fun isin key NONE = false
+  | isin key (SOME table) = case S.find table key of NONE => false | _ => true
 
 (** A reference to the next label that we can use which hasn't been used before.
  * Initially set to be a reference to #firstLab but updated by #setNextLab. *)
@@ -108,16 +113,26 @@ fun freshlab  () =
 (** An exception raised when we don't find an element in the hash table. *)
 exception noneHere
 
-fun empty () = S.mkTable (Word.fromInt, (op =)) (5, noneHere)
-fun bigEmpty () = S.mkTable (Word.fromInt, (op =)) (50, noneHere)
+fun empty () = NONE
+fun bigEmpty () = NONE
+
+(** Inserts a label into an (empty ()) hash table, returning the table. *)
+fun singleton key =
+    let
+	val table = S.mkTable (Word.fromInt, (op =)) (1, noneHere)
+	val _ = S.insert table (key, true)
+    in
+	SOME table
+    end
 
 (** Adds an element to a set given as an argument. *)
-fun cons key hashTable =
+fun cons key NONE = singleton key
+  | cons key (SOME hashTable) =
     let
 	val newHashTable = S.copy hashTable
 	val _ = S.insert newHashTable (key,true)
     in
-	 newHashTable
+	 SOME newHashTable
     end
 
 fun printHashTable [] = ""
@@ -126,38 +141,50 @@ fun printHashTable [] = ""
   | printHashTable ((key,value)::t) = "(" ^ (Int.toString key) ^ "," ^ (Bool.toString value) ^ ")"
 				      ^ (printHashTable t)
 
-fun toString hashTable = printHashTable (S.listItemsi hashTable)
+fun toString NONE = ""
+  | toString (SOME hashTable) = printHashTable (S.listItemsi hashTable)
 
 
 (** Returns the intersection of two sets. *)
-fun inter set1 set2 =
+fun inter NONE NONE = NONE
+  | inter (SOME x) NONE = SOME (S.copy x)
+  | inter NONE (SOME x) = SOME (S.copy x)
+  |  inter (SOME set1) (SOME set2) =
     let
 	val newSet1 = S.copy set1
 	val _ = S.filteri (fn (x,y) => S.inDomain set2 x) newSet1
     in
-	newSet1
+	SOME newSet1
     end
 
 (** Tests if the set in the first argument is a subset of the set given as the second argument. *)
-fun subset set1 set2 = S.foldi (fn (a,b,c) => S.inDomain set2 a andalso c) true set1
+fun subset NONE NONE = true
+  | subset NONE x = true
+  | subset x NONE = false
+  | subset (SOME set1) (SOME set2) = S.foldi (fn (a,b,c) => S.inDomain set2 a andalso c) true set1
 
 (** Tests if the set in the first argument is a strict subset of the set given as the second argument. *)
-fun subseteq set1 set2 = subset set1 set2 andalso (S.numItems set1 < S.numItems set2)
+fun subseteq NONE NONE = false
+  | subseteq x NONE = false
+  | subseteq NONE x = true
+  | subseteq (SOME set1) (SOME set2) = subset (SOME set1) (SOME set2) andalso (S.numItems set1 < S.numItems set2)
 
 (** Tests whether two label hash tables are disjoint. *)
 (* fun disjoint set1 set2 = (S.foldi (fn (a,b,c) => not (S.inDomain set2 a)) true (empty ())) *)
 
 (** Tests whether two label hash tables are disjoint. *)
-fun disjoint set1 set2 =
+fun disjoint NONE NONE = true
+  | disjoint NONE x = true
+  | disjoint x NONE = true
+  | disjoint (SOME set1) (SOME set2) =
     let
-	val result = inter set1 set2
-	val _ = D.printDebug D.UNIF D.TEMP (fn _ => "set1: " ^ (toString set1) ^ ", set2: " ^ (toString set2) ^ ", inter = " ^ (toString result))
+	val result = inter (SOME set1) (SOME set2)
     in
 	(length result) = 0
     end
 
-
-fun toList table =
+fun toList NONE = []
+  | toList (SOME table) =
     let
 	fun getKeys [] = []
 	  | getKeys ((k,v)::t) = k::(getKeys t)
@@ -165,29 +192,25 @@ fun toList table =
 	getKeys (S.listItemsi table)
     end
 
-(** Inserts a label into an (empty ()) hash table, returning the table. *)
-fun singleton key =
-    let
-	val table = S.mkTable (Word.fromInt, (op =)) (1, noneHere)
-	val _ = S.insert table (key, true)
-    in
-	table
-    end
-
 (** Removes an alement from a set. *)
-fun delete x set =
+fun delete x NONE = NONE
+  | delete x (SOME set) =
     let
 	val copy = S.copy set
 	val _ = (S.remove copy x; ()) handle _ => ()
     in
-	copy
+	SOME copy
     end
 
 (** Tests whether a key is equal to ll where ll has only one element. *)
-fun isinone key ll = case S.find ll key of NONE => false | _ => (S.numItems ll = 1)
+fun isinone key NONE = false
+  | isinone key (SOME ll) = case S.find ll key of NONE => false | _ => (S.numItems ll = 1)
 
 (** Unions sets. *)
-fun union hashTable1 hashTable2 =
+fun union NONE NONE = NONE
+  | union (SOME x) NONE = SOME (S.copy x)
+  | union NONE (SOME x) = SOME (S.copy x)
+  | union (SOME hashTable1) (SOME hashTable2) =
     let
 	val length1 = S.numItems hashTable1
 	val length2 = S.numItems hashTable2
@@ -197,18 +220,33 @@ fun union hashTable1 hashTable2 =
 	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable1
 	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable2
     in
-	temp
+	SOME temp
     end
+
+fun destructiveUnion (SOME hashTable) (SOME setToAdd) = S.appi (fn (x,y) => S.insert hashTable (x,y)) setToAdd
+  | destructiveUnion _ _ = ()
 
 (** Generalised union. *)
 fun unions list =
     let
 	val size = List.foldl (fn (set,rest) => Int.max (length set,rest)) 0 list
-	val newTable = S.mkTable (Word.fromInt, (op =)) (size, noneHere)
-	fun unions' table [] = table
-	  | unions' table (h::t) = unions' (union table h) t
+	val newTable = SOME (S.mkTable (Word.fromInt, (op =)) (size, noneHere))
+	fun unions' [] = newTable
+	  | unions' (h::t) = (destructiveUnion newTable h; unions' t)
     in
-	unions' newTable list
+	unions' list
+    end
+
+(** Generalised union and cons. *)
+fun unionsCons ordElements list =
+    let
+	val size = List.foldl (fn (set,rest) => Int.max (length set,rest)) 0 list
+	val newTable = S.mkTable (Word.fromInt, (op =)) (size, noneHere)
+	val _ = List.map (fn x => S.insert newTable (x,true)) ordElements
+	fun unions' [] = (SOME newTable)
+	  | unions' (h::t) = (destructiveUnion (SOME newTable) h; unions' t)
+    in
+	unions' list
     end
 
 (** Tests all tables in 'tables' is a subset of 'table'. *)
@@ -218,37 +256,40 @@ fun exsubseteq table [] = true
 (** Creates a new hash table given a list of keys. *)
 fun ord list =
     let
-	val table = empty ()
+	val table = S.mkTable (Word.fromInt, (op =)) (List.length list, noneHere)
 	val _ = List.map (fn x => S.insert table (x,true)) list
     in
-	table
+	SOME table
     end
 
 (** Splits a list into two pieces.
  * \returns (lll,llr) s.t. $\forall$ l' in lll, l' < x and $\forall$ l' in llr, l' >= x *)
-fun split x table =
+fun split x NONE = (NONE,NONE)
+  | split x (SOME table) =
     let
 	val table'  = S.copy table
 	val table'' = S.copy table
 	val _ = S.filteri (fn (k,v) => if k < x then true else false) table'
 	val _ = S.filteri (fn (k,v) => if k >= x then true else false) table''
     in
-	(table', table'')
+	(SOME table', SOME table'')
     end
 
 (** Splits the set argument into two by setting those less than the value in 'next' in one half and the rest in the other half. *)
-fun split2 first next table =
+fun split2 first next NONE = (NONE,NONE)
+  | split2 first next (SOME table) =
     let
 	val table' = S.copy table
 	val table'' = S.copy table
 	val _ = S.filteri (fn (k,v) => if k >= first andalso k < next then true else false) table'
 	val _ = S.filteri (fn (k,v) => if k < first orelse k >= next then true else false) table''
     in
-	(table', table'')
+	(SOME table', SOME table'')
     end
 
 (** Splits a table into two pieces, returning two label maps. *)
-fun splitIn2 table =
+fun splitIn2 NONE = (NONE, NONE)
+  | splitIn2 (SOME table) =
     let
 	val table' = S.copy table
 	val tableCopy = S.copy table
@@ -264,12 +305,13 @@ fun splitIn2 table =
 				       else (counter := (!counter+1); false))
 			  tableCopy
     in
-	(table',tableCopy)
+	(SOME table',SOME tableCopy)
     end
 
 (** Removes a (key,value) pair in the hash table given as an argument.
  * Returns element removed and rest of the hash table as a pair. *)
-fun remFirst table =
+fun remFirst NONE = (NONE, NONE)
+  | remFirst (SOME table) =
     let
 	val counter = ref 0
 	val label = ref dummyLab
@@ -281,12 +323,15 @@ fun remFirst table =
 				      else true) table'
     in
 	if !label = dummyLab
-	then (NONE, table)
-	else (SOME (!label), table')
+	then (NONE, SOME table)
+	else (SOME (!label), SOME table')
     end
 
 (** Compares two hash tables using . *)
-fun compare (table1, table2) =
+fun compare (NONE, NONE) = EQUAL
+  | compare (x, NONE) = GREATER
+  | compare (NONE, x) = LESS
+  | compare (SOME table1, SOME table2) =
     let
 	val table1Items = S.listItemsi table1
 	val table2Items = S.listItemsi table2
@@ -304,7 +349,8 @@ fun compare (table1, table2) =
     end
 
 (** Folds right over the keys in a map. *)
-fun foldr f lab map =
+fun foldr f lab NONE = lab
+  | foldr f lab (SOME map) =
     let
 	val items = S.listItemsi map
 	fun foldr' f lab [] = lab
@@ -314,12 +360,15 @@ fun foldr f lab map =
     end
 
 (** Returns the set difference (set2 \ set1). *)
-fun diff set1 set2 =
+fun diff NONE NONE = NONE
+  | diff (SOME x) NONE = NONE
+  | diff NONE (SOME x) = SOME (S.copy x)
+  | diff (SOME set1) (SOME set2) =
     let
 	val tableCopy = S.copy set2
 	val _ = S.mapi (fn (x,y) => if (S.find tableCopy x <> NONE) then (S.remove tableCopy x; ()) else ()) set1
     in
-	tableCopy
+	SOME tableCopy
     end
 
 end

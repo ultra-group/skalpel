@@ -1329,7 +1329,7 @@ fun generateConstraints' prog pack nenv =
 					* test it's constructed with eqTypeVar' just for consistency as it is above *)
 					E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar')) lab))
 				    | _ =>
-				       (E.genCstTfAll (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv', T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar'), lab)) (L.cons lab (L.empty ())) (L.cons lab (L.empty ())) CD.empty,
+				       (E.genCstTfAll (T.TYPE_FUNCTION_VAR typeFunctionVar) (T.TFC (T.ROW_VAR sv', T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar'), lab)) (L.singleton lab) (L.singleton lab) CD.empty,
 				       (* this constraint c2 is irrelevant to the slice in the datatype-argument.sml,
 					* test it's constructed with eqTypeVar' just for consistency as it is above *)
 				       E.initTypeConstraint (T.consTYPE_VAR tv) (T.consTYPE_VARwithEQ tv' (T.consEQUALITY_TYPE_VAR eqTypeVar')) lab)
@@ -3081,7 +3081,7 @@ fun generateConstraints' prog pack nenv =
 		    * if this type is in a signature that is used in an opaque way *)
 		   val equalityConstraints = if getBasis()
 					     then List.map (fn eqtv => E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqtv) (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE)) lab) equalityTypeVars
-					     else List.map (fn eqtv => E.genCstEqAll (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR eqtv) (L.cons lab (L.empty ())) (L.cons lab (L.empty ())) CD.empty) equalityTypeVars
+					     else List.map (fn eqtv => E.genCstEqAll (T.consEQUALITY_TYPE_VAR eqtv) (T.consEQUALITY_TYPE_VAR eqtv) (L.singleton lab) (L.singleton lab) CD.empty) equalityTypeVars
 
 		   val env  = E.ROW_ENV (E.CONSTRAINT_ENV (E.conscsts (lab, equalityConstraints) constraints), E.updateInfoTypeNames typenames (E.consEnvTypeNames typeNameEnv))
 		   val ev   = E.freshEnvVar ()

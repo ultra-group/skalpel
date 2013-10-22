@@ -72,6 +72,7 @@ signature LABEL = sig
     val compare    : (label, bool) labels * (label, bool) labels -> order
     val ord        : label  list -> (label, bool) labels
     val unions     : (label, bool) labels list -> (label, bool) labels
+    val unionsCons : label list -> (label, bool) labels list -> (label, bool) labels
     val toList     : (label, bool) labels -> int list
     val remFirst   : (label, bool) labels -> label option * (label, bool) labels
     val foldr      : (label * 'a -> 'a) -> 'a -> (label, bool) labels -> 'a

@@ -482,7 +482,7 @@ fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
     (case List.find (fn x => true) (E.plusproj (E.getStructs env) id) of
 	 NONE => (NONE, (SOME ((id, lab1), (env, labs, stts, deps))), false)
        | SOME (bind, labs', stts', deps') =>
-	 let val labs0 = L.cons lab1 (L.cons lab2 (L.union labs labs'))
+	 let val labs0 = L.unionsCons [lab1, lab2] [labs, labs']
 	     val stts0 = L.union stts stts'
 	     val deps0 = CD.union deps deps'
 	     val (sem, str, b) =  getValStateId (C.getBindT bind) lid state fenv labs0 stts0 deps0
@@ -819,8 +819,8 @@ fun ftestrecord (srec as ((rtl1, b1, llc1), (rtl2, b2, llc2))) =
 		    val (list2, labs2, stts2, deps2) = reportLabTyClash rtl2'
 		    val (list3, labs3, stts3, deps3) = reportRcty llc11
 		    val (list4, labs4, stts4, deps4) = reportRcty llc22
-		    val labs0 = L.union  labs1 (L.union  labs2 (L.union  labs3 labs4))
-		    val stts0 = L.union  stts1 (L.union  stts2 (L.union  stts3 stts4))
+		    val labs0 = L.unions [labs1, labs2, labs3, labs4]
+		    val stts0 = L.unions [stts1, stts2, stts3, stts4]
 		    val deps0 = CD.union deps1 (CD.union deps2 (CD.union deps3 deps4))
 		in ([], [], [((list1, list2, list3, list4), labs0, stts0, deps0)])
 		end
@@ -833,8 +833,8 @@ fun ftestrecord (srec as ((rtl1, b1, llc1), (rtl2, b2, llc2))) =
 		    val (list2, labs2, stts2, deps2) = reportLabTyClash rtl2'
 		    val (list3, labs3, stts3, deps3) = reportRcty llc11
 		    val (list4, labs4, stts4, deps4) = reportRcty llc22
-		    val labs0 = L.union  labs1 (L.union  labs2 (L.union  labs3 labs4))
-		    val stts0 = L.union  stts1 (L.union  stts2 (L.union  stts3 stts4))
+		    val labs0 = L.unions [labs1, labs2, labs3, labs4]
+		    val stts0 = L.unions [stts1, stts2, stts3, stts4]
 		    val deps0 = CD.union deps1 (CD.union deps2 (CD.union deps3 deps4))
 		in ([], [], [((list1, list2, list3, list4), labs0, stts0, deps0)])
 		end

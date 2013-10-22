@@ -160,7 +160,7 @@ and nonexpConLongId (A.LongIdQual (sid, lid, _, lab, _)) =
 	      NONE => X.Nonexp
 	    | SOME (v, l) =>
 	      X.Expans [X.Expdep (I.LID ((v, l), id, lab),
-				  L.cons l (L.cons lab ll))])
+				  L.unionsCons [l,lab] [ll])])
        | X.Expans _ =>
 	 raise EH.DeadBranch "The expansiveness constraints does not have the expected structure")
   | nonexpConLongId (A.LongIdId id)                      = nonexpConIdent id

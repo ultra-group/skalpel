@@ -90,17 +90,19 @@ fun finalError error counter =
 	end
       | _ => (error, counter)
 
-fun lazyunbind4 [] _ labs keep err _ = (labs, keep, err)
+fun lazyunbind4 [] _ labs keep err _ =
+    ((* print ("LU4 FINAL. labs: " ^ (L.toString labs) ^ " keep: " ^ (L.toString keep) ^ ".\n" ); *)
+     (labs, keep, err))
   | lazyunbind4 (x :: xs) css labs keep err ast =
     let (*val _ = D.printdebug2 ("[lazy]")*)
 	val (labs', keep', err') =
 	    if L.disjoint labs x orelse L.subseteq x keep
-	    then (labs, keep, err)
+	    then ((* print "labs disjoint, set to values.\n" ;*) (labs, keep, err))
 	    else case U.unif css (FI.cons (SOME labs) (SOME x)) (U.MIN err) of
 		     U.Success _ =>
 		     if L.isSingle x
-		     then (labs, L.union x keep, err)
-		     else (labs, keep, err)
+		     then ((* print "Sucess was returned 1\n"; *) (labs, L.union x keep, err))
+		     else ((* print "Sucess was returned 2\n"; *) (labs, keep, err))
 		   | U.Error (err, _) =>
 		     ((*D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true ^ "\n" ^
 				     L.toString x ^ "\n" ^
@@ -108,7 +110,8 @@ fun lazyunbind4 [] _ labs keep err _ = (labs, keep, err)
 				     L.toString (ERR.getL err));*)
 		      reportError err;
 		      (L.inter (ERR.getL err) labs, keep, err))
-    in lazyunbind4 xs css labs' keep' err' ast
+    in ((* print ("Recursing lazyunbind4 with labs': " ^ (L.toString labs') ^ " and keep' " ^ (L.toString keep') ^ ".\n") ;*)
+	lazyunbind4 xs css labs' keep' err' ast)
     end
 
 fun lazyunbind bindings css labs err ast = lazyunbind4 bindings css labs (L.empty ()) err ast
@@ -126,22 +129,19 @@ fun select2 labs =
 
 fun select labs = select1 labs
 
-(* above is the old implementation of reduce1 *)
 fun reduce1 css done todo err =
-    let val (lop, ll) = select todo
+    let (* val _ = print ("Entered reduce - todo is " ^ L.toString todo ^ "\n") *)
+	val (lop, ll) = select todo
     in case lop of
-	   NONE => (done, err)
+	   NONE => ((* print ("No more label to select. Returning. done = " ^ (L.toString done) ^ "\n"); *)  (done, err))
 	 | SOME l =>
-	   let val totest  = L.union done ll
+	   let
+	       (* val _ = print ("In reduce1. lop: " ^ (L.printLab l) ^ " and ll is " ^ (L.toString ll) ^ ".\n") *)
+	       val totest  = L.union done ll
 	       val filters = FI.cons (SOME totest) (SOME (L.singleton l))
 	   in case U.unif css filters (U.MIN err) of
-		  U.Error (err, _) =>
-		  ((*D.printdebug2 ("[" ^ L.printelt l ^ "]" ^ "removed");*)
-		   reportError err;
-		   reduce1 css done (L.inter (ERR.getL err) ll) err)
-		| U.Success state =>
-		  ((*D.printdebug2 ("[" ^ L.printelt l ^ "]" ^ "kept");*)
-		   reduce1 css (L.cons l done) ll err)
+		  U.Error (err, _) => (reportError err; reduce1 css done (L.inter (ERR.getL err) ll) err)
+		| U.Success state => reduce1 css (L.cons l done) ll err
 	   end
     end
 
@@ -150,7 +150,8 @@ fun reduce css done todo err = reduce1 css done todo err
 (* in todo we should test first the labels in the csbindings *)
 (* it does not seem to work quite well *)
 fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (ast, _, _)) timer export counter =
-    let val _        = setCurrentBackground timer export envContextSensitiveSyntaxPair parse err counter
+    let (* val _        = print "entering minimize4" *)
+	val _        = setCurrentBackground timer export envContextSensitiveSyntaxPair parse err counter
 	val labs     = ERR.getL err
 	val done     = (L.empty ()) (*EK.getLabsEk (ERR.getK err)*)
 	val filters1 = FI.cons (SOME labs) NONE
@@ -173,15 +174,14 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 	 * and so an error such as datatype 'a int = T of int int, will result in the minimal error
 	 * [<..>] int where the 'int' is then the one from the builtin basis.*)
 	val (bindings, inenv) = E.getbindings env
-	(*val _ = map (fn labs => D.printdebug2 (L.toString labs)) bindings*)
+	(* val _ = print ("labs: " ^ (L.toString labs) ^ "\n" ) *)
 	val (labs1, keep, err1) = lazyunbind bindings env labs err ast
-	(*val env = E.filterEnv env (L.union labs keep)*)
-	(*val _ = D.printdebug2 (S.printSlice (S.slice ast (L.union labs1 keep)) true)*)
+	(* val _ = print ("labs1: " ^ (L.toString labs1) ^ "\n") *)
+	(* val _ = print ("keep: " ^ (L.toString keep) ^ "\n") *)
+	(* val _ = print ("*** Suspected point of error. keep=" ^ (L.toString keep) ^ ",labs1="^ (L.toString labs1) ^ ",diff="^ (L.toString (L.diff keep labs1)) ^ "\n") *)
 	val (labs2, err2) = reduce env (L.union keep done) (L.diff keep labs1) err1
-	(*val _ = D.printdebug2 (S.printSlice (S.slice ast labs2) true)*)
+	(* val _ = print ("labs2: " ^ (L.toString labs1) ^ "\n") *)
 	val filters2 = FI.cons (SOME labs2) NONE
-	(*val _ = D.printdebug2 ("[last]")*)
-	(*val env = E.filterEnv env labs2*)
 	val err = case U.unif env filters2 (U.MIN err2) of
 		      U.Error (err, _) => err
 		    | U.Success _ =>
@@ -201,6 +201,7 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 		      end
 	val _ = D.printdebug1 ("[minimisation]")
 	val (err', counter') = finalError err counter
+	(* val _        = print "leaving minimize4..." *)
     in (err', counter')
     end
 (* is it because of the VAL constraints that it does not work *)
