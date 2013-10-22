@@ -191,8 +191,9 @@ fun union hashTable1 hashTable2 =
     let
 	val length1 = S.numItems hashTable1
 	val length2 = S.numItems hashTable2
-	val temp = HashTable.mkTable (Word.fromInt, (op =)) (Int.max(length1,length2), noneHere)
-	val _ = unionSizes := (((length hashTable1) + (length hashTable2))::(!unionSizes))
+	val max = Int.max (length1,length2)
+	val temp = HashTable.mkTable (Word.fromInt, (op =)) (max, noneHere)
+	(* val _ = unionSizes := (((length hashTable1) + (length hashTable2))::(!unionSizes)) *)
 	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable1
 	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable2
     in
