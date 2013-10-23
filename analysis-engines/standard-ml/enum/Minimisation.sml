@@ -178,7 +178,6 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 	val (labs1, keep, err1) = lazyunbind bindings env labs err ast
 	(* val _ = print ("labs1: " ^ (L.toString labs1) ^ "\n") *)
 	(* val _ = print ("keep: " ^ (L.toString keep) ^ "\n") *)
-	(* val _ = print ("*** Suspected point of error. keep=" ^ (L.toString keep) ^ ",labs1="^ (L.toString labs1) ^ ",diff="^ (L.toString (L.diff keep labs1)) ^ "\n") *)
 	val (labs2, err2) = reduce env (L.union keep done) (L.diff keep labs1) err1
 	(* val _ = print ("labs2: " ^ (L.toString labs1) ^ "\n") *)
 	val filters2 = FI.cons (SOME labs2) NONE

@@ -136,10 +136,8 @@ fun cons key NONE = singleton key
     end
 
 fun printHashTable [] = ""
-  | printHashTable ((key,value)::h2::t) = "(" ^ (Int.toString key) ^ "," ^ (Bool.toString value) ^ "), "
-					  ^ (printHashTable (h2::t))
-  | printHashTable ((key,value)::t) = "(" ^ (Int.toString key) ^ "," ^ (Bool.toString value) ^ ")"
-				      ^ (printHashTable t)
+  | printHashTable ((key,value)::h2::t) = "(" ^ (Int.toString key) ^ "," ^ (Bool.toString value) ^ "), " ^ (printHashTable (h2::t))
+  | printHashTable ((key,value)::t) = "(" ^ (Int.toString key) ^ "," ^ (Bool.toString value) ^ ")" ^ (printHashTable t)
 
 fun toString NONE = ""
   | toString (SOME hashTable) = printHashTable (S.listItemsi hashTable)
@@ -147,9 +145,9 @@ fun toString NONE = ""
 
 (** Returns the intersection of two sets. *)
 fun inter NONE NONE = NONE
-  | inter (SOME x) NONE = SOME (S.copy x)
-  | inter NONE (SOME x) = SOME (S.copy x)
-  |  inter (SOME set1) (SOME set2) =
+  | inter (SOME x) NONE = NONE
+  | inter NONE (SOME x) = NONE
+  | inter (SOME set1) (SOME set2) =
     let
 	val newSet1 = S.copy set1
 	val _ = S.filteri (fn (x,y) => S.inDomain set2 x) newSet1
@@ -173,15 +171,15 @@ fun subseteq NONE NONE = false
 (* fun disjoint set1 set2 = (S.foldi (fn (a,b,c) => not (S.inDomain set2 a)) true (empty ())) *)
 
 (** Tests whether two label hash tables are disjoint. *)
-fun disjoint NONE NONE = true
-  | disjoint NONE x = true
-  | disjoint x NONE = true
-  | disjoint (SOME set1) (SOME set2) =
-    let
-	val result = inter (SOME set1) (SOME set2)
-    in
-	(length result) = 0
-    end
+fun disjoint (SOME set1) (SOME set2) =
+    not (S.foldi (fn (a,b,c) => S.inDomain set2 a orelse c) false set1)
+    (* let *)
+
+    (* 	val result = inter (SOME set1) (SOME set2) *)
+    (* in *)
+    (* 	(length result) = 0 *)
+    (* end *)
+    | disjoint _ _ = true
 
 fun toList NONE = []
   | toList (SOME table) =
@@ -212,41 +210,80 @@ fun union NONE NONE = NONE
   | union NONE (SOME x) = SOME (S.copy x)
   | union (SOME hashTable1) (SOME hashTable2) =
     let
-	val length1 = S.numItems hashTable1
-	val length2 = S.numItems hashTable2
-	val max = Int.max (length1,length2)
-	val temp = HashTable.mkTable (Word.fromInt, (op =)) (max, noneHere)
+	(** Previously we made a new table of initial size max(size hashTable1, size hashTable2), but this is slower than using S.copy apparently. *)
+	val newHashTable = S.copy hashTable1
 	(* val _ = unionSizes := (((length hashTable1) + (length hashTable2))::(!unionSizes)) *)
-	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable1
-	val _ = S.appi (fn (x,y) => S.insert temp (x,y)) hashTable2
+	val _ = S.appi (fn (x,y) => S.insert newHashTable (x,y)) hashTable2
     in
-	SOME temp
+	SOME newHashTable
     end
 
 fun destructiveUnion (SOME hashTable) (SOME setToAdd) = S.appi (fn (x,y) => S.insert hashTable (x,y)) setToAdd
   | destructiveUnion _ _ = ()
 
-(** Generalised union. *)
+(** Generalised union.
+ * We go through the list to find the largest hashTable, and then use S.copy of that.
+ * This has been shown to be more efficient than traversing through, finding the biggest size,
+ * making a new hash table of that size then just destructively unioning through the list (this
+ * speedup is not large, but enough to justify the additonal complexity here. *)
 fun unions list =
     let
-	val size = List.foldl (fn (set,rest) => Int.max (length set,rest)) 0 list
-	val newTable = SOME (S.mkTable (Word.fromInt, (op =)) (size, noneHere))
-	fun unions' [] = newTable
-	  | unions' (h::t) = (destructiveUnion newTable h; unions' t)
-    in
-	unions' list
-    end
+	fun locateBiggest counter biggestSoFar indexLocated [] = indexLocated
+	  | locateBiggest counter biggestSoFar indexLocated (h::t) =
+	    let
+		val newLength = length h
+	    in
+		if newLength > biggestSoFar
+		then locateBiggest (counter+1) newLength counter t
+		else locateBiggest (counter+1) biggestSoFar indexLocated t
+	    end
 
-(** Generalised union and cons. *)
+	val biggest = locateBiggest 0 0 0 list
+
+	val newTable = S.copy (Option.valOf (List.nth (list, biggest)))
+
+	fun unionRemaining counter [] = ()
+	  | unionRemaining counter (h::t) =
+	    if counter = biggest
+	    then unionRemaining (counter+1) t
+	    else (destructiveUnion (SOME newTable) h; unionRemaining (counter+1) t)
+
+	val _ = unionRemaining 0 list
+    in
+	SOME newTable
+    end handle Option => NONE
+
+(** Generalised union and cons.
+ * We go through the list to find the largest hashTable, and then use S.copy of that.
+ * This has been shown to be more efficient than traversing through, finding the biggest size,
+ * making a new hash table of that size then just destructively unioning through the list (this
+ * speedup is not large, but enough to justify the additonal complexity here. *)
 fun unionsCons ordElements list =
     let
-	val size = List.foldl (fn (set,rest) => Int.max (length set,rest)) 0 list
-	val newTable = S.mkTable (Word.fromInt, (op =)) (size, noneHere)
+	fun locateBiggest counter biggestSoFar indexLocated [] = indexLocated
+	  | locateBiggest counter biggestSoFar indexLocated (h::t) =
+	    let
+		val newLength = length h
+	    in
+		if newLength > biggestSoFar
+		then locateBiggest (counter+1) newLength counter t
+		else locateBiggest (counter+1) biggestSoFar indexLocated t
+	    end
+
+	val biggest = locateBiggest 0 0 0 list
+
+	val newTable = S.copy (Option.valOf (List.nth (list, biggest)))
+
+	fun unionRemaining counter [] = ()
+	  | unionRemaining counter (h::t) =
+	    if counter = biggest
+	    then unionRemaining (counter+1) t
+	    else (destructiveUnion (SOME newTable) h; unionRemaining (counter+1) t)
+
 	val _ = List.map (fn x => S.insert newTable (x,true)) ordElements
-	fun unions' [] = (SOME newTable)
-	  | unions' (h::t) = (destructiveUnion (SOME newTable) h; unions' t)
+	val _ = unionRemaining 0 list
     in
-	unions' list
+	SOME newTable
     end
 
 (** Tests all tables in 'tables' is a subset of 'table'. *)
