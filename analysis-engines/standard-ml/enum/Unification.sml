@@ -781,7 +781,7 @@ and freshty (T.TYPE_VAR (tv, b, p, equalityTypeInfo))       tvl state bstr =
 	 if O.isin (T.typeVarToInt tv) tvl'
 	 then T.TYPE_VAR (tv, if bstr then NONE else b, p, equalityTypeInfo)
 	 else T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, equalityTypeInfo)
-       | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, (*T.POLY*)(*N*)T.MONO, equalityTypeInfo)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
+       | (_, T.MONO) => T.TYPE_VAR (tv, if bstr then NONE else b, T.MONO, equalityTypeInfo)) (* NOTE: We reset all the type variables as polymorphic.  Why?  Because of the accessors. *)
   | freshty (T.EXPLICIT_TYPE_VAR   (id, tv,   l, eqtv))  tvl state bstr =
     (*(2010-06-14)bstr is false when we refresh an env when dealing with SIGNATURE_CONSTRAINT*)
     if bstr then T.EXPLICIT_TYPE_VAR (id, tv, l, eqtv) else T.TYPE_VAR (F.freshTypeVar tv state, SOME (id, l), T.POLY, T.EQUALITY_TYPE_STATUS(T.UNKNOWN))
@@ -4442,7 +4442,7 @@ fun unif env filters user =
 	    else fsimplify cs' l)
 	  | fsimplify ((currentConstraint as E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in env as I've done for WHR. *)
-	    (* 0: signature, 1: returned, 2: sharing *)
+	    (* 0: spec, 1: returned, 2: longTyCons *)
 	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	    if FI.testtodo filters lab
 	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev0 lab) state false

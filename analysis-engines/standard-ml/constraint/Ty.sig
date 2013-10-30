@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Ty.sig
- *  o Description: This file defines the signature TY specifying the
- *                 internal types used by our slicer.
  *)
 
-
+(** Defines the signature TY used by structure refstruct{Ty} specifying the internal types used by Skalpel. *)
 signature TY = sig
 
     type typeVar
@@ -99,42 +97,42 @@ signature TY = sig
 
     val consTypenameVar     : Label.label -> ty
 
-    val consTYPE_VAR             : typeVar  -> ty
-    val consTYPE_VARwithEQ             : typeVar  -> equalityType -> ty
-    val consROW_VAR              : rowVar -> rowType
-    val consEQUALITY_TYPE_VAR    : equalityTypeVar -> equalityType
-    val consEQUALITY_TYPE_VAR_LIST    : equalityTypeVar list -> equalityType
-    val consTYPE_FUNCTION_VAR    : typeFunctionVar -> typeFunction
+    val consTYPE_VAR                : typeVar  -> ty
+    val consTYPE_VARwithEQ          : typeVar  -> equalityType -> ty
+    val consROW_VAR                 : rowVar -> rowType
+    val consEQUALITY_TYPE_VAR       : equalityTypeVar -> equalityType
+    val consEQUALITY_TYPE_VAR_LIST  : equalityTypeVar list -> equalityType
+    val consTYPE_FUNCTION_VAR       : typeFunctionVar -> typeFunction
 
-    val newTYPE_VAR           : unit -> ty
-    val newFIELD_VAR            : unit -> fieldType
-    val newROW_VAR       : unit -> rowType
-    val newTYPE_FUNCTION_VAR  : unit -> typeFunction
+    val newTYPE_VAR                 : unit -> ty
+    val newFIELD_VAR                : unit -> fieldType
+    val newROW_VAR                  : unit -> rowType
+    val newTYPE_FUNCTION_VAR        : unit -> typeFunction
 
-    val typeVarToInt        : typeVar     -> int
-    val typeFunctionVarToInt       : typeFunctionVar    -> int
-    val typenameVarToInt    : typenameVar -> int
-    val typenameToInt       : typename    -> int
-    val labelVarToInt       : labelVar    -> int
-    val fieldVarToInt       : fieldVar    -> int
-    val rowVarToInt       : rowVar    -> int
-    val equalityTypeVarToInt  : equalityTypeVar    -> int
-    val idorToInt         : idor      -> int
+    val typeVarToInt                : typeVar     -> int
+    val typeFunctionVarToInt        : typeFunctionVar    -> int
+    val typenameVarToInt            : typenameVar -> int
+    val typenameToInt               : typename    -> int
+    val labelVarToInt               : labelVar    -> int
+    val fieldVarToInt               : fieldVar    -> int
+    val rowVarToInt                 : rowVar    -> int
+    val equalityTypeVarToInt        : equalityTypeVar    -> int
+    val idorToInt                   : idor      -> int
 
-    val typenameFromInt     : int -> typename
+    val typenameFromInt             : int -> typename
 
-    val eqTypeVar           : typeVar     -> typeVar     -> bool
-    val eqRowVar          : rowVar    -> rowVar    -> bool
-    val eqEqualityTypeVar   : equalityTypeVar -> equalityTypeVar -> bool
-    val eqLabelVar          : labelVar    -> labelVar    -> bool
-    val eqFieldVar          : fieldVar    -> fieldVar    -> bool
-    val eqTypename          : typename    -> typename    -> bool
-    val eqTypenameVar       : typenameVar -> typenameVar -> bool
-    val eqIdor            : idor      -> idor      -> bool
+    val eqTypeVar                   : typeVar     -> typeVar     -> bool
+    val eqRowVar                    : rowVar    -> rowVar    -> bool
+    val eqEqualityTypeVar           : equalityTypeVar -> equalityTypeVar -> bool
+    val eqLabelVar                  : labelVar    -> labelVar    -> bool
+    val eqFieldVar                  : fieldVar    -> fieldVar    -> bool
+    val eqTypename                  : typename    -> typename    -> bool
+    val eqTypenameVar               : typenameVar -> typenameVar -> bool
+    val eqIdor                      : idor      -> idor      -> bool
 
-    val isTypename          : typeFunction -> names ExtLab.extLab
+    val isTypename        : typeFunction -> names ExtLab.extLab
 
-    val getTypename     : typeFunction -> typename option
+    val getTypename       : typeFunction -> typename option
 
     val noflex            : unit -> flex
     val consflex          : Label.label -> flex

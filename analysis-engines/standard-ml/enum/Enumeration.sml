@@ -17,10 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Enumeration.sml
- *  o Description: Contains the enumeration algorithm.  The file defines
- *      the structure Enum which has the signature ENUM.
  *)
 
+(** Contains the enumeration algorithm.  The file defines the structure Enum which has the signature ENUM. *)
 functor Enum (SS : SEARCHSPACE) = struct
 
 structure I   = Id
@@ -71,8 +70,7 @@ fun occdone [] = ()
     end
 
 
-(* haack's one *)
-(* computes the new set of filters *)
+(** Computes the new set of filters (haack). *)
 fun mintodo1 labl labll labl' =
     L.foldr (fn (x, y) =>
 		let val ll = L.cons x labl
@@ -119,26 +117,18 @@ fun enumdisjoint _ [] = NONE
       | EK.Warning _ => enumdisjoint x ys
       | EK.Parsing _ => enumdisjoint x ys
       | _ => if L.disjoint x (ERR.getL err)
-	     then ((*D.printdebug2 (">>" ^ L.toString (L.ord (ERR.getR err)) ^ "\n");*)
-		   SOME (ERR.getL err))
+	     then SOME (ERR.getL err)
 	     else enumdisjoint x ys
 
-(* It seems that all these checkings are for nothing *)
+(** It seems that all these checkings are for nothing. *)
 fun minfilter x xs = x :: xs
 
 fun minone errs err envcss timer (parse as (ast, _, _)) filter =
     if ERR.alreadyone errs err
-    then ((* D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true ^ "\n" ^ *)
-    	  (* 	 L.toString (FI.filtertodos (FI.cons filter NONE) (ERR.getL err))); *)
-    	  (* app (fn err => D.printdebug2 (ERR.printOneXmlErr err "" true)) *)
-    	  (*     (ERR.setSlices ast errs); *)
-    	  (* raise EH.DeadBranch "DeadBranch78"; *)
-	  (L.empty, NONE, errs)
-    	  (* (L.empty, SOME err, errs) *))
+    then ((L.empty, NONE, errs))
     (* should we return labs (in err) only for the first one? *)
-    else let (*val _ = D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true)*)
-             (*val _ = raise EH.DeadBranch ""*)
-	     val (err1, _) = M.minimize err envcss parse timer NONE 0 (* done is actually never used in minimize! (2009-11-23)*)
+    else let
+	val (err1, _) = M.minimize err envcss parse timer NONE 0 (* done is actually never used in minimize! (2009-11-23)*)
 	     val err2 = ERR.setM (ERR.setT (ERR.setI err1 (ERR.freshError ())) (VT.getMilliTime timer)) true
 	     val bmerge = true (*merging of slices*)
 	     val err3 = ERR.setReg (ERR.setSlice ast err2) bmerge
@@ -153,8 +143,6 @@ fun minone errs err envcss timer (parse as (ast, _, _)) filter =
 	     				     L.toString outs);
 	     		      raise EH.DeadBranch "DeadBranch79")
 	     val (newerr, errs') = ERR.mindone errs err3
-	 (*val _ = D.printdebug2 (case newerr of NONE => raise EH.DeadBranch ""
-					       | SOME err => ERR.printOneErr err "")*)
 	 in (ERR.getL err3, newerr, errs')
 	 end
 
@@ -181,18 +169,18 @@ fun minOne errs err envcss timer parse filer NONE counter =
 	 in (ERR.getL err3, newerr, errs', counter')
 	 end
 
-(* prints a list of filters that are passed in as an argument *)
+(** Prints a list of filters that are passed in as an argument *)
 fun printfilters [] = ""
   | printfilters [x] = L.toString x
   | printfilters (x :: xs) = L.toString x ^ "  " ^ printfilters xs
 
-(* returns filters just as they were *)
+(** The identity function. *)
 fun reorderFilters1 filters = filters
 
-(* reverses the list of filters *)
+(** Reverses the list of filters. *)
 fun reorderFilters2 filters = List.rev filters
 
-(* returns the second half of the filters followed by the first half in reverse order *)
+(** Returns the second half of the filters followed by the first half in reverse order. *)
 fun reorderFilters3 filters =
     let val n   = List.length filters div 2
 	val f1  = List.take (filters, n)
@@ -200,7 +188,7 @@ fun reorderFilters3 filters =
     in f2 @ (List.rev f1)
     end
 
-(* more filter jumbling *)
+(** More filter jumbling. *)
 fun reorderFilters4 filters =
     let val n   = List.length filters div 2
 	val f1  = List.take (filters, n)
@@ -211,7 +199,7 @@ fun reorderFilters4 filters =
     in f22 @ (List.rev f1) @ f21
     end
 
-(* use the function which just returns the set of filters *)
+(** Use the function which just returns the set of filters. *)
 fun reorderFilters filters = reorderFilters1 filters
 
 fun newFreeErr (free as ((id, lab), b)) timer (ast, _, _) =
@@ -301,11 +289,10 @@ fun enum4 (envcss as (env, css)) errors searchspace timelimit program =
 	 | _ => run errors searchspace
     end
 
-(* This is now only used by our database. *)
-fun enum  envcss errors filters timelimit program =
-    enum4 envcss errors filters timelimit program
+(** This is now only used by our database. *)
+fun enum  envcss errors filters timelimit program = enum4 envcss errors filters timelimit program
 
-(* In initEnum and runEnum, if we got a success then we don't need to keep
+(** In initEnum and runEnum, if we got a success then we don't need to keep
  * searching for free identifiers because it means we found them all.
  * In initEnum we don't need to do that because it is the first time that
  * the unification is called, but in runEnum we could use done which indicates
@@ -329,8 +316,9 @@ fun initEnum (envcss as (env, _)) found searchspace timer parse export counter =
 		     end)
       | _ => ([], found, searchspace, counter, true)
 
-(* found:       are the found errors so far *)
-(* searchspace: is the set of filters still to test and the set of unsuccessful filters  *)
+(** Runs the enumeration algorithm.
+ * found:       are the found errors so far.
+ * searchspace: is the set of filters still to test and the set of unsuccessful filters. *)
 fun runEnum (envcss as (env, _)) found searchspace timelimit timer ast export counter =
     case SS.getOneFilter searchspace of
 	NONE => ([], found, searchspace, counter, false)

@@ -24,36 +24,22 @@
 (** The signature SLICER, used by the structure refstruct{Slicer}. *)
 signature SLICER = sig
 
-    (* remove this when the test database is converted to json format *)
-    val convertErrors      : JsonParser.error -> string -> unit
-    val generateTests      : int -> int -> unit
-
-    (* lists the tests in the database
-     * if true list the typable ones otherwise all of them *)
-    val listtests          : bool -> unit
-
-    (*val getLastRegions     : unit -> ER.regs list
-    val getLastSlices      : unit -> string list
-    val getLastMin         : unit -> bool*)
-
-    (* true if we want to be in the online demo mode:
-     * no SKALPEL-USE-FILE and no SKALPEL-SET-BASIS *)
     val setWebDemo         : bool -> unit
 
-    val smlnjEntryPoint          :   string * string list -> OS.Process.status
+    val smlnjEntryPoint          :  string * string list -> OS.Process.status
     val mltonEntryPoint          :  unit -> OS.Process.status
     val polymlEntryPoint         :  unit -> unit
 
-    val commslicerp        : string      -> (* basis file       *)
-    			     string list -> (* input files      *)
-    			     string      -> (* HTML output file *)
-    			     string      -> (* XML  output file *)
-    			     string      -> (* SML  output file *)
-    			     string      -> (* LISP output file *)
-    			     string      -> (* PERL output file *)
-    			     int         -> (* 0/1/2, this is for the basis *)
-    			     int         -> (* desired running time         *)
-    			     int         -> (* basis overloading         *)
+    val commslicerp        : string      ->
+    			     string list ->
+    			     string      ->
+    			     string      ->
+    			     string      ->
+    			     string      ->
+    			     string      ->
+    			     int         ->
+    			     int         ->
+    			     int         ->
     			     unit
 
     val smlTesStrArgs : string -> OS.Process.status

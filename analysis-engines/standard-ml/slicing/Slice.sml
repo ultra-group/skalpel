@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Slicer.sml
- *  o Description: Defines the structure Slicing which has signature
- *      SLICING and contains our slicing algorithm.
  *)
 
-
+(** Defines the structure Slicing which has signature SLICING and contains our slicing algorithm. *)
 structure Slicing :> SLICING = struct
 
 (* abbreviate structures that we use *)
@@ -4462,21 +4460,6 @@ fun slice prog labels =
 	    else A.LabAtPatDots (flattenAtPat [sl_atpat ap ll])
 	  | sl_labatpat (A.LabAtPatDots pl) ll = A.LabAtPatDots (sl_partlist pl ll)
 
-	(*
-	       and sl_sl_fmatchid x ll =
-		   if isEmpty ll
-		   then A.FMatchId A.IdentDots
-		   else sl_fmatchid x ll
-	*)
-
-	(*
-	       and sl_fmatchid fm ll =
-		   (case sl_fmatch fm ll of
-			A.FMatchDots                              => A.FMatchId A.IdentDots
-		      | A.FMatchSlApp (x, A.LabAtPatDots [], _) => x
-		      | slfm                                        => slfm)
-	*)
-
 	and sl_fmatchid fm ll =
 	    (case sl_fmatch fm ll of
 		 (*A.FMatchDots                                                   => A.FMatchId A.IdentDots*)
@@ -4605,32 +4588,6 @@ fun slice prog labels =
 			A.FMatchTDots => A.FVBCoreDots (flattenLabExp [slle])
 		      | _               => A.FValBindCore (slfm, slle, r, l, n)
 		 end
-	  (*| sl_fvalbindcore (A.FVBCoreTy (lfm, ty, le, r1, r2, l, n)) ll =
-		  if isin l ll
-		  then
-		      let
-			  val nxt1 = A.getLabFMatchNext lfm
-			  val nxt2 = A.getLabTypeNext ty
-			  val (ll1, ll') = splitList nxt1 (L.delete l ll)
-			  val (ll2, ll3) = splitList nxt2 ll'
-			  val slfm = sl_sl_labfmatch lfm ll1
-			  val slty = sl_sl_labtype ty ll2
-			  val slle = sl_sl_labexp le ll3
-		      in A.FVBCoreTy (slfm, slty, slle, r1, r2, l, n)
-		      end
-		  else
-		      let
-			  val nxt1 = A.getLabFMatchNext lfm
-			  val nxt2 = A.getLabTypeNext ty
-			  val (ll1, ll') = splitList nxt1 ll
-			  val (ll2, ll3) = splitList nxt2 ll'
-			  val slfm = sl_sl_labfmatch lfm ll1
-			  val slty = sl_sl_labtype ty ll2
-			  val slle = sl_sl_labexp le ll3
-		      in case (slfm, slty) of
-			     (A.LabFMatchDots, A.LabTypeDots []) => A.FVBCoreDots (flattenLabExp [slle])
-			   | _ => A.FVBCoreTy (slfm, slty, slle, r1, r2, l, n)
-		      end*)
 	  | sl_fvalbindcore (A.FVBCoreDots pl) ll = A.FVBCoreDots (sl_partlist pl ll)
 
 	and sl_sl_fvalbindcorelist x ll =
@@ -4796,18 +4753,7 @@ fun slice prog labels =
 		    val (lll, llr) = splitList nxt ll
 		    val slid  = sl_sl_labid id lll
 		    val slsid = sl_sl_longid sid llr
-		in (*case (slid, slsid) of
-			     (_, A.LongIdQual _) => A.ExBindEq (slid, slsid, r, l, n)
-			   | (_, A.LongIdId _)   => A.ExBindEq (slid, slsid, r, l, n)
-			   (* The two above are because if we have the id on the right only
-			    * then it means that it is important that it is an exception.
-			    * This is wrong because in:
-			    *   structure S = struct end; exception e = S.e;
-			    * we don't need the exception and =.
-			    * Where is it we need the = but we don't have the label? *)
-			   (*| (A.LabIdDots [(A.PartLgid (A.LongIdId id))],
-			      A.LongIdDots []) => A.ExBindNo (id, n)*)
-			   | _ =>*) A.ExBindDots ((flattenLabId [slid]) @ (flattenLongId [slsid]))
+		in A.ExBindDots ((flattenLabId [slid]) @ (flattenLongId [slsid]))
 		end
 	  | sl_exbind (A.ExBindNo (id, n)) ll =
 	    (case sl_ident id ll of

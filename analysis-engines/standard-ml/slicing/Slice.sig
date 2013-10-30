@@ -17,17 +17,14 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Slice.sig
- *  o Description: Defines the signature SLICING which is the signature
- *      of our slicing algorithm.
  *)
 
-
+(** Defines the signature SLICING which is the signature of our slicing algorithm refstruct{Slicing}. *)
 signature SLICING = sig
 
     val slice            : AstSML.progs -> Label.labels -> AstSML.progs
     val printSlice       : AstSML.progs -> bool -> string
     val printOneSlice    : AstSML.progs -> bool -> string -> string
-    (*val printOneSmlSlice : AstSML.progs -> string*)
     val printSlices      : AstSML.progs list -> string
     val getDots          : unit -> string * string * string * string * string
     val toString         : AstSML.progs -> string

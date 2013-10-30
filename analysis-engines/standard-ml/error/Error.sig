@@ -222,8 +222,5 @@ signature ERROR = sig
     val setReg           : error      -> bool -> error
     val setRegs          : error list -> bool -> error list
 
-    (*val printError       : error list -> string*)
-    (*val printErrorBis    : error list -> AstSML.prog -> string*)
-    (*val printErrorBisBis : error list -> AstSML.prog -> string*)
 
 end

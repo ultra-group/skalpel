@@ -17,7 +17,6 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Html.sml
- *  o Description: 
  *)
 
 (** Defines the functor Html which has signature HTML and takes an argument of signature TAG.
@@ -52,9 +51,9 @@ fun setstylecss 1 = stylecss := stylecss1
   | setstylecss 2 = stylecss := stylecss2
   | setstylecss _ = ()
 
-(* Space character specified in the structure passed to this functor. *)
+(** Space character specified in the structure passed to this functor. *)
 val space = TA.getSpace ()
-(* New line character specified in the structure passed to this functor. *)
+(** New line character specified in the structure passed to this functor. *)
 val nline = TA.getBreakTag ()
 
 (** A tab, set to be the concatenation of eight #space values. *)
@@ -85,7 +84,8 @@ fun getPartLine line from lgth n =
     end
 
 fun transform stin stout regl bas (curNb, curLine) =
-    let (* add or remove clW depending on if we want the overlaping of slices to show up *)
+    let
+	(** Add or remove clW depending on if we want the overlaping of slices to show up *)
 	fun treatLine line [] n =
 	    let val st  = getPartLine line n ((String.size line) - n) 11
 		val st' = String.translate transfun st
@@ -153,21 +153,19 @@ fun readAndPrintLines stin stout curLine topLineOp curCol line bas =
 	      then ()
 	      else TextIO.output (stout, String.translate transfun line ^ nline);
 	      case TextIO.inputLine stin of
-		  NONE => (0, " ") (* We do that because of test 311.
-				    * It should only be for EOF syntax errors. *) (*raise EH.DeadBranch (EH.msg (Int.toString curLine ^ " " ^ Int.toString topLine))*)
+		  NONE => (0, " ") (* We do that because of test 311. It should only be for EOF syntax errors. *)
 		| SOME line' => readAndPrintLines stin stout (curLine + 1) topLineOp 0 line' bas)
 
+
 fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
-  | transform2 stin stout
-	       (regl as ((ER.L (r as {from = (l1, c1), to = (l2, c2)}, col, w)) :: rs))
-	       bas (curLine, curCol) line =
+  | transform2 stin stout (regl as ((ER.L (r as {from = (l1, c1), to = (l2, c2)}, col, w)) :: rs)) bas (curLine, curCol) line =
     if l1 > curLine
     then let val (curCol1, line1) = readAndPrintLines stin stout curLine (SOME l1) curCol line bas
 	 in transform2 stin stout regl bas (l1, curCol1) line1
 	 end
     else if l1 < curLine
     then raise EH.DeadBranch "DeadBranch48"
-    else (* l1 = curLine *)
+    else
 	let val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 21)
 	    val _     = TextIO.output (stout, st1)
 	    val _     = TextIO.output (stout, TA.getBTag col w 0)
@@ -188,7 +186,7 @@ fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
 	 end
     else if l1 < curLine
     then raise EH.DeadBranch "DeadBranch49"
-    else (* l1 = curLine *)
+    else
 	let val _     = if c1 = c2 andalso l1 = l2 then () else raise EH.DeadBranch "DeadBranch50"
 	    val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 31)
 	    val _     = TextIO.output (stout, st1)
@@ -214,19 +212,17 @@ fun transform2 _ _ [] _ (curLine, curCol) line = (curLine, curCol, line)
 	 end
     else if l1 < curLine
     then raise EH.DeadBranch "DeadBranch51"
-    else (* l1 = curLine *)
+    else
 	let val st1   = String.translate transfun (getPartLine line 0 (c1 - curCol - 1) 41)
 	    val _     = TextIO.output (stout, st1)
 	    val _     = TextIO.output (stout, TA.getBTag col w 2)
 	    val line1 = getPartLine line (c1 - curCol - 1) (String.size line - c1 + curCol + 1) 42
-	    (*val _     = D.printdebug2 line1*)
 	    val (curLine2, curCol2, line2) = transform2 stin stout eregs bas (l1, c1 - 1) line1
 	    val (curCol3, line3) = readAndPrintLines stin stout curLine2 (SOME l2) (curCol2 + 1) line2 bas
 	    val st2   = String.translate transfun (getPartLine line3 0 (c2 - curCol3 + 1) 43)
 	    val _     = TextIO.output (stout, st2)
 	    val _     = TextIO.output (stout, TA.getETag ())
 	    val line4 = getPartLine line3 (c2 - curCol3 + 1) ((String.size line3) - c2 + curCol3 - 1) 44
-	(*val _     = D.printdebug2 (line4)*)
 	in transform2 stin stout rs bas (l2, c2) line4
 	end
 
@@ -240,12 +236,10 @@ fun transform2' stin stout eregs bas _ =
 	in ()
 	end
 
-fun getRestrictions _ (EK.MultiOcc   (SOME x)) asc = raise EH.DeadBranch "No multiocc error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
-  | getRestrictions _ (EK.ValVarApp  (SOME x)) asc = raise EH.DeadBranch "No applied value variable in pattern error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
-  | getRestrictions _ (EK.ConIsVar   (SOME x)) asc = raise EH.DeadBranch "No Constructor is a value variable error on long ids" (*toStringCds (CD.singleton x) asc ^ " is not datatype/exception constructor"*)
-  (*| getRestrictions _ (EK.MultiOcc   NONE) _       = "none"
-  | getRestrictions _ (EK.ValVarApp  NONE) _       = "none"
-  | getRestrictions _ (EK.ConIsVar   NONE) _       = "none"*)
+(** Gets the context dependencies for an error. *)
+fun getRestrictions _ (EK.MultiOcc   (SOME x)) asc = raise EH.DeadBranch "No multiocc error on long ids"
+  | getRestrictions _ (EK.ValVarApp  (SOME x)) asc = raise EH.DeadBranch "No applied value variable in pattern error on long ids"
+  | getRestrictions _ (EK.ConIsVar   (SOME x)) asc = raise EH.DeadBranch "No Constructor is a value variable error on long ids"
   | getRestrictions asmp _ asc                     = if CD.isEmpty asmp
 						     then "none"
 						     else
@@ -263,7 +257,7 @@ fun linesLengths file =
 	    case TextIO.inputLine stm of
 		NONE      => []
 	      | SOME line => (n, size line) :: (count (n+1))
-   (** Calls #count with an argument of 1.*)
+	(** Calls #count with an argument of 1.*)
 	val ret = count 1
 	val _   = TextIO.closeIn stm
     in ret
@@ -294,7 +288,7 @@ fun lineByLineReg reg assoc =
 	    end
     end
 
-(* This should not be needed anymore. *)
+(** This should not be needed anymore. *)
 fun lineByLine [] _ = []
   | lineByLine ((ER.L (reg, col, w)) :: xs) assoc =
     let val regs = lineByLineReg reg assoc
@@ -302,9 +296,9 @@ fun lineByLine [] _ = []
     end
   | lineByLine (x :: xs) assoc = x :: lineByLine xs assoc
 
-(* translates internal representation of a slice to something HTML can
-   actually understand. (Special text characters like \t removed and
-   replaced by spaces etc *)
+(** Translates internal representation of a slice to something HTML can
+ *  actually understand. (Special text characters like \t removed and
+ *  replaced by spaces etc *)
 fun sliceToHtml sl =
     String.translate
 	(fn #"\t"   => mytab
@@ -338,12 +332,13 @@ fun printTagged stout btag st =
     then TextIO.output (stout, st)
     else ()
 
+(** Prepares a single region for HTML format. *)
 fun treatOneRegs stout filebas btag (file, regs) basisoverloading =
     let
 	(** We transform the regions because a region coming from a parsing errors are not always on one line.
 	 * maybe we should do that out of this structure but in Tester. *)
 	val regs' = lineByLine regs (linesLengths file)
-   (** A file stream. *)
+	(** A file stream. *)
 	val stin  = TextIO.openIn file
 	val f = #file (OS.Path.splitDirFile file)
     in
@@ -387,13 +382,11 @@ fun getSlice err btag ascid basisoverloading removeBasisSlice =
 
 (** Forms the enumerated output html files (<name>-n.html). *)
 fun transformOneErr stout filebas fileout err ascid btag basisoverloading removeBasisSlice =
-    let (*val _       = D.printdebug2 (I.printAssoc ascid)*)
-	(*val _       = D.printdebug2 (ERR.printOneXmlErr err "" false)*)
-  (** The kind of the error (found by calling #getKind). *)
+    let
+	(** The kind of the error (found by calling #getKind). *)
 	val stkind  = getKind         err ascid btag
-	(*val _       = D.printdebug2 (stkind)*)
 	val stdeps  = getDependencies err ascid btag
-  (** Holds the slice of the error (found by calling #getSlice). *)
+	(** Holds the slice of the error (found by calling #getSlice). *)
 	val stslice = getSlice        err       btag ascid basisoverloading removeBasisSlice
 	val _ = printTagged
 		    stout btag
@@ -437,14 +430,16 @@ fun transformOneErr stout filebas fileout err ascid btag basisoverloading remove
 
 (** Transforms an error slice into an HTML-representation. *)
 fun transformErrSl fileout filebas errs ascid _ bhead btag basisoverloading removeBasisSlice =
-    let val stout = TextIO.openOut fileout
-  (** Meta tag. **)
+    let
+	(** Output stream for the HTML file. *)
+	val stout = TextIO.openOut fileout
+	(** Meta tag. **)
 	val code  = "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
-  (** Style tag. *)
+	(** Style tag. *)
 	val style = "<link href=\"" ^ !stylecss ^  "\" rel=\"stylesheet\" type=\"text/css\" />"
-  (** An h3 tag. *)
+	(** An h3 tag. *)
 	val errb  = "<h3>SML-TES found "
-  (** Closes an h3 tag and adds a break (br tag). *)
+	(** Closes an h3 tag and adds a break (br tag). *)
 	val erre  = "</h3>\n<br/>\n\n"
 	val _ = if bhead
 		then TextIO.output (stout, "<head>\n" ^ style ^ "\n" ^ code ^ "\n</head>\n<body>\n\n")
@@ -456,7 +451,7 @@ fun transformErrSl fileout filebas errs ascid _ bhead btag basisoverloading remo
 		       | 1 => TextIO.output (stout, errb ^ "1 error:" ^ erre)
 		       | n => TextIO.output (stout, errb ^ Int.toString n ^ " errors:" ^ erre)
 		else ()
-  (** Calls #transformOneErr on each of the elements in the list given as an argument. *)
+	(** Calls #transformOneErr on each of the elements in the list given as an argument. *)
 	fun f xs = app (fn x => transformOneErr
 				    stout
 				    filebas

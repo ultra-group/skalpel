@@ -27,7 +27,6 @@
  *      which has signature TY.
  *)
 
-
 structure Ty :> TY = struct
 
 (* shorten the name of structures *)
@@ -43,104 +42,110 @@ structure D  = Debug
 (* new exception, raised if a non-option value is passed to getflex function *)
 exception unflex
 
-(* type and datatype declarations *)
+(** A type variable. *)
 type typeVar         = int
+(** A row variable. *)
 type rowVar     = int
+(** An equality type variable variable. *)
 type equalityTypeVar     = int
+(** A typename variable. *)
 type typenameVar     = int
+(** A label variable. *)
 type labelVar        = int
+(** A field variable. *)
 type fieldVar          = int
+(** A type function variable. *)
 type typeFunctionVar = int
 type eqType          = bool
 
-(* int for typename but string for labcons because not in any environment *)
+(** int for typename but string for labcons because not in any environment *)
 type typename     = int (* 1: arrow, 2: record, ... *)
+(** Type of a field name for a record, a string. *)
 type fieldName    = string
 type idor       = int
-(* if we have ... in a record then that makes it flexible, that's called a
+(** If we have ... in a record then that makes it flexible, that's called a
  * flexible record pattern. Sometimes just called flex records, it's equivalent
  * to having all the missing fields there with wildcard for pattern inside the
  * field. Change the name of this so that it makes sense *)
 type flex       = L.label option
-type extv       = I.labelledId option (* extv stands for EXplicit Type Variable*)
+(** Explicit type variable. *)
+type extv       = I.labelledId option
+(** The type of an association. *)
 type assoc      = (int * string) list
 
+(** Explicit type variable. *)
 type explicitTypeVar = typeVar ExtLab.extLab
 
-    datatype poly   = POLY (* polymorphic type var *)
-		    | MONO (* monomorphic type var *)
+(** Used to reporesent polymorphism (POLY) or monomorphism (MONO).*)
+datatype poly   = POLY
+		| MONO
 
-    (* --------------------------------------------------------------------------------
-     * The constructorKind datatype:
-     *
-     * DECLARATION_CONS: constructor from a declaration
-     * PATTERN_CONS: constructor from a pattern
-     * OTHER_CONS: other constructor
-     * BUILTIN_BASIS_CONS: We have this constructor because for type constructor labeled
-     *                     by BUILTIN_BASIS. We might want to re-label them to get end
-     *                     points. *)
+(** A datatype holding representing kinds of constructors, has 4 constructors.
+ *
+ * \arg DECLARATION_CONS: constructor from a declaration
+ * \arg PATTERN_CONS: constructor from a pattern
+ * \arg OTHER_CONS: other constructor
+ * \arg BUILTIN_BASIS_CONS: We have this constructor because for type constructor labeled
+ *                          by BUILTIN_BASIS. We might want to re-label them to get final points. *)
+datatype constructorKind  = DECLARATION_CONS of Id.id
+			  | PATTERN_CONS
+			  | OTHER_CONS
+			  | BUILTIN_BASIS_CONS
 
-    datatype constructorKind  = DECLARATION_CONS of Id.id
-			      | PATTERN_CONS
-			      | OTHER_CONS
-			      | BUILTIN_BASIS_CONS
+(* jpirie: figure out what the 'or' means in 'orKind' *)
+datatype orKind = VALUE of Id.labelledId
+		| CONSTANT of string * Id.id * Label.label
 
-    (* ------------------------------------------------------------------------------*)
+(* The Cs in the below should be replaced by CONSTRUCTION. So for example,
+ * LV should be become LABEL_CONSTRUCTION *)
 
-    (* jpirie: figure out what the 'or' means in 'orKind' *)
-    datatype orKind = VALUE of Id.labelledId
-		    | CONSTANT of string * Id.id * Label.label
+(** It is unclear why we need label vars (LABEL_VAR constructor). *)
+datatype labelType = LABEL_VAR  of labelVar
+		   | LC  of fieldName * Label.label
+		   | LABEL_DEPENDANCY  of labelType ExtLab.extLab
 
-    (* The Cs in the below should be replaced by CONSTRUCTION. So for example,
-     * LV should be become LABEL_CONSTRUCTION *)
+(** Joe speculates that typenameType and tyfun could be simply merged.
+ * This means the C and A cases of ty could also be merged.
+ * Probably nothing wrong with leaving them separate as they are now.
+ *
+ * constructorKind in the NC constructor is used to know if the constructor
+ * comes from a declaration (arrow type: datatype constructor with argument).
+ * It is only used for the arrow type isn't it? *)
+datatype typenameType = TYPENAME_VAR  of typenameVar
+		      | NC  of typename * constructorKind * Label.label
+		      | TYPENAME_DEPENDANCY  of typenameType ExtLab.extLab
 
-    (* it is unclear why we need label vars (LABEL_VAR constructor) *)
-    (* change: field name type *)
-    datatype labelType = LABEL_VAR  of labelVar
-		       | LC  of fieldName * Label.label
-		       | LABEL_DEPENDANCY  of labelType ExtLab.extLab
+(** FIELD_NO_OVERLOAD: marker to show that a field has been deleted from a row because
+ * it is cannot be an overloaded type while a FIELD_VAR can *)
+datatype fieldType = FIELD_VAR  of fieldVar
+		   | FC  of labelType * ty * Label.label
+		   | FIELD_DEPENDANCY  of fieldType ExtLab.extLab
+		   | FIELD_NO_OVERLOAD
 
-    (* Joe speculates that typenameType and tyfun could be simply merged.
-     * This means the C and A cases of ty could also be merged.
-     * Probably nothing wrong with leaving them separate as they are now.
-     *
-     * constructorKind in the NC constructor is used to know if the constructor
-     * comes from a declaration (arrow type: datatype constructor with argument).
-     * It is only used for the arrow type isn't it? *)
-    datatype typenameType = TYPENAME_VAR  of typenameVar
-			  | NC  of typename * constructorKind * Label.label
-			  | TYPENAME_DEPENDANCY  of typenameType ExtLab.extLab
+(** A row type, either a row variable, a row constructor, or a row dependency. *)
+     and rowType = ROW_VAR  of rowVar
+		 | ROW_C  of fieldType list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
+		 | ROW_DEPENDANCY  of rowType ExtLab.extLab
 
-    (* FIELD_NO_OVERLOAD: marker to show that a field has been deleted from a row because
-     * it is cannot be an overloaded type while a FIELD_VAR can *)
-    datatype fieldType = FIELD_VAR  of fieldVar
-		       | FC  of labelType * ty * Label.label
-		       | FIELD_DEPENDANCY  of fieldType ExtLab.extLab
-		       | FIELD_NO_OVERLOAD
+(** A type function, either a type function variable, a type function constructor, or a type function dependency. *)
+     and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
+		      | TFC of rowType * ty * Label.label
+		      | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
 
-	 and rowType = ROW_VAR  of rowVar
-		     | ROW_C  of fieldType list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
-		     | ROW_DEPENDANCY  of rowType ExtLab.extLab
-
-	 and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
-			  | TFC of rowType * ty * Label.label
-			  | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
-
-	 (*--------------------------------------------------------------------------
-	  * The ty datatype:
+	 (** The ty datatype, used to represent a type.
 	  *
-	  * TYPE_VAR: implicit type variable. The option (extv) is  NONE if
+	  * \arg TYPE_VAR: implicit type variable. The option (extv) is  NONE if
 	  *                the variable does not come from an explicit type varaible
-	  * EXPLICIT_TYPE_VAR: explicit type variable. The second variable is
+	  * \arg EXPLICIT_TYPE_VAR: explicit type variable. The second variable is
 	  *                         the generalisation
-	  * TYPE_CONSTRUCTOR: type constructor
-	  * APPLICATION: type scheme instantiation (do we need this?)
-	  * TYPE_POLY: polymorphic type. the idor is so that an
+	  * \arg TYPE_CONSTRUCTOR: type constructor
+	  * \arg APPLICATION: type scheme instantiation (do we need this?)
+	  * \arg TYPE_POLY: polymorphic type. the idor is so that an
 				   jpirie: HUH? "or type" is unique
 	  *            even after freshening. The id is so that we can in case of
 	  *            an overloading type error, report the overloaded id.
-	  * GEN: intersection type
-	  * TYPE_DEPENDANCY: type annotated with dependancies *)
+	  * \arg GEN: intersection type
+	  * \arg TYPE_DEPENDANCY: type annotated with dependancies *)
 
 	 and ty = TYPE_VAR          of typeVar  * extv  * poly * equalityType
 		| EXPLICIT_TYPE_VAR of Id.id  * typeVar * Label.label * equalityType
@@ -150,9 +155,7 @@ type explicitTypeVar = typeVar ExtLab.extLab
 		| GEN               of ty list ref
 		| TYPE_DEPENDANCY   of ty ExtLab.extLab
 
-	 (*------------------------------------------------------------------------*)
-
-	 (* a datatype to give the different status that we can be in when checking if something is an equality type
+	 (** A datatype to give the different status that we can be in when checking if something is an equality type
 	  * EQUALITY_TYPE: definitely an equality type
 	  * NOT_EQUALITY_TYPE: definitely not an equality type *)
 	 and equalityTypeStatus = EQUALITY_TYPE
@@ -161,12 +164,12 @@ type explicitTypeVar = typeVar ExtLab.extLab
 				| UNKNOWN
 
 
-	 (* datatype constructor for equality type status tracking
-	  * EQUALITY_TYPE_VAR: an equality type variable, just a number
-	  * EQUALITY_TYPE_VAR_LIST: a list of equality type variables
-	  * EQUALITY_TYPE_STATUS: for when we know the equality type status of an expression
-	  * EQUALITY_TYPE_DEPENDANCY: allows us to hold e.g. labels when creating constraints
-	  * EQUALITY_TYPE_ON_TYPE: holds any of the ty constructors (allows constraining ty's
+	 (** Datatype for equality type status tracking.
+	  * \arg EQUALITY_TYPE_VAR: an equality type variable, just a number
+	  * \arg EQUALITY_TYPE_VAR_LIST: a list of equality type variables
+	  * \arg EQUALITY_TYPE_STATUS: for when we know the equality type status of an expression
+	  * \arg EQUALITY_TYPE_DEPENDANCY: allows us to hold e.g. labels when creating constraints
+	  * \arg EQUALITY_TYPE_ON_TYPE: holds any of the ty constructors (allows constraining ty's
           *                        equality type vars to another equality type var *)
  	 and equalityType = EQUALITY_TYPE_VAR of equalityTypeVar
 			  | EQUALITY_TYPE_VAR_LIST of equalityTypeVar list
@@ -175,10 +178,10 @@ type explicitTypeVar = typeVar ExtLab.extLab
 			  | EQUALITY_TYPE_DEPENDANCY of equalityType ExtLab.extLab
 			  | EQUALITY_TYPE_ON_TYPE of ty
 
-
+(** Different type name constructs (typename, dummy, mabye typename, not type name). *)
 datatype names = TYPENAME of typename | DUMTYPENAME of typename | MAYTYPENAME | NOTTYPENAME
 
-(* List of top level type constructors (builtin type names).
+(** List of top level type constructors (builtin type names).
  * When analysing the basis file, the first occurrence of such a type name
  * is the occurrence which is affected the internal type name as defined by
  * the getTypenameString function (see below). *)
@@ -186,47 +189,77 @@ val typenames = ["unit"     , "int"  , "word" , "real"  , "char", "string",
 		 "substring", "exn"  , "array", "vector", "ref" , "bool"  ,
 		 "option"   , "order", "list" , "frag"]
 
-(* List of the overloading classes as they are called in the Definition
+(** List of the overloading classes as they are called in the Definition
  * of SML.  These are hard coded in the parser. *)
 val ovClasses = ["Int", "Word", "Real", "Char", "String"]
 
+(** Used if a record is not flexible, returns NONE. *)
 fun noflex   _ = NONE
+(** Used if a record is flexible, built with a label.
+ * \param The label responsible for record flexibility. *)
 fun consflex l = SOME l
+(** Returns true if a record is flexible, false otherwise. *)
 fun isflex   f = Option.isSome f
+(** Gets the label reponsible for the flexibility of a record. *)
 fun getflex  f = Option.valOf f handle Option => raise unflex
 
-(* integer constants representing types *)
+(** Integer constant representing dummy type names. *)
 val DUMMYTYPENAME        = 0
+(** Integer constant representing an arrow type. *)
 val CONSARROW          = 1
+(** Integer constant representing a record type. *)
 val CONSRECORD         = 2
+(** Integer constant representing an integer type. *)
 val CONSINT            = 3
+(** Integer constant representing a word type. *)
 val CONSWORD           = 4
+(** Integer constant representing a real type. *)
 val CONSREAL           = 5
+(** Integer constant representing a boolean type. *)
 val CONSBOOL           = 6
+(** Integer constant representing a string type. *)
 val CONSSTRING         = 7
+(** Integer constant representing a list type. *)
 val CONSLIST           = 8
+(** Integer constant representing a ref type. *)
 val CONSREF            = 9
+(** Integer constant representing a char type. *)
 val CONSCHAR           = 10
+(** Integer constant representing an exception type. *)
 val CONSEXCEPTION      = 11
+(** Integer constant representing a substring type. *)
 val CONSSUBSTRING      = 12
+(** Integer constant representing an array type. *)
 val CONSARRAY          = 13
+(** Integer constant representing a vector type. *)
 val CONSVECTOR         = 14
+(** Integer constant representing an option type. *)
 val CONSOPTION         = 15
+(** Integer constant representing an order type. *)
 val CONSORDER          = 16
+(** Integer constant representing a frag type. *)
 val CONSFRAG           = 17
 val CONSTYPENAMESTART  = 18
 
-val nextTypenameVar        = ref 0 (* next type name variable *)
-val nextTypeVar            = ref 0 (* next type variable *)
-val nextRowVar             = ref 0 (* next row variable *)
-val nextEqualityTypeVar    = ref 0 (* next equality type variable *)
-val nextLabelVar           = ref 0 (* next label variable *)
-val nextFieldVar           = ref 0 (* next field variable *)
-val nextTypeFunctionVar    = ref 0 (* next type function variable *)
-val nextidor               = ref 0 (* next id variable *)
+(** Next type name variable *)
+val nextTypenameVar        = ref 0
+(** Next type variable *)
+val nextTypeVar            = ref 0
+(** Next row variable *)
+val nextRowVar             = ref 0
+(** Next equality type variable *)
+val nextEqualityTypeVar    = ref 0
+(** Next label variable *)
+val nextLabelVar           = ref 0
+(** Next field variable *)
+val nextFieldVar           = ref 0
+(** Next type function variable *)
+val nextTypeFunctionVar    = ref 0
+(** Next id variable *)
+val nextidor               = ref 0
 val nextTypename           = ref (CONSTYPENAMESTART)
 
-(* sets the above ref values to a value n *)
+(** Sets the ref values for 'next' variables to a specified value set in the argument. *)
 fun setnexts n =
     let val _ = nextTypenameVar     := n
 	val _ = nextTypeVar         := n
@@ -240,54 +273,78 @@ fun setnexts n =
     in ()
     end
 
-(* resets all ref values above to 0 *)
+(** Resets all 'next' ref values to 0. *)
 fun resetnexts () = setnexts 0
 
-(* accessor methods *)
+(** Gets the next type variable. *)
 fun getTypeVar ()         = !nextTypeVar
+(** Gets the next row variable. *)
 fun getrowVar ()          = !nextRowVar
+(** Gets the next equality type variable. *)
 fun getEqualityTypeVar () = !nextEqualityTypeVar
+(** Gets the next field variable. *)
 fun getFieldVar ()        = !nextFieldVar
+(** Gets the next label variable. *)
 fun getLabelVar ()        = !nextLabelVar
+(** Gets the next type function variable. *)
 fun getTypeFunctionVar () = !nextTypeFunctionVar
+(** Gets the next 'idor' variable. *)
 fun getidor ()            = !nextidor
+(** Gets the next typename variable. *)
 fun getTypenameVar ()     = !nextTypenameVar
 
-(* funtions to cast defined types to integers *)
+(** Converts a type variable to an integer. *)
 fun typeVarToInt          typeVar         = typeVar
+(** Converts a type function variable to an integer. *)
 fun typeFunctionVarToInt  typeFunctionVar = typeFunctionVar
+(** Converts a label variable to an integer. *)
 fun labelVarToInt         labelVar        = labelVar
+(** Converts a field variable to an integer. *)
 fun fieldVarToInt           fieldVar          = fieldVar
+(** Converts a typename variable to an integer. *)
 fun typenameVarToInt      typenameVar     = typenameVar
+(** Converts a typename to an integer. *)
 fun typenameToInt         typename          = typename
+(** Converts a row variable to an integer. *)
 fun rowVarToInt           rowVar     = rowVar
+(** Converts an equality type variable to an integer. *)
 fun equalityTypeVarToInt  equalityTypeVar     = equalityTypeVar
+(** Converts an idor variable to an integer. *)
 fun idorToInt             idor            = idor
-
+(** Converts a typename to an integer. *)
 fun typenameFromInt typename = typename
 
-(* equality testing for defined types *)
+(** Tests for equality between two equality type variables. *)
 fun eqTypeVar     tv1 tv2 = (tv1 = (tv2 : typeVar))
+(** Tests for equality between two equality type function variables. *)
 fun eqTypeFunctionVar    fv1 fv2 = (fv1 = (fv2 : typeFunctionVar))
+(** Tests for equality between two row variables. *)
 fun eqRowVar    sv1 sv2 = (sv1 = (sv2 : rowVar))
+(** Tests for equality between two equality type variables. *)
 fun eqEqualityTypeVar    eqtv1 eqtv2 = (eqtv1 = (eqtv2 : equalityTypeVar))
+(** Tests for equality between two labels variables. *)
 fun eqLabelVar    lv1 lv2 = (lv1 = (lv2 : labelVar))
+(** Tests for equality between two field variables. *)
 fun eqFieldVar    rv1 rv2 = (rv1 = (rv2 : fieldVar))
+(** Tests for equality between two idor variables. *)
 fun eqIdor      id1 id2 = (id1 = (id2 : idor))
+(** Tests for equality between two typenames. *)
 fun eqTypename    tn1 tn2 = (tn1 = (tn2 : typename))
+(** Tests for equality between two typename variables. *)
 fun eqTypenameVar nv1 nv2 = (nv1 = (nv2 : typenameVar))
 
-(* Extract the name of a type name *)
+(** Extract the name of a type name. *)
 fun getNameTypenameTn (NC (name, _, _)) = SOME name
   | getNameTypenameTn (TYPENAME_DEPENDANCY exttn) = getNameTypenameTn (EL.getExtLabT exttn)
   | getNameTypenameTn _ = NONE
 
+(** Extracts the typename of a type constructor. *)
 fun getNameTypenameTy (TYPE_CONSTRUCTOR (tn, _, _, _)) = getNameTypenameTn tn
   | getNameTypenameTy (TYPE_DEPENDANCY extty) = getNameTypenameTy (EL.getExtLabT extty)
   | getNameTypenameTy _ = NONE
 
 
-(* extract the type name from a type function of the form:
+(** Extract the type name from a type function of the form:
  *   T.TFC (_, T.C (T.NC (name, _, _), _, _), _)
  * where we omit the dependencies. *)
 fun getTypename (TFC (_, ty, _)) = getNameTypenameTy ty
@@ -295,8 +352,7 @@ fun getTypename (TFC (_, ty, _)) = getNameTypenameTy ty
   | getTypename _ = NONE
 
 
-(* Strip dependencies off types *)
-
+(** Strips the dependencies off type functions. *)
 fun stripDepsTf (tf as TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1)) =
     let val (tf2, labs2, stts2, deps2) = stripDepsTf tf1
     in (tf2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
@@ -312,6 +368,7 @@ fun stripDepsTf (tf as TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1)) =
   | stripDepsTf (tf as TYPE_FUNCTION_VAR _) =
     (tf, L.empty, L.empty, CD.empty)
 
+(** Strips the dependencies off #ty values. *)
 and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
   | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
   | stripDepsTy (ty as TYPE_CONSTRUCTOR(tn, sq, lab, _)) =
@@ -353,7 +410,7 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
     in (ty2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-(* strip the dependencies off a row type *)
+(** Strips the dependencies off a row type. *)
 and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
   | stripDepsSq (sq as ROW_C (fields, flex, lab)) =
     let val (fields', labs, stts, deps) =
@@ -372,6 +429,7 @@ and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
     let val (sq2, labs2, stts2, deps2) = stripDepsSq sq1
     in (sq2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
+
 
 and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
   | stripDepsRt (rt as FC (lt, ty, lab)) =
@@ -403,8 +461,7 @@ and stripDepsTn (tn as TYPENAME_VAR _) = (tn, L.empty, L.empty, CD.empty)
     end
 
 
-(* NONE means not a type name, SOME SOME tn means a type name tn, SOME NONE means we can't now.*)
-
+(** NONE means not a type name, SOME SOME tn means a type name tn, SOME NONE means we can't now.*)
 fun isTypename tf =
     let val (tf', labs, stts, deps) = stripDepsTf tf
     in (isTypename' tf', labs, stts, deps)
@@ -428,18 +485,6 @@ and eqSeqTy (ROW_VAR sv1) (ROW_VAR sv2) =
     else SOME false
   | eqSeqTy (ROW_C (fields1, _, _)) (ROW_C (fields2, _, _)) = eqFieldTys fields1 fields2
   | eqSeqTy _ _ = SOME false
-
-and eqEqualityTy _ _  (* (EQUALITY_TYPE_VAR eqtv1) (EQUALITY_TYPE_VAR eqtv2) *)=
-    true
-  (*   if eqEqualityTypeVar eqtv1 eqtv2 *)
-  (*   then SOME true *)
-  (*   else SOME false *)
-  (* | eqEqualityTy (NOT_EQTYPE_VAR eqtv1) (NOT_EQTYPE_VAR eqtv2) = *)
-  (*   if eqEqualityTypeVar eqtv1 eqtv2 *)
-  (*   then SOME true *)
-  (*   else SOME false *)
-  (* | eqEqualityTy _ _ = SOME false *)
-
 
 and eqFieldTys [] [] = SOME true
   | eqFieldTys (field1 :: fields1) (field2 :: fields2) =
@@ -477,20 +522,29 @@ and eqTy (TYPE_VAR (tv1, _, _, _)) (TYPE_VAR (tv2, _, _, _)) =
 
 (* Freshening *)
 
-(* increment a ref value given as a parameter *)
+(** Increment a ref value given as a parameter *)
 fun freshAVar avar = let val x = !avar in (avar := !avar + 1; x) end
 
-(* increments the ref associated with the function name *)
+(** Generates a fresh type variable. *)
 fun freshTypeVar         () = freshAVar nextTypeVar
+(** Generates a fresh row variable. *)
 fun freshRowVar          () = freshAVar nextRowVar
+(** Generates a fresh equality type variable. *)
 fun freshEqualityTypeVar () = freshAVar nextEqualityTypeVar
+(** Generates a fresh typename variable. *)
 fun freshTypenameVar     () = freshAVar nextTypenameVar
+(** Generates a fresh label variable. *)
 fun freshLabelVar        () = freshAVar nextLabelVar
+(** Generates a fresh field variable. *)
 fun freshFieldVar        () = freshAVar nextFieldVar
+(** Generates a fresh type function variable. *)
 fun freshTypeFunctionVar () = freshAVar nextTypeFunctionVar
+(** Generates a fresh typename variable. *)
 fun freshTypename        () = freshAVar nextTypename
+(** Generates a fresh idor variable. *)
 fun freshidor            () = freshAVar nextidor
 
+(** Takes a typename string and returns a datatype constructor of #typename. *)
 fun getTypenameString "unit"      = CONSRECORD
   | getTypenameString "int"       = CONSINT
   | getTypenameString "word"      = CONSWORD
@@ -510,59 +564,50 @@ fun getTypenameString "unit"      = CONSRECORD
   | getTypenameString _           = freshTypename ()
 
 
-(**)
-
-(* type constructor for a label *)
-(* this is used in the binding of datatypes (f_datbind (A.DatBind...)) in the constraint generator *)
+(** A type constructor for a label.
+ * Used in the binding of datatypes (f_datbind (A.DatBind...)) in the constraint generator. *)
 fun consTypenameVar lab = TYPE_CONSTRUCTOR (TYPENAME_VAR (freshTypenameVar ()),
 					    ROW_VAR (freshRowVar ()),
 					    lab,
 					    EQUALITY_TYPE_STATUS(UNKNOWN))
 
-(* constructs an equality type variable *)
+(** Constructs an equality type variable *)
 fun consEQUALITY_TYPE_VAR eqtv = EQUALITY_TYPE_VAR eqtv
-
-(* constructs an equality type variable list *)
+(** Constructs an equality type variable list *)
 fun consEQUALITY_TYPE_VAR_LIST eqtvs = EQUALITY_TYPE_VAR_LIST eqtvs
-
-
+(** Prints a type variable. *)
 fun printTypeVar     tv  = "t"   ^ Int.toString tv
-
-(* constructs an implicit type var *)
+(** Constructs an implicit type variable. *)
 fun consTYPE_VAR   tv = (TYPE_VAR (tv, NONE, POLY, EQUALITY_TYPE_STATUS(UNKNOWN)))
-
-
-(* constructs an implicit type var *)
+(** Constructs an implicit type var. *)
 fun consTYPE_VARwithEQ   tv eqtv = TYPE_VAR (tv, NONE, POLY, eqtv)
-
-
-(* constructs a row var *)
+(** Constructs a row variable. *)
 fun consROW_VAR  rv  = ROW_VAR rv
-
-(* constructs a field variable *)
+(** Constructs a field variable. *)
 fun consFIELD_VAR  fv  = FIELD_VAR fv
-
-(* constructs a function variable *)
+(** Constructs a function variable. *)
 fun consTYPE_FUNCTION_VAR tfv = TYPE_FUNCTION_VAR tfv
-
+(** Builds a new type variable. *)
 fun newTYPE_VAR   () = consTYPE_VAR   (freshTypeVar  ())
+(** Builds a new field variable. *)
 fun newFIELD_VAR  () = consFIELD_VAR  (freshFieldVar ())
+(** Builds a new row variable. *)
 fun newROW_VAR  () = consROW_VAR  (freshRowVar ())
+(** Builds a new type function variable. *)
 fun newTYPE_FUNCTION_VAR () = consTYPE_FUNCTION_VAR (freshTypeFunctionVar ())
 
-(* check if parameter is a type construction *)
+(** True if parameter is a type constructor, false otherwise. *)
 fun isTyC (TYPE_CONSTRUCTOR _)    = true
   | isTyC _                        = false
-
-(* check if the parameter is an implicit type variable *)
+(** True if the parameter is an implicit type variable. *)
 fun isTyV (TYPE_VAR _)    = true
   | isTyV _        = false
 
-(* gets type name modelled by the type constructor *)
+(** Gets type name inside the type constructor. *)
 fun getTypenameType (TYPE_CONSTRUCTOR (tn, _, _, _)) = SOME tn
   | getTypenameType  _             = NONE
 
-(* returns labels from TyLab*)
+(** Returns labels from a #ty. *)
 fun getTyLab (TYPE_VAR  _)               = NONE
   | getTyLab (EXPLICIT_TYPE_VAR (_, _, l, _))       = SOME l
   | getTyLab (TYPE_CONSTRUCTOR  (_, _, l, _))       = SOME l
@@ -572,17 +617,13 @@ fun getTyLab (TYPE_VAR  _)               = NONE
   | getTyLab (TYPE_DEPENDANCY  _)              = NONE
 
 
-(* Extract the tyvar from a type.  The type as to be a type variable. *)
+(** Extracts the tyvar from a type. The type as to be a type variable. *)
 fun tyToTypeVar (TYPE_VAR (tv, _, _, _)) = tv
   | tyToTypeVar _ = raise EH.DeadBranch "the type should a var"
-(* Extract the rowVariable from a type row.  The type row as to be a row variable.*)
+(** Extract the rowVariable from a type row.  The type row as to be a row variable. *)
 fun seqToRowVar (ROW_VAR sv) = sv
   | seqToRowVar _ = raise EH.DeadBranch "the type row should be a var"
 
-
-(**)
-
-(* constructor functions *)
 fun conslabty n lab = LC (Int.toString n, lab)
 
 fun constuple tvl lab =
@@ -600,82 +641,136 @@ fun constupleTyped tvl lab =
 fun consTupleTy tyl lab =
     #1 (foldl (fn (x, (xs, n)) => ((FC (conslabty n lab, x, lab)) :: xs, n+1)) ([], 1) tyl)
 
-(* constructors with kinds *)
 
+(** Construct an arow type where tv1 and tv2 are already a TYPE_VAR. *)
 fun constyarrow'Typed tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constupleTyped [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct an arow type where tv1 and tv2 are of type #typeVar. *)
 fun constyarrow' tv1 tv2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(NOT_EQUALITY_TYPE))
+(** Construct an arrow type with equality type information attached. *)
 fun constyarrow'Eq tv1 tv2 lab k eq = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (constuple [tv1, tv2] lab, noflex (), lab), lab, eq)
+(** Construct a record type. *)
 fun constyrecord'  tvl f lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (map (fn x => FIELD_VAR x) tvl, f, lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a boolean type. *)
 fun constybool'          lab k = TYPE_CONSTRUCTOR (NC (CONSBOOL, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct an integer type. *)
 fun constyint'           lab k = TYPE_CONSTRUCTOR (NC (CONSINT, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a word type. *)
 fun constyword'          lab k = TYPE_CONSTRUCTOR (NC (CONSWORD, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a 'real' type. *)
 fun constyreal'          lab k = TYPE_CONSTRUCTOR (NC (CONSREAL, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a char type.*)
 fun constychar'          lab k = TYPE_CONSTRUCTOR (NC (CONSCHAR, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a string type. *)
 fun constystring'        lab k = TYPE_CONSTRUCTOR (NC (CONSSTRING, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct an exception type. *)
 fun constyexception'     lab k = TYPE_CONSTRUCTOR (NC (CONSEXCEPTION, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a unit type. *)
 fun constyunit'          lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a list type. *)
 fun constylist'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSLIST, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a ref type. *)
 fun constyref'        tv lab k = TYPE_CONSTRUCTOR (NC (CONSREF, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a tuple type. *)
 fun constytuple'     tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a tuple type where the type variable as an argument is already a TYPE_VAR. *)
 fun constytuple'WithTheta tvl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constupleTyped tvl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a tuple with equality type information attached. *)
 fun constytuple'WithEquality     tvl eqtv lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (constuple tvl lab, noflex (), lab), lab, eqtv)
+(** Construct a substring type. *)
 fun constysubstring'     lab k = TYPE_CONSTRUCTOR (NC (CONSSUBSTRING, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(* Construct an array type. *)
 fun constyarray'      tv lab k = TYPE_CONSTRUCTOR (NC (CONSARRAY, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a vector type. *)
 fun constyvector'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSVECTOR, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct an option type. *)
 fun constyoption'     tv lab k = TYPE_CONSTRUCTOR (NC (CONSOPTION, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct an order type. *)
 fun constyorder'         lab k = TYPE_CONSTRUCTOR (NC (CONSORDER, k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a frag type. *)
 fun constyfrag'       tv lab k = TYPE_CONSTRUCTOR (NC (CONSFRAG, k, lab), ROW_C (constuple [tv] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a new constructor type. *)
 fun constynewcons'       lab k = TYPE_CONSTRUCTOR (NC (freshTypename   (), k, lab), ROW_C ([], noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN)) (* a new constant type *)
 
-(* constructors on types *)
+(** Construct an arrow type. *)
 fun consTyArrowTy ty1 ty2 lab k = TYPE_CONSTRUCTOR (NC (CONSARROW, k, lab), ROW_C (consTupleTy [ty1, ty2] lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
+(** Construct a tuple type (record type). *)
 fun consTyTupleTy     tyl lab k = TYPE_CONSTRUCTOR (NC (CONSRECORD, k, lab), ROW_C (consTupleTy tyl lab, noflex (), lab), lab, EQUALITY_TYPE_STATUS(UNKNOWN))
 
-(* constructors without kinds *)
+(** Constructs an arrow type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyarrow tv1 tv2 lab = constyarrow' tv1 tv2 lab OTHER_CONS
+(** Constructs an arrow type without a constructor kind where the tv values are already TYPE_VARs (OTHER_CONS constructor kind). *)
 fun constyarrowTyped tv1 tv2 lab = constyarrow'Typed tv1 tv2 lab OTHER_CONS
+(** Constructs a record type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyrecord  tvl f lab = constyrecord'  tvl f lab OTHER_CONS (* the label option is for the flex *)
+(** Constructs a boolean type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constybool          lab = constybool'          lab OTHER_CONS
+(** Constructs an integer type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyint           lab = constyint'           lab OTHER_CONS
+(** Constructs a word type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyword          lab = constyword'          lab OTHER_CONS
+(** Constructs a real type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyreal          lab = constyreal'          lab OTHER_CONS
+(** Constructs a char type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constychar          lab = constychar'          lab OTHER_CONS
+(** Constructs a string type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constystring        lab = constystring'        lab OTHER_CONS
+(** Constructs a exception type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyexception     lab = constyexception'     lab OTHER_CONS
+(** Constructs a unit type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyunit          lab = constyunit'          lab OTHER_CONS
+(** Constructs a list type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constylist       tv lab = constylist'       tv lab OTHER_CONS
+(** Constructs a ref type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyref        tv lab = constyref'        tv lab OTHER_CONS
+(** Constructs a tuple type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constytuple     tvl lab = constytuple'     tvl lab OTHER_CONS
+(** Constructs a tuple type without a constructor kind with equality type information (OTHER_CONS constructor kind). *)
 fun constytupleWithTheta  tvl lab = constytuple'WithTheta     tvl lab OTHER_CONS
+(** Constructs an arrow type without a constructor kind with equality type information (OTHER_CONS constructor kind). *)
 fun constytupleWithEquality tvl eq lab = constytuple'WithEquality     tvl eq lab OTHER_CONS
+(** Constructs an arrow type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constysubstring     lab = constysubstring'     lab OTHER_CONS
+(** Constructs an array type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyarray      tv lab = constyarray'      tv lab OTHER_CONS
+(** Constructs a vector type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyvector     tv lab = constyvector'     tv lab OTHER_CONS
+(** Constructs an option type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyoption     tv lab = constyoption'     tv lab OTHER_CONS
+(** Constructs an order type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyorder         lab = constyorder'         lab OTHER_CONS
+(** Constructs a frag type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constyfrag       tv lab = constyfrag'       tv lab OTHER_CONS
+(** Constructs a new constructor type without a constructor kind (OTHER_CONS constructor kind). *)
 fun constynewcons       lab = constynewcons'       lab OTHER_CONS
 
+(** Returns true if the typename given in the argument is a base type. *)
 fun isBase' tn = tn < CONSTYPENAMESTART andalso tn > DUMMYTYPENAME
+
+(** Returns true if typename in the argument is a base type, false otherwise. *)
 fun isBase  tn = tn = CONSARROW         orelse  tn = CONSRECORD
 (*orelse (tn = CONSINT)*)
 
+(** Returns true if the typename value given in the argument is a base type. *)
 fun isBaseTy (TYPENAME_VAR _)          = false
   | isBaseTy (NC (tn, _, _)) = isBase tn
   | isBaseTy (TYPENAME_DEPENDANCY etn)        = isBaseTy (EL.getExtLabT etn)
 
+(** Returns true if the typename value argument is an arrow type. *)
 fun isArrowTy (TYPENAME_VAR _)          = false
   | isArrowTy (NC (tn, _, _)) = tn = CONSARROW
   | isArrowTy (TYPENAME_DEPENDANCY etn)        = isArrowTy (EL.getExtLabT etn)
 
+(** Returns true if the typename value argument is an exception type. *)
 fun isExcTy (TYPENAME_VAR _)          = false
   | isExcTy (NC (tn, _, _)) = tn = CONSEXCEPTION
   | isExcTy (TYPENAME_DEPENDANCY etn)        = isExcTy (EL.getExtLabT etn)
 
+(** Returns true if the typename value argument is an declaration. *)
 fun isDecTy (NC (_, DECLARATION_CONS _, _)) = true
   | isDecTy (TYPENAME_DEPENDANCY etn)          = isDecTy (EL.getExtLabT etn)
   | isDecTy _                 = false
 
+(** Returns true if the typename value argument is a pattern. *)
 fun isPatTy (NC (_, PA, _)) = true
   | isPatTy (TYPENAME_DEPENDANCY etn)        = isPatTy (EL.getExtLabT etn)
   | isPatTy _               = false
@@ -724,9 +819,11 @@ and labelBuiltinTyf (TFC (seq, ty, l)) lab =
   | labelBuiltinTyf (TYPE_FUNCTION_DEPENDANCY etf) lab = TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => labelBuiltinTyf tf lab))
   | labelBuiltinTyf (TYPE_FUNCTION_VAR x) _ = (TYPE_FUNCTION_VAR x)
 
+(** True if the argument is a TYPENAME_VAR, false otherwise. *)
 fun isVarTypename (TYPENAME_VAR _) = true
   | isVarTypename _ = false
 
+(** True if the argument is a FIELD_VAR, false otherwise. *)
 fun isShallowField (FIELD_VAR _) = true
   | isShallowField _ = false
 
@@ -744,16 +841,21 @@ fun unionExtTypeVars (set1, set2) =
 		    (L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2))
 		(set1, set2)
 
+
+(** Extracts the type variables from a field type. *)
 fun getTypeVarsfieldty (FIELD_VAR _)                       = S.empty
   | getTypeVarsfieldty (FC (_, ty, _))              = getTypeVarsty ty
   | getTypeVarsfieldty (FIELD_DEPENDANCY (field, labs, stts, deps)) = decorateExtTypeVars (getTypeVarsfieldty field) labs stts deps
   | getTypeVarsfieldty FIELD_NO_OVERLOAD                           = S.empty
+(** Extracts the type variables from a sequence type. *)
 and getTypeVarstyseq (ROW_VAR _)                       = S.empty
   | getTypeVarstyseq (ROW_C (fields, _, _))            = foldr (fn (field, tvs) => unionExtTypeVars (getTypeVarsfieldty field, tvs)) S.empty fields
   | getTypeVarstyseq (ROW_DEPENDANCY (seq, labs, stts, deps)) = decorateExtTypeVars (getTypeVarstyseq seq) labs stts deps
+(** Extracts type variables from a type function type value. *)
 and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
   | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
   | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
+(** Extracts types variables from a #ty value. *)
 and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
   | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _, _))             = getTypeVarstyseq sq
@@ -761,12 +863,8 @@ and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty,
   | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _, _))        = getTypeVarstyseq sq
   | getTypeVarsty    (GEN ty)                     = S.empty
   | getTypeVarsty    (TYPE_DEPENDANCY (ty, labs, stts, deps))  = decorateExtTypeVars (getTypeVarsty ty) labs stts deps
-(*and getTypeVarstylist xs = foldr (fn (x, y) => (getTypeVarsty x) @ y) [] xs
-and getTypeVarstyseqlist xs = foldr (fn (x, y) => (getTypeVarstyseq x) @ y) [] xs*)
-
-(* getTypeVarsty is used by the unification algorithm to recompute
- * the monomorphic type variables.
- * This is at least used by enum/StateEnv.sml *)
+(** Used by the unification algorithm to recompute * the monomorphic type variables.
+ *  This is at least used by enum/StateEnv.sml. *)
 fun getTypeVarsTy ty =
     S.foldri (fn (tv, (labs, stts, deps), list) =>
 		 (tv, labs, stts, deps) :: list)
@@ -774,40 +872,53 @@ fun getTypeVarsTy ty =
 	     (getTypeVarsty ty)
 
 
-(* Returns the actual type constructor of a typenameType *)
+(** Returns the actual type constructor of a typenameType *)
 fun tntyToTyCon (TYPENAME_VAR tnv)        = DUMMYTYPENAME (* we could also return "tnv" but we don't care about the variable really *)
   | tntyToTyCon (NC (tn, _, _)) = tn
   | tntyToTyCon (TYPENAME_DEPENDANCY etn)        = tntyToTyCon (EL.getExtLabT etn)
 
-(* determines if a parameter is of monomorphic or polymorphic type *)
+(* Determines if a parameter is of monomorphic (false) or polymorphic (true) type *)
 fun isPoly POLY = true
   | isPoly MONO = false
 
 (********* PRINTING SECTION **********)
 
-
+(** Prints an explicit type variable. *)
 fun printetyvar    tv  = "e"   ^ Int.toString tv (*printetyvar for print explicit type variable *)
+(** Prints a row variable. *)
 fun printRowVar    sv  = "s"   ^ Int.toString sv
+(** Prints a typename variable. *)
 fun printTypenameVar tnv = "tnv" ^ Int.toString tnv
+(** Prints a typename variable. *)
 fun printTypename    tn  = "n"   ^ Int.toString tn
+(** Prints a field variable. *)
 fun printFieldVar    rv  = "r"   ^ Int.toString rv
+(** Prints a label variable. *)
 fun printLabelVar    lv  = "f"   ^ Int.toString lv
+(** Prints a type function variable. *)
 fun printTypeFunctionVar    tfv = "tfv" ^ Int.toString tfv
+(** Prints an equality type variable. *)
 fun printEqualityTypeVar        eqtv = "eqtv" ^ Int.toString eqtv
+(** Prints a list of equality type variables. *)
 fun printEqualityTypeVarList       [] = ""
   | printEqualityTypeVarList      [h] = "eqtv" ^ Int.toString h
   | printEqualityTypeVarList   (h::t) = ("eqtv" ^ Int.toString h ^ ", ")^(printEqualityTypeVarList t)
+(** Prints an equality type status. *)
 fun printEqualityTypeStatus status =
     case status of
 	EQUALITY_TYPE => "EQUALITY_TYPE"
       | NOT_EQUALITY_TYPE => "NOT_EQUALITY_TYPE"
       | SIG_TYPE => "SIG_TYPE"
       | UNKNOWN => "UNKNOWN"
+(** Prints a field name. *)
 fun printFieldName   fieldName  = fieldName
+(** Prints a label. *)
 fun printlabel     l   = "l"   ^ L.printLab l
+(** Prints a labelled constructor? *)
 fun printsmllc     lc  = "\""  ^ lc ^ "\""
 fun printsmltn     tn  = Int.toString tn
 
+(** Prints a typename. *)
 fun printTypename'   0   = "a new type name"
   | printTypename'   1   = "arrow"
   | printTypename'   2   = "record"
@@ -828,6 +939,7 @@ fun printTypename'   0   = "a new type name"
   | printTypename'   17  = "frag"
   | printTypename'   _   = "a user type" (* should be a raise DeadBranch *)
 
+(** Looks up the typename argument in the association map and prints it. *)
 fun printTypenameAssoc typename assoc =
     if typename >= CONSTYPENAMESTART
     then case I.lookupId (I.fromInt typename) assoc of
@@ -835,22 +947,28 @@ fun printTypenameAssoc typename assoc =
 	   | SOME str => "a user type named " ^ str
     else printTypename' typename
 
+(** Pritns out a #labelType value. *)
 fun printlabty (LABEL_VAR lv)      = printLabelVar lv
   | printlabty (LC (lc, l)) = "(" ^ printFieldName lc ^ "," ^ printlabel l ^ ")"
   | printlabty (LABEL_DEPENDANCY elt)     = "LD" ^ EL.printExtLab' elt printlabty
 
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(** Prints a list of field variables. *)
 fun printFieldVarlist xs = printlistgen xs printFieldVar
+(** Prints a list of type variables. *)
 fun printTypeVarList  xs = printlistgen xs printTypeVar
+(** Prints a list of row variables. *)
 fun printRowVarList xs = printlistgen xs printRowVar
 
-(* KCons means "Kind of constructor" - this name should be changed. *)
+(** Prints the kind of a constructor.
+ *  KCons means "Kind of constructor" - this name should be changed. *)
 fun printKCons (DECLARATION_CONS id) = "DECLARATION_CONS(" ^ I.printId id ^ ")"
   | printKCons PATTERN_CONS      = "PATTERN"
   | printKCons OTHER_CONS      = "OTHER_CONS"
   | printKCons BUILTIN_BASIS_CONS      = "BUILTIN_BASIS_CONS"
 
+(** Prints out a #typenameType value. *)
 fun printtnty (TYPENAME_VAR tnv)        = printTypenameVar tnv
   | printtnty (NC (tn, k, l)) = "(" ^ printTypename tn ^ "," ^ printKCons k ^ "," ^ printlabel l ^ ")"
   | printtnty (TYPENAME_DEPENDANCY etn)        = "TYPENAME_DEPENDANCY" ^ EL.printExtLab' etn printtnty
@@ -863,28 +981,31 @@ fun printExplicit x = printOp x I.printIdL
 
 fun printidor i = Int.toString i
 
+(** Prints out a #poly constructor as a string. *)
 fun printPoly POLY = "POLY"
   | printPoly MONO = "MONO"
 
 fun printOrKind (VALUE labelledId) = "VALUE(" ^ I.printIdL labelledId ^ ")"
   | printOrKind (CONSTANT (st, id, lab)) = "CONSTANT(" ^ st ^ "," ^ I.printId id ^ "," ^ L.printLab lab ^ ")"
 
-
-(* functions to print internal types *)
-
+(** Prints a field type value. *)
 fun printFieldType (FIELD_VAR rv)            = "FIELD_VAR(" ^ printFieldVar rv ^ ")"
   | printFieldType (FC (lt, tv, l))   = "FIELD_CONSTRUCTION(" ^ printlabty lt ^
 				    ":"   ^ printty    tv ^
 				    ","   ^ printlabel l  ^ ")"
   | printFieldType (FIELD_DEPENDANCY efield)          = "FIELD_DEPENDANCY"  ^ EL.printExtLab' efield printFieldType
   | printFieldType FIELD_NO_OVERLOAD               = "FIELD_NO_OVERLOAD"
+(** Prints a list of filed type values. *)
 and printfieldtylist xs             = printlistgen xs printFieldType
+
+(** Prints a sequence type as a string. *)
 and printseqty (ROW_VAR sv)            = "ROW_VAR(" ^ printRowVar     sv ^ ")"
   | printseqty (ROW_C (rl, b, l))    = "ROW_CONSTRUCTION("  ^ printfieldtylist rl ^
 				    ","    ^ printflex      b  ^
 				    ","    ^ printlabel     l  ^ ")"
   | printseqty (ROW_DEPENDANCY eseq)          = "ROW_DEPENDANCY"   ^ EL.printExtLab' eseq printseqty
 
+(** Prints an #equalityType value. *)
 and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ printEqualityTypeVar eqtv ^ ")"
   | printEqualityType (EQUALITY_TYPE_VAR_LIST eqtvs)    = "EQUALITY_TYPE_LIST(" ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_STATUS status) = "EQUALITY_TYPE_STATUS("  ^ (printEqualityTypeStatus status) ^")"
@@ -892,11 +1013,14 @@ and printEqualityType (EQUALITY_TYPE_VAR eqtv)    = "EQUALITY_TYPE_VAR(" ^ print
   | printEqualityType (EQUALITY_TYPE_TYPENAME eqtvs) = "EQUALITY_TYPE_TYPENAME("  ^ printEqualityTypeVarList eqtvs ^ ")"
   | printEqualityType (EQUALITY_TYPE_ON_TYPE ty) = "EQUALITY_TYPE_ON_TYPE("  ^ (printty ty) ^")"
 
+(** Prints out a type function value. *)
 and printtyf (TYPE_FUNCTION_VAR v)              = "TYPE_FUNCTION_VAR(" ^ printTypeFunctionVar   v   ^ ")"
   | printtyf (TFC (sq, ty, l))    = "TFC(" ^ printseqty    sq  ^
 				    ","    ^ printty       ty  ^
 				    ","    ^ printlabel    l   ^ ")"
   | printtyf (TYPE_FUNCTION_DEPENDANCY etf)            = "TYPE_FUNCTION_DEPENDANCY"  ^ EL.printExtLab' etf printtyf
+
+(** Prints out a #ty value. *)
 and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar    v   ^
 						 ","    ^ printExplicit b   ^
 						 ","    ^ printPoly     p   ^
@@ -920,14 +1044,14 @@ and printty (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("   ^ printTypeVar   
 				    ","    ^ printEqualityType    eq   ^ ")"
   | printty (GEN tys)             = "GEN(" ^ printTyGen    tys ^ ")"
   | printty (TYPE_DEPENDANCY ety)              = "TYPE_DEPENDANCY"   ^ EL.printExtLab' ety printty
+
+(** Prints out a list of #ty values. *)
 and printtylist    xs = printlistgen xs printty
+(** Prints out a list of sequence types. *)
 and printseqtylist xs = printlistgen xs printseqty
 and printTyGen tys = printtylist (!tys)
 
-
-(* this printty is user friendly *)
-
-
+(** Prints out a typename type value. *)
 fun printtnty' (TYPENAME_VAR tnv)            = "TYPENAME_VAR(" ^ printTypenameVar tnv ^ ")"
   | printtnty' (NC (tn, k, l))     = "TYPENAME_CONSTRUCTION(" ^ printTypename' tn ^
 				     ","   ^ printKCons   k  ^
@@ -977,14 +1101,15 @@ and printty' (TYPE_VAR (v, b, p, eqtv))         = "TYPE_VAR("    ^ printTypeVar 
 and printtylist' tys = printlistgen tys printty'
 and printTyGen'  tys = printtylist' (!tys)
 
+(** Maps a function f over a list of lists and then joins all the lists together using the @ operator. *)
 fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
-
+(** Strips equality type variables from a field type. *)
 fun stripEqualityVariables_fieldType (FIELD_VAR rv) labels   = ([], labels)
   | stripEqualityVariables_fieldType (FC (_, tv, label)) labels  = stripEqualityVariables tv (L.cons label labels)
   | stripEqualityVariables_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityVariables_fieldType term (L.union labs labels)
   | stripEqualityVariables_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
-
+(** Strips equality type variables from a sequence type. *)
 and stripEqualityVariables_sequenceType (ROW_VAR _) labels = ([], labels)
   | stripEqualityVariables_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
   | stripEqualityVariables_sequenceType (ROW_C ((h::t),x,label)) labels =
@@ -997,9 +1122,7 @@ and stripEqualityVariables_sequenceType (ROW_VAR _) labels = ([], labels)
 	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityVariables_fieldType (L.cons label labels) *)
   | stripEqualityVariables_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityVariables_sequenceType term (L.union labs labels)
 
-(* this is currently used when solving equality constraint accessors, and only equality constraint accessors
- * (2012-07-09-12:22) jpirie: do we actually need to strip things this way? Want to look into this.
- *)
+(** Strips equality type variables from a #ty value. *)
 and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYPE_VAR eqtv)) labels =
     (D.printDebug D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality type var from a TYPE_VAR: " ^ (printty (typeVar)));
      ([eqtv], labels))
@@ -1032,9 +1155,6 @@ and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYP
      ([], labels))
   | stripEqualityVariables (TYPE_DEPENDANCY (term, depLabels, _, _)) labels = stripEqualityVariables term (L.union depLabels labels)
 
-and stripEqualityVariablesList _ = raise EH.TODO "Not written this function yet"
-
-fun printAssoc  xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ st ^ ")")
-fun printAssoc' xs = printlistgen xs (fn (tv, st) => "(" ^ Int.toString tv ^ "," ^ "\"" ^ st ^ "\"" ^ ")")
+and stripEqualityVariablesList _ = raise EH.TODO ""
 
 end

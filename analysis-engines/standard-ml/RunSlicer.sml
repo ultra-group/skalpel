@@ -43,52 +43,62 @@ structure EH = ErrorHandler
 structure D  = Debug
 structure PP = Ppp
 
-(* flag set if we are building the web demo binary *)
+(** Set to true if we are building a binary for the webdemo. *)
 val webdemo = ref false
 val data_tmp = PP.data_tmp
 
+(** Type of reported errors, set to JsonParser.error. *)
 type error = JsonParser.error
-val error : error = Tester.error
 
-(* localise Tester functions *)
+(** Set to be the same as the error as defined in Tester (#Tester.error). *)
+val error : error = Tester.error
+(** Set to be the same as the myfilehtml as defined in Tester (#Tester.myfilehtml). *)
 val myfilehtml     = Tester.myfilehtml
 
-(* datatype for determining whether the user wishes slices displayed in a terminal *)
-(* INTERACTIVE is not used yet. It perhaps should be added, so the user can cycle through slices *)
+(** Datatype for determining whether the user wishes slices displayed in a terminal, has three constructors.
+ * \arg NO_DISPLAY is for disabling slices shown in the terminal.
+ * \arg NON_INTERACTIVE is to put all the slices in the termanal as soon as we find them.
+ * \arg INTERACTIVE is not used yet. It perhaps should be added, so the user can cycle through slices. *)
 datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
+
+(** Setting for showing slices in the terminal; we set the default setting to NO_DISPLAY. *)
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
-(** do not change the below line! We change it using sed in the makefile and insert the git hash *)
-val SKALPEL_VERSION = "Built with MLton on Tue Oct 15 15:49:10 BST 2013. Skalpel version: c1f141ee51b0cd718b88e893143e8b889b96a1ac"
+(** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
+val SKALPEL_VERSION = "Built with MLton on Wed Oct 30 02:05:29 GMT 2013. Skalpel version: 7857bb46fa43314a1f402657d802a830e5247383"
 
-(** takes a boolean value b, if true then we are generating a binary for the web demo. *)
+(** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
 
-(* Enhance these messages with the messages from EH.DeadBranch (failure of the slicer)
+(** Enhance these messages with the messages from EH.DeadBranch (failure of the slicer)
  * and add a message saying if type errors have been discovered (success of the slicer)
  * - this applies to both the finishedLisp* and finishedPerl* functions. *)
 fun finishedLispM x = "(setq skalpel-finished-message \"" ^ x ^ "\")"
+(** A message for lisp indicatng the slicer terminated successfully (but applogises for it...?). *)
 fun finishedLispMessage1 msg =
     case msg of
 	"" => finishedLispM "slicer worked OK, sorry no debugging message"
       | _  => finishedLispM ("slicer worked OK, " ^ msg)
+(** A message for lisp indicatng the slicer terminated with an error. *)
 fun finishedLispMessage2 msg =
     case msg of
 	"" => finishedLispM "slicer encountered an internal bug, sorry no debugging message"
       | _  => finishedLispM ("slicer encountered an internal bug, " ^ msg)
-
+(** Builds the finished perl message. *)
 fun finishedPerlM x = "$sml-tes-finished-message=\"" ^ x ^ "\""
+(** A message for perl indicatng the slicer terminated with success (but appologises for it..?). *)
 fun finishedPerlMessage1 msg =
     case msg of
 	"" => finishedPerlM "slicer worked OK, sorry no debugging message" |
 	_  => finishedPerlM ("slicer worked OK, " ^ msg)
+(** A message for perl indicatng the slicer terminated with an error. *)
 fun finishedPerlMessage2 msg =
     case msg of
 	"" => finishedPerlM "slicer encountered an internal bug, sorry no debugging message"
       | _  => finishedPerlM ("slicer encountered an internal bug, " ^ msg)
 
 
-(* takes the basis flag and a file to be used as the basis *)
+(** Takes the basis flag and a file to be used as the basis. *)
 fun getFileBasAndNum nenv filebas =
     (OS.FileSys.fileSize filebas;
      case nenv of
@@ -96,24 +106,15 @@ fun getFileBasAndNum nenv filebas =
        | _ => (nenv, ""))
     handle OS.SysErr (str, opt) => (case nenv of 2 => 1 | _ => nenv, "")
 
-(* called by preslicer' if Tester.slicergen returns NONE *)
+(** Called by preslicer' if Tester.slicergen returns NONE *)
 fun getDebugProblem () =
-    let fun f () = "PROBLEM!\n"
+    let
+	(** Takes unit as an argument, and returns a string indicating a problem occurred. *)
+	fun f () = "PROBLEM!\n"
     in (f, f, f, f, f, f)
     end
 
-(* remove this when test database is converted to json format *)
-
-fun convertErrors currentError newName = Tester.convertErrors currentError newName
-
-fun generateTests min max = Tester.generateTests min max
-
-(* pass false to get the range of tests (eg [1-565])
- * pass true to see which tests are typeable *)
-fun listtests  false      = Tester.listTests ()
-  | listtests  true       = Tester.printTypables ()
-
-(* returns a two tuple of a boolean (whether suff is a suffix of file), and the
+(** Returns a two tuple of a boolean (whether suff is a suffix of file), and the
  * file name without the suffix (the empty string if suff is not a suffix *)
 fun getBoolFile file suff =
     if String.isSuffix suff file
@@ -121,37 +122,34 @@ fun getBoolFile file suff =
 	 handle Subscript => (false, "")
     else (false, "")
 
-(* if suff is a suffix of ffile, then an output file will be created from the
+(** If suff is a suffix of ffile, then an output file will be created from the
  * file name, concatenated with '-', the counter, and the suffix, which
  * contains the result of fdebug applied to str *)
 fun genOutputFile (bfile, ffile) suff counter fdebug str filesin =
     if bfile
-    then let val file  = ffile  ^ "-" ^ Int.toString counter ^ suff
+    then let
+	     (** File to be used as output. *)
+	     val file  = ffile  ^ "-" ^ Int.toString counter ^ suff
+	     (** File to be used as output with a .tmp extension. *)
 	     val file' = file ^ ".tmp"
+	     (** Output stream. *)
 	     val stout = TextIO.openOut file'
 	     val _     = TextIO.output (stout, fdebug str)
 	     val _     = TextIO.closeOut stout
 	     val _     = OS.FileSys.rename {old = file', new = file}
-	 in
-	     (* if (!terminalSlices) <> NO_DISPLAY andalso suff=".pl" *)
-	     (* then *)
-	     (* 	 (* this will probably not work on the windows operating system- need to check this! *) *)
-	     (* 	 let *)
-	     (* 	     val execAll = OS.Process.system("skalpel-perl-to-bash"^" "^filesin^" "^(ffile^suff)^" "^"; for FILE in "^ffile^"-"^(Int.toString counter)^".sh ; do if [ ${FILE:0:1} = \"/\" ]; then $FILE; else ./$FILE; fi; rm -f "^ffile^"*.sh; done;")  handle OS.SysErr (str, opt) => raise Fail str *)
-	     (* 	 in *)
-	     (* 	     () *)
-	     (* 	 end *)
-	     (* else () *)
-	     ()
+	 in ()
 	 end
     else ()
 
-(* generates the -finished file after the -counter files (see genOutputFile)
- * have been generated *)
+(** Generates the -finished file after the -counter files (see genOutputFile) have been generated. *)
 fun genFinished (bfile, ffile) suff msg =
     if bfile
-    then let val fin   = ffile ^ "-finished" ^ suff
+    then let
+	     (** Filename to generate the finished file, indicating Skalpel has finished. *)
+	     val fin   = ffile ^ "-finished" ^ suff
+	     (** Filename to generate the finished file, indicating Skalpel has finished, with a .tmp extension.. *)
 	     val fin'  = fin ^ ".tmp"
+	     (** Output stream. *)
 	     val stout = TextIO.openOut fin'
 	     val _     = TextIO.output (stout, msg)
 	     val _     = TextIO.closeOut stout
@@ -162,10 +160,10 @@ fun genFinished (bfile, ffile) suff msg =
 	 handle IO.Io {name, function, cause} => TextIO.output (TextIO.stdErr, "Input/Output error. Cannot open or close the following file: "^ffile^"\n")
     else ()
 
-(* prints the integer value of iderror *)
+(** Prints the integer value of iderror. *)
 fun printIdError iderror = Int.toString (ER.idToInt iderror)
 
-(* prints the items in the errors list *)
+(** Prints the items in the errors list. *)
 fun printErrors errors =
     "[" ^ #1 (foldr (fn (error, (st, sep)) =>
 			(printIdError (ER.getI error) ^
@@ -175,23 +173,30 @@ fun printErrors errors =
 		    errors)
     ^ "]"
 
-(* prints out the error it found, and how long it took to find the error *)
+(** Prints out the error it found, and how long it took to find the error. *)
 fun printFound counter errors time =
     print ("[Skalpel:" ^
 	   " found counter=" ^ Int.toString counter ^
 	   " time="          ^ Int.toString time    ^
 	   " errors="        ^ printErrors  errors  ^ "]\n")
 
-(* calls the necessary functions to write the *.html, *.xml, *.sml etc
- * to the system *)
+(** Calls the necessary functions to write the *.html, *.xml, *.sml etc to the system. *)
 fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading filesin
 	   errs parse bmin times cs initlab name st counter time =
-    let val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading ER.removeBasisSlice
+    let
+	(** Holds result of calling #Tester.debuggingHTML with the errors we generated. *)
+	val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading ER.removeBasisSlice
+	(** Holds result of calling #Tester.debuggingXML with the errors we generated. *)
 	val dbgxml   = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
+	(** Holds result of calling #Tester.debuggingSML with the errors we generated. *)
 	val dbgsml   = Tester.debuggingSML  errs parse bmin times cs initlab true name true nenv basisoverloading
+	(** Holds result of calling #Tester.debuggingJSON with the errors we generated. *)
 	val dbgjson  = Tester.debuggingJSON  errs parse bmin times cs initlab true name true nenv basisoverloading
+	(** Holds result of calling #Tester.debuggingLISP with the errors we generated. *)
 	val dbglisp  = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
+	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
+
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val dbgbash  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
 	val _ = if bhtml then dbghtml' st else ()
@@ -204,30 +209,31 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisove
     in ()
     end
 
-(* the primary function in this file which calls the functions necessary to
- * run the slicer, including the main Testing.slicing function *)
+(** The primary function in this file which calls the functions necessary to run the slicer, including the main Testing.slicing function. *)
 fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
     let val (nenv, filebas) = getFileBasAndNum nenv filebas
 
-	(* check that the files have the correct extension*)
+	(** Checks that the HTML file specified has a .html extension. *)
 	val bfhtml = getBoolFile filehtml ".html"
+	(** Checks that the XML file specified has a .xml extension. *)
 	val bfxml  = getBoolFile filexml  ".xml"
+	(** Checks that the SML file specified has a .sml extension. *)
 	val bfsml  = getBoolFile filesml  ".sml"
+	(** Checks that the JSON file specified has a no extension. *)
 	val bfjson = (if filejson = "" then false else true, filejson)
+	(** Checks that the Emacs lisp file specified has a .el extension. *)
 	val bflisp = getBoolFile filelisp ".el"
+	(** Checks that the PERL file specified has a .pl extension. *)
 	val bfperl = getBoolFile fileperl ".pl"
 
 	(* write the files to the system *)
 	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading (List.hd filesin)
 
 	(* get various information from Tester, such as solution number *)
-	val tmpsol = 9
-	val tmptab = Tester.getTabSize ()
 	val _      = Option.map (fn t => Tester.setTabSize t) tab
-	val tmptm  = Tester.gettimelimit ()
 	val _      = Tester.settimelimit ((Int.toLarge time) handle Overflow => Tester.mytimelimit)
 
-	(* call the slicing function in tester *)
+	(** Calls the slicing function in Tester.sml. *)
 	fun run () = case Tester.slicing filebas filesin fout nenv (!webdemo) min dev bcs searchspace basisoverloading of
 			 0 => (false, "this case should never happen")
 		       | 1 => (true,  "it detected no errors (some might be undetected)"(*"program is typable"*))
@@ -244,11 +250,12 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 				   | Subscript => (TextIO.output (TextIO.stdErr, "Error: Subscript\n"); (false, ""))
 				   | _ => (TextIO.output (TextIO.stdErr, "the slicer failed for some reason\n"); (false, ""))
 
-	(* if the slicer didn't fail, print the lisp/perl messages *)
+	(** Finished lisp messaege. *)
 	val fmlisp = if bfm then finishedLispMessage1 msg else finishedLispMessage2 msg
+	(** Finished PERL message. *)
 	val fmperl = if bfm then finishedPerlMessage1 msg else finishedPerlMessage2 msg
-	val _ = Option.map (fn _ => Tester.setTabSize tmptab) tab
-	val _ = Tester.settimelimit tmptm
+	val _ = Option.map (fn _ => Tester.setTabSize (Tester.getTabSize())) tab
+	val _ = Tester.settimelimit (Tester.gettimelimit ())
 
 	(* generate the finished files *)
 	val _ = genFinished bfhtml ".html" ""
@@ -264,29 +271,24 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
     in ()
     end
 
-(* calls commslicerp', if we are not developing (not dev) then the error is
- * handled, otherwise we leave the error so we can debug *)
+(** calls commslicerp', if we are not developing (not dev) then the error is handled, otherwise we leave the error so we can debug. *)
 fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
     if dev
     then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
     else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
 
-(* called by the emacs interface; sets no tab and uses the solution from sol in
- * utils/Solution.sml *)
+(** Called by the emacs interface; sets no tab and uses the solution from sol in utils/Solution.sml. *)
 fun commslicerp  filebas filesin filehtml filexml filesml filelisp fileperl nenv time basisoverloading =
     slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl nenv time NONE 9 true false false 1 basisoverloading
 
-(* the full version of the slicer function with all arguments *)
+(** The full version of the slicer function with all arguments. *)
 fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp, fileperl, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
     let
 	val mtl = Int.fromLarge Tester.mytimelimit
-	val mso = 9
 	val nop = Int.fromString  basop         handle Overflow => SOME 2
 	val n   = Option.valOf    nop           handle Option   => 2
 	val top = Int.fromString  tlim          handle Overflow => SOME mtl
 	val t   = Option.valOf    top           handle Option   => mtl
-	val sop = Int.fromString  sol           handle Overflow => SOME mso
-	val s   = Option.valOf    sop           handle Option   => mso
 	val mop = Bool.fromString min
 	val m   = Option.valOf    mop           handle Option   => false
 	val aop = Bool.fromString dev
@@ -302,7 +304,7 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
 		n
 		t
 		(Int.fromString tab handle Overflow => NONE)
-		s
+		9
 		m
 		a
 		c
@@ -313,16 +315,18 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
     end
   | slicerFull _ = (print("Incorrect arguments specified. Run with --help to see arguments list"); OS.Process.failure)
 
+(** Prints the legend that is used when we output slices into the terminal. *)
 fun printLegend () =
     let
 	val indent=""
+	(** A function which prints the sting argument and appnds the string #Debug.textReset. *)
 	fun printReset str = print (str^(!D.textReset))
     in
 	(printReset ((#yellow (!D.underlineColors))^"Legend:\n\n");
 	 printReset ("  "^(#red (!D.backgroundColors))^"red highlights\n");
 	 printReset "  - Indicates that the highlighted code contributes to the error.\n\n";
 	 printReset ("  "^(#blue (!D.backgroundColors))^"blue" ^ (!D.textReset) ^ " / " ^ (#cyan (!D.backgroundColors)) ^ "cyan" ^ (!D.textReset) ^ " highlights \n");
-	 printReset "  - Indicates that the highlighted code is an end point of either\n";
+	 printReset "  - Indicates that the highlighted code is an endpoint of either\n";
 	 printReset  "\t - a type constructor clash\n\t - an arity clash\n\t - a record clash\n";
 	 printReset  "\t NOTE: The cyan used here is equivalent to the gray\n\t       used by other interfaces of the type error slicer.\n\n";
 
@@ -360,39 +364,58 @@ fun printLegend () =
 	)
     end
 
-(* A function which has been created so that the slicer can be used
+(** A function which has been created so that the slicer can be used
  * in various ways without the need to program a new function every
  * time. Parameters have been kept mostly the same as the cmd-line
- * interface to avoid confusion.
- *
- * Currently assumes there are no spaces in any directories.
+ * interface to avoid confusion. Currently assumes there are no spaces
+ * in any directories.
  *)
 fun smlTesStrArgs strArgs =
     let
 	(* these are the arguments passed to slicerFull *in order* *)
 	val filebas  = ref "../lib/basis.sml"
+	(** The file to be used as input. *)
 	val filein   = ref ""
+	(** The filename for HTML slices. *)
 	val filehtml = ref ""
+	(** The filename for XML slices. *)
 	val filexml  = ref ""
+	(** The file name for SML slices. *)
 	val filesml  = ref ""
+	(** The file name for JSON slices. *)
 	val filejson = ref ""
+	(** The filename for lisp slices. *)
 	val filelisp = ref ""
+	(** The filename for perl slices. *)
 	val fileperl = ref ""
+	(** Basis operator. *)
 	val basop    = ref ""
+	(** Holds the timelimit for Skalpel. *)
 	val tlim     = ref ""
 	val tab      = ref ""
+	(** The solution number to use
+	 * \deprecated *)
 	val sol      = ref ""
 	val min      = ref ""
+	(** Holds whether developer mode is enabled. *)
 	val dev      = ref ""
 	val bcs      = ref ""
-	val search   = ref ""
+	(** Value used to hold searchspace choice. *)
+	val search = ref ""
+	(** A boolean set to true if we are running the test database. *)
 	val runtests = ref false
+	(** A value holding whether a termnal slice viewing option has been set. *)
 	val terminalSet = ref false
+	(** A value indicating if the user needs to specify a file or not (e.g. they don't need to for showing the legend. *)
 	val filesNeeded = ref true
+	(** A value holding whether the user specified a basis file. *)
 	val basisSpecified = ref false
+	(** A value indicating if the user needs to specify an output file or not (e.g. they don't need to for showing the legend. *)
 	val outputFilesNeeded = ref true
+	(** A value holding the basis overloading value, a value used to control slice information from the basis. *)
 	val basisoverloading = ref "1"
 
+	(** Prints the help text for the user (gives command-line options). *)
 	fun printHelp () =
 	    print ("usage: skalpel [option ...] [FILE] \n\
 				    \    FILE file taken as input to be sliced\n\
@@ -429,9 +452,10 @@ fun smlTesStrArgs strArgs =
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
 				    \    --help Show this help text");
 
-        (* split into tokens to allow for easy parsing *)
+        (** Split into tokens to allow for easy parsing. *)
 	val split = String.tokens Char.isSpace strArgs
 
+	(** Checks the file suffixes of the files the user has specified (.html for HTML output, etc.). *)
 	fun checkFileSuffix () =
 	    let
 		val _ = if (String.isSuffix ".html" (!filehtml) orelse (!filehtml = ""))
@@ -453,6 +477,7 @@ fun smlTesStrArgs strArgs =
 		()
 	    end
 
+	(** Parses the arguments specified on the command-line. *)
 	fun parse [] = ()
  	  | parse [option] =
 	    if option = "--help" then
@@ -594,6 +619,7 @@ fun smlTesStrArgs strArgs =
     end
     handle Fail _ => OS.Process.failure
 
+(** Used by the MLton and Poly/ML entry points. *)
 fun slicerGen [] name =
     smlTesStrArgs ""
   | slicerGen args name =
@@ -603,10 +629,11 @@ fun slicerGen [] name =
  *                           Entry point functions                            *
  ******************************************************************************)
 
+(** Entry point for the SML/NJ compiler. *)
 fun smlnjEntryPoint (binaryName, argumentList) = smlTesStrArgs (foldr (fn (x,y)=>x^" "^y) "" argumentList)
-
+(** Entry point for the MLton compiler. *)
 fun mltonEntryPoint () = slicerGen (CommandLine.arguments ()) (CommandLine.name ()) handle EH.DeadBranch str => (print ("Error: "^str); OS.Process.failure)
-
+(** Entry point for the Poly/ML compiler. *)
 fun polymlEntryPoint () = OS.Process.exit (slicerGen (CommandLine.arguments ()) (CommandLine.name ());
 					   OS.Process.success)
 

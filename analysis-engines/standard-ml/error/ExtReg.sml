@@ -952,49 +952,6 @@ fun highlightEmptyUnmatched regs l ((EK.Unmatched (_, ls, lab)), _) =
     else []
   | highlightEmptyUnmatched _ _ _ = []
 
-
-(*
-fun trickTyCon reg regl =
-    let val left = R.getFrom reg
-	fun throughregl [] = false
-	  | throughregl ((L (r, _)) :: xs) =
-	    if R.getFrom r = R.downPos left andalso R.getTo r = R.downPos left
-	    then true
-	    else throughregl xs
-	  | throughregl ((H (r, _)) :: xs) =
-	    if R.getFrom r = R.downPos left andalso R.getTo r = R.downPos left
-	    then true
-	    else throughregl xs
-	  | throughregl ((N (r, _, _)) :: xs) =
-	    if R.getFrom r = R.downPos left andalso R.getTo r = R.downPos left
-	    then true
-	    else throughregl xs
-    in if throughregl regl
-       then R.consReg (R.downPos left) (R.getTo reg) (R.getVis reg)
-       else reg
-    end*)
-
-(*fun splitRegsToPushInN regs1 (* regions for the N *)
-		       regs2 (* extended regions for inside N *)
-		       col
-		       occ =
-    let
-	fun cons [] [] = []
-	  | cons [] _ = raise EH.DeadBranch ""
-	  | cons (r :: rs) rs' =
-	    let
-		val line = R.getPosLine (R.getFrom r)
-		val (rs1, rs2) = splitExtRegLine line rs'
-		(*val _ = if inclExtRegList rs1 r
-			then ()
-			else (print (printExtRegList rs1 ^ " - " ^ R.printReg r ^ "\n");
-			      raise EH.DeadBranch "")*)
-		val r' = extendReg r rs1
-	    in (N (r', col, occ, rs1)) :: (cons rs rs2)
-	    end
-    in cons regs1 regs2
-    end*)
-
 fun createRegsComponentsTuple [] = raise EH.DeadBranch "DeadBranch63"
   | createRegsComponentsTuple [r] = []
   | createRegsComponentsTuple (r1 :: r2 :: rs) =
