@@ -61,11 +61,16 @@ fun addmessage msg = messages := (!messages) @ [msg]
 (** Prints the messages we received during parsing. *)
 fun printmessages _ = app (fn (x, _, _) => print (x ^ "\n")) (!messages)
 
+(** Changes the format of the messages parameter.
+ * The messages come in as a pair of a triple and a pair.
+ * We format these messages as a list of pairs, with the label given in the parameter on the left hand side,
+ * and on the right we have a quad-tuple built up from the messages argument. *)
 fun formatmessages messages lab =
     foldr (fn ((_, msg, reg), (lab, msgs)) => (LA.nextLabel lab, (msg, reg, lab, LA.nextLabel lab) :: msgs))
 	  (lab, [])
 	  messages
 
+(** Mapps #AstSML.ProgOneParse over the formatted messages. *)
 fun dummyparsing messages lab nasc =
     let val (m, xs) = formatmessages messages lab
 	val progonelist = map (fn x => A.ProgOneParse x) xs
@@ -73,10 +78,11 @@ fun dummyparsing messages lab nasc =
     end
 
 (** Parses an SML file.
- * \param filename of the file we are parsing
- * \param an input stream
- * \param the next node label
- * \param an association list
+ * \param Filename of the file we are parsing.
+ * \param An input stream.
+ * \param The next node label before execution.
+ * \param An association list
+ * \returns (abstract syntax tree, next node label after execution).
  *)
 fun parse file inputStream nextNodeLabel nasc =
     let
@@ -89,7 +95,7 @@ fun parse file inputStream nextNodeLabel nasc =
 	val error = ref false
 	(** The lexer argument, a pair of the file name and start position. *)
 	val lexarg = (file, posref)
-	(* Creaes a stream of lexical tokens by calling makeLexer. *)
+	(** Creaes a stream of lexical tokens by calling makeLexer. *)
 	val lexstream = MLParser.makeLexer (fn n => TextIO.inputN(inputStream, n)) lexarg
 
 	(** Set the initial parsing error messages to empty. *)
@@ -105,6 +111,7 @@ fun parse file inputStream nextNodeLabel nasc =
 		(** Prints a single token. *)
 		fun printToken (LrParser.Token.TOKEN x) =
 		    let
+			(** Prints a region. *)
 			fun printRegion (point1, point2) = ("(" ^ (Int.toString point1) ^ "," ^ (Int.toString point2) ^ ")")
 	    		val term = #1 x
 	    		val (p1,p2,p3) = #2 x
@@ -163,6 +170,8 @@ fun parse file inputStream nextNodeLabel nasc =
 (** For parsing .tes control files. *)
 fun parseTes tesfile stin lab nasc =
     let val {dir, file} = OS.Path.splitDirFile tesfile
+
+	(** For getting regions of the .tes file *)
 	fun getRegion st sub n =
 	    let val (pref, _) = Substring.position sub (Substring.full st)
 		val pref = Substring.string pref
@@ -172,17 +181,24 @@ fun parseTes tesfile stin lab nasc =
 		val pos2 = (n, c2)
 	    in R.consReg pos1 pos2
 	    end
-	(*val stin = TextIO.openIn file*)
+
+	(** Gets a list of all the SML files that we have been given with their full path. *)
 	fun gatherFiles n files lab =
 	    case TextIO.inputLine stin of
 		NONE => (lab, files)
 	      | SOME line =>
-		let fun getSmls [] l = (l, [])
+		let
+		    (** Helper function for #gatherFiles. *)
+		    fun getSmls [] l = (l, [])
 		      | getSmls (x :: xs) l =
-			let val next = LA.nextLabel l
+			let
+			    (** The next available label. *)
+			    val next = LA.nextLabel l
+			    (** Regions of the SML file lines. *)
 			    val regs = getRegion line x n
 			    val {dir = d, file = f} = OS.Path.splitDirFile x
 			    val dir' = OS.Path.concat (dir, d)
+			    (** The full path of the file to process. *)
 			    val newfile = OS.Path.joinDirFile {dir = dir', file = f}
 				handle OS.Path.InvalidArc => ""
 			    val af      = A.ProgOneFile (A.AFile (newfile, regs, l, next), next)
@@ -190,7 +206,7 @@ fun parseTes tesfile stin lab nasc =
 			in (l', af :: afs)
 			end
 
-		    (* strips out spaces, tabs, and new line characters, puts the words from 'line' in a list *)
+		    (** Strips out spaces, tabs, and new line characters, puts the words from 'line' in a list *)
 		    val toks = String.tokens (fn #" "  => true
 					       | #"\t" => true
 					       | #"\n" => true
@@ -233,6 +249,7 @@ fun convertToFull file fop fnames =
     case tokenizeSt file of
 	[x] => (let
 		    val _ = D.printDebug D.PARSER D.PARSING (fn _ => "Getting full path of "^x^"...\n")
+		    (** Full path of the file we are gathering. *)
 		    val f = OS.FileSys.fullPath x
 		    val _ = D.printDebug D.PARSER D.PARSING (fn _ => "Opening file with full path: "^x)
 		in if OS.FileSys.isDir f orelse OS.FileSys.isLink f
@@ -250,6 +267,7 @@ fun newFilesToTreat files isBasis = map (fn f => (f, NONE, isBasis)) files
 (** Same as #newFilesToTreat, but uses region information as an Option. *)
 fun newFilesRegToTreat xs = map (fn (f, r, b) => (f, SOME r, b)) xs
 
+(** Deals with parsing of a file, if it's a tes file calls #parseTes otherwise calls #parse. *)
 fun treatAFile file n nasc webdemo =
     let val instr = TextIO.openIn file
 	val (prog, m, masc) =
@@ -308,6 +326,7 @@ fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
 fun checkABas [] = false
   | checkABas ((_, _, basisVal, _) :: xs) = basisVal orelse checkABas xs
 
+(** Builds all programs together. *)
 fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
     let val _ = F.reset ()
 	val _ = LD.setQuotation false
@@ -321,17 +340,23 @@ fun consProgs filesbas filesin nextNodeLabel nasc basisVal webdemo =
 			 webdemo
 	val basisVal' = case (checkABas progs, basisVal) of (false, 2) => 1 | _ => basisVal
 
-	val nonBasisProgs = List.foldl (fn (x,y) =>
-					   case x of                          (* x comes from newFilesToTreat - a three tuple *)
-					       (_,_,true,_) =>  y               (* true means this file is the basis *)
-					     | (_,_,false,_) => x::y) [] progs  (* false means this file is NOT the basis *)
-
-	val basisProgs = List.foldl (fn (x,y) =>
-					case x of                            (* x comes from newFilesToTreat - a three tuple *)
-					    (_,_,true,_) =>  x::y            (* true means this file is the basis *)
-					  | (_,_,false,_) => y) [] progs     (* false means this file is NOT the basis *)
+	(** A list of all files that don't come from the basis. *)
+	val nonBasisProgs =
+	    List.foldl (fn (x,y) =>
+			   case x of                          (* x comes from newFilesToTreat - a three tuple *)
+			       (_,_,true,_) =>  y               (* true means this file is the basis *)
+			     | (_,_,false,_) => x::y) [] progs  (* false means this file is NOT the basis *)
+	(** A list of all basis files (should be just one?) *)
+	val basisProgs =
+	    List.foldl (fn (x,y) =>
+			   case x of                            (* x comes from newFilesToTreat - a three tuple *)
+			       (_,_,true,_) =>  x::y            (* true means this file is the basis *)
+			     | (_,_,false,_) => y) [] progs     (* false means this file is NOT the basis *)
 
 	(* print out labelled basis and non-basis files as per the user requested *)
+
+	(* A temporary value holding the value of #Debug.debugBasis,
+	 * used to hide debugging statements during basis processing. *)
 	val skalpelDebugValue = !(D.debug)
 	val _ = D.debug := !(D.debugBasis)
 	val _ = D.printDebug D.PARSER D.BASIS_LABELLING (fn _ => ("\n"^(Slicing.printSlice (A.Progs basisProgs) true)^"\n"))

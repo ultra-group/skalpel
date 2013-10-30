@@ -3223,25 +3223,18 @@ fun generateConstraints' prog pack nenv =
 		   val ev   = E.freshEnvVar ()
 		   val ev1  = E.freshEnvVar ()
 		   val ev2  = E.freshEnvVar ()
-		   val c1   = E.initEnvConstraint (E.consENV_VAR ev1 lab) env1 lab
-		   val c2   = E.initEnvConstraint (E.consENV_VAR ev2 lab) env2 lab
+		   val specEnvConstraint   = E.initEnvConstraint (E.consENV_VAR ev1 lab) env1 lab
+		   val longTyConConstrint   = E.initEnvConstraint (E.consENV_VAR ev2 lab) env2 lab
 		   val c3   = E.SHARING_CONSTRAINT (ev1, ev, ev2, lab)
-		   (*val c3   = E.SIGNATURE_CONSTRAINT (ev1, SOME ev, ev2, NONE, lab, E.WHR)*)
-		   val env3 = E.ROW_ENV (E.CONSTRAINT_ENV (E.singcsts (lab, [c1, c2])), E.CONSTRAINT_ENV (E.singleConstraint (lab, c3)))
+		   val env3 = E.ROW_ENV (E.CONSTRAINT_ENV (E.singcsts (lab, [specEnvConstraint, longTyConConstrint])), E.CONSTRAINT_ENV (E.singleConstraint (lab, c3)))
 		   val env4 = E.ROW_ENV (env3, E.consENV_VAR ev lab)
-		   val css' = if getBasis ()
-			      then E.emptyContextSensitiveSyntaxError
-			      else E.singcss (poorlyCs lab "sharing")
-	       in (env4, E.unionContextSensitiveSyntaxErrors [css, css'])
+	       in (env4, css)
 	       end
 	     | f_specone indent (A.SpecSsi (spec, longstrideq, _, lab, _)) =
 	       let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.SpecSsi")
 		   val (env, css) = f_spec indent spec
-		   val css' = if getBasis ()
-			      then E.emptyContextSensitiveSyntaxError
-			      else E.singcss (poorlyCs lab "sharing")
 		   val env' = E.newEnvVar lab
-	       in (E.ROW_ENV (env, env'), E.unionContextSensitiveSyntaxErrors [css, css'])
+	       in (E.ROW_ENV (env, env'), css)
 	       end
 	     | f_specone indent (A.SpecOneDots pl) =
 	       let val env = f_partlist pl

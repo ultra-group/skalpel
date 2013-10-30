@@ -150,14 +150,6 @@ and ltreadesc =
     LTReaDesc       of ltreadescone list * R.region list * L.label * next
   | LTReaDescDots   of part list
 
-(*and treadescone =
-    TReaDOne        of datname * labtype * R.region * L.label * next
-  | TReaDOneDots    of part list
-
-and treadesc =
-    TReaDesc        of treadescone list * R.region list * next
-  | TReaDescDots    of part list*)
-
 and labsigexp =
     LabSigExp       of sigexp * R.region list * R.region list * L.label * next
   | LabSigExpDots   of part list
@@ -2125,141 +2117,7 @@ and getTypeVarProg (Prog xs)     = foldr (fn (x, y) => (getTypeVarProgOne x) @ y
 and getTypeVarProgs (Progs xs) = foldr (fn ((x, _, _, _), y) => (getTypeVarProg x) @ y) [] xs
 
 
-(* inclusion type variable *)
-
-
-
-(*
-fun getstregtypeVarlist [] = []
-  | getstregtypeVarlist ((TypeVar (st, n, reg, lab, nxt))::xs) = (st, reg)::(getstregtypeVarlist xs)
-
-fun typeVarin _ [] = false
-  | typeVarin (x as (TypeVar (_, n, reg, _, _))) ((TypeVar (_, m, reg', _, _))::xs) =
-      if n = m then true else typeVarin x xs
-
-fun typeVarnotincl [] ys      = []
-  | typeVarnotincl (x::xs) ys = if (typeVarin x ys) then typeVarnotincl xs ys else x::(typeVarnotincl xs ys)
-*)
-
-
-(* id in *)
-
-
-(*
-fun typeVarin _ [] = false
-  | typeVarin (x as (TypeVar (_, n, _, _, _))) ((TypeVar (_, m, _, _, _))::xs) =
-      if n = m then true else typeVarin x xs
-*)
-
-
-(**)
-
-
-(*
-val getmultiocctypeVar = fn tyl =>
-  let
-  fun find st [] = ([], [])
-    | find st ((x as (TypeVar (s, _, reg, _, _)))::xs) =
-        let
-        val (fd, ys) = find st xs
-        in if st = s then (reg::fd, ys) else (fd, x::ys)
-        end
-  fun f [] = []
-    | f ((TypeVar (st, _, reg, _, _))::xs) =
-        let
-        val (regl, ys) = find st xs
-        in (st, reg::regl)::(f ys)
-        end
-  fun g [] = []
-    | g ((_, [])::xs) = g xs
-    | g ((_, [_])::xs) = g xs
-    | g ((st, regl)::xs) = (st, regl)::(g xs)
-  in g (f tyl)
-  end
-*)
-
-
-(* return the last label associated a type *)
-(* we shouldn't need this one anymore *)
-
-
-(*
-fun getlabtypeVar (TypeVar (st, n, reg, lab, nxt))    = lab
-
-fun getlabty (TypeOneVar tv)                        = getlabtypeVar tv
-  | getlabty (TypeUnit (reg, lab, nxt))             = lab
-  | getlabty (TypeArrow (ty1, ty2, reg, lab, nxt))  = lab
-  | getlabty (TypeTuple (tyl, regl, lab, nxt))      = lab
-  | getlabty (TypeTyCon (ts, tn, reg, lab, nxt)) = lab
-  | getlabty (TypeParen (ty, r1, r2, lab, nxt))     = lab
-*)
-
-
-(* return the list of the constructors in a datbindseq *)
-
-
-(*
-fun getiddatbindseqtc (ConBind (Ident (st, v, reg, _, _))) =
-      [(st, reg)]
-  | getiddatbindseqtc (ConBindOf (Ident (st, v, reg, _, _), _, _, _, _)) =
-      [(st, reg)]
-
-fun getiddatbindseqtcs (ConBindSeq tcl) =
-      T.union (map getiddatbindseqtc tcl)
-
-fun getiddatbindseqdb (DatBind (_, _, tcs, _, _, _)) =
-      getiddatbindseqtcs tcs
-
-fun getiddatbindseq (DatBindSeq (dbl, _, _)) =
-      T.union (map getiddatbindseqdb dbl)
-
-(* we sould use lkup instead of the next one *)
-fun multiiddatbind [] = []
-  | multiiddatbind ((id, reg) :: xs) =
-      let
-      fun f [] = ([], [])
-        | f ((x as (id', reg')) :: xs) =
-            let
-            val (regs, xss) = f xs
-            in if id = id' then (reg' :: regs, xss) else (regs, x :: xss)
-            end
-      val (regs, xss) = f xs
-      in if regs = [] then multiiddatbind xs else (id, reg :: regs) :: (multiiddatbind xss)
-      end
-*)
-
-
-(* return the list of the type names in a datbindseq *)
-
-
-(*
-fun gettndatbindseqtn (TyCon (st, v, reg, _, _)) = [(st, reg)]
-
-fun gettndatbindseqdn (DatName (_, tn)) = gettndatbindseqtn tn
-
-fun gettndatbindseqdb (DatBind (dn, _, _, _, _)) = gettndatbindseqdn dn
-
-fun gettndatbindseq (DatBindSeq (dbl, _, _)) =
-      T.union (map gettndatbindseqdb dbl)
-
-(* we sould use lkup instead of the next one *)
-fun multitndatbind [] = []
-  | multitndatbind ((st, reg) :: xs) =
-      let
-      fun f [] = ([], [])
-        | f ((x as (st', reg')) :: xs) =
-            let
-            val (regs, xss) = f xs
-            in if st = st' then (reg' :: regs, xss) else (regs, x :: xss)
-            end
-      val (regs, xss) = f xs
-      in if regs = [] then multitndatbind xs else (st, reg :: regs) :: (multitndatbind xss)
-      end
-*)
-
-
 (* return the next label of a term *)
-
 
 fun getSconNext (SconInt    (_, _, _, _, n))         = SOME n
   | getSconNext (SconWord   (_, _, _, _, n))         = SOME n
@@ -3126,12 +2984,6 @@ fun isExpFnValBindSeq (ValBindSeq (xs, _, _)) =
 	       else SOME labs
 	    end) xs
   | isExpFnValBindSeq (ValBindSeqDots _)      = []
-
-(*(* returns a list of labels *)
-fun isExpFnValBind (ValBindRec (vbs, _, l, _)) = isExpFnValBindSeq vbs
-  | isExpFnValBind (ValBind     _)             = []
-  | isExpFnValBind (ValBindDots _)             = []*)
-
 
 (* within a pattern, there cannot be real constants *)
 

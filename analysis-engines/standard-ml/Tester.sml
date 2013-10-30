@@ -53,7 +53,10 @@ structure ERR = Error
 structure CDS = SplaySetFn(OrdStr)
 structure JP  = JsonParser
 
+(** The type or a single error, set to be the same as #JsonParser.oneerror. *)
 type oneerror = JP.oneerror
+
+(** The type or an error, set to be the same as #JsonParser.error. *)
 type error = JP.error
 
 type 'a debug = ERR.error list ->
@@ -84,69 +87,87 @@ type 'a debug = ERR.error list ->
 		    'a
 
 
-(*datatype smlTesComment = USE  of string
-		       | SBAS of string (* Set   Basis *)
-		       | CBAS           (* Clear Basis *)
-		       | NCOM           (* No Comment  *)*)
+(** Used when the format of an error is not as it should be. *)
+exception FormatTest  of string
+(** Raised when Skalpel didn't find an error that was found before. *)
+exception MissingTest of string
+(** Context dependencies are wrong for a slice. *)
+exception CtxtDepTest of string
+(** Raised when a file does not exist, it should always be caught. *)
+exception FileEx
+(* Raised when a file cannot be modified. *)
+exception NoWrite
+(** Raised when Skalpel did not run. *)
+exception BadTest
+(** Raised when Skalpel finds the same solutions as before but runs out of time. *)
+exception SlowTest
+(** Raised when Skalpel runs out of time but finds more errors. *)
+exception BetterTest
+(** Raised when Skalpel found errors that it did not before. *)
+exception TypableTest
+(** Raised when Skalpel found more errors than before when it shouldn't have. *)
+exception ToomuchTest
+(** Raised when Skalpel didn't run out of time and didn't find as much errors as before. *)
+exception NotmuchTest
+(** Raised when the regions are wrong for a slice. *)
+exception RegsTest
+(** Raised when a test has been recorded but the slices are not correct yet. *)
+exception TocheckTest
 
-(* declaration of exceptions *)
-exception FormatTest  of string (* The format of an error is not as it should be                               *)
-exception MissingTest of string (* The slicer didn't find an error that was found before                       *)
-exception CtxtDepTest of string (* Context dependencies are wrong for a slice                                  *)
-exception FileEx                (* A file does not exist, it should always be caught                           *)
-exception NoWrite               (* A file cannot be modified                                                   *)
-exception BadTest               (* The slicer did not run                                                      *)
-exception SlowTest              (* The slicer finds the same solutions as before but runs out of time          *)
-exception BetterTest            (* The slicer rans out of time as before but finds more errors                 *)
-exception TypableTest           (* The slicer found errors when it didn't before (test was marked as typable)  *)
-exception ToomuchTest           (* The slicer found more errors than before when it shouldn't                  *)
-exception NotmuchTest           (* The slicer didn't run out of time and didn't find as much errors as before  *)
-exception RegsTest              (* Regions are wrong for a slice                                               *)
-exception TocheckTest           (* A test has been recorded but the slices are not correct yet                 *)
-
+(** A space separator (4 spaces). *)
 val sep        = "    "
+(** An emacs tab space separator (8 spaces). *)
 val emacstab   = "        "
 
+(** The location of the test folder by default. *)
 val testFolder = ref "../../../testing/analysis-engine-tests/standard-ml"
-val mytempfile = "/tmp/smltes-tmp"
+(** The default location of the basis. *)
 val myfilebas  = ref "../../../lib/basis.sml"
+(** The default location of the HTML file for output. *)
 val myfilehtml = "res.html"
 
-(* This is the file in which the debugging info from running
+(** This is the file in which the debugging info from running
  * the database checking is copied to. *)
 val tmpdatabase = "/tmp/smltes-database"
 
-(*val myfileerrors = "errors.sml"*)
 val error : error = ref NONE
-(* mytimelimit is the time limit used for the database
- - change to timelimitdb or something like that *)
 
-(* nonmin is true if one wants to report non minimal errors
- * that then get minimised. *)
+(** True if one wants to report non minimal errors that then get minimised. *)
 val nonmin = ref true
+(** Sets the nomin ref value to the argument specified. *)
 fun setNonMin b = nonmin := b
 
-(* fullreport is true if we want to report all the information
- * in the XML output. *)
+(** True if we want to report all the information in the XML output. *)
 val fullreport = false
 
+(** Default time limit for Skalpel to run. *)
 val mytimelimit = Int.toLarge 5000
+(** Time set if there is to be no timelimit (set to -1). *)
 val notimelimit = Int.toLarge ~1
+(** Timelimit setting used for Skalpel, initially set to mytimelimit. *)
 val timelimit   = ref mytimelimit
 
+(** Sets the #timelimit value. *)
 fun settimelimit tm = timelimit := tm
+(** Gets the #timelimit value. *)
 fun gettimelimit _  = !timelimit
 
+(** Allows specification of the CSS style sheet. *)
 fun setstylecss n = H.setstylecss n
 
+(** Gets the tab size. *)
 fun getTabSize () = R.getTabSize ()
+(** Sets the tab size. *)
 fun setTabSize ts = R.setTabSize ts
 
-(* functions to grab code and correct output from the test database *)
+(** Gets the test files (solutions). \depretcated *)
 fun getfileerr  nb = (!testFolder) ^ "/test"   ^ Int.toString nb
+(** Gets the code files. \depretcated *)
 fun getfilecode nb = (!testFolder) ^ "/code"   ^ Int.toString nb ^ ".sml"
+(** Gets the output files. \depretcated *)
 fun getfilehtml nb = (!testFolder) ^ "/output" ^ Int.toString nb ^ ".html"
 
+(** Resets the values for next labels, next identifiers etc. *)
 fun resetAll _ =
     (T.resetnexts   ();
      L.resetNext    ();
@@ -155,6 +176,7 @@ fun resetAll _ =
      EV.resetEnvVar ();
      ERR.resetError ())
 
+(** Calls #Parser.consProgs with the argument. *)
 fun consProgs filebas bbas filesin n ascid webdemo =
     P.consProgs (case bbas of 2 => [filebas] | _ => [])
 		filesin
@@ -163,21 +185,26 @@ fun consProgs filebas bbas filesin n ascid webdemo =
 		bbas
 		webdemo
 
+(** Used to repreesnt dummy times. *)
 val oneDummyTime = Int.toLarge 0
+
+(** A representation of dummy times. *)
 val dummyTimes   = (oneDummyTime,
 		    oneDummyTime,
 		    oneDummyTime,
 		    oneDummyTime,
 		    oneDummyTime)
+
 val dummyName    = "dummy"
+
+(** Initial label, set to #Label.firstlab. *)
 val initLab      = L.firstLab
-
-
 
 (************************************************************)
 (*                OUTPUTTING THE ERRORS                     *)
 (************************************************************)
 
+(** Prints the times found as a string. *)
 fun timesToStr (t1, t2, t3, t4, t5) =
     let val stt1 = "analyse=\""      ^ Int.toString (Int.fromLarge t1) ^ "ms\""
 	val stt2 = "enum=\""         ^ Int.toString (Int.fromLarge t2) ^ "ms\""
@@ -187,6 +214,7 @@ fun timesToStr (t1, t2, t3, t4, t5) =
     in (stt1, stt2, stt3, stt4, stt5)
     end
 
+(** Transforms a special character into a string. *)
 fun transfun1 #"\""    = "\\\""
   | transfun1 #"\227"  = "\227" (* sequence ldots and rdots *)
   | transfun1 #"\128"  = "\128"
@@ -203,20 +231,7 @@ fun transfun1 #"\""    = "\\\""
   | transfun1 #"\169"  = "\169"
   | transfun1 x        = Char.toString x
 
-(*fun transfun1' #"\""    = "\""
-  | transfun1' #"\\"    = ""
-  | transfun1' #"\227"  = "\227"
-  | transfun1' #"\128"  = "\128"
-  | transfun1' #"\152"  = "\152"
-  | transfun1' #"\153"  = "\153"
-  | transfun1' #"\154"  = "\154"
-  | transfun1' #"\155"  = "\155"
-  | transfun1' #"\226"  = "\226"
-  | transfun1' #"\167"  = "\167"
-  | transfun1' #"\188"  = "\188"
-  | transfun1' #"\189"  = "\189"
-  | transfun1' x        = Char.toString x*)
-
+(** Uses String.translate to turn a character into a string. *)
 fun transfun2 st = String.translate transfun1 st
 
 fun debuggingHTML errl
@@ -235,9 +250,9 @@ fun debuggingHTML errl
 		  filebas
 		  bhead
 		  begsep =
-    ((*D.printdebug2 (I.printAssoc ascid);*)
-     H.transformErrSl fileout (#1 (P.convertToFull filebas NONE [])) errl ascid ast bhead true basisoverloading removeBasisSlice)
+    H.transformErrSl fileout (#1 (P.convertToFull filebas NONE [])) errl ascid ast bhead true basisoverloading removeBasisSlice
 
+(** Prints errors in XML format. *)
 fun errorsToXML [] _ _ _ = ""
   | errorsToXML (x :: xs) begsep bslice basisoverloading =
     let val (id, lab, statLab, builtBasis, assump, ek, rem, t, sl, reg, min) = ERR.printOneXmlErrTuple x (begsep ^sep) bslice basisoverloading
@@ -260,6 +275,7 @@ fun errorsToXML [] _ _ _ = ""
 	errorsToXML xs begsep bslice basisoverloading
     end
 
+(** Builds errors in XML format. *)
 fun debuggingXML errl
 		 (ast, m, ascid)
 		 bmin
@@ -331,8 +347,10 @@ fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair ini
 		  name         = "\"" ^ name ^ "\""})
     end
 
+(** Assigns the #error ref to the vaule in the argument. *)
 fun assignError err = error := !err
 
+(** Converts errors to SML format. *)
 fun errorsToSML [] _ _ _ = ""
   | errorsToSML [x] begsep bslice basisoverloading =
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneSmlErr x bslice basisoverloading
@@ -361,6 +379,7 @@ fun errorsToSML [] _ _ _ = ""
     in err ^ ",\n" ^ begsep ^ (errorsToSML xs begsep bslice basisoverloading)
     end
 
+(** Converts errors to JSON format. *)
 fun errorsToJSON [] _ _ _ = ""
   | errorsToJSON [x] begsep bslice basisoverloading =
     let val (id, ll, sa, sk, tm, sl, re) = ERR.printOneJsonErr x bslice basisoverloading
@@ -389,10 +408,10 @@ fun errorsToJSON [] _ _ _ = ""
     in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading)
     end
 
-
 fun convertErrors currentError newName =
     let
 
+	(** Prints out a single error in JSON format. *)
 	fun printOneJsonErr {identifier, labels, assumptions, kind, slice, time, regions} =
 	    let
 		fun getFst (a,b) = a
@@ -442,6 +461,7 @@ fun convertErrors currentError newName =
 	    in err ^ ",\n" ^ begsep ^ (errorsToJSON2 xs)
 	    end
 
+	(** Prints out the time taken during various points of execution of the test database. *)
 	fun getTime {analysis, enumeration, minimisation, slicing, html} =
 	    "{\"analysis\": "^(LargeInt.toString analysis)^", \"enumeration\": "^(LargeInt.toString enumeration)^", \"minimisation\": "^(LargeInt.toString minimisation)^
 	    ", \"slicing\": "^(LargeInt.toString slicing)^", \"html\": "^(LargeInt.toString html)^"}"
@@ -493,12 +513,7 @@ fun convertErrors currentError newName =
 	convertSmlError currentError newName
     end
 
-fun generateTests min max =
-    if min=max then ()
-    else ((* use ("../../testing/analysis-engine-tests/standard-ml/test"^(Int.toString min)^".sml"); *)
-	  (* convertErrors error ("test"^(Int.toString min)); *)
-	  (* generateTests (min+1) max *));
-
+(** Builds errors in SML format. *)
 fun debuggingSML errl
 		 (ast, m, ascid)
 		 bmin
@@ -563,6 +578,7 @@ fun debuggingSML errl
     in st
     end
 
+(** Builds errors in JSON format. *)
 fun debuggingJSON errl
 		 (ast, m, ascid)
 		 bmin
@@ -657,6 +673,7 @@ fun debuggingLISP' [] _ _ _ _ = ""
        )
     end
 
+(** Builds errors in LISP format. *)
 fun debuggingLISP errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envContextSensitiveSyntaxPair initlab bfinal name bslice nenv basisoverloading _ =
     "(setq skalpel-slice-data '(" ^ (debuggingLISP' errl ascid "" bslice basisoverloading) ^ ")\n  )"
 
@@ -695,6 +712,7 @@ fun debuggingPERL errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab b
     "sub getError { return @error; }"
 
 
+(** Bulids errors in BASH format. *)
 fun debuggingBASH' [] _ _ _ _ = ()
   | debuggingBASH' [err] ascid ind bslice basisoverloading =
     ERR.printOneBashErr err ascid bslice basisoverloading
@@ -711,6 +729,7 @@ fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab b
 (*                  RUNNING THE SLICER                      *)
 (************************************************************)
 
+(** Gets the file to be used for the basis file (set to the empty string if the basis is not to be used). *)
 fun getFileBasAndNum nenv filebas =
     (OS.FileSys.fileSize filebas;
      case nenv of
@@ -723,21 +742,23 @@ fun exportErrors [] _ _ _ _ counter = counter
     (funout [error] parse cs counter time;
      exportErrors errors funout time parse cs (counter + 1))
 
-(* slicing function - a function to run the slicer. Arguments are as follows:
- * filebas: file containing the basis
- * filesin: list containing input files
- * funout: ?
- * nenv: see Analyze.sig for this integer - related to the basis
- * webdemo: true if building a webdemo binary
- * bmin: true if we want to report non-minimal errors
- * badmin true if we want to output errors in an html default file and in xml format in stdout
- * bcs: true to print constraints in stdout (deprecated)
- * searchspace: 1 for the default searchspace, 2 for the searchspace' and 3 for the rbs one, the default is 1
- * basisoverloading: ?
+(** slicing function - a function to run the slicer. Arguments are as follows:
+ * \param filebas file containing the basis
+ * \param filesin list containing input files
+ * \param funout Function used to export errors.
+ * \param nenv see Analyze.sig for this integer - related to the basis
+ * \param webdemo true if building a webdemo binary
+ * \param bmin true if we want to report non-minimal errors
+ * \param badmin true if we want to output errors in an html default file and in xml format in stdout
+ * \param bcs true to print constraints in stdout (deprecated)
+ * \param searchspace 1 for the default searchspace, 2 for the searchspace' and 3 for the rbs one, the default is 1
+ * \param basisoverloading Value set to control overloading information in the basis.
  *)
 fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basisoverloading =
 
-    let fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
+    let
+	(** Calls functions to execute parsing, constraint generation, and enumeration. *)
+	fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
 	    let val _ = resetAll ()
 		val _ = print ("[Skalpel: parsing...]\n")
 		val (progs, m, ascid, nenv) =
@@ -822,23 +843,24 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 		val _       = assignError (berr "")
 	    in counter
 	    end
-       else (print ("Number of union operations: " ^ (Int.toString (List.length (!L.unionSizes))) ^ "\n");
-	     let
-		 val x = List.foldl (op +) 0 (!L.unionSizes)
-		 val avg = x div (List.length (!L.unionSizes))
+       else ((* print ("Number of union operations: " ^ (Int.toString (List.length (!L.unionSizes))) ^ "\n"); *)
+	     (* let *)
+	     (* 	 val x = List.foldl (op +) 0 (!L.unionSizes) *)
+	     (* 	 val avg = x div (List.length (!L.unionSizes)) *)
 
-		 fun findMax max [] = max
-		   | findMax max (h::t) = if h > max then findMax h t else findMax max t
-		 val max = findMax 0 (!L.unionSizes)
-	     in
-		 (print ("Next label number: " ^ (L.printLab (!L.nextlab)) ^ "\n");
-		  print ("Average combined union set length: " ^ (Int.toString avg) ^ "\n");
-		  print ("Maximum combined union set length: " ^ (Int.toString max) ^ "\n"))
-	     end;
+	     (* 	 fun findMax max [] = max *)
+	     (* 	   | findMax max (h::t) = if h > max then findMax h t else findMax max t *)
+	     (* 	 val max = findMax 0 (!L.unionSizes) *)
+	     (* in *)
+	     (* 	 (print ("Next label number: " ^ (L.printLab (!L.nextlab)) ^ "\n"); *)
+	     (* 	  print ("Average combined union set length: " ^ (Int.toString avg) ^ "\n"); *)
+	     (* 	  print ("Maximum combined union set length: " ^ (Int.toString max) ^ "\n")) *)
+	     (* end; *)
 	     counter)
     end
 
 
+(** Bulids up the abstract syntax tree. *)
 fun initialise filebas filesin nenv bprint =
     let val webdemo = false
 	val _ = setNonMin false
@@ -942,6 +964,7 @@ fun findIntervals _ [] = []
 fun findIntervals' [] = []
   | findIntervals' (x :: xs) = findIntervals x (x :: xs)
 
+(** List the tests that we are to run Skalpel against. *)
 fun listTests' msg tests =
     let val inter = findIntervals' tests
 	val interst = printIntervals inter
@@ -950,62 +973,77 @@ fun listTests' msg tests =
        print "\n"
     end
 
+(** List the tests that we are to run Skalpel against by calling #listTests'. *)
 fun listTests _ = listTests' "Tests:" (getTests ())
 
+(** Returns the 'errors' portion of the #error record. *)
 fun getErrors _ =
     (#errors (Option.valOf (!error)))
     handle Option => raise FormatTest "errors"
 
+(** Returns the 'slices' portion of the #error record. *)
 fun getSlices _ =
     (map (fn x => #slice x) (#errors (Option.valOf (!error))))
     handle Option => raise FormatTest "slices"
 
+(** Returns the 'regions' portion of the #error record. *)
 fun getRegions _ =
     (map (fn x => #regions x) (#errors (Option.valOf (!error))))
     handle Option => raise FormatTest "regions"
 
+(** Returns the 'dependencies' portion of the #error record. *)
 fun getDependencies _ =
     (map (fn x => CD.inSet (#assumptions x)) (#errors (Option.valOf (!error))))
     handle Option => raise FormatTest "dependencies"
 
+(** Returns the 'min' portion of the #error record. *)
 fun getMin _ =
     (#minimisation (Option.valOf (!error)))
     handle Option => raise FormatTest "min"
 
+(** Returns the 'final' portion of the #error record. *)
 fun getFinal _ =
     (#final (Option.valOf (!error)))
     handle Option => raise FormatTest "final"
 
+(** Returns the enumeration time of the #error record. *)
 fun getTimeEnum _ =
     (#enumeration (#time (Option.valOf (!error))))
     handle Option => raise FormatTest "enumeration time"
 
+(** Returns the analysis time of the #error record. *)
 fun getTimeCg _ =
     (#analysis (#time (Option.valOf (!error))))
     handle Option => raise FormatTest "constraint generation time"
 
+(** Returns the 'timelimit' portion of the #error record. *)
 fun getTimeLim _ =
     (#timelimit (Option.valOf (!error)))
     handle Option => raise FormatTest "time limit"
 
+(** Returns the 'basis' portion of the #error record. *)
 fun getBasis _ =
     (#basis (Option.valOf (!error)))
     handle Option => raise FormatTest "basis"
 
+(** Returns the 'ident' portion of the #error record. *)
 fun getAssoc _ =
     (#ident (Option.valOf (!error)))
     handle Option => raise FormatTest "assoc. list ids"
 
+(** Returns the 'solution' portion of the #error record. \deprecated *)
 fun getSolution _ =
     (#solution (Option.valOf (!error)))
     handle Option => raise FormatTest "solution"
 
+(** Calls #getRegions, handling the FormatTest exception. *)
 fun getLastRegs   _ = (getRegions ()) handle FormatTest _ => []
+(** Calls #getSlices, handling the FormatTest exception. *)
 fun getLastSlices _ = (getSlices  ()) handle FormatTest _ => []
+(** Calls #getMin, handling the FormatTest exception. *)
 fun getLastMin    _ = (getMin     ()) handle FormatTest _ => false
 
-
-(* thansform the old parentheses into the new ones *)
+(** Transform the old parentheses into the new ones. *)
 fun transParen #"\227"  = "\226" (* 1st old ldots and rdots *)
   | transParen #"\128"  = "\159"
   | transParen #"\154"  = "\168"
@@ -1020,11 +1058,6 @@ fun transParen #"\227"  = "\226" (* 1st old ldots and rdots *)
   | transParen #"\152"  = "\168" (* sequence dots *)
   | transParen #"\153"  = "\169"
   | transParen x        = Char.toString x
-
-(* we want to replace "val ⧼..⧽" by "val " when it is not directly follows by "=" *)
-(* look at that *)
-(* (fn  (x, y) => (Substring.string x, Substring.string y)) (Substring.position "abc" (Substring.full "ghabcdef")); *)
-(* (fn  (x, y) => (Substring.string x, Substring.string y)) (Substring.position "abc" (Substring.full "ghabbdef")); *)
 
 fun upToBasis slice =
     let val (dots, ldots, rdots, _, _) = S.getDots ()
@@ -1077,22 +1110,24 @@ fun upTos (id, slice0, deps, regs) =
 	(*val _ = D.printdebug2 (slice3)*)
     in (id, slice3, deps, regs) end
 
-(* A slice is a string here *)
+(** A slice is a string here. *)
 fun removeSlice _ [] = (NONE, [])
   | removeSlice x ((y as (id, slice : string, cds, regs)) :: xs) =
     if x = slice
     then (SOME y, xs)
     else (fn (u, v) => (u, y :: v)) (removeSlice x xs)
 
+(** Compares two context dependencies. *)
 fun compareCDS cd1 cd2 =
     CDS.equal (CDS.addList (CDS.empty, cd1), CDS.addList (CDS.empty, cd2))
 
+(** Prints context dependencies. *)
 fun printCD [] = ""
   | printCD (h::[]) = ("\""^h^"\"")
   | printCD (h::t) = ("\""^h^"\","^(printCD t))
 
-(* parameter 1 is the information in the database
- * parameter 2 is the imformation we found during execution *)
+(** Parameter 1 is the information in the database,
+ * Parameter 2 is the imformation we found during execution. *)
 fun compareErrors2 [] [] (true,  id) = ()
   | compareErrors2 [] _  (true,  id) = raise BetterTest
   | compareErrors2 [] _  (false, id) = raise CtxtDepTest (Int.toString id)
@@ -1133,52 +1168,78 @@ fun compareErrors (_, []) (_, (_ :: _)) = raise TypableTest
     (* the timed ran off for the stored test *)
     compareErrors1 xs ys (* means we now have to check that the new algo is more efficient *)
 
-(* declare functions which will give delevelopers messagees about the status of tests *)
+(** Returns a string that there was a format problem with a test. *)
 fun messageFormat     test st = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": format (" ^ st ^ ")\n"
+(** Returns a string that there is a missing test. *)
 fun messageMissing    test st = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": a slice has not been found (Error UID = " ^ st ^ ")\n"
+(** Returns a string that indicates there are context dependency discrepancies in tests. *)
 fun messageCtxtDep    test st = (#purple (!D.colors)) ^ test ^ " OK except the dependencies (" ^ st ^ ")\n"
+(** Returns a string that indicates a test was marked as typable but isn't any longer. *)
 fun messageTypable    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": was marked as typable but is not anymore\n"
+(** Returns a string that indicates a test had too many slices generated for it. *)
 fun messageToomuch    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": too many slices\n"
+(** Returns a string that indicates a test had not enough slices. *)
 fun messageNotmuch    test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": not enough slices\n"
+(** Returns a string that indicates the regions for a found error are wrong. *)
 fun messageRegs       test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ ": the regions are wrong\n"
+(** Returns a string that indicates a test has to yet get a confirmed solution and so cannot be checked. *)
 fun messageTocheck    test    = (#yellow (!D.colors)) ^ "PROBLEM: " ^  test ^ ": TO CHECK!!!!\n"
+(** Returns a string that indicates a test has an unspecified problem. *)
 fun messageBad        test    = (#red (!D.colors)) ^ "PROBLEM: " ^  test ^ "\n"
+(** Returns a string that indicates a test is more than OK. *)
 fun messageBetter     test    = (#green (!D.colors)) ^  test ^ " more than OK\n"
+(** Returns a string that indicates a test is OK but slower. *)
 fun messageSlow       test    = (#green (!D.colors)) ^ test ^ " OK but slower\n"
+(** Returns a string that indicates a test has successfully passed. *)
 fun messageOK         test    = (#green (!D.colors)) ^ test ^ " OK\n"
+(** Returns a string that indicates a test has dead branched. *)
 fun messageDeadBranch test st = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": ********DEADBRANCH(" ^ st ^ ")********\n"
+(** Returns a string that indicates a test has raised the todo exception in #ErrorHandler. *)
 fun messageTodo       test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ ": TODO: "
 
+(** Generates a temporary file used when checking the test database.
+ * Might not still be needed... *)
 fun generateTmpDBFile () =
     let val date = Date.toString (Date.fromTimeLocal (Time.now ()))
 	val tr   = fn #" " => "_" | #":" => "-" | x => Char.toString x
     in tmpdatabase ^ "_" ^ String.translate tr date
     end
 
+(** Outputs a line of text to the database output file. *)
 fun outputDB str stout =
     let val _ = print str
 	val _ = TextIO.output (stout, str)
     in ()
     end
 
+(** Function that handles the testing of Skalpel against the test database. *)
 fun checktests listtests =
     let val timerCheck = VT.startTimer ()
+	(** Temporary file for output. *)
 	val tmpfile    = generateTmpDBFile ()
+	(** Create an output stream from tmpfile. *)
 	val stout      = TextIO.openOut tmpfile
 	val _          = outputDB ("[begin database checking]\n") stout
 	val localtimelimit = mytimelimit
+	(** The timelimit for the longest test. *)
 	val longest        = ref {test = "", time = 0} (*longest test to check*)
 	val tmptm          = gettimelimit ()
 	val _              = settimelimit localtimelimit
+	(** Number of OK tests. *)
 	val oktests        = ref 0
+	(** Number of bad tests. *)
 	val badtests       = ref 0
+	(** Numbered of tests without a confirmed solution. *)
 	val checktests     = ref 0
+	(** Number of tests that raised the TODO exception. *)
 	val todotests      = ref 0
 	val deadtests      = ref 0
 	val newertests     = ref 0
 	val formtests      = ref 0
 	val ctxttests      = ref 0
+	(** Increments the number of tests that have been run. *)
 	fun plustest tests = tests := !tests + 1
+	(** Updates the longest running test if applicable. *)
 	fun updLongest test time =
 	    if time > #time (!longest)
 	    then longest := {test = test, time = time}
@@ -1191,8 +1252,11 @@ fun checktests listtests =
 	    List.partition
 		(fn x => case ERR.getK x of EK.FreeIdent => false | _ => true)
 		errs
+
+	(** Parses the test control file. *)
 	val testList = JP.parseTestControlFile (!(testFolder)^"/test-control")
 
+	(** Function to run the tests on Skalpel. *)
 	fun run [] = ()
 	  | run (x :: xs) =
 	    (* run the test *)
@@ -1270,6 +1334,7 @@ fun checktests listtests =
     in ()
     end
 
+(** Prints the typeable tests. *)
 fun printTypables _ =
     let val _ = PP.silence_compiler ()
 	val tests = getTests ()
@@ -1285,17 +1350,6 @@ fun printTypables _ =
 		tests
 	val _ = PP.unsilence_compiler ()
     in listTests' "Typables:" xs
-    end
-
-fun vinnie nb =
-    (PP.use (getfileerr nb);
-     print ("-" ^ (Int.toString (#labels (Option.valOf (!error))) handle Option => "") ^ "\n"))
-
-fun vinnie _ =
-    let val set = L.ord [L.fromInt 1, L.fromInt 2, L.fromInt 3, L.fromInt 4]
-	val (set1, set2) = L.splitIn2 set
-	val _ = print (">>" ^ L.toString set1 ^ "\n>>" ^ L.toString set2)
-    in ()
     end
 
 end

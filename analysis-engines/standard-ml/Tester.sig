@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        25 May 2010
  *  o File name:   Tester.sig
- *  o Description: Defines the signature TESTER which is the signature
- *      of the interface with the running and testing of the slicer.
  *)
 
-
+(** Defines the signature TESTER which is the signature of the interface with the running and testing of the slicer. *)
 signature TESTER = sig
 
     type 'a debug = Error.error list ->
@@ -130,10 +128,7 @@ signature TESTER = sig
     val myfilebas     : string ref
     val myfilehtml    : string
 
-    val vinnie        : int    -> unit
-
     (* remove this when test database is in json format *)
     val convertErrors : JsonParser.error -> string -> unit
-    val generateTests  : int -> int -> unit
 
 end

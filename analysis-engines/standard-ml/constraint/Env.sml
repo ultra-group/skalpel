@@ -223,6 +223,7 @@ datatype env = ENV_CONS of {valueIds : varEnv,                          (* value
 (*(2010-03-02)not withtype because it is not SML valid and even though SML/NJ
  * does not complain, MLton does.*)
 
+(** Lists the items in the map of CONSTRAINTS items. *)
 fun getConstraintItems (CONSTRAINTS(map)) = OMC.listItems map
 
 type extstr = env bind
@@ -259,16 +260,17 @@ type contextSensitiveSyntaxError       = oneContextSensitiveSyntaxError list
 type envContextSensitiveSyntaxPair = env * contextSensitiveSyntaxError
 
 
-(* ====== FUNCTIONS ====== *)
-
 (* ------ printing section ------ *)
 
+(** A tab separation space, set to 11 spaces. *)
 val tab = "           "
 
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(** Prints a binding using #ExtLab.printExtLab. *)
 fun printBind bind f assoc = EL.printExtLab bind (fn x => C.printBind x f assoc) assoc
 
+(** Prints a binding using #printBind. *)
 fun printBind' bind f = printBind bind f I.emAssoc
 
 fun printEnvVar v = "e" ^ Int.toString v
@@ -280,6 +282,7 @@ fun printOp NONE _ = "-"
 
 fun printEvOp       x = printOp x printEnvVar
 
+(** Prints a typename kind to a string. *)
 fun printTnKind DATATYPE = "DATATYPE"
   | printTnKind TYPE = "TYPE"
 
@@ -323,6 +326,7 @@ fun printOpenEnv xs ind =
 	    ("", "")
 	    xs)
 
+(** Prints a typename mapping. *)
 fun printTypeNameMap xs =
     printlistgen xs (fn {id, lab, kind, name} =>
 			"(" ^ I.printId     id   ^
@@ -356,8 +360,10 @@ fun printShaBind (ev1, ev2, ev3, lab) =
     "," ^ printEnvVar ev3 ^
     "," ^ L.printLab  lab ^ ")"
 
+(** Print a pair (x,y) appling the function f to both the left and right hand side. *)
 fun printPair (x, y) f = "(" ^ f x ^ "," ^ f y ^ ")"
 
+(** Prints out an accessor as a string. *)
 fun printAccessorId {lid, equalityTypeVar, sem, class, lab} f ind ascid =
     "{" ^ I.printLid' lid ascid ^
     "," ^ T.printEqualityTypeVar equalityTypeVar ^
@@ -365,6 +371,7 @@ fun printAccessorId {lid, equalityTypeVar, sem, class, lab} f ind ascid =
     "," ^ CL.toString class     ^
     "," ^ L.printLab lab        ^ "}"
 
+(** Prints a match kind, either OPAQUE or TRANSLUCENT. *)
 fun printMatchKind OPAQUE = "OPAQUE"
   | printMatchKind TRANSLUCENT = "TRANSLUCENT"
 
@@ -470,48 +477,68 @@ and printcst cst ascid = printcst' cst "" ascid
 fun printConstraints cst =
     printcst cst I.emAssoc (* printocst(List.hd (List.hd(OMC.listItems(cst)))) *)
 
+(** Prints one constraint using #printocst. *)
 fun printOneConstraint cst = printocst cst "" I.emAssoc
 
+(** Prints a list of single constraints using #printOneConstraint. *)
 fun printOneConstraintList [] = ""
   | printOneConstraintList (h::h2::t) = printOneConstraint h ^ ", " ^ (printOneConstraintList t)
   | printOneConstraintList (h::t) = printOneConstraint h
 
+(** Prints an accessor using #printAcc. *)
 fun printOneAccessor   cst = printAcc cst "" I.emAssoc
 
 (* Bindings constructors *)
 
+(** Constructs a binder. *)
 fun consBind     id bind equalityTypeVar class lab poly = EL.initExtLab (C.consBind     id bind equalityTypeVar class lab poly) lab
+(** Constructs a polymorphic binding. *)
 fun consBindPoly {id=id, typeOfId=bind, equalityTypeVar=eqtv, classOfId=class, labelOfConstraint=lab} =
     EL.initExtLab (C.consBindPoly id bind eqtv class lab)      lab
-fun consBindMono id bind equalityTypeVar class lab      = EL.initExtLab (C.consBindMono id bind equalityTypeVar class lab)      lab
+(** Constructs a monomorphic binding. *)
+fun consBindMono id bind equalityTypeVar class lab = EL.initExtLab (C.consBindMono id bind equalityTypeVar class lab) lab
 
 fun consAccessorId lid eqtv sem class lab = {lid = lid, equalityTypeVar = eqtv, sem = sem, class = class, lab = lab}
 
 (* Accessors to a extenv *)
 
+(** Gets the identifier of a binding. *)
 fun getBindI x = C.getBindI (EL.getExtLabT x)
 fun getBindT x = C.getBindT (EL.getExtLabT x)
-fun getBindEqualityTypeVar x = C.getBindEqualityTypeVar (EL.getExtLabT x) (* get equality type information from a binder *)
+(** Gets equality type information from a binding. *)
+fun getBindEqualityTypeVar x = C.getBindEqualityTypeVar (EL.getExtLabT x)
+(** Gets the class from a binding. *)
 fun getBindC x = C.getBindC (EL.getExtLabT x)
+(** Gets the labels of a binding. *)
 fun getBindL x = C.getBindL (EL.getExtLabT x)
+(** Gets the polymorphism status of a binding. *)
 fun getBindP x = C.getBindP (EL.getExtLabT x)
 
+(** The next environment variable to assign, a ref initially set to 0. *)
 val nextEnvVar     = ref 0
+(** Sets the #nextEnvVar to the value specified in the argument. *)
 fun setNextEnvVar     n  = nextEnvVar := n
+(** Gets the next environment variable to use. *)
 fun getEnvVar   () = !nextEnvVar
+(** Generates a fresh environment variable, incrementing the #nextEnvVar counter. *)
 fun freshEnvVar () = let val x = !nextEnvVar in nextEnvVar := x + 1; x end
+(** Resets the environment variable counter. *)
 fun resetEnvVar () = setNextEnvVar 0
 
+(** Converts an environment variable to an integer. *)
 fun envVarToInt envVar = envVar
 
+(** Tests equality of two environment variables. *)
 fun eqEnvVar ev1 ev2 = (ev1 = (ev2 : envVar))
 
+(** Constructs an environment variable. *)
 fun consENV_VAR ev lab = ENV_VAR (ev, lab)
 fun newEnvVar  lab    = consENV_VAR (freshEnvVar ()) lab
 
 fun envToEnvVar (ENV_VAR ev) = ev
   | envToEnvVar _ = raise EH.DeadBranch "the env should be a variable"
 
+(** Construct an environment constructor (ENV_CONS). *)
 fun consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info =
     ENV_CONS {valueIds = valueIds,
 	    typeNames = typeNames,
@@ -542,34 +569,46 @@ val emptyEnv = consEnvConstructor emvar emtyp emtv emstr emsig emfun emoc emnfo
 
 (* Accessors to envs *)
 
+(** Gets the value identifiers from an environment constructor. *)
 fun getValueIds (ENV_CONS x) = #valueIds x
   | getValueIds _          = raise EH.DeadBranch ""
+(** Gets the type names from an environment constructor. *)
 fun getTypeNameEnv (ENV_CONS x) = #typeNames x
   | getTypeNameEnv _          = raise EH.DeadBranch ""
+(** Gets the explicit type variables from an environment constructor. *)
 fun getExplicitTypeVars (ENV_CONS x) = #explicitTypeVars x
   | getExplicitTypeVars _          = raise EH.DeadBranch ""
+(** Gets the structures from an environment constructor. *)
 fun getStructs (ENV_CONS x) = #structs x
   | getStructs _          = raise EH.DeadBranch ""
+(** Gets the signatures from an environment constructor. *)
 fun getSigs (ENV_CONS x) = #sigs x
   | getSigs _          = raise EH.DeadBranch ""
+(** Gets the functors from an environment constructor. *)
 fun getFunctors (ENV_CONS x) = #functors x
   | getFunctors _          = raise EH.DeadBranch ""
+(** Gets the overloading classes from an environment constructor. *)
 fun getOverloadingClasses (ENV_CONS x) = #overloadingClasses x
   | getOverloadingClasses _          = raise EH.DeadBranch ""
+(** Gets the info field from an environment constructor. *)
 fun getInfo (ENV_CONS x) = #info x
   | getInfo _          = raise EH.DeadBranch ""
+(** Gets the labels from an environment constructor. *)
 fun getILab (ENV_CONS x) = #lab (#info x)
   | getILab _          = raise EH.DeadBranch ""
+(** Gets the 'complete' field from an environment constructor. *)
 fun getIComplete (ENV_CONS x) = #complete (#info x)
   | getIComplete _          = raise EH.DeadBranch ""
+(** Gets the argument of a functor field from an environment constructor. *)
 fun getIArgOfFunctor (ENV_CONS x) = #argOfFunctor (#info x)
   | getIArgOfFunctor _          = raise EH.DeadBranch ""
+(** Gets the info type names field of an environment constructor. *)
 fun getITypeNames (ENV_CONS x)        = #infoTypeNames (#info x)
   | getITypeNames (ROW_ENV (e1, e2)) = (getITypeNames e1) @ (getITypeNames e2)
   | getITypeNames (ENV_VAR _)        = []
   | getITypeNames env               = (print (printEnv env ""); raise EH.DeadBranch "")
 
-(* update fields in a record of type infoEnv *)
+(** Update fields in a record of type infoEnv *)
 fun updateInfoLab lab {lab = _, complete, infoTypeNames, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
 fun updateInfoComplete complete {lab, complete = _, infoTypeNames, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
 fun updateInfoTypeNames infoTypeNames {lab, complete, infoTypeNames = _, argOfFunctor} = consInfo lab complete infoTypeNames argOfFunctor
@@ -1190,8 +1229,10 @@ fun getTypeNames typeNames =
  * that we are in fact dealing with an opaque signature *)
 fun createOpaqueEqualityConstraints env lab =
     let
+	(** Holds a list of the equality type variables that we have freshened. *)
  	val equalityTypeVarsToFreshen = ref []
 
+	(** Freshens an equality type variable. *)
 	fun freshenEqualityTypeVar eqtv =
 	    let
 		val newEqtv = T.freshEqualityTypeVar()
@@ -1200,6 +1241,7 @@ fun createOpaqueEqualityConstraints env lab =
 		newEqtv
 	    end
 
+	(** Check if an equality type variable has already been freshened, returning the new freshened one if so. *)
 	fun checkForFreshening eqtv =
 	    let
 		fun checkForFreshening' eqtv [] = freshenEqualityTypeVar eqtv
@@ -1252,9 +1294,7 @@ fun createOpaqueEqualityConstraints env lab =
 	(parseEnv env, generateEqtvConstraints (!(equalityTypeVarsToFreshen)) lab)
     end
 
-(* The set of labels is the set of labels that we want to keep *)
-
-(* Same as in Filter *)
+(** Same as in Filter. *)
 fun testlab lab labs = L.eq lab L.dummyLab
 		       orelse L.eq lab L.builtinLab
 		       orelse L.isin lab labs
@@ -1277,6 +1317,7 @@ fun filterIdEnv idenv labs =
 	       (emptyMap, true)
 	       idenv
 
+(** Filter an open environment by labels specified as a parameter. *)
 fun filterOpenEnv openEnv labs =
     let val openEnv' =
 	    OMO.foldr (fn (openSem as (lid, lab, kind), openEnv) =>
@@ -1312,6 +1353,7 @@ fun toIncomplete (env as ENV_CONS _)               = updateIComplete false env
   | toIncomplete (env as ENVFIL (f, e, strm))    = ENVFIL (f, toIncomplete e, fn () => toIncomplete (strm ()))
   | toIncomplete (env as ENVTOP)                 = env
 
+(** Filter a single constraint by the labels given in the parameter. *)
 fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as TYPENAME_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as ROW_CONSTRAINT _) labs = SOME oneConstraint
@@ -1335,6 +1377,7 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as FUNCTOR_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as SHARING_CONSTRAINT _) labs = SOME oneConstraint
 
+(** Filters somehting of type CONSTRAINTS by some labels given in the function argument. *)
 and filterCst (CONSTRAINTS oneConstraint) labs =
     CONSTRAINTS (OMC.mapPartiali (fn (key, cs) =>
 			      if testlab (L.fromInt key) labs
@@ -1344,6 +1387,7 @@ and filterCst (CONSTRAINTS oneConstraint) labs =
 			      else NONE)
 			  oneConstraint)
 
+(** A function which will filter envirnomnts by the labels given in the second parameter to this function. *)
 and filterEnv (env as ENV_CONS _) labs =
     let val (valueIds, completeValueIds) = filterIdEnv (getValueIds env) labs
 	val (typeNames, completeTyps) = filterIdEnv (getTypeNameEnv env) labs

@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Minimisation.sml
- *  o Description: Defines the Min structure which has signature MIN
- *      and which is the structure containing our minimisation algo.
  *)
 
-
+(** Contains the minimisation algorithm, opaquely constrained by refstruct{MIN}. *)
 structure Min :> MIN = struct
 
 (* shorten the names of the structures that we are going to use *)
@@ -40,39 +38,41 @@ structure VT  = VTimer
 structure ERR = Error
 
 val currentBackground = ref (NONE : (VT.timer * ERR.export' * E.envContextSensitiveSyntaxPair * A.packs * int) option)
-(* error being minimized *)
+
+(** Represents the error being minimized as a ref value. *)
 val currentError = ref (NONE : (ERR.error * LargeInt.int * int) option)
 
-(* sets the currentError ref given an error and a counter for the error *)
+(** Sets the currentError ref given an error and a counter for the error. *)
 fun setCurrentError error counter =
     case !currentBackground of
-	SOME (timer, funout, env, parse, size) =>
-	let val time = VT.getMilliTime timer
-	in currentError := SOME (error, time, counter)
-	end
+	SOME (timer, funout, env, parse, size) => currentError := SOME (error, VT.getMilliTime timer, counter)
       | _ => ()
 
+(** Sets the #currentBackground values to those given as the arguments. *)
 fun setCurrentBackground timer (SOME funout) env parse error counter =
     (currentBackground := SOME (timer, funout, env, parse, L.length (ERR.getL error));
      setCurrentError error counter)
   | setCurrentBackground timer NONE env parse error counter = ()
 
+(** Gets the counter information inside the current error (#currentError). *)
 fun getCurrentErrorCounter () =
     case !currentError of
 	SOME (error, time, counter) => SOME counter
       | NONE => NONE
 
+(** Reports an error using the function 'funout', specified in the second component of the #currentBackground ref tuple. *)
 fun reportError error =
     case (!currentBackground, !currentError) of
 	(SOME (timer, funout, env, parse as (ast, _, _), size), SOME (err, time, counter)) =>
 	let val time' = VT.getMilliTime timer
+	    (** Length of the labels given in the 'error' parameter to #reportError. *)
 	    val size1 = L.length (ERR.getL error)
+	    (** Length of the labels given in the 'err' portion of #currentError. *)
 	    val size2 = L.length (ERR.getL err)
 	in if (time' - time > 20000 andalso size1 < size2) (* either 20s have passed *)
 	      orelse
 	      (time' - time > 1000 andalso 100 - ((size1 * 100) div size2) > 20) (* or the error is 20% smaller *)
-	   then let val id   = ERR.freshError ()
-		    val err' = ERR.setT (ERR.setReg (ERR.setSlice ast (ERR.setE (ERR.setI error id) [ERR.getI err])) true) time'
+	   then let val err' = ERR.setT (ERR.setReg (ERR.setSlice ast (ERR.setE (ERR.setI error (ERR.freshError ())) [ERR.getI err])) true) time'
 		    val _    = funout [err'] parse env counter (LargeInt.toInt time')
 		    val _    = setCurrentError err' (counter + 1)
 		in true
@@ -81,53 +81,29 @@ fun reportError error =
 	end
       | _ => false
 
+(** Returns the final error generated (after minimisation has finished) and the time taken to generate it. *)
 fun finalError error counter =
     case !currentError of
-	SOME (err, time, counter) =>
-	let val id1 = ERR.freshError ()
-	    val id2 = ERR.getI err
-	in (ERR.setE (ERR.setI error id1) [id2], counter)
-	end
+	SOME (err, time, counter) => (ERR.setE (ERR.setI error (ERR.freshError ())) [ERR.getI err], counter)
       | _ => (error, counter)
 
-fun lazyunbind4 [] _ labs keep err _ = (labs, keep, err)
-  | lazyunbind4 (x :: xs) css labs keep err ast =
-    let (*val _ = D.printdebug2 ("[lazy]")*)
-	val (labs', keep', err') =
+(** Attempts to removes labels associated with bindings (disconnecting binders from accessors. *)
+fun lazyunbind [] _ labs keep err _ = (labs, keep, err)
+  | lazyunbind (x :: xs) css labs keep err ast =
+    let val (labs', keep', err') =
 	    if L.disjoint labs x orelse L.subseteq x keep
 	    then (labs, keep, err)
 	    else case U.unif css (FI.cons (SOME labs) (SOME x)) (U.MIN err) of
-		     U.Success _ =>
-		     if L.isSingle x
-		     then (labs, L.union x keep, err)
-		     else (labs, keep, err)
-		   | U.Error (err, _) =>
-		     ((*D.printdebug2 (ERR.printOneXmlErr (ERR.setSlice ast err) "" true ^ "\n" ^
-				     L.toString x ^ "\n" ^
-				     L.toString labs ^ "\n" ^
-				     L.toString (ERR.getL err));*)
-		      reportError err;
-		      (L.inter (ERR.getL err) labs, keep, err))
-    in lazyunbind4 xs css labs' keep' err' ast
+		     U.Success _ => (labs, if L.isSingle x then L.union x keep else keep, err)
+		   | U.Error (err, _) => (reportError err; (L.inter (ERR.getL err) labs, keep, err))
+    in lazyunbind xs css labs' keep' err' ast
     end
 
-fun lazyunbind bindings css labs err ast = lazyunbind4 bindings css labs L.empty err ast
+(** Extracts a single label from a label set using #Label.remFirst. *)
+fun select labs = L.remFirst labs
 
-fun select1 labs = L.remFirst labs
-
-(* A random selection of the next label to try to eliminate *)
-fun select2 labs =
-    let val n = L.fromInt (Int.fromLarge (Time.toSeconds (Time.now ())))
-    in if L.isin n labs
-       then (SOME n, L.delete n labs)
-       else select1 labs
-    end
-    handle Overflow => select1 labs
-
-fun select labs = select1 labs
-
-(* above is the old implementation of reduce1 *)
-fun reduce1 css done todo err =
+(** Removes labels from the label set in todo, and repeatedly runs the unification algorithm to check whether the error still exists. *)
+fun reduce css done todo err =
     let val (lop, ll) = select todo
     in case lop of
 	   NONE => (done, err)
@@ -137,22 +113,28 @@ fun reduce1 css done todo err =
 	   in case U.unif css filters (U.MIN err) of
 		  U.Error (err, _) =>
 		   (reportError err;
-		    reduce1 css done (L.inter (ERR.getL err) ll) err)
+		    reduce css done (L.inter (ERR.getL err) ll) err)
 		| U.Success state =>
-		  reduce1 css (L.cons l done) ll err
+		  reduce css (L.cons l done) ll err
 	   end
     end
 
-fun reduce css done todo err = reduce1 css done todo err
-
-(* in todo we should test first the labels in the csbindings *)
-(* it does not seem to work quite well *)
-fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (ast, _, _)) timer export counter =
+(** Function that does minimisation.
+ * In todo we should test first the labels in the csbindings, it does not seem to work quite well. *)
+fun minimize err (envContextSensitiveSyntaxPair as (env, css)) (parse as (ast, _, _)) timer export counter =
     let val _        = setCurrentBackground timer export envContextSensitiveSyntaxPair parse err counter
 	val labs     = ERR.getL err
-	val done     = L.empty (*EK.getLabsEk (ERR.getK err)*)
+
+	(** The set of labels that we have verified to be part of the error.
+	 * Initially the empty set. *)
+	val done     = L.empty
 	val filters1 = FI.cons (SOME labs) NONE
+
+	(** A filtered environment, filtered by the labels in the error giving in the argument to #minimize. *)
 	val env      = E.filterEnv env labs
+
+	(** Holds the new error reproted by the minimisation algorithm for the
+	 * filtered environment #env. Throws atn exception if minimisation returns success. *)
 	val err      =
 	    case U.unif env filters1 (U.MIN err) of
 		U.Error (err, _) => err
@@ -162,30 +144,27 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
 		in raise EH.DeadBranch ("Error! The unification algorithm terminated in a success state, but an error was generated previously! "^
 					"Hint: It has been found previously to be the case that this error is cased by a bug solely in the unification algorithm where some labels are not propagated correctly...")
 		end
+
+	(** Holds the new labels reported by the error received from the minimisation algorithm. *)
 	val labs    = ERR.getL err
-	(*val labs = ERR.getL err*)
 	(*(2010-06-18)We need 'done' because for arity clashes we keep the accessors without their binding
 	 * and the builtin basis is labelled by the dummy label so it is never going to be filtered out
 	 * and so an error such as datatype 'a int = T of int int, will result in the minimal error
 	 * [<..>] int where the 'int' is then the one from the builtin basis.*)
+
 	val (bindings, inenv) = E.getbindings env
-	(*val _ = map (fn labs => D.printdebug2 (L.toString labs)) bindings*)
-	val (labs1, keep, err1) = lazyunbind bindings env labs err ast
-	(*val env = E.filterEnv env (L.union labs keep)*)
-	(*val _ = D.printdebug2 (S.printSlice (S.slice ast (L.union labs1 keep)) true)*)
+	val (labs1, keep, err1) = lazyunbind bindings env labs L.empty err ast
 	val (labs2, err2) = reduce env (L.union keep done) (L.diff keep labs1) err1
-	(*val _ = D.printdebug2 (S.printSlice (S.slice ast labs2) true)*)
+
+	(** Holds a new set of filters with the labels in labs2 assigned to 'keep', and no binding labels. *)
 	val filters2 = FI.cons (SOME labs2) NONE
-	(*val _ = D.printdebug2 ("[last]")*)
-	(*val env = E.filterEnv env labs2*)
 	val err = case U.unif env filters2 (U.MIN err2) of
 		      U.Error (err, _) => err
 		    | U.Success _ =>
-		      let val msg = "after minimisation, the error should still be an error"
-			  val err' = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
+		      let val err' = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
 			  val _   =
 			      D.printdebug2
-				  (msg ^
+				  ("after minimisation, the error should still be an error" ^
 				   "\n" ^ err' ^
 				   "\nlabs:  " ^ L.toString labs  ^
 				   (*"\n" ^ S.printSlice (S.slice ast labs) true ^*)
@@ -200,25 +179,18 @@ fun minimize4 err (envContextSensitiveSyntaxPair as (env, css)) lazy (parse as (
     in (err', counter')
     end
 
-fun minimize err css ast timer export counter =
-    minimize4 err css true ast timer export counter
-(* done filters is not used in minimize4 *)
-
+(** Calls the minimize function (#minimize) on all the errors in the list in the first argument. *)
 fun minimizeall [] syn _ _ _ _ _ = syn
   | minimizeall (err :: xs) syn cs ast timer export counter =
-    let (*val _ = D.printdebug2 ("--" ^ (L.toString ll) ^ "\n")*)
-	val errl = minimizeall xs syn cs ast timer export counter
-	(*val (ll', ids', errk') = minimize ll cs*)
+    let val errl = minimizeall xs syn cs ast timer export counter
     in if ERR.alreadyone errl err
        then errl
        else #2 (ERR.mindone errl (#1 (minimize err cs ast timer export counter)))
     end
 
+(** Minimises all the semantic errors that are in the list in the first argument.
+ * Uses #Error.sepsemsyn to identify which error are semantic and which are syntactic. *)
 fun minimizeallkind errl cst ast timer export counter =
-    let (*val _ = D.printdebug2 (Int.toString (List.length errl))*)
-	(*val _ = print "minimization is running...\n"*)
-    in (fn (sem, syn) => minimizeall sem syn cst ast timer export counter)
+    (fn (sem, syn) => minimizeall sem syn cst ast timer export counter)
 	   (ERR.sepsemsyn errl)
-    end
-
 end

@@ -37,8 +37,21 @@ structure ER = ExtReg
 structure EH = ErrorHandler
 structure CD = LongId
 
-(* declare some new types *)
+(** An identifier for an error, set to be an integer. *)
 type id      = int
+
+(** A type used to represent an error. Has the following fields:
+ * \arg id. The id used to represent the error.
+ * \arg labs. The labels of the error.
+ * \arg deps. The dependencies of the error.
+ * \arg ek. The error kind.
+ * \arg rf
+ * \arg bb. Whether the built-in basis was used.
+ * \arg rem.
+ * \arg time. Time taken to find the error.
+ * \arg sl. Slice of the error.
+ * \arg regs. Regions for the error.
+ * \arg min. Indicates whether the slice is minimal or not. *)
 type error   = {id   : id,
 		labs : L.labels,
 		deps : CD.set,
@@ -76,21 +89,15 @@ type export' = error list ->
 (*********************************************************************)
 (* printing                                                          *)
 
+(** Prints an identifier. *)
 fun printId id = Int.toString id
 
+(** Function used to print a list. *)
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
 fun printRemoves xs = printlistgen xs printId
 
-(* should be just for debugging *)
-fun printlabss xs = printlistgen xs L.toString ^ "\n\n"
-
-fun printLabReg xs =
-    printlistgen
-	xs
-	(fn (l, rl) => "(" ^ L.printLab l ^ "," ^ R.printRegList rl ^ ")")
-
-(* turns the character into a string *)
+(** Turns the character into a string. *)
 fun transfun1 #"\""    = "\\\""
   | transfun1 #"\227"  = "\227" (* sequence ldots and rdots *)
   | transfun1 #"\128"  = "\128"
@@ -118,7 +125,7 @@ fun transLisp' #"'"  = "\\'"
 
 fun transLisp st = String.translate transLisp' st
 
-(* prints error information in XML format *)
+(** Prints error information in XML format. *)
 fun printOneXmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} sep bslice =
     sep ^ "<id>"           ^ Int.toString id                   ^ "</id>\n"           ^
     sep ^ "<labels nb=\""  ^ Int.toString (L.length labs)      ^ "\">" ^ L.toString labs ^ "</labels>\n" ^
@@ -133,6 +140,7 @@ fun printOneXmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} sep bs
     sep ^ "<minimal>"      ^ Bool.toString min                 ^ "</minimal>\n"
     (*^ sep ^ "<slast>"       ^ S.toString sl                   ^ "</slast>\n"*)
 
+(** Prints an error in XML format. *)
 fun printOneXmlErrTuple {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} sep bslice basisoverloading =
     (Int.toString id,
      Int.toString (L.length labs) ^ "\">" ^ L.toString labs,
@@ -148,7 +156,7 @@ fun printOneXmlErrTuple {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} s
       else ER.printOneRegs regs),
      Bool.toString min)
 
-(* this is used for our database, that's why we don't print anything for this new "rem" field *)
+(** Used for our database, that's why we don't print anything for this new "rem" field. *)
 fun printOneSmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice basisoverloading =
     let val ll = "labels      = " ^ "(" ^ Int.toString (L.length labs) ^ "," ^ L.toString labs ^ ")"
 	val cd = "assumptions = " ^ CD.toStringOut deps
@@ -163,6 +171,7 @@ fun printOneSmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice
        else "regions     = " ^ "[" ^ ER.printSmlExtRegs regs ^ "]"))
     end
 
+(** Prints a JSON error to string. *)
 fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice basisoverloading =
     let val ll = "\"labels\"      : " ^ "{\"count\": " ^ Int.toString (L.length labs) ^ ", " ^ "\"labelNumbers\": " ^ L.toString labs ^ "}"
 	val cd = "\"assumptions\" : " ^ CD.toJsonStringOut deps
@@ -180,12 +189,12 @@ fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslic
 fun toListSep xs sep p =
     #1 (foldr (fn (x, (y, z)) => (p ^ x ^ p ^ z ^ y, sep)) ("", "") xs)
 
-(* returns a give slice as a string *)
+(** Returns a give slice as a string *)
 fun SlToString sl = S.toString sl
 
 fun removesToList rems = map (fn x => printId x) rems
 
-(* prints one error in lisp format *)
+(** Prints one error in lisp format. *)
 fun printOneLispErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid bslice basisoverloading =
     let val id = "(id . " ^ Int.toString id ^ ")"
 	val cd = "(assumptions . (" ^ transLisp (toListSep (CD.toStringList deps ascid) " " "") ^ "))"
@@ -203,7 +212,7 @@ fun printOneLispErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
       , mn)
     end
 
-(* prints one error in perl format *)
+(** Prints one error in perl format. *)
 fun printOnePerlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid bslice basisoverloading =
     let val id = "id => " ^ Int.toString id
 	val cd = "assumptions => [" ^ toListSep (CD.toStringList deps ascid) ", " "\"" ^ "]"
@@ -220,7 +229,7 @@ fun printOnePerlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 	, mn)
     end
 
-(* quick hack for the next release to reduce overloading information from the basis *)
+(** Quick hack for the next release to reduce overloading information from the basis. *)
 fun removeBasisSlice sl =
 let
     fun stripBasisSlice sl =
@@ -245,6 +254,7 @@ let
 	    String.implode (findBasisSlice sl)
 	end
 
+    (** Finds the start of the basis slice. This should ideally be done in the AST. *)
     fun findStartBasisSlice sl =
 	if (String.extract (sl, 0, SOME(11))) = "..structure"
 	   andalso
@@ -283,48 +293,56 @@ fun printOneBashErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 
 val idError = ref 0
 
-(* functions to set, get and reset idError.
- * A fresh function is also implemented which will increment idError but return the current value
- *)
+(** Sets the #idError to the value in the argument. *)
 fun setError   n = idError := n
+(** Gets the #idError value. *)
 fun getError   _ = !idError
+(** Increments and then gets a fresh error. *)
 fun freshError _ = let val x = !idError in (idError := !idError + 1; x) end
+(** Resets the error counter. *)
 fun resetError _ = setError 0
 
+(** A dummy identifier, set to 0. *)
 val dummyId = 0
 
-(* The initial value for the "rem" field of an error *)
+(** The initial value for the "rem" field of an error *)
 val initRem   = []
-(* The initial value for the "rf" field of an error *)
+(** The initial value for the "rf" field of an error *)
 val initRf    = L.empty
-(* The dummy time value *)
+(** The dummy time value *)
 val initTime  = Int.toLarge ~1
-(* The dummy slice *)
+(** The dummy slice *)
 val initSlice = A.Progs []
-(* The dummy Regsins *)
+(** The dummy Regsins *)
 val initRegs  = []
-(* The dummy builtinBasis *)
+(** The dummy builtinBasis *)
 val initBB    = true
-(* The dummy minimality marker *)
+(** The dummy minimality marker *)
 val initMin   = false
 
-(* changes and id of type id to an integer *)
+(** Changes and id of type id to an integer. *)
 fun idToInt id = id
 
-(* functions to get each of the record fields *)
+(** Gets the identifier of an error. *)
 fun getI (x : error) = #id   x
+(** Gets the labels of an error. *)
 fun getL (x : error) = #labs x
+(** Gets the dependencies of an error. *)
 fun getD (x : error) = #deps x
+(** Gets the error kind of an error. *)
 fun getK (x : error) = #ek   x
 fun getF (x : error) = #rf   x
 fun getB (x : error) = #bb   x
 fun getE (x : error) = #rem  x
 fun getT (x : error) = #time x
+(** Gets the slice of an error. *)
 fun getS (x : error) = #sl   x
+(** Gets the regions of the error. *)
 fun getR (x : error) = #regs x
+(** Gets the minimisation value of an error. *)
 fun getM (x : error) = #min  x
 
-(* constructs an error, given the record fields as parameters *)
+(** Constructs an error, given the record fields as parameters. *)
 fun consError id labs deps ek rf bb rem time sl regs min =
     {id   = id,
      labs = labs,
@@ -344,28 +362,34 @@ fun consErrorNoR  id labs deps ek rf     =
 fun consPreError  id labs deps ek rf =
     consError id labs deps ek rf     initBB initRem initTime initSlice initRegs initMin
 
-(* Delete the dummy label *)
+(** Delete the dummy label. *)
 fun stripDummy {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} =
     consError id (L.delete L.dummyLab labs) deps ek rf bb rem time sl regs min
 
-(* Delete the dummy and builtin labels *)
+(** Delete the dummy and builtin labels. *)
 fun stripDummys {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} =
     consError id (L.delete L.builtinLab (L.delete L.dummyLab labs)) deps ek rf bb rem time sl regs min
 
-(* functions which will set each of the record fields *)
+(** Sets the identifier of an error. *)
 fun setI {id = _, labs, deps, ek, rf, bb, rem, time, sl, regs, min} id   = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the labels of an error. *)
 fun setL {id, labs = _, deps, ek, rf, bb, rem, time, sl, regs, min} labs = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the dependencies of an error. *)
 fun setD {id, labs, deps = _, ek, rf, bb, rem, time, sl, regs, min} deps = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the error kind of an error. *)
 fun setK {id, labs, deps, ek = _, rf, bb, rem, time, sl, regs, min} ek   = consError id labs deps ek rf bb rem time sl regs min
 fun setF {id, labs, deps, ek, rf = _, bb, rem, time, sl, regs, min} rf   = consError id labs deps ek rf bb rem time sl regs min
 fun setB {id, labs, deps, ek, rf, bb = _, rem, time, sl, regs, min} bb   = consError id labs deps ek rf bb rem time sl regs min
 fun setE {id, labs, deps, ek, rf, bb, rem = _, time, sl, regs, min} rem  = consError id labs deps ek rf bb rem time sl regs min
 fun setT {id, labs, deps, ek, rf, bb, rem, time = _, sl, regs, min} time = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the slice of an error. *)
 fun setS {id, labs, deps, ek, rf, bb, rem, time, sl = _, regs, min} sl   = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the regions of an error. *)
 fun setR {id, labs, deps, ek, rf, bb, rem, time, sl, regs = _, min} regs = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the minimisation field of an error. *)
 fun setM {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min = _} min  = consError id labs deps ek rf bb rem time sl regs min
 
-(* Adds dependencies to an error *)
+(** Adds dependencies to an error. *)
 fun labelError {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} labs' stts' deps' =
     consError id (L.union labs labs') (CD.union deps deps') ek (L.union rf stts') bb rem time sl regs min
 
@@ -377,7 +401,7 @@ fun sepsemsyn [] = ([], [])
        else (sem, x :: syn)
     end
 
-(* ordering of errors depending on their sizes *)
+(** Ordering of errors depending on their sizes. *)
 fun orderErrors errs =
     let fun add x [] = [x]
 	  | add x (y :: ys) = if L.length (getL x) <= L.length (getL y)
@@ -390,7 +414,7 @@ fun orderErrors errs =
 fun getIdsErrors [] = []
   | getIdsErrors (x :: xs) = (getI x) :: (getIdsErrors xs)
 
-(* returns the errors in errs2 that are not in errs1 using the id's *)
+(** Returns the errors in errs2 that are not in errs1 using the id's. *)
 fun getNewErrors errs1 errs2 =
     let val ids = O.ord (getIdsErrors errs1)
     in List.filter (fn x => not (O.isin (getI x) ids)) errs2
@@ -399,16 +423,16 @@ fun getNewErrors errs1 errs2 =
 fun getErrorList []        _          = NONE
   | getErrorList (x :: xs) (id : int) = if getI x = id then SOME x else getErrorList xs id
 
-(* returns the identifiers of all the errors that can be removed *)
+(** Returns the identifiers of all the errors that can be removed. *)
 fun getToRemove errs = foldr (fn (x, y) => (getE x) @ y) initRem errs
 
-(* filters the errors: keep only the one that are not unvalidated by others *)
+(** Filters the errors: keep only the one that are not unvalidated by others. *)
 fun getMergedErrors errs =
     let val rems = getToRemove errs
     in List.filter (fn x => not (TO.isin (getI x) rems)) errs
     end
 
-(* filters the errors: keep all the minimal ones (that don't specify any removal) *)
+(** Filters the errors: keep all the minimal ones (that don't specify any removal). *)
 fun getMinErrors errs =
     List.filter (fn x => null (getE x)) errs
 
@@ -451,7 +475,7 @@ fun fusionerr {id = id1, labs = labs1, deps = deps1,
      min  = true}
   | fusionerr _ _ = raise EH.DeadBranch "DeadBranch69"
 
-(* multi minimal record errors at once *)
+(** Multi minimal record errors at once. *)
 (* returns: (keep, remove)             *)
 fun recordSpeTreat [] = []
   | recordSpeTreat ((x as {id, labs, deps, ek = EK.LabTyClash (ll1, ll2, ll3, ll4), rf, bb, rem, time, sl, regs, min}) :: xs) =
@@ -486,7 +510,7 @@ fun consWeight [] found = found
     in consWeight news found'
     end
 
-(* checks if err1 is smaller or equal to err2 *)
+(** Checks if err1 is smaller or equal to err2. *)
 fun alreadyoneone err1 err2 =
     case getK err1 of
 	EK.FreeIdent => false
@@ -496,17 +520,17 @@ fun alreadyoneone err1 err2 =
 	     andalso
 	     CD.subseteq (getD err1) (getD err2)
 
-(* checks if there exists an error smaller or equal to err in the list *)
+(** Checks if there exists an error smaller or equal to err in the list. *)
 fun alreadyone [] _ = false
   | alreadyone (x :: xs) err =
     alreadyoneone x err orelse alreadyone xs err
 
-(* checks if err is smaller or equal to one of the errors in the list of errors *)
+(* Checks if err is smaller or equal to one of the errors in the list of errors. *)
 fun alreadyone' _ [] = false
   | alreadyone' err (x :: xs) =
     alreadyoneone err x orelse alreadyone' err xs
 
-(* checks if the first error is strictly smaller than the second one *)
+(** Checks if the first error is strictly smaller than the second one. *)
 fun orderdone {id = _, labs = labs1, deps = deps1, ek = ek1, rf = _,
 	       bb = _, rem = _, time = _, sl = _, regs = _, min = _}
 	      {id = _, labs = labs2, deps = deps2, ek = ek2, rf = _,
@@ -519,7 +543,7 @@ fun orderdone {id = _, labs = labs1, deps = deps1, ek = ek1, rf = _,
 	      orelse
 	      (L.subseteq labs1 labs2 andalso CD.subset deps1 deps2)
 
-(* all the minimal errors on which depend an errors (merged or not) *)
+(** All the minimal errors on which depend an errors (merged or not). *)
 fun removedErrors errs err =
     if null (getE err)
     then [err]
@@ -544,24 +568,15 @@ fun mindone1 errs err =
     end
 
 fun mindone2 errs err = (SOME err, errs @ [err])
-
 fun mindone3 errs err = (SOME err, err :: errs)
-
-(* before both of them were mindone1 *)
 fun mindone  errs err = mindone2 errs err
 fun mindone' errs err = mindone1 errs err
-
-
 fun setSlice ast err = setS err (S.slice ast (getL err))
-
 fun setSlices ast xs = map (setSlice ast) xs
 
 fun setReg err bmerge =
     let val info = (getK err, getF err)
 	val extr = ER.getpos_progs (getS err) info
-	(*val _ = Debug.printdebug2 (printOneXmlErr err "" false
-				     ^ "\n" ^
-				     ER.printOneRegs extr)*)
 	val regs = ER.delNegRegs (ER.simplify extr bmerge)
     in setR err regs
     end
