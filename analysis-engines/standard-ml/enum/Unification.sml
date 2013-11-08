@@ -17,12 +17,11 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        21 May 2010
  *  o File name:   Unification.sml
- *  o Description: Contains the unification algorithm.  The file defines
- *      the functor Unif with signature UNIF and takes a parameter of
- *      signature STATE.
  *)
 
-(* we need to use ":" instead of ":>" because of the types of State *)
+(** Contains the unification algorithm.
+ * The file defines the functor Unif with signature UNIF and takes a parameter of signature STATE.
+* We need to use ":" instead of ":>" because of the types of State *)
 functor Unif (S : STATE) : UNIF = struct
 
 structure S   = S
@@ -48,6 +47,7 @@ structure OM  = SplayMapFn(OrdKey)
 structure ERR = Error
 structure D   = Debug
 
+(** A boolean that's set to true when we are analyzing the basis. *)
 val analysingBasis : bool ref = ref false
 
 (** Represents unification termination states.
@@ -87,12 +87,17 @@ datatype cocc  = CT of T.typeVar  * T.ty
                | CS of T.rowVar * T.rowType
                | CR of T.fieldVar * T.fieldType
 
-(* THESE bind forms are used to solve binders.   *)
-datatype 'a sbind = BINDOUT                  (* the binding has been discarded                    *)
-		  | BINDNOT of E.constraints (* the binding is not a binding                      *)
-		  | BINDIN  of 'a E.bind     (* we kept the binding                               *)
-		  | BINDPOL of 'a E.bind     (* we kept the binding but weakened the poly field   *)
-		  | BINDDUM of 'a E.bind     (* the binding has been transformed into a dummy one *)
+(** These bind forms are used to solve binders.
+ * \arg BINDOUT. The binding has been discarded.
+ * \arg BINDIN. The binding is not a binding.
+ * \arg BINDIN. We kept the binding.
+ * \arg BINDPOL. We kept the binding but weakened the poly field.
+ * \arg BINDDUM. The binding has been transformed into a dummy binding. *)
+datatype 'a sbind = BINDOUT
+		  | BINDNOT of E.constraints
+		  | BINDIN  of 'a E.bind
+		  | BINDPOL of 'a E.bind
+		  | BINDDUM of 'a E.bind
 
 (** Represents which Skalpel entity is using the unification algorithm (e.g.\ the enumerator).
  * There are three potential users of the unification algorithm:
@@ -127,34 +132,27 @@ fun printOccty (T x) = "T" ^ EL.printExtLab' x T.printTypeVar
   | printOccty (S x) = "S" ^ EL.printExtLab' x T.printRowVar
   | printOccty (R x) = "R" ^ EL.printExtLab' x T.printFieldVar
 
-(** some text *)
+(** Prints a list of occty values. *)
 fun printOcctyList [] = ""
   | printOcctyList (x :: xs) = printOccty x ^ "\n" ^ printOcctyList xs
 
-(*fun printError (Success state)      =
-    "SUCCESS:\n" ^ S.printState state
-  | printError (Error (err, state)) =
-    "ERROR:\n" ^
-    ERR.printOneXmlErr err "" true ^ "\n" ^
-    S.printState state*)
-
+(** Prints a type function. *)
 fun printTFun tfun =
     "[" ^ #2 (OM.foldri (fn (id, exttf, (sep, str)) =>
 			    (",", EL.printExtLab' exttf T.printtyf ^ sep ^ str))
 			("", "]")
 			tfun)
 
-
-(* -------------- *)
-
-
+(** Decomposes a field type into a pair of a list of an occty and an integer. *)
 fun decomptyfield (T.FIELD_VAR rv)                ll deps ids = ([R (rv, ll, deps, ids)], 0)
   | decomptyfield (T.FC (_, ty, _))        ll deps ids = decomptyty ty ll deps ids
   | decomptyfield (T.FIELD_DEPENDANCY (r, x, y, z))      ll deps ids = decomptyfield r (L.union x ll) (L.union y deps) (CD.union z ids)
   | decomptyfield T.FIELD_NO_OVERLOAD                     ll deps ids = ([], 0)
+(** Decomposes a sequence type into a pair of a list of an occty and an integer. *)
 and decomptysq  (T.ROW_VAR sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
   | decomptysq  (T.ROW_C (rtl, _, _))       ll deps ids = (decomptyfieldlist rtl ll deps ids, 1)
   | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
+(** Decomposes a type into a pair of a list of an occty and an integer. *)
 and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l, eqtv))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
   | decomptyty  (T.TYPE_CONSTRUCTOR (_, sq, _, _))         ll deps ids = decomptysq sq ll deps ids
@@ -162,17 +160,15 @@ and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, de
   | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.GEN ty)               ll deps ids = ([], 0) (*(2010-06-23)Isn'y that risky?*)
   | decomptyty  (T.TYPE_DEPENDANCY (t, x, y, z))      ll deps ids = decomptyty t (L.union x ll) (L.union y deps) (CD.union z ids)
+(** Decomposes a list of field types. *)
 and decomptyfieldlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyfield x ll deps ids)) @ y) [] xs
-(*and decomptytylist  xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyty  x ll deps ids)) @ y) [] xs*)
 
+fun getpairs l1 l2 = foldr (fn (x, pairs) => foldr (fn (y, pairs) => (x, y) :: pairs) pairs l2) [] l1
 
-(* -------------- *)
-
-fun getpairs l1 l2 =
-    foldr (fn (x, pairs) => foldr (fn (y, pairs) => (x, y) :: pairs) pairs l2) [] l1
-
+(** Raises a TODO exception, not yet written this. *)
 fun comparetypsenv typsenv1 typsenv2 filters ls deps ids = raise EH.TODO "no description, raised in the 'comparetypsenv' function of Unification.sml"
 
+(** Compare value identifiers in an environment. *)
 fun comparevidsenv idenv1 idenv2 filters ls deps ids =
     let val dom1  = E.dom idenv1
 	val dom2  = E.dom idenv2
@@ -193,8 +189,8 @@ fun comparevidsenv idenv1 idenv2 filters ls deps ids =
     in cs
     end
 
-(* TODO: we don't pass test273 because of that:
- * We should have a similar test as in genenv *)
+(** TODO: we don't pass test273 because of that:
+ * We should have a similar test as in genenv. *)
 fun comparestrsenv strenv1 strenv2 filters ls deps ids =
     let val dom1  = E.dom strenv1
 	val dom2  = E.dom strenv2
@@ -215,7 +211,7 @@ fun comparestrsenv strenv1 strenv2 filters ls deps ids =
     in cs
     end
 
-(* compares the value identifiers from two different envs *)
+(** Compares the value identifiers from two different envs *)
 fun compareenv env1 env2 filters ls deps ids =
     let val cs1 = comparevidsenv (E.getValueIds env1) (E.getValueIds env2) filters ls deps ids
 	val cs2 = comparetypsenv (E.getTypeNameEnv env1) (E.getTypeNameEnv env2) filters ls deps ids
@@ -223,18 +219,19 @@ fun compareenv env1 env2 filters ls deps ids =
     in cs1 @ cs2 @ cs3
     end
 
+(** Decorates a constraint with labels, stts and dependency values. *)
 fun decorateCst' (E.ROW_CONSTRAINT x) labs stts deps = E.ROW_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.TYPE_CONSTRAINT x) labs stts deps = E.TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' (E.FUNCTION_TYPE_CONSTRAINT x) labs stts deps = E.FUNCTION_TYPE_CONSTRAINT (EL.updExtLab x labs stts deps)
   | decorateCst' c labs stts deps = (print (E.printEnv (E.CONSTRAINT_ENV (E.singleConstraint (L.dummyLab, c))) "");
 				     raise EH.DeadBranch "DeadBranch1")
 
+(** Maps #decorateCst' over the list of constraints in the argument. *)
 fun decorateCst xs labs stts deps =
     map (fn x => decorateCst' x labs stts deps) xs
 
 
-(* Collapsing of dependencies - have to be moved to Ty.sml. *)
-
+(** Collapsing of dependencies - have to be moved to Ty.sml. *)
 fun collapseTy (T.TYPE_DEPENDANCY (T.TYPE_DEPENDANCY (ty, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTy ty
 	       (L.union  (L.union  labs1 labs2) labs3)
@@ -247,6 +244,7 @@ fun collapseTy (T.TYPE_DEPENDANCY (T.TYPE_DEPENDANCY (ty, labs1, stts1, deps1), 
 	  CD.union deps1 deps2)
   | collapseTy ty labs stts deps = T.TYPE_DEPENDANCY (ty, labs, stts, deps)
 
+(** Collapses dependencies in a sequence type. *)
 fun collapseSq (T.ROW_DEPENDANCY (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseSq sq
 	       (L.union  (L.union  labs1 labs2) labs3)
@@ -259,6 +257,7 @@ fun collapseSq (T.ROW_DEPENDANCY (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1), la
 	  CD.union deps1 deps2)
   | collapseSq sq labs stts deps = T.ROW_DEPENDANCY (sq, labs, stts, deps)
 
+(** Collapses dependencies in a field type. *)
 fun collapseRt (T.FIELD_DEPENDANCY (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseRt rt
 	       (L.union  (L.union  labs1 labs2) labs3)
@@ -271,6 +270,7 @@ fun collapseRt (T.FIELD_DEPENDANCY (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1)
 	  CD.union deps1 deps2)
   | collapseRt rt labs stts deps = T.FIELD_DEPENDANCY (rt, labs, stts, deps)
 
+(** Collapses dependencies in a typename type. *)
 fun collapseTn (T.TYPENAME_DEPENDANCY (T.TYPENAME_DEPENDANCY (tn, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTn tn
 	       (L.union  (L.union  labs1 labs2) labs3)
@@ -283,6 +283,7 @@ fun collapseTn (T.TYPENAME_DEPENDANCY (T.TYPENAME_DEPENDANCY (tn, labs1, stts1, 
 	  CD.union deps1 deps2)
   | collapseTn tn labs stts deps = T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)
 
+(** Collapses dependencies in a function type. *)
 fun collapseTf (T.TYPE_FUNCTION_DEPENDANCY (T.TYPE_FUNCTION_DEPENDANCY (tf, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTf tf
 	       (L.union  (L.union  labs1 labs2) labs3)
@@ -295,8 +296,7 @@ fun collapseTf (T.TYPE_FUNCTION_DEPENDANCY (T.TYPE_FUNCTION_DEPENDANCY (tf, labs
 	  CD.union deps1 deps2)
   | collapseTf tf labs stts deps = T.TYPE_FUNCTION_DEPENDANCY (tf, labs, stts, deps)
 
-(* This is used for or types *)
-
+(** Gathers all typenames in a type. *)
 fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = gatherAllTnTn tn
   | gatherAllTnTy (T.TYPE_POLY (sq, _, _, _, _, _)) = gatherAllTnSq sq
   | gatherAllTnTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
@@ -304,6 +304,7 @@ fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = gatherAllTnTn tn
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
   | gatherAllTnTy _ = ([], L.empty, L.empty, CD.empty)
+(** Gathers all typenames in a sequnce type. *)
 and gatherAllTnSq (T.ROW_VAR _) = ([], L.empty, L.empty, CD.empty)
   | gatherAllTnSq (T.ROW_C (rtl, _, _)) =
     foldr (fn ((list1, labs1, stts1, deps1), (list2, labs2, stts2, deps2)) =>
@@ -317,6 +318,7 @@ and gatherAllTnSq (T.ROW_VAR _) = ([], L.empty, L.empty, CD.empty)
     let val (list, labs', stts', deps') = gatherAllTnSq seq
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
+(** Gathers all typenames in a row type. *)
 and gatherAllTnRt (T.FIELD_VAR _) = ([], L.empty, L.empty, CD.empty)
   | gatherAllTnRt (T.FC (_, ty, _)) = gatherAllTnTy ty
   | gatherAllTnRt (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
@@ -324,6 +326,7 @@ and gatherAllTnRt (T.FIELD_VAR _) = ([], L.empty, L.empty, CD.empty)
     in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
     end
   | gatherAllTnRt T.FIELD_NO_OVERLOAD = ([], L.empty, L.empty, CD.empty)
+(** Gathers all typenames in a typename type. *)
 and gatherAllTnTn (T.NC (tn, _, l)) =
     ([(L.toInt l, T.typenameToInt tn)], L.empty, L.empty, CD.empty)
   | gatherAllTnTn (T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)) =
@@ -332,17 +335,21 @@ and gatherAllTnTn (T.NC (tn, _, l)) =
     end
   | gatherAllTnTn (T.TYPENAME_VAR _) = ([], L.empty, L.empty, CD.empty)
 
+(** Checks for presence of variables in a type. *)
 fun isAllTy (T.TYPE_POLY (sq, _, _, _, _, _)) = isAllSq sq
   | isAllTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = isAllTn tn
   | isAllTy (T.TYPE_DEPENDANCY ety) = isAllTy (EL.getExtLabT ety)
   | isAllTy _ = false
+(** Checks for presence of variables in a sequence type. *)
 and isAllSq (T.ROW_VAR _) = false
   | isAllSq (T.ROW_C (rtl, _, _)) = List.all isAllRt rtl
   | isAllSq (T.ROW_DEPENDANCY eseq) = isAllSq (EL.getExtLabT eseq)
+(** Checks for presence of variables in a field type. *)
 and isAllRt (T.FIELD_VAR _) = false
   | isAllRt (T.FC (_, ty, _)) = isAllTy ty
   | isAllRt (T.FIELD_DEPENDANCY efield) = isAllRt (EL.getExtLabT efield)
   | isAllRt T.FIELD_NO_OVERLOAD = true
+(** Checks for precesnce of variables in a typename type. *)
 and isAllTn (T.NC _) = true
   | isAllTn (T.TYPENAME_DEPENDANCY etn) = isAllTn (EL.getExtLabT etn)
   | isAllTn (T.TYPENAME_VAR _) = false
@@ -442,7 +449,7 @@ and gotoInOrTn (tn as T.NC (name, _, _)) = SOME tn
        | NONE => NONE)
   | gotoInOrTn (T.TYPENAME_VAR _) = NONE
 
-(* We build the row variable in a OR because in the case of overloading constants
+(** We build the row variable in a OR because in the case of overloading constants
  * These are not already built when dealing with the binder. *)
 fun buildDirectOr (ty as T.TYPE_POLY (T.ROW_VAR sv, idor, poly, kind, lab, eq)) state =
     (case S.getValStateSq state sv of
@@ -450,7 +457,7 @@ fun buildDirectOr (ty as T.TYPE_POLY (T.ROW_VAR sv, idor, poly, kind, lab, eq)) 
        | SOME sq => T.TYPE_POLY (sq, idor, poly, kind, lab, eq))
   | buildDirectOr ty state = ty
 
-
+(** Get paths where each path in the list is equal to the col argument. *)
 fun getPathsCol (paths : S.paths) col =
     List.mapPartial (fn [] => NONE
 		      | (c :: path) =>
@@ -508,35 +515,45 @@ and selectPathsTy [] ty = NONE
        | SOME ty' => SOME (T.TYPE_DEPENDANCY (ty', labs, stts, deps)))
   | selectPathsTy _ _ = NONE
 
+(** If #selectPathsSeq with the arguments returns NONE, generate a fresh row variable, otherwise give the return value. *)
 fun selectPaths paths seq =
     case selectPathsSeq paths seq of
 	NONE => T.ROW_VAR (T.freshRowVar ())
       | SOME seq => seq
 
+(** Checks the sequence type argument is not a variable. *)
 fun isFullOrSeq (T.ROW_VAR _) = false
   | isFullOrSeq (T.ROW_DEPENDANCY eseq) = isFullOrSeq (EL.getExtLabT eseq)
   | isFullOrSeq (T.ROW_C (fields, _, _)) =
     List.all (fn field => isFullOrField field) fields
 
+(** Checks the sequence field type argument is not a variable. *)
 and isFullOrField (T.FIELD_VAR _) = false
   | isFullOrField (T.FIELD_DEPENDANCY efield) = isFullOrField (EL.getExtLabT efield)
   | isFullOrField (T.FC (_, ty, _)) = isFullOrTy ty
   | isFullOrField T.FIELD_NO_OVERLOAD = true
 
+(** Checks the type argument is not a variable. *)
 and isFullOrTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = isFullOrTn tn
   | isFullOrTy (T.TYPE_POLY (seq, _, _, _, _, _)) = isFullOrSeq seq
   | isFullOrTy (T.TYPE_DEPENDANCY ety) = isFullOrTy (EL.getExtLabT ety)
   | isFullOrTy _ = false
 
+(** Checks the typename argument is not a variable. *)
 and isFullOrTn (T.NC (name, _, _)) = true
   | isFullOrTn (T.TYPENAME_DEPENDANCY etn) = isFullOrTn (EL.getExtLabT etn)
   | isFullOrTn (T.TYPENAME_VAR _) = false
 
+(** Calls #isFullOrSeq with the given argument. *)
 fun isFullOr seq = isFullOrSeq seq
 
-
+(** Checks for duplicate identifiers in an environment, used for include specifications.
+ * If we see the same identier twice in the environment, it means that we are including
+ * the same typename more than once. If this is the case we want to raise an error.
+ *)
 fun duplicateIdCheck state env =
     let
+	(** Gets a list of environments. *)
 	fun getListEnvs (E.ROW_ENV(E.ROW_ENV e1, E.ROW_ENV e2)) = (getListEnvs (E.ROW_ENV e1)) @ (getListEnvs (E.ROW_ENV e2))
 	  | getListEnvs (E.ROW_ENV(E.ROW_ENV e1, e2)) =
 	    (case e2 of
@@ -551,20 +568,23 @@ fun duplicateIdCheck state env =
 		 (E.CONSTRAINT_ENV x, E.CONSTRAINT_ENV y) => [x] @ [y]
 	       | (E.CONSTRAINT_ENV x, _) => [x]
 	       | (_, E.CONSTRAINT_ENV y) => [y]
-	       | (env1, env2) => (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "IGNORING: " ^ (E.printEnv env1 "") ^ "...... and ......" ^ (E.printEnv env2 ""))); []))
+	       | (env1, env2) => ([]))
 	  | getListEnvs (E.ENV_VAR (ev, lab)) =
 	    (case S.getValStateEv state ev of
-		 NONE => (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "No state entry for environment variable, skipping.")); [])
+		 NONE => []
 	       | SOME ev => getListEnvs ev)
-	  | getListEnvs env = (D.printDebug D.UNIF D.TEMP (fn _ => ((#red (!D.colors)) ^ "IGNORING: " ^ (E.printEnv env ""))); [])
+	  | getListEnvs env = ([])
 
+	(** Prints a list of constraint items, helper function for #duplicateIdCheck. *)
 	fun printConstraintItems [] = ""
 	  | printConstraintItems (h::h2::t) = "[" ^ E.printOneConstraintList h ^ "], " ^ (printConstraintItems (h2::t))
 	  | printConstraintItems (h::t) = "[" ^ E.printOneConstraintList h ^ "]"
 
+	(** Flattens a list of lists into a single list, helper function for #duplicateIdCheck. *)
 	fun flattenList [] = []
 	 |  flattenList (h::t) = h@(flattenList t)
 
+	(** Parses an environment constructor for duplicate identifiers. *)
 	fun parseEnvCons (env as E.ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, functors, overloadingClasses, info}) labs =
 	    let
 		val (ids,idLabs) = E.getLabsIdsEnv env
@@ -573,69 +593,65 @@ fun duplicateIdCheck state env =
 	    end
 	  | parseEnvCons _ _ = raise EH.DeadBranch "Expected an environment constructor but got something else (unification algorithm)."
 
+	(** Parses row environments for duplicate identifiers. *)
 	fun parseRows (E.ROW_ENV (_, E.ENVDEP (E.ENV_CONS consValue, labs,_,_))) labels =
-	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
-	     parseEnvCons (E.ENV_CONS consValue) (L.union labs labels))
+	    (parseEnvCons (E.ENV_CONS consValue) (L.union labs labels))
 	  | parseRows (E.ROW_ENV (_, E.ENV_CONS consValue)) labels =
-	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
-	     parseEnvCons (E.ENV_CONS consValue) labels)
+	    (parseEnvCons (E.ENV_CONS consValue) labels)
 	  | parseRows (E.ROW_ENV (E.ENV_CONS consValue, _)) labels =
-	    (D.printDebug D.UNIF D.TEMP (fn _ => "Found consValue: " ^ (E.printEnv (E.ENV_CONS consValue) ""));
-	     parseEnvCons (E.ENV_CONS consValue) labels)
+	    (parseEnvCons (E.ENV_CONS consValue) labels)
 	  | parseRows (E.ROW_ENV (r1, r2)) labels = (parseRows r1 labels) @ (parseRows r2 labels)
-	  | parseRows env _ = (D.printDebug D.UNIF D.TEMP (fn _ => "Ignoring environment: " ^ (E.printEnv env "")); [])
+	  | parseRows env _ = ([])
 
+	(** Prints an id tuple list, can be used to debug #duplicateIdCheck. *)
 	fun printIdTupleList [] = ""
 	  | printIdTupleList ((int1,int2)::t) = "(" ^ (Int.toString int1) ^ "," ^ (Int.toString int2) ^ "), " ^ (printIdTupleList t)
 
+	(** Prints a list of lists of idTuples. *)
 	fun printListOfLists [] = ""
 	  | printListOfLists ((idTupleList,labels)::t) = "([" ^ (printIdTupleList idTupleList) ^ "], " ^ (L.toString labels) ^ "), " ^ (printListOfLists t)
 
+	(** Parses an include specification for duplicate identifiers. *)
 	fun parseIncludeSpec state (envvar as E.ENV_VAR (ev, evlab)) labs =
 	    (D.printDebug D.UNIF D.STATE (fn _ => S.printState state);
-	     D.printDebug D.UNIF D.TEMP (fn _ => "Parsing the ENVVAR now: " ^ (E.printEnv envvar ""));
 	     case S.getValStateEv state ev of
 		 NONE => []
 	       | SOME (E.ENVDEP(E.ENV_VAR(ev, lab), depLabs, _, _)) => parseIncludeSpec state (E.ENV_VAR(ev, lab)) (L.cons lab (L.cons evlab (L.union labs depLabs)))
 	       | SOME (E.ENVDEP(E.ENV_CONS consValue, depLabs, _, _)) =>
 		 let
-		     val _ = D.printDebug D.UNIF D.TEMP (fn _ => "Found an ENV_CONS value: " ^ E.printEnv (E.ENV_CONS consValue) "")
 		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab (L.union labs depLabs))
 		 in
-		     (D.printDebug D.UNIF D.TEMP (fn _ => "Returning value: " ^ (printListOfLists x));
-		      x)
+		      x
 		 end
 	       | SOME (E.ENV_CONS consValue) =>
 		 let
-		     val _ = D.printDebug D.UNIF D.TEMP (fn _ => "Found an ENV_CONS value: " ^ E.printEnv (E.ENV_CONS consValue) "")
 		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab labs)
 		 in
-		     (D.printDebug D.UNIF D.TEMP (fn _ => "Returning value: " ^ (printListOfLists x));
-		      x)
+		     x
 		 end
 	       | SOME (E.ROW_ENV (r1, r2)) => parseRows (E.ROW_ENV (r1,r2)) (L.cons evlab labs)
 	       | SOME x  => raise EH.DeadBranch ("While following a chain of environment variables values to environment constructors, got something which wasn't an environment constructor: " ^ (E.printEnv x "")))
 	  | parseIncludeSpec _ _ _ = raise EH.DeadBranch "While looking for duplicate typename specificaions in signatures, found something which isn't an ENV_VAR which should only be an ENV_VAR."
 
+	(** Extracts identifiers in an environment constraint (used in #duplicateIdCheck). *)
 	fun extractIdentifiers state (E.ENV_CONSTRAINT((_ ,E.ROW_ENV (x)),labs,_,_)) =
 	    parseRows (E.ROW_ENV x) labs
 	  | extractIdentifiers state (E.ENV_CONSTRAINT ((E.NO_DUPLICATE_ID, envvar),labs,_,_)) =
 	    parseIncludeSpec state envvar labs
-	  | extractIdentifiers _ oneConstraint = (D.printDebug D.UNIF D.TEMP (fn _ => "Ignoring constraint: " ^ (E.printOneConstraint oneConstraint)); [])
+	  | extractIdentifiers _ oneConstraint = []
 
 	(** Holds a list of #E.constraints values. *)
  	val envList = getListEnvs env
 	(** Holds a list of ENV_CONSTRAINT values. *)
 	val constraintItems = flattenList (flattenList (List.map (E.getConstraintItems) envList))
-	val _ = D.printDebug D.UNIF D.TEMP (fn _ => (#green(!D.colors)) ^ "[" ^ (E.printOneConstraintList constraintItems) ^ "]")
 	val identifierList = List.map (extractIdentifiers state) constraintItems
 	val listOfLists = foldr (op @) [] identifierList
-	val _ = D.printDebug D.UNIF D.TEMP (fn _ => (#cyan(!D.colors)) ^ "Gathered all identifiers: " ^ (printListOfLists listOfLists));
 
 	(** A list of triples of an identifier, a label (endpoint), and a set of labels (contributing). *)
 	fun formatIdentifiers [] = []
 	  | formatIdentifiers ((idLabelList,labels)::t) =
 	    let
+		(** Helper function for #formatIdentifiers. *)
 		fun parseIdLabelList [] _ = []
 		  | parseIdLabelList ((label,id)::t) labels =
 		    (id, L.fromInt label, L.cons (L.fromInt label) labels) :: (parseIdLabelList t labels)
@@ -648,10 +664,11 @@ fun duplicateIdCheck state env =
 	identifiers
     end
 
-(* New matching of or/seq structures *)
-
+(** New matching of or/seq structures *)
 fun concatOptList (list1, b1) (list2, b2) =
-    let fun isin _ [] = false
+    let
+	(** Helper function for #concatOptList. *)
+	fun isin _ [] = false
 	  | isin (path : int list) ((_, path') :: list) =
 	    path = path' orelse isin path list
 	val b = b1 andalso b2
@@ -694,8 +711,7 @@ and tryToMatchOrsTy path (t as (T.TYPE_CONSTRUCTOR (tn, _, _, _))) sq =
        | ([], false)               => (([], false), ([], false), false))
   | tryToMatchOrsTy path (T.TYPE_POLY (sq, _, _, _, _, _)) sq2 = tryToMatchOrsSq path sq sq2
   | tryToMatchOrsTy path (t as T.TYPE_VAR _) sq2 = (([], false), ([], true), true)
-  | tryToMatchOrsTy path (T.TYPE_DEPENDANCY ety) sq2 =
-    tryToMatchOrsTy path (EL.getExtLabT ety) sq2
+  | tryToMatchOrsTy path (T.TYPE_DEPENDANCY ety) sq2 = tryToMatchOrsTy path (EL.getExtLabT ety) sq2
   | tryToMatchOrsTy _ _ _ = (([], false), ([], true), true) (* Something isn't complete *)
 
 and tryToMatchOrsTn path (T.NC (name, _, _)) sq =
@@ -720,7 +736,7 @@ and tryToMatchOrsRt path (T.FC (_, ty, _)) sq = tryToMatchOrsTy path ty sq
 fun tryToMatchOrs sq1 sq2 = tryToMatchOrsSq [] sq1 sq2
 
 
-(* a function which will tell us whether an ID belongs to a datatype or a type
+(** A function which will tell us whether an ID belongs to a datatype or a type
  * note: the 'true' argument to getValStateIdTy is thrown away *)
 fun getTypeNameKindOfId state id =
     let
@@ -756,24 +772,31 @@ fun get state id =
 	  | NONE => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"***** WARNING ****** Typename kind of this identifier could not be determined (probably the id did not refer to a typename). Returning E.DATATYPE to preserve equality type variable."); E.DATATYPE)
     end
 
-(* ------ Type freshning ------ *)
-
+(** Freshens a label type. *)
 fun freshlabty (T.LABEL_VAR lv) state = T.LABEL_VAR (F.freshLabVar lv state)
   | freshlabty labty     _     = labty
 
+(** Freshens a typename. *)
 fun freshTypename (T.TYPENAME_VAR var) state = T.TYPENAME_VAR (F.freshTypenameVar var state)
   | freshTypename tnty       _     = tnty
 
+(** Freshens a field type. *)
 fun freshfieldType (T.FIELD_VAR rv)           _   state _    = T.FIELD_VAR (F.freshFieldVar rv state)
   | freshfieldType (T.FC (lt, ty, l))  tvl state bstr = T.FC (freshlabty lt state, freshty ty tvl state bstr, l)
   | freshfieldType (T.FIELD_DEPENDANCY efield)         tvl state bstr = T.FIELD_DEPENDANCY (EL.mapExtLab efield (fn field => freshfieldType field tvl state bstr))
   | freshfieldType T.FIELD_NO_OVERLOAD                _   _     _    = T.FIELD_NO_OVERLOAD
+
+(** Freshens a type function. *)
 and freshtypeFunction (T.TYPE_FUNCTION_VAR tfv)         _   state _    = T.TYPE_FUNCTION_VAR (F.freshTypeFunctionVar tfv state)
   | freshtypeFunction (T.TFC (sq, ty, l)) tvl state bstr = T.TFC (freshseqty sq tvl state bstr, freshty ty tvl state bstr, l)
   | freshtypeFunction (T.TYPE_FUNCTION_DEPENDANCY etf)         tvl state bstr = T.TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => freshtypeFunction tf tvl state bstr))
+
+(** Freshens a sequence type. *)
 and freshseqty (T.ROW_VAR var)          _   state _    = T.ROW_VAR (F.freshRowVar var state)
   | freshseqty (T.ROW_C (trl, b, l))  tvl state bstr = T.ROW_C (map (fn rt => freshfieldType rt tvl state bstr) trl, b, l)
   | freshseqty (T.ROW_DEPENDANCY eseq)         tvl state bstr = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => freshseqty seq tvl state bstr))
+
+(** Freshens a type. *)
 and freshty (T.TYPE_VAR (tv, b, p, equalityTypeInfo))       tvl state bstr =
     (case (tvl, p) of
 	 (NONE, T.POLY) => T.TYPE_VAR (F.freshTypeVar tv state, if bstr then NONE else b, p, equalityTypeInfo)
@@ -791,34 +814,36 @@ and freshty (T.TYPE_VAR (tv, b, p, equalityTypeInfo))       tvl state bstr =
   | freshty (T.GEN tys)             tvl state bstr = T.GEN (ref (map (fn ty => freshty ty tvl state bstr) (!tys)))
   | freshty (T.TYPE_DEPENDANCY  ety)             tvl state bstr = T.TYPE_DEPENDANCY (EL.mapExtLab ety (fn ty => freshty ty tvl state bstr))
 
-(* bstr below has to be true so that we don't refresh explicit type variables that
+(** bstr below has to be true so that we don't refresh explicit type variables that
  * are bound higher and so cannot be generalised.  The true is to say that explicit
  * type variables are here considered as constant types. *)
 fun freshTy ty tvl P.POLY = freshty ty tvl (F.finitState ()) true
   | freshTy ty _ _ = ty
 
+(** Generates a fresh type function. *)
 fun freshTypeFunction typeFunction bstr = freshtypeFunction typeFunction NONE (F.finitState ()) bstr
 
-(* for some crazy reason there are two functions called
- * the same thing with different abbreviations. Busy working
- * on other naming issues at the moment, discover the difference
- * and rename. Adding a prime to the end for now *)
+(** Generates a fresh type variable if the polymorphic status argument is POLY, doesn't fresehen the variable otherwise. *)
 fun freshTypeVar' tyvar P.POLY = T.freshTypeVar ()
   | freshTypeVar' tyvar _      = tyvar
 
+(** Construcs a new class binding from the arguments. *)
 fun freshextgen (ext as ({id, bind, equalityTypeVar, class, lab, poly}, labs, stts, deps)) tvl state bstr f =
     (C.consBind id (f bind tvl state bstr) equalityTypeVar class lab poly, labs, stts, deps)
 
+(** Calls #freshextgen with the arguments given and the #freshty function. *)
 fun freshextty x tvl state bstr = freshextgen x tvl state bstr freshty
 
+(** Generates a fresh variable environment by calling #freshextty. *)
 fun freshvarenv idenv tvl state bstr =
     E.mapenv (fn semty => map (fn x => freshextty x tvl state bstr) semty) idenv
 
+(** Calls #freshextgen with the #freshseqty function with the argument given. *)
 fun freshextseqty x tvl state bstr = freshextgen x tvl state bstr freshseqty
 
-fun freshocsenv clenv tvl state bstr =
-    E.mapenv (fn semty => map (fn x => freshextseqty x tvl state bstr) semty) clenv
+fun freshocsenv clenv tvl state bstr = E.mapenv (fn semty => map (fn x => freshextseqty x tvl state bstr) semty) clenv
 
+(** Generates a fresh extended labeled type function. *)
 fun freshexttypfun x tvl state bstr =
     freshextgen x tvl state bstr (fn (typfun, tnKind, varenv) =>
 				  fn tvl                      =>
@@ -829,9 +854,11 @@ fun freshexttypfun x tvl state bstr =
 				     in (freshtypeFunction typfun tvl state bstr, tnKind, varenv)
 				     end)
 
+(** Generates a fresh type environment by calling #freshexttypfun. *)
 fun freshtypenv idenv tvl state bstr =
     E.mapenv (fn semty => map (fn x => freshexttypfun x tvl state bstr) semty) idenv
 
+(** Freshens an environment. *)
 fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev state, lab)
   | freshenv (env as E.ENV_CONS _) tvl state bstr =
     let val vids = freshvarenv (E.getValueIds env) tvl state bstr
@@ -866,25 +893,23 @@ fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev sta
   | freshenv (E.CONSTRAINT_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVPTY _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVFIL _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
-and freshextenv extenv tvl state bstr = freshextgen extenv tvl state bstr freshenv
-and freshstrenv strenv tvl state bstr =
-    E.mapenv (fn semty => map (fn x => freshextenv x tvl state bstr) semty) strenv
 
+(** Freshens an extended environment by calling the #freshextgen function with #freshenv. *)
+and freshextenv extenv tvl state bstr = freshextgen extenv tvl state bstr freshenv
+(** Freshens a structure environment environment by calling the #freshextenv function.. *)
+and freshstrenv strenv tvl state bstr = E.mapenv (fn semty => map (fn x => freshextenv x tvl state bstr) semty) strenv
+
+(** Generates a fresh environment with an initial state. *)
 fun freshenv' env tvl bstr = freshenv env tvl (F.finitState ()) bstr
 
-
-
-
-(***********************)
-(* type reconstruction *)
-(***********************)
-
+(** Keeps looking up a class argument in the state until we can't look it up any longer. *)
 fun buildClass (CL.CLVAR clv) state =
     (case S.getValStateCl state clv of
 	 NONE => (CL.CLVAR clv, L.empty, L.empty, CD.empty)
        | SOME (cl, labs, stts, deps) => EL.updExtLab (buildClass cl state) labs stts deps)
   | buildClass class state = (class, L.empty, L.empty, CD.empty)
 
+(** Keeps looking up a typename type argument in the state until we can't look it up any longer. *)
 fun buildtnty (T.TYPENAME_VAR tnv) state =
     (case S.getValStateTn state tnv of
 	 NONE => T.TYPENAME_VAR tnv
@@ -893,6 +918,7 @@ fun buildtnty (T.TYPENAME_VAR tnv) state =
   | buildtnty (T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)) state =
     T.TYPENAME_DEPENDANCY (buildtnty tn state, labs, stts, deps)
 
+(** Keeps looking up a label type argument in the state until we can't look it up any longer. *)
 fun buildlabty (T.LABEL_VAR lv) state =
     (case S.getValStateLt state lv of
 	 NONE => T.LABEL_VAR lv
@@ -901,8 +927,7 @@ fun buildlabty (T.LABEL_VAR lv) state =
   | buildlabty (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) state =
     T.LABEL_DEPENDANCY (buildlabty lt state, labs, stts, deps)
 
-
-(* - bmon is true if we want to build the monomorphic type variables - Is it still used?
+(** - bmon is true if we want to build the monomorphic type variables - Is it still used?
  * - monfun is true if we want to turn all the variables into monomorphic ones.
  *   This is used when a function turns to be monomoprhic.
  *   false is the default value. *)
@@ -1004,6 +1029,7 @@ and buildtypeFunction (T.TYPE_FUNCTION_VAR tfv) state dom bmon monfun =
     in collapseTf tf' labs stts deps
     end
 
+(** Keeps looking up a variable environment argument in the state until we can't look it up any longer. *)
 fun buildVarEnv varenv state dom bmon =
     E.foldrienv (fn (id, sem, varenv) =>
 		E.addenv (id, map (fn bd as (bind, labs, stts, deps) =>
@@ -1021,6 +1047,7 @@ fun buildVarEnv varenv state dom bmon =
 		E.emvar
 		varenv
 
+(** Keeps looking up a variable environment argument in the state until we can't look it up any longer. *)
 fun buildIdEnv idenv state fresh ffresh fbuild bstr =
     E.foldrienv (fn (id, sem, genenv) =>
 		    E.addenv (id, map (fn bd as (bind, labs, stts, deps) =>
@@ -1043,14 +1070,19 @@ fun buildIdEnv idenv state fresh ffresh fbuild bstr =
 		E.emptyMap
 		idenv
 
+(** Returns the first parameter. Why do we have this. *)
 fun buildnobuild x _ _ _ _ _ = x
 
+(** Buldis up a type variable. *)
 val buildTyVar = buildnobuild
 
+(** Freshens a type variable. *)
 fun freshTypeVar (tyvar, b) tvl fresh bstr = (F.freshTypeVar tyvar fresh, b)
 
+(** Calls #buildty. *)
 fun buildTy' ty state fresh dom bmon bstr = buildty ty state dom bmon false
 
+(** Calls #buildseqty.. *)
 fun buildSeqTy' seqty state fresh dom bmon bstr = buildseqty seqty state dom bmon false
 
 fun buildTypSem (typfun, tnKind, cons) state fresh dom bmon bstr =
@@ -1061,12 +1093,15 @@ fun buildTypSem (typfun, tnKind, cons) state fresh dom bmon bstr =
 fun freshTypSem (typfun, tnKind, cons) tvl fresh bstr =
     (freshtypeFunction typfun tvl fresh bstr, tnKind, cons)
 
+(** Returns the enivronment in the first argument. *)
 fun freshEnv env tvl fresh bstr = env
 
 val buildFuns = buildnobuild
 
+(** Returns the first argument. *)
 fun freshFuns funs tvl fresh bstr = funs
 
+(** Looks up an environment in the state until we can look variables up no further. *)
 fun buildEnv (E.ENV_VAR (ev, lab)) state fresh bstr =
     (case S.getValStateEv state ev of
 	 NONE => E.ENV_VAR (ev, lab)
@@ -1097,9 +1132,12 @@ fun buildEnv (E.ENV_VAR (ev, lab)) state fresh bstr =
   | buildEnv env state fresh bstr = (D.printdebug2 (E.printEnv env ""); raise EH.DeadBranch "DeadBranch12")
 and buildEnv' env state fresh dom bmon bstr = buildEnv env state fresh bstr
 
+(** Calls #buildEnv with a fresh initial state. *)
 fun buildFEnv env state bstr = buildEnv env state (SOME (F.finitState ())) bstr
 
+(** Calls #buildEnv. *)
 fun justBuildEnv env state bstr = buildEnv env state NONE bstr
+
 
 fun getExplicitTyVars vids tyvs state =
     let val tyvs' = E.foldrienv (fn (id, sem, tyvenv) =>
@@ -1190,6 +1228,7 @@ fun getExplicitTyVars vids tyvs state =
 			vids
     end
 
+(** Get general type variables. *)
 fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _, _)) = [idl]
   | getGenTyvars (T.TYPE_VAR _) = []
   | getGenTyvars (T.EXPLICIT_TYPE_VAR _) = []
@@ -1200,22 +1239,24 @@ fun getGenTyvars (T.TYPE_VAR (_, SOME idl, _, _)) = [idl]
     foldr (fn (ty, tvlabs) => (getGenTyvars ty) @ tvlabs) [] (!tys)
   | getGenTyvars (T.TYPE_DEPENDANCY ety) = getGenTyvars (EL.getExtLabT ety)
 
+(** Gets general type variable sequences. *)
 and getGenTyvarsSeq (T.ROW_VAR _) = []
   | getGenTyvarsSeq (T.ROW_C (fields, _, _)) =
     foldr (fn (field, tvlabs) => (getGenTyvarsField field) @ tvlabs) [] fields
   | getGenTyvarsSeq (T.ROW_DEPENDANCY eseq) = getGenTyvarsSeq (EL.getExtLabT eseq)
 
+(** Gets genneral field type variables. *)
 and getGenTyvarsField (T.FIELD_VAR _) = []
   | getGenTyvarsField (T.FC (_, ty, _)) = getGenTyvars ty
   | getGenTyvarsField (T.FIELD_DEPENDANCY efield) = getGenTyvarsField (EL.getExtLabT efield)
   | getGenTyvarsField T.FIELD_NO_OVERLOAD = []
 
-
+(** Gets generalisation of type. *)
 fun extractTyGen (T.GEN _)   true  = [T.newTYPE_VAR ()]
   | extractTyGen (T.GEN tys) false = !tys
   | extractTyGen ty _ = [ty]
 
-
+(** Tests for too general errors in signatures, creates an error if necessary. *)
 fun checkIsNotTooGen bind1 bind2 bfun lab =
     if CL.classIsVAL (E.getBindC bind2) andalso E.isMonoBind bind2
     then let val tys = extractTyGen (E.getBindT bind1) bfun
@@ -1255,6 +1296,7 @@ fun idInEnv (env as E.ENV_CONS _) lab id =
     end
   | idInEnv _ _ _ = false
 
+(** Tests whether an environment is complete. *)
 fun completeEnv env (SOME err) =
     E.completeEnv env
     orelse
@@ -1264,7 +1306,7 @@ fun completeEnv env (SOME err) =
        | _ => false)
   | completeEnv env _ = E.completeEnv env
 
-(* NOTE: if filterLid lid filter = SOME (lid', true) then lid = lid' *)
+(** NOTE: if filterLid lid filter = SOME (lid', true) then lid = lid' *)
 fun filterLid (lid as I.ID (id, lab)) filters =
     if FI.testtodo filters lab
     then SOME (lid, true)
@@ -1279,42 +1321,41 @@ fun filterLid (lid as I.ID (id, lab)) filters =
 	 else SOME (I.ID (id, lab1), false)
     else NONE
 
+(** Unions the labels and context dependencies given in the argument. *)
 fun unionLabs (labs1, stts1, deps1) (labs2, stts2, deps2) =
     (L.union labs1 labs2,
      L.union stts1 stts2,
      CD.union deps1 deps2)
 
-
-
-
-(* Extracts the type functions from a structure.
+(** Extracts the type functions from a structure.
  * env1 is for the signature and env2 for the structure. *)
-
 fun domTFun tfun =
     OM.foldri (fn (i, _, set) => O.cons i set)
 	      O.empty
 	      tfun
 
-(* (2010-06-04) Why does the seqty has to be a SC? *)
+(** (2010-06-04) Why does the seqty has to be a SC? *)
 fun mergeTypeFunction tfn1 tfn2 =
     OM.unionWith (fn (tf1, tf2 as T.TFC ((*T.ROW_C*) _, _, _)) => ((*D.printdebug2 (T.printtyf tf1 ^ "\n" ^ T.printtyf tf2);*) tf2)
 		   | (tf1, tf2) => ((*D.printdebug2 (T.printtyf tf1 ^ "\n" ^ T.printtyf tf2);*) tf2))
 		 (*(2010-07-06)This is to fix, we don't want to just keep the second one!*)
 		 (tfn1, tfn2)
 
+(** Decorates a type function with labels and context dependencies. *)
 fun decorateTypeFunction tfn labs stts deps =
     OM.map (fn tf => collapseTf tf labs stts deps)
 	   tfn
 
+(** Generates a new type function constructor. *)
 fun newTypeFunction () = T.TFC (T.newROW_VAR (), T.newTYPE_VAR (), L.dummyLab)
 
+(** What about when we already have a tn entry in typeFunction because of some sharing? *)
 fun insertInTypeFunction typeFunction name tf =
     let val tn = T.typenameToInt name
-    (*What about when we already have a tn entry in typeFunction because of
-     *some sharing?*)
     in OM.insert (typeFunction, tn, tf)
     end
 
+(** Gathers all type functions in an environment. *)
 fun getAllTypeFunctionEnv (env as E.ENV_CONS _) =
     let val (tfnDs1, tfnTs1) =
 	    foldr (fn ({id, lab, kind, name}, (tfnDs, tfnTs)) =>
@@ -1350,7 +1391,7 @@ fun getAllTypeFunctionEnv (env as E.ENV_CONS _) =
   | getAllTypeFunctionEnv (E.ENVFIL _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTypeFunctionEnv (E.NO_DUPLICATE_ID) = raise EH.DeadBranch "This should have been built by now"
 
-
+(** Get all type functions in a structure environment. *)
 and getAllTypeFunctionStrEnv strenv =
     E.foldrienv
 	(fn (id, semty, (tfnDs, tfnTs)) =>
@@ -1363,6 +1404,7 @@ and getAllTypeFunctionStrEnv strenv =
 	(OM.empty, OM.empty)
 	strenv
 
+(** Get all type functions in an environment. *)
 fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts deps =
     let val (tfnDs1, tfnTs1) =
 	    foldr (fn ({id, lab, kind, name}, (tfnDs, tfnTs)) =>
@@ -1425,6 +1467,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
   | getTypeFunctionEnv (E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnv (E.NO_DUPLICATE_ID) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
+(** Get all type functions in an environment extended with labels, calls #getTypeFunctionEnv. *)
 and getTypeFunctionExtEnv extenv extenv' =
     let (*val labs = L.union  (EL.getExtLabL extenv) (EL.getExtLabL extenv')
 	val stts = L.union  (EL.getExtLabE extenv) (EL.getExtLabE extenv')
@@ -1436,6 +1479,7 @@ and getTypeFunctionExtEnv extenv extenv' =
     in (tfnD, tfnT)
     end
 
+(** Gets all type functions in a structure environment. *)
 and getTypeFunctionStrEnv strenv strenv' =
     E.foldrienv
 	(fn (id, semty, (tfnDs, tfnTs)) =>
@@ -1450,8 +1494,6 @@ and getTypeFunctionStrEnv strenv strenv' =
 		  semty)
 	(OM.empty, OM.empty)
 	strenv
-
-
 
 
 fun mergeTypeFunctionSha tfn1 tfn2 =
@@ -1470,7 +1512,7 @@ fun decorateTypeFunctionSha tfn labs stts deps =
 fun decorateUTypeFunctionSha (SOME utf) labs stts deps = SOME (EL.updExtLab utf labs stts deps)
   | decorateUTypeFunctionSha NONE       _    _    _    = NONE
 
-(* TODO: we should extract the dependencies from both utf1 and utf2 and put them on x using collapseTf. *)
+(** TODO: we should extract the dependencies from both utf1 and utf2 and put them on x using collapseTf. *)
 fun mergeUTypeFunctionSha (SOME utf1) (SOME utf2) = SOME (EL.unionExtLab utf1 utf2 (fn (x, y) => x))
   | mergeUTypeFunctionSha (SOME utf)  NONE        = SOME utf
   | mergeUTypeFunctionSha NONE        (SOME utf)  = SOME utf
@@ -1570,13 +1612,7 @@ and getTypeFunctionShaStrEnv strenv strenv' =
 	(NONE, OM.empty)
 	strenv
 
-
-
-
-
-(****************************************)
-(* 2nd generalisation of the type names *)
-(****************************************)
+(** 2nd generalisation of the type names. *)
 fun genTypeFunctionTy (x as T.TYPE_VAR _) _ _ = ([], x)
   | genTypeFunctionTy (x as T.EXPLICIT_TYPE_VAR _) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
   | genTypeFunctionTy (x as T.TYPE_CONSTRUCTOR (tnc, sq, l, eq)) tfun btyp =
@@ -1741,13 +1777,8 @@ fun genTypeFunctionEnv' env state tfun b =
     in ret
     end
 
-
-
-
-(************************************************************************)
-(* Applies a type function to an env                            *)
-(* This is only used by ENVWHR for where clauses                        *)
-(************************************************************************)
+(** Applies a type function to an env.
+ * This is only used by ENVWHR for where clauses. *)
 fun applyTypeFunctionTy (x as (T.TYPE_VAR _)) _ _ = ([], x)
   | applyTypeFunctionTy (x as (T.EXPLICIT_TYPE_VAR _)) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
   | applyTypeFunctionTy (x as (T.TYPE_CONSTRUCTOR (tnc, sq, l, eq))) tfun btyp =
@@ -1831,7 +1862,9 @@ fun applyTypeFunctionFunTy' (typeFunction, tnKind, cons) tfun btyp =
     end
 
 fun applyTypeFunctionExtTy    x tfun = applyTypeFunctionExtGen x tfun applyTypeFunctionTy     true
+(** Applys a type function to a function type. *)
 fun applyTypeFunctionExtFunTy x tfun = applyTypeFunctionExtGen x tfun applyTypeFunctionFunTy' false
+(** Applies a type function to a sequence type. *)
 fun applyTypeFunctionExtSeqTy x tfun = applyTypeFunctionExtGen x tfun applyTypeFunctionSeqTy  true
 
 fun applyTypeFunctionGenEnv genenv tfun genfun =
@@ -1844,6 +1877,7 @@ fun applyTypeFunctionGenEnv genenv tfun genfun =
 	([], E.emptyMap)
 	genenv
 
+(** Applies a type function to an environment. *)
 fun applyTypeFunctionEnv (env as E.ENV_CONS _) tfun =
     let val (csValueIds, vids) = applyTypeFunctionGenEnv (E.getValueIds env) tfun applyTypeFunctionExtTy
 	val (csTyps, typs) = applyTypeFunctionGenEnv (E.getTypeNameEnv env) tfun applyTypeFunctionExtFunTy
@@ -2056,12 +2090,10 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
   | matchWhereEnv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.NO_DUPLICATE_ID) _ _ = raise EH.DeadBranch "This should have been built by now"
 
-(* Env renamening *)
-
-(* TODO *)
-
+(** A ref cell. *)
 fun initRen () = ref OM.empty
 
+(** Updates a renaming. *)
 fun updateRen state tn =
     (case Option.getOpt (OM.find (!state, T.typenameToInt tn), NONE) of
 	 NONE => let val tn' = T.freshTypename ()
@@ -2073,6 +2105,7 @@ fun getRen state tn =
 	 NONE => tn
        | SOME tn' => tn')
 
+(** Renames a typeanme. *)
 fun renametypename (x as T.TYPENAME_VAR _) _ = x
   | renametypename (T.NC (tn, b, l)) state =
     if T.isBase' tn
@@ -2080,6 +2113,7 @@ fun renametypename (x as T.TYPENAME_VAR _) _ = x
     else T.NC ((*updateRen*) getRen state tn, b, l)
   | renametypename (T.TYPENAME_DEPENDANCY etn) state = T.TYPENAME_DEPENDANCY (EL.mapExtLab etn (fn tn => renametypename tn state))
 
+(** Renames a type. *)
 fun renamety (x as T.TYPE_VAR _) _ = x
   | renamety (x as T.EXPLICIT_TYPE_VAR _) _ = x
   | renamety (T.TYPE_CONSTRUCTOR (tn, sq, l, eq))       state = T.TYPE_CONSTRUCTOR (renametypename tn state, renameseqty sq state, l, eq)
@@ -2087,12 +2121,15 @@ fun renamety (x as T.TYPE_VAR _) _ = x
   | renamety (T.TYPE_POLY (sq, i, p, k, l, eq)) state = T.TYPE_POLY (renameseqty sq state, i, p, k, l, eq)
   | renamety (T.GEN ty)              state = raise EH.TODO "no description, raised in the 'renamety' function of Unification.sml"
   | renamety (T.TYPE_DEPENDANCY ety)              state = T.TYPE_DEPENDANCY (EL.mapExtLab ety (fn ty => renamety ty state))
+(** Renames a type function. *)
 and renametypfun (x as T.TYPE_FUNCTION_VAR _) _ = x
   | renametypfun (T.TFC (sq, ty, lab)) state = T.TFC (renameseqty sq state, renamety ty state, lab)
   | renametypfun (T.TYPE_FUNCTION_DEPENDANCY etf)           state = T.TYPE_FUNCTION_DEPENDANCY (EL.mapExtLab etf (fn tf => renametypfun tf state))
+(** Renames a sequence type. *)
 and renameseqty (x as T.ROW_VAR _) _ = x
   | renameseqty (T.ROW_C (rtl, flex, l)) state = T.ROW_C (map (fn rt => renamefieldType rt state) rtl, flex, l)
   | renameseqty (T.ROW_DEPENDANCY eseq)           state = T.ROW_DEPENDANCY (EL.mapExtLab eseq (fn seq => renameseqty seq state))
+(** Renames a field type. *)
 and renamefieldType (x as T.FIELD_VAR _)      _     = x
   | renamefieldType (T.FC (lt, ty, l)) state = T.FC (lt, renamety ty state, l)
   | renamefieldType (T.FIELD_DEPENDANCY efield)        state = T.FIELD_DEPENDANCY (EL.mapExtLab efield (fn field => renamefieldType field state))
@@ -2105,14 +2142,17 @@ fun renameextgen ({id, bind, equalityTypeVar, class, lab, poly}, labs, stts, dep
 
 fun renameextty x state ren = renameextgen x state ren (fn x => fn state => fn ren => renamety x ren)
 
+(** Renames a variable environment using #renameextty by using the varenv. *)
 fun renamevarenv varenv state ren =
     E.mapenv (fn semty => map (fn x => renameextty x state ren) semty) varenv
 
+(** Renames a sequence environment extended with labels. *)
 fun renameextseqty x state ren = renameextgen x state ren (fn x => fn state => fn ren => renameseqty x ren)
 
-fun renameseqenv ovsenv state ren =
-    E.mapenv (fn semty => map (fn x => renameextseqty x state ren) semty) ovsenv
+(** Renames a sequence environment. *)
+fun renameseqenv ovsenv state ren = E.mapenv (fn semty => map (fn x => renameextseqty x state ren) semty) ovsenv
 
+(** Renames and extended type function *)
 fun renameexttypfun x state ren =
     renameextgen x state ren
 		 (fn (typfun, tnKind, varenv) =>
@@ -2123,9 +2163,11 @@ fun renameexttypfun x state ren =
 		     in (renametypfun typfun ren, tnKind, varenv)
 		     end)
 
+(** Renames a type environment. *)
 fun renametypenv typenv state ren =
     E.mapenv (fn semty => map (fn x => renameexttypfun x state ren) semty) typenv
 
+(** Renames an environment. *)
 and renameenv (env as E.ENV_CONS _) state ren =
     let (*val state = ref (!state) (*(2010-06-14)Why a new reference?*)*)
 	val tns   = map (fn {id, lab, kind, name} =>
@@ -2174,8 +2216,6 @@ and renamefunenv funenv state ren =
 
 fun renameenv' env state = renameenv env state (initRen ())
 
-
-
 (* These are similar to the getValStateAr in StateEnv.sml *)
 
 fun buildSeqAr state (T.ROW_VAR sv) labs stts deps=
@@ -2208,7 +2248,7 @@ fun buildTypeFunctionAr state (T.TYPE_FUNCTION_VAR tfv) lab labs stts deps =
 
 
 
-(* Checks if a type variable is already stored in the 'ge' part of the unification env. *)
+(** Checks if a type variable is already stored in the 'ge' part of the unification env. *)
 fun isInState (T.TYPE_VAR (tv, _, _, _)) state =
     S.isInGe state tv
     (*Option.isSome (S.getValStateTv state tv)*)
@@ -2229,30 +2269,32 @@ fun updateStateTyGen state (T.TYPE_VAR (tv, _, _, _)) ty labs stts deps =
   | updateStateTyGen _ _ _ _ _ _ = ()
 
 
-(****************************************************)
-
-
-(*(2010-06-18)What is that?*)
+(** (2010-06-18) What is that?*)
 val sigVsStr = ref false
+(** Sets sigVsStr ref cell to true. *)
 fun sigVsStrON  () = sigVsStr := true
+(** Sets sigVsStr ref cell to false. *)
 fun sigVsStrOFF () = sigVsStr := false
+(** Accessor value for sigVsStr. *)
 fun isSigVsStr  () = !sigVsStr
 
-(*(2010-06-18)What is that?*)
+(** (2010-06-18) What is that?*)
 val sigVsStrTyp = ref false
+(** Sets sigVsStrTyp to true. *)
 fun sigVsStrTypON  () = sigVsStrTyp := true
+(** Sets sigVsStrTyp to false. *)
 fun sigVsStrTypOFF () = sigVsStrTyp := false
+(** Gets sigVsStrTyp value. *)
 fun isSigVsStrTyp  () = !sigVsStrTyp
 
-
-
+(** Tests the caller of the unification algorithm. *)
 fun isEnum ENUM   = true
   | isEnum DBENUM = true
   | isEnum _      = false
 
 
-(* bcontinue is true if we don't stop when we discover a type error *)
-(* this is used to buid envs *)
+(** bcontinue is true if we don't stop when we discover a type error.
+ * This is used to buid envs. *)
 fun unif env filters user =
     let exception errorex of ERR.error
 
@@ -2269,8 +2311,10 @@ fun unif env filters user =
 		      then FI.addLab filters L.builtinLab
 		      else filters
 
+	(** True if the user of the unification algorithm is the enumeration algorithm. *)
 	val enum    = isEnum user
 
+	(** Initialises the state. *)
 	val state = S.initState ()
 
 	val bcontinue = false
@@ -2345,11 +2389,7 @@ fun unif env filters user =
 	 * time.
 	 *)
 
-	(*val temp_time = ref (0 : LargeInt.int)*)
-
-
-	(* ====== VALUE POLYMORPHISM RESTRICTION SOLVER ====== *)
-
+	(** Value polymorphism restriction solver. *)
 	fun solveMono (x as P.EXPANS (X.Expdep (lid, labels))) =
 	    if FI.testtodos filters labels
 	    then case S.getValStateIdVa state lid false of
@@ -2394,8 +2434,7 @@ fun unif env filters user =
 	      | (mono :: _) => P.MONO [mono]
 
 
-	(* ====== PARTIAL ENV SOLVER ====== *)
-
+	(** Partial env solver. *)
 	fun preSolveEnv (E.ENV_VAR (ev, lab)) =
 	    (case S.getValStateEv state ev of
 		 NONE => E.ENV_VAR (ev, lab)
@@ -2412,8 +2451,7 @@ fun unif env filters user =
 	  | preSolveEnv env = env
 
 
-	(* ====== BINDING SOLVER ====== *)
-
+	(** Binding solver.  *)
 	fun solveextvarkeep bind =
 	    (* NOTE: we might want to use 'FI.getStateLabs filters (EL.getExtLabL bind)' here. *)
 	    case (*FI.getStateLab filters (E.getBindL bind)*)
@@ -2522,7 +2560,7 @@ fun unif env filters user =
 							  classOfId=(CL.consANY ()),
 							  labelOfConstraint=(E.getBindL bind)})
 	      | class => (print (CL.toString class); raise EH.DeadBranch "identifier in binder has an unexpected status")
-
+	(** Solves a dummy variable binding. *)
 	fun solvedumvarbind bind =
 	    case S.getValStateIdVa state (I.idToLid (E.getBindI bind) (E.getBindL bind)) false of
 		(SOME (bind', _), _, _) =>
@@ -2545,6 +2583,7 @@ fun unif env filters user =
 		   | class => (print (CL.toString class); raise EH.DeadBranch "identifier in env has an unexpected status"))
 	      | _ => BINDDUM bind
 
+	(** Solves a type variable extended with labels. *)
 	fun solveextvar bind =
 	    ((*D.printdebug2 (L.printLab (E.getBindL bind));*)
 	     case solveextvarkeep bind of
@@ -2559,6 +2598,7 @@ fun unif env filters user =
 				  else BINDDUM bind'
 	       | sbind => sbind)
 
+	(** Solves an extended explicit type variable. *)
 	fun solveexttyp (bind as (btyp, labs, stts, deps)) =
 	    case FI.getStateLabs filters (EL.getExtLabL bind)
 	     (*FI.getStateLab filters (E.getBindL bind)*) of
@@ -2576,6 +2616,7 @@ fun unif env filters user =
 						    classOfId=(CL.consANY ()),
 						    labelOfConstraint=(E.getBindL bind)})
 
+	(** Solves an extended overloading type constructor. *)
 	fun solveextovc (bind as (bovc, labs, stts, deps)) =
 	    case FI.getStateLabs filters (EL.getExtLabL bind) of
 		FI.IN   => let val ovc  = E.getBindT bind
@@ -2592,6 +2633,7 @@ fun unif env filters user =
 						    classOfId=(CL.consANY ()),
 						    labelOfConstraint=(E.getBindL bind)})
 
+	(** Solves an extended type variable. *)
 	fun solveexttyv bind =
 	    case FI.getStateLab filters (E.getBindL bind) of
 		FI.IN   => (case E.getBindT bind of
@@ -2612,6 +2654,7 @@ fun unif env filters user =
 						    classOfId=(CL.consANY ()),
 						    labelOfConstraint=(E.getBindL bind)})
 
+	(** Solves an extended environment. *)
 	fun solveextenv bind =
 	    (case FI.getStateLab filters (E.getBindL bind) of
 		 FI.IN   => BINDIN bind
@@ -2626,6 +2669,7 @@ fun unif env filters user =
 						     classOfId=(CL.consANY ()),
 						     labelOfConstraint=(E.getBindL bind)}))
 
+	(** Solves an extended function type. *)
 	fun solveextfun bind =
 	    ((*D.printdebug2 (FI.toString filters ^ "\n" ^ I.printId (E.getBindI bind));*)
 	     case FI.getStateLab filters (E.getBindL bind) of
@@ -2636,7 +2680,6 @@ fun unif env filters user =
 						     equalityTypeVar = (T.freshEqualityTypeVar()),
 						     classOfId=(CL.consANY ()),
 						     labelOfConstraint=(E.getBindL bind)}))
-	(*(EL.mapExtLab (E.resetExtLab bind) C.resetPoly)*)
 
 	fun genMultiError (SOME bind1) bind2 =
 	    let val cl1 = E.getBindC bind1
@@ -2687,19 +2730,23 @@ fun unif env filters user =
 		genenv
 
 
+	(** Solves a variable environment, calls #solvegenenv'. *)
 	fun solvevarenv vars bmon = solvegenenv' vars solveextvar bmon
+	(** Solves a type environment, calls #solvegenenv'. *)
 	fun solvetypenv typs bmon = solvegenenv' typs solveexttyp bmon
+	(** Solves a type variable environment, calls #solvegenenv'. *)
 	fun solvetyvenv typs bmon = solvegenenv' typs solveexttyv bmon
-	(* We build for overloading classes only because of the
-	 * overloaded constants. *)
+	(** We build for overloading classes only because of the * overloaded constants. *)
 	fun solveovcenv ovcs bmon = solvegenenv' ovcs solveextovc bmon
+	(** Solves a structure environment, calls #solvegenenv'. *)
 	fun solvestrenv strs bmon = solvegenenv' strs solveextenv bmon
+	(** Solves a signature environment, calls #solvegenenv'. *)
 	fun solvesigenv sigs bmon = solvegenenv' sigs solveextenv bmon
+	(** Solves a function environment, calls #solvegenenv'. *)
 	fun solvefunenv funs bmon = solvegenenv' funs solveextfun bmon
 
 
-	(* ====== ENV SOLVER ====== *)
-
+	(** Environment solver. *)
 	fun solveenv (E.ENV_VAR (ev, lab)) bmon =
 	    (case S.getValStateEv state ev of
 		 NONE => E.ENV_VAR (ev, lab)
@@ -2878,16 +2925,18 @@ fun unif env filters user =
 	    in E.plusEnv env1 env2
 	    end
 
+	(** If the bcontinue ref cell is set to true, then we return the environment in the argument, otherwise we raise the error we generated. *)
 	and handleSolveEnv err env =
 	    if bcontinue
 	    then env
 	    else raise errorex err
 
 
-	(* ====== LONGTYP SOLVER ====== *)
-
+	(** Longtyp solver. *)
 	and solveLongTyp ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps) =
-	    let fun genDum () = SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem, class = CL.consANY (), lab = lab},
+	    let
+		(** Helper function for #solveLongTyp. *)
+		fun genDum () = SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem, class = CL.consANY (), lab = lab},
 				      L.empty,
 				      L.empty,
 				      CD.empty)
@@ -2908,8 +2957,7 @@ fun unif env filters user =
 	    end
 
 
-	(* ====== OPENING SOLVER ====== *)
-
+	(** Opening solver. *)
 	and solveopnsem (opnsem as (lid, lab, E.OPENED_STRUCT)) bmon = (* opening of a structure *)
 	    (case filterLid lid filters of
 		 NONE => E.newEnvVar lab
@@ -2976,8 +3024,7 @@ fun unif env filters user =
 			opnenv
 
 
-	(* ====== ACCESSOR SOLVER ====== *)
-
+	(** Accessor solver. *)
 	and solveacc (acc as E.VALUEID_ACCESSOR ({lid, equalityTypeVar = equalityTypeVarAccessor, sem, class, lab}, labs, stts, deps)) l =
 	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving the following VALUEID_ACCESSOR accessor:\n"^(#purple (!D.colors))^(E.printOneAccessor acc));
 	    (case filterLid lid filters of
@@ -3152,21 +3199,14 @@ fun unif env filters user =
 		  | SOME _ => ()
 	    end
 
-	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, equalityTypeVar = eqTypeVarAccessor, sem, class, lab = accessorLabel}, labs, stts, deps)) l =
-	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor. Labels = " ^ L.toString labs);
+	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, equalityTypeVar = eqTypeVarAccessor, sem=(sem, isSharing), class, lab = accessorLabel}, labs, stts, deps)) l =
+	    if not isSharing then
+	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (not sharing). Labels = " ^ L.toString labs);
 	     case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
 		 (case S.getValStateIdTy state lid false of
 		      (SOME (({id, bind = (bind, _, _), equalityTypeVar, lab = l, poly, class = CL.ANY}, _, _, _), _), _, _) =>
-		      (*(2010-06-16)We used to return () but we need to do something
-		       * else to catch the arity errors.*)
-		      (*let val (tf, labs', stts', deps') = buildTypeFunctionAr state bind lab L.empty L.empty CD.empty
-			    (*val _ = D.printdebug2 (T.printtyf bind)*)
-			    val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			    val c = E.genCstTfAll sem tf (L.union labs0 (I.getLabs lid)) stts0 deps0
-			in fsimplify [c] l
-			end*)
 		      let
 			  val sq   = S.getValStateAr state lid (SOME l)
 			  val labs = L.union labs (I.getLabs lid)
@@ -3204,6 +3244,20 @@ fun unif env filters user =
 			   in fsimplify [c] l
 			   end)
 	       | SOME (lid', false) => ())
+	    else
+		(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (WITH sharing). Labels = " ^ L.toString labs);
+		 case filterLid lid filters of
+		     NONE => (D.printDebug D.UNIF D.TEMP (fn _ => "None case"))
+		   | SOME (_, true) =>
+		     (case S.getValStateIdTy state lid false of
+		     	  (SOME (({id, bind = (bind, _, _), equalityTypeVar, lab = l, poly, class = CL.ANY}, _, _, _), _), _, _) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 3"))
+		     	| (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 4"))
+		     	| (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
+			  (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 6");
+		     	  handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
+			| (_, _, b) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 5")))
+		   | SOME (lid', false) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 2"))
+		)
 	  | solveacc (E.OVERLOADING_CLASSES_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
 	    (case filterLid lid filters of
 		NONE => ()
@@ -3418,12 +3472,12 @@ fun unif env filters user =
 			    (()(*checkDatSigStruc (E.plusproj (E.getTypeNameEnv env) tn) etv labs deps asmp l tn*);
 			     componeTyp tn (E.plusproj (E.getTypeNameEnv env) tn) etv))
 			semty
-		(* We should also check the NONs, because these are errors.
+		(** We should also check the NONs, because these are errors.
 		 * SML/NJ says: Error: type t must be a datatype.
-		 * --> checkDatSigTypStruc *)
-		(* We should aslo check that all the conss are declared along with the datatype in the signature!
+		 * --> checkDatSigTypStruc
+		 * We should aslo check that all the conss are declared along with the datatype in the signature!
 		 * It seems to be the only case when we have something in the structure that have to be in the signature.
-		 * --> checkAllConsInSig *)
+		 * --> checkAllConsInSig. *)
 		fun compS semty id env =
 		    map (fn exv => componestr id (E.plusproj (E.getStructs env) id) exv) semty
 		fun compGen idenv fcomp env =
@@ -3434,7 +3488,6 @@ fun unif env filters user =
 			val csT = compGen (E.getTypeNameEnv env1) compT env2
 			val csS = compGen (E.getStructs env1) compS env2
 			val (csSV, csST) = ListPair.unzip csS
-		    (*val _ = D.printdebug2 (E.printEnv (E.CONSTRAINT_ENV (E.singcsts (L.dummyLab, List.concat csST))) "")*)
 		    in (List.concat (csG @ csSV), List.concat (csT @ csST))
 		    end
 	    in case (env1, env2) of (* env1/env2 : signature/structure *)
@@ -3455,7 +3508,7 @@ fun unif env filters user =
 	    end
 
 
-	(** The equality constraint solver *)
+	(** The equality constraint solver. *)
 	and fsimplify [] l = ()
 	  (**)
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
@@ -3721,7 +3774,6 @@ fun unif env filters user =
 			       let
 				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
 				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.cons lab2 (L.cons l ls), deps, ids)
-				   (* val _ = D.printDebug D.UNIF D.TEMP (fn _ => if (!(sigVsStr)) orelse (!(sigVsStrTyp)) then "TRUE!" else "") *)
 			       in
 				   (* if the context dependancies are not empty, then that means that we are checking that the type var and
 				    * type constructor match, based on other information we inferred from another type var. For example:
@@ -4122,6 +4174,7 @@ fun unif env filters user =
 		val _ = D.printDebug D.UNIF D.STATE (fn _ => S.printState state)
 		val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors)) ^ "checking environment for duplicate identifiers: " ^ (E.printEnv env ""))
 
+		(** Looks for duplicates identifiers in an environment after #duplicateIdCheck has been executed. *)
 		fun findDuplicates [] = ()
 		  | findDuplicates ((id,label,labels)::t) =
 		    let
@@ -4847,6 +4900,7 @@ fun unif env filters user =
 			  | SOME(_) =>
 			    raise EH.DeadBranch "An impossible case occurred."
 
+		(** Creates equality type variable constraint between typenames. *)
 		fun createTypenameEqtvConstraint [] = ()
 		  | createTypenameEqtvConstraint (h::t) =
 		    case S.getValStateEq state h of
@@ -4866,6 +4920,7 @@ fun unif env filters user =
 		NONE => raise EH.DeadBranch "An impossible case occurred when solving equality type status values of datatype constructor typenames."
 	      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME(depList),_,_,_), _) =>
 		let
+		    (** Looks up a list of equality type variables and creates new constraints to NOT_EQUALITY_TYPE. *)
 		    fun setNonEqualityType [] = ()
 		      | setNonEqualityType (h::t) =
 			case S.getValStateEq state h of
@@ -4891,17 +4946,19 @@ fun unif env filters user =
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT someConstraint)::cs') l =
 	    raise EH.TODO ("unhandled equality type discovered in the constraint solver, raised in the 'f_simplify' function of Unification.sml:\n"^(E.printOneConstraint (E.EQUALITY_TYPE_CONSTRAINT(someConstraint))))
 
+	(** If the bcontinue ref is set to true then we run #fsimplify again, otherwise raises the erorr found. *)
 	and handleSimplify err xs l =
 	    if bcontinue
 	    then fsimplify xs l
 	    else raise errorex err
 
+	(** Calls #fsimplify. *)
 	and simplify cs l =
 	    let val ret = fsimplify cs l
 	    in ret
 	    end
 
-	(* hack: in run I fold right because then all the context will
+	(** Hack: in run I fold right because then all the context will
          * be treated before the CSTGEN and CSTVAL.  We can then
          * discard a part of the state in CSTVAL.  Otherwise we would
          * have to modify the state to change T.EXPLICIT_TYPE_VAR into T.TYPE_VAR instead of

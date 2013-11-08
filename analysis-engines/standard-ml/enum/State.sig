@@ -35,7 +35,7 @@ signature STATE = sig
     type stRt = Ty.fieldType
     type stLt = Ty.labelType
     type stEv = Env.env
-    type stRc = (rcty * rcty) (* this is for records *)
+    type stRc = (rcty * rcty)
     type stGe = Ty.explicitTypeVar
     type stAr = Ty.rowType
     type stOr = paths         ExtLab.extLab
@@ -51,7 +51,6 @@ signature STATE = sig
 
     type state
 
-    (* ACCESS THE UNIFIERS AND ENVS *)
     val getValStateTv      : state -> Ty.typeVar         -> stTv option
     val getValStateTf      : state -> Ty.typeFunctionVar        -> stTf option
     val getValStateEq      : state -> Ty.equalityTypeVar -> stEq option
@@ -130,58 +129,17 @@ signature STATE = sig
     val isInGe             : state -> Ty.typeVar -> bool
 
     val initState          : unit  -> state
-    (*val resetState         : state -> unit*)
     val isEmpty            : state -> bool
-    (*val copyState          : state -> state*)
 
-    (* checks if the typename is in the state *)
     val isAName            : Ty.typename -> state -> bool
 
-    (* PUSH AN ENV ONTO A STATE *)
     val pushEnvToState     : bool -> Env.env -> state -> (Ty.typeVar list * stNa list)
 
-    (* REMOVE AN ENV FROM A STATE *)
     val remEnvFromState    : bool -> (Ty.typeVar list * stNa list) -> state -> unit
 
-    (* CHECKS IF THE ENV IN THE STATE HIDS WITH ENV VARIABLES *)
     val hasEnvVar          : state -> bool
 
-    (* PRINT THE UNIFIERS AND ENVS *)
     val printState         : state -> string
     val printStateEq       : state -> string
-
-    (*val combineStates      : state -> state -> Env.csext list*)
-    (*val generalise         : state -> Label.ordset -> unit*)
-
-    (*(* The first boolean is true for the opening of a structure and false for a datatype replication. *)
-    (* The second boolean is false if we want to open everything (incomplete structure for example).  *)
-    val updateStateOpn     : state          ->
-			     Id.lid         ->
-			     Label.label   ->
-			     ClassId.strenv ->
-			     Env.opnkind    ->
-			     bool           ->
-			     ErrorKind.unmerr ExtLab.extLab option*)
-
-    (*(* The boolean arguments are explained in updateStateOpn. *)
-    val deleteStateOpn     : state          ->
-			     Id.lid         ->
-			     ClassId.strenv ->
-			     Env.opnkind    ->
-			     bool           ->
-			     unit*)
-
-    (*val updateStateIdVa    : state -> Id.id -> Env.extty  -> unit
-     val updateStateIdTy    : state -> Id.id -> Env.extty  -> unit
-     val updateStateIdSt    : state -> Id.id -> Env.extenv -> unit
-     val updateStateIdSi    : state -> Id.id -> Env.extenv -> unit
-     val updateStateIdOc    : state -> Id.id -> Env.extseq -> unit*)
-
-    (* REMOVE FROM THE ENVS *)
-    (*val deleteStateIdVa    : state -> Id.id -> unit
-    val deleteStateIdTy    : state -> Id.id -> unit
-    val deleteStateIdSt    : state -> Id.id -> unit
-    val deleteStateIdSi    : state -> Id.id -> unit
-    val deleteStateIdOc    : state -> Id.id -> unit*)
 
 end

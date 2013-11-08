@@ -17,8 +17,6 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        21 May 2010
  *  o File name:   Unification.sig
- *  o Description: Contains the signature UNIF which is the signature of
- *      the functor Unif that contains our unification algorithm.
  *)
 
 (** The signature UNIF, used by the structure refstruct{Unif}. *)
@@ -29,19 +27,12 @@ signature UNIF = sig
     datatype error   = Success of S.state
                      | Error   of Error.error * S.state
 
-    datatype user = MIN of Error.error (* called by the minimisation algorithm *)
-		  | ENUM               (* called by the enumeration algorithm  *)
-		  | DBENUM             (* called by the enumeration algorithm when dealing with database *)
-    (* Free identifiers are only reported when the solver is called by the enumeration
-     * algo.  When it is called by the enumeration algo we know that a free id, is one
-     * which is not bound, but it is not the case at minimisation time because of the way
-     * we report type constructor arity clashes. *)
+    datatype user = MIN of Error.error
+		  | ENUM
+		  | DBENUM
 
-    val unif       : Env.env -> (* constraints                    *)
-		     Filter.filters  -> (* filters                        *)
-		     user            -> (* caller of the unification algo *)
+    val unif       : Env.env ->
+		     Filter.filters  ->
+		     user            ->
 		     error
-
-    (* When given ENUM, it means that we want to solve the builtin basis. *)
-
 end

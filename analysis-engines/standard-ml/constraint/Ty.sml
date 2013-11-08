@@ -122,12 +122,12 @@ datatype fieldType = FIELD_VAR  of fieldVar
 		   | FIELD_DEPENDANCY  of fieldType ExtLab.extLab
 		   | FIELD_NO_OVERLOAD
 
-(** A row type, either a row variable, a row constructor, or a row dependency. *)
+     (** A row type, either a row variable, a row constructor, or a row dependency. *)
      and rowType = ROW_VAR  of rowVar
 		 | ROW_C  of fieldType list * flex  * Label.label (* flex is SOME _ if the record is flexible *)
 		 | ROW_DEPENDANCY  of rowType ExtLab.extLab
 
-(** A type function, either a type function variable, a type function constructor, or a type function dependency. *)
+     (** A type function, either a type function variable, a type function constructor, or a type function dependency. *)
      and typeFunction = TYPE_FUNCTION_VAR of typeFunctionVar
 		      | TFC of rowType * ty * Label.label
 		      | TYPE_FUNCTION_DEPENDANCY of typeFunction ExtLab.extLab
@@ -430,7 +430,7 @@ and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
     in (sq2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
-
+(** Strips the dependencies from a field type. *)
 and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
   | stripDepsRt (rt as FC (lt, ty, lab)) =
     let val (lt', labs1, stts1, deps1) = stripDepsLt lt
@@ -446,6 +446,7 @@ and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
     end
   | stripDepsRt RO = (RO, L.empty, L.empty, CD.empty)
 
+(** Strips dependencies from a label type. *)
 and stripDepsLt (lt as LABEL_VAR _) = (lt, L.empty, L.empty, CD.empty)
   | stripDepsLt (lt as LC _) = (lt, L.empty, L.empty, CD.empty)
   | stripDepsLt (lt as LABEL_DEPENDANCY (lt1, labs1, stts1, deps1)) =
@@ -453,13 +454,13 @@ and stripDepsLt (lt as LABEL_VAR _) = (lt, L.empty, L.empty, CD.empty)
     in (lt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
 
+(** Strips dependencies from a typename type. *)
 and stripDepsTn (tn as TYPENAME_VAR _) = (tn, L.empty, L.empty, CD.empty)
   | stripDepsTn (tn as NC _) = (tn, L.empty, L.empty, CD.empty)
   | stripDepsTn (tn as TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1)) =
     let val (tn2, labs2, stts2, deps2) = stripDepsTn tn1
     in (tn2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
     end
-
 
 (** NONE means not a type name, SOME SOME tn means a type name tn, SOME NONE means we can't now.*)
 fun isTypename tf =
@@ -479,6 +480,7 @@ and isTypename' (TFC (sq1, TYPE_CONSTRUCTOR (NC (name, _, _), sq2, _, _), _)) =
   | isTypename' (TFC (_, TYPE_VAR (_, SOME _, _, _), _)) = NOTTYPENAME
   | isTypename' _ = MAYTYPENAME
 
+(** Tests for equality between row types. *)
 and eqSeqTy (ROW_VAR sv1) (ROW_VAR sv2) =
     if eqRowVar sv1 sv2
     then SOME true
@@ -486,6 +488,7 @@ and eqSeqTy (ROW_VAR sv1) (ROW_VAR sv2) =
   | eqSeqTy (ROW_C (fields1, _, _)) (ROW_C (fields2, _, _)) = eqFieldTys fields1 fields2
   | eqSeqTy _ _ = SOME false
 
+(** Tests for equality between field variables by calling #eqFieldTy. *)
 and eqFieldTys [] [] = SOME true
   | eqFieldTys (field1 :: fields1) (field2 :: fields2) =
     (case (eqFieldTy field1 field2, eqFieldTys fields1 fields2) of
@@ -493,6 +496,7 @@ and eqFieldTys [] [] = SOME true
        | _ => NONE)
   | eqFieldTys _ _ = NONE
 
+(** Tests for equalit ybetween field variables. *)
 and eqFieldTy (FIELD_VAR fv1) (FIELD_VAR fv2) =
     if eqFieldVar fv1 fv2
     then SOME true
@@ -503,6 +507,7 @@ and eqFieldTy (FIELD_VAR fv1) (FIELD_VAR fv2) =
        | _ => NONE)
   | eqFieldTy _ _ = SOME false
 
+(** Checks for equality between two label types. *)
 and eqLabTy (LABEL_VAR lv1) (LABEL_VAR lv2) =
     if eqLabelVar lv1 lv2
     then SOME true
@@ -513,6 +518,7 @@ and eqLabTy (LABEL_VAR lv1) (LABEL_VAR lv2) =
     else NONE
   | eqLabTy _ _ = SOME false
 
+(** Checks for equality between two type variables by calling #eqTypeVar. *)
 and eqTy (TYPE_VAR (tv1, _, _, _)) (TYPE_VAR (tv2, _, _, _)) =
     if eqTypeVar tv1 tv2
     then SOME true

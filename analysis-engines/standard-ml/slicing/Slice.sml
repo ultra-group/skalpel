@@ -22,7 +22,6 @@
 (** Defines the structure Slicing which has signature SLICING and contains our slicing algorithm. *)
 structure Slicing :> SLICING = struct
 
-(* abbreviate structures that we use *)
 structure A  = AstSML
 structure R  = Reg
 structure L  = Label
@@ -31,30 +30,32 @@ structure EH = ErrorHandler
 structure SY = SymbSlice
 structure PP = Ppp
 
+(** The string "..". *)
+val dots     = SY.dots
+(** Mathematical left angle bracket *)
+val ldots    = SY.ldots
+(** Mathematical left angle bracket *)
+val ldotsLatex = SY.ldotsLatex
+(** Mathematcial right angle bracket *)
+val rdots    = SY.rdots
+(** Mathematcial right angle bracket *)
+val rdotsLatex = SY.rdotsLatex
+(** Left white square bracket *)
+val splparen = SY.splparen
+(** Right white square bracket *)
+val sprparen = SY.sprparen
 
-(* printing section *)
-
-
-(*┤├*)
-
-val dots     = SY.dots      (* the string ".."*)
-val ldots    = SY.ldots     (* mathematical left angle bracket *)
-val ldotsLatex = SY.ldotsLatex     (* mathematical left angle bracket *)
-val rdots    = SY.rdots     (* mathematcial right angle bracket *)
-val rdotsLatex = SY.rdotsLatex     (* mathematcial right angle bracket *)
-val splparen = SY.splparen  (* left white square bracket *)
-val sprparen = SY.sprparen  (* right white square bracket *)
-
-(* returns a five tuple of the five values listed above *)
+(** Returns a five tuple of the five values listed above *)
 fun getDots _ = (dots, ldots, rdots, splparen, sprparen)
 
+(** Gives a slice as a string. *)
 fun toString sl =
     let val astst1 = PP.prettyPrintAst sl
 	val astst2 = String.translate
 			 (fn #"\"" => "\\\""
-			   | #"\n" => ""
-			   | #" "  => ""
-			   | x     => Char.toString x)
+			 | #"\n" => ""
+			 | #" "  => ""
+			 | x     => Char.toString x)
 			 astst1
 	val astst3 = String.concatWith
 			 ":"
@@ -68,39 +69,46 @@ fun toString sl =
     in astst3
     end
 
-(* transforms a character into a string *)
+(** Transforms a character into a string *)
 fun transfun #"\t" = "\\t"
   | transfun #"\n" = "\\n"
   | transfun #"\\" = "\\"
   | transfun #"\"" = "\""
   | transfun x     = Char.toString x
 
-(* printSlice' is the function which will print a program slice
- * slprog is the abstract syntax tree of the program
- * ident is the indentatation to be used when printing  (for readability)
- * sep is a boolean, if true we print separator strings (usually a space)
+(** Prints a program slice * slprog is the abstract syntax tree of the
+ * program * ident is the indentatation to be used when printing (for
+ * readability) * sep is a boolean, if true we print separator strings
+ * (usually a space)
  *)
 fun printSlice' slprog indent sep =
     let
 
-	fun pind ind = if sep then ind ^ " "  else "" (* because a Parenthesis is 1 character *)
-	fun dind ind = if sep then ind ^ "  " else "" (* because Dots are 2 characters        *)
-	fun sind ind = if sep then ind ^ " "  else "" (* because a seq Parenthesis is 1 char  *)
+	(** Parenthesis is 1 character. *)
+	fun pind ind = if sep then ind ^ " "  else ""
+	(** Dots are 2 characters. *)
+	fun dind ind = if sep then ind ^ "  " else ""
+	(** A seq Parenthesis is 1 char.  *)
+	fun sind ind = if sep then ind ^ " "  else ""
 
+	(** Gets the line from a region. *)
 	fun getLine []       = NONE
 	  | getLine (r :: _) = SOME (R.getPosLine (R.getFrom r))
 
+	(** Gets the column of a region. *)
 	fun getCol []       = NONE
 	  | getCol (r :: _) = SOME (R.getPosCol (R.getFrom r))
 
+	(** Adds n number of spaces. *)
 	fun lengthToString n =
 	    if n <= 1
 	    then ""
 	    else " " ^ lengthToString (n - 1)
 
+	(** Seperate lines. *)
 	fun sepLines NONE     _        _        _   = ""
 	  | sepLines _        NONE     _        _   = ""
-	  | sepLines (SOME l) (SOME k) NONE     ind = 
+	  | sepLines (SOME l) (SOME k) NONE     ind =
 	    if !(D.debugProgramLabelling)
 	    then if l < k andalso sep
 		 then "$}\\\\\n" ^ ind ^ "\\scalebox{0.5}{$ "
@@ -117,9 +125,10 @@ fun printSlice' slprog indent sep =
 	    then "\n" ^ ind ^ lengthToString c
 	    else ""
 
-	fun printProgs (A.Progs xs)                          ind = 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	fun printProgs (A.Progs xs)                          ind =
 	    if !(D.debugProgramLabelling)
-	    then ("\\documentclass[border=5pt]{article}\n " ^ 
+	    then ("\\documentclass[border=5pt]{article}\n " ^
 		  "\\usepackage{amsmath}\n " ^
 		  "\\usepackage{color}\n " ^
 		  "\\usepackage{graphicx}\n " ^
@@ -127,22 +136,25 @@ fun printSlice' slprog indent sep =
 		  "\\noindent " ^ printProgList xs ind)
 	    else printProgList xs ind
 
+	(** Prints a program list. *)
 	and printProgList []                                   _   = ""
-	  | printProgList [(x, _, _, _)]                       ind = 
+	  | printProgList [(x, _, _, _)]                       ind =
 	    if !(D.debugProgramLabelling)
 	    then ind ^ "\\scalebox{0.5}{$" ^ printProg x ind ^ "$}\n \\end{document}"
 	    else ind ^ printProg x ind
-	  | printProgList ((x, _, _, _) :: xs)                 ind = 
+	  | printProgList ((x, _, _, _) :: xs)                 ind =
 	    if !(D.debugProgramLabelling)
 	    then ind ^ printProg x ind ^ "\n" ^ printProgList xs ind
 	    else ind ^ printProg x ind ^ "\n" ^ printProgList xs ind
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printProg (A.Prog xs)                            ind = #4 (printProgOneList xs ind)
 	  | printProg (A.ProgDots pl)                        ind =
 	    if !(D.debugProgramLabelling)
 	    then ldotsLatex ^ #4 (printPartDots pl (pind ind)) ^ rdotsLatex
 	    else ldots ^ #4 (printPartDots pl (pind ind)) ^ rdots
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printProgOneList []                                _   = (NONE, NONE, NONE, "")
 	  | printProgOneList (x :: xs)                         ind =
 	    let
@@ -155,6 +167,7 @@ fun printSlice' slprog indent sep =
 		else (l, j, c,  x ^ sep ^ y )
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printAFile (A.AFile (f, r, l, _))                ind =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^f^"}")^"^{"^L.printLab(l)^"}")
@@ -164,6 +177,7 @@ fun printSlice' slprog indent sep =
 	    then (NONE, NONE, NONE, ldotsLatex ^ dots ^ rdotsLatex)
 	    else (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printABool (A.ABool (b, r, l, _))                ind =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^b^"}")^"^{"^L.printLab(l)^"}")
@@ -173,6 +187,7 @@ fun printSlice' slprog indent sep =
 	    then (NONE, NONE, NONE, ldotsLatex ^ dots ^ rdotsLatex)
 	    else (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printProgOne (A.ProgOneDec td)                   ind = printTopDec td ind
 	  | printProgOne (A.ProgOneExp (e, _, _, label, _))      ind =
 	    let
@@ -200,6 +215,7 @@ fun printSlice' slprog indent sep =
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTopDec (A.TopDec xs)                        ind = printTopDecOneList xs ind
 	  | printTopDec (A.TopDecDots pl)                    ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -209,6 +225,7 @@ fun printSlice' slprog indent sep =
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTopDecOneList []                              _   = (NONE, NONE, NONE, "")
 	  | printTopDecOneList (x :: xs)                       ind =
 	    let val (l, k, c, x) = printTopDecOne x ind
@@ -218,16 +235,18 @@ fun printSlice' slprog indent sep =
 	    in (l, j', c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTopDecOne (A.TopDecOneTes (x, _))           ind = printSmlTes x ind
 	  | printTopDecOne (A.TopDecOneDec (x, _))           ind = printATopDec x ind
 	  | printTopDecOne (A.TopDecOneDots pl)              ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSmlTes (A.SmlTesDec (s, rs, _))             ind =
 	    let val (l, k, c, x) = printATopDec s ind
 		val k' = case k of NONE => getLine rs | _ => k
@@ -284,6 +303,7 @@ fun printSlice' slprog indent sep =
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printATopDec (A.ATopDecSig s)                  ind = printSigDec s ind
 	  | printATopDec (A.ATopDecStr s)                  ind = printStrDec s ind
 	  (*| printATopDec (A.TopDecOneFun f)                ind = printFunDec f ind*)
@@ -295,18 +315,7 @@ fun printSlice' slprog indent sep =
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	(*and printFunDec (A.FunDec (fb, r, _, _))             ind =
-	    let val (_, k, _, x) = printFunBind fb ind
-	    in (getLine [r], k, getCol [r], "functor " ^ x)
-	    end
-	  | printFunDec (A.FunDecDots pl)                    ind =
-	    let val (l, k, c, x) = printPartDots pl ind
-	    in
-if !(D.debugProgramLabelling)
-then (l, k, c, ldotsLatex ^ x ^ rdotsLatex)
-else (l, k, c, ldots ^ x ^ rdots)
-	    end*)
-
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFunBind (A.FunBind (fbol, _, _))            ind =
 	    let val (l, k, c, x) = printFunBindOneList fbol (pind ind)
 	    in
@@ -322,6 +331,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFunBindOneList []                             _   = (NONE, NONE, NONE, dots)
 	  | printFunBindOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printFBO x (dind ind)
@@ -330,12 +340,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFBO (A.FunBindO (i, j, si, se, _, label, _))    ind =
 	    let val (l, k, c, x) = printFunId     i  ind
 		val (_, _, _, y) = printStrId     j  ind
 		val (_, _, _, z) = printLabSigExp si ind
 		val (_, j, _, w) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{(}" ^ y ^ " \\operatorname{:} "   ^ z ^ "\\operatorname{) = }"  ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " (" ^ y ^ " : "   ^ z ^ ") = "  ^ w)
@@ -357,7 +368,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val (_, _, _, z) = printLabSigExp s  ind
 		val (_, _, _, w) = printLabSigExp t  ind
 		val (_, j, _, u) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\opeartorname{(}" ^ y ^ " \\operatorname{:} " ^ z ^ "\\operatorname{) :} " ^ w ^ " \\operatorname{=} " ^ u ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " (" ^ y ^ " : " ^ z ^ ") : " ^ w ^ " = " ^ u)
@@ -366,7 +377,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printFunId     i  ind
 		val (_, _, _, y) = printSpec      p  ind
 		val (_, j, _, z) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " [\\operatorname{(}" ^ y ^ "\\operatorname{) =} "  ^ z ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " (" ^ y ^ ") = "  ^ z)
@@ -376,7 +387,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val (_, _, _, y) = printSpec      p  ind
 		val (_, _, _, z) = printLabSigExp si ind
 		val (_, j, _, w) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{(}" ^ y ^ "\\operatorname{) :>} " ^ z ^ " \\operatorname{=} " ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " (" ^ y ^ ") :> " ^ z ^ " = " ^ w)
@@ -399,9 +410,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigDec (A.SigDec (sb, r, _))                ind =
 	    let val (_, k, _, x) = printSigBind sb ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], "\\operatorname{signature} " ^ x)
 		else (getLine [r], k, getCol [r], "signature " ^ x)
@@ -414,6 +426,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigBind (A.SigBind (sbol, _, _))            ind =
 	    let val (l, k, c, x) = printSigBindOneList sbol (pind ind)
 	    in
@@ -429,6 +442,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigBindOneList []                             _   = (NONE, NONE, NONE, dots)
 	  | printSigBindOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printSigBindOne x (dind ind)
@@ -438,6 +452,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigBindOne (A.SigBindOne (id, se, r, label, _)) ind =
 	    let val (l1, k1, c1, x) = printSigId     id ind
 		val (l2, k2, c2, y) = printLabSigExp se ind
@@ -445,7 +460,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val esep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ esep ^ "\\operatorname{=} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ esep ^ "= " ^ sep2 ^ y)
@@ -458,6 +473,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDec (A.StrDec (xs, label, _))            ind =
 	    let
 		val (i, j, d, y) = printStrDecOneList xs ind
@@ -474,6 +490,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDecOneList []                              _   = (NONE, NONE, NONE, "")
 	  | printStrDecOneList (x :: xs)                       ind =
 	    let val (l, k, c, x) = printStrDecOne x ind
@@ -483,9 +500,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDecOne (A.StrDecOneDec d)                ind =
 	    let val (l, k, c, x) = printDecs d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, x ^ "\\operatorname{;}") (* semicolon? *)
 		else (l, k, c, x ^ ";")
@@ -494,7 +512,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printStrBind sb ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], "\\operatorname{structure} " ^ sep ^ x ^ "\\operatorname{;}") (* semicolon? *)
 		else (getLine [r], k', getCol [r], "structure " ^ sep ^ x ^ ";") (* semicolon? *)
@@ -523,21 +541,21 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep4 = sepLines k2' (getLine [r3]) (getCol [r3]) ind
 		val isep = case sep2 of "" => " " | _ => ""
 		val esep = case sep4 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs,
-		getLine (rev rs),
-		getCol rs,
-		D.printLabelledProgramString("\\operatorname{local} " ^ sep1 ^ x ^ sep2 ^ isep ^
-		"\\operatorname{in} "    ^ sep3 ^ y ^ sep4 ^ esep ^
-		"\\operatorname{end}" ^
-		"")^"^{" ^ L.printLab(label)^"}")
+		      getLine (rev rs),
+		      getCol rs,
+		      D.printLabelledProgramString("\\operatorname{local} " ^ sep1 ^ x ^ sep2 ^ isep ^
+						   "\\operatorname{in} "    ^ sep3 ^ y ^ sep4 ^ esep ^
+						   "\\operatorname{end}" ^
+						   "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs,
-		getLine (rev rs),
-		getCol rs,
-		"local " ^ sep1 ^ x ^ sep2 ^ isep ^
-		"in "    ^ sep3 ^ y ^ sep4 ^ esep ^
-		"end")
+		      getLine (rev rs),
+		      getCol rs,
+		      "local " ^ sep1 ^ x ^ sep2 ^ isep ^
+		      "in "    ^ sep3 ^ y ^ sep4 ^ esep ^
+		      "end")
 	    end
 	  | printStrDecOne (A.StrDecOneDots pl)              ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -547,6 +565,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrBind (A.StrBind (xs, _, _))              ind =
 	    let val (l, k, c, x) = printStrBindOneList xs (pind ind)
 	    in
@@ -562,6 +581,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrBindOneList []                             _   = (NONE, NONE, NONE, dots)
 	  | printStrBindOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printStrBO x (dind ind)
@@ -570,6 +590,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrBO (A.StrBindOneOp (id, i, e, rs, label, _))  ind =
 	    let val (r1, r2) =
 		    case rs of
@@ -584,7 +605,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep2 = sepLines (getLine [r1]) l2 c2 ind
 		val sep3 = sepLines k2' (getLine [r2]) (getCol [r2]) ind
 		val sep4 = sepLines (getLine [r2]) l3 c3 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k3', c1,
 		      D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{:>} " ^ sep2 ^ y ^ sep3 ^ " \\operatorname{=} " ^ sep4 ^ z ^ "")^"^{" ^ L.printLab(label)^"}")
@@ -605,7 +626,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep2 = sepLines (getLine [r1]) l2 c2 ind
 		val sep3 = sepLines k2' (getLine [r2]) (getCol [r2]) ind
 		val sep4 = sepLines (getLine [r2]) l3 c3 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k3', c1, D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{:} " ^ sep2 ^ y ^ sep3 ^ " \\operatorname{=} " ^ sep4 ^ z ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k3', c1, x ^ sep1 ^ " : " ^ sep2 ^ y ^ sep3 ^ " = " ^ sep4 ^ z)
@@ -616,7 +637,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k2'  = case k2 of NONE => getLine [r] | _ => k2
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{=} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ " = " ^ sep2 ^ y)
@@ -629,6 +650,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printAstLTReaDO (A.LTReaDOne (d, t, rs, label, _))   ind =
 	    let val (r1, r2) =
 		    case rs of
@@ -641,7 +663,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines (getLine [r1]) l1 c1 ind
 		val sep2 = sepLines k1' (getLine [r2]) (getCol [r2]) ind
 		val sep3 = sepLines (getLine [r2]) l2 c2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString("\\operatorname{type} " ^ sep1 ^ x ^ sep2 ^ " \\operatorname{=} " ^ sep3 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, "type " ^ sep1 ^ x ^ sep2 ^ " = " ^ sep3 ^ y)
@@ -654,6 +676,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printAstLTReaDOneList []                           _   = (NONE, NONE, NONE, dots)
 	  | printAstLTReaDOneList (x :: xs)                    ind =
 	    let val (l, k, c, x) = printAstLTReaDO x (dind ind)
@@ -663,6 +686,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLTReaDesc (A.LTReaDesc (xs, _, label, _))         ind =
 	    let val (l, k, c, x) = printAstLTReaDOneList xs (pind ind)
 	    in
@@ -678,7 +702,8 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	(*and printAstTReaDO (A.TReaDOne (d, t, r, _, _))      ind =
+	(*(** Helper function to printSlice', prints an abstract syntax tree node. *)
+and printAstTReaDO (A.TReaDOne (d, t, r, _, _))      ind =
 	    let val (l, k, c, x) = printDatName d ind
 		val (_, j, _, y) = printLabType t ind
 	    in (l, j, c, x ^ " = " ^ y)
@@ -691,7 +716,8 @@ then (l, k, c, ldotsLatex ^ x ^ rdotsLatex)
 else (l, k, c, ldots ^ x ^ rdots)
 	    end*)
 
-	(*and printAstTReaDOneList []                            _   = (NONE, NONE, NONE, dots)
+	(*(** Helper function to printSlice', prints an abstract syntax tree node. *)
+and printAstTReaDOneList []                            _   = (NONE, NONE, NONE, dots)
 	  | printAstTReaDOneList (x :: xs)                     ind =
 	    let val (l, k, c, x) = printAstTReaDO x (dind ind)
 		val (i, j, d, y) = printAstTReaDOneList xs ind
@@ -700,7 +726,8 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
-	and printTReaDesc (A.TReaDesc (xs, _, _))            ind =
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+and printTReaDesc (A.TReaDesc (xs, _, _))            ind =
 	    let val (l, k, c, x) = printAstTReaDOneList xs (pind ind)
 	    in
 if !(D.debugProgramLabelling)
@@ -715,6 +742,7 @@ then (l, k, c, ldotsLatex ^ x ^ rdotsLatex)
 else (l, k, c, ldots ^ x ^ rdots)
 	    end*)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabSigExp (A.LabSigExp (e, _, _, label, _))     ind =
 	    let
 		val (x1, x2, x3, x4) = printSigExp e ind
@@ -731,6 +759,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigExp (A.SigExpBasic (sp, rs, label, _))       ind =
 	    let val (r1, r2) =
 		    case rs of
@@ -740,7 +769,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k'   = case k of NONE => getLine [r1] | _ => k
 		val sep1 = sepLines (getLine [r1]) l c ind
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r2], getCol [r1],
 		      D.printLabelledProgramString("\\operatorname{sig} " ^ sep1 ^ x ^ sep2 ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
@@ -764,7 +793,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val (l2, k2, c2, y) = printLTReaDesc rea ind
 		val sep1 = sepLines l1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) k2 c2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2, c1,
 		      D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{where} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
@@ -779,6 +808,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabStrExp (A.LabStrExp (e, _, _, _, _))     ind = printStrExp e ind
 	  | printLabStrExp (A.LabStrExpDots pl)              ind =
 	    let val (l, k, c, x) = printPartDots pl (pind ind)
@@ -788,6 +818,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrExp (A.StrExpBasic (sd, rs, label, _))       ind =
 	    let val (r1, r2) =
 		    case rs of
@@ -797,15 +828,15 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k'   = case k of NONE => getLine [r1] | _ => k
 		val sep1 = sepLines (getLine [r1]) l c ind
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r2], getCol [r1], D.printLabelledProgramString("\\operatorname{struct} " ^ sep1 ^ x ^ sep2 ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
-		else (getLine [r1], getLine [r2], getCol [r1], "struct " ^ sep1 ^ x ^ sep2 ^ " end") 
+		else (getLine [r1], getLine [r2], getCol [r1], "struct " ^ sep1 ^ x ^ sep2 ^ " end")
 	    end
 	  | printStrExp (A.StrExpId (id, label, _))              ind =
 	    let
 		val (x1, x2, x3, x4) = printLongStrId id ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (x1, x2, x3, x4)
@@ -813,7 +844,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printStrExp (A.StrExpOp (se, si, _, label, _))       ind =
 	    let val (l, k, c, x) = printLabStrExp se ind
 		val (_, j, _, y) = printLabSigExp si ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:>} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " :> " ^ y)
@@ -821,7 +852,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printStrExp (A.StrExpTr (se, si, _, label, _))       ind =
 	    let val (l, k, c, x) = printLabStrExp se ind
 		val (_, j, _, y) = printLabSigExp si ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " : " ^ y)
@@ -829,7 +860,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printStrExp (A.StrExpFExp (id, se, _, label, _))     ind =
 	    let val (l, k, c, x) = printFunId     id ind
 		val (_, j, _, y) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x  ^ "\\operatorname{(}" ^ y ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x  ^ "(" ^ y ^ ")")
@@ -845,7 +876,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printStrExp (A.StrExpLocal (sd, se, rs, label, _))   ind =
 	    let val (_, _, _, x) = printStrDec    sd ind
 		val (_, _, _, y) = printLabStrExp se ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{let} " ^ x ^ " \\operatorname{in} " ^ y ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "let " ^ x ^ " in " ^ y ^ " end")
@@ -858,6 +889,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSpec (A.Spec (spol, _))                     ind =
 	    let val (l, k, c, x) = printSpecOneList spol (pind ind)
 	    in
@@ -873,6 +905,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSpecOneList []                                _   = (NONE, NONE, NONE, "")
 	  | printSpecOneList (x :: xs)                         ind =
 	    let val (l, k, c, x) = printSpecOne x ind
@@ -882,6 +915,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongTyConEqList []                            _   = (NONE, NONE, NONE, "")
 	  | printLongTyConEqList [x]                           ind =
 	    let val (l, k, c, x) = printLongTyCon x ind
@@ -891,12 +925,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printLongTyCon x ind
 		val (i, j, d, y) = printLongTyConEqList xs ind
 		val j'  = case j of NONE => k | _ => j
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j', c, x ^ " \\operatorname{=} " ^ y)
 		else (l, j', c, x ^ " = " ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongTyConEq (A.LongTyConEq (xs, rs, label, _))    ind =
 	    let val (l, k, c, x) = printLongTyConEqList xs ind
 	    in
@@ -912,6 +947,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongStrIdEqList []                            _   = (NONE, NONE, NONE, "")
 	  | printLongStrIdEqList [x]                           ind =
 	    let val (l, k, c, x) = printLongStrId x ind
@@ -921,12 +957,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printLongStrId x ind
 		val (i, j, d, y) = printLongStrIdEqList xs ind
 		val j'  = case j of NONE => k | _ => j
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j', c, x ^ " \\operatorname{=} " ^ y)
 		else (l, j', c, x ^ " = " ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongStrIdEq (A.LongStrIdEq (xs, rs, _))     ind =
 	    let val (l, k, c, x) = printLongStrIdEqList xs ind
 	    in (l, k, c, x)
@@ -939,11 +976,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSpecOne (A.SpecValue (vd, r, label, _))           ind =
 	    let val (l, k, c, x) = printValDesc vd ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{val} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "val " ^ sep ^ x)
@@ -952,7 +990,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printTypDesc td ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{type} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "type " ^ sep ^ x)
@@ -961,7 +999,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printTypDesc td ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{eqtype} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "eqtype " ^ sep ^ x)
@@ -970,7 +1008,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printExcDesc ed ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{exception} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "exception " ^ sep ^ x)
@@ -979,7 +1017,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printTdrDesc td ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{type} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "type " ^ sep ^ x)
@@ -999,7 +1037,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep = sepLines (getLine [r]) l c ind
 	    (*val _ = Debug.printdebug2 (Int.toString (Option.getOpt (getCol [r],  ~1)) ^ " - " ^
 					 Int.toString (Option.getOpt (getLine [r], ~1)))*)
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{structure} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "structure " ^ sep ^ x)
@@ -1008,7 +1046,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printLabSigExp si ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{include} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "include " ^ sep ^ x)
@@ -1017,7 +1055,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printSigIdSeq si ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{include} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "include " ^ sep ^ x)
@@ -1037,12 +1075,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep4 = sepLines (getLine [r3]) l2 c2 ind
 		val isep = case sep2 of "" => " " | _ => ""
 		val esep = case sep3 of " "=> " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, k2', getCol rs,
 		      D.printLabelledProgramString("\\operatorname{datatype} " ^ sep1 ^ x ^ sep2 ^ isep ^
-		      "\\operatorname{=} "        ^ sep3 ^ esep ^
-		      "\\operatorname{datatype} " ^ sep4 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{=} "        ^ sep3 ^ esep ^
+						   "\\operatorname{datatype} " ^ sep4 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, k2', getCol rs,
 		      "datatype " ^ sep1 ^ x ^ sep2 ^ isep ^
 		      "= "        ^ sep3 ^ esep ^
@@ -1059,7 +1097,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r1]) (getCol [r1]) ind
 		val sep2 = sepLines (getLine [r2]) l2 c2 ind
 		val isep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ isep ^ "\\operatorname{sharing} \\operatorname{type} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ isep ^ "sharing type " ^ sep2 ^ y)
@@ -1075,7 +1113,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val isep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ isep ^ "\\operatorname{sharing} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ isep ^ "sharing " ^ sep2 ^ y)
@@ -1088,6 +1126,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDesc (A.StrDesc (sdol, _, _))            ind = printStrDescOneList sdol ind
 	  | printStrDesc (A.StrDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1097,6 +1136,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printStrDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printStrDescOne x ind
@@ -1106,15 +1146,16 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printStrDescOne (A.StrDescOne (id, se, r, label, _)) ind =
 	    let val (l1, k1, c1, x) = printStrId     id ind
 		val (l2, k2, c2, y) = printLabSigExp se ind
 		val k2'  = case k2 of NONE => getLine [r] | _ => k2
 		val sep1 = sepLines l1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
-		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{:} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}") 
+		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ " \\operatorname{:} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ " : " ^ sep2 ^ y)
 	    end
 	  | printStrDescOne (A.StrDescOneDots pl)            ind =
@@ -1125,6 +1166,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatDesc (A.DatDesc (ddol, _, _))            ind = printDatDescOneList ddol ind
 	  | printDatDesc (A.DatDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1134,6 +1176,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printDatDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printDatDescOne x ind
@@ -1143,10 +1186,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatDescOne (A.DatDescOne (dn, cd, _, label, _)) ind =
 	    let val (l, k, c, x) = printDatName dn ind
 		val (_, j, _, y) = printConDesc cd ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{=} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " = " ^ y)
@@ -1159,6 +1203,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConDesc (A.ConDesc (cdol, _, _))            ind =
 	    let val (l, k, c, x) = printConDescOneList cdol ind
 	    in
@@ -1174,6 +1219,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConDescOneList []                             _   = (NONE, NONE, NONE, dots)
 	  | printConDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printConDescOne x ind
@@ -1182,11 +1228,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConDescOne (A.ConDescOneId (id, _))         ind = printIdent id ind
 	  | printConDescOne (A.ConDescOneOf (i, t, _, label, _)) ind =
 	    let val (l, k, c, x) = printLabId i ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{of} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " of " ^ y)
@@ -1201,6 +1248,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValDesc (A.ValDesc (vdol, _, _))            ind = printValDescOneList vdol ind
 	  | printValDesc (A.ValDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1210,6 +1258,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printValDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printValDescOne x ind
@@ -1218,10 +1267,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValDescOne (A.ValDescOne (id, ty, _, label, _)) ind =
 	    let val (l, k, c, x) = printLabId id ind
 		val (_, j, _, y) = printLabType ty ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " : " ^ y)
@@ -1234,6 +1284,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypDesc (A.TypDesc (tdol, _, _))            ind = printTypDescOneList tdol ind
 	  | printTypDesc (A.TypDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1243,6 +1294,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printTypDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printTypDescOne x ind
@@ -1251,6 +1303,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypDescOne (A.TypDescOne (dn, label, _))        ind =
 	    let
 		val (x1, x2, x3, x4) = printDatName dn ind
@@ -1267,6 +1320,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTdrDesc (A.TdrDesc (tdol, _, _))            ind = printTdrDescOneList tdol ind
 	  | printTdrDesc (A.TdrDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1276,6 +1330,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTdrDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printTdrDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printTdrDescOne x ind
@@ -1284,10 +1339,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTdrDescOne (A.TdrDescOne (d, t, _, label, _))   ind =
 	    let val (l, k, c, x) = printDatName d ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{=} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " = " ^ y)
@@ -1300,6 +1356,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExcDesc (A.ExcDesc (edol, _, _))            ind = printExcDescOneList edol ind
 	  | printExcDesc (A.ExcDescDots pl)                  ind =
 	    let val (l, k, c, x) = printPartDots pl ind
@@ -1309,6 +1366,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExcDescOneList []                             _   = (NONE, NONE, NONE, "")
 	  | printExcDescOneList (x :: xs)                      ind =
 	    let val (l, k, c, x) = printExcDescOne x ind
@@ -1317,6 +1375,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExcDescOne (A.ExcDescOne (id, label, _))        ind =
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
@@ -1328,7 +1387,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExcDescOne (A.ExcDescOf (id, ty, _, label, _))  ind =
 	    let val (l, k, c, x) = printLabId id ind
 		val (_, j, _, y) = printLabType ty ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{of} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " of " ^ y)
@@ -1341,10 +1400,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongStrId (A.LongStrIdQual (a, b, _, label, _)) ind =
 	    let val (l, k, c, x) = printStrId a ind
 		val (_, j, _, y) = printLongStrId b ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{.}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ "." ^ y)
@@ -1358,6 +1418,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPart (A.PartExp   ex)                       ind = printExp       ex ind
 	  | printPart (A.PartDec   de)                       ind = printDec       de ind
 	  | printPart (A.PartType  ty)                       ind = printType      ty ind
@@ -1377,6 +1438,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPart (A.PartTes   st)                       ind = printSmlTes    st ind
 	  | printPart (A.PartClass cl)                       ind = printClass     cl ind
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPartDots []                                   _   = (NONE, NONE, NONE, dots)
 	  | printPartDots (p :: pl)                            ind =
 	    let val (l, k, c, x) = printPart p (dind ind)
@@ -1385,42 +1447,45 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
-	and printScon (A.SconInt    (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printScon (A.SconInt    (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
-	  | printScon (A.SconWord   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+	  | printScon (A.SconWord   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
-	  | printScon (A.SconReal   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+	  | printScon (A.SconReal   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
-	  | printScon (A.SconString (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+	  | printScon (A.SconString (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}"
 									else (String.translate transfun s))
-	  | printScon (A.SconChar   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r], 
+	  | printScon (A.SconChar   (s, _, r, label, _))         _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( (String.translate transfun s) ^ "")^"^{" ^ L.printLab(label)^"}"
 									else (String.translate transfun s))
 	  | printScon A.SconDots                             _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printPcon (A.PconBool (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printPcon (A.PconBool (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
-	  | printPcon (A.PconRef  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+	  | printPcon (A.PconRef  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
-	  | printPcon (A.PconNil  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r], 
+	  | printPcon (A.PconNil  (s, _, r, label, _))           _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printPcon A.PconDots                             _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabId (A.LabId (id, _, label, _))           ind =
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
@@ -1437,6 +1502,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printIdent (A.Ident (s, _, r, label, _))         _   =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^s^"}")^"^{"^L.printLab(label)^"}")
@@ -1444,6 +1510,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printIdent (A.IdentPcon pc)                      ind = printPcon pc ind
 	  | printIdent A.IdentDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabClass (A.LabClass (cl, _, label, _))     ind =
 	    let
 		val (x1, x2, x3, x4) = printClass cl ind
@@ -1460,34 +1527,39 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printClass (A.Class (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printClass (A.Class (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printClass A.ClassDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printStrId (A.StrId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printStrId (A.StrId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printStrId A.StrIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printSigId (A.SigId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printSigId (A.SigId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printSigId A.SigIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printFunId (A.FunId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printFunId (A.FunId (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printFunId A.FunIdDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongId (A.LongIdQual (sid, lid, _, label, _))   ind =
 	    let val (l, k, c, x) = printStrId sid ind
 		val (_, j, _, y) = printLongId lid ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{.}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ "." ^ y)
@@ -1501,10 +1573,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongTyCon (A.LongTyConQual (s, t, _, label, _)) ind =
 	    let val (l, k, c, x) = printStrId s ind
 		val (_, j, _, y) =printLongTyCon t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{.}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ "." ^ y)
@@ -1518,39 +1591,44 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-	and printTyLab (A.TyLab (s, r, label, _))                _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printTyLab (A.TyLab (s, r, label, _))                _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printTyLab (A.TyLabDots)                         _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printTyCon (A.TyCon (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r], 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printTyCon (A.TyCon (s, _, r, label, _))             _   = (getLine [r], getLine [r], getCol [r],
 									if !(D.debugProgramLabelling)
 									then D.printLabelledProgramString( s ^ "")^"^{" ^ L.printLab(label)^"}"
 									else s)
 	  | printTyCon A.TyConDots                           _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
-	and printTypeVar (A.TypeVar (s, _, r, label, _))         _   = 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
+	and printTypeVar (A.TypeVar (s, _, r, label, _))         _   =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^s^"}")^"^{"^L.printLab(label)^"}")
 	    else (getLine [r], getLine [r], getCol [r], s)
-	  | printTypeVar (A.EqualityTypeVar (s, _, r, label, _)) _   = 
+	  | printTypeVar (A.EqualityTypeVar (s, _, r, label, _)) _   =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [r], getLine [r], getCol [r], D.printLabelledProgramString("\\operatorname{"^s^"}")^"^{"^L.printLab(label)^"}")
 	    else (getLine [r], getLine [r], getCol [r], s)
 	  | printTypeVar (A.TypeVarDots)                     _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeVarList []                                _   = (NONE, NONE, NONE, "")
 	  | printTypeVarList [ty]                              ind = printTypeVar ty ind
 	  | printTypeVarList (ty :: tyl)                       ind =
 	    let val (l, k, c, x) = printTypeVar ty ind
 		val (_, j, _, y) = printTypeVarList tyl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeVarDots []                                _   = (NONE, NONE, NONE, dots)
 	  | printTypeVarDots (tv :: tvl)                       ind =
 	    let val (l, k, c, x) = printTypeVar tv (dind ind)
@@ -1558,6 +1636,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTypeVar (A.LabTypeVar (tv, _, label, _))         ind =
 	    let
 		val (x1, x2, x3, x4) = printTypeVar tv ind
@@ -1574,32 +1653,34 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTypeVarList []                               _   = (NONE, NONE, NONE, "")
 	  | printLabTypeVarList [x]                              ind = printLabTypeVar x ind
 	  | printLabTypeVarList (x :: xs)                        ind =
 	    let val (l, k, c, x) = printLabTypeVar x ind
 		val (i, j, d, y) = printLabTypeVarList xs ind
 		val sep = sepLines k i d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ sep ^ y)
 		else (l, j, c, x ^ "," ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeVarSeq (A.TypeVarSeqOne (tv, _, label, _))      ind =
 	    let val (l, k, c, x) = printTypeVar tv (sind ind)
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, k, c, splparen ^ x ^ sprparen)
 	    end
-	  | printTypeVarSeq (A.TypeVarSeqEm (_, label, _))           _   = (NONE, NONE, NONE, 
+	  | printTypeVarSeq (A.TypeVarSeqEm (_, label, _))           _   = (NONE, NONE, NONE,
 									    if !(D.debugProgramLabelling)
 									    then D.printLabelledProgramString( splparen ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}"
 									    else splparen ^ sprparen) (*HACK: before it was empty string*)
 	  | printTypeVarSeq (A.TypeVarSeqSeq (tvl, rs, label, _))    ind =
 	    let val (_, _, _, x) = printLabTypeVarList tvl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
@@ -1612,28 +1693,31 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeList []                                   _   = (NONE, NONE, NONE, "")
 	  | printTypeList [ty]                                 ind = printType ty ind
 	  | printTypeList (ty :: tyl)                          ind =
 	    let val (l, k, c, x) = printType ty ind
 		val (_, j, _, y) = printTypeList tyl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeTuple []                                  _   = (NONE, NONE, NONE, "")
 	  | printTypeTuple [ty]                                ind = printType ty ind
 	  | printTypeTuple (ty :: tyl)                         ind =
 	    let val (l, k, c, x) = printType ty ind
 		val (_, j, _, y) = printTypeTuple tyl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{*}" ^ y)
 		else (l, j, c, x ^ "*" ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTypeList [] _                              _   = (NONE, NONE, NONE, "")
 	  | printLabTypeList [ty] []                           ind = printLabType ty ind
 	  | printLabTypeList (ty :: tyl) (r :: rs)             ind =
@@ -1642,24 +1726,26 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val j'  = case j of NONE => getLine [r] | _ => j
 		val sep1 = sepLines k (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) i d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j', c, x ^ sep1 ^ "\\operatorname{,}" ^ sep2 ^ y)
 		else (l, j', c, x ^ sep1 ^ "," ^ sep2 ^ y)
 	    end
 	  | printLabTypeList _ _                               _   = raise EH.DeadBranch "Missing region for a type row comma"
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTypeTuple []                               _   = (NONE, NONE, NONE, "")
 	  | printLabTypeTuple [ty]                             ind = printLabType ty ind
 	  | printLabTypeTuple (ty :: tyl)                      ind =
 	    let val (l, k, c, x) = printLabType ty ind
 		val (_, j, _, y) = printLabTypeTuple tyl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{*}" ^ y)
 		else (l, j, c, x ^ "*" ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabType (A.LabType (t, _, label, _))            ind =
 	    let
 		val (x1, x2, x3, x4) = printType t ind
@@ -1676,10 +1762,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTyField (A.TyField (tl, lt, _, label, _))           ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabType lt ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{:}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ ":" ^ y)
@@ -1692,33 +1779,36 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTyFieldList []                                  _   = (NONE, NONE, NONE, "")
 	  | printTyFieldList [x]                                 ind = printTyField x ind
 	  | printTyFieldList (x :: xs)                           ind =
 	    let val (l, k, c, x) = printTyField x ind
 		val (_, j, _, y) = printTyFieldList xs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTyFieldSlList []                                _   = (NONE, NONE, NONE, dots)
 	  | printTyFieldSlList (x :: xs)                         ind =
 	    let val (l, k, c, x) = printTyField x (dind ind)
 		val (i, j, d, y) = printTyFieldSlList xs ind
 		val sep = sepLines k i d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, dots ^ "\\operatorname{,}" ^ x ^ "\\operatorname{,}" ^ sep ^ y)
 		else (l, j, c, dots ^ "," ^ x ^ "," ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printType (A.TypeOneVar (tv))                    ind = printTypeVar tv ind
 	  | printType (A.TypeArrow (t1, t2, _, label, _))        ind =
 	    let val (l, k, c, x) = printLabType t1 ind
 		val (_, j, _, y) = printLabType t2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{->} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " -> " ^ y)
@@ -1733,14 +1823,14 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printType (A.TypeRecord (trl, rs, _, label, _))      ind =
 	    let val (_, _, _, x) = printTyFieldList trl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{\\{}" ^ x ^ "\\operatorname{\\}}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printType (A.TypeSlRec (trl, rs, label, _))          ind =
 	    let val (_, _, _, x) = printTyFieldSlList trl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{\\{}" ^ x ^ "\\operatorname{\\}}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
@@ -1756,7 +1846,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printType (A.TypeParen (t, r1, r2, label, _))          ind =
 	    let val (_, _, _, x) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r2], getCol [r1], D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1], getLine [r2], getCol [r1], "(" ^ x ^ ")")
@@ -1769,6 +1859,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypeRow (A.TypeRowOne (t, _, label, _))         ind =
 	    let val (l, k, c, x) = printType t (sind ind)
 	    in
@@ -1788,7 +1879,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k'   = case k of NONE => getLine [r1] | _ => k
 		val sep1 = sepLines (getLine [r1]) l c ind
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ sep1 ^ x ^ sep2 ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ sep1 ^ x ^ sep2 ^ ")")
@@ -1801,11 +1892,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTyClass (A.TyClassCl (cl, r, label, _))         ind =
 	    let val (l, k, c, x) = printLabClass cl ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{in} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "in " ^ sep ^ x)
@@ -1814,7 +1906,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let
 		val (x1, x2, x3, x4) = printType ty ind
 	    in
-		
+
 		if !(D.debugProgramLabelling)
 		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (x1, x2, x3, x4)
@@ -1827,6 +1919,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTyClass (A.LabTyClass (t, _, label, _))      ind =
 	    let
 		val (x1, x2, x3, x4) = printTyClass t ind
@@ -1843,6 +1936,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabTyClassList [] _                           _   = (NONE, NONE, NONE, "")
 	  | printLabTyClassList [ty] []                        ind = printLabTyClass ty ind
 	  | printLabTyClassList (ty :: tyl) (r :: rs)          ind =
@@ -1851,16 +1945,17 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val j'  = case j of NONE => getLine [r] | _ => j
 		val sep1 = sepLines k (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) i d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j', c, x ^ sep1 ^ "\\operatorname{,}" ^ sep2 ^ y)
 		else (l, j', c, x ^ sep1 ^ "," ^ sep2 ^ y)
 	    end
 	  | printLabTyClassList _ _                            _   = raise EH.DeadBranch "Missing region for a type row comma"
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTyClassSeq (A.TyClassSeqOne (t, _, label, _))   ind =
 	    let val (l, k, c, x) = printTyClass t (sind ind)
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, D.printLabelledProgramString( splparen ^ x ^ sprparen ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, k, c, splparen ^ x ^ sprparen)
@@ -1877,7 +1972,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val k'   = case k of NONE => getLine [r1] | _ => k
 		val sep1 = sepLines (getLine [r1]) l c ind
 		val sep2 = sepLines k' (getLine [r2]) (getCol [r2]) ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ sep1 ^ x ^ sep2 ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ sep1 ^ x ^ sep2 ^ ")")
@@ -1890,6 +1985,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConBind (A.ConBind (id, _))                 ind = printIdent id ind
 	  | printConBind (A.ConBindOf (id, t, r, label, _))      ind =
 	    let val (l1, k1, c1, x) = printLabId id ind
@@ -1898,7 +1994,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val esep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ esep ^ "\\operatorname{of} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ esep ^ "of " ^ sep2 ^ y)
@@ -1912,6 +2008,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConBindList []                                _   = (NONE, NONE, NONE, dots)
 	  | printConBindList (x :: xs)                         ind =
 	    let val (l, k, c, x) = printConBind x (dind ind)
@@ -1920,6 +2017,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printConBindSeq (A.ConBindSeq tcl)               ind =
 	    let val (l, k, c, x) = printConBindList tcl (pind ind)
 	    in
@@ -1935,6 +2033,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValBindCore (A.ValBindCore (p, e, r, label, _)) ind =
 	    let val (l1, k1, c1, x) = printLabPat p ind
 		val (l2, k2, c2, y) = printLabExp e ind
@@ -1942,7 +2041,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val esep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ esep ^ "\\operatorname{=} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ esep ^ "= " ^ sep2 ^ y)
@@ -1955,6 +2054,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValBindCoreList []                            _   = (NONE, NONE, NONE, dots)
 	  | printValBindCoreList (x :: xs)                     ind =
 	    let val (l, k, c, x) = printValBindCore x (dind ind)
@@ -1964,6 +2064,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValBindSeq (A.ValBindSeq (vbl, _, _))       ind =
 	    let val (l, k, c, x) = printValBindCoreList vbl (pind ind)
 	    in
@@ -1979,11 +2080,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printValBind (A.ValBindRec (vbs, r, label, _))       ind =
 	    let val (l, k, c, x) = printValBindSeq vbs ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{rec} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "rec " ^ sep ^ x)
@@ -1997,6 +2099,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatName (A.DatName (tvs, tn, _, _))         ind =
 	    let val (l, k, c, x) = printTypeVarSeq tvs ind
 		val (_, j, _, y) = printTyCon tn ind
@@ -2004,6 +2107,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printDatName A.DatNameDots                       _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLDatName (A.LDatName (tvs, tn, _, _))       ind =
 	    let val (l, k, c, x) = printTypeVarSeq tvs ind
 		val (_, j, _, y) = printLongTyCon tn ind
@@ -2011,13 +2115,14 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printLDatName A.LDatNameDots                     _   = (NONE, NONE, NONE, ldots ^ dots ^ rdots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatBind (A.DatBind (dn, tcs, r, label, _))      ind =
 	    let val (l1, k1, c1, x) = printDatName dn ind
 		val (l2, k2, c2, y) = printConBindSeq tcs ind
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val esep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2, c1, D.printLabelledProgramString( x ^ sep1 ^ esep ^ "\\operatorname{=} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2, c1, x ^ sep1 ^ esep ^ "= " ^ sep2 ^ y)
@@ -2030,6 +2135,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatBindList []                                _   = (NONE, NONE, NONE, dots)
 	  | printDatBindList (x :: xs)                         ind =
 	    let val (l, k, c, x) = printDatBind x (dind ind)
@@ -2040,6 +2146,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
 	(* do we want something special for the empty case? *)
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDatBindSeq (A.DatBindSeq (dbl, _, _))       ind =
 	    let val (l, k, c, x) = printDatBindList dbl (pind ind)
 	    in
@@ -2055,6 +2162,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabAtPat (A.LabAtPat (ap, _, label, _))         ind =
 	    let
 		val (x1, x2, x3, x4) = printAtPat ap ind
@@ -2071,11 +2179,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFMatch (A.FMatchId (id, _, _))               ind = printIdent id ind
 	  | printFMatch (A.FMatchApp (fm, a, _, _, label, _)) ind =
 	    let val (l, k, c, x) = printFMatch fm ind
 		val (_, j, _, y) = printLabAtPat a ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " " ^ y)
@@ -2091,9 +2200,10 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printFMatch A.FMatchDots                         _   = (NONE, NONE, NONE, dots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabFMatch (A.LabFMatch (fm, _, label, _))       ind =
 	    let val (l, k, c, x) = printFMatch fm ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, k, c, D.printLabelledProgramString( x ^ " " ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, k, c, x ^ " ")
@@ -2104,24 +2214,26 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printLabFMatch A.LabFMatchDots                   _   = (NONE, NONE, NONE, dots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFMatchTy (A.FMatchT fm)                     ind = printLabFMatch fm ind
 	  | printFMatchTy (A.FMatchTTy (fm, ty, _, label, _))    ind =
 	    let val (l, k, c, x) = printLabFMatch fm ind
 		val (_, j, _, y) = printLabType ty ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:} " ^ y ^ " " ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " : " ^ y ^ " ")
 	    end
 	  | printFMatchTy A.FMatchTDots                      _   = (NONE, NONE, NONE, dots)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFVBCore (A.FValBindCore (x, e, r, label, _))    ind =
 	    let val (l1, k1, c1, x) = printFMatchTy x ind
 		val (l2, k2, c2, y) = printLabExp e ind
 		val k2'  = case k2 of NONE => getLine [r] | _ => k2
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
-	    in (l1, k2', c1, 
+	    in (l1, k2', c1,
 		if !(D.debugProgramLabelling)
 		then D.printLabelledProgramString( x ^ sep1 ^ "= " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}"
 		else x ^ sep1 ^ "= " ^ sep2 ^ y)
@@ -2135,6 +2247,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFValBindCoreList []                           _   = (NONE, NONE, NONE, dots)
 	  | printFValBindCoreList (x :: xs)                    ind =
 	    let val (l, k, c, x) = printFVBCore x (dind ind)
@@ -2153,6 +2266,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	   | printFValBindCoreList (x :: xs)                    = dots ^ " | " ^ (printFVBCore x) ^ " | " ^ (printFValBindCoreList xs)
 	*)
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFValBindOne (A.FValBindOne (x, _, label, _))    ind =
 	    let val (l, k, c, x) = printFValBindCoreList x (pind ind)
 	    in
@@ -2168,6 +2282,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFValBindOneList []                            _   = (NONE, NONE, NONE, dots)
 	  | printFValBindOneList (x :: xs)                     ind =
 	    let val (l, k, c, x) = printFValBindOne x (dind ind)
@@ -2178,6 +2293,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printFValBind (A.FValBind (fvbol, _, _))         ind =
 	    let val (l, k, c, x) = printFValBindOneList fvbol (pind ind)
 	    in
@@ -2193,6 +2309,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypBind (A.TypBind (dn, ty, r, label, _))       ind =
 	    let val (l1, k1, c1, x) = printDatName dn ind
 		val (l2, k2, c2, y) = printLabType ty ind
@@ -2200,7 +2317,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val esep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2', c1, D.printLabelledProgramString( x ^ sep1 ^ esep ^ "\\operatorname{=} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2', c1, x ^ sep1 ^ esep ^ "= " ^ sep2 ^ y)
@@ -2213,6 +2330,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypBindList []                                _   = (NONE, NONE, NONE, dots)
 	  | printTypBindList (x :: xs)                         ind =
 	    let val (l, k, c, x) = printTypBind x (dind ind)
@@ -2222,6 +2340,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printTypBindSeq (A.TypBindSeq (tbl, _, _))       ind =
 	    let val (l, k, c, x) = printTypBindList tbl (pind ind)
 	    in
@@ -2237,6 +2356,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExBind (A.ExBind (id, label, _))            ind =
 	    let
 		val (x1, x2, x3, x4) = printIdent id ind
@@ -2248,7 +2368,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExBind (A.ExBindOf (id, t, _, label, _))        ind =
 	    let val (l, k, c, x) = printLabId id ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{of} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " of " ^ y)
@@ -2256,7 +2376,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExBind (A.ExBindEq (id, sid, _, label, _))      ind =
 	    let val (l, k, c, x) = printLabId id ind
 		val (_, j, _, y) = printLongId sid ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{=} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " = " ^ y)
@@ -2270,6 +2390,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExBindList []                                 _   = (NONE, NONE, NONE, dots)
 	  | printExBindList (x :: xs)                          ind =
 	    let val (l, k, c, x) =printExBind x (dind ind)
@@ -2278,6 +2399,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExBindSeq (A.ExBindSeq (ebl, _, _))         ind =
 	    let val (l, k, c, x) = printExBindList ebl (pind ind)
 	    in
@@ -2293,6 +2415,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigIdSeqList []                              _   = (NONE, NONE, NONE, dots)
 	  | printSigIdSeqList (x :: xs)                       ind =
 	    let val (l, k, c, x) = printSigId x (dind ind)
@@ -2301,6 +2424,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSigIdSeq (A.SigIdSeq (xs, _))              ind =
 	    let val (l, k, c, x) = printSigIdSeqList xs (pind ind)
 	    in
@@ -2316,6 +2440,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongStrIdList []                              _   = (NONE, NONE, NONE, dots)
 	  | printLongStrIdList (x :: xs)                       ind =
 	    let val (l, k, c, x) = printLongStrId x (dind ind)
@@ -2324,6 +2449,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLongStrSeq (A.LongStrSeq (idl, _))          ind =
 	    let val (l, k, c, x) = printLongStrIdList idl (pind ind)
 	    in
@@ -2339,6 +2465,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printIdentList []                              _   = (NONE, NONE, NONE, dots)
 	  | printIdentList (x :: xs)                       ind =
 	    let val (l, k, c, x) = printIdent x (dind ind)
@@ -2347,6 +2474,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printIdentSeq (A.IdentSeq (idl, _))          ind =
 	    let val (l, k, c, x) = printIdentList idl (pind ind)
 	    in
@@ -2362,12 +2490,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDec (A.DecVal (tvs, vb, r, _))              ind =
 	    let val (l1, k1, c1, x) = printTypeVarSeq tvs ind
 		val (l2, k2, c2, y) = printValBind vb ind
 		val k2' = case k2 of NONE => k1 | _ => k2
 		val sep = sepLines (getLine [r]) l1 c1 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k2', getCol [r], "\\operatorname{val} " ^ sep ^ x ^ " " ^ y)
 		else (getLine [r], k2', getCol [r], "val " ^ sep ^ x ^ " " ^ y)
@@ -2377,7 +2506,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val (l2, k2, c2, y) = printFValBind fvb ind
 		val k2' = case k2 of NONE => k1 | _ => k2
 		val sep = sepLines (getLine [r]) l1 c1 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k2', getCol [r], "\\operatorname{fun} " ^ sep ^ x ^ " " ^ y)
 		else (getLine [r], k2', getCol [r], "fun " ^ sep ^ x ^ " " ^ y)
@@ -2394,7 +2523,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printDec (A.DecDatWith (db, tb, rs, label, _))       ind =
 	    let val (_, _, _, x) = printDatBindSeq db ind
 		val (_, j, _, y) = printTypBindSeq tb ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, j, getCol rs, D.printLabelledProgramString("\\operatorname{datatype} " ^ x ^ " \\operatorname{withtype} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, j, getCol rs, "datatype " ^ x ^ " withtype " ^ y)
@@ -2402,21 +2531,21 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printDec (A.DecDatRep (tc, ltc, rs, label, _))       ind =
 	    let val (_, _, _, x) = printTyCon tc ind
 		val (_, j, _, y) = printLongTyCon ltc ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, j, getCol rs, D.printLabelledProgramString("\\operatorname{datatype} " ^ x ^ " = \\opertorname{datatype} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, j, getCol rs, "datatype " ^ x ^ " = datatype " ^ y)
 	    end
 	  | printDec (A.DecType (tbs, r, _))                 ind =
 	    let val (_, k, _, x) = printTypBindSeq tbs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], "\\operatorname{type} " ^ x)
 		else (getLine [r], k, getCol [r], "type " ^ x)
 	    end
 	  | printDec (A.DecEx (ebs, r, _))                   ind =
 	    let val (_, k, _, x) = printExBindSeq ebs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], "\\operatorname{exception} " ^ x)
 		else (getLine [r], k, getCol [r], "exception " ^ x)
@@ -2425,7 +2554,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (l, k, c, x) = printLongStrSeq ids ind
 		val k'  = case k of NONE => getLine [r] | _ => k
 		val sep = sepLines (getLine [r]) l c ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k', getCol [r], D.printLabelledProgramString("\\operatorname{open} " ^ sep ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k', getCol [r], "open " ^ sep ^ x)
@@ -2433,7 +2562,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printDec (A.DecLocal (d1, d2, rs, label, _))         ind =
 	    let val (_, _, _, x) = printDecs d1 ind
 		val (_, _, _, y) = printDecs d2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{local} " ^ x ^ " \\operatorname{in} " ^ y ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "local " ^ x ^ " in " ^ y ^ " end")
@@ -2441,7 +2570,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printDec (A.DecAbsType (db, ds, rs, label, _))       ind =
 	    let val (_, _, _, x) = printDatBindSeq db ind
 		val (_, _, _, y) = printDecs ds ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{abstype} " ^ x ^ " \\operatorname{with} " ^ y ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "abstype " ^ x ^ " with " ^ y ^ " end")
@@ -2450,28 +2579,28 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    let val (_, _, _, x) = printDatBindSeq db ind
 		val (_, _, _, y) = printTypBindSeq tb ind
 		val (_, _, _, z) = printDecs ds ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{abstype} " ^ x ^ " \\operatorname{withtype} " ^ y ^ " \\operatorname{with} " ^ z ^ " \\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "abstype " ^ x ^ " withtype " ^ y ^ " with " ^ z ^ " end")
 	    end
 	  | printDec (A.DecInfix (i, ids, r, label, _))          ind =
 	    let val (_, k, _, x) = printIdentSeq ids ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{infix} " ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "infix " ^ x)
 	    end
 	  | printDec (A.DecInfixr (i, ids, r, label, _))         ind =
 	    let val (_, k, _, x) = printIdentSeq ids ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{infixr} " ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "infixr " ^ x)
 	    end
 	  | printDec (A.DecNonfix (ids, r, label, _))            ind =
 	    let val (_, k, _, x) = printIdentSeq ids ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{nonfix} " ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "nonfix " ^ x)
@@ -2499,13 +2628,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val asep = case sep2 of "" => " " | _ => ""
 		val bsep = case sep4 of "" => " " | _ => ""
 		val csep = case sep6 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], k4', getCol [r1],
 		      D.printLabelledProgramString("\\operatorname{overload} " ^ sep1 ^ x ^ sep2 ^ asep ^
-		      "\\operatorname{:} "        ^ sep3 ^ y ^ sep4 ^ bsep ^
-		      "\\operatorname{with} "     ^ sep5 ^ z ^ sep6 ^ csep ^
-		      "\\operatorname{in} "       ^ sep7 ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{:} "        ^ sep3 ^ y ^ sep4 ^ bsep ^
+						   "\\operatorname{with} "     ^ sep5 ^ z ^ sep6 ^ csep ^
+						   "\\operatorname{in} "       ^ sep7 ^ w ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1], k4', getCol [r1],
 		      "overload " ^ sep1 ^ x ^ sep2 ^ asep ^
 		      ": "        ^ sep3 ^ y ^ sep4 ^ bsep ^
@@ -2520,7 +2649,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep1 = sepLines (getLine [r]) l1 c1 ind
 		val sep2 = sepLines k1' l2 c2 ind
 		val asep = case sep2 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k2', getCol [r], D.printLabelledProgramString("\\operatorname{overload} " ^ sep1 ^ x ^ sep2 ^ asep ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k2', getCol [r], "overload " ^ sep1 ^ x ^ sep2 ^ asep ^ y)
@@ -2533,6 +2662,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDecList []                                    _   = (NONE, NONE, NONE, dots)
 	  | printDecList (x :: xs)                             ind =
 	    let val (l, k, c, x) = printDec x (dind ind)
@@ -2542,6 +2672,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j', c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printDecs (A.Decs (dl, _))                       ind =
 	    let val (l, k, c, x) = printDecList dl (pind ind)
 	    in
@@ -2557,44 +2688,48 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExplist []                                    _   = (NONE, NONE, NONE, "")
 	  | printExplist [e]                                   ind = printExp e ind
 	  | printExplist (e :: el)                             ind =
 	    let val (l, k, c, x) = printExp e ind
 		val (i, j, d, y) = printExplist el ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabExplist []                                 _   = (NONE, NONE, NONE, "")
 	  | printLabExplist [e]                                ind = printLabExp e ind
 	  | printLabExplist (e :: el)                          ind =
 	    let val (l, k, c, x) = printLabExp e ind
 		val (_, j, _, y) = printLabExplist el ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabExpSeq []                                  _   = (NONE, NONE, NONE, "")
 	  | printLabExpSeq [x]                                 ind = printLabExp x ind
 	  | printLabExpSeq (x :: xs)                           ind =
 	    let val (l, k, c, x) = printLabExp x ind
 		val (_, j, _, y) = printLabExpSeq xs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{;}" ^ y)
 		else (l, j, c, x ^ ";" ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabExp (A.LabExp (e, _, _, label, _))           ind =
 	    let
 		val (x1, x2, x3, x4) = printExp e ind
 	    in
-		
+
 		if !(D.debugProgramLabelling)
 		then (x1, x2, x3, D.printLabelledProgramString( x4 ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (x1, x2, x3, x4)
@@ -2608,10 +2743,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExpField (A.ExpField (tl, e, _, _, label, _))       ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabExp e ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{=}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ "=" ^ y)
@@ -2624,28 +2760,31 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExpFieldList []                                 _   = (NONE, NONE, NONE, "")
 	  | printExpFieldList [x]                                ind = printExpField x ind
 	  | printExpFieldList (x :: xs)                          ind =
 	    let val (l, k, c, x) = printExpField x ind
 		val (_, j, _, y) = printExpFieldList xs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExpFieldSlList []                               _   = (NONE, NONE, NONE, dots)
 	  | printExpFieldSlList (x :: xs)                        ind =
 	    let val (l, k, c, x) = printExpField x (dind ind)
 		val (i, j, d, y) = printExpFieldSlList xs ind
 		val sep = sepLines k i d ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, dots ^ "\\operatorname{,}" ^ x ^ "\\operatorname{,}" ^ sep ^ y)
 		else (l, j, c, dots ^ "," ^ x ^ "," ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printSeqExp (A.SeqExp (el, e, _, _, label, _))       ind =
 	    let
 		val (x1, x2, x3, x4) = printLabExpSeq (el @ [e]) ind
@@ -2657,32 +2796,33 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printSeqExp (A.SeqExpSl (pl, e, _, label, _))        ind =
 	    let val (l, k, c, x) = printPartDots pl ind
 		val (_, j, _, y) = printLabExp e ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{;}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ ";" ^ y)
 	    end
 	  | printSeqExp (A.SeqExpDots pl)                    ind = printPartDots pl ind
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printAtExp (A.AtExpId id)                        ind = printLongId id ind
 	  | printAtExp (A.AtExpScon sc)                      ind = printScon sc ind
 	  | printAtExp (A.AtExpTuple (el, rs, label, _))         ind =
 	    let val (_, _, _, x) = printLabExplist el ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
 	  | printAtExp (A.AtExpRecord (erl, rs, _, label, _))    ind =
 	    let val (_, _, _, x) = printExpFieldList erl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{\\{}" ^ x ^ "\\operatorname{\\}}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtExp (A.AtExpSlRec (erl, rs, label, _))        ind =
 	    let val (_, _, _, x) = printExpFieldSlList erl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{\\{}" ^ x ^ "\\operatorname{\\}}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
@@ -2702,12 +2842,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep4 = sepLines k2' (getLine [r3]) (getCol [r3]) ind
 		val isep = case sep2 of "" => " " | _ => ""
 		val esep = case sep4 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r3], getCol [r1],
 		      D.printLabelledProgramString("\\operatorname{let} " ^ sep1 ^ x ^ sep2 ^ isep ^
-		      "\\operatorname{in} "  ^ sep3 ^ y ^ sep4 ^ esep ^
-		      "\\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{in} "  ^ sep3 ^ y ^ sep4 ^ esep ^
+						   "\\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1], getLine [r3], getCol [r1],
 		      "let " ^ sep1 ^ x ^ sep2 ^ isep ^
 		      "in "  ^ sep3 ^ y ^ sep4 ^ esep ^
@@ -2728,14 +2868,14 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep4 = sepLines k2' (getLine [r3]) (getCol [r3]) ind
 		val isep = case sep2 of "" => " " | _ => ""
 		val esep = case sep4 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs,
 		      getLine (rev rs),
 		      getCol rs,
 		      D.printLabelledProgramString("\\operatorname{let} " ^ sep1 ^ x ^ sep2 ^ isep ^
-		      "\\operatorname{in} "  ^ sep3 ^ y ^ sep4 ^ esep ^
-		      "\\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{in} "  ^ sep3 ^ y ^ sep4 ^ esep ^
+						   "\\operatorname{end}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs,
 		      getLine (rev rs),
 		      getCol rs,
@@ -2745,35 +2885,35 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printAtExp (A.AtExpParen (e, r1, r2, label, _))      ind =
 	    let val (_, _, _, x) = printLabExp e ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r2], getCol [r1], D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1], getLine [r2], getCol [r1], "(" ^ x ^ ")")
 	    end
 	  | printAtExp (A.AtExpList (el, rs, label, _))          ind =
 	    let val (_, _, _, x) = printLabExplist el ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{[}" ^ x ^ "\\operatorname{]}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "[" ^ x ^ "]")
 	    end
 	  | printAtExp (A.AtExpProj (tl, r, _, label, _))        ind =
 	    let val (_, k, _, x) = printTyLab tl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{#}" ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "#" ^ x)
 	    end
 	  | printAtExp (A.AtExpSeq (seq, rs, label, _))          ind =
 	    let val (_, _, _, x) = printSeqExp seq ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
 	  | printAtExp (A.AtExpQuote (quotes, regs, label, _))   ind =
 	    let val (_, _, _, x) = printQuotes quotes ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine regs, getLine (rev regs), getCol regs, D.printLabelledProgramString("\\operatorname{`}" ^ x ^ "\\operatorname{`}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine regs, getLine (rev regs), getCol regs, "`" ^ x ^ "`" )
@@ -2786,20 +2926,21 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printQuote (A.Quote (str, reg, label, _))            _   =
 	    if !(D.debugProgramLabelling)
 	    then (getLine [reg], getLine [reg], getCol [reg], D.printLabelledProgramString( str ^ "")^"^{" ^ L.printLab(label)^"}")
 	    else (getLine [reg], getLine [reg], getCol [reg], str)
 	  | printQuote (A.Antiquote (exp, [reg], label, _))      ind = (* means it's an identifier *)
 	    let val (_, k, _, x) = printExp exp ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [reg], k, getCol [reg], D.printLabelledProgramString("\\operatorname{^}" ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [reg], k, getCol [reg], "^" ^ x)
 	    end
 	  | printQuote (A.Antiquote (exp, regs, label, _))       ind = (* otherwise it's an expression in parentheses *)
 	    let val (_, k, _, x) = printExp exp ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine regs, k, getCol regs, D.printLabelledProgramString("\\operatorname{^(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine regs, k, getCol regs, "^(" ^ x ^ ")")
@@ -2812,6 +2953,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printQuotes []                                   _   = (NONE, NONE, NONE, "")
 	  | printQuotes [e]                                  ind = printQuote e ind
 	  | printQuotes (e :: el)                            ind =
@@ -2820,10 +2962,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, x ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printExp (A.ExpAtExp ae)                         ind = printAtExp ae ind
 	  | printExp (A.ExpFn (m, r, label, _))                  ind =
 	    let val (_, k, _, x) = printMatch m ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{fn} " ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "fn " ^ x)
@@ -2831,7 +2974,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpApp (e, ae, _, _, _, label, _))       ind =
 	    let val (l, k, c, x) = printExp e ind
 		val (_, j, _, y) = printAtExp ae ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " " ^ y)
@@ -2844,13 +2987,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep2 = sepLines k1' (getLine [r2]) (getCol [r2]) ind
 		val sep3 = sepLines (getLine [r2]) l2 c2 ind
 		val osep = case sep2 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1],
 		      k2,
 		      getCol [r1],
 		      D.printLabelledProgramString("\\operatorname{case} " ^ sep1 ^ x ^ sep2 ^ osep ^
-		      "\\operatorname{of} "   ^ sep3 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{of} "   ^ sep3 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1],
 		      k2,
 		      getCol [r1],
@@ -2860,7 +3003,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpConsList (_, e1, e2, _, label, _))    ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
 		val (_, j, _, y) = printLabExp e2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname::} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " :: " ^ y)
@@ -2868,7 +3011,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpOp (s, _, e1, e2, _, label, _))       ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
 		val (_, j, _, y) = printLabExp e2 ind
-	    in (l, j, c, 
+	    in (l, j, c,
 		if !(D.debugProgramLabelling)
 		then D.printLabelledProgramString( x ^ " " ^ s ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}"
 		else x ^ " " ^ s ^ " " ^ y)
@@ -2876,7 +3019,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpOr (e1, e2, _, label, _))             ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
 		val (_, j, _, y) = printLabExp e2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{orelse} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " orelse " ^ y)
@@ -2884,7 +3027,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpAnd (e1, e2, _, label, _))            ind =
 	    let val (l, k, c, x) = printLabExp e1 ind
 		val (_, j, _, y) = printLabExp e2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{andalso} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " andalso " ^ y)
@@ -2892,7 +3035,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpTyped (e, t, _, label, _))            ind =
 	    let val (l, k, c, x) = printLabExp e ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " : " ^ y)
@@ -2914,14 +3057,14 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep5 = sepLines (getLine [r3]) l3 c3 ind
 		val tsep = case sep2 of "" => " " | _ => ""
 		val esep = case sep4 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs,
 		      k3,
 		      getCol rs,
 		      D.printLabelledProgramString("\\operatorname{if} "   ^ sep1 ^ x ^ sep2 ^ tsep ^
-		      "\\operatorname{then} " ^ sep3 ^ y ^ sep4 ^ esep ^
-		      "\\operatorname{else} " ^ sep5 ^ z ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{then} " ^ sep3 ^ y ^ sep4 ^ esep ^
+						   "\\operatorname{else} " ^ sep5 ^ z ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs,
 		      k3,
 		      getCol rs,
@@ -2937,13 +3080,13 @@ else (l, k, c, ldots ^ x ^ rdots)
 		val sep2 = sepLines k1' (getLine [r2]) (getCol [r2]) ind
 		val sep3 = sepLines (getLine [r2]) l2 c2 ind
 		val dsep = case sep2 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1],
 		      k2,
 		      getCol [r1],
 		      D.printLabelledProgramString("\\operatorname{while} " ^ sep1 ^ x ^ sep2 ^ dsep ^
-		      "\\operatorname{do} "    ^ sep3 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
+						   "\\operatorname{do} "    ^ sep3 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1],
 		      k2,
 		      getCol [r1],
@@ -2952,7 +3095,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    end
 	  | printExp (A.ExpRaise (e, r, label, _))               ind =
 	    let val (_, k, _, x) = printLabExp e ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r], k, getCol [r], D.printLabelledProgramString("\\operatorname{raise} " ^ x ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r], k, getCol [r], "raise " ^ x)
@@ -2960,7 +3103,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printExp (A.ExpHandle (e, m, _, label, _))           ind =
 	    let val (l1, k1, c1, x) = printLabExp e ind
 		val (_,  k2, _,  y) = printMatch m ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2, c1, D.printLabelledProgramString( x ^ " \\operatorname{handle} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2, c1, x ^ " handle " ^ y)
@@ -2973,6 +3116,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printMruleList []                                  _   = (NONE, NONE, NONE, dots)
 	  | printMruleList (mr :: mrl)                         ind =
 	    let val (l, k, c, x) = printMrule mr (dind ind)
@@ -2981,6 +3125,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ sep ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printMatch (A.Match (l, _, _))                   ind =
 	    let val (l, k, c, x) = printMruleList l (pind ind)
 	    in
@@ -2996,13 +3141,14 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printMrule (A.Mrule (p, e, r, label, _))             ind =
 	    let val (l1, k1, c1, x) = printLabPat p ind
 		val (l2, k2, c2, y) = printLabExp e ind
 		val sep1 = sepLines k1 (getLine [r]) (getCol [r]) ind
 		val sep2 = sepLines (getLine [r]) l2 c2 ind
 		val asep = case sep1 of "" => " " | _ => ""
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l1, k2, c1, D.printLabelledProgramString( x ^ sep1 ^ asep ^ "\\operatorname{=>} " ^ sep2 ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l1, k2, c1, x ^ sep1 ^ asep ^ "=> " ^ sep2 ^ y)
@@ -3015,39 +3161,43 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPatList []                                    _   = (NONE, NONE, NONE, "")
 	  | printPatList [p]                                   ind = printPat p ind
 	  | printPatList (p :: pl)                             ind =
 	    let val (l, k, c, x) = printPat p ind
 		val (_, j, _, y) = printPatList pl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabPatList []                                 _   = (NONE, NONE, NONE, "")
 	  | printLabPatList [p]                                ind = printLabPat p ind
 	  | printLabPatList (p :: pl)                          ind =
 	    let val (l, k, c, x) = printLabPat p ind
 		val (_, j, _, y) = printLabPatList pl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printOrPatList []                                  _   = (NONE, NONE, NONE, "")
 	  | printOrPatList [p]                                 ind = printLabPat p ind
 	  | printOrPatList (p :: pl)                           ind =
 	    let val (l, k, c, x) = printLabPat p ind
 		val (_, j, _, y) = printLabPatList pl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{|}" ^ y)
 		else (l, j, c, x ^ "|" ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPatDots []                                    _   = (NONE, NONE, NONE, dots)
 	  | printPatDots (p :: pl)                             ind =
 	    let val (l, k, c, x) = printPat p (dind ind)
@@ -3055,6 +3205,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	    in (l, j, c, dots ^ x ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabPat (A.LabPat (p, _, _, label, _))           ind =
 	    let
 		val (x1, x2, x3, x4) = printPat p ind
@@ -3071,10 +3222,11 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPatField (A.PatField (tl, p, _, _, label, _))       ind =
 	    let val (l, k, c, x) = printTyLab tl ind
 		val (_, j, _, y) = printLabPat p ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ "\\operatorname{=}" ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ "=" ^ y)
@@ -3083,7 +3235,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPatField (A.PatFieldAs (id, p, _, label, _))        ind =
 	    let val (l, k, c, x) = printLabIdTy id ind
 		val (_, j, _, y) = printLabPat p ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{as} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " as " ^ y)
@@ -3100,51 +3252,53 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPatFieldList []                                 _   = (NONE, NONE, NONE, "")
 	  | printPatFieldList [x]                                ind = printPatField x ind
 	  | printPatFieldList (x :: xs)                          ind =
 	    let val (l, k, c, x) = printPatField x ind
 		val (_, j, _, y) = printPatFieldList xs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ "\\operatorname{,}" ^ y)
 		else (l, j, c, x ^ "," ^ y)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printAtPat (A.AtPatWild (r, _))                  _   = (getLine [r], getLine [r], getCol [r], "_")
 	  | printAtPat (A.AtPatId id)                        ind = printLongId id ind
 	  | printAtPat (A.AtPatScon sc)                      ind = printScon sc ind
 	  | printAtPat (A.AtPatTuple (pl, rs, label, _))         ind =
 	    let val (_, _, _, x) = printLabPatList pl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
 	    end
 	  | printAtPat (A.AtPatRecord (prl, rs, _, label, _))    ind =
 	    let val (_, _, _, x) = printPatFieldList prl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("{" ^ x ^ "}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "{" ^ x ^ "}")
 	    end
 	  | printAtPat (A.AtPatParen (p, r1, r2, label, _))      ind =
 	    let val (_, _, _, x) = printLabPat p ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine [r1], getLine [r2], getCol [r1], D.printLabelledProgramString("\\operatorname{(}" ^  x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine [r1], getLine [r2], getCol [r1], "(" ^  x ^ ")")
 	    end
 	  | printAtPat (A.AtPatList (pl, rs, label, _))          ind =
 	    let val (_, _, _, x) = printLabPatList pl ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{[}" ^ x ^ "\\operatorname{]}"^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "[" ^ x ^ "]")
 	    end
 	  | printAtPat (A.AtPatOr (xs, rs, label, _))            ind =
 	    let val (_, _, _, x) = printOrPatList xs ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (getLine rs, getLine (rev rs), getCol rs, D.printLabelledProgramString("\\operatorname{(}" ^ x ^ "\\operatorname{)}" ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (getLine rs, getLine (rev rs), getCol rs, "(" ^ x ^ ")")
@@ -3157,11 +3311,12 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printIdentTy (A.IdentTyId id)                    ind = printIdent id ind
 	  | printIdentTy (A.IdentTyTy (id, t, _, _, _))      ind =
 	    let val (l, k, c, x) = printLabId id ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, x ^ " \\operatorname{:} " ^ y)
 		else (l, j, c, x ^ " : " ^ y)
@@ -3174,6 +3329,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printLabIdTy (A.LabIdTy (id, _, label, _))           ind =
 	    let
 		val (x1, x2, x3, x4) = printIdentTy id ind
@@ -3190,6 +3346,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
+	(** Helper function to printSlice', prints an abstract syntax tree node. *)
 	and printPat (A.PatAtPat ap)                         ind = printAtPat ap ind
 	  | printPat (A.PatApp (id, ap, _, _, label, _))         ind =
 	    let val (l, k, c, x) = printLongId id ind
@@ -3202,7 +3359,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPat (A.PatConsList (_, p1, p2, _, label, _))    ind =
 	    let val (l, k, c, x) = printLabPat p1 ind
 		val (_, j, _, y) = printLabPat p2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{::} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " :: " ^ y)
@@ -3210,7 +3367,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPat (A.PatOp (st, _, p1, p2, _, label, _))      ind =
 	    let val (l, k, c, x) = printLabPat p1 ind
 		val (_, j, _, y) = printLabPat p2 ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " " ^ st ^ " " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " " ^ st ^ " " ^ y)
@@ -3218,7 +3375,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPat (A.PatTyped (p, t, _, label, _))            ind =
 	    let val (l, k, c, x) = printLabPat p ind
 		val (_, j, _, y) = printLabType t ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{:} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " : " ^ y)
@@ -3226,7 +3383,7 @@ else (l, k, c, ldots ^ x ^ rdots)
 	  | printPat (A.PatAs (id, p, _, label, _))              ind =
 	    let val (l, k, c, x) = printLabIdTy id ind
 		val (_, j, _, y) = printLabPat p ind
-	    in 
+	    in
 		if !(D.debugProgramLabelling)
 		then (l, j, c, D.printLabelledProgramString( x ^ " \\operatorname{as} " ^ y ^ "")^"^{" ^ L.printLab(label)^"}")
 		else (l, j, c, x ^ " as " ^ y)
@@ -3239,279 +3396,333 @@ else (l, k, c, ldots ^ x ^ rdots)
 		else (l, k, c, ldots ^ x ^ rdots)
 	    end
 
-    (*val _ = Debug.printdebug2 ("PRINTING")*)
-
     in printProgs slprog indent
     end
 
+(** Prinst a program slice with a seperator. *)
 fun printSlice slprog sep = printSlice' slprog "" sep
 
+(** Calls printSlice' to print a slice. *)
 fun printOneSlice sl bslice sep = "\n" ^ printSlice' sl (sep ^ "  ") bslice ^ "\n" ^ sep
 
+(** Prints a slice in SML format. *)
 fun printOneSmlSlice sl = "slice = " ^ "\"" ^ printSlice sl true ^ "\""
 
+(** Prints a list of slices. *)
 fun printSlices []        = ""
   | printSlices [x]       = "SLICE:\n" ^ printSlice x true
   | printSlices (x :: xs) = "SLICE:\n" ^ printSlice x true ^ "\n" ^ printSlices xs
 
-
-
-(* SLICER *)
-
-
-
+(** Flattens an abstract syntax tree node. *)
 fun flattenType [] = []
   | flattenType ((A.TypeDots sltp) :: xs) = sltp @ (flattenType xs)
   | flattenType (x :: xs) = (A.PartType x) :: (flattenType xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTypeVar [] = []
   | flattenTypeVar (A.TypeVarDots :: xs) = flattenTypeVar xs
   | flattenTypeVar (x :: xs) = (A.PartType (A.TypeOneVar x)) :: (flattenTypeVar xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabTypeVar [] = []
   | flattenLabTypeVar ((A.LabTypeVarDots sltp) :: xs) = (flattenTypeVar sltp) @ (flattenLabTypeVar xs)
   | flattenLabTypeVar ((A.LabTypeVar (t, _, _, _)) :: xs) = (A.PartType (A.TypeOneVar t)) :: (flattenLabTypeVar xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabType [] = []
   | flattenLabType ((A.LabTypeDots sltp) :: xs) = sltp @ (flattenLabType xs)
   | flattenLabType ((A.LabType (t, _, _, _)) :: xs) = (A.PartType t) :: (flattenLabType xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTypeRow [] = []
   | flattenTypeRow ((A.TypeRowDots sltp) :: xs) = sltp @ (flattenTypeRow xs)
   | flattenTypeRow (x :: xs) = (A.PartSeq x) :: (flattenTypeRow xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenSeqExp [] = []
   | flattenSeqExp ((A.SeqExpDots slp) :: xs) = slp @ (flattenSeqExp xs)
   | flattenSeqExp _ = raise EH.DeadBranch "flattening of a row of expressions failed" (* we might want to relax this condition *)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenAtExp [] = []
   | flattenAtExp ((A.AtExpDots slp) :: xs) = slp @ (flattenAtExp xs)
   | flattenAtExp (x :: xs) = (A.PartExp (A.ExpAtExp x)) :: (flattenAtExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenExp [] = []
   | flattenExp ((A.ExpDots slp) :: xs) = slp @ (flattenExp xs)
   | flattenExp (x :: xs) = (A.PartExp x) :: (flattenExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenQuote [] = []
   | flattenQuote ((A.QuoteDots parts) :: xs) = parts @ (flattenQuote xs)
   | flattenQuote ((A.Quote _) :: xs) = flattenQuote xs
   | flattenQuote ((A.Antiquote (exp, _, _, _)) :: xs) = (A.PartExp exp) :: (flattenQuote xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabExp [] = []
   | flattenLabExp ((A.LabExpDots slp) :: xs) = slp @ (flattenLabExp xs)
   | flattenLabExp ((A.LabExp (e, _, _, _, _)) :: xs) = (A.PartExp e) :: (flattenLabExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenDec [] = []
   | flattenDec ((A.DecDots slp) :: xs) = slp @ (flattenDec xs)
   | flattenDec (x :: xs) = (A.PartDec x) :: (flattenDec xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenAtPat [] = []
   | flattenAtPat ((A.AtPatDots slp) :: xs) = slp @ (flattenAtPat xs)
   | flattenAtPat (x :: xs) = (A.PartPat (A.PatAtPat x)) :: (flattenAtPat xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenPat [] = []
   | flattenPat ((A.PatDots slp) :: xs) = slp @ (flattenPat xs)
   | flattenPat (x :: xs) = (A.PartPat x) :: (flattenPat xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabPat [] = []
   | flattenLabPat ((A.LabPatDots slp) :: xs) = slp @ (flattenLabPat xs)
   | flattenLabPat ((A.LabPat (p, _, _, _, _)) :: xs) = (A.PartPat p) :: (flattenLabPat xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabId [] = []
   | flattenLabId ((A.LabIdDots pl) :: xs) = pl @ (flattenLabId xs)
   | flattenLabId ((A.LabId (id, _, _, _)) :: xs) = (A.PartLgid (A.LongIdId id)) :: (flattenLabId xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenIdent [] = []
   | flattenIdent (A.IdentDots :: xs) = flattenIdent xs
   | flattenIdent (x :: xs) = (A.PartLgid (A.LongIdId x)) :: (flattenIdent xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabClass [] = []
   | flattenLabClass ((A.LabClassDots pl) :: xs) = pl @ (flattenLabClass xs)
   | flattenLabClass ((A.LabClass (id, _, _, _)) :: xs) = (A.PartClass id) :: (flattenLabClass xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenClass [] = []
   | flattenClass (A.ClassDots :: xs) = flattenClass xs
   | flattenClass (x :: xs) = (A.PartClass x) :: (flattenClass xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTyClass [] = []
   | flattenTyClass ((A.TyClassDots pl) :: xs) = pl @ (flattenTyClass xs)
   | flattenTyClass ((A.TyClassCl (cl, _, _, _)) :: xs) = (flattenLabClass [cl]) @ (flattenTyClass xs)
   | flattenTyClass ((A.TyClassTy (ty, _, _)) :: xs) = (flattenType [ty]) @ (flattenTyClass xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabTyClass [] = []
   | flattenLabTyClass ((A.LabTyClassDots slp) :: xs) = slp @ (flattenLabTyClass xs)
   | flattenLabTyClass ((A.LabTyClass (x, _, _, _)) :: xs) = (flattenTyClass [x]) @ (flattenLabTyClass xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTyClassSeq [] = []
   | flattenTyClassSeq ((A.TyClassSeqDots pl) :: xs) = pl @ (flattenTyClassSeq xs)
   | flattenTyClassSeq ((A.TyClassSeqOne (t, _, _, _)) :: xs) = (flattenTyClass [t]) @ (flattenTyClassSeq xs)
   | flattenTyClassSeq ((A.TyClassSeqEm _) :: xs) = (flattenTyClassSeq xs)
   | flattenTyClassSeq ((A.TyClassSeqSeq (tl, _, _, _)) :: xs) = (flattenLabTyClass tl) @ (flattenTyClassSeq xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTyCon [] = []
   | flattenTyCon (A.TyConDots :: xs) = flattenTyCon xs
   | flattenTyCon (x :: xs) = (A.PartTyCon (A.LongTyConId x)) :: (flattenTyCon xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenSigId [] = []
   | flattenSigId (A.SigIdDots :: xs) = flattenSigId xs
   | flattenSigId (x :: xs) = (A.PartSigid x) :: (flattenSigId xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongId [] = []
   | flattenLongId ((A.LongIdDots pl) :: xs) = pl @ (flattenLongId xs)
   | flattenLongId (x :: xs) = (A.PartLgid x) :: (flattenLongId xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongTyCon [] = []
   | flattenLongTyCon ((A.LongTyConDots pl) :: xs) = pl @ (flattenLongTyCon xs)
   | flattenLongTyCon (x :: xs) = (A.PartTyCon x) :: (flattenLongTyCon xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongStrId [] = []
   | flattenLongStrId ((A.LongStrIdDots pl) :: xs) = pl @ flattenLongStrId xs
   | flattenLongStrId (x :: xs) = (A.PartLgsid x) :: (flattenLongStrId xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongStrId' [] = []
   | flattenLongStrId' ((A.LongStrIdDots x) :: (A.LongStrIdDots y):: xs) = flattenLongStrId' ((A.LongStrIdDots (x @ y)) :: xs)
   | flattenLongStrId' ((A.LongStrIdDots []) :: xs) = flattenLongStrId' xs
   | flattenLongStrId' (x :: xs) = x :: (flattenLongStrId' xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenSigId' [] = []
   | flattenSigId' (A.SigIdDots :: xs) = flattenSigId' xs
   | flattenSigId' (x :: xs) = x :: (flattenSigId' xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenIdent' [] = []
   | flattenIdent' (A.IdentDots :: xs) = flattenIdent' xs
   | flattenIdent' (x :: xs) = x :: (flattenIdent' xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenIdentTy [] = []
   | flattenIdentTy ((A.IdentTyDots pl) :: xs) = pl @ (flattenIdentTy xs)
   | flattenIdentTy (x :: xs) = (A.PartIdTy x) :: (flattenIdentTy xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongTyCon [] = []
   | flattenLongTyCon ((A.LongTyConDots pl) :: xs) = pl @ (flattenLongTyCon xs)
   | flattenLongTyCon (x :: xs) = (A.PartTyCon x) :: (flattenLongTyCon xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongTyConEq [] = []
   | flattenLongTyConEq ((A.LongTyConEqDots pl) :: xs) = pl @ (flattenLongTyConEq xs)
   | flattenLongTyConEq ((A.LongTyConEq (ys, _, _, _)) :: xs) = (flattenLongTyCon ys) @ (flattenLongTyConEq xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLongStrIdEq [] = []
   | flattenLongStrIdEq ((A.LongStrIdEqDots pl) :: xs) = pl @ (flattenLongStrIdEq xs)
   | flattenLongStrIdEq ((A.LongStrIdEq (ys, _, _)) :: xs) = (flattenLongStrId ys) @ (flattenLongStrIdEq xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenStrId [] = []
   | flattenStrId (A.StrIdDots :: xs) = flattenStrId xs
   | flattenStrId (x :: xs) = (A.PartLgsid (A.LongStrIdId x)) :: (flattenStrId xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenConBind [] = []
   | flattenConBind ((A.ConBindDots x) :: (A.ConBindDots y) :: xs) = flattenConBind ((A.ConBindDots (x @ y)) ::  xs)
   | flattenConBind ((A.ConBindDots []) :: xs) = flattenConBind xs
   | flattenConBind (x :: xs) = x :: (flattenConBind xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenConDescOne [] = []
   | flattenConDescOne ((A.ConDescOneDots x) :: (A.ConDescOneDots y) :: xs) = flattenConDescOne ((A.ConDescOneDots (x @ y)) ::  xs)
   | flattenConDescOne ((A.ConDescOneDots []) :: xs) = flattenConDescOne xs
   | flattenConDescOne (x :: xs) = x :: (flattenConDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenDatBind [] = []
   | flattenDatBind ((A.DatBindDots x) :: (A.DatBindDots y) :: xs) = flattenDatBind ((A.DatBindDots (x @ y)) :: xs)
   | flattenDatBind ((A.DatBindDots []) :: xs) = flattenDatBind xs
   | flattenDatBind (x :: xs) = x :: (flattenDatBind xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTypBind [] = []
   | flattenTypBind ((A.TypBindDots x) :: (A.TypBindDots y) :: xs) = flattenTypBind ((A.TypBindDots (x @ y)) :: xs)
   | flattenTypBind ((A.TypBindDots []) :: xs) = flattenTypBind xs
   | flattenTypBind (x :: xs) = x :: (flattenTypBind xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenExBind [] = []
   | flattenExBind ((A.ExBindDots x) :: (A.ExBindDots y) :: xs) = flattenExBind ((A.ExBindDots (x @ y)) :: xs)
   | flattenExBind ((A.ExBindDots []) :: xs) = flattenExBind xs
   | flattenExBind (x :: xs) = x :: (flattenExBind xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenValBindCore [] = []
   | flattenValBindCore ((A.ValBindCoreDots x) :: (A.ValBindCoreDots y) :: xs) = flattenValBindCore ((A.ValBindCoreDots (x @ y)) :: xs)
   | flattenValBindCore ((A.ValBindCoreDots []) :: xs) = flattenValBindCore xs
   | flattenValBindCore (x :: xs) = x :: (flattenValBindCore xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLTReaDOne [] = []
   | flattenLTReaDOne ((A.LTReaDOneDots x) :: (A.LTReaDOneDots y) :: xs) = flattenLTReaDOne ((A.LTReaDOneDots (x @ y)) :: xs)
   | flattenLTReaDOne ((A.LTReaDOneDots []) :: xs) = flattenLTReaDOne xs
   | flattenLTReaDOne (x :: xs) = x :: (flattenLTReaDOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenMrule [] = []
   | flattenMrule ((A.MruleDots x) :: (A.MruleDots y) :: xs) = flattenMrule ((A.MruleDots (x @ y)) :: xs)
   | flattenMrule ((A.MruleDots []) :: xs) = flattenMrule xs
   | flattenMrule (x :: xs) = x :: (flattenMrule xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTyField [] = []
   | flattenTyField ((A.TyFieldDots x) :: (A.TyFieldDots y) :: xs) = flattenTyField ((A.TyFieldDots (x @ y)) :: xs)
   | flattenTyField ((A.TyFieldDots []) :: xs) = flattenTyField xs
   | flattenTyField (x :: xs) = x :: (flattenTyField xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenExpField [] = []
   | flattenExpField ((A.ExpFieldDots x) :: (A.ExpFieldDots y) :: xs) = flattenExpField ((A.ExpFieldDots (x @ y)) :: xs)
   | flattenExpField ((A.ExpFieldDots []) :: xs) = flattenExpField xs
   | flattenExpField (x :: xs) = x :: (flattenExpField xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenPatField [] = []
   | flattenPatField ((A.PatFieldDots x) :: (A.PatFieldDots y) :: xs) = flattenPatField ((A.PatFieldDots (x @ y)) :: xs)
   | flattenPatField (x :: xs) = x :: (flattenPatField xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenFValBindOne [] = []
   | flattenFValBindOne ((A.FVBOneDots x) :: (A.FVBOneDots y) :: xs) = flattenFValBindOne ((A.FVBOneDots (x @ y)) :: xs)
   | flattenFValBindOne ((A.FVBOneDots []) :: xs) = flattenFValBindOne xs
   | flattenFValBindOne (x :: xs) = x :: (flattenFValBindOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenFValBindCore [] = []
   | flattenFValBindCore ((A.FVBCoreDots x) :: (A.FVBCoreDots y) :: xs) = flattenFValBindCore ((A.FVBCoreDots (x @ y)) :: xs)
   | flattenFValBindCore ((A.FVBCoreDots []) :: xs) = flattenFValBindCore xs
   | flattenFValBindCore (x :: xs) = x :: (flattenFValBindCore xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenDecs [] = []
   | flattenDecs ((A.DecsDots pl) :: xs) = pl @ (flattenDecs xs)
   | flattenDecs ((A.Decs (dl, _)) :: xs) = (flattenDec dl) @ (flattenDecs xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenSpecOne [] = []
   | flattenSpecOne ((A.SpecOneDots pl) :: xs) = pl @ (flattenSpecOne xs)
   | flattenSpecOne (x :: xs) = (A.PartSpec x) :: (flattenSpecOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabSigExp [] = []
   | flattenLabSigExp ((A.LabSigExpDots slp) :: xs) = slp @ (flattenLabSigExp xs)
   | flattenLabSigExp ((A.LabSigExp (e, _, _, _, _)) :: xs) = (A.PartSige e) :: (flattenLabSigExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenSigExp [] = []
   | flattenSigExp ((A.SigExpDots pl) :: xs) = pl @ (flattenSigExp xs)
   | flattenSigExp (x :: xs) = (A.PartSige x) :: (flattenSigExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenLabStrExp [] = []
   | flattenLabStrExp ((A.LabStrExpDots slp) :: xs) = slp @ (flattenLabStrExp xs)
   | flattenLabStrExp ((A.LabStrExp (e, _, _, _, _)) :: xs) = (A.PartStre e) :: (flattenLabStrExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenStrExp [] = []
   | flattenStrExp ((A.StrExpDots pl) :: xs) = pl @ (flattenStrExp xs)
   | flattenStrExp (x :: xs) = (A.PartStre x) :: (flattenStrExp xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenSpec [] = []
   | flattenSpec ((A.Spec (spol, _)) :: xs) = (flattenSpecOne spol) @ (flattenSpec xs)
   | flattenSpec ((A.SpecDots pl) :: xs) = pl @ (flattenSpec xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenStrDec [] = []
   | flattenStrDec ((A.StrDecDots pl) :: xs) = pl @ (flattenStrDec xs)
   | flattenStrDec ((A.StrDec (x, _, _)) :: xs) = (flattenStrDecOne x) @ (flattenStrDec xs)
 
-(* TODO: TO CHANGE! *)
+(** Flattens an abstract syntax tree node. *)
 and flattenStrDecOne [] = []
   | flattenStrDecOne ((A.StrDecOneDots pl) :: xs) = pl @ (flattenStrDecOne xs)
   | flattenStrDecOne ((A.StrDecOneDec ds) :: xs) = (flattenDecs [ds]) @ (flattenStrDecOne xs)
   | flattenStrDecOne (x :: xs) = (A.PartStrd x) :: (flattenStrDecOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenSigDec [] = []
   | flattenSigDec ((A.SigDecDots pl) :: xs) = pl @ (flattenSigDec xs)
   | flattenSigDec ((x as (A.SigDec _)) :: xs) = (A.PartSigd x) :: (flattenSigDec xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenATopDec [] = []
   | flattenATopDec ((A.ATopDecDots pl) :: xs) = pl @ (flattenATopDec xs)
   | flattenATopDec ((A.ATopDecStr s) :: xs) = (flattenStrDec [s]) @ (flattenATopDec xs)
   | flattenATopDec ((A.ATopDecSig s) :: xs) = (flattenSigDec [s]) @ (flattenATopDec xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenSmlTes [] = []
   | flattenSmlTes ((A.SmlTesDots pl) :: xs) = pl @ (flattenSmlTes xs)
   | flattenSmlTes (x :: xs) = (A.PartTes x) :: (flattenSmlTes xs)
@@ -3520,70 +3731,82 @@ and flattenSmlTes [] = []
   | flattenFunDec ((A.FunDecDots pl) :: xs) = pl @ (flattenFunDec xs)
   | flattenFunDec ((x as (A.FunDec _)) :: xs) = (A.PartFund x) :: (flattenFunDec xs)*)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenValDescOne [] = []
   | flattenValDescOne ((A.ValDescOneDots x) :: (A.ValDescOneDots y) :: xs) = flattenValDescOne ((A.ValDescOneDots (x @ y)) :: xs)
   | flattenValDescOne ((A.ValDescOneDots []) :: xs) = flattenValDescOne xs
   | flattenValDescOne (x :: xs) = x :: (flattenValDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenTypDescOne [] = []
   | flattenTypDescOne ((A.TypDescOneDots x) :: (A.TypDescOneDots y) :: xs) = flattenTypDescOne ((A.TypDescOneDots (x @ y)) :: xs)
   | flattenTypDescOne ((A.TypDescOneDots []) :: xs) = flattenTypDescOne xs
   | flattenTypDescOne (x :: xs) = x :: (flattenTypDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenExcDescOne [] = []
   | flattenExcDescOne ((A.ExcDescOneDots x) :: (A.ExcDescOneDots y) :: xs) = flattenExcDescOne ((A.ExcDescOneDots (x @ y)) :: xs)
   | flattenExcDescOne ((A.ExcDescOneDots []) :: xs) = flattenExcDescOne xs
   | flattenExcDescOne (x :: xs) = x :: (flattenExcDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenTdrDescOne [] = []
   | flattenTdrDescOne ((A.TdrDescOneDots x) :: (A.TdrDescOneDots y) :: xs) = flattenTdrDescOne ((A.TdrDescOneDots (x @ y)) :: xs)
   | flattenTdrDescOne ((A.TdrDescOneDots []) :: xs) = flattenTdrDescOne xs
   | flattenTdrDescOne (x :: xs) = x :: (flattenTdrDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenDatDescOne [] = []
   | flattenDatDescOne ((A.DatDescOneDots x) :: (A.DatDescOneDots y) :: xs) = flattenDatDescOne ((A.DatDescOneDots (x @ y)) :: xs)
   | flattenDatDescOne ((A.DatDescOneDots []) :: xs) = flattenDatDescOne xs
   | flattenDatDescOne (x :: xs) = x :: (flattenDatDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenStrDescOne [] = []
   | flattenStrDescOne ((A.StrDescOneDots x) :: (A.StrDescOneDots y) :: xs) = flattenStrDescOne ((A.StrDescOneDots (x @ y)) :: xs)
   | flattenStrDescOne ((A.StrDescOneDots []) :: xs) = flattenStrDescOne xs
   | flattenStrDescOne (x :: xs) = x :: (flattenStrDescOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenStrBindOne [] = []
   | flattenStrBindOne ((A.StrBindOneDots x) :: (A.StrBindOneDots y) :: xs) = flattenStrBindOne ((A.StrBindOneDots (x @ y)) :: xs)
   | flattenStrBindOne ((A.StrBindOneDots []) :: xs) = flattenStrBindOne xs
   | flattenStrBindOne (x :: xs) = x :: (flattenStrBindOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenSigBindOne [] = []
   | flattenSigBindOne ((A.SigBindOneDots x) :: (A.SigBindOneDots y) :: xs) = flattenSigBindOne ((A.SigBindOneDots (x @ y)) :: xs)
   | flattenSigBindOne ((A.SigBindOneDots []) :: xs) = flattenSigBindOne xs
   | flattenSigBindOne (x :: xs) = x :: (flattenSigBindOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 and flattenFunBindOne [] = []
   | flattenFunBindOne ((A.FunBindODots x) :: (A.FunBindODots y) :: xs) = flattenFunBindOne ((A.FunBindODots (x @ y)) :: xs)
   | flattenFunBindOne ((A.FunBindODots []) :: xs) = flattenFunBindOne xs
   | flattenFunBindOne (x :: xs) = x :: (flattenFunBindOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenTopDecOne [] = []
   | flattenTopDecOne ((A.TopDecOneDots x) :: (A.TopDecOneDots y) :: xs) = flattenTopDecOne ((A.TopDecOneDots (x @ y)) :: xs)
   | flattenTopDecOne ((A.TopDecOneDots []) :: xs) = flattenTopDecOne xs
   | flattenTopDecOne (x :: xs) = x :: (flattenTopDecOne xs)
 
+(** Flattens an abstract syntax tree node. *)
 fun flattenProgOne [] = []
   | flattenProgOne ((A.ProgOneDots x) :: (A.ProgOneDots y) :: xs) = flattenProgOne ((A.ProgOneDots (x @ y)) :: xs)
   | flattenProgOne ((A.ProgOneDots []) :: xs) = flattenProgOne xs
   | flattenProgOne (x :: xs) = x :: (flattenProgOne xs)
 
 
-(* functions defined in case something wrong, uses the error hadler *)
+(** Function defined in case something wrong, uses the error hadler *)
 fun msgEmpty labs =
     EH.msg ("slicing constraint non respected: " ^ L.toString labs ^ " should be empty")
+(** Function defined in case something wrong, uses the error hadler *)
 fun msgOne lab labs =
     EH.msg ("slicing constraint non respected: " ^ L.printLab lab ^
 	    " should be the only element in " ^ L.toString labs)
 
-(* generates type error slices *)
+(** Generates type error slices *)
 fun slice prog labels =
 
     let
@@ -3594,34 +3817,31 @@ fun slice prog labels =
 	    (if strictLab then L.split (Option.valOf nxt) ll else (ll, ll))
 	    handle Option => raise EH.DeadBranch "undefined 'next' label"
 
-	(*fun splitListTwo (SOME nxt1) (SOME nxt2) ll =
-		  if nxt1 < nxt2
-		  then L.splitList nxt1 ll
-		  else (fn (x, y) => (y, x)) (L.splitList nxt2 ll)
-		| splitListTwo (SOME nxt) NONE ll = L.splitList nxt ll
-		| splitListTwo NONE _ _ = raise EH.DeadBranch "undefined 'next' label"*)
-
 	fun splitListFirst (SOME nxt) (SOME fst) ll = L.split2 fst nxt ll
-	  (*| splitListFirst (SOME nxt) NONE ll = L.splitList nxt ll*)
 	  | splitListFirst _ _ ll = (L.empty, ll) (*raise EH.DeadBranch "undefined 'next' label"*)
 
+	(** If #strictLab is set to true, tests that l = ll, otherwise checks l \in ll. *)
 	fun isinone l ll = if strictLab then L.isinone l ll else L.isin l ll
+	(** Tests whether the ll set is empty. *)
 	fun isEmpty ll = L.isEmpty ll andalso strictLab
-	(* Switching these two bool above leads to a compiler bug!?
+	(** Switching these two bool above leads to a compiler bug!?
 	 * Apparently isEmpty needs to be applied to get the bug.
 	 * Apparently strictLab needs to be false *)
 	fun isEmptyL ll = L.isEmpty ll orelse not strictLab
+	(** Tests whether the first parameter of labels is in the set of the second. *)
 	fun isin l ll = L.isin l ll
 
-	(* This is for debugging only *)
+	(** This is for debugging only *)
 	fun printFirst NONE     = "-"
 	  | printFirst (SOME l) = L.printLab l
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	fun sl_sl_part x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_part x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_part (A.PartExp   e) ll = flattenExp       [sl_exp       e ll]
 	  | sl_part (A.PartDec   d) ll = flattenDec       [sl_dec       d ll]
 	  | sl_part (A.PartType  t) ll = flattenType      [sl_type      t ll]
@@ -3641,11 +3861,13 @@ fun slice prog labels =
 	  | sl_part (A.PartTes   t) ll = flattenSmlTes    [sl_smltes    t ll]
 	  | sl_part (A.PartClass c) ll = flattenClass     [sl_class     c ll]
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_partlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_partlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_partlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -3658,11 +3880,13 @@ fun slice prog labels =
 	    in p @ ps
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_scon x ll =
 	    if isEmpty ll
 	    then A.SconDots
 	    else sl_scon x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_scon (A.SconInt (st, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.SconInt (st, v, r, l, n)
@@ -3698,11 +3922,13 @@ fun slice prog labels =
 	    then A.SconDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_pcon x ll =
 	    if isEmpty ll
 	    then A.PconDots
 	    else sl_pcon x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_pcon (A.PconBool (st, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.PconBool (st, v, r, l, n)
@@ -3726,22 +3952,26 @@ fun slice prog labels =
 	    then A.PconDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labid x ll =
 	    if isEmpty ll
 	    then A.LabIdDots []
 	    else sl_labid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labid (A.LabId (id, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabId (sl_sl_ident id (L.delete l ll), rl, l, n)
 	    else A.LabIdDots (flattenIdent [sl_ident id ll])
 	  | sl_labid (A.LabIdDots pl) ll = A.LabIdDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_ident x ll =
 	    if isEmpty ll
 	    then A.IdentDots
 	    else sl_ident x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_ident (A.Ident (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.Ident (s, v, r, l, n)
@@ -3757,22 +3987,26 @@ fun slice prog labels =
 	    then A.IdentDots
 	    else raise EH.DeadBranch  (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labclass x ll =
 	    if isEmpty ll
 	    then A.LabClassDots []
 	    else sl_labclass x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labclass (A.LabClass (id, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabClass (sl_sl_class id (L.delete l ll), rl, l, n)
 	    else A.LabClassDots (flattenClass [sl_class id ll])
 	  | sl_labclass (A.LabClassDots pl) ll = A.LabClassDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_class x ll =
 	    if isEmpty ll
 	    then A.ClassDots
 	    else sl_class x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_class (A.Class (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.Class (s, v, r, l, n)
@@ -3784,11 +4018,13 @@ fun slice prog labels =
 	    then A.ClassDots
 	    else raise EH.DeadBranch  (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strid x ll =
 	    if isEmpty ll
 	    then A.StrIdDots
 	    else sl_strid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strid (A.StrId (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.StrId (s, v, r, l, n)
@@ -3800,11 +4036,13 @@ fun slice prog labels =
 	    then A.StrIdDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigid x ll =
 	    if isEmpty ll
 	    then A.SigIdDots
 	    else sl_sigid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigid (A.SigId (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.SigId (s, v, r, l, n)
@@ -3816,11 +4054,13 @@ fun slice prog labels =
 	    then A.SigIdDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_funid x ll =
 	    if isEmpty ll
 	    then A.FunIdDots
 	    else sl_funid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_funid (A.FunId (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.FunId (s, v, r, l, n)
@@ -3832,11 +4072,13 @@ fun slice prog labels =
 	    then A.FunIdDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tycon x ll =
 	    if isEmpty ll
 	    then A.TyConDots
 	    else sl_tycon x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tycon (A.TyCon (st, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.TyCon (st, v, r, l, n)
@@ -3848,11 +4090,13 @@ fun slice prog labels =
 	    then A.TyConDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longid x ll =
 	    if isEmpty ll
 	    then A.LongIdDots []
 	    else sl_longid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longid (A.LongIdQual (sid, lid, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getStrIdNext sid
@@ -3876,11 +4120,13 @@ fun slice prog labels =
 	       | x             => A.LongIdId x)
 	  | sl_longid (A.LongIdDots pl) ll = A.LongIdDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longtycon x ll =
 	    if isEmpty ll
 	    then A.LongTyConDots []
 	    else sl_longtycon x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longtycon (A.LongTyConQual (sid, ltc, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getStrIdNext sid
@@ -3903,11 +4149,13 @@ fun slice prog labels =
 	       | x             => A.LongTyConId x)
 	  | sl_longtycon (A.LongTyConDots pl) ll = A.LongTyConDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tylab x ll =
 	    if isEmpty ll
 	    then A.TyLabDots
 	    else sl_tylab x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tylab (A.TyLab (s, r, l, n)) ll =
 	    if isinone l ll
 	    then A.TyLab (s, r, l, n)
@@ -3919,11 +4167,13 @@ fun slice prog labels =
 	    then A.TyLabDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typevar x ll =
 	    if isEmpty ll
 	    then A.TypeVarDots
 	    else sl_typevar x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typevar (A.TypeVar (s, v, r, l, n)) ll =
 	    if isinone l ll
 	    then A.TypeVar (s, v, r, l, n)
@@ -3943,9 +4193,11 @@ fun slice prog labels =
 	    then A.TypeVarDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typevarlist xs ll = sl_typevarlist xs ll
 
 	(* do something for the regions? - No *)
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typevarlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -3958,11 +4210,13 @@ fun slice prog labels =
 	    in y :: ys
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typevardotlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_typevarlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typevardotlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -3975,8 +4229,10 @@ fun slice prog labels =
 	    in y :: ys
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtyvarlist xs ll = sl_labtyvarlist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtyvarlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -3989,11 +4245,13 @@ fun slice prog labels =
 	    in y :: ys
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtyvardotlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_labtyvardotlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtyvardotlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4008,11 +4266,13 @@ fun slice prog labels =
 	    in y @ ys
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtyvar x ll =
 	    if isEmpty ll
 	    then A.LabTypeVarDots []
 	    else sl_labtyvar x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtyvar (A.LabTypeVar (tv, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabTypeVar (sl_sl_typevar tv (L.delete l ll), rl, l, n)
@@ -4020,11 +4280,13 @@ fun slice prog labels =
 	  | sl_labtyvar (A.LabTypeVarDots tvl) ll =
 	    A.LabTypeVarDots (sl_typevarlist tvl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tyvarseq x ll =
 	    if isEmpty ll
 	    then A.TypeVarSeqDots []
 	    else sl_tyvarseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tyvarseq (A.TypeVarSeqOne (tv, r, l, n)) ll =
 	    if isin l ll
 	    then A.TypeVarSeqOne (sl_sl_typevar tv (L.delete l ll), r, l, n)
@@ -4046,14 +4308,16 @@ fun slice prog labels =
 	  | sl_tyvarseq (A.TypeVarSeqDots tvl) ll =
 	    A.TypeVarSeqDots (sl_typevarlist tvl ll)
 	(* Can we have an error inside the parentheses without having the parentheses in the error?
-	         Do we want to use the same function sl_typevarlist in the else branch?
-                    - In the else branch we don't have the row structure in the slice (l') so maybe
-                      we don't care about the position of each variable.
-                      This remark stands for all sort of row I guess *)
+		 Do we want to use the same function sl_typevarlist in the else branch?
+		    - In the else branch we don't have the row structure in the slice (l') so maybe
+		      we don't care about the position of each variable.
+		      This remark stands for all sort of row I guess *)
 	(* I took care of this case - do the same for the other rows - the flattening already take care of that *)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtypelist xs ll = sl_labtypelist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtypelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4066,22 +4330,26 @@ fun slice prog labels =
 	    in slty :: sltl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtype x ll =
 	    if isEmpty ll
 	    then A.LabTypeDots []
 	    else sl_labtype x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtype (A.LabType (t, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabType (sl_sl_type t (L.delete l ll), rl, l, n)
 	    else A.LabTypeDots (flattenType [sl_type t ll])
 	  | sl_labtype (A.LabTypeDots pl) ll = A.LabTypeDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tyfield x ll =
 	    if isEmpty ll
 	    then A.TyFieldDots []
 	    else sl_tyfield x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tyfield (A.TyField (tl, t, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getTyLabNext tl
@@ -4089,7 +4357,7 @@ fun slice prog labels =
 		     val sltl = sl_sl_tylab tl lll
 		     val slt  = sl_sl_labtype t llr
 		 in A.TyField (sltl, slt, r, l, n)
-	  	 end
+		 end
 	    else let val nxt = A.getTyLabNext tl
 		     val (lll, llr) = splitList nxt ll
 		     val sltl = sl_sl_tylab tl lll
@@ -4097,11 +4365,13 @@ fun slice prog labels =
 		 in case sltl of
 			A.TyLabDots => A.TyFieldDots (flattenLabType [slt])
 		      | _             => A.TyField (sltl, slt, r, l, n)
-	  	 end
+		 end
 	  | sl_tyfield (A.TyFieldDots pl) ll = A.TyFieldDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tyfieldlist xs ll = sl_tyfieldlist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tyfieldlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4114,11 +4384,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_type x ll =
 	    if isEmpty ll
 	    then A.TypeDots []
 	    else sl_type x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_type (A.TypeOneVar tv) ll =
 	    let val sltv = sl_typevar tv ll
 	    in case sltv of
@@ -4184,11 +4456,13 @@ fun slice prog labels =
 	    else A.TypeDots (flattenLabType [sl_labtype ty ll])
 	  | sl_type (A.TypeDots pl) ll = A.TypeDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typeRow x ll =
 	    if isEmpty ll
 	    then A.TypeRowDots []
 	    else sl_typeRow x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typeRow (A.TypeRowOne (ty, r, l, n)) ll =
 	    if isin l ll
 	    then A.TypeRowOne (sl_sl_type ty (L.delete l ll), r, l, n)
@@ -4205,11 +4479,13 @@ fun slice prog labels =
 	    else A.TypeRowDots (flattenLabType (sl_labtypelist tl ll))
 	  | sl_typeRow (A.TypeRowDots pl) ll = A.TypeRowDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_conbind x ll =
 	    if isEmpty ll
 	    then A.ConBindDots []
 	    else sl_conbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_conbind (A.ConBind (id, n)) ll =
 	    (case sl_ident id ll of
 		 A.IdentDots => A.ConBindDots []
@@ -4238,11 +4514,13 @@ fun slice prog labels =
 	       | slid          => A.ConBindNoOf (slid, n))
 	  | sl_conbind (A.ConBindDots pl) ll = A.ConBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_conbindlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_conbindlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_conbindlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4255,11 +4533,13 @@ fun slice prog labels =
 	    in sltc :: sltcl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_conbindseq x ll =
 	    if isEmpty ll
 	    then A.ConBindSeqDots []
 	    else sl_conbindseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_conbindseq (A.ConBindSeq tcl) ll =
 	    let val sltcl = flattenConBind (sl_conbindlist tcl ll)
 	    in case sltcl of
@@ -4269,11 +4549,13 @@ fun slice prog labels =
 	    end
 	  | sl_conbindseq (A.ConBindSeqDots pl) ll = A.ConBindSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_ldatname x ll =
 	    if isEmpty ll
 	    then A.LDatNameDots
 	    else sl_ldatname x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_ldatname (A.LDatName (tvs, tn, rl, n)) ll =
 	    let val nxt = A.getLongTyConNext tn (* a type name is always first (left) *)
 		val (lll, llr) = splitList nxt ll
@@ -4288,11 +4570,13 @@ fun slice prog labels =
 	    then A.LDatNameDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datname x ll =
 	    if isEmpty ll
 	    then A.DatNameDots
 	    else sl_datname x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datname (A.DatName (tvs, tn, rl, n)) ll =
 	    let val nxt = A.getTyConNext tn (* a type name is always first (left) *)
 		val (lll, llr) = splitList nxt ll
@@ -4307,11 +4591,13 @@ fun slice prog labels =
 	    then A.DatNameDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datbind x ll =
 	    if isEmpty ll
 	    then A.DatBindDots []
 	    else sl_datbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datbind (A.DatBind (dn, tcs, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getDatNameNext dn
@@ -4330,16 +4616,18 @@ fun slice prog labels =
 		 end
 	  | sl_datbind (A.DatBindDots pl) ll = A.DatBindDots (sl_partlist pl ll)
 	(* Do we really want to have the datatype if only the type name is in the slice?
-                   - see test23.sml
-                   -
-                 sltvs <> A.TypeVarSeqDots [] implies isin l ll *)
+		   - see test23.sml
+		   -
+		 sltvs <> A.TypeVarSeqDots [] implies isin l ll *)
 	(* It might be better to have only: "A.ConBindSeqDots x" *)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datbindlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_datbindlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datbindlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4352,12 +4640,14 @@ fun slice prog labels =
 	    in sldb :: sldbl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datbindseq x ll =
 	    if isEmpty ll
 	    then A.DatBindSeqDots []
 	    else sl_datbindseq x ll
 
 	(* what about the regions? *)
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datbindseq (A.DatBindSeq (dbl, rl, n)) ll =
 	    let val sldbl = flattenDatBind (sl_datbindlist dbl ll)
 	    in case sldbl of
@@ -4367,11 +4657,13 @@ fun slice prog labels =
 	    end
 	  | sl_datbindseq (A.DatBindSeqDots pl) ll = A.DatBindSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valbindcore x ll =
 	    if isEmpty ll
 	    then A.ValBindCoreDots []
 	    else sl_valbindcore x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valbindcore (A.ValBindCore (p, e, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getLabPatNext p
@@ -4399,11 +4691,13 @@ fun slice prog labels =
 		 end
 	  | sl_valbindcore (A.ValBindCoreDots pl) ll = A.ValBindCoreDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valbindcorelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_valbindcorelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valbindcorelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4416,11 +4710,13 @@ fun slice prog labels =
 	    in slvb :: slvbl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valbindseq x ll =
 	    if isEmpty ll
 	    then A.ValBindSeqDots []
 	    else sl_valbindseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valbindseq (A.ValBindSeq (vbl, rl, n)) ll =
 	    let val slvbl = flattenValBindCore (sl_valbindcorelist vbl ll)
 	    in case slvbl of
@@ -4430,11 +4726,13 @@ fun slice prog labels =
 	    end
 	  | sl_valbindseq (A.ValBindSeqDots pl) ll = A.ValBindSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valbind x ll =
 	    if isEmpty ll
 	    then A.ValBindDots []
 	    else sl_valbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valbind (A.ValBindRec (vbs, r, l, n)) ll =
 	    if isin l ll
 	    then A.ValBindRec (sl_valbindseq vbs (L.delete l ll), r, l, n)
@@ -4449,17 +4747,20 @@ fun slice prog labels =
 	    end
 	  | sl_valbind (A.ValBindDots pl) ll = A.ValBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labatpat x ll =
 	    if isEmpty ll
 	    then A.LabAtPatDots []
 	    else sl_labatpat x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labatpat (A.LabAtPat (ap, r, l, n)) ll =
 	    if isin l ll
 	    then A.LabAtPat (sl_sl_atpat ap (L.delete l ll), r, l, n)
 	    else A.LabAtPatDots (flattenAtPat [sl_atpat ap ll])
 	  | sl_labatpat (A.LabAtPatDots pl) ll = A.LabAtPatDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fmatchid fm ll =
 	    (case sl_fmatch fm ll of
 		 (*A.FMatchDots                                                   => A.FMatchId A.IdentDots*)
@@ -4469,11 +4770,13 @@ fun slice prog labels =
 		     | A.FMatchNoApp (A.FMatchNoApp (x, n), _)                      => A.FMatchNoApp (x, n)
 		     | slfm                                                             => slfm)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fmatch x ll =
 	    if isEmpty ll
 	    then A.FMatchDots
 	    else sl_fmatch x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fmatch (A.FMatchId (id, fix, r)) ll =
 	    (case sl_sl_ident id ll of
 		 (*A.IdentDots => A.FMatchDots (* NEW - related to strictLab *)
@@ -4506,11 +4809,13 @@ fun slice prog labels =
 	    then A.FMatchDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labfmatch x ll =
 	    if isEmpty ll
 	    then A.LabFMatchDots
 	    else sl_labfmatch x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labfmatch (A.LabFMatch (fm, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabFMatch (sl_sl_fmatch fm (L.delete l ll), rl, l, n)
@@ -4525,7 +4830,7 @@ fun slice prog labels =
 	  | sl_labfmatch (A.LabFMatchSl (fm, n)) ll =
 	    (case sl_fmatchid fm ll of
 		 A.FMatchDots                              => A.LabFMatchDots
- 	       (*| A.FMatchSlApp (A.FMatchDots, A.LabAtPatDots [], _) => A.LabFMatchDots (* NEW - related to strictLab *)*)
+	       (*| A.FMatchSlApp (A.FMatchDots, A.LabAtPatDots [], _) => A.LabFMatchDots (* NEW - related to strictLab *)*)
 	       | A.FMatchSlApp (x, A.LabAtPatDots [], _) => A.LabFMatchSl (x, n)
 	       (*| A.FMatchNoApp (A.FMatchDots, _)         => A.LabFMatchDots (* NEW - related to strictLab *)*)
 	       (*| A.FMatchNoApp (A.FMatchId (A.IdentDots, _), _) => A.LabFMatchDots (* NEW - related to strictLab *)*)
@@ -4536,11 +4841,13 @@ fun slice prog labels =
 	    then A.LabFMatchDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fmatchty x ll =
 	    if isEmpty ll
 	    then A.FMatchTDots
 	    else sl_fmatchty x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fmatchty (A.FMatchT fm) ll =
 	    (case sl_labfmatch fm ll of
 		 A.LabFMatchDots => A.FMatchTDots
@@ -4567,11 +4874,13 @@ fun slice prog labels =
 	    then A.FMatchTDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fvalbindcore x ll =
 	    if isEmpty ll
 	    then A.FVBCoreDots []
 	    else sl_fvalbindcore x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fvalbindcore (A.FValBindCore (fm, le, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getFMatchTyNext fm
@@ -4590,11 +4899,13 @@ fun slice prog labels =
 		 end
 	  | sl_fvalbindcore (A.FVBCoreDots pl) ll = A.FVBCoreDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fvalbindcorelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_fvalbindcorelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fvalbindcorelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4607,11 +4918,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fvalbindone x ll =
 	    if isEmpty ll
 	    then A.FVBOneDots []
 	    else sl_fvalbindone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fvalbindone (A.FValBindOne (slvbcl, rl, l, n)) ll =
 	    if isin l ll
 	    then A.FValBindOne (flattenFValBindCore (sl_sl_fvalbindcorelist slvbcl (L.delete l ll)), rl, l, n)
@@ -4621,11 +4934,13 @@ fun slice prog labels =
 		    | x                   => A.FValBindOne (x, rl, l, n))
 	  | sl_fvalbindone (A.FVBOneDots pl) ll = A.FVBOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fvalbindonelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_fvalbindonelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fvalbindonelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4639,11 +4954,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_fvalbind x ll =
 	    if isEmpty ll
 	    then A.FValBindDots []
 	    else sl_fvalbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_fvalbind (A.FValBind (slvbol, rl, n)) ll =
 	    (case flattenFValBindOne (sl_fvalbindonelist slvbol ll) of
 		 [] => A.FValBindDots []  (* NEW - related to strictLab *)
@@ -4651,11 +4968,13 @@ fun slice prog labels =
 	       | x                  => A.FValBind (x, rl, n))
 	  | sl_fvalbind (A.FValBindDots pl) ll = A.FValBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typbind x ll =
 	    if isEmpty ll
 	    then A.TypBindDots []
 	    else sl_typbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typbind (A.TypBind (dn, ty, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getDatNameNext dn
@@ -4674,11 +4993,13 @@ fun slice prog labels =
 		 end
 	  | sl_typbind (A.TypBindDots pl) ll = A.TypBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typbindlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_typbindlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typbindlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4691,11 +5012,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typbindseq x ll =
 	    if isEmpty ll
 	    then A.TypBindSeqDots []
 	    else sl_typbindseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typbindseq (A.TypBindSeq (tbl, rl, n)) ll =
 	    let val sltbl = flattenTypBind (sl_typbindlist tbl ll)
 	    in case sltbl of
@@ -4705,11 +5028,13 @@ fun slice prog labels =
 	    end
 	  | sl_typbindseq (A.TypBindSeqDots pl) ll = A.TypBindSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_exbind x ll =
 	    if isEmpty ll
 	    then A.ExBindDots []
 	    else sl_exbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_exbind (A.ExBind (id, l, n)) ll =
 	    if isin l ll
 	    then A.ExBind (sl_sl_ident id (L.delete l ll), l, n)
@@ -4761,11 +5086,13 @@ fun slice prog labels =
 	       | slid          => A.ExBindNo (slid, n))
 	  | sl_exbind (A.ExBindDots pl) ll = A.ExBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_exbindlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_exbindlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_exbindlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4778,11 +5105,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_exbindseq x ll =
 	    if isEmpty ll
 	    then A.ExBindSeqDots []
 	    else sl_exbindseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_exbindseq (A.ExBindSeq (ebl, rl, n)) ll =
 	    let val slebl = flattenExBind (sl_exbindlist ebl ll)
 	    in case slebl of
@@ -4792,11 +5121,13 @@ fun slice prog labels =
 	    end
 	  | sl_exbindseq (A.ExBindSeqDots pl) ll = A.ExBindSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longstrseq x ll =
 	    if isEmpty ll
 	    then A.LongStrSeqDots []
 	    else sl_longstrseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longstrseq (A.LongStrSeq (idl, n)) ll =
 	    (case flattenLongStrId' (sl_longstridlist idl ll) of
 		 [] => A.LongStrSeqDots [] (* NEW - related to strictLab *)
@@ -4804,11 +5135,13 @@ fun slice prog labels =
 	       | x => A.LongStrSeq (x, n))
 	  | sl_longstrseq (A.LongStrSeqDots pl) ll = A.LongStrSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longstridlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_longstridlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longstridlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4821,11 +5154,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigidseq x ll =
 	    if isEmpty ll
 	    then A.SigIdSeqDots []
 	    else sl_sigidseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigidseq (A.SigIdSeq (xs, n)) ll =
 	    (case flattenSigId' (sl_sigidlist xs ll) of
 		 [] => A.SigIdSeqDots [] (* NEW - related to strictLab *)
@@ -4833,11 +5168,13 @@ fun slice prog labels =
 	       | x => A.SigIdSeq (x, n))
 	  | sl_sigidseq (A.SigIdSeqDots pl) ll = A.SigIdSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigidlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_sigidlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigidlist[] ll =
 	    if isEmptyL ll
 	    then []
@@ -4851,11 +5188,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_identseq x ll =
 	    if isEmpty ll
 	    then A.IdentSeqDots []
 	    else sl_identseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_identseq (A.IdentSeq (idl, n)) ll =
 	    (case flattenIdent' (sl_identlist idl ll) of
 		 [] => A.IdentSeqDots [] (* NEW - related to strictLab *)
@@ -4863,11 +5202,13 @@ fun slice prog labels =
 	       | x => A.IdentSeq (x, n))
 	  | sl_identseq (A.IdentSeqDots pl) ll = A.IdentSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_identlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_identlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_identlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4881,22 +5222,26 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtyclass x ll =
 	    if isEmpty ll
 	    then A.LabTyClassDots []
 	    else sl_labtyclass x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtyclass (A.LabTyClass (t, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabTyClass (sl_sl_tyclass t (L.delete l ll), rl, l, n)
 	    else A.LabTyClassDots (flattenTyClass [sl_tyclass t ll])
 	  | sl_labtyclass (A.LabTyClassDots pl) ll = A.LabTyClassDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tyclass x ll =
 	    if isEmpty ll
 	    then A.TyClassDots []
 	    else sl_tyclass x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tyclass (A.TyClassCl (cl, r, l, n)) ll =
 	    if isin l ll
 	    then A.TyClassCl (sl_sl_labclass cl (L.delete l ll), r, l, n)
@@ -4908,8 +5253,10 @@ fun slice prog labels =
 	  | sl_tyclass (A.TyClassDots pl) ll =
 	    A.TyClassDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labtyclasslist xs ll = sl_labtyclasslist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labtyclasslist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -4923,11 +5270,13 @@ fun slice prog labels =
 	    in slty :: sltl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tyclassseq x ll =
 	    if isEmpty ll
 	    then A.TyClassSeqDots []
 	    else sl_tyclassseq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tyclassseq (A.TyClassSeqOne (ty, r, l, n)) ll =
 	    if isin l ll
 	    then A.TyClassSeqOne (sl_sl_tyclass ty (L.delete l ll), r, l, n)
@@ -4945,11 +5294,13 @@ fun slice prog labels =
 	    else A.TyClassSeqDots (flattenLabTyClass (sl_labtyclasslist tl ll))
 	  | sl_tyclassseq (A.TyClassSeqDots pl) ll = A.TyClassSeqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_dec x ll =
 	    if isEmpty ll
 	    then A.DecDots []
 	    else sl_dec x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_dec (A.DecVal (tvs, vb, r, n)) ll =
 	    let val nxt = A.getTypeVarSeqNext tvs
 		val (ll1, ll2) = splitList nxt ll
@@ -5006,7 +5357,7 @@ fun slice prog labels =
 			A.TyConDots => A.DecDots (flattenLongTyCon [slltc])
 		      | _ => A.DecDatRep (sltc, slltc, rs, l, n)
 		 end
-    	  | sl_dec (A.DecType (tbs, r, n)) ll =
+	  | sl_dec (A.DecType (tbs, r, n)) ll =
 	    let val sltbs = sl_typbindseq tbs ll
 	    in case sltbs of
 		   A.TypBindSeqDots x => A.DecDots x
@@ -5140,11 +5491,13 @@ fun slice prog labels =
 		 end
 	  | sl_dec (A.DecDots pl) ll = A.DecDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_declist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_declist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_declist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5157,14 +5510,17 @@ fun slice prog labels =
 	    in sld :: sldl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_decs x ll =
 	    if isEmpty ll
 	    then A.DecsDots []
 	    else sl_decs x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_decs (A.Decs (ds, _)) ll = A.DecsDots (flattenDec (sl_declist ds ll))
 	  | sl_decs (A.DecsDots pl)  ll = A.DecsDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_explist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5178,8 +5534,10 @@ fun slice prog labels =
 	    in sle :: slel
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labexplist xs ll = sl_labexplist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labexplist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5193,22 +5551,26 @@ fun slice prog labels =
 	    in sle :: slel
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labexp x ll =
 	    if isEmpty ll
 	    then A.LabExpDots []
 	    else sl_labexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labexp (A.LabExp (e, rl, re, l, n)) ll =
 	    if isin l ll
 	    then A.LabExp (sl_sl_exp e (L.delete l ll), rl, re, l, n)
 	    else A.LabExpDots (flattenExp [sl_exp e ll])
 	  | sl_labexp (A.LabExpDots pl) ll = A.LabExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_expfield x ll =
 	    if isEmpty ll
 	    then A.ExpFieldDots []
 	    else sl_expfield x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_expfield (A.ExpField (tl, e, r, rl, l, n)) ll =
 	    if isin l ll
 	    then
@@ -5218,7 +5580,7 @@ fun slice prog labels =
 		    val sltl = sl_sl_tylab tl lll
 		    val sle  = sl_sl_labexp e llr
 		in A.ExpField (sltl, sle, r, rl, l, n)
-	  	end
+		end
 	    else
 		let
 		    val nxt = A.getTyLabNext tl
@@ -5228,11 +5590,13 @@ fun slice prog labels =
 		in case sltl of
 		       A.TyLabDots => A.ExpFieldDots (flattenLabExp [sle])
 		     | _             => A.ExpField (sltl, sle, r, rl, l, n)
-	  	end
+		end
 	  | sl_expfield (A.ExpFieldDots pl) ll = A.ExpFieldDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_expfieldlist xs ll = sl_expfieldlist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_expfieldlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5246,11 +5610,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_seqexp x ll =
 	    if isEmpty ll
 	    then A.SeqExpDots []
 	    else sl_seqexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_seqexp (A.SeqExp (el, e, r, rs, l, n)) ll =
 	    if isin l ll
 	    then
@@ -5273,11 +5639,13 @@ fun slice prog labels =
 	    else A.SeqExpDots (sl_partlist (pl @ (flattenLabExp [e])) ll)
 	  | sl_seqexp (A.SeqExpDots pl) ll = A.SeqExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_atexp x ll =
 	    if isEmpty ll
 	    then A.AtExpDots []
 	    else sl_atexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_atexp (A.AtExpId id) ll =
 	    (case sl_longid id ll of
 		 A.LongIdDots pl => A.AtExpDots pl
@@ -5366,8 +5734,10 @@ fun slice prog labels =
 	    else A.AtExpDots (flattenQuote (sl_quotes quotes ll))
 	  | sl_atexp (A.AtExpDots pl) ll = A.AtExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_quotes quotes ll = sl_quotes quotes ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_quotes [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5380,11 +5750,13 @@ fun slice prog labels =
 	    in slq :: slqs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_quote quote ll =
 	    if isEmpty ll
 	    then A.QuoteDots []
 	    else sl_quote quote ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_quote (A.Quote (string, reg, lab, next)) ll =
 	    if isinone lab ll
 	    then A.Quote (string, reg, lab, next)
@@ -5397,11 +5769,13 @@ fun slice prog labels =
 	    else A.QuoteDots (flattenExp [sl_exp exp ll])
 	  | sl_quote (A.QuoteDots pl) ll = A.QuoteDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_exp x ll =
 	    if isEmpty ll
 	    then A.ExpDots []
 	    else sl_exp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_exp (A.ExpAtExp atexp) ll =
 	    let val slatexp = sl_atexp atexp ll
 	    in case slatexp of
@@ -5570,11 +5944,13 @@ fun slice prog labels =
 		 end
 	  | sl_exp (A.ExpDots pl) ll = A.ExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_match x ll =
 	    if isEmpty ll
 	    then A.MatchDots []
 	    else sl_match x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_match (A.Match (ml, rl, n)) ll =
 	    let
 		val slml = flattenMrule (sl_mrulelist ml ll)
@@ -5585,11 +5961,13 @@ fun slice prog labels =
 	    end
 	  | sl_match (A.MatchDots pl) ll = A.MatchDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_mrulelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_mrulelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_mrulelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5603,11 +5981,13 @@ fun slice prog labels =
 	    in slm :: slml
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_mrule x ll =
 	    if isEmpty ll
 	    then A.MruleDots []
 	    else sl_mrule x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_mrule (A.Mrule (p, e, r, l, n)) ll =
 	    if isin l ll
 	    then let
@@ -5629,8 +6009,10 @@ fun slice prog labels =
 	    end
 	  | sl_mrule (A.MruleDots pl) ll = A.MruleDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labpatlist xs ll = sl_labpatlist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labpatlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5643,22 +6025,26 @@ fun slice prog labels =
 	    in slp :: slpl
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labpat x ll =
 	    if isEmpty ll
 	    then A.LabPatDots []
 	    else sl_labpat x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labpat (A.LabPat (p, rl, rp, l, n)) ll =
 	    if isin l ll
 	    then A.LabPat (sl_sl_pat p (L.delete l ll), rl, rp, l, n)
 	    else A.LabPatDots (flattenPat [sl_pat p ll])
 	  | sl_labpat (A.LabPatDots pl) ll = A.LabPatDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_patfield x ll =
 	    if isEmpty ll
 	    then A.PatFieldDots []
 	    else sl_patfield x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_patfield (A.PatField (tl, p, r, rl, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getTyLabNext tl
@@ -5666,7 +6052,7 @@ fun slice prog labels =
 		     val sltl = sl_sl_tylab tl lll
 		     val slp  = sl_sl_labpat p llr
 		 in A.PatField (sltl, slp, r, rl, l, n)
-	  	 end
+		 end
 	    else let val nxt = A.getTyLabNext tl
 		     val (lll, llr) = splitList nxt ll
 		     val sltl = sl_sl_tylab tl lll
@@ -5674,7 +6060,7 @@ fun slice prog labels =
 		 in case sltl of
 			A.TyLabDots => A.PatFieldDots (flattenLabPat [slp])
 		      | _             => A.PatField (sltl, slp, r, rl, l, n)
-	  	 end
+		 end
 	  | sl_patfield (A.PatFieldId (id, n)) ll =
 	    (case sl_identty id ll of
 		 A.IdentTyDots pl => A.PatFieldDots pl
@@ -5686,7 +6072,7 @@ fun slice prog labels =
 		     val slid = sl_sl_labidty id lll
 		     val slp  = sl_sl_labpat p llr
 		 in A.PatFieldAs (slid, slp, r, l, n)
-	  	 end
+		 end
 	    else let val nxt = A.getLabIdTyNext id
 		     val (lll, llr) = splitList nxt ll
 		     val slid = sl_sl_labidty id lll
@@ -5694,7 +6080,7 @@ fun slice prog labels =
 		 in case slid of
 			A.LabIdTyDots pl => A.PatFieldDots (pl @ (flattenLabPat [slp]))
 		      | _                  => A.PatFieldAs (slid, slp, r, l, n)
-	  	 end
+		 end
 	  | sl_patfield (A.PatFieldWild (r, l, n)) ll =
 	    if isinone l ll
 	    then A.PatFieldWild (r, l, n)
@@ -5703,8 +6089,10 @@ fun slice prog labels =
 	    else A.PatFieldDots []
 	  | sl_patfield (A.PatFieldDots pl) ll = A.PatFieldDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_patfieldlist xs ll = sl_patfieldlist xs ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_patfieldlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5717,6 +6105,7 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_idfieldlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5729,11 +6118,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_atpat x ll =
 	    if isEmpty ll
 	    then A.AtPatDots []
 	    else sl_atpat x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_atpat (A.AtPatWild _) ll =
 	    if isEmptyL ll
 	    then A.AtPatDots []
@@ -5773,11 +6164,13 @@ fun slice prog labels =
 	    else A.AtPatDots (flattenLabPat (sl_labpatlist xs ll))
 	  | sl_atpat (A.AtPatDots pl) ll = A.AtPatDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_identty x ll =
 	    if isEmpty ll
 	    then A.IdentTyDots []
 	    else sl_identty x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_identty (A.IdentTyId id) ll =
 	    (case sl_ident id ll of
 		 A.IdentDots => A.IdentTyDots []
@@ -5800,22 +6193,26 @@ fun slice prog labels =
 		 end
 	  | sl_identty (A.IdentTyDots pl) ll = A.IdentTyDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labidty x ll =
 	    if isEmpty ll
 	    then A.LabIdTyDots []
 	    else sl_labidty x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labidty (A.LabIdTy (id, rl, l, n)) ll =
 	    if isin l ll
 	    then A.LabIdTy (sl_sl_identty id (L.delete l ll), rl, l, n)
 	    else A.LabIdTyDots (flattenIdentTy [sl_identty id ll])
 	  | sl_labidty (A.LabIdTyDots pl) ll = A.LabIdTyDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_pat x ll =
 	    if isEmpty ll
 	    then A.PatDots []
 	    else sl_pat x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_pat (A.PatAtPat atpat) ll =
 	    (case sl_atpat atpat ll of
 		 A.AtPatDots x => A.PatDots x
@@ -5894,20 +6291,24 @@ fun slice prog labels =
 		 end
 	  | sl_pat (A.PatDots pl) ll = A.PatDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdec x ll =
 	    if isEmpty ll
 	    then A.StrDecDots []
 	    else sl_strdec x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdec (A.StrDec (xs, l, n)) ll =
 	    A.StrDecDots (flattenStrDecOne (sl_strdeconelist xs (L.delete l ll)))
 	  | sl_strdec (A.StrDecDots pl) ll = A.StrDecDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdeconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_strdeconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdeconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5920,11 +6321,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdecone x ll =
 	    if isEmpty ll
 	    then A.StrDecOneDots []
 	    else sl_strdecone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdecone (A.StrDecOneDec d) ll =
 	    (case sl_decs d ll of
 		 A.DecsDots pl => A.StrDecOneDots pl
@@ -5960,11 +6363,13 @@ fun slice prog labels =
 	  | sl_strdecone (A.StrDecOneDots pl) ll =
 	    A.StrDecOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strbind x ll =
 	    if isEmpty ll
 	    then A.StrBindDots []
 	    else sl_strbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strbind (A.StrBind (xs, rs, n)) ll =
 	    (case flattenStrBindOne (sl_sl_strbindonelist xs ll) of
 		 [] => A.StrBindDots [] (* NEW - related to strictLab *)
@@ -5973,11 +6378,13 @@ fun slice prog labels =
 	  | sl_strbind (A.StrBindDots pl) ll =
 	    A.StrBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strbindonelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_strbindonelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strbindonelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -5990,11 +6397,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strbindone x ll =
 	    if isEmpty ll
 	    then A.StrBindOneDots []
 	    else sl_strbindone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strbindone (A.StrBindOneOp (id, si, se, rl, l, n)) ll =
 	    if isin l ll
 	    then let val nxt1 = A.getStrIdNext id
@@ -6059,11 +6468,13 @@ fun slice prog labels =
 		 end
 	  | sl_strbindone (A.StrBindOneDots pl) ll = A.StrBindOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_ltreadescone x ll =
 	    if isEmpty ll
 	    then A.LTReaDOneDots []
 	    else sl_ltreadescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_ltreadescone (A.LTReaDOne (dn, ty, rs, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getLDatNameNext dn
@@ -6084,11 +6495,13 @@ fun slice prog labels =
 	  | sl_ltreadescone (A.LTReaDOneDots pl) ll =
 	    A.LTReaDOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_ltreadesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_ltreadesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_ltreadesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6101,11 +6514,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_ltreadesc x ll =
 	    if isEmpty ll
 	    then A.LTReaDescDots []
 	    else sl_ltreadesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_ltreadesc (A.LTReaDesc (xs, rs, l, n)) ll =
 	    (case flattenLTReaDOne (sl_sl_ltreadesconelist xs (L.delete l ll)) of
 		 [] => A.LTReaDescDots []
@@ -6117,22 +6532,26 @@ fun slice prog labels =
 	(*and sl_sl_treadesc  x ll = A.TReaDescDots  []
 	      and sl_treadesc     x ll = A.TReaDescDots  []*)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labsigexp x ll =
 	    if isEmpty ll
 	    then A.LabSigExpDots []
 	    else sl_labsigexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labsigexp (A.LabSigExp (e, rl, re, l, n)) ll =
 	    if isin l ll
 	    then A.LabSigExp (sl_sl_sigexp e (L.delete l ll), rl, re, l, n)
 	    else A.LabSigExpDots (flattenSigExp [sl_sigexp e ll])
 	  | sl_labsigexp (A.LabSigExpDots pl) ll = A.LabSigExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigexp x ll =
 	    if isEmpty ll
 	    then A.SigExpDots []
 	    else sl_sigexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigexp (A.SigExpBasic (sp, rl, l, n)) ll =
 	    ((*Debug.printdebug2 ("(1)" ^ L.toString ll ^ " " ^ L.printelt l);*)
 	      if isin l ll
@@ -6163,22 +6582,26 @@ fun slice prog labels =
 		 end
 	  | sl_sigexp (A.SigExpDots pl) ll = A.SigExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_labstrexp x ll =
 	    if isEmpty ll
 	    then A.LabStrExpDots []
 	    else sl_labstrexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_labstrexp (A.LabStrExp (e, rl, re, l, n)) ll =
 	    if isin l ll
 	    then A.LabStrExp (sl_sl_strexp e (L.delete l ll), rl, re, l, n)
 	    else A.LabStrExpDots (flattenStrExp [sl_strexp e ll])
 	  | sl_labstrexp (A.LabStrExpDots pl) ll = A.LabStrExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strexp x ll =
 	    if isEmpty ll
 	    then A.StrExpDots []
 	    else sl_strexp x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strexp (A.StrExpBasic (sd, rl, l, n)) ll =
 	    if isin l ll
 	    then A.StrExpBasic (sl_sl_strdec sd (L.delete l ll), rl, l, n)
@@ -6271,11 +6694,13 @@ fun slice prog labels =
 		 end
 	  | sl_strexp (A.StrExpDots pl) ll = A.StrExpDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longtyconlist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_longtyconlist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longtyconlist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6288,11 +6713,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longtyconeq x ll =
 	    if isEmpty ll
 	    then A.LongTyConEqDots []
 	    else sl_longtyconeq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longtyconeq (A.LongTyConEq (longtycons, regs, lab, n)) ll =
 	    let val sllongtycons = sl_longtyconlist longtycons (L.delete lab ll)
 	    in case sllongtycons of
@@ -6302,11 +6729,13 @@ fun slice prog labels =
 	    end
 	  | sl_longtyconeq (A.LongTyConEqDots pl) ll = A.LongTyConEqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longstrideq x ll =
 	    if isEmpty ll
 	    then A.LongStrIdEqDots []
 	    else sl_longstrideq x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longstrideq (A.LongStrIdEq (longstrids, regs, n)) ll =
 	    let val sllongstrids = sl_longstridlist longstrids ll
 	    in case sllongstrids of
@@ -6316,11 +6745,13 @@ fun slice prog labels =
 	    end
 	  | sl_longstrideq (A.LongStrIdEqDots pl) ll = A.LongStrIdEqDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_specone x ll =
 	    if isEmpty ll
 	    then A.SpecOneDots []
 	    else sl_specone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_specone (A.SpecValue (vd, r, l, n)) ll =
 	    if isin l ll
 	    then A.SpecValue (sl_sl_valdesc vd (L.delete l ll), r, l, n)
@@ -6425,11 +6856,13 @@ fun slice prog labels =
 	  | sl_specone (A.SpecOneDots pl) ll =
 	    A.SpecOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_speconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_speconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_speconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6442,21 +6875,25 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_spec x ll =
 	    if isEmpty ll
 	    then A.SpecDots []
 	    else sl_spec x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_spec (A.Spec (spol, n)) ll =
 	    A.SpecDots (flattenSpecOne (sl_speconelist spol ll))
 	  | sl_spec (A.SpecDots pl) ll =
 	    A.SpecDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdesc x ll =
 	    if isEmpty ll
 	    then A.StrDescDots []
 	    else sl_strdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdesc (A.StrDesc (sdol, rl, n)) ll =
 	    (case flattenStrDescOne (sl_strdesconelist sdol ll) of
 		 [] => A.StrDescDots [] (* NEW - related to strictLab *)
@@ -6465,11 +6902,13 @@ fun slice prog labels =
 	  | sl_strdesc (A.StrDescDots pl) ll =
 	    A.StrDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_strdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6482,11 +6921,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_strdescone x ll =
 	    if isEmpty ll
 	    then A.StrDescOneDots []
 	    else sl_strdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_strdescone (A.StrDescOne (id, se, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getStrIdNext id
@@ -6506,11 +6947,13 @@ fun slice prog labels =
 	  | sl_strdescone (A.StrDescOneDots pl) ll =
 	    A.StrDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_condescone x ll =
 	    if isEmpty ll
 	    then A.ConDescOneDots []
 	    else sl_condescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_condescone (A.ConDescOneId (id, n)) ll =
 	    (case sl_ident id ll of
 		 A.IdentDots => A.ConDescOneDots []
@@ -6538,11 +6981,13 @@ fun slice prog labels =
 	       | slid          => A.ConDescOneNoOf (slid, n))
 	  | sl_condescone (A.ConDescOneDots pl) ll = A.ConDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_condesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_condesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_condesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6555,11 +7000,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_condesc x ll =
 	    if isEmpty ll
 	    then A.ConDescDots []
 	    else sl_condesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_condesc (A.ConDesc (xs, rl, n)) ll =
 	    let val slxs = flattenConDescOne (sl_condesconelist xs ll)
 	    in case slxs of
@@ -6569,11 +7016,13 @@ fun slice prog labels =
 	    end
 	  | sl_condesc (A.ConDescDots pl) ll = A.ConDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datdesc x ll =
 	    if isEmpty ll
 	    then A.DatDescDots []
 	    else sl_datdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datdesc (A.DatDesc (ddol, rl, n)) ll =
 	    (case flattenDatDescOne (sl_datdesconelist ddol ll) of
 		 [] => A.DatDescDots [] (* NEW - related to strictLab *)
@@ -6582,11 +7031,13 @@ fun slice prog labels =
 	  | sl_datdesc (A.DatDescDots pl) ll =
 	    A.DatDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_datdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6600,11 +7051,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_datdescone x ll =
 	    if isEmpty ll
 	    then A.DatDescOneDots []
 	    else sl_datdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_datdescone (A.DatDescOne (dn, cd, r, l, n)) ll =
 	    if isin l ll
 	    then
@@ -6628,11 +7081,13 @@ fun slice prog labels =
 	  | sl_datdescone (A.DatDescOneDots pl) ll =
 	    A.DatDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valdesc x ll =
 	    if isEmpty ll
 	    then A.ValDescDots []
 	    else sl_valdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valdesc (A.ValDesc (vdol, rl, n)) ll =
 	    (case flattenValDescOne (sl_valdesconelist vdol ll) of
 		 [] => A.ValDescDots [] (* NEW - related to strictLab *)
@@ -6641,11 +7096,13 @@ fun slice prog labels =
 	  | sl_valdesc (A.ValDescDots pl) ll =
 	    A.ValDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_valdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6659,11 +7116,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_valdescone x ll =
 	    if isEmpty ll
 	    then A.ValDescOneDots []
 	    else sl_valdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_valdescone (A.ValDescOne (id, ty, r, l, n)) ll =
 	    if isin l ll
 	    then
@@ -6687,11 +7146,13 @@ fun slice prog labels =
 	  | sl_valdescone (A.ValDescOneDots pl) ll =
 	    A.ValDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typdesc x ll =
 	    if isEmpty ll
 	    then A.TypDescDots []
 	    else sl_typdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typdesc (A.TypDesc (tdol, rl, n)) ll =
 	    (case flattenTypDescOne (sl_typdesconelist tdol ll) of
 		 [] => A.TypDescDots [] (* NEW - related to strictLab *)
@@ -6700,11 +7161,13 @@ fun slice prog labels =
 	  | sl_typdesc (A.TypDescDots pl) ll =
 	    A.TypDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_typdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6718,11 +7181,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_typdescone x ll =
 	    if isEmpty ll
 	    then A.TypDescOneDots []
 	    else sl_typdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_typdescone (A.TypDescOne (dn, l, n)) ll =
 	    if isin l ll
 	    then A.TypDescOne (sl_sl_datname dn (L.delete l ll), l, n)
@@ -6732,11 +7197,13 @@ fun slice prog labels =
 	  | sl_typdescone (A.TypDescOneDots pl) ll =
 	    A.TypDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_excdesc x ll =
 	    if isEmpty ll
 	    then A.ExcDescDots []
 	    else sl_excdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_excdesc (A.ExcDesc (edol, rl, n)) ll =
 	    (case flattenExcDescOne (sl_excdesconelist edol ll) of
 		 [] => A.ExcDescDots [] (* NEW - related to strictLab *)
@@ -6745,11 +7212,13 @@ fun slice prog labels =
 	  | sl_excdesc (A.ExcDescDots pl) ll =
 	    A.ExcDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_excdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_excdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_excdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6763,11 +7232,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_excdescone x ll =
 	    if isEmpty ll
 	    then A.ExcDescOneDots []
 	    else sl_excdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_excdescone (A.ExcDescOne (id, l, n)) ll =
 	    if isin l ll
 	    then A.ExcDescOne (sl_sl_ident id (L.delete l ll), l, n)
@@ -6793,11 +7264,13 @@ fun slice prog labels =
 	  | sl_excdescone (A.ExcDescOneDots pl) ll =
 	    A.ExcDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tdrdesc x ll =
 	    if isEmpty ll
 	    then A.TdrDescDots []
 	    else sl_tdrdesc x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tdrdesc (A.TdrDesc (tdol, rl, n)) ll =
 	    (case flattenTdrDescOne (sl_tdrdesconelist tdol ll) of
 		 [] => A.TdrDescDots [] (* NEW - related to strictLab *)
@@ -6806,11 +7279,13 @@ fun slice prog labels =
 	  | sl_tdrdesc (A.TdrDescDots pl) ll =
 	    A.TdrDescDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tdrdesconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_tdrdesconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tdrdesconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -6824,11 +7299,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_tdrdescone x ll =
 	    if isEmpty ll
 	    then A.TdrDescOneDots []
 	    else sl_tdrdescone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_tdrdescone (A.TdrDescOne (dn, ty, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getDatNameNext dn
@@ -6848,11 +7325,13 @@ fun slice prog labels =
 	  | sl_tdrdescone (A.TdrDescOneDots pl) ll =
 	    A.TdrDescOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_longstrid x ll =
 	    if isEmpty ll
 	    then A.LongStrIdDots []
 	    else sl_longstrid x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_longstrid (A.LongStrIdQual (id, lid, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getStrIdNext id
@@ -6888,11 +7367,13 @@ fun slice prog labels =
 		     | x => A.FunDec (x, r, l, n))
 		| sl_fundec (A.FunDecDots pl) ll = A.FunDecDots (sl_partlist pl ll)*)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_funbind x ll =
 	    if isEmpty ll
 	    then A.FunBindDots []
 	    else sl_funbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_funbind (A.FunBind (fbol, rl, n)) ll =
 	    (case flattenFunBindOne (sl_funbindonelist fbol ll) of
 		 [] => A.FunBindDots [] (* NEW - related to strictLab *)
@@ -6900,11 +7381,13 @@ fun slice prog labels =
 	       | x => A.FunBind (x, rl, n))
 	  | sl_funbind (A.FunBindDots pl) ll = A.FunBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_funbindone x ll =
 	    if isEmpty ll
 	    then A.FunBindODots []
 	    else sl_funbindone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_funbindone (A.FunBindO (fid, sid, si, se, rs, l, n)) ll =
 	    if isin l ll
 	    then let val nxt1 = A.getFunIdNext     fid
@@ -7087,11 +7570,13 @@ fun slice prog labels =
 		 end
 	  | sl_funbindone (A.FunBindODots pl) ll = A.FunBindODots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_funbindonelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_funbindonelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_funbindonelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -7104,22 +7589,26 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigdec x ll =
 	    if isEmpty ll
 	    then A.SigDecDots []
 	    else sl_sigdec x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigdec (A.SigDec (sb, r, n)) ll =
 	    (case sl_sigbind sb ll of
 		 A.SigBindDots x => A.SigDecDots x
 	       | x => A.SigDec (x, r, n))
 	  | sl_sigdec (A.SigDecDots pl) ll = A.SigDecDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigbind x ll =
 	    if isEmpty ll
 	    then A.SigBindDots []
 	    else sl_sigbind x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigbind (A.SigBind (sbol, rl, n)) ll =
 	    (case flattenSigBindOne (sl_sigbindonelist sbol ll) of
 		 [] => A.SigBindDots [] (* NEW - related to strictLab *)
@@ -7127,11 +7616,13 @@ fun slice prog labels =
 	       | x => A.SigBind (x, rl, n))
 	  | sl_sigbind (A.SigBindDots pl) ll = A.SigBindDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigbindone x ll =
 	    if isEmpty ll
 	    then A.SigBindOneDots []
 	    else sl_sigbindone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigbindone (A.SigBindOne (id, se, r, l, n)) ll =
 	    if isin l ll
 	    then let val nxt = A.getSigIdNext id
@@ -7150,11 +7641,13 @@ fun slice prog labels =
 		 end
 	  | sl_sigbindone (A.SigBindOneDots pl) ll = A.SigBindOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_sigbindonelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_sigbindonelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sigbindonelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -7168,11 +7661,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_afile x ll =
 	    if isEmpty ll
 	    then A.AFileDots
 	    else sl_afile x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_afile (A.AFile (f, r, l, n)) ll =
 	    if isinone l ll
 	    then A.AFile (f, r, l, n)
@@ -7184,6 +7679,7 @@ fun slice prog labels =
 	    then A.AFileDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_abool(A.ABool(b, r, l, n)) ll =
 	    if isinone l ll
 	    then A.ABool (b, r, l, n)
@@ -7195,11 +7691,13 @@ fun slice prog labels =
 	    then A.ABoolDots
 	    else raise EH.DeadBranch (msgEmpty ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_smltes x ll =
 	    if isEmpty ll
 	    then A.SmlTesDots []
 	    else sl_smltes x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_smltes (A.SmlTesDec (s, r, n)) ll =
 	    (case sl_atopdec s ll of
 		 A.ATopDecDots [] => A.SmlTesDots []
@@ -7226,11 +7724,13 @@ fun slice prog labels =
 	  | sl_smltes (A.SmlTesType _)  ll = A.SmlTesDots []
 	  | sl_smltes (A.SmlTesDots pl) ll = A.SmlTesDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_atopdec x ll =
 	    if isEmpty ll
 	    then A.ATopDecDots []
 	    else sl_atopdec x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_atopdec (A.ATopDecStr s) ll =
 	    A.ATopDecDots (flattenStrDec [sl_strdec s ll])
 	  | sl_atopdec (A.ATopDecSig s) ll =
@@ -7240,11 +7740,13 @@ fun slice prog labels =
 	  | sl_atopdec (A.ATopDecDots pl) ll =
 	    A.ATopDecDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_topdecone x ll =
 	    if isEmpty ll
 	    then A.TopDecOneDots []
 	    else sl_topdecone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_topdecone (A.TopDecOneTes (t, n)) ll =
 	    (case sl_smltes t ll of
 		 A.SmlTesDots x => A.TopDecOneDots x
@@ -7256,11 +7758,13 @@ fun slice prog labels =
 	  | sl_topdecone (A.TopDecOneDots pl) ll =
 	    A.TopDecOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_topdeconelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_topdeconelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_topdeconelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -7276,6 +7780,7 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_topdec (A.TopDec xs) ll =
 	    (case flattenTopDecOne (sl_topdeconelist xs ll) of
 		 [] => A.TopDecDots [] (* NEW - related to strictLab *)
@@ -7298,11 +7803,13 @@ fun slice prog labels =
 		  then x :: (sl_sl_parse xs (L.delete l ll))
 		  else sl_parse xs ll*)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_progone x ll =
 	    if isEmpty ll
 	    then A.ProgOneDots []
 	    else sl_progone x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_progone (A.ProgOneDec td) ll =
 	    (case sl_topdec td ll of
 		 A.TopDecDots x => A.ProgOneDots x
@@ -7324,11 +7831,13 @@ fun slice prog labels =
 	  | sl_progone (A.ProgOneDots pl) ll =
 	    A.ProgOneDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_progonelist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_progonelist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_progonelist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -7343,11 +7852,13 @@ fun slice prog labels =
 	    in slx :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_prog x ll =
 	    if isEmpty ll
 	    then A.ProgDots []
 	    else sl_prog x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_prog (A.Prog xs) ll =
 	    (case flattenProgOne (sl_progonelist xs ll) of
 		 [] => A.ProgDots [] (* NEW - related to strictLab *)
@@ -7355,11 +7866,13 @@ fun slice prog labels =
 	       | x                   => A.Prog x)
 	  | sl_prog (A.ProgDots pl) ll = A.ProgDots (sl_partlist pl ll)
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_proglist x ll =
 	    if isEmpty ll
 	    then []
 	    else sl_sl_proglist x ll
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_sl_proglist [] ll =
 	    if isEmptyL ll
 	    then []
@@ -7378,6 +7891,7 @@ fun slice prog labels =
 		 | _ => (slx, y, b, n) :: slxs
 	    end
 
+	(** Generates a slice for an abstract syntax tree node, helper function to #slice. *)
 	and sl_progs (A.Progs progs) ll = A.Progs (sl_proglist progs ll)
 
 	val labels' = L.delete L.dummyLab labels

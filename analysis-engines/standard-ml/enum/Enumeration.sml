@@ -37,78 +37,8 @@ structure VT  = VTimer
 structure EH  = ErrorHandler
 structure ERR = Error
 
-exception occextodo
-exception occexdone
-
+(** Calls L.singleton on each element of the set that's given in the argument. *)
 fun flatset xs = L.foldr (fn (x, y) => (L.singleton x) :: y) [] xs
-
-fun occtodo [] = ()
-  | occtodo (x :: xs) =
-    let fun f [] = false
-          | f (y :: ys) =
-	    if (L.subseteq x y) orelse (L.subseteq y x)
-	    then ((print ((L.toString x) ^ "\n" ^
-			  (L.toString y) ^ "\n"));
-		  true)
-	    else f ys
-    in if f xs then raise occextodo else occtodo xs
-    end
-
-fun occdone [] = ()
-  | occdone ((x, u, _) :: xs) =
-    let fun f [] = false
-          | f ((y, v, _) :: ys) =
-            if ((L.subseteq x y) andalso (L.subseteq u v))
-	       orelse ((L.subseteq y x) andalso (L.subseteq v u))
-            then ((print ((L.toString x) ^ "\n" ^
-			  (L.toString u) ^ "\n" ^
-			  (L.toString y) ^ "\n" ^
-			  (L.toString v) ^ "\n"));
-		  true)
-            else f ys
-    in if f xs then raise occexdone else occdone xs
-    end
-
-
-(** Computes the new set of filters (haack). *)
-fun mintodo1 labl labll labl' =
-    L.foldr (fn (x, y) =>
-		let val ll = L.cons x labl
-		in if L.exsubseteq ll labll
-		   then y
-		   else ll :: y
-		end) labll labl'
-
-fun mintodo2 labl labll labl' =
-    L.foldr (fn (x, y) =>
-		let
-		    val ll = L.cons x labl
-		in
-		    if L.exsubseteq ll labll
-		    then y
-		    else ll :: y
-		end) labll labl' (*(L.delete L.dummylab labl')
-(* TODO: the best might be to not enumerate dummylab at all *)*)
-
-fun mintodo3 filter filters labs done =
-    L.foldr (fn (x, y) =>
-		let val ll = L.cons x filter
-		in if L.exsubseteq ll filters
-		      orelse
-		      L.exsubseteq ll done
-		   then y
-		   else ll :: y
-		end) filters labs
-
-fun mintodo3' filter filters labs done =
-    L.foldr (fn (x, y) =>
-		let val ll = L.cons x filter
-		in if L.exsubseteq ll filters
-		      orelse
-		      L.exsubseteq ll done
-		   then y
-		   else y @ [ll]
-		end) filters labs
 
 fun enumdisjoint _ [] = NONE
   | enumdisjoint x (err :: ys) =
@@ -119,9 +49,6 @@ fun enumdisjoint _ [] = NONE
       | _ => if L.disjoint x (ERR.getL err)
 	     then SOME (ERR.getL err)
 	     else enumdisjoint x ys
-
-(** It seems that all these checkings are for nothing. *)
-fun minfilter x xs = x :: xs
 
 fun minone errs err envcss timer (parse as (ast, _, _)) filter =
     if ERR.alreadyone errs err
@@ -177,31 +104,10 @@ fun printfilters [] = ""
 (** The identity function. *)
 fun reorderFilters1 filters = filters
 
-(** Reverses the list of filters. *)
-fun reorderFilters2 filters = List.rev filters
-
-(** Returns the second half of the filters followed by the first half in reverse order. *)
-fun reorderFilters3 filters =
-    let val n   = List.length filters div 2
-	val f1  = List.take (filters, n)
-	val f2  = List.drop (filters, n)
-    in f2 @ (List.rev f1)
-    end
-
-(** More filter jumbling. *)
-fun reorderFilters4 filters =
-    let val n   = List.length filters div 2
-	val f1  = List.take (filters, n)
-	val f2  = List.drop (filters, n)
-	val m   = List.length f2 div 2
-	val f21 = List.take (f2, m)
-	val f22 = List.drop (f2, m)
-    in f22 @ (List.rev f1) @ f21
-    end
-
 (** Use the function which just returns the set of filters. *)
 fun reorderFilters filters = reorderFilters1 filters
 
+(** Generates a new free error, either FreeOpen or FreeIdent depending on the argument. *)
 fun newFreeErr (free as ((id, lab), b)) timer (ast, _, _) =
     let val id   = ERR.freshError ()
 	val time = VT.getMilliTime timer
@@ -242,6 +148,7 @@ fun addFrees errors [] timer ast = (errors, [])
     in (errors, news1 @ news2)
     end
 
+(** The current implementation of the enumeration algorithm. *)
 fun enum4 (envcss as (env, css)) errors searchspace timelimit program =
     let val timer = VT.startTimer ()
 	(* found:       are the found errors so far *)
@@ -289,7 +196,8 @@ fun enum4 (envcss as (env, css)) errors searchspace timelimit program =
 	 | _ => run errors searchspace
     end
 
-(** This is now only used by our database. *)
+(** This is now only used by our database.
+ * Is this still the case after the JSON conversion?. *)
 fun enum  envcss errors filters timelimit program = enum4 envcss errors filters timelimit program
 
 (** In initEnum and runEnum, if we got a success then we don't need to keep
@@ -345,8 +253,11 @@ fun runEnum (envcss as (env, _)) found searchspace timelimit timer ast export co
 		       in (errs, found', searchspace'', counter', true)
 		       end))
 
+(** In a file without syntax errors, errsynt is empty and labs is also empty, creating the initial filter? *)
 fun preEnum (envcss as (env, css)) (ast, _, _) =
-    let fun conv (E.CSSMULT ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.MultiOcc  NONE)) (*TODO: this is temporary - before all the assumptions move to long assumptions*)
+    let
+	(** Helper function to the #preEnum phase. *)
+	fun conv (E.CSSMULT ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.MultiOcc  NONE)) (*TODO: this is temporary - before all the assumptions move to long assumptions*)
 	  | conv (E.CSSCVAR ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.ValVarApp NONE))
 	  | conv (E.CSSEVAR ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.ExcIsVar  NONE))
 	  | conv (E.CSSECON ll) = SOME (ERR.consErrorNoRB ERR.dummyId ll CD.empty (EK.ExcIsDat NONE))
@@ -376,9 +287,7 @@ fun preEnum (envcss as (env, css)) (ast, _, _) =
 		      end)
 		  ([], L.empty)
 		  (List.mapPartial conv css)
-    (* in a file without syntax errors, errsynt is empty and labs is also empty, creating the initial filter? *)
     in (errsynt, SS.flatLabs labs) (* enum cs errsynt (flatset labs) timelimit program*)
     end
-
 
 end
