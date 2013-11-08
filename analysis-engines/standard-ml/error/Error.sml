@@ -64,8 +64,10 @@ type error   = {id   : id,
 		regs : ER.regs,
 		min  : bool}
 
+(** A quintuple of LargeInt.times. *)
 type times = LargeInt.int * LargeInt.int * LargeInt.int * LargeInt.int * LargeInt.int
 
+(** An exported error, a function. *)
 type export = error list ->
 	      A.packs    ->
 	      bool       ->
@@ -78,6 +80,7 @@ type export = error list ->
 	      int        ->
 	      unit
 
+(** Type of a function that exports some dummy fields. *)
 type export' = error list ->
 	       A.packs    ->
 	       E.envContextSensitiveSyntaxPair   ->
@@ -95,6 +98,7 @@ fun printId id = Int.toString id
 (** Function used to print a list. *)
 fun printlistgen xs f = "[" ^ #1 (List.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
+(** Prinst a list of identifiers using #printid. *)
 fun printRemoves xs = printlistgen xs printId
 
 (** Turns the character into a string. *)
@@ -114,8 +118,10 @@ fun transfun1 #"\""    = "\\\""
   | transfun1 #"\169"  = "\169"
   | transfun1 x        = Char.toString x
 
+(** Translates a string using String.translate and #transfun1 operated on the string argument. *)
 fun transfun2 st = String.translate transfun1 st
 
+(** Turns a charecter into a string as understood by Lisp. *)
 fun transLisp' #"'"  = "\\'"
   | transLisp' #"#"  = "\\#"
   | transLisp' #"\\" = "\\\\"
@@ -123,6 +129,7 @@ fun transLisp' #"'"  = "\\'"
   | transLisp' #"`"  = "\\`"
   | transLisp' x     = Char.toString x
 
+(** Translates a string using String.translate and #transLisp' operated on the string argument. *)
 fun transLisp st = String.translate transLisp' st
 
 (** Prints error information in XML format. *)
@@ -173,11 +180,18 @@ fun printOneSmlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice
 
 (** Prints a JSON error to string. *)
 fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslice basisoverloading =
-    let val ll = "\"labels\"      : " ^ "{\"count\": " ^ Int.toString (L.length labs) ^ ", " ^ "\"labelNumbers\": " ^ L.toString labs ^ "}"
+    let
+	(** The labels used in the erorr. *)
+	val ll = "\"labels\"      : " ^ "{\"count\": " ^ Int.toString (L.length labs) ^ ", " ^ "\"labelNumbers\": " ^ L.toString labs ^ "}"
+	(** The assumptions used in the error. *)
 	val cd = "\"assumptions\" : " ^ CD.toJsonStringOut deps
+	(** The kind of the error. *)
 	val ek = "\"kind\"        : " ^ EK.printJsonErrKind ek
+	(** The time taken to locate the error. *)
 	val tm = "\"time\"        : " ^ LargeInt.toString time
+	(** The identifier of the error. *)
 	val id = "\"identifier\"  : " ^ Int.toString id
+	(** The slice of the error. *)
 	val sl = "\"slice\"       : " ^ "\"" ^ transfun2 (S.printSlice sl bslice) ^ "\""
     in (id, ll, cd, ek, tm, sl,
        (if basisoverloading = 0
@@ -186,12 +200,17 @@ fun printOneJsonErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} bslic
     end
 
 
+(** Takes the argument xs, applies the argument p to ever element of xs and concatenates the result with the 'sep' argument.
+ * \param xs A list to be turned into a string.
+ * \param sep An element seperator.
+ * \param p A function applied to each element of xs. *)
 fun toListSep xs sep p =
     #1 (foldr (fn (x, (y, z)) => (p ^ x ^ p ^ z ^ y, sep)) ("", "") xs)
 
 (** Returns a give slice as a string *)
 fun SlToString sl = S.toString sl
 
+(** Prints all ids using #printId over a given list, rems. *)
 fun removesToList rems = map (fn x => printId x) rems
 
 (** Prints one error in lisp format. *)
@@ -232,13 +251,14 @@ fun printOnePerlErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 (** Quick hack for the next release to reduce overloading information from the basis. *)
 fun removeBasisSlice sl =
 let
+    (** Helper function for #removeBasisSlice. *)
     fun stripBasisSlice sl =
 	let
-	    (* we start at two because when we look for the start of the basis slice, we take
+	    (** We start at two because when we look for the start of the basis slice, we take
              * two brackets into account *)
 	    val bracketBalancer = ref 2;
 
-	    (* locates the start of the slice for the basis *)
+	    (** Locates the start of the slice for the basis *)
 	    fun findBasisSlice [] = []
 	      | findBasisSlice (h::t) =
 		if h = #"\168" (* opening slice bracket *)
@@ -273,6 +293,7 @@ fun printOneBashErr {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} ascid
 	val (idk, errk) = EK.printErrKind ek ascid
 	val ek = "kind        => {id  => \"" ^ idk ^ "\", msg => \"" ^ errk ^ "\"}"
 	val errk = String.translate (fn #"\"" => "\\\"" | x=>(Char.toString x)) errk
+	(** Prints the string argument followed by #Debug.textReset. *)
 	fun printReset str = print (str^(!D.textReset))
     in
 	(printReset( (#yellow (!D.underlineColors)) ^ errk ^ "\n\n");
@@ -331,9 +352,13 @@ fun getL (x : error) = #labs x
 fun getD (x : error) = #deps x
 (** Gets the error kind of an error. *)
 fun getK (x : error) = #ek   x
+(** Gets the bound functions of an error. *)
 fun getF (x : error) = #rf   x
+(** Gets the builtin basis specification for an error. *)
 fun getB (x : error) = #bb   x
+(** Gets the errors to be erased from an error. (?) *)
 fun getE (x : error) = #rem  x
+(** Get time taken to generate the error. *)
 fun getT (x : error) = #time x
 (** Gets the slice of an error. *)
 fun getS (x : error) = #sl   x
@@ -355,10 +380,14 @@ fun consError id labs deps ek rf bb rem time sl regs min =
      sl   = sl,
      regs = regs,
      min  = min}
+
+(** Construct an error given just an identifier, labels, dependencies and an error kind. *)
 fun consErrorNoRB id labs deps ek        =
     consError id labs deps ek initRf initBB initRem initTime initSlice initRegs initMin
+(** Construct an error given just an identifier, labels, dependencies, an error kind and an 'rf' (?). *)
 fun consErrorNoR  id labs deps ek rf     =
     consError id labs deps ek rf     initBB initRem initTime initSlice initRegs initMin
+(** Same as #consErrorNoR? *)
 fun consPreError  id labs deps ek rf =
     consError id labs deps ek rf     initBB initRem initTime initSlice initRegs initMin
 
@@ -378,9 +407,13 @@ fun setL {id, labs = _, deps, ek, rf, bb, rem, time, sl, regs, min} labs = consE
 fun setD {id, labs, deps = _, ek, rf, bb, rem, time, sl, regs, min} deps = consError id labs deps ek rf bb rem time sl regs min
 (** Sets the error kind of an error. *)
 fun setK {id, labs, deps, ek = _, rf, bb, rem, time, sl, regs, min} ek   = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the bound functions of an error. *)
 fun setF {id, labs, deps, ek, rf = _, bb, rem, time, sl, regs, min} rf   = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the builtin basis value of an error. *)
 fun setB {id, labs, deps, ek, rf, bb = _, rem, time, sl, regs, min} bb   = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the errors to be erased  from an error (?). *)
 fun setE {id, labs, deps, ek, rf, bb, rem = _, time, sl, regs, min} rem  = consError id labs deps ek rf bb rem time sl regs min
+(** Sets the time taken to locate an error. *)
 fun setT {id, labs, deps, ek, rf, bb, rem, time = _, sl, regs, min} time = consError id labs deps ek rf bb rem time sl regs min
 (** Sets the slice of an error. *)
 fun setS {id, labs, deps, ek, rf, bb, rem, time, sl = _, regs, min} sl   = consError id labs deps ek rf bb rem time sl regs min
@@ -393,6 +426,7 @@ fun setM {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min = _} min  = consE
 fun labelError {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} labs' stts' deps' =
     consError id (L.union labs labs') (CD.union deps deps') ek (L.union rf stts') bb rem time sl regs min
 
+(** Separates semantic errors from syntactic ones. *)
 fun sepsemsyn [] = ([], [])
   | sepsemsyn (x :: xs) =
     let val (sem, syn) = sepsemsyn xs
@@ -403,14 +437,18 @@ fun sepsemsyn [] = ([], [])
 
 (** Ordering of errors depending on their sizes. *)
 fun orderErrors errs =
-    let fun add x [] = [x]
+    let
+	(** Helper function for #orderErrors. *)
+	fun add x [] = [x]
 	  | add x (y :: ys) = if L.length (getL x) <= L.length (getL y)
 			      then x :: y :: ys
 			      else y :: (add x ys)
+	(** Calls #add on each of the elemnts of the list 'xs' while folding right over it. *)
 	fun order xs = foldr (fn (x, y) => add x y) [] xs
     in (fn (sem, syn) => (order syn) @ (order sem)) (sepsemsyn errs)
     end
 
+(** Gets the identifiers in a list of errors, and returns them all as a list. *)
 fun getIdsErrors [] = []
   | getIdsErrors (x :: xs) = (getI x) :: (getIdsErrors xs)
 
@@ -420,6 +458,7 @@ fun getNewErrors errs1 errs2 =
     in List.filter (fn x => not (O.isin (getI x) ids)) errs2
     end
 
+(** Given an identifier and a list of errors, finds the error with that identifier number. *)
 fun getErrorList []        _          = NONE
   | getErrorList (x :: xs) (id : int) = if getI x = id then SOME x else getErrorList xs id
 
@@ -454,6 +493,7 @@ fun sortlab ll1 ll2 ll3 ll4 ll1' ll2' ll3' ll4' =
     in (lle, llg, llc, lld)
     end
 
+(** Combines two errors to make a new error, returning the result. *)
 fun fusionerr {id = id1, labs = labs1, deps = deps1,
 	       ek = EK.LabTyClash (ll1,  ll2,  ll3,  ll4),
 	       rf = rf1, bb = bb1, rem = rem1, time = time1,
@@ -525,7 +565,7 @@ fun alreadyone [] _ = false
   | alreadyone (x :: xs) err =
     alreadyoneone x err orelse alreadyone xs err
 
-(* Checks if err is smaller or equal to one of the errors in the list of errors. *)
+(** Checks if err is smaller or equal to one of the errors in the list of errors. *)
 fun alreadyone' _ [] = false
   | alreadyone' err (x :: xs) =
     alreadyoneone err x orelse alreadyone' err xs
@@ -555,7 +595,9 @@ fun removedErrors errs err =
 	       (getE err)
 
 fun mindone1 errs err =
-    let fun g [] false = let val newerr = setI err (freshError ())
+    let
+	(** Helper function to mindone1. *)
+	fun g [] false = let val newerr = setI err (freshError ())
 			 in (SOME newerr, [newerr]) end
 	  | g [] true  = (NONE, [])
 	  | g (x :: xs) b =
@@ -569,11 +611,17 @@ fun mindone1 errs err =
 
 fun mindone2 errs err = (SOME err, errs @ [err])
 fun mindone3 errs err = (SOME err, err :: errs)
+
+(** Does not do mindone' checking because errors are supposed to be minimal anyway *)
 fun mindone  errs err = mindone2 errs err
+(** Checks if there is already a minimmal error or if the new error invalidates an already found error. *)
 fun mindone' errs err = mindone1 errs err
+(** Sets the slice associated with an error given an abstract snytax tree, which #Slice.slice is called on. *)
 fun setSlice ast err = setS err (S.slice ast (getL err))
+(** Maps #setSlice over a list of errors. *)
 fun setSlices ast xs = map (setSlice ast) xs
 
+(** The boolean has to be true if we want to merge consecutive similar regions (see ExtReg.sig). *)
 fun setReg err bmerge =
     let val info = (getK err, getF err)
 	val extr = ER.getpos_progs (getS err) info
@@ -581,6 +629,7 @@ fun setReg err bmerge =
     in setR err regs
     end
 
+(** Sets the regions for an error by calling #setReg. *)
 fun setRegs errors bmerge = map (fn err => setReg err bmerge) errors
 
 

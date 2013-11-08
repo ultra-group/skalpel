@@ -17,39 +17,12 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   AstSML.sig
- *  o Description: This file contains the definition of our abstract
- *      syntax.  The file defines the signature AST.
- *
- *      An abstract syntax tree (or AST) is basically a representation
- *      of the abstract syntactic structure of a given set of source
- *      code (in our case, SML). Each node of this tree denotes a
- *      construct occurring in the source code.
- *
- *      We say that the syntax is abstract because the tree does not
- *      represent every details that is present in the real syntax,
- *      such as grouping parentheses which are implicit in the structure
- *      of the tree, or for example an if-condition-then expression
- *      can be represented by a single node with two branches etc.
- *
- *      ASTs are distinct from Concrete Syntax Trees (CSTs), which
- *      are traditionally called parse trees.
  *)
 
-
+(** Signature for refstruct{AstSML}. *)
 signature ASTSML = sig
 
     type next = Label.label
-    (* Labels must be placed in the AST in such a way that each label
-     * encountered during a preorder traversal of the tree nodes is 1
-     * greater than the previously encountered label (not counting
-     * those labels marked as being of type next).  Labels in
-     * positions marked as being of type next must be 1 greater than
-     * all labels in the subtree.  (Such a label is the "next" label
-     * to be used in the rest of the tree.)
-     *)
-
-    (* slicing algorithm *depends* on the labels being in this order,
-     * (should throw an exception..?) *)
 
     type file = string (* file name *)
     type bas  = bool   (* true if it is a basis file *)
@@ -630,45 +603,6 @@ signature ASTSML = sig
       | ExpHandle       of labexp * match * Reg.region * Label.label * next
       | ExpDots         of part list
 
-    (*?
-     *
-     * Let's take a look at a code fragment.
-     *
-     * and quotes =
-     *     Quote           of string * R.region * L.label * next
-     *   | Antiquote       of exp * R.region list * L.label * next
-     *
-     * This line has been recently added in order to give support for the
-     * antiquote feature in SML/NJ. Here Quote is meant to be dealing with
-     * the ` symbol and the Antiquote deals with the carrot symbol.
-     *
-     * Quote is  string * R.region * L.label * next. This is a 4-tuple:
-     *
-     * 1- The first element of the tuple is a string containing text that is
-     * specified in-between ` symbols.
-     *
-     * 2 - R.region contains the region of the source code where the text
-     * that is specified in-between the ` symbols.
-     *
-     * 3 - L.label represents the current label in the AST
-     *
-     * 4 - next represents the next free node in the AST.
-     *
-     * This is used in the parser file (ML.grm), in the following line:
-     *
-     * val qquote = A.Quote (AQUOTE, R.consReg AQUOTEleft AQUOTEright,
-     * currentNode, L.nextLabel currentNode)
-     *
-     * So here a new value called qquote is created, which is of type string
-     * * R.region * L.label * next. Now the AST has the information of:
-     *
-     * -> What the string is
-     * -> Where the string is
-     * -> Which node we are in the AST right now
-     * -> The next free available node
-     *
-     ?*)
-
     and quote =
 	Quote           of string * Reg.region * Label.label * next
       | Antiquote       of exp * Reg.region list * Label.label * next
@@ -676,7 +610,6 @@ signature ASTSML = sig
 
     and match =
 	Match           of mrule list * Reg.region list * next
-      (* | MatchSl           of mrule list * Reg.region list * next (* For a match after slicing *) *)
       | MatchDots       of part list
 
     and mrule =

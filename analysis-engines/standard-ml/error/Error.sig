@@ -17,22 +17,12 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Error.sig
- *  o Description: Defines the signature ERROR for type errors.
  *)
 
-
+(** Defines the signature ERROR for type errors. *)
 signature ERROR = sig
 
     type id
-    (* id   : identifier of the error
-     * labs : labels
-     * deps : context dependencies
-     * ek   : kind of the error
-     * rf   : identifiers of functions constraining statuses in the error - rf stands for Recursive Function
-     * bb   : true if the error involves the builtin basis
-     * rem  : the errors invalidated by id
-     * time : time to enumerate the error
-     * min  : true if the error is minimal and false if it is in the process of being minimised *)
     type error    = {id   : id,
 		     labs : Label.labels,
 		     deps : LongId.set,
@@ -59,7 +49,6 @@ signature ERROR = sig
 		  int          ->
 		  unit
 
-    (* type of a function that export some dummy fields. *)
     type export' = error list   ->
 		   AstSML.packs ->
 		   Env.envContextSensitiveSyntaxPair   ->
@@ -68,9 +57,7 @@ signature ERROR = sig
 		   unit
 
 
-    val removeBasisSlice : string -> (* input slice *)
-			   string    (* output slice *)
-
+    val removeBasisSlice : string -> string
 
     val resetError       : unit -> unit
     val getError         : unit -> id
@@ -78,20 +65,18 @@ signature ERROR = sig
 
     val dummyId          : id
 
-    (* Accessors *)
-    val getI             : error -> id                (* I for Identifier           *)
-    val getL             : error -> Label.labels      (* L for Labels               *)
-    val getD             : error -> LongId.set        (* D for context Dependencies *)
-    val getK             : error -> ErrorKind.kind    (* K for Kind of the error    *)
-    val getE             : error -> id list           (* E for errors to be Errase  *)
-    val getF             : error -> Label.labels      (* F for bound Function       *)
-    val getB             : error -> bool              (* B for Builtin basis        *)
-    val getT             : error -> LargeInt.int      (* T for Time                 *)
-    val getS             : error -> AstSML.progs      (* S for Slice                *)
-    val getR             : error -> ExtReg.regs       (* R for Regions              *)
-    val getM             : error -> bool              (* M for Minimal              *)
+    val getI             : error -> id
+    val getL             : error -> Label.labels
+    val getD             : error -> LongId.set
+    val getK             : error -> ErrorKind.kind
+    val getE             : error -> id list
+    val getF             : error -> Label.labels
+    val getB             : error -> bool
+    val getT             : error -> LargeInt.int
+    val getS             : error -> AstSML.progs
+    val getR             : error -> ExtReg.regs
+    val getM             : error -> bool
 
-    (* Modifiers *)
     val setI             : error -> id             -> error
     val setL             : error -> Label.labels   -> error
     val setD             : error -> LongId.set     -> error
@@ -104,7 +89,6 @@ signature ERROR = sig
     val setR             : error -> ExtReg.regs    -> error
     val setM             : error -> bool           -> error
 
-    (* Constructors *)
     val consError        : id                ->
 			   Label.labels      ->
 			   LongId.set        ->
@@ -139,9 +123,7 @@ signature ERROR = sig
 			   ErrorKind.kind    ->
 			   error
 
-    (* Discard the dummy label from the labels of the error. *)
     val stripDummy       : error -> error
-    (* Discard the dummy and builtin labels from the labels of the error. *)
     val stripDummys       : error -> error
 
     val orderErrors      : error list -> error list
@@ -152,9 +134,7 @@ signature ERROR = sig
     val consWeight       : error list -> error list -> error list
     val sepsemsyn        : error list -> error list * error list
     val alreadyone       : error list -> error -> bool
-    (* mindone: does not do mindone' checking because errors are supposed to be minimal anyway *)
     val mindone          : error list -> error -> error option * error list
-    (* mindone': checks if there is already a minimal error or if the new error invalidate a already found error *)
     val mindone'         : error list -> error -> error option * error list
     val getErrorList     : error list -> int -> error option
 
@@ -162,63 +142,55 @@ signature ERROR = sig
 
     val idToInt          : id -> int
 
-    (* In all these printOne functions, the Boolean is used so that in the database,
-     * we enter only inlined slices *)
-    val printOneXmlErr   : error  ->
-			   string -> (* indentation *)
-			   bool   -> (* true if we want to pretty print the slices *)
-			   string
+    val printOneXmlErr   : error  -> string -> bool   -> string
 
-    (* In all these printOne functions, the Boolean is used so that in the database,
-     * we enter only inlined slices *)
     val printOneXmlErrTuple   : error  ->
-				string -> (* indentation *)
-				bool   -> (* true if we want to pretty print the slices *)
-				int    -> (* overloading basis *)
+				string ->
+				bool   ->
+				int    ->
 				string * string * string * string * string *
 				string * string * string * string * string * string
 
 
     val printOneSmlErr   : error -> bool  -> int ->
-			   string * (* identifier           *)
-			   string * (* labels               *)
-			   string * (* context dependencies *)
-			   string * (* error kind           *)
-			   string * (* time information     *)
-			   string * (* slice                *)
-			   string   (* regions              *)
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string
     val printOneJsonErr  : error -> bool  -> int ->
-			   string * (* identifier           *)
-			   string * (* labels               *)
-			   string * (* context dependencies *)
-			   string * (* error kind           *)
-			   string * (* time information     *)
-			   string * (* slice                *)
-			   string   (* regions              *)
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string
     val printOneLispErr  : error -> Id.assoc -> bool -> int ->
-			   string * (* identifier                           *)
-			   string * (* context dependencies                 *)
-			   string * (* error kind                           *)
-			   string * (* error invalidated by the printed one *)
-			   string * (* slice                                *)
-			   string * (* ast                                  *)
-			   string * (* regions                              *)
-			   string   (* minimal                              *)
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string
     val printOnePerlErr  : error -> Id.assoc -> bool -> int ->
-			   string * (* identifier                           *)
-			   string * (* context dependencies                 *)
-			   string * (* error kind                           *)
-			   string * (* error invalidated by the printed one *)
-			   string * (* slice                                *)
-			   string * (* regions                              *)
-			   string   (* minimal                              *)
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string *
+			   string
 
     val printOneBashErr  : error -> Id.assoc -> bool -> int -> unit
 
     val setSlice         : AstSML.progs -> error -> error
     val setSlices        : AstSML.progs -> error list -> error list
-    (* the Boolean has to be true if we want to merge consecutive similar regions
-     * see ExtReg.sig *)
+
     val setReg           : error      -> bool -> error
     val setRegs          : error list -> bool -> error list
 

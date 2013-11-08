@@ -17,11 +17,9 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        20 May 2010
  *  o File name:   Analyze.sig
- *  o Description: This file contains our the the signature ANALYZE
- *      of the structre that defines our constraint generator.
  *)
 
-
+(** This file contains our the the signature ANALYZE of the structre that defines our constraint generator. *)
 signature ANALYZE = sig
 
     val generateConstraints : AstSML.progs -> int -> Env.envContextSensitiveSyntaxPair

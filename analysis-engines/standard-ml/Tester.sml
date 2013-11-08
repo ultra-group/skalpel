@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,6 +130,7 @@ val myfilehtml = "res.html"
  * the database checking is copied to. *)
 val tmpdatabase = "/tmp/smltes-database"
 
+(** Holds a JSON error (is this really used?). *)
 val error : error = ref NONE
 
 (** True if one wants to report non minimal errors that then get minimised. *)
@@ -234,6 +235,7 @@ fun transfun1 #"\""    = "\\\""
 (** Uses String.translate to turn a character into a string. *)
 fun transfun2 st = String.translate transfun1 st
 
+(** Builds HTML representation of errors by calling #Html.transformErrSl. *)
 fun debuggingHTML errl
 		  (ast, m, ascid)
 		  bmin
@@ -314,8 +316,11 @@ fun debuggingXML errl
     in st
     end
 
+(** Builds an error (SML representation). *)
 fun buildError errl (ast, m, ascid) bmin times envContextSensitiveSyntaxPair initlab bfinal name bslice nenv _ =
-    let fun toerrors [] = []
+    let
+	(** Helper function for #buildError. *)
+	fun toerrors [] = []
 	  | toerrors (err :: xs) =
 	    {labels      = (L.length (ERR.getL err), L.toList (ERR.getL err)),
 	     assumptions = CD.toOutList (ERR.getD err),
@@ -408,18 +413,22 @@ fun errorsToJSON [] _ _ _ = ""
     in err ^ ",\n" ^ begsep ^ (errorsToJSON xs begsep bslice basisoverloading)
     end
 
+(** Builds error descriptions in JSON format. *)
 fun convertErrors currentError newName =
     let
 
 	(** Prints out a single error in JSON format. *)
 	fun printOneJsonErr {identifier, labels, assumptions, kind, slice, time, regions} =
 	    let
+		(** Gets the first part of a tuple. *)
 		fun getFst (a,b) = a
+		(** A printer for labels. *)
 		fun stringLabelList (a, [t]) = Int.toString t
 		| stringLabelList (a,(h::t)) =
 		    (Int.toString h)^", "^(stringLabelList (a, t))
 		| stringLabelList _ = ""
 
+		(** Prints the assumptions of an error. *)
 		fun outputAssumptions [] = ""
 		  | outputAssumptions [(_,value)] = Int.toString value
 		  | outputAssumptions ((_,value)::t) = Int.toString value ^ ", " ^ (outputAssumptions t)
@@ -435,6 +444,7 @@ fun convertErrors currentError newName =
 	    in (id, ll, ek, tm, cd, sl, "\"regions\"     : " ^ "[" ^ ER.printJsonExtRegs regions ^ "]")
 	    end
 
+	(** Converts JSON errors to a string using #printOneJsonErr. *)
 	fun errorsToJSON2 [] = ""
 	  | errorsToJSON2 [x] =
 	    let val begsep = "                              "
@@ -466,16 +476,21 @@ fun convertErrors currentError newName =
 	    "{\"analysis\": "^(LargeInt.toString analysis)^", \"enumeration\": "^(LargeInt.toString enumeration)^", \"minimisation\": "^(LargeInt.toString minimisation)^
 	    ", \"slicing\": "^(LargeInt.toString slicing)^", \"html\": "^(LargeInt.toString html)^"}"
 
+	(** Converts the constraint field of an error to a string. *)
 	fun getConstraint {total, top, syntactic} =
 	    "{\"total\": "^(Int.toString total)^", \"top\": "^(Int.toString top)^", \"syntactic\": "^(Int.toString syntactic)^"}"
 
+	(** Gets first part of the type variable information in an error. *)
 	fun getTyvarNum  (a, _) = a
+	(** Gets second part of the type variable information in an error. *)
 	fun getTyvarVals (_, b) = b
 
+	(** Given a list of ids and strings, will print them to a string. Used when printing the 'tyvar' portion of an error. *)
 	fun getTyvar [] = ""
 	  | getTyvar [(b,c)] = "{\"id\": " ^ (Int.toString b) ^ ", \"str\": \"" ^ c ^ "\"}"
 	  | getTyvar ((b,c)::t) = "{\"id\": "^(Int.toString b)^", \"str\": \""^c^"\"},"^(getTyvar t)
 
+	(** Helper function for #convertErrors *)
 	fun convertSmlError (ref (SOME ({errors,
 					 time,
 					 tyvar,
@@ -640,6 +655,7 @@ fun debuggingJSON errl
     end
 
 
+(** Builds lisp in perl format, called by #debuggingLisp. *)
 fun debuggingLISP' [] _ _ _ _ = ""
   | debuggingLISP' [err] ascid ind bslice basisoverloading =
     let val ind' = emacstab ^ "      "
@@ -677,6 +693,7 @@ fun debuggingLISP' [] _ _ _ _ = ""
 fun debuggingLISP errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envContextSensitiveSyntaxPair initlab bfinal name bslice nenv basisoverloading _ =
     "(setq skalpel-slice-data '(" ^ (debuggingLISP' errl ascid "" bslice basisoverloading) ^ ")\n  )"
 
+(** Bulids errors in PERL format. *)
 fun debuggingPERL' [] _ _ _ _ = ""
   | debuggingPERL' [err] ascid ind bslice basisoverloading =
     let val (id, ap, ek, rm, sl, re, mn) = ERR.printOnePerlErr err ascid bslice basisoverloading
@@ -707,6 +724,8 @@ fun debuggingPERL' [] _ _ _ _ = ""
        ",\n    " ^ mn ^
        "}," ^ xs
     end
+
+(** Builds errors in Perl format by called #debuggingPERL'. *)
 fun debuggingPERL errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     "my @error = (" ^ (debuggingPERL' errl ascid "" bslice basisoverloading) ^ ");\n" ^
     "sub getError { return @error; }"
@@ -720,6 +739,7 @@ fun debuggingBASH' [] _ _ _ _ = ()
     (ERR.printOneBashErr h ascid bslice basisoverloading;
      debuggingBASH' t ascid ind bslice basisoverloading)
 
+(** Bulids errors in BASH format by calling #debuggingBASH'. *)
 fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     (debuggingBASH' errl ascid "" bslice basisoverloading)
 
@@ -737,6 +757,7 @@ fun getFileBasAndNum nenv filebas =
        | _ => (nenv, ""))
     handle OS.SysErr (str, opt) => (case nenv of 2 => 1 | _ => nenv, "")
 
+(** Calls the output function (funout) on each error and then returns how many applications to funout were made. *)
 fun exportErrors [] _ _ _ _ counter = counter
   | exportErrors (error :: errors) funout time parse cs counter =
     (funout [error] parse cs counter time;
@@ -776,37 +797,41 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 	    in (parse, envContextSensitiveSyntaxPair, errl3, filters, counter)
 	    end
 
+	(** Helper function for #loopSlicing, calls #initEnum. *)
 	fun initSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
 	    let val export = if !nonmin then SOME funout else NONE
 		val (errs1, found', filters', counter', continue) =
 		    initEnum envContextSensitiveSyntaxPair found filters timerEnum parse export counter
-		val found''   = found' (*ERR.recordSpeTreat found'*)
-		val errs2     = errs1  (*ERR.getMergedErrors (err :: ERR.getNewErrors found' found'')*)
-		(*(2010-07-05)We shouldn't need these 2 lines anymore because this was
+		val found''   = found'
+		val errs2     = errs1
+		(** (2010-07-05)We shouldn't need these 2 lines anymore because this was
 		 * when record errors were not directly reported as merged errors. *)
 		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
 		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
 	    in (found'', filters', counter'', continue)
 	    end
 
+	(** Helper function for #loopSlicing, runs the enumeration algorithm once. *)
 	fun runSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
 	    let val export    = if !nonmin then SOME funout else NONE
 		val timelimit = gettimelimit ()
 		val (errs1, found', filters', counter', continue) =
 		    runEnum envContextSensitiveSyntaxPair found filters timelimit timerEnum parse export counter
-		val found''   = found' (*ERR.recordSpeTreat found'*)
-		val errs2     = errs1  (*ERR.getMergedErrors (err :: ERR.getNewErrors found' found'')*)
-		(*(2010-07-05)Same as above concerning found'' and errs2.*)
+		val found''   = found'
+		val errs2     = errs1
+		(**(2010-07-05)Same as above concerning found'' and errs2.*)
 		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
 		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
-	    (*val _ = print ("[" ^ Bool.toString continue ^ "]")*)
 	    in if continue
 	       then runSlicing funout counter'' parse envContextSensitiveSyntaxPair found'' filters' timerEnum (preEnum, initEnum, runEnum)
 	       else (counter'', found'')
 	    end
 
+	(** Loops the slicing algorithm by calling #preSlicing, #initSlicing, and #runSlicing in order to get a minimised error, then reports the errors found. *)
 	fun loopSlicing filebas filesin funout nenv webdemo bmin (preEnum, initEnum, runEnum) =
-	    let fun funout' errors parse cs counter time = funout errors parse false dummyTimes cs initLab dummyName "" counter time
+	    let
+		(** Calls #funout. *)
+		fun funout' errors parse cs counter time = funout errors parse false dummyTimes cs initLab dummyName "" counter time
 		val _         = setNonMin bmin
 		val timer     = VT.startTimer ()
 		val (parse, envcs, errs, filters, counter) = preSlicing funout' filebas filesin nenv webdemo (preEnum, initEnum, runEnum)
@@ -882,37 +907,26 @@ fun initialise filebas filesin nenv bprint =
     in (initlab, parse, envContextSensitiveSyntaxPair, timer, t1)
     end
 
-fun outTerm filebas errs ascid ast =
-    let val _ = H2.transformErrSl "tmp" (#1 (P.convertToFull filebas NONE [])) errs ascid ast false false
-	val _ = OS.Process.system ("IFSTMP=$IFS; IFS=$'\n'; for line in $(cat tmp); do echo -e \"$line\"; done; IFS=$IFSTMP")
-    in () end
-
+(** Called when the user requests Skalpel to be run on a test database. *)
 fun slicergen filebas filesin nenv bprint =
     let val (initlab,
 	     parse as (ast, m, ascid),
 	     envContextSensitiveSyntaxPair as (env, css),
 	     timer,
 	     t1) = initialise filebas filesin nenv bprint
-	(* Enumeration of the type errors *)
+
 	val _      = if bprint then print "enumeration...\n" else ()
         val (errl1, space) = EN.preEnum envContextSensitiveSyntaxPair parse
         val (errl2, bmin)  = EN.enum envContextSensitiveSyntaxPair errl1 space (gettimelimit ()) parse
         val t2     = VT.getMilliTime timer
-	(* Minimisation *)
+
         val errl3  = errl2
         val t3     = VT.getMilliTime timer
-	(* Ordering and merging of errors *)
-	(*val _      = D.printdebug2 (">>" ^ Int.toString (List.length errl3) ^ "\n")*)
-	(*val errl4  = ERR.recordSpeTreat  errl3*)
-	(*val errl5  = ERR.getMergedErrors errl4*)
 	val errl5  = errl3
 	val errl6  = ERR.orderErrors     errl5
 	val errl7  = errl6
-	(* Slicing *)
-        (*val errl8  = ERR.setSlices ast errl7*)
 	val errl8  = errl7
         val t4     = VT.getMilliTime timer
-	(* Creates the set of regions *)
 	val bmerge = true
 	(* use false for a better precision on the regions *)
 	(* When changing bmerge to false, enable clW in Html.sml.
@@ -924,13 +938,15 @@ fun slicergen filebas filesin nenv bprint =
         val t5     = VT.getMilliTime timer
 	(* Times *)
 	val times = (t1, t2, t3, t4, t5)
-	(*val _ = outTerm filebas errl10 ascid ast*)
     in SOME (errl10, parse, bmin, times, envContextSensitiveSyntaxPair, initlab)
     end
 
+(** Retrieves a list of test files.
+ * \deprecated Don't think we use this any longer with the new JSON database. *)
 fun getTests _ =
     let
-	(* WARNING! Magic Numbers bad smell! *)
+	(** Strips out a test number.
+	 * Has a magic numbers 'bad smell'. We should get rid of that. *)
 	fun stripnb file = String.substring (file, 4, (String.size file) - 4)
 	    handle Subscript => raise EH.DeadBranch ""
 	val dir = OS.FileSys.openDir (!testFolder)
@@ -948,12 +964,14 @@ fun getTests _ =
     end
 	handle SysErr => raise EH.DeadBranch "problem in reading tests\n"
 
+(** Prints the intervals between number as <N>-<N'>. *)
 fun printIntervals [] = ""
   | printIntervals ((x, y) :: xs) =
     "[" ^ Int.toString x ^
     "-" ^ Int.toString y ^
     "]" ^ printIntervals xs
 
+(** Finds intervals in a list of numbers.. *)
 fun findIntervals _ [] = []
   | findIntervals first [x] = [(first, x)]
   | findIntervals first (x :: y :: xs) =
@@ -961,6 +979,7 @@ fun findIntervals _ [] = []
     then (first, x) :: (findIntervals y (y :: xs))
     else findIntervals first (y :: xs)
 
+(** Helper function for #findIntervals. *)
 fun findIntervals' [] = []
   | findIntervals' (x :: xs) = findIntervals x (x :: xs)
 
@@ -1151,6 +1170,7 @@ fun compareErrors1 xs ys =
 	val ys2 = map (fn x => upTos x) ys1
     in compareErrors2 xs2 ys2 (true, 0) end
 
+(** Compares errors for equality. *)
 fun compareErrors (_, []) (_, (_ :: _)) = raise TypableTest
   | compareErrors (false, xs) (true, ys) =
     (* the timer didn't run off for the stored test but now ran off - which is problematic *)
@@ -1244,10 +1264,14 @@ fun checktests listtests =
 	    if time > #time (!longest)
 	    then longest := {test = test, time = time}
 	    else ()
+
+	(** Uses List.partition to separate errors into those which are free identifiers and the rest (using #kind to check). *)
 	fun toErrsAndWarns1 errs =
 	    List.partition
 		(fn x : oneerror => case #kind x of EK.FreeIdent => false | _ => true)
 		errs
+
+	(** Uses List.partition to separate errors into those which are free identifiers and the rest (using #Error.getK to check). *)
 	fun toErrsAndWarns2 errs =
 	    List.partition
 		(fn x => case ERR.getK x of EK.FreeIdent => false | _ => true)

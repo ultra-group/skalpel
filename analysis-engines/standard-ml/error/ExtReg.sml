@@ -17,16 +17,13 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   ExtReg.sml
- *  o Description: Contains the extended regions which are regions
- *      extended with colours.  The file defines the structure ExtReg
- *      which has the signature EXTREG.
  *)
 
-
+(** Contains the extended regions which are regions extended with colours.
+ * The file defines the structure ExtReg which has the signature EXTREG. *)
 structure ExtReg :> EXTREG =
 struct
 
-(* shorten the names of structures *)
 structure A  = AstSML
 structure R  = Reg
 structure L  = Label
@@ -34,17 +31,15 @@ structure D  = Debug
 structure EK = ErrorKind
 structure EH = ErrorHandler
 
-(* used only in the testoverlap function. Why?
- * These are tags corresping to L, H, and N.  We can then easily
- * test the equality between node kinds. *)
+(** These are tags corresping to L, H, and N.  We can then easily test the equality between node kinds. *)
 datatype constr  = CL | CH | CN
 
-(* the colours we use for slices *)
-(* These should be changed to meaningful names:
+(** Represents the colours for slices.
+ * These should be changed to meaningful names:
  *   - Red    -> DEFAULT_ERROR_LOCATION
  *   - Blue   -> END_POINT_1
- *   - Purple -> END_POINT_2
- *   - Green  -> COMMON_RECORD_FIELD
+ *   - Purple -> END_POINT_2 
+*   - Green  -> COMMON_RECORD_FIELD
  *   - Orange -> SPECIAL_ERROR_LOCATION
  *       (used to indicate that a location is part of an error
  *        because it forces the status of an identifier, or to
@@ -54,8 +49,7 @@ datatype constr  = CL | CH | CN
  *)
 datatype color   = Red | Blue | Purple | Green | Orange | Yellow
 
-(* weight...?
- * Weigths are use when combining slices to indicates the number
+(** Weigths are use when combining slices to indicates the number
  * of slices a location is part of.   The weight will be higher
  * if it occurs in mode slices.  We can then highlight these
  * locations with, e.g., a darker color.  This can be useful
@@ -65,10 +59,10 @@ datatype color   = Red | Blue | Purple | Green | Orange | Yellow
  *)
 type weight      = int
 
-(* declare a special type for a file *)
+(** A special type for a file. *)
 type file        = string
 
-(* a tree of regions
+(** A tree of regions
  * - L stands for leaf, a usual error location.
  * - H stands for head, it's used to indicate that a no-space participate
  *   in an error, meaning that we've got no space at the left of a regions
@@ -79,17 +73,19 @@ datatype treeReg = L of R.region * color * weight
 		 | H of R.region * color * weight
 		 | N of R.region * color * weight * treeReg list
 
-(* holds a full tree of regions for a file *)
+(** Holds a full tree of regions for a file *)
 type fileReg     = file * treeReg list
 
-datatype highlighting = LEAF         (* background colour *)
-		      | BOX          (* underline colour *)
-                      | LEAF_IN_BOX  (* background and underline *)
+(** Highlighting kind, either LEAF, BOX, or LEAF_IN_BOX.
+ * \arg LEAF. The background colour.
+ * \arg BOX. The underline colour.
+ * \arg LEAF_IN_BOX. The background and underline colour. *)
+datatype highlighting = LEAF | BOX | LEAF_IN_BOX
 
-(* holds the regions spanning accross multiple files in a list *)
+(** Holds the regions spanning accross multiple files in a list *)
 type regs        = fileReg list
 
-(* returns the first character of a colour from the colour datatype *)
+(** Returns the first character of a colour from the colour datatype *)
 fun printColor Red    = "R"
   | printColor Blue   = "B"
   | printColor Purple = "P"
@@ -97,7 +93,7 @@ fun printColor Red    = "R"
   | printColor Orange = "O"
   | printColor Yellow = "Y"
 
-(* boolean value is to denote whether the colour should be boxed *)
+(** Boolean value is to denote whether the colour should be boxed *)
 fun printBashColor Red    LEAF = #red (!D.backgroundColors)
   | printBashColor Blue   LEAF = #blue (!D.backgroundColors)
   | printBashColor Purple LEAF = #cyan (!D.backgroundColors)
@@ -118,7 +114,7 @@ fun printBashColor Red    LEAF = #red (!D.backgroundColors)
   | printBashColor Yellow LEAF_IN_BOX = #yellow (!D.leafInBoxColors)
 
 
-(* returns the colour (same as printColor) but with the structure name prefixed *)
+(** Returns the colour (same as printColor) but with the structure name prefixed *)
 fun printSmlColor Blue   = "ExtReg.Blue"
   | printSmlColor Red    = "ExtReg.Red"
   | printSmlColor Purple = "ExtReg.Purple"
@@ -126,20 +122,12 @@ fun printSmlColor Blue   = "ExtReg.Blue"
   | printSmlColor Orange = "ExtReg.Orange"
   | printSmlColor Yellow = "ExtReg.Yellow"
 
-(* returns regions for any constructor of treeReg *)
+(** Returns regions for any constructor of treeReg *)
 fun getReg (L (r, _, _))    = r
   | getReg (H (r, _, _))    = r
   | getReg (N (r, _, _, _)) = r
 
-(*fun printExtReg (L (r, c)) ind     = ind ^ " - " ^ R.printReg r ^ " - " ^ printColor c
-  | printExtReg (H (r, c)) ind     = ind ^ " + " ^ R.printReg r ^ " - " ^ printColor c
-  | printExtReg (N (r, c, tl)) ind = ind ^ " - " ^ R.printReg r ^ " - " ^ printColor c ^ " .." ^ printExtRegList tl (ind ^ "  ")
-and printExtRegList [] _           = ""
-  | printExtRegList (t :: tl) ind  = "\n" ^ printExtReg t ind ^ printExtRegList tl ind
-
-fun printExtRegSp x = printExtRegList x ""*)
-
-(* prints the extended regions for L, H, and N constructuors of treeReg *)
+(** Prints the extended regions for L, H, and N constructuors of treeReg *)
 fun printExtReg (L (r, c, w))     = "L(" ^ R.printReg r   ^
 				    ","  ^ printColor c   ^
 				    ","  ^ Int.toString w ^ ")"
@@ -151,12 +139,12 @@ fun printExtReg (L (r, c, w))     = "L(" ^ R.printReg r   ^
 				    ","  ^ Int.toString w ^
 				    ",[" ^ printExtRegList tl ^ "])"
 
-(* prints extended regions that have been put into a list by calling printExtReg *)
+(** Prints extended regions that have been put into a list by calling printExtReg *)
 and printExtRegList []         = ""
   | printExtRegList [t]        = printExtReg t
   | printExtRegList (t :: tl)  = printExtReg t ^ "," ^ printExtRegList tl
 
-(* prints extended regions for files in a list of tuples (file, regions) *)
+(** Prints extended regions for files in a list of tuples (file, regions) *)
 fun printExtRegs [] = ""
   | printExtRegs [(file, regs)] =
     "(\"" ^ file ^ "\",[" ^ printExtRegList regs ^ "])"
@@ -164,9 +152,10 @@ fun printExtRegs [] = ""
     "(\"" ^ file ^ "\",[" ^ printExtRegList regs ^ "])" ^
     "," ^ printExtRegs xs
 
+(** Prinsts one list of regions. *)
 fun printOneRegs regs = "[" ^ printExtRegs regs ^ "]"
 
-(* prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
+(** Prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
 fun printSmlExtReg (L (r, c, w))     =
     "ExtReg.L(" ^ R.printSmlReg r ^ "," ^ printSmlColor c ^ "," ^ Int.toString w ^ ")"
   | printSmlExtReg (H (r, c, w))     =
@@ -174,12 +163,12 @@ fun printSmlExtReg (L (r, c, w))     =
   | printSmlExtReg (N (r, c, w, tl)) =
     "ExtReg.N(" ^ R.printSmlReg r ^ "," ^ printSmlColor c ^ "," ^ Int.toString w ^ ",[" ^ printSmlExtRegList tl ^ "])"
 
-(* for the same form as above, but when they are in a list *)
+(** For the same form as above, but when they are in a list *)
 and printSmlExtRegList []         = ""
   | printSmlExtRegList [t]        = printSmlExtReg t
   | printSmlExtRegList (t :: tl)  = printSmlExtReg t ^ "," ^ printSmlExtRegList tl
 
-(* prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
+(** Prints SML style extended regions (same as print printExtReg, but prints structure prefix *)
 fun printJsonExtReg (L (r, c, w))     =
     "{\"nodeType\": \"leaf\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ "}"
   | printJsonExtReg (H (r, c, w))     =
@@ -187,11 +176,12 @@ fun printJsonExtReg (L (r, c, w))     =
   | printJsonExtReg (N (r, c, w, tl)) =
     "{\"nodeType\": \"node\", " ^ R.printJsonReg r ^ ", \"color\": \"" ^ printColor c ^ "\", \"weight\": " ^ Int.toString w ^ ", \"regionList\": [" ^ printJsonExtRegList tl ^ "]}"
 
+(** Prints an extreg list in JSON format. *)
 and printJsonExtRegList []         = ""
   | printJsonExtRegList [t]        = printJsonExtReg t
   | printJsonExtRegList (t :: tl)  = printJsonExtReg t ^ "," ^ printJsonExtRegList tl
 
-(* prints extended regions SML style for files in a list of tuples (file, regions) *)
+(** Prints extended regions SML style for files in a list of tuples (file, regions) *)
 fun printSmlExtRegs [] = ""
   | printSmlExtRegs [(file, regs)] =
     "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])"
@@ -199,20 +189,24 @@ fun printSmlExtRegs [] = ""
     "(\"" ^ file ^ "\",[" ^ printSmlExtRegList regs ^ "])" ^
     "," ^ printSmlExtRegs xs
 
-(* prints extended regions to be used with the JSON format *)
+(** Prints extended regions to be used with the JSON format *)
 fun printJsonExtRegs [] = ""
   | printJsonExtRegs [(file, regs)] =
     "{\"fileName\": \"" ^ file ^ "\", \"regionList\": [" ^ printJsonExtRegList regs ^ "]}"
   | printJsonExtRegs ((file, regs) :: xs) =
     "{\"fileName\": \"" ^ file ^ "\", \"regionList\": [" ^ printJsonExtRegList regs ^ "]}, "^(printJsonExtRegs xs)
 
+(** Prints an ExtReg in LISP format. *)
 fun printLispExtReg (L (r, c, w))     = "(L " ^ R.printLispReg r ^ " " ^ printColor c ^ ")"
   | printLispExtReg (H (r, c, w))     = "(H " ^ R.printLispReg r ^ " " ^ printColor c ^ ")"
   | printLispExtReg (N (r, c, w, tl)) = "(N " ^ R.printLispReg r ^ " " ^ printColor c ^ " (" ^ printLispExtRegList tl ^ "))"
+
+(** Prints a list of ExtReg in LISP format. *)
 and printLispExtRegList []         = ""
   | printLispExtRegList [t]        = printLispExtReg t
   | printLispExtRegList (t :: tl)  = printLispExtReg t ^ " " ^ printLispExtRegList tl
 
+(** Prints list and regions in LISP format. *)
 fun printLispExtRegs [] = ""
   | printLispExtRegs [(file, regs)] =
     "(\"" ^ file ^ "\" . (" ^ printLispExtRegList regs ^ "))"
@@ -220,6 +214,7 @@ fun printLispExtRegs [] = ""
     "(\"" ^ file ^ "\" . (" ^ printLispExtRegList regs ^ "))" ^
     " " ^ printLispExtRegs xs
 
+(** Print perl extra labelled regions. *)
 fun printPerlGenExtReg node r c regs =
     let val p1 = R.getFrom r
 	val p2 = R.getTo r
@@ -236,13 +231,17 @@ fun printPerlGenExtReg node r c regs =
        ", reg => "   ^ regs            ^ "}"
     end
 
+(** Prints perl regions extended with labels. *)
 fun printPerlExtReg (L (r, c, w))     = printPerlGenExtReg "\"L\"" r c "[]"
   | printPerlExtReg (H (r, c, w))     = printPerlGenExtReg "\"H\"" r c "[]"
   | printPerlExtReg (N (r, c, w, tl)) = printPerlGenExtReg "\"N\"" r c ("[" ^ printPerlExtRegList tl ^ "]")
+
+(** Prints list of perl regions extended with labels. *)
 and printPerlExtRegList []         = ""
   | printPerlExtRegList [t]        = printPerlExtReg t
   | printPerlExtRegList (t :: tl)  = printPerlExtReg t ^ ", " ^ printPerlExtRegList tl
 
+(** Prints bash rgions extended with labels. *)
 fun printBashGenExtReg r c regs explodedLines previousLineNum =
     let val p1 = R.getFrom r
 	val p2 = R.getTo r
@@ -254,33 +253,7 @@ fun printBashGenExtReg r c regs explodedLines previousLineNum =
 	 printCodeFragment (l1, c1) (l2, c2) explodedLines c previousLineNum
     end
 
-(* and printSubRegions (currentLine, currentColumn) []        explodedLines moreRegions previousLineNum = NONE *)
-(*   | printSubRegions (currentLine, currentColumn) (node::t) explodedLines moreRegions previousLineNum = *)
-(*     case node of *)
-(* 	(L (r, c, w)) => *)
-(* 	let *)
-(* 	    val endRegionLine = R.getPosLine(R.getTo r) *)
-(* 	    val endRegionCol  = R.getPosCol(R.getTo r) *)
-(* 	    val moreRegionsLine = (case moreRegions of NONE => ~1 | SOME(x,y) => x) *)
-(* 	    val moreRegionsCol = (case moreRegions of NONE => ~1 | SOME(x,y) => y) *)
-(* 	    val _  = print ("*********** " ^ (Int.toString (moreRegionsCol - endRegionCol)) ^ "*********************") *)
-(* 	in *)
-(* 	     if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
-(* 	     then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (if moreRegionsCol - endRegionCol > 1 then moreRegions else (SOME(~1,~1)))  previousLineNum []; *)
-(* 		   SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
-(* 	     else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
-(* 	end *)
-(*       | (H (r, c, w)) => *)
-(* 	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
-(* 	then (printBashGenExtReg r (printBashColor c LEAF_IN_BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum []; *)
-(* 	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
-(* 	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
-(*       | (N (r, c, w, nodeRegionList)) => *)
-(* 	if R.getPosLine(R.getFrom r) = currentLine andalso R.getPosCol(R.getFrom r) = currentColumn *)
-(* 	then (printBashGenExtReg r (printBashColor c BOX) "[]" explodedLines (SOME(~1,~1)) previousLineNum nodeRegionList; *)
-(* 	      SOME(R.getPosLine(R.getTo r), R.getPosCol(R.getTo r))) *)
-(* 	else printSubRegions (currentLine, currentColumn) t explodedLines moreRegions previousLineNum) *)
-
+(** Prints skipped fragments with the "..." string. *)
 and printSkipped explodedLines currentLine currentColumn previousLineNum color =
     let
 	(* we need to subtract 1 because of list indexing *)
@@ -310,11 +283,12 @@ and printSkipped explodedLines currentLine currentColumn previousLineNum color =
 	(currentLineList, previousLineNum, currentColumnChar)
     end
 
-
+(** Prints a code fragment given two line and columns. Used in the command-line interface pritning. *)
 and printCodeFragment (l1, c1) (l2, c2) explodedLines color previousLineNum =
     let
 	val _ = if l1 <> previousLineNum then (printSkipped explodedLines l1 c1 previousLineNum color; ()) else ()
 
+	(** Helper function for #printCodeFragment. *)
 	fun printCodeFragmentHelper (l2, c2) explodedLines (currentLine, currentColumn) =
 	    let
 		val _ = ()
@@ -331,7 +305,7 @@ and printCodeFragment (l1, c1) (l2, c2) explodedLines color previousLineNum =
 	(print color; printCodeFragmentHelper (l2, c2) explodedLines (l1, c1))
     end
 
-(* if the end of the first region (r1) is on the same line as as the start
+(** If the end of the first region (r1) is on the same line as as the start
  * of the second region (r2), then we return SOME of the start position of
  * the second region, otherwise we return NONE *)
 fun getNextLineRegs r1 r2 =
@@ -358,6 +332,7 @@ fun getNextLineRegs r1 r2 =
 	else NONE                (* there are no more regions on this line, return NONE *)
     end
 
+(** Prints a tree node in BASH format. *)
 fun printBashTreeRegNode _ [] explodedLines = raise EH.DeadBranch "Tried to print command line sub-region node which doesn't exist!"
   | printBashTreeRegNode (currentLine, currentColumn) (node::t) explodedLines =
     let
@@ -380,12 +355,14 @@ fun printBashTreeRegNode _ [] explodedLines = raise EH.DeadBranch "Tried to prin
 	else printBashTreeRegNode (currentLine, currentColumn) t explodedLines
     end
 
+(** Tests whether a node is in a region list. *)
 and inNodeRegionList (currentLine, currentColumn) [] = false
   | inNodeRegionList (currentLine, currentColumn) (node::t) =
     if currentLine = R.getPosLine(R.getFrom (getReg node)) andalso currentColumn = R.getPosCol(R.getFrom (getReg node))
     then true
     else inNodeRegionList (currentLine, currentColumn) t
 
+(** Prints a single BASH node. *)
 and printBashNode (currentLine, currentColumn) (endLine, endColumn) color nodeRegionList explodedLines =
     if inNodeRegionList (currentLine, currentColumn) nodeRegionList
     then
@@ -402,7 +379,7 @@ and printBashNode (currentLine, currentColumn) (endLine, endColumn) color nodeRe
 	  then ()
 	  else printBashNode (currentLine, currentColumn+1) (endLine, endColumn) color nodeRegionList explodedLines)
 
-(* case L - we have a leaf. We use normal highlighting for this
+(** case L - we have a leaf. We use normal highlighting for this
  * case H - We make a box for this.
  * case N - we have a node. *)
 fun printBashExtReg node explodedLines moreRegions previousLineNum =
@@ -433,19 +410,21 @@ fun printBashExtReg node explodedLines moreRegions previousLineNum =
 	     printCodeFragment (R.getPosLine(R.getTo region), R.getPosCol(R.getTo region)+1) (nextLine, nextColumn-1) explodedLines "" (R.getPosLine(R.getTo region))))
 end
 
+(** Prints regions extended with labels in BASH format. *)
 and printBashExtRegList []        explodedLines previousLineNum = ()
   (* give NONE as there cannot be any more regions to print at the end of this region *)
   | printBashExtRegList [t]       explodedLines previousLineNum = printBashExtReg t explodedLines NONE previousLineNum
   | printBashExtRegList (t :: tl) explodedLines previousLineNum = (printBashExtReg t explodedLines (getNextLineRegs (getReg t) (getReg(List.hd tl))) previousLineNum;
 								   printBashExtRegList tl explodedLines (R.getPosLine (R.getTo (getReg t))))
 
-(* getExplodedLines - returns an list of lists, each element is a line of
+(** getExplodedLines - returns an list of lists, each element is a line of
  * the input stream, which each element of that being a character from the line *)
 fun getExplodedLines stream =
     case (TextIO.inputLine stream) of
 	SOME line => (String.explode line)::(getExplodedLines stream)
 	| NONE => []
 
+(** Prints extended regions in Perl format. *)
 fun printPerlExtRegs [] = ""
   | printPerlExtRegs [(file, regs)] =
 	"{file => \"" ^ file ^ "\"" ^
@@ -455,6 +434,7 @@ fun printPerlExtRegs [] = ""
      ", regs => [" ^ printPerlExtRegList regs ^ "]}" ^
      ", " ^ printPerlExtRegs xs
 
+(** Prints extended regions in BASH format. *)
 fun printBashExtRegs [] = ()
   | printBashExtRegs [(file, regs)] =
     let
@@ -476,15 +456,12 @@ fun printBashExtRegs [] = ()
 	 printBashExtRegs xs)
     end
 
-(*fun printColRegs []        = ""
-  | printColRegs (x :: xs) = "<JBW val="  ^ (printExtRegPPSp x) ^ ">\n" ^ (printColRegs xs)*)
-
-(* determines if two colors are the same *)
+(** Determines if two colors are the same *)
 fun sameCols (c1 : color) (c2 : color) = c1 = c2
 
-(* gathers regions which have colours other than red, yellow and orange *)
-(* We should use gatherNonRedRegs instead of checkSameExtRegs to test the database *)
-(* treeReg list -> Reg.reiong list *)
+(** Gathers regions which have colours other than red, yellow and orange.
+ * We should use gatherNonRedRegs instead of checkSameExtRegs to test the database.
+ * treeReg list -> Reg.reiong list. *)
 fun gatherNonRedRegs [] = []
   | gatherNonRedRegs ((L (_, Red,    _)) :: xs) = gatherNonRedRegs xs
   | gatherNonRedRegs ((L (_, Yellow, _)) :: xs) = gatherNonRedRegs xs
@@ -499,23 +476,21 @@ fun gatherNonRedRegs [] = []
   | gatherNonRedRegs ((N (_, Orange, _, eregs)) :: xs) = (gatherNonRedRegs eregs) @ (gatherNonRedRegs xs)
   | gatherNonRedRegs ((N (r, _,      _, eregs)) :: xs) = r :: (gatherNonRedRegs eregs) @ (gatherNonRedRegs xs)
 
-(* determines if regs1 and regs2 have equal regions (disragarding
-   regions coloured red, yellow, and orange) *)
+(** Determines if regs1 and regs2 have equal regions (disragarding regions coloured red, yellow, and orange). *)
 fun checkSimExtRegs regs1 regs2 =
     let val xs1 = gatherNonRedRegs regs1
 	val xs2 = gatherNonRedRegs regs2
     in R.areEqualRegs xs1 xs2
     end
 
-(* checks if two files have equal regions (disregarding
-   regions coloured red, yellow and orange) *)
+(** Checks if two files have equal regions (disregarding regions coloured red, yellow and orange). *)
 fun checkSimRegs [] [] = true
   | checkSimRegs [] _  = false
   | checkSimRegs _ []  = false
   | checkSimRegs ((f1 : file, eregs1) :: xs1) ((f2 : file, eregs2) :: xs2) =
     checkSimExtRegs eregs1 eregs2 andalso checkSimRegs xs1 xs2
 
-(* checks if two items of the treeReg dataype have scrictly equal regions *)
+(** Checks if two items of the treeReg dataype have scrictly equal regions. *)
 fun checkSameExtRegs [] [] = true
   | checkSameExtRegs [] _  = false
   | checkSameExtRegs _  [] = false
@@ -534,46 +509,47 @@ fun checkSameExtRegs [] [] = true
     checkSameExtRegs eregs1 eregs2
   | checkSameExtRegs _ _ = false
 
-(* checks if two files have strictly equal regions *)
+(** Checks if two files have strictly equal regions. *)
 fun checkSameRegs [] [] = true
   | checkSameRegs [] _  = false
   | checkSameRegs _ []  = false
   | checkSameRegs ((f1 : file, eregs1) :: xs1) ((f2 : file, eregs2) :: xs2) =
     (*f1 = f2 andalso*) checkSameExtRegs eregs1 eregs2 andalso checkSameRegs xs1 xs2
 
-(* returns colours for any constructor of treeReg *)
+(** Returns colours for any constructor of treeReg. *)
 fun getColor (L (_, c, _))    = c
   | getColor (H (_, c, _))    = c
   | getColor (N (_, c, _, _)) = c
 
-(* returns weighting for any constructor of treeReg *)
+(** Returns weighting for any constructor of treeReg. *)
 fun getWeight (L (_, _, w))    = w
   | getWeight (H (_, _, w))    = w
   | getWeight (N (_, _, w, _)) = w
 
-(* determines if the parameter is equal to Red *)
+(** Determines if the parameter is equal to Red. *)
 fun isRed Red = true
   | isRed _   = false
 
-(* determines if the parameter is equal to Orarge *)
+(** Determines if the parameter is equal to Orarge. *)
 fun isOrange Orange = true
   | isOrange _      = false
 
-(* determines if the parameter is equal to Yellow *)
+(** Determines if the parameter is equal to Yellow. *)
 fun isYellow Yellow = true
   | isYellow _      = false
 
-(* determines if the parameter is a leaf of a tree *)
+(** Determines if the parameter is a leaf of a tree. *)
 fun isLeaf (L _) = true
   | isLeaf _     = false
 
-(* returns the extended regions in a given line number *)
+(** Returns the extended regions in a given line number. *)
 fun getExtRegLine _ [] = []
   | getExtRegLine n (x :: xs) =
     if (R.getPosLine (R.getFrom (getReg x))) = n
     then x :: (getExtRegLine n xs)
     else getExtRegLine n xs
 
+(** Splits extra labelled regions by line. *)
 fun splitExtRegLine _ [] = ([], [])
   | splitExtRegLine n (x :: xs) =
     let val (xs1, xs2) = splitExtRegLine n xs
@@ -582,11 +558,11 @@ fun splitExtRegLine _ [] = ([], [])
        else (xs1, x :: xs2)
     end
 
-(* the list is a list of extended region, the region is just a plain region *)
+(** The list is a list of extended region, the region is just a plain region. *)
 fun inclExtRegList [] _ = true
   | inclExtRegList (r' :: rs) r = R.inclReg (getReg r') r andalso inclExtRegList rs r
 
-(* returns the biggest column from a list of extended regions *)
+(** Returns the biggest column from a list of extended regions. *)
 fun getEndExtRegList [] = raise EH.DeadBranch "DeadBranch54"
   | getEndExtRegList [x] = R.getPosCol (R.getTo (getReg x))
   | getEndExtRegList (x :: xs) =
@@ -595,7 +571,7 @@ fun getEndExtRegList [] = raise EH.DeadBranch "DeadBranch54"
     in Int.max (c1, c2)
     end
 
-(* r is a region and rs a list of extended regions *)
+(** The argument r is a region and rs a list of extended regions. *)
 fun extendReg r rs =
     let val c    = getEndExtRegList rs
 	val from = R.getFrom r
@@ -604,7 +580,7 @@ fun extendReg r rs =
     in R.consReg from to'
     end
 
-(* deletes negative regions in treeReg *)
+(** Deletes negative regions in treeReg. *)
 fun delNegReg [] = []
   | delNegReg ((N (r, c, w, tl)) :: xs) =
     if Reg.isReg r
@@ -619,15 +595,15 @@ fun delNegReg [] = []
     then (H (r, c, w)) :: (delNegReg xs)
     else delNegReg xs
 
-(* delete negative regions in a list of (file, region) tuples *)
+(** Delete negative regions in a list of (file, region) tuples. *)
 fun delNegRegs [] = []
   | delNegRegs ((file, regs) :: xs) = (file, delNegReg regs) :: (delNegRegs xs)
 
-(* check for overlapping regions *)
+(** Check for overlapping regions. *)
 fun testOverLap r1 r2 _ _ =
     R.overlapReg r1 r2 orelse R.inclReg r1 r2 orelse R.inclReg r2 r1
 
-(* check for overlapping regions *)
+(** Check for overlapping regions. *)
 fun testOverLap r1 r2 (tr1 : constr) tr2 =
     tr1 = tr2 andalso (R.overlapReg r1 r2 orelse R.inclReg r1 r2 orelse R.inclReg r2 r1)
 
@@ -743,7 +719,6 @@ and endNotEnd t1 t2 r1 r2 xs col1 col2 w1 w2 f =
 
 fun simplify rl bmerge = (* bmerge is true if we want to merge regions *)
     let
-	(*val _ = Debug.printdebug2 (printOneRegs rl)*)
 	fun f (N (r, c, w, tl)) [] = [N (r, c, w, treatTree tl)]
 	  | f t [] = [t]
 	  | f (t as (N (r, c, w, tl))) (xss as (x :: xs)) =
@@ -815,6 +790,7 @@ fun simplify rl bmerge = (* bmerge is true if we want to merge regions *)
     in treatRegs rl
     end
 
+(** Gets the colour of an error kind. *)
 fun getCol' _ EK.Circularity                      = Red
   | getCol' _ (EK.MultiOcc   _)                   = Red
   | getCol' _ (EK.ValVarApp  _)                   = Red
@@ -916,6 +892,7 @@ fun getCol' _ EK.Circularity                      = Red
   | getCol' x (EK.IllFormedWhere ((lab1, _), (lab2, _))) =
     if x = lab1 then Blue else if x = lab2 then Purple else Red
 
+(** Gets a colour of an error kind and binding labels. *)
 fun getCol x (ek, bound) =
     let val col = getCol' (L.toInt x) ek
     in if L.isin x bound andalso isRed col
@@ -926,8 +903,7 @@ fun getCol x (ek, bound) =
 fun recolor col Red = col
   | recolor _   col = col
 
-
-(* This is to highlight an empty structure or an empty signature *)
+(** This is to highlight an empty structure or an empty signature. *)
 fun highlightEmptyUnmatched regs l ((EK.Unmatched (_, ls, lab)), _) =
     if null ls (* empty structure or signature *)
        andalso (L.toInt l) = lab (* the structure we need to deal with *)
@@ -967,6 +943,7 @@ fun intIsALabInRecClash n ll =
 		EQUAL => true
 	      | _ => false) ll
 
+(** Highlights a tuple in a record clash error. *)
 fun highlightTupleInRecClash reg eregs n lab ((EK.LabTyClash (l1, l2, l3, l4)), bound) weight =
     (case if L.isin lab (L.ord (map (fn (l, _) => L.fromInt l) l1))
 	     andalso
@@ -986,6 +963,7 @@ fun highlightTupleInRecClash reg eregs n lab ((EK.LabTyClash (l1, l2, l3, l4)), 
        | col => [N (reg, col, weight, eregs)])
   | highlightTupleInRecClash _ eregs _ _ _ _ = eregs
 
+(** Unhighlights a tuple in a record clash error. *)
 fun unHighightTupleInRecClash lab col ((EK.LabTyClash (l1, l2, l3, l4)), bound) =
     if L.isin lab (L.ord (map (fn (l, _) => L.fromInt l) (l1 @ l2 @ l3 @ l4)))
     then Red
@@ -993,27 +971,24 @@ fun unHighightTupleInRecClash lab col ((EK.LabTyClash (l1, l2, l3, l4)), bound) 
   | unHighightTupleInRecClash _ col _ = col
 
 
-(* get top regions *)
-
-
-(* on the right of r *)
+(** On the right of r. *)
 fun getTopRegionsLongId (A.LongIdQual (A.StrId (_, _, r', _, _), _, _, _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsLongId (A.LongIdId (A.Ident (_, _, r', _, _))) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsLongId _ _ = []
 
-(* on the left of r *)
+(** On the left of r. *)
 fun getTopRegionsStrId (A.StrId (_, _, r', _, _)) r =
     Reg.getRegionList (Reg.getTo r') (Reg.getFrom r)
   | getTopRegionsStrId _ _ = []
 
-(* on the left of r *)
+(** On the left of r *)
 fun getTopRegionsSigId (A.SigId (_, _, r', _, _)) r =
     Reg.getRegionList (Reg.getTo r') (Reg.getFrom r)
   | getTopRegionsSigId _ _ = []
 
-(* on the right of r *)
+(** On the right of r. *)
 fun getTopRegionsTypeRow (A.TypeRowOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsTypeRow (A.TypeRowEm (r', _, _)) r =
@@ -1022,7 +997,7 @@ fun getTopRegionsTypeRow (A.TypeRowOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsTypeRow _ _ = []
 
-(* on the right of r *)
+(** On the right of r. *)
 fun getTopRegionsTyClassSeq (A.TyClassSeqOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsTyClassSeq (A.TyClassSeqEm (r', _, _)) r =
@@ -1031,12 +1006,12 @@ fun getTopRegionsTyClassSeq (A.TyClassSeqOne (_, (r' :: _), _, _)) r =
     Reg.getRegionList (Reg.getTo r) (Reg.getFrom r')
   | getTopRegionsTyClassSeq _ _ = []
 
-(* on the left of r *)
+(** On the left of r. *)
 fun getTopRegionsDatName (A.DatName (_, A.TyCon (_, _, r', _, _), _, _)) r =
     Reg.getRegionList (Reg.getTo r') (Reg.getFrom r)
   | getTopRegionsDatName _ _ = []
 
-(* on the left of r *)
+(* On the left of r. *)
 fun getTopRegionsLongTyCon (A.LongTyConQual (_, ltc, _, _, _)) r =
     getTopRegionsLongTyCon ltc r
   | getTopRegionsLongTyCon (A.LongTyConId (A.TyCon (_, _, r', _, _))) r =
@@ -1048,26 +1023,23 @@ fun getTopRegionsLDatName (A.LDatName (_, ltc, _, _)) r =
     getTopRegionsLongTyCon ltc r
   | getTopRegionsLDatName _ _ = []
 
-
-(* Puts a red box around the regions *)
+(** Puts a red box around the regions. *)
 fun putRedBox regs (EK.FreeOpen, _) =
     map (fn (ereg as L (reg, Yellow, x)) => N (reg, Red, x, [ereg])
 	  | ereg => ereg) regs
   | putRedBox regs _ = regs
 
-
-(* return regions with fixed colors *)
-
-
+(** Maps a yellow leaf over the list argument. *)
 fun mapYellow   xs = map (fn x => (L (x, Yellow,      1))) xs
+(** Maps a red leaf over the list argument. *)
 fun mapRed      xs = map (fn x => (L (x, Red,         1))) xs
+(** Maps a coloured leaf over the list argument. *)
 fun mapCol l ll xs = map (fn x => (L (x, getCol l ll, 1))) xs
+(** Maps a leaf over the list argument given a colour as an argument. *)
 fun mapColC col xs = map (fn x => (L (x, col,         1))) xs
 
 
-(* check if all the regions are of a specific color *)
-
-
+(** Check if all the regions are of a specific color. *)
 fun checkAllColTR (L (_, c, _))     c' = sameCols c c'
   | checkAllColTR (H (_, c, _))     c' = sameCols c c'
   | checkAllColTR (N (_, c, _, xs)) c' = sameCols c c'
@@ -1075,49 +1047,57 @@ fun checkAllColTR (L (_, c, _))     c' = sameCols c c'
 					 checkAllCol xs c'
 and checkAllCol xs c = List.all (fn x => checkAllColTR x c) xs
 
+(** Check orange is the colour embedded in the argument. *)
 fun checkAllOrange xs = checkAllCol xs Orange
 
-
-(* return the positions of a slice *)
-
-
+(** Gets the position of a slice for an abstract syntax tree node. *)
 fun getpos_progs (A.Progs xs) ll =
     getpos_proglist xs ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_proglist []                      _  = []
   | getpos_proglist ((x, file, _, _) :: xs) ll =
     (case putRedBox (getpos_prog x ll) ll of
 	[] => getpos_proglist xs ll
       | y  => (file, y) :: (getpos_proglist xs ll))
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_prog (A.Prog tdl)           ll = getpos_progonelist tdl ll
   | getpos_prog (A.ProgDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_progonelist []        _  = []
   | getpos_progonelist (x :: xs) ll = (getpos_progone x ll) @ (getpos_progonelist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_afile (A.AFile (_, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_afile A.AFileDots            _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_abool (A.ABool (_, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_abool A.ABoolDots            _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_progone (A.ProgOneDec td)              ll = getpos_topdec td ll
   | getpos_progone (A.ProgOneExp (e, _, r, l, _)) ll = (L (r, getCol l ll, 1)) :: (getpos_exp e ll)
   | getpos_progone (A.ProgOneParse (_, rs, _, _)) ll = mapYellow rs
   | getpos_progone (A.ProgOneFile  (af, _))       ll = getpos_afile af ll
   | getpos_progone (A.ProgOneDots pl)             ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_topdec (A.TopDec xs)     ll = getpos_topdeconelist xs ll
   | getpos_topdec (A.TopDecDots pl) ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_topdeconelist []        _  = []
   | getpos_topdeconelist (x :: xs) ll = (getpos_topdecone x ll) @ (getpos_topdeconelist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_topdecone (A.TopDecOneTes (x, _)) ll = getpos_smltes x ll
   | getpos_topdecone (A.TopDecOneDec (x, _)) ll = getpos_atopdec x ll
   | getpos_topdecone (A.TopDecOneDots pl)    ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_smltes (A.SmlTesDec   (t,  rs, _)) ll = (mapRed rs) @ (getpos_atopdec t ll)
   | getpos_smltes (A.SmlTesSpec  (s,  rs, _)) ll = (mapRed rs) @ (getpos_spec s ll)
   | getpos_smltes (A.SmlTesUse   (af, rs, _)) ll = (mapRed rs) @ (getpos_afile af ll)
@@ -1127,20 +1107,25 @@ and getpos_smltes (A.SmlTesDec   (t,  rs, _)) ll = (mapRed rs) @ (getpos_atopdec
   | getpos_smltes (A.SmlTesType  (st, rs, _)) ll = mapRed rs
   | getpos_smltes (A.SmlTesDots pl)           ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_atopdec (A.ATopDecStr s)   ll = getpos_strdec s ll
   | getpos_atopdec (A.ATopDecSig s)   ll = getpos_sigdec s ll
   (*| getpos_atopdec (A.ATopDecFun f)   ll = getpos_fundec f ll*)
   | getpos_atopdec (A.ATopDecDots pl) ll = getpos_partlist pl ll
 
-(*and getpos_fundec (A.FunDec (fb, r, l, _)) ll = (L (r, getCol l ll, 1)) :: (getpos_funbind fb ll)
+(*(** Gets the position of a slice for an abstract syntax tree node. *)
+and getpos_fundec (A.FunDec (fb, r, l, _)) ll = (L (r, getCol l ll, 1)) :: (getpos_funbind fb ll)
   | getpos_fundec (A.FunDecDots pl)        ll = getpos_partlist pl ll*)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_funbind (A.FunBind (fbol, rl, _)) ll = getpos_funbindonelist fbol ll
   | getpos_funbind (A.FunBindDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_funbindonelist xs ll = foldr (fn (x, y) => (getpos_funbindone x ll) @ y) [] xs
 
 (* TODO: We still have to get the context of the structure ids. *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_funbindone (A.FunBindO (fid, sid, si, se, rs, l, _))       ll =
     (mapCol l ll rs)          @
     (getpos_funid     fid ll) @
@@ -1181,6 +1166,7 @@ and getpos_funbindone (A.FunBindO (fid, sid, si, se, rs, l, _))       ll =
   | getpos_funbindone (A.FunBindODots pl)                             ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigdec (A.SigDec (sb, r, _)) ll =
     let val gpp = getpos_sigbind sb ll
 	val c   = if checkAllOrange gpp
@@ -1190,18 +1176,23 @@ and getpos_sigdec (A.SigDec (sb, r, _)) ll =
     end
   | getpos_sigdec (A.SigDecDots pl)     ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigbind (A.SigBind (sbol, rl, _)) ll = getpos_sigbindonelist sbol ll
   | getpos_sigbind (A.SigBindDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigbindonelist xs ll = foldr (fn (x, y) => (getpos_sigbindone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigbindone (A.SigBindOne (id, se, r, l, _)) ll =
     let val gp1 = getpos_sigid id ll
 	val gp2 = getpos_labsigexp se ll
 	val col = getCol l ll
 	val c   = if checkAllOrange gp1
-		     andalso checkAllOrange gp2
-		     andalso isRed col
+		     (** Gets the position of a slice for an abstract syntax tree node. *)
+andalso checkAllOrange gp2
+		     (** Gets the position of a slice for an abstract syntax tree node. *)
+andalso isRed col
 		  then Orange
 		  else col
 	val c'  = if isOrange c then Orange else Red
@@ -1211,11 +1202,14 @@ and getpos_sigbindone (A.SigBindOne (id, se, r, l, _)) ll =
   | getpos_sigbindone (A.SigBindOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdec (A.StrDec (xs, l, n)) ll = getpos_strdeconelist xs ll
   | getpos_strdec (A.StrDecDots pl)     ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdeconelist xs ll = foldr (fn (x, y) => (getpos_strdecone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdecone (A.StrDecOneDec d)                    ll =
     getpos_decs d ll
   | getpos_strdecone (A.StrDecOneStr (sb, r, _))           ll =
@@ -1232,6 +1226,7 @@ and getpos_strdecone (A.StrDecOneDec d)                    ll =
   | getpos_strdecone (A.StrDecOneDots pl)                  ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strbind (A.StrBind (xs, rs, n)) ll =
     let val gpp = getpos_strbindonelist xs ll
 	val c   = if checkAllOrange gpp
@@ -1242,8 +1237,10 @@ and getpos_strbind (A.StrBind (xs, rs, n)) ll =
   | getpos_strbind (A.StrBindDots pl)      ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strbindonelist xs ll = foldr (fn (x, y) => (getpos_strbindone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strbindone (A.StrBindOneOp (id, si, se, rl, l, _)) ll =
     let val r   = case rl of
 		      [r, _] => r
@@ -1297,6 +1294,7 @@ and getpos_strbindone (A.StrBindOneOp (id, si, se, rl, l, _)) ll =
     end
   | getpos_strbindone (A.StrBindOneDots pl)                   ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_ltreadone (A.LTReaDOne (dn, ty, [r1, r2], l, _)) ll =
     (mapCol l ll [r1, r2]) @
     (getpos_ldatname dn ll) @
@@ -1307,27 +1305,34 @@ and getpos_ltreadone (A.LTReaDOne (dn, ty, [r1, r2], l, _)) ll =
   | getpos_ltreadone (A.LTReaDOneDots pl)                   ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_ltreadonelist xs ll = foldr (fn (x, y) => (getpos_ltreadone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_ltreadesc (A.LTReaDesc (xs, rs, l, _)) ll = getpos_ltreadonelist xs ll
   | getpos_ltreadesc (A.LTReaDescDots pl)         ll = getpos_partlist pl ll
 
-(*and getpos_treadone (A.TReaDOne (dn, ty, r, l, _)) ll =
+(*(** Gets the position of a slice for an abstract syntax tree node. *)
+and getpos_treadone (A.TReaDOne (dn, ty, r, l, _)) ll =
     (L (r, getCol l ll, 1)) :: (getpos_datname dn ll) @ (getpos_labtype ty ll)
   | getpos_treadone (A.TReaDOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_treadonelist xs ll = foldr (fn (x, y) => (getpos_treadone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_treadesc (A.TReaDesc (xs, rs, _)) ll = getpos_treadonelist xs ll
   | getpos_treadesc (A.TReaDescDots pl)      ll = getpos_partlist pl ll*)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labsigexp (A.LabSigExp (e, rl, re, l, _)) ll =
     let val gp = getpos_sigexp e ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labsigexp (A.LabSigExpDots pl)            ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigexp (A.SigExpBasic (sp, rl, l, _))     ll =
     (mapCol l ll rl)                  @
     (highlightEmptyUnmatched rl l ll) @
@@ -1341,12 +1346,14 @@ and getpos_sigexp (A.SigExpBasic (sp, rl, l, _))     ll =
   | getpos_sigexp (A.SigExpDots pl)                  ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labstrexp (A.LabStrExp (e, rl, re, l, _)) ll =
     let val gp = getpos_strexp e ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labstrexp (A.LabStrExpDots pl)            ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strexp (A.StrExpBasic (sd, rl, l, _))     ll =
     (mapCol l ll rl)                  @
     (highlightEmptyUnmatched rl l ll) @
@@ -1376,20 +1383,26 @@ and getpos_strexp (A.StrExpBasic (sd, rl, l, _))     ll =
   | getpos_strexp (A.StrExpDots pl)                  ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_spec (A.Spec (spol, _)) ll = getpos_speconelist spol ll
   | getpos_spec (A.SpecDots pl)    ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_speconelist xs ll = foldr (fn (x, y) => (getpos_specone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longtyconeq (A.LongTyConEq (xs, _, _, _)) ll = foldr (fn (x, y) => (getpos_longtycon x ll) @ y) [] xs
   | getpos_longtyconeq (A.LongTyConEqDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longstrideq (A.LongStrIdEq (xs, _, _)) ll = foldr (fn (x, y) => (getpos_longstrid x ll) @ y) [] xs
   | getpos_longstrideq (A.LongStrIdEqDots pl)     ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigidseq (A.SigIdSeq (xs, _)) ll = foldr (fn (x, y) => (getpos_sigid x ll) @ y) [] xs
   | getpos_sigidseq (A.SigIdSeqDots pl)  ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_specone (A.SpecValue (vd, r, l, _))     ll =
     let val gpp = getpos_valdesc vd ll
 	val col = getCol l ll
@@ -1428,6 +1441,7 @@ and getpos_specone (A.SpecValue (vd, r, l, _))     ll =
   | getpos_specone (A.SpecSsi (s, ls, rs, l, _)) ll = (mapCol l ll rs) @ (getpos_spec s ll) @ (getpos_longstrideq ls ll)
   | getpos_specone (A.SpecOneDots pl)            ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdescone (A.StrDescOne (id, se, r, l, _)) ll =
     let val gp1 = getpos_strid  id ll
 	val gp2 = getpos_labsigexp se ll
@@ -1444,11 +1458,14 @@ and getpos_strdescone (A.StrDescOne (id, se, r, l, _)) ll =
   | getpos_strdescone (A.StrDescOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdesconelist xs ll = foldr (fn (x, y) => (getpos_strdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strdesc (A.StrDesc (sdol, rl, _)) ll = getpos_strdesconelist sdol ll
   | getpos_strdesc (A.StrDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_condescone (A.ConDescOneId (id, _))           ll =
     getpos_ident id ll
   | getpos_condescone (A.ConDescOneOf (id, ty, r, l, _)) ll =
@@ -1459,11 +1476,14 @@ and getpos_condescone (A.ConDescOneId (id, _))           ll =
   | getpos_condescone (A.ConDescOneNoOf (id, _))         ll = getpos_ident id ll
   | getpos_condescone (A.ConDescOneDots pl)              ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_condesconelist xs ll = foldr (fn (x, y) => (getpos_condescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_condesc (A.ConDesc (xs, rl, _)) ll = getpos_condesconelist xs ll
   | getpos_condesc (A.ConDescDots pl)      ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datdescone (A.DatDescOne (dn, cd, r, l, _)) ll =
     let val gp1 = getpos_datname dn ll
 	val gp2 = getpos_condesc cd ll
@@ -1473,11 +1493,14 @@ and getpos_datdescone (A.DatDescOne (dn, cd, r, l, _)) ll =
   | getpos_datdescone (A.DatDescOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datdesconelist xs ll = foldr (fn (x, y) => (getpos_datdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datdesc (A.DatDesc (ddol, rl, _)) ll = getpos_datdesconelist ddol ll
   | getpos_datdesc (A.DatDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valdescone (A.ValDescOne (id, ty, r, l, _)) ll =
     let val gp1 = getpos_labid   id ll
 	val gp2 = getpos_labtype ty ll
@@ -1492,19 +1515,25 @@ and getpos_valdescone (A.ValDescOne (id, ty, r, l, _)) ll =
   | getpos_valdescone (A.ValDescOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valdesconelist xs ll = foldr (fn (x, y) => (getpos_valdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valdesc (A.ValDesc (vdol, rl, _)) ll = getpos_valdesconelist vdol ll
   | getpos_valdesc (A.ValDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typdescone (A.TypDescOne (dn, _, _)) ll = getpos_datname dn ll
   | getpos_typdescone (A.TypDescOneDots pl)     ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typdesconelist xs ll = foldr (fn (x, y) => (getpos_typdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typdesc (A.TypDesc (tdol, rl, _)) ll = getpos_typdesconelist tdol ll
   | getpos_typdesc (A.TypDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tdrdescone (A.TdrDescOne (dn, ty, r, l, _)) ll =
     let val gp1 = getpos_datname dn ll
 	val gp2 = getpos_labtype ty ll
@@ -1514,11 +1543,14 @@ and getpos_tdrdescone (A.TdrDescOne (dn, ty, r, l, _)) ll =
   | getpos_tdrdescone (A.TdrDescOneDots pl)            ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tdrdesconelist xs ll = foldr (fn (x, y) => (getpos_tdrdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tdrdesc (A.TdrDesc (tdol, rl, _)) ll = getpos_tdrdesconelist tdol ll
   | getpos_tdrdesc (A.TdrDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_excdescone (A.ExcDescOne (id, _, _))       ll = getpos_ident id ll
   | getpos_excdescone (A.ExcDescOf (id, ty, r, l, _)) ll =
     let val gp1 = getpos_labid   id ll
@@ -1528,11 +1560,14 @@ and getpos_excdescone (A.ExcDescOne (id, _, _))       ll = getpos_ident id ll
   | getpos_excdescone (A.ExcDescOneDots pl)           ll =
     getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_excdesconelist xs ll = foldr (fn (x, y) => (getpos_excdescone x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_excdesc (A.ExcDesc (edol, rl, _)) ll = getpos_excdesconelist edol ll
   | getpos_excdesc (A.ExcDescDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_part (A.PartExp   e) ll = getpos_exp       e ll
   | getpos_part (A.PartDec   d) ll = getpos_dec       d ll
   | getpos_part (A.PartType  t) ll = getpos_type      t ll
@@ -1552,9 +1587,11 @@ and getpos_part (A.PartExp   e) ll = getpos_exp       e ll
   | getpos_part (A.PartTes   t) ll = getpos_smltes    t ll
   | getpos_part (A.PartClass c) ll = getpos_class     c ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_partlist [] _         = []
   | getpos_partlist (p :: pl) ll = (getpos_part p ll) @ (getpos_partlist pl ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_scon (A.SconInt    (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_scon (A.SconWord   (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_scon (A.SconReal   (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
@@ -1562,39 +1599,48 @@ and getpos_scon (A.SconInt    (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_scon (A.SconChar   (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_scon A.SconDots                     _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_pcon (A.PconBool (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_pcon (A.PconRef  (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_pcon (A.PconNil  (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_pcon A.PconDots                   _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labid (A.LabId (id, rl, l, _)) ll =
     let val gp = getpos_ident id ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labid (A.LabIdDots pl)         ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_ident (A.Ident (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_ident (A.IdentPcon pc)          ll = getpos_pcon pc ll
   | getpos_ident A.IdentDots               _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labclass (A.LabClass (id, rl, l, _)) ll =
     let val gp = getpos_class id ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labclass (A.LabClassDots pl)         ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_class (A.Class (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_class A.ClassDots               _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_strid (A.StrId (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_strid A.StrIdDots               _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_sigid (A.SigId (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_sigid A.SigIdDots               _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_funid (A.FunId (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_funid A.FunIdDots               _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longstrid (A.LongStrIdQual (id, lid, r, l, _)) ll =
     let val gp1 = getpos_strid     id ll
 	val gp2 = getpos_longstrid lid ll
@@ -1604,6 +1650,7 @@ and getpos_longstrid (A.LongStrIdQual (id, lid, r, l, _)) ll =
   | getpos_longstrid (A.LongStrIdId id)                    ll = getpos_strid id ll
   | getpos_longstrid (A.LongStrIdDots pl)                  ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longid (A.LongIdQual (sid, lid, r, l, _)) ll =
     let val gp1 = getpos_strid sid ll
 	val gp2 = getpos_longid lid ll
@@ -1613,6 +1660,7 @@ and getpos_longid (A.LongIdQual (sid, lid, r, l, _)) ll =
   | getpos_longid (A.LongIdId id) ll                    = getpos_ident id ll
   | getpos_longid (A.LongIdDots pl) ll                  = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longtycon (A.LongTyConQual (sid, ltc, r, l, _)) ll =
     let val gp1 = getpos_strid sid ll
 	val gp2 = getpos_longtycon ltc ll
@@ -1622,28 +1670,35 @@ and getpos_longtycon (A.LongTyConQual (sid, ltc, r, l, _)) ll =
   | getpos_longtycon (A.LongTyConId tc) ll                    = getpos_tycon tc ll
   | getpos_longtycon (A.LongTyConDots pl) ll                  = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tylab (A.TyLab (_, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_tylab A.TyLabDots _             = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tycon (A.TyCon (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_tycon A.TyConDots _                = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typevar (A.TypeVar (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_typevar (A.EqualityTypeVar (_, _, r, l, _)) ll = [L (r, getCol l ll, 1)]
   | getpos_typevar A.TypeVarDots _                = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typevarlist [] _           = []
   | getpos_typevarlist (tv :: tvl) ll = (getpos_typevar tv ll) @ (getpos_typevarlist tvl ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtyvar (A.LabTypeVar (tv, rl, l, _)) ll =
     let val gp = getpos_typevar tv ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labtyvar (A.LabTypeVarDots tvl) ll        = getpos_typevarlist tvl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtyvarlist [] _         = []
   | getpos_labtyvarlist (x :: xs) ll = (getpos_labtyvar x ll) @ (getpos_labtyvarlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tyvarseq (A.TypeVarSeqOne (tv, r, l, _))   ll =
     let (*val _  = Debug.printdebug2 "foo"*)
 	val gp = getpos_typevar tv ll
@@ -1658,18 +1713,22 @@ and getpos_tyvarseq (A.TypeVarSeqOne (tv, r, l, _))   ll =
     end
   | getpos_tyvarseq (A.TypeVarSeqDots tvl)            ll = getpos_typevarlist tvl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typelist [] _          = []
   | getpos_typelist (ty :: tl) ll = (getpos_type ty ll) @ (getpos_typelist tl ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtypelist [] _          = []
   | getpos_labtypelist (ty :: tl) ll = (getpos_labtype ty ll) @ (getpos_labtypelist tl ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtype (A.LabType (t, rl, l, _)) ll =
     let val gp = getpos_type t ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labtype (A.LabTypeDots pl) ll        = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tyfield (A.TyField (tl, lt, r, l, _)) ll =
     let val gp1 = (getpos_tylab tl ll)
 	val gp2 = (getpos_labtype lt ll)
@@ -1678,9 +1737,11 @@ and getpos_tyfield (A.TyField (tl, lt, r, l, _)) ll =
     end
   | getpos_tyfield (A.TyFieldDots pl) ll            = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tyfieldlist []        _  = []
   | getpos_tyfieldlist (x :: xs) ll = (getpos_tyfield x ll) @ (getpos_tyfieldlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
   | getpos_type (A.TypeArrow (ty1, ty2, r, l, _)) ll  =
     let val gp1 = getpos_labtype ty1 ll
@@ -1711,6 +1772,7 @@ and getpos_type (A.TypeOneVar tv) ll                  = getpos_typevar tv ll
     end
   | getpos_type (A.TypeDots spl) ll                   = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typeRow (A.TypeRowOne (ty, rs, l, _)) ll =
     let val gpp = getpos_type ty ll
 	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "DeadBranch64" (*trickTyCon r gpp*)
@@ -1724,6 +1786,7 @@ and getpos_typeRow (A.TypeRowOne (ty, rs, l, _)) ll =
     end
   | getpos_typeRow (A.TypeRowDots spl)           ll = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_conbind (A.ConBind (id, _)) ll             = getpos_ident id ll
   | getpos_conbind (A.ConBindOf (id, ty, r, l, _)) ll =
     let val gp1 = (getpos_labid id ll)
@@ -1734,12 +1797,15 @@ and getpos_conbind (A.ConBind (id, _)) ll             = getpos_ident id ll
   | getpos_conbind (A.ConBindNoOf (id, _)) ll         = getpos_ident id ll
   | getpos_conbind (A.ConBindDots spl) ll             = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_conbindlist [] _         = []
   | getpos_conbindlist (x :: xs) ll = (getpos_conbind x ll) @ (getpos_conbindlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_conbindseq (A.ConBindSeq tcl) ll     = getpos_conbindlist tcl ll
   | getpos_conbindseq (A.ConBindSeqDots spl) ll = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valbindcore (A.ValBindCore (p, e, r, l, _)) ll =
     let val gp1 = getpos_labpat p ll
 	val gp2 = getpos_labexp e ll
@@ -1748,18 +1814,22 @@ and getpos_valbindcore (A.ValBindCore (p, e, r, l, _)) ll =
     end
   | getpos_valbindcore (A.ValBindCoreDots pl) ll          = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valbindcorelist [] _         = []
   | getpos_valbindcorelist (x :: xs) ll = (getpos_valbindcore x ll) @ (getpos_valbindcorelist xs ll)
 
 (* we don't care about these regions *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valbindseq (A.ValBindSeq (vbl, rl, _)) ll = getpos_valbindcorelist vbl ll
   | getpos_valbindseq (A.ValBindSeqDots pl) ll      = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_valbind (A.ValBindRec (vbs, r, _, _)) ll = (L (r, Red, 1)) :: (getpos_valbindseq vbs ll)
   | getpos_valbind (A.ValBind vbs)               ll = getpos_valbindseq vbs ll
   | getpos_valbind (A.ValBindDots pl)            ll = getpos_partlist pl ll
 
 (* what do we do about the regions? *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datname (A.DatName (tvs, tn, rl, _)) ll =
     let val gp1 = getpos_tycon tn ll
 	val gp2 = getpos_tyvarseq tvs ll
@@ -1771,6 +1841,7 @@ and getpos_datname (A.DatName (tvs, tn, rl, _)) ll =
     end
   | getpos_datname A.DatNameDots ll                = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_ldatname (A.LDatName (tvs, tn, rl, _)) ll =
     let val gp1 = getpos_longtycon tn ll
 	val gp2 = getpos_tyvarseq tvs ll
@@ -1778,6 +1849,7 @@ and getpos_ldatname (A.LDatName (tvs, tn, rl, _)) ll =
     end
   | getpos_ldatname A.LDatNameDots ll                = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datbind (A.DatBind (dn, tcs, r, l, _)) ll =
     let val gp1 = getpos_datname dn ll
 	val gp2 = getpos_conbindseq tcs ll
@@ -1787,10 +1859,12 @@ and getpos_datbind (A.DatBind (dn, tcs, r, l, _)) ll =
     end
   | getpos_datbind (A.DatBindDots spl) ll            = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datbindlist [] _         = []
   | getpos_datbindlist (x :: xs) ll = (getpos_datbind x ll) @ (getpos_datbindlist xs ll)
 
 (* we don't care about these regions *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_datbindseq (A.DatBindSeq (dbl, rl, _)) ll = getpos_datbindlist dbl ll
   | getpos_datbindseq (A.DatBindSeqDots spl)      ll = getpos_partlist spl ll
 
@@ -1798,10 +1872,12 @@ and getpos_datbindseq (A.DatBindSeq (dbl, rl, _)) ll = getpos_datbindlist dbl ll
  * the boxes around this kind of argument *)
 (* 2009-09-28: changed it back to what it was because this need more careful treatment.
  * at least as for the other arguments. *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labatpat (A.LabAtPat (ap, r, l, _))    ll = [(N (r, getCol l ll, 1, getpos_atpat ap ll))]
   (*getpos_atpat ap ll*)
   | getpos_labatpat (A.LabAtPatDots pl)           ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fmatch (A.FMatchId (id, fix, _))             ll = getpos_ident id ll
   | getpos_fmatch (A.FMatchApp (fm, lap, rl, ra, l, _)) ll =
     let val col = (*if Reg.isVisList rl then Red else*) getCol l ll
@@ -1833,6 +1909,7 @@ and getpos_fmatch (A.FMatchId (id, fix, _))             ll = getpos_ident id ll
   | getpos_fmatch (A.FMatchNoApp (fm, _))               ll = getpos_fmatch fm ll
   | getpos_fmatch A.FMatchDots                          _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labfmatch (A.LabFMatch (fm, rl, l, _)) ll =
     let val gp = getpos_fmatch fm ll
     in (mapCol l ll rl) @ gp
@@ -1840,6 +1917,7 @@ and getpos_labfmatch (A.LabFMatch (fm, rl, l, _)) ll =
   | getpos_labfmatch (A.LabFMatchSl (fm, _)) ll      = getpos_fmatch fm ll
   | getpos_labfmatch A.LabFMatchDots _               = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fmatchty (A.FMatchT fm)                  ll = getpos_labfmatch fm ll
   | getpos_fmatchty (A.FMatchTTy (fm, ty, r, l, n)) ll =
     let val gp1 = getpos_labfmatch fm ll
@@ -1849,6 +1927,7 @@ and getpos_fmatchty (A.FMatchT fm)                  ll = getpos_labfmatch fm ll
     end
   | getpos_fmatchty A.FMatchTDots                   _  = []
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fvalbindcore (A.FValBindCore (fm, e, r, l, _))      ll =
     let val gp1 = getpos_fmatchty fm ll
 	val gp2 = getpos_labexp e ll
@@ -1871,9 +1950,11 @@ and getpos_fvalbindcore (A.FValBindCore (fm, e, r, l, _))      ll =
     end*)
   | getpos_fvalbindcore (A.FVBCoreDots pl)                    ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fvalbindcorelist [] _ = []
   | getpos_fvalbindcorelist (x :: xs) ll = (getpos_fvalbindcore x ll) @ (getpos_fvalbindcorelist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fvalbindone (A.FValBindOne (x, rl, l, _)) ll =
     let val gpx = getpos_fvalbindcorelist x ll
 	val col = getCol l ll
@@ -1885,14 +1966,17 @@ and getpos_fvalbindone (A.FValBindOne (x, rl, l, _)) ll =
     end
   | getpos_fvalbindone (A.FVBOneDots pl) ll             = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fvalbindonelist [] _         = []
   | getpos_fvalbindonelist (x :: xs) ll = (getpos_fvalbindone x ll) @ (getpos_fvalbindonelist xs ll)
 
 (* we don't care about these regions *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_fvalbind (A.FValBind (x, rl, _)) ll =
     getpos_fvalbindonelist x ll
   | getpos_fvalbind (A.FValBindDots pl) ll     = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typbind (A.TypBind (dn, ty, r, l, _)) ll =
     let val gp1 = getpos_datname dn ll
 	val gp2 = getpos_labtype ty ll
@@ -1902,12 +1986,15 @@ and getpos_typbind (A.TypBind (dn, ty, r, l, _)) ll =
     end
   | getpos_typbind (A.TypBindDots pl) ll            = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typbindlist []        _  = []
   | getpos_typbindlist (x :: xs) ll = (getpos_typbind x ll) @ (getpos_typbindlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_typbindseq (A.TypBindSeq (tbl, rl, _)) ll = getpos_typbindlist tbl ll
   | getpos_typbindseq (A.TypBindSeqDots pl)       ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_exbind (A.ExBind (id, l, _))           ll =
     (case getpos_ident id ll of
 	 [L (r, c, w)] => [L (r, recolor c (getCol l ll), w)]
@@ -1931,37 +2018,47 @@ and getpos_exbind (A.ExBind (id, l, _))           ll =
   | getpos_exbind (A.ExBindNo (id, _))            ll = getpos_ident id ll
   | getpos_exbind (A.ExBindDots pl)               ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_exbindlist []        _  = []
   | getpos_exbindlist (x :: xs) ll = (getpos_exbind x ll) @ (getpos_exbindlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_exbindseq (A.ExBindSeq (ebl, rl, _)) ll = getpos_exbindlist ebl ll
   | getpos_exbindseq (A.ExBindSeqDots pl)       ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longstridlist []        _  = []
   | getpos_longstridlist (x :: xs) ll = (getpos_longstrid x ll) @ (getpos_longstridlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_longstrseq (A.LongStrSeq (idl, _)) ll = getpos_longstridlist idl ll
   | getpos_longstrseq (A.LongStrSeqDots pl)   ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_identlist []        _  = []
   | getpos_identlist (x :: xs) ll = (getpos_ident x ll) @ (getpos_identlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_identseq (A.IdentSeq (idl, _)) ll = getpos_identlist idl ll
   | getpos_identseq (A.IdentSeqDots pl)   ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtyclasslist []        _  = []
   | getpos_labtyclasslist (x :: xs) ll = (getpos_labtyclass x ll) @ (getpos_labtyclasslist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tyclass (A.TyClassCl (cl, r, l, _)) ll = (L (r, getCol l ll, 1)) :: (getpos_labclass cl ll)
   | getpos_tyclass (A.TyClassTy (ty, _, _))    ll = getpos_type ty ll
   | getpos_tyclass (A.TyClassDots pl)          ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labtyclass (A.LabTyClass (t, rl, l, _)) ll =
     let val gp = getpos_tyclass t ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labtyclass (A.LabTyClassDots pl)        ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_tyclassseq (A.TyClassSeqOne (ty, rs, l, _)) ll =
     let val gpp = getpos_tyclass ty ll
 	val r'  = case rs of [r] => r | _ => raise EH.DeadBranch "DeadBranch65"
@@ -1974,6 +2071,7 @@ and getpos_tyclassseq (A.TyClassSeqOne (ty, rs, l, _)) ll =
     end
   | getpos_tyclassseq (A.TyClassSeqDots spl)           ll = getpos_partlist spl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_dec (A.DecVal (tvs, vb, r, _))                 ll =
     (L (r, Red, 1)) ::
     (getpos_tyvarseq tvs ll) @
@@ -2043,15 +2141,19 @@ and getpos_dec (A.DecVal (tvs, vb, r, _))                 ll =
   | getpos_dec (A.DecDots ptl)                            ll =
     getpos_partlist ptl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_declist [] _         = []
   | getpos_declist (x :: xs) ll = (getpos_dec x ll) @ (getpos_declist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_decs (A.DecsDots pl)  ll = getpos_partlist pl ll
   | getpos_decs (A.Decs (dl, _)) ll = getpos_declist dl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_explist [] _         = []
   | getpos_explist (e :: el) ll = (getpos_exp e ll) @ (getpos_explist el ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labexplist [] _         _ = []
   | getpos_labexplist (e :: el) ll x =
     let val gp = getpos_labexp e ll
@@ -2063,9 +2165,11 @@ and getpos_labexplist [] _         _ = []
 	   (highlightTupleInRecClash r gp n l ll 1) @ (fgpp (SOME (rs, n + 1, l)))
     end
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labexp (A.LabExp (e, rl, re, l, _)) ll = (mapCol l ll rl) @ (getpos_exp e ll)
   | getpos_labexp (A.LabExpDots pl)            ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_expfield (A.ExpField (tl, e, r, rlt, l, _)) ll =
     let val gp1 = getpos_tylab tl ll
 	val gp2 = getpos_labexp e ll
@@ -2075,9 +2179,11 @@ and getpos_expfield (A.ExpField (tl, e, r, rlt, l, _)) ll =
     end
   | getpos_expfield (A.ExpFieldDots pl) ll           = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_expfieldlist [] _         = []
   | getpos_expfieldlist (x :: xs) ll = (getpos_expfield x ll) @ (getpos_expfieldlist xs ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_seqexp (A.SeqExp (el, e, r, rs, l, n)) ll =
     let val gp = getpos_labexplist (el @ [e]) ll NONE
     in (mapCol l ll (r :: rs)) @ gp
@@ -2089,6 +2195,7 @@ and getpos_seqexp (A.SeqExp (el, e, r, rs, l, n)) ll =
     end
   | getpos_seqexp (A.SeqExpDots pl) ll               = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_atexp (A.AtExpId id) ll                        = getpos_longid id ll
   | getpos_atexp (A.AtExpScon sc) ll                      = getpos_scon sc ll
   | getpos_atexp (A.AtExpTuple (el, rl, l, _)) ll         =
@@ -2143,6 +2250,7 @@ and getpos_atexp (A.AtExpId id) ll                        = getpos_longid id ll
     end
   | getpos_atexp (A.AtExpDots pl) ll                      = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_quotes [] _ = []
   | getpos_quotes (quote :: quotes) ll =
     let val gp  = getpos_quote  quote  ll
@@ -2150,6 +2258,7 @@ and getpos_quotes [] _ = []
     in gp @ gpp
     end
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_quote (A.Quote (_, reg, lab, _)) ll = [L (reg, getCol lab ll, 1)]
   | getpos_quote (A.Antiquote (exp, regs, lab, _)) ll =
     let val gp = getpos_exp exp ll
@@ -2157,6 +2266,7 @@ and getpos_quote (A.Quote (_, reg, lab, _)) ll = [L (reg, getCol lab ll, 1)]
     end
   | getpos_quote (A.QuoteDots parts) ll = getpos_partlist parts ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_exp (A.ExpAtExp ae) ll                    = getpos_atexp ae ll
   | getpos_exp (A.ExpFn (m, r, l, _)) ll             =
     let val gp2 = (getpos_match m ll)
@@ -2234,12 +2344,15 @@ and getpos_exp (A.ExpAtExp ae) ll                    = getpos_atexp ae ll
   | getpos_exp (A.ExpDots pl) ll                      = getpos_partlist pl ll
 
 (* we don't care about these regions *)
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_match (A.Match (l, rl, _)) ll = getpos_mrulelist l ll
   | getpos_match (A.MatchDots pl) ll     = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_mrulelist [] _         = []
   | getpos_mrulelist (m :: ml) ll = (getpos_mrule m ll) @ (getpos_mrulelist ml ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_mrule (A.Mrule (p, e, r, l, _)) ll =
     let val gp1 = getpos_labpat p ll
 	val gp2 = getpos_labexp e ll
@@ -2248,9 +2361,11 @@ and getpos_mrule (A.Mrule (p, e, r, l, _)) ll =
     end
   | getpos_mrule (A.MruleDots pl)  ll         = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_patlist [] _         = []
   | getpos_patlist (p :: pl) ll = (getpos_pat p ll) @ (getpos_patlist pl ll)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labpatlist []        _  _ = []
   | getpos_labpatlist (p :: pl) ll x =
     let val gp = getpos_labpat p ll
@@ -2265,12 +2380,14 @@ and getpos_labpatlist []        _  _ = []
  * It is useful to highlight correctly a record clash in tuple cases.
  * The integer is to know the position in the list. *)
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labpat (A.LabPat (p, rl, rp, l, _)) ll =
     let val gp = getpos_pat p ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labpat (A.LabPatDots pl) ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_identty (A.IdentTyId id)               ll = getpos_ident id ll
   | getpos_identty (A.IdentTyTy (id, t, r, l, _)) ll =
     let val gp1 = getpos_labid id ll
@@ -2280,12 +2397,14 @@ and getpos_identty (A.IdentTyId id)               ll = getpos_ident id ll
     end
   | getpos_identty (A.IdentTyDots pl)             ll = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_labidty (A.LabIdTy (id, rl, l, _)) ll =
     let val gp = getpos_identty id ll
     in (mapCol l ll rl) @ gp
     end
   | getpos_labidty (A.LabIdTyDots pl) ll         = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_patfield (A.PatField (tl, p, r, rl, l, _)) ll   =
     let val gp1 = getpos_tylab tl ll
 	val gp2 = getpos_labpat p ll
@@ -2303,8 +2422,10 @@ and getpos_patfield (A.PatField (tl, p, r, rl, l, _)) ll   =
   | getpos_patfield (A.PatFieldWild (r, l, _)) ll      = [(L (r, getCol l ll, 1))]
   | getpos_patfield (A.PatFieldDots pl) ll             = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_patfieldlist xs ll = foldr (fn (x, y) => (getpos_patfield x ll) @ y) [] xs
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch "68"
   | getpos_atpat (A.AtPatId id) ll                      = getpos_longid id ll
   | getpos_atpat (A.AtPatScon sc) ll                    = getpos_scon sc ll
@@ -2333,6 +2454,7 @@ and getpos_atpat (A.AtPatWild _) _                      = raise EH.DeadBranch "6
     end
   | getpos_atpat (A.AtPatDots pl) ll                    = getpos_partlist pl ll
 
+(** Gets the position of a slice for an abstract syntax tree node. *)
 and getpos_pat (A.PatAtPat atpat) ll                 = getpos_atpat atpat ll
   | getpos_pat (A.PatApp (id, a, rl, r, l, n')) ll   =
     let val gp1 = (getpos_longid id ll)

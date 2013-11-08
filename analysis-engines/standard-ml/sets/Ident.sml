@@ -171,14 +171,12 @@ fun updateAssoc str (assoc as {assocId, assocSt}) =
     case SI.find (assocSt, str) of
 	NONE =>
 	let
-	    val _ = D.printDebug D.BLANK D.TEMP (fn _ => "Didn't find \"" ^ str ^ "\" in association map.")
 	    val id       = freshId ()
 	    val assocSt' = SI.insert (assocSt, str, id)
 	    val assocId' = IS.insert (assocId, id, str)
 	in (id, {assocId = assocId', assocSt = assocSt'})
 	end
-      | SOME id => (D.printDebug D.BLANK D.TEMP (fn _ => "Found \"" ^ str ^ "\" in association map.");
-		    (id, assoc))
+      | SOME id => ((id, assoc))
 
 (** Finds an identifier given an integer in the binary tree. *)
 fun lookupId id {assocId, assocSt} = IS.find (assocId, id)

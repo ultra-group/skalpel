@@ -17,30 +17,20 @@
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   Env.sig
- *  o Description: Defines the ENV signature which is the signature of
- *      our constraint system.
  *)
 
-
+(** Defines the ENV signature which is the signature of our constraint system. *)
 signature ENV = sig
 
-    (* ====== TYPES AND DATATYPES ====== *)
-
-    (* ------ MAPPINGS ------ *)
     type 'a constraintMap
     type 'a envMap
     type 'a openEnvMap
 
-    (* ------ VARIABLES ------ *)
     type envVar         = int
 
-    (* ------ BINDERS ------ *)
     type 'a bind        = 'a ConsId.bind ExtLab.extLab
 
-    (* ------ GENERIC ENVIRONMENT ------ *)
     type 'a genericEnv        = 'a bind list envMap
-
-    (* ------ OPENENV ------ *)
 
     datatype openKind    = OPENED_STRUCT
 			 | DATATYPE_REPLICATION
@@ -50,26 +40,20 @@ signature ENV = sig
 
     type openEnv         = openSem openEnvMap
 
-    (* ------ VARENV ------ *)
     type extVar         = Ty.ty bind
     type varEnv         = Ty.ty genericEnv
 
-    (* ------ KIND OF A TYPE DECLARATION *)
     datatype typeNameKind     = DATATYPE | TYPE
 
-    (* ------ TYPENV ------ *)
     type extType         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) bind
     type typeEnv         = (Ty.typeFunction * typeNameKind * (varEnv * bool) ref) genericEnv
 
-    (* ------ OVERLADINGENV ------ *)
     type extovc         = Ty.rowType bind
     type overloadingClassesEnv = Ty.rowType genericEnv
 
-    (* ------ TYPEVARENV ------ *)
     type explicitTypeVar = (Ty.typeVar * bool) bind
     type typeVarEnv         = (Ty.typeVar * bool) genericEnv
 
-    (* ------ INFORMATION ON ENVS ------ *)
     type typeName          = {id : Id.id, lab : Label.label, kind : typeNameKind, name : Ty.typename}
     type typeNameMap       = typeName list
     datatype names      = TYPENAME    of typeName ExtLab.extLab
@@ -86,21 +70,16 @@ signature ENV = sig
 
     type 'a accessorId       = {lid : Id.lid, equalityTypeVar : Ty.equalityTypeVar, sem : 'a, class : ClassId.class, lab : Label.label}
 
-    (* ------ LONG TYPE CONSTRUCTOR BINDER ------ *)
     type longTypeConsBinder        = Ty.typeFunction accessorId ExtLab.extLab
 
-    (* ------ ENRICHEMENT AND INSTANTIATION ------ *)
     type evsbind        = envVar * envVar option * envVar * envVar option * Label.label
 
-    (* ------ FUNCTOR INSTANTIATION ------ *)
     type evfbind        = envVar * envVar * envVar * envVar * Label.label
 
-    (* ------ SHARING ------ *)
     type shabind        = envVar * envVar * envVar * Label.label
 
     datatype matchKind  = OPAQUE | TRANSLUCENT
 
-    (* ------ ENVS ------ *)
     datatype env        = ENV_CONS of {valueIds : varEnv,
 				       typeNames : typeEnv,
 				       explicitTypeVars : typeVarEnv,
@@ -129,7 +108,7 @@ signature ENV = sig
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accessorId ExtLab.extLab
 			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.ty    accessorId ExtLab.extLab
 			    | EQUALITY_TYPE_ACCESSOR of Ty.equalityType accessorId ExtLab.extLab
-			    | TYPE_CONSTRUCTOR_ACCESSOR of Ty.typeFunction    accessorId ExtLab.extLab
+			    | TYPE_CONSTRUCTOR_ACCESSOR of (Ty.typeFunction * bool) accessorId ExtLab.extLab
 			    | OVERLOADING_CLASSES_ACCESSOR of Ty.rowType    accessorId ExtLab.extLab
 			    | STRUCTURE_ACCESSOR of env         accessorId ExtLab.extLab
 			    | SIGNATURE_ACCESSOR of env         accessorId ExtLab.extLab
@@ -378,7 +357,7 @@ signature ENV = sig
     val initValueIDAccessor   : Ty.ty    accessorId -> Label.label -> accessor
     val genAccIeEm   : Ty.ty accessorId -> Label.label -> accessor
     val initEqualityTypeAccessor : Ty.equalityType accessorId -> Label.label -> accessor
-    val genAccItEm   : Ty.typeFunction accessorId -> Label.label -> accessor
+    val genAccItEm   : (Ty.typeFunction * bool) accessorId -> Label.label -> accessor
     val genAccIoEm   : Ty.rowType accessorId -> Label.label -> accessor
     val genAccIsEm   : env      accessorId -> Label.label -> accessor
     val genAccIiEm   : env      accessorId -> Label.label -> accessor
