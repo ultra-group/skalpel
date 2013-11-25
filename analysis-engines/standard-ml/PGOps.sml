@@ -45,20 +45,6 @@ signature SMLTESDEPS = sig
 
 end
 
-
-structure SmlTesDeps :> SMLTESDEPS = struct
-
-(* raised if there is any kind of problem with a file (incorrect type, non-existant, etc) *)
-exception ErrorFile of string
-
-(* This is a temporary file *)
-val thelib = "/tmp/thelibrary.sml"
-
-fun isin (x : string) xs = List.exists (fn y => y = x) xs
-
-(* converts a list of something to a string *)
-fun stringListToString xs = "[" ^ #1 (foldr (fn (t, (s, c)) => (t ^ c ^ s, ",")) ("", "") xs) ^ "]"
-
 structure OrdFile : ORD_KEY =
 struct
 type ord_key = string(*file*) * string list(*dependencies*)
@@ -73,6 +59,19 @@ fun compare ((f1, d1), (f2, d2)) =
  * be the element that is added to the set.
  * Ideally, we would like something more robust. *)
 end
+
+structure SmlTesDeps :> SMLTESDEPS = struct
+
+(* raised if there is any kind of problem with a file (incorrect type, non-existant, etc) *)
+exception ErrorFile of string
+
+(* This is a temporary file *)
+val thelib = "/tmp/thelibrary.sml"
+
+fun isin (x : string) xs = List.exists (fn y => y = x) xs
+
+(* converts a list of something to a string *)
+fun stringListToString xs = "[" ^ #1 (foldr (fn (t, (s, c)) => (t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
 structure M = BinarySetFn(OrdFile)
 
