@@ -22,17 +22,39 @@
  *      the signature Slicer.
  *)
 
-(** \mainpage My Personal Index Page
+(** \mainpage Documentation for the Skalpel Analysis Engine
  *
- * \section intro_sec Introduction
+ * \section doc_sec Building this documentation
  *
- * This is the introduction.
+ * In order to build this documentation, please follow these steps:
  *
- * \section install_sec Installation
+ * 1 - Clone the doxygen repository to your system.
  *
- * \subsection step1 Step 1: Opening the box
+ * 2 - Checkout a compatible version of the doxygen repository (if master fails to build)
  *
- * etc...
+ * $ git checkout 7cda115a6830bf816a094e37c498e5a50ce1b29c
+ *
+ * 3 - Apply the patch for SML support:
+ *
+ * $ git apply --ignore-space-change --ignore-whitespace ~/repos/doxygen/0001-Addition-of-support-for-Standard-ML-language.patch
+ *
+ * 4 - Configure doxygen (specifying path to python2 - assuming /usr/bin/python2)
+ *
+ * $ ./configure --prefix `pwd` --python /usr/bin/python2
+ *
+ * 5 - Bulid doxygen:
+ *
+ * $ make
+ *
+ * 6 - Generate documentation (assuming directory is Standard ML analysis egnine repo directory).
+ *
+ * $ /path/to/doxygen/repo/bin/doxygen doxygen-config-file
+ *
+ * HTML pages will be in html/, man pages in man/, latex files in latex/
+ *
+ * \section update_sec Keeping me updated
+ *
+ * Pleasae try to keep this documentation updated for the sanity of future Skalpel developers. ;-)
  *)
 
 structure Slicer : SLICER = struct

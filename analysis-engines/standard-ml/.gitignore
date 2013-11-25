@@ -35,3 +35,6 @@ mlton-control.sml
 current.sml
 hol
 basis.sml
+html/
+man/
+latex/
