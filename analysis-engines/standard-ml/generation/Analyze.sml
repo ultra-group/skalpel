@@ -3200,6 +3200,9 @@ fun generateConstraints' prog pack nenv =
 		val ev   = E.freshEnvVar ()
 		val ev1  = E.freshEnvVar ()
 		val ev2  = E.freshEnvVar ()
+
+               (** This constraint will add constraint for the preceeding spec, but we don't care for this env var in particular w.r.t. sharing.
+                * Likely this was put in place to add a syntactic constrait of sharing specifications.  *)
 		val specEnvConstraint   = E.initEnvConstraint (E.consENV_VAR ev1 lab) env1 lab
 		val longTyConConstrint   = E.initEnvConstraint (E.consENV_VAR ev2 lab) env2 lab
 		val c3   = E.SHARING_CONSTRAINT (ev1, ev, ev2, lab)
@@ -3221,6 +3224,12 @@ fun generateConstraints' prog pack nenv =
 	(** Only called from the A.SpecSha case, for type sharing. *)
 	and f_longtyconeq (A.LongTyConEq (longtycons, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.LongTyConEq")
+               (** \var typeFunctionVars
+                * \brief Type function variables for each type name in sharing specification. *)
+               (** \var envs
+                * \brief Environment for each sharing specification. *)
+               (** \var csts
+                * \brief Constraints for each sharing specification. *)
 		val (typeFunctionVars, envs, csts) = unzipThree (map (f_longtyconbind lab) longtycons)
 		val env = E.unionEnv envs
 		val cst = E.unionConstraintsList csts
@@ -3476,6 +3485,8 @@ fun generateConstraints' prog pack nenv =
 		    val lab = I.getLabId lid
 		    val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "Looked up a longtycon and received back a labelled identifier: " ^ (Id.printIdL id) ^ ".")
 		    val typeFunctionVar = T.freshTypeFunctionVar ()
+
+		    (** This results from a call to #Env.genLongEnv - why do we want to create binders here? We want *accessors*. No? *)
 		    val (cst, env) = E.genLongEnv lid (T.consTYPE_FUNCTION_VAR typeFunctionVar)
 
 		    (** jpirie: testing my stuff.

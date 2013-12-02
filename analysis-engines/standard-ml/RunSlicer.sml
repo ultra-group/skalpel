@@ -36,7 +36,7 @@
  *
  * 3 - Apply the patch for SML support:
  *
- * $ git apply --ignore-space-change --ignore-whitespace ~/repos/doxygen/0001-Addition-of-support-for-Standard-ML-language.patch
+ * $ git apply --ignore-space-change --ignore-whitespace /path/to/skalpel/repo/doxygen-sml.patch
  *
  * 4 - Configure doxygen (specifying path to python2 - assuming /usr/bin/python2)
  *
@@ -52,9 +52,14 @@
  *
  * HTML pages will be in html/, man pages in man/, latex files in latex/
  *
- * \section update_sec Keeping me updated
+ * \section update_sec Keeping this documentation updated
+ *
+ * To generate a new patch, commit your updated changes to the doxygen git repository and then execute (where SHA is most recent SHA tag):
+ *
+ * $ git format-patch -1 SHA
  *
  * Pleasae try to keep this documentation updated for the sanity of future Skalpel developers. ;-)
+ *
  *)
 
 structure Slicer : SLICER = struct
@@ -67,7 +72,6 @@ structure PP = Ppp
 
 (** Set to true if we are building a binary for the webdemo. *)
 val webdemo = ref false
-val data_tmp = PP.data_tmp
 
 (** Type of reported errors, set to JsonParser.error. *)
 type error = JsonParser.error
@@ -87,7 +91,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with MLton on Thu Nov  7 17:06:16 GMT 2013. Skalpel version: d7d86d49e8aa3ec0e39c3597516daa2950e3c281"
+val SKALPEL_VERSION = "Built with MLton on Tue Nov 26 14:49:33 GMT 2013. Skalpel version: 2cbe5623c9be5c3890dd1b0ad3fabc469b6daccd"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -220,7 +224,7 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisove
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
-	val dbgbash  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
+	val _  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
 	val _ = if bhtml then dbghtml' st else ()
 	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st filesin
 	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st filesin
@@ -416,7 +420,7 @@ fun smlTesStrArgs strArgs =
 	val tlim     = ref ""
 	val tab      = ref ""
 	(** The solution number to use
-	 * \deprecated *)
+	 * \deprecated We no longer have different 'solutions' in Skalpel. *)
 	val sol      = ref ""
 	val min      = ref ""
 	(** Holds whether developer mode is enabled. *)
