@@ -161,7 +161,8 @@ fun getTabSize () = R.getTabSize ()
 (** Sets the tab size. *)
 fun setTabSize ts = R.setTabSize ts
 
-(** Gets the test files (solutions). \depretcated *)
+(** Gets the test files (solutions).
+ * \deprecated 'Test' files no longer exist in the test database. *)
 fun getfileerr  nb = (!testFolder) ^ "/test"   ^ Int.toString nb
 (** Gets the code files. \depretcated *)
 fun getfilecode nb = (!testFolder) ^ "/code"   ^ Int.toString nb ^ ".sml"
@@ -942,7 +943,7 @@ fun slicergen filebas filesin nenv bprint =
     end
 
 (** Retrieves a list of test files.
- * \deprecated Don't think we use this any longer with the new JSON database. *)
+ * \deprecated There should now be no used of this with the new JSON database. *)
 fun getTests _ =
     let
 	(** Strips out a test number.
@@ -1050,7 +1051,8 @@ fun getAssoc _ =
     (#ident (Option.valOf (!error)))
     handle Option => raise FormatTest "assoc. list ids"
 
-(** Returns the 'solution' portion of the #error record. \deprecated *)
+(** Returns the 'solution' portion of the #error record.
+ * \deprecated We no longer have different 'solutions' in Skalpel. *)
 fun getSolution _ =
     (#solution (Option.valOf (!error)))
     handle Option => raise FormatTest "solution"

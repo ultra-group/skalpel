@@ -106,8 +106,8 @@ datatype names   = TYPENAME of typeName EL.extLab | DUMTYPENAME of typeName | MA
 
 (** An information environment, a record with 4 fields.
  * \arg lab. Should be a list or a set, see uenvEnv in Analyze.sml.
- * \arg complete. True if env is complete (true when initialised and can be false during unification.
- * \arg infoTypeNames. Type names introduced in the structure, these are here to ease thef collection of type names when pushing an env onto a unification context.
+ * \arg complete. True if env is complete (true when initialised and can be false during unification).
+ * \arg infoTypeNames. Type names introduced in the structure, these are here to ease the collection of type names when pushing an env onto a unification context.
  * \arg argOfFunctor. True if the environment is an argument of a functor. *)
 type infoEnv     = {lab : L.label, complete : bool, infoTypeNames : typeNameMap, argOfFunctor : bool}
 
