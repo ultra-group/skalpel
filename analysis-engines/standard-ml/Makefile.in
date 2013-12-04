@@ -77,6 +77,11 @@ mlton-base: gen-parse
 	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with MLton on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 
+documentation:
+	cp doxygen-config-file doxygen-config-file.original
+	sed s/"PROJECT_NUMBER = \".*\""/"PROJECT_NUMBER = \"Git SHA-1: "`git rev-parse HEAD`\"/ doxygen-config-file > doxygen-config-file.tmp
+	mv doxygen-config-file.tmp doxygen-config-file
+	doxygen doxygen-config-file
 
 mlton-bin: gen-mlb-sources mlton-base
 	echo "val _ = Slicer.mltonEntryPoint ();" > build-files/mlton-control.sml
