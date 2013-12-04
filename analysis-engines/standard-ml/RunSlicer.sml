@@ -48,7 +48,7 @@
  *
  * 6 - Generate documentation (assuming directory is Standard ML analysis egnine repo directory).
  *
- * $ /path/to/doxygen/repo/bin/doxygen doxygen-config-file
+ * $ make documentation
  *
  * HTML pages will be in html/, man pages in man/, latex files in latex/
  *
