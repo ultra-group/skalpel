@@ -966,7 +966,7 @@ fun pushExtEnv (env as ENV_CONS _) labs stts deps =
   (*(2010-06-09)NOTE: we shouldn't need to push onto env1 because this env
    * should be useless. *)
   | pushExtEnv (ENVDEP (env, labs0, stts0, deps0)) labs stts deps =
-    pushExtEnv env (L.union labs0 labs) (L.union stts0 stts) (CD.union deps0 deps)
+    pushExtEnv env (labs0@labs) (stts0@stts) (deps0@deps)
   | pushExtEnv env labs stts deps = ENVDEP (env, labs, stts, deps)
 
 (** An empty context sensitive syntax error. *)
@@ -1204,7 +1204,7 @@ fun isMonoBind bind = P.isMono (getBindP bind)
 
 (** Changes the value id bindings in an environment to be monomorphic. *)
 fun toMonoValueIds valueIds labs =
-    mapenv (fn sems => map (fn extlab => EL.mapExtLab extlab (fn x => C.toMonoBind x (L.cons (getBindL extlab) labs))) sems)
+    mapenv (fn sems => map (fn extlab => EL.mapExtLab extlab (fn x => C.toMonoBind x ((L.singleton (getBindL extlab))::labs))) sems)
 	   valueIds
 
 (** Changes the value id bindings in an environment to be polymorphic. *)
@@ -1213,35 +1213,35 @@ fun toPolyValueIds valueIds =
 	   valueIds
 
 fun toRECValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toREC) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toREC) labs [] []) sems)
 	   valueIds
 
 fun toPATValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toPAT) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toPAT) labs [] []) sems)
 	   valueIds
 
 fun toEX0ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX0) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX0) labs [] []) sems)
 	   valueIds
 
 fun toEX1ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX1) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toEX1) labs [] []) sems)
 	   valueIds
 
 fun toDA0ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA0) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA0) labs [] []) sems)
 	   valueIds
 
 fun toDA1ValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA1) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDA1) labs [] []) sems)
 	   valueIds
 
 fun toDATValueIds valueIds labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDAT) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x C.toDAT) labs [] []) sems)
 	   valueIds
 
 fun toCLSValueIds valueIds cls labs =
-    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x (fn x => C.toCLS x cls)) labs L.empty CD.empty) sems)
+    mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x (fn x => C.toCLS x cls)) labs [] []) sems)
 	   valueIds
 
 (** We have DAT here because this is only used for datatypes and datatype descriptions.
@@ -1250,7 +1250,7 @@ fun toTYCONTypeNameEnv typeNames cons b labs =
     let
 	(** Calls #ConsId.mapBind given a binding and a function to be applied. *)
 	fun mapbind x = C.mapBind x (fn (tyf, _, _) => (tyf, DATATYPE, ref (cons, b)))
-    in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs L.empty CD.empty) sems)
+    in mapenv (fn sems => map (fn x => EL.updExtLab (EL.mapExtLab x mapbind) labs [] []) sems)
 	      typeNames
     end
 
@@ -1335,11 +1335,11 @@ fun getLabsIdsGenEnv idenv =
 			    let val lab   = getBindL bind
 				val lid   = (L.toInt lab, I.toInt id)
 				val labs' = EL.getExtLabL bind
-			    in (lid :: lids, L.union labs' labs)
+			    in (lid :: lids, labs'@labs)
 			    end)
 			(lids, labs)
 			semty)
-	      ([], L.empty)
+	      ([], [])
 	      idenv
 
 (** Returns the ids (as integers) of an env along with the associated labels.
@@ -1354,7 +1354,7 @@ fun getLabsIdsEnv (env as ENV_CONS _) =
 	val (idlabsFunctors, labsFunctors) = getLabsIdsGenEnv (getFunctors env)
 	val (idlabsOverloadingClasses, labsOverloadingClasses) = getLabsIdsGenEnv (getOverloadingClasses env)
     in (idlabsValueIds @ idlabsTyps @ idlabsExplicitTypeVars @ idlabsStructs @ idlabsSigs @ idlabsFunctors @ idlabsOverloadingClasses,
-	L.unions [labsValueIds, labsTyps, labsExplicitTypeVars, labsStructs, labsSigs, labsFunctors, labsOverloadingClasses])
+	labsValueIds@labsTyps@labsExplicitTypeVars@labsStructs@labsSigs@labsFunctors@labsOverloadingClasses)
     end
   | getLabsIdsEnv _ = raise EH.DeadBranch "" (*([], L.empty)*)
 
@@ -1377,9 +1377,9 @@ fun getTypeNames typeNames =
 				     val (names, labs, stts, deps) = T.isTypename tf
 				 in case names of
 					T.TYPENAME name =>
-					let val labs  = L.union  labs (EL.getExtLabL bind)
-					    val stts  = L.union  stts (EL.getExtLabE bind)
-					    val deps  = CD.union deps (EL.getExtLabD bind)
+					let val labs  = labs@(EL.getExtLabL bind)
+					    val stts  = stts@(EL.getExtLabE bind)
+					    val deps  = deps@(EL.getExtLabD bind)
 					    val tname = {id = id, lab = lab, kind = typeNameKind, name = name}
 					    val names = TYPENAME (tname, labs, stts, deps)
 					in names :: typeNameMap
@@ -1391,9 +1391,9 @@ fun getTypeNames typeNames =
 					end
 				      | T.MAYTYPENAME => typeNameMap
 				      | T.NOTTYPENAME =>
-					let val labs  = L.union  labs (EL.getExtLabL bind)
-					    val stts  = L.union  stts (EL.getExtLabE bind)
-					    val deps  = CD.union deps (EL.getExtLabD bind)
+					let val labs  = labs@(EL.getExtLabL bind)
+					    val stts  = stts@(EL.getExtLabE bind)
+					    val deps  = deps@(EL.getExtLabD bind)
 					    val names = NOTTYPENAME (id, labs, stts, deps)
 					in names :: typeNameMap
 					end
@@ -1483,7 +1483,13 @@ fun testlab lab labs = L.eq lab L.dummyLab
 		       orelse L.isin lab labs
 
 (** Tests whether labs1 is a subset of labs2. *)
-fun testlabs labs1 labs2 = L.subseteq labs1 (L.cons L.dummyLab (L.cons L.builtinLab labs2))
+fun testlabs labs1 labs2 =
+    let
+	val newLabs1 = L.unions labs1
+	val newLabs2 = L.unions labs2
+    in
+	L.subseteq newLabs1 (L.cons L.dummyLab (L.cons L.builtinLab newLabs2))
+    end
 
 (** Filters an environment given an idenv. *)
 fun filterIdEnv idenv labs =
@@ -1548,7 +1554,7 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as FIELD_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as LABEL_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as ENV_CONSTRAINT ((env1, env2), labs0, stts0, deps0)) labs =
-    (case (filterEnv env1 labs, filterEnv env2 labs) of
+    (case (filterEnv env1 (L.unions labs), filterEnv env2 (L.unions labs)) of
 	 (SOME env1', SOME env2') => SOME (ENV_CONSTRAINT ((env1', env2'), labs0, stts0, deps0))
        | (SOME env1', NONE)       => SOME (ENV_CONSTRAINT ((env1', emptyEnv), labs0, stts0, deps0))
        | (NONE,       SOME env2') => SOME (ENV_CONSTRAINT ((emptyEnv, env2'), labs0, stts0, deps0))
@@ -1557,7 +1563,7 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as FUNCTION_TYPE_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as ACCESSOR_CONSTRAINT _) labs = SOME oneConstraint
   | filterOcst (oneConstraint as LET_CONSTRAINT env) labs =
-    (case filterEnv env labs of
+    (case filterEnv env (L.unions labs) of
 	 SOME env' => SOME (LET_CONSTRAINT env')
        | NONE      => NONE)
   | filterOcst (oneConstraint as SIGNATURE_CONSTRAINT _) labs = SOME oneConstraint
@@ -1568,7 +1574,7 @@ fun filterOcst (oneConstraint as TYPE_CONSTRAINT _) labs = SOME oneConstraint
 and filterCst (CONSTRAINTS oneConstraint) labs =
     CONSTRAINTS (OMC.mapPartiali (fn (key, cs) =>
 			      if testlab (L.fromInt key) labs
-			      then case List.mapPartial (fn oneConstraint => filterOcst oneConstraint labs) cs of
+			      then case List.mapPartial (fn oneConstraint => filterOcst oneConstraint [labs]) cs of
 				       []  => NONE
 				     | cs' => SOME cs'
 			      else NONE)
@@ -1576,13 +1582,13 @@ and filterCst (CONSTRAINTS oneConstraint) labs =
 
 (** A function which will filter envirnomnts by the labels given in the second parameter to this function. *)
 and filterEnv (env as ENV_CONS _) labs =
-    let val (valueIds, completeValueIds) = filterIdEnv (getValueIds env) labs
-	val (typeNames, completeTyps) = filterIdEnv (getTypeNameEnv env) labs
-	val (explicitTypeVars, completeExplicitTypeVars) = filterIdEnv (getExplicitTypeVars env) labs
-	val (structs, completeStructs) = filterIdEnv (getStructs env) labs
-	val (sigs, completeSigs) = filterIdEnv (getSigs env) labs
-	val (functors, completeFunctors) = filterIdEnv (getFunctors env) labs
-	val (overloadingClasses, completeOverloadingClasses) = filterIdEnv (getOverloadingClasses env) labs
+    let val (valueIds, completeValueIds) = filterIdEnv (getValueIds env) [labs]
+	val (typeNames, completeTyps) = filterIdEnv (getTypeNameEnv env) [labs]
+	val (explicitTypeVars, completeExplicitTypeVars) = filterIdEnv (getExplicitTypeVars env) [labs]
+	val (structs, completeStructs) = filterIdEnv (getStructs env) [labs]
+	val (sigs, completeSigs) = filterIdEnv (getSigs env) [labs]
+	val (functors, completeFunctors) = filterIdEnv (getFunctors env) [labs]
+	val (overloadingClasses, completeOverloadingClasses) = filterIdEnv (getOverloadingClasses env) [labs]
 	val complete  = completeValueIds andalso completeTyps andalso completeExplicitTypeVars andalso
 		   completeStructs andalso completeSigs andalso completeFunctors andalso
 		   completeOverloadingClasses andalso getIComplete env
@@ -1590,7 +1596,7 @@ and filterEnv (env as ENV_CONS _) labs =
 	val env' = consEnvConstructor valueIds typeNames explicitTypeVars structs sigs functors overloadingClasses info
     in SOME env'
     end
-  | filterEnv (env as ENV_VAR _) labs = SOME env
+  | filterEnv (env as ENV_VAR _) _ = SOME env
   | filterEnv (env as ROW_ENV (env1, env2)) labs =
     (case (filterEnv env1 labs, filterEnv env2 labs) of
 	 (SOME env1', SOME env2') => SOME (ROW_ENV (env1', env2'))
@@ -1622,7 +1628,7 @@ and filterEnv (env as ENV_CONS _) labs =
        | (NONE,       SOME env2') => SOME (SIGNATURE_ENV (updateIComplete false emptyEnv, env2', kind))
        | (NONE,       NONE)       => NONE)
   | filterEnv (env as ENVPOL (typeVarEnv, env1)) labs =
-    (case (filterIdEnv typeVarEnv labs , filterEnv env1 labs) of
+    (case (filterIdEnv typeVarEnv [labs] , filterEnv env1 labs) of
 	 ((typeVarEnv', _), SOME env1') => SOME (ENVPOL (typeVarEnv', env1'))
        | ((typeVarEnv', _), NONE)       =>
 	 if isEmptyIdEnv typeVarEnv'
@@ -1639,7 +1645,7 @@ and filterEnv (env as ENV_CONS _) labs =
 	 SOME openEnv' => SOME (ENVOPN openEnv')
        | NONE         => NONE)
   | filterEnv (env as ENVDEP (env1, labs1, stts1, deps1)) labs =
-    if testlabs labs1 labs
+    if testlabs labs1 [labs]
     then case filterEnv env1 labs of
 	     SOME env1' => SOME (ENVDEP (env1', labs1, stts1, deps1))
 	   | NONE       => NONE
@@ -1664,6 +1670,6 @@ and filterEnv (env as ENV_CONS _) labs =
   | filterEnv (env as ENVTOP) _ = SOME env
 
 (** Filters the constraintss that are not in the label set. *)
-val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateIComplete false emptyEnv | SOME env' => env'
+val filterEnv = fn env => fn labs => case filterEnv env (L.unions labs) of NONE => updateIComplete false emptyEnv | SOME env' => env'
 
 end

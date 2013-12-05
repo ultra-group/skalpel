@@ -64,7 +64,7 @@ fun consBind id bind equalityTypeVar class lab poly = {id = id, bind  = bind, eq
 (** Constructs a #bind value using #consBind, setting the polymorphic status to POLY, indicating polymorphism. *)
 fun consBindPoly id bind equalityTypeVar class lab = consBind id bind equalityTypeVar class lab P.POLY
 (** Constructs a #bind value using #consBind, setting the polymorphic status to MONO, indicating monomorphism. *)
-fun consBindMono id bind equalityTypeVar class lab = consBind id bind equalityTypeVar class lab (P.MONO [P.MONBIN (L.singleton lab)])
+fun consBindMono id bind equalityTypeVar class lab = consBind id bind equalityTypeVar class lab (P.MONO [P.MONBIN [(L.singleton lab)]])
 
 (** Takes a binding and turns it into a monomorphic binding. *)
 fun toMonoBind {id, bind, equalityTypeVar, class, lab, poly} labs = consBind id bind equalityTypeVar class lab (P.polyToMono poly labs)
@@ -113,9 +113,9 @@ fun toDA1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equal
 (** Changes a #bind value to update the class field by using #ClassId.classToDAT on it. *)
 fun toDAT {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToDAT class) lab poly
 (** Changes a #bind value to update the class field by using #ClassId.classToEX0 on it. *)
-fun toEX0 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX0 class) lab (P.polyToMono poly L.empty)
+fun toEX0 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX0 class) lab (P.polyToMono poly [])
 (** Changes a #bind value to update the class field by using #ClassId.classToEX1 on it. *)
-fun toEX1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX1 class) lab (P.polyToMono poly L.empty)
+fun toEX1 {id, bind, equalityTypeVar, class, lab, poly} = consBind id bind equalityTypeVar (CL.classToEX1 class) lab (P.polyToMono poly [])
 
 (** Given a #bind value and a class value, constructs a new binding with that class value, throwing away the old one. *)
 fun toCLS {id, bind, class, equalityTypeVar, lab, poly} cls = consBind id bind equalityTypeVar cls lab poly

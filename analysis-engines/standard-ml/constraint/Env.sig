@@ -252,7 +252,7 @@ signature ENV = sig
 
     val plusEnv            : env -> env -> env
 
-    val pushExtEnv         : env -> Label.labels -> Label.labels -> LongId.set -> env
+    val pushExtEnv         : env -> Label.labels list -> Label.labels list  -> LongId.set list -> env
 
     val isEmptyIdEnv       : 'a envMap  -> bool
     val isEmptyEnv         : env      -> bool
@@ -267,11 +267,11 @@ signature ENV = sig
 
     val isENV_CONS          : env -> bool
 
-    val getLabsIdsEnv : env -> (int * int) list * Label.labels
+    val getLabsIdsEnv : env -> (int * int) list * Label.labels list
 
     val getLabEnv     : env -> Label.label
 
-    val filterEnv     : env -> Label.labels -> env
+    val filterEnv     : env -> Label.labels list -> env
 
     val addenv        : (Id.id * 'a) -> 'a envMap -> 'a envMap
     val consSingleEnv : (Id.id * 'a) -> 'a envMap
@@ -284,17 +284,17 @@ signature ENV = sig
 
     val isMonoBind   : 'a bind -> bool
 
-    val toMonoValueIds   : varEnv -> Label.labels -> varEnv
+    val toMonoValueIds   : varEnv -> Label.labels list -> varEnv
     val toPolyValueIds   : varEnv -> varEnv
-    val toRECValueIds    : varEnv -> Label.labels -> varEnv
-    val toPATValueIds    : varEnv -> Label.labels -> varEnv
-    val toEX0ValueIds    : varEnv -> Label.labels -> varEnv
-    val toEX1ValueIds    : varEnv -> Label.labels -> varEnv
-    val toDA0ValueIds    : varEnv -> Label.labels -> varEnv
-    val toDA1ValueIds    : varEnv -> Label.labels -> varEnv
-    val toDATValueIds    : varEnv -> Label.labels -> varEnv
-    val toCLSValueIds    : varEnv -> ClassId.class -> Label.labels -> varEnv
-    val toTYCONTypeNameEnv  : typeEnv -> varEnv -> bool -> Label.labels -> typeEnv
+    val toRECValueIds    : varEnv -> Label.labels list -> varEnv
+    val toPATValueIds    : varEnv -> Label.labels list -> varEnv
+    val toEX0ValueIds    : varEnv -> Label.labels list -> varEnv
+    val toEX1ValueIds    : varEnv -> Label.labels list -> varEnv
+    val toDA0ValueIds    : varEnv -> Label.labels list -> varEnv
+    val toDA1ValueIds    : varEnv -> Label.labels list -> varEnv
+    val toDATValueIds    : varEnv -> Label.labels list -> varEnv
+    val toCLSValueIds    : varEnv -> ClassId.class -> Label.labels list -> varEnv
+    val toTYCONTypeNameEnv  : typeEnv -> varEnv -> bool -> Label.labels list -> typeEnv
 
     val closeValueIds    : varEnv -> Expans.nonexp -> varEnv
 
@@ -332,17 +332,17 @@ signature ENV = sig
     val foldlicst        : ((int * oneConstraint list * 'b) -> 'b) -> 'b -> constraints -> 'b
     val getbindings      : env -> Label.labels list * Label.labels
 
-    val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstEqAll  : Ty.equalityType  -> Ty.equalityType    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstTfAll  : Ty.typeFunction  -> Ty.typeFunction -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstTnAll  : Ty.typenameType   -> Ty.typenameType  -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstSqAll  : Ty.rowType  -> Ty.rowType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstRtAll  : Ty.fieldType  -> Ty.fieldType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstLtAll  : Ty.labelType  -> Ty.labelType -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstEvAll  : env       -> env      -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
-    val genCstClAll  : class     -> class    -> Label.labels -> Label.labels -> LongId.set -> oneConstraint
+    val genCstTyAll  : Ty.ty     -> Ty.ty    -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstEqAll  : Ty.equalityType  -> Ty.equalityType    -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstTfAll  : Ty.typeFunction  -> Ty.typeFunction -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstTnAll  : Ty.typenameType   -> Ty.typenameType  -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstSqAll  : Ty.rowType  -> Ty.rowType -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstRtAll  : Ty.fieldType  -> Ty.fieldType -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstLtAll  : Ty.labelType  -> Ty.labelType -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
+    val genCstEvAll  : env       -> env      -> Label.labels list -> Label.labels list  -> LongId.set list -> oneConstraint
+    val genCstClAll  : class     -> class    -> Label.labels list -> Label.labels list -> LongId.set list -> oneConstraint
 
-    val genValueIDAccessor  : Ty.ty    accessorId -> Label.labels -> Label.labels -> LongId.set -> accessor
+    val genValueIDAccessor  : Ty.ty    accessorId -> Label.labels list -> Label.labels list -> LongId.set list -> accessor
 
     val initTypeConstraint         : Ty.ty    -> Ty.ty    -> Label.label -> oneConstraint
     val initFunctionTypeConstraint : Ty.typeFunction -> Ty.typeFunction -> Label.label -> oneConstraint

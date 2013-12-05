@@ -23,16 +23,16 @@
 signature POLY = sig
 
     datatype mono = EXPANS of Expans.expans
-		  | MONBIN of Label.labels
+		  | MONBIN of Label.labels list
     datatype poly = POLY
 		  | MONO of mono list
 
-    val getLabsMono       : mono -> Label.labels * Label.labels * LongId.set
-    val getLabsPoly       : poly -> Label.labels * Label.labels * LongId.set
+    val getLabsMono       : mono -> Label.labels list * Label.labels list * LongId.set list
+    val getLabsPoly       : poly -> Label.labels list * Label.labels list * LongId.set list
     val fromPolyToNonexp  : poly -> Expans.nonexp
     val fromNonexpToPoly  : Expans.nonexp -> poly
     val mergePoly         : poly -> poly -> poly
-    val polyToMono        : poly -> Label.labels -> poly
+    val polyToMono        : poly -> Label.labels list -> poly
     val toPoly            : poly -> poly
     val isPoly            : poly -> bool
     val isMono            : poly -> bool

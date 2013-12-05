@@ -55,8 +55,8 @@ structure L = Label
 (** Holds expansive and non-expansive expressions (see top of file/doc page)
  * The I.lid value in the Expdep constructor is the identifier that makes the expression expansive.
  *)
-datatype expans = Expexp of L.labels
-		| Expdep of I.lid * L.labels
+datatype expans = Expexp of L.labels list
+		| Expdep of I.lid * L.labels list
 
 (** For non expansive expressions (constructor #nonexp) as well as expansive
  * expressions (constructor #expans). An #expans takes a list because there
@@ -72,9 +72,9 @@ datatype nonexp = Nonexp
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
 
 (** Prints something of type #expans. *)
-fun printexpans (Expexp l)         = "Expexp(" ^ L.toString l   ^ ")"
+fun printexpans (Expexp l)         = "Expexp(" ^ printlistgen l L.toString   ^ ")"
   | printexpans (Expdep (lid, ll)) = "Expdep(" ^ I.printLid lid ^
-				     ","       ^ L.toString ll  ^ ")"
+				     ","       ^ printlistgen ll L.toString  ^ ")"
 
 (** Prints a list of expansive expressions. *)
 fun printexpanslist xs = printlistgen xs printexpans
@@ -95,19 +95,19 @@ fun composeNonexp xs =
 val initLongExpans = ([], NONE)
 
 (** Adds expansive expression labels. *)
-fun addexpans (Expexp ll)      l = Expexp (L.cons l ll)
-  | addexpans (Expdep (x, ll)) l = Expdep (x, L.cons l ll)
+fun addexpans (Expexp ll)      l = Expexp (L.singleton l::ll)
+  | addexpans (Expdep (x, ll)) l = Expdep (x, L.singleton l::ll)
 
 (** Adds non-expansive expression labels. *)
 fun addnonexp (Expans ll) l = Expans (map (fn x => addexpans x l) ll)
   | addnonexp x _ = x
 
 (** Generates a dependent form of an expansive expresison. *)
-fun genOneExpdep n l = Expans [Expdep (I.ID (n, l), L.singleton l)]
+fun genOneExpdep n l = Expans [Expdep (I.ID (n, l), [L.singleton l])]
 
 (** Generates an expansive expresison. *)
-fun genOneExpans l   = Expans [Expexp (L.singleton l)]
-fun genMulExpans ll  = Expans [Expexp (L.ord ll)]
+fun genOneExpans l   = Expans [Expexp [(L.singleton l)]]
+fun genMulExpans ll  = Expans [Expexp [L.singleton ll]]
 
 (** Gets expansive labels. *)
 fun getLabsExpans (Expexp labs) = (labs, NONE)

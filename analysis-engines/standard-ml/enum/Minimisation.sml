@@ -131,7 +131,7 @@ fun minimize err (envContextSensitiveSyntaxPair as (env, css)) (parse as (ast, _
 	val filters1 = FI.cons (SOME labs) NONE
 
 	(** A filtered environment, filtered by the labels in the error giving in the argument to #minimize. *)
-	val env      = E.filterEnv env labs
+	val env      = E.filterEnv env [labs]
 
 	(** Holds the new error reproted by the minimisation algorithm for the
 	 * filtered environment #env. Throws atn exception if minimisation returns success. *)

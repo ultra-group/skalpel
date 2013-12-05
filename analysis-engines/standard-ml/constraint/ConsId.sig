@@ -42,7 +42,7 @@ signature CONSID = sig
 
     val resetPoly         : 'a bind -> 'a bind
     val toPolyBind        : 'a bind -> 'a bind
-    val toMonoBind        : 'a bind -> Label.labels  -> 'a bind
+    val toMonoBind        : 'a bind -> Label.labels list  -> 'a bind
     val updClass          : 'a bind -> ClassId.class -> 'a bind
     val updPoly           : 'a bind -> Poly.poly     -> 'a bind
 

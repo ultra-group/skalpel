@@ -136,11 +136,11 @@ and nonexpExp (A.ExpAtExp ae)                      = nonexpAtExp ae
 (** Returns expansiveness of an atomic expression. *)
 and nonexpConExp (A.ExpAtExp (A.AtExpParen (e, _, _, l, _))) = X.addnonexp (nonexpDonLabExp e) l
   | nonexpConExp (A.ExpAtExp (A.AtExpId id))                 = nonexpConLongId id
-  | nonexpConExp e                                           = X.genMulExpans (toplabExp e)
+  | nonexpConExp e                                           = X.genMulExpans (List.hd (toplabExp e))
 
 and nonexpConLabExp (A.LabExp (A.ExpAtExp (A.AtExpParen (e, _, _, l, _)), _, _, k, _)) = X.addnonexp (X.addnonexp (nonexpDonLabExp e) l) k
   | nonexpConLabExp (A.LabExp (A.ExpAtExp (A.AtExpId id), _, _, l, _))                 = X.addnonexp (nonexpConLongId id) l
-  | nonexpConLabExp e                                                                  = X.genMulExpans (toplabLabExp e)
+  | nonexpConLabExp e                                                                  = X.genMulExpans (List.hd (toplabLabExp e))
 
 and nonexpDonLabExp (A.LabExp (A.ExpTyped (e, _, _, l, _), _, _, k, _)) = X.addnonexp (X.addnonexp (nonexpConLabExp e) l) k
   | nonexpDonLabExp e                                                   = nonexpConLabExp e
@@ -160,7 +160,7 @@ and nonexpConLongId (A.LongIdQual (sid, lid, _, lab, _)) =
 	      NONE => X.Nonexp
 	    | SOME (v, l) =>
 	      X.Expans [X.Expdep (I.LID ((v, l), id, lab),
-				  L.cons l (L.cons lab ll))])
+				  L.singleton l::L.singleton lab::ll)])
        | X.Expans _ =>
 	 raise EH.DeadBranch "The expansiveness constraints does not have the expected structure")
   | nonexpConLongId (A.LongIdId id)                      = nonexpConIdent id

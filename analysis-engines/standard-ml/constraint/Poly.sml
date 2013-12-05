@@ -35,7 +35,7 @@ structure EH = ErrorHandler
  * \arg EXPANS of #Expans.expans. For when an expansiveness constraint forcing the monomorphism.
  * \arg MONOBIN of #Label.labels. Labels forcing the monomorphism e.g. an exception. *)
 datatype mono = EXPANS of X.expans
-	      | MONBIN of L.labels
+	      | MONBIN of L.labels list
 
 (** Represents whether an expression is monomorphic or polymorphic.
  * Constructors are as follows:
@@ -49,21 +49,21 @@ datatype poly = POLY
 fun getLabsMono (EXPANS expans) =
     let val (labs, lidop) = X.getLabsExpans expans
     in case lidop of
-	   NONE => (labs, labs, CD.empty)
-	 | SOME lid => (labs, labs, CD.singleton (CD.buildKey lid))
+	   NONE => (labs, labs, [])
+	 | SOME lid => (labs, labs, [CD.singleton (CD.buildKey lid)])
     end
-  | getLabsMono (MONBIN labs)   = (labs, L.empty, CD.empty)
+  | getLabsMono (MONBIN labs)   = (labs, [], [])
 
 (** Returns the labels of a polymorphic term. *)
-fun getLabsPoly POLY         = (L.empty, L.empty, CD.empty)
+fun getLabsPoly POLY         = ([], [], [])
   | getLabsPoly (MONO monos) =
     foldr (fn (mono, (labs, stts, deps)) =>
 	      let val (labs', stts', deps') = getLabsMono mono
-	      in (L.union  labs labs',
-		  L.union  stts stts',
-		  CD.union deps deps')
+	      in (labs@labs',
+		  stts@stts',
+		  deps@deps')
 	      end)
-	  (L.empty, L.empty, CD.empty)
+	  ([], [], [])
 	  monos
 
 (** Turns a non expansive term into a polymorphic term. *)
@@ -105,12 +105,13 @@ fun isPoly POLY = true
 fun isMono POLY = false
   | isMono _    = true
 
-(** Prints a #mono expression. *)
-fun printMono (EXPANS exp)  = "EXPANS(" ^ X.printexpans exp ^ ")"
-  | printMono (MONBIN labs) = "MONBIN(" ^ L.toString labs   ^ ")"
-
 (** Prints a list of values, given a print function and a list . *)
 fun printlistgen xs f = "[" ^ #1 (foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
+
+
+(** Prints a #mono expression. *)
+fun printMono (EXPANS exp)  = "EXPANS(" ^ X.printexpans exp ^ ")"
+  | printMono (MONBIN labs) = "MONBIN(" ^ printlistgen labs L.toString   ^ ")"
 
 (** Prints a list of monomorphic expressions. *)
 fun printMonoList xs = printlistgen xs printMono

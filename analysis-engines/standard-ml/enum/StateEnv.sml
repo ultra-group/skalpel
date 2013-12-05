@@ -349,8 +349,8 @@ fun getValStateGe state x =
 	   NONE => NONE
 	 | SOME {resp, deps} =>
 	   SOME (MS.foldr (fn ((_, labs1, stts1, deps1), (_, labs2, stts2, deps2)) =>
-			      (x, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2))
-			  (x, L.empty, L.empty, CD.empty)
+			      (x, labs1@labs2, stts1@stts2, deps1@deps2))
+			  (x, [], [], [])
 			  resp)
     end
 
@@ -444,7 +444,7 @@ fun updateStateGe state key value =
 				 in statege := (MS.insert (!statege, v, new))
 				 end
 		       | SOME (_, labs2, stts2, deps2) =>
-			 let val entry = (tv, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+			 let val entry = (tv, labs1@labs2, stts1@stts2, deps1@deps2)
 			     val new = {resp = MS.insert (resp, u, entry), deps = deps}
 			 in statege := (MS.insert (!statege, v, new))
 			 end)
@@ -458,9 +458,9 @@ fun updateStateGe state key value =
 				NONE => raise EH.DeadBranch "DeadBranch70"
 			      | SOME (_, labs, stts, deps) =>
 				let val _ = app (fn (v, labs', stts', deps') =>
-						    let val labs0 = L.union  labs labs'
-							val stts0 = L.union  stts stts'
-							val deps0 = CD.union deps deps'
+						    let val labs0 = labs@labs'
+							val stts0 = stts@stts'
+							val deps0 = deps@deps'
 						    in updateStateGe state v (key, labs0, stts0, deps0)
 						    end)
 						tyvars
@@ -493,9 +493,9 @@ fun updateStateTv state key value =
 		       then ()
 		       else let val statege = getStateGe state
 				val _ = app (fn (v, labs', stts', deps') =>
-						let val labs0 = L.union  labs labs'
-						    val stts0 = L.union  stts stts'
-						    val deps0 = CD.union deps deps'
+						let val labs0 = labs@labs'
+						    val stts0 = stts@stts'
+						    val deps0 = deps@deps'
 						in updateStateGe state v (key, labs0, stts0, deps0)
 						end)
 					    tyvars
@@ -532,7 +532,7 @@ fun updateStateFr state lid =
 
 (** Tests whether a typename is in a state. *)
 fun isAName tyname state =
-    NA.member (!(getStateNa state), (tyname, L.empty, L.empty, CD.empty))
+    NA.member (!(getStateNa state), (tyname, [], [], []))
 
 
 fun updateFoundVal NONE _ = NONE
@@ -546,9 +546,9 @@ fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
     (case List.find (fn x => true) (E.plusproj (E.getStructs env) id) of
 	 NONE => (NONE, (SOME ((id, lab1), (env, labs, stts, deps))), false)
        | SOME (bind, labs', stts', deps') =>
-	 let val labs0 = L.cons lab1 (L.cons lab2 (L.union labs labs'))
-	     val stts0 = L.union stts stts'
-	     val deps0 = CD.union deps deps'
+	 let val labs0 = L.singleton lab1::L.singleton lab2::(labs@labs')
+	     val stts0 = stts@stts'
+	     val deps0 = deps@deps'
 	     val (sem, str, b) =  getValStateId (C.getBindT bind) lid state fenv labs0 stts0 deps0
 	     val sem' = updateFoundVal sem (E.getIArgOfFunctor env)
 	 (*val str' = if not (Option.isSome str) andalso not b
@@ -580,9 +580,9 @@ fun getValStateId (env as E.ENV_CONS _) (I.ID (id, lab)) _ fenv labs stts deps =
 		  lid
 		  state
 		  fenv
-		  (L.union  labs labs0)
-		  (L.union  stts stts0)
-		  (CD.union deps deps0)
+		  (labs@labs0)
+		  (stts@stts0)
+		  (deps@deps0)
   | getValStateId env _ _ _ _ _ _ =
     (print (E.printEnv env "");
      raise EH.DeadBranch "There shouldn't be such an env in the unification env")
@@ -598,7 +598,7 @@ fun selSi env = E.getSigs env
 (** Gets the overloading classes in the environment. *)
 fun selOc env = E.getOverloadingClasses env
 
-fun getValStateId' state lid fenv = getValStateId (!(getStateId state)) lid state fenv L.empty L.empty CD.empty
+fun getValStateId' state lid fenv = getValStateId (!(getStateId state)) lid state fenv [] [] []
 
 (** Calls getValStateId' with the appropriate argument for getState. *)
 fun getValStateIdVa state lid bdown = getValStateId' state lid getStateIdVa
@@ -707,13 +707,13 @@ fun initState () =
 
 fun reportLabTyClashLC (T.LABEL_VAR _) = NONE
   | reportLabTyClashLC (T.LC (lc, lab)) =
-    SOME (L.toInt lab, lc, L.empty, L.empty, CD.empty)
+    SOME (L.toInt lab, lc, [], [], [])
   | reportLabTyClashLC (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
     (case reportLabTyClashLC lt of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
-	 let val labs1 = L.union  labs labs0
-	     val stts1 = L.union  stts stts0
-	     val deps1 = CD.union deps deps0
+	 let val labs1 = labs@labs0
+	     val stts1 = stts@stts0
+	     val deps1 = deps@deps0
 	 in SOME (lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
@@ -723,9 +723,9 @@ fun reportLabTyClashRC (T.FIELD_VAR _) = NONE
   | reportLabTyClashRC (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
     (case reportLabTyClashRC field of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
-	 let val labs1 = L.union  labs labs0
-	     val stts1 = L.union  stts stts0
-	     val deps1 = CD.union deps deps0
+	 let val labs1 = labs@labs0
+	     val stts1 = stts@stts0
+	     val deps1 = deps@deps0
 	 in SOME (lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
@@ -735,23 +735,23 @@ fun reportLabTyClash fields =
     foldr (fn (field, (list, labs, stts, deps)) =>
 	      case reportLabTyClashRC field of
 		  SOME (lab, lc, labs0, stts0, deps0) =>
-		  let val labs1 = L.union  labs labs0
-		      val stts1 = L.union  stts stts0
-		      val deps1 = CD.union deps deps0
+		  let val labs1 = labs@labs0
+		      val stts1 = stts@stts0
+		      val deps1 = deps@deps0
 		  in ((lab, lc) :: list, labs1, stts1, deps1)
 		  end
 		| NONE => (list, labs, stts, deps))
-	  ([], L.empty, L.empty, CD.empty)
+	  ([], [], [], [])
 	  fields
 
 fun reportRcty xs =
     foldr (fn (((lab, lc), labs1, stts1, deps1), (list, labs2, stts2, deps2)) =>
-	      let val labs0 = L.union  labs1 labs2
-		  val stts0 = L.union  stts1 stts2
-		  val deps0 = CD.union deps1 deps2
+	      let val labs0 = labs1@labs2
+		  val stts0 = stts1@stts2
+		  val deps0 = deps1@deps2
 	      in ((L.toInt lab, lc) :: list, labs0, stts0, deps0)
 	      end)
-	  ([], L.empty, L.empty, CD.empty)
+	  ([], [], [], [])
 	  xs
 
 fun interEmpty rtl1 rtl2 =
@@ -788,14 +788,14 @@ fun isComplete []                         = true
 
 fun getFieldNameLC lc0 (T.LC (lc, lab)) =
     if lc0 = lc
-    then SOME (lab, lc, L.empty, L.empty, CD.empty)
+    then SOME (lab, lc, [], [], [])
     else NONE
   | getFieldNameLC lc0 (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) =
     (case getFieldNameLC lc0 lt of
 	 SOME (lab, lc, labs0, stts0, deps0) =>
-	 let val labs1 = L.union  labs labs0
-	     val stts1 = L.union  stts stts0
-	     val deps1 = CD.union deps deps0
+	 let val labs1 = labs@labs0
+	     val stts1 = stts@stts0
+	     val deps1 = deps@deps0
 	 in SOME (lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
@@ -809,9 +809,9 @@ fun getFieldNameRC lc (rt as T.FC (lt, ty, lab)) =
   | getFieldNameRC lc (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
     (case getFieldNameRC lc field of
 	 SOME (ty, lab, lc, labs0, stts0, deps0) =>
-	 let val labs1 = L.union  labs labs0
-	     val stts1 = L.union  stts stts0
-	     val deps1 = CD.union deps deps0
+	 let val labs1 = labs@labs0
+	     val stts1 = stts@stts0
+	     val deps1 = deps@deps0
 	 in SOME (ty, lab, lc, labs1, stts1, deps1)
 	 end
        | NONE => NONE)
@@ -840,9 +840,9 @@ fun ziprecLC (T.LC (lc, lab)) rtl =
   | ziprecLC (T.LABEL_DEPENDANCY (lt, labs, stts, deps)) rtl =
     (case ziprecLC lt rtl of
 	 SOME (ty, lab1, lc1, lab2, lc2, labs', stts', deps', rtl) =>
-	 let val labs0 = L.union  labs labs'
-	     val stts0 = L.union  stts stts'
-	     val deps0 = CD.union deps deps'
+	 let val labs0 = labs@labs'
+	     val stts0 = stts@stts'
+	     val deps0 = deps@deps'
 	 in SOME (ty, lab1, lc1, lab2, lc2, labs0, stts0, deps0, rtl)
 	 end
        | NONE => NONE)
@@ -856,9 +856,9 @@ fun ziprecRC (T.FC (lt, ty, _)) rtl =
   | ziprecRC (T.FIELD_DEPENDANCY (field, labs, stts, deps)) rtl =
     (case ziprecRC field rtl of
 	 SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs', stts', deps', rtl') =>
-	 let val labs0 = L.union  labs labs'
-	     val stts0 = L.union  stts stts'
-	     val deps0 = CD.union deps deps'
+	 let val labs0 = labs@labs'
+	     val stts0 = stts@stts'
+	     val deps0 = deps@deps'
 	 in SOME (ty1, ty2, lab1, lc1, lab2, lc2, labs0, stts0, deps0, rtl')
 	 end
        | NONE => NONE)
@@ -898,9 +898,9 @@ fun ftestrecord (srec as ((rtl1, b1, llc1), (rtl2, b2, llc2))) =
 		    val (list2, labs2, stts2, deps2) = reportLabTyClash rtl2'
 		    val (list3, labs3, stts3, deps3) = reportRcty llc11
 		    val (list4, labs4, stts4, deps4) = reportRcty llc22
-		    val labs0 = L.union  labs1 (L.union  labs2 (L.union  labs3 labs4))
-		    val stts0 = L.union  stts1 (L.union  stts2 (L.union  stts3 stts4))
-		    val deps0 = CD.union deps1 (CD.union deps2 (CD.union deps3 deps4))
+		    val labs0 = labs1@labs2@labs3@labs4
+		    val stts0 = stts1@stts2@stts3@stts4
+		    val deps0 = deps1@deps2@deps3@deps4
 		in ([], [], [((list1, list2, list3, list4), labs0, stts0, deps0)])
 		end
 	   else if isComplete rtl2'
@@ -912,9 +912,9 @@ fun ftestrecord (srec as ((rtl1, b1, llc1), (rtl2, b2, llc2))) =
 		    val (list2, labs2, stts2, deps2) = reportLabTyClash rtl2'
 		    val (list3, labs3, stts3, deps3) = reportRcty llc11
 		    val (list4, labs4, stts4, deps4) = reportRcty llc22
-		    val labs0 = L.union  labs1 (L.union  labs2 (L.union  labs3 labs4))
-		    val stts0 = L.union  stts1 (L.union  stts2 (L.union  stts3 stts4))
-		    val deps0 = CD.union deps1 (CD.union deps2 (CD.union deps3 deps4))
+		    val labs0 = labs1@labs2@labs3@labs4
+		    val stts0 = stts1@stts2@stts3@stts4
+		    val deps0 = deps1@deps2@deps3@deps4
 		in ([], [], [((list1, list2, list3, list4), labs0, stts0, deps0)])
 		end
 	   else if (List.null rtl1' andalso T.isflex b1)
@@ -1013,9 +1013,9 @@ fun getAllTns (env as E.ENV_CONS _) state =
 fun combineTyVars monos1 monos2 =
     MS.unionWith (fn ((tv1, labs1, stts1, deps1), (tv2, labs2, stts2, deps2)) =>
 		     (tv1,
-		      L.union  labs1 labs2,
-		      L.union  stts1 stts2,
-		      CD.union deps1 deps2))
+		      labs1@labs2,
+		      stts1@stts2,
+		      deps1@deps2))
 		 (monos1, monos2)
 
 (** The empty set of monomorphic variables .*)
@@ -1037,9 +1037,9 @@ fun getMonoTyVars (env as E.ENV_CONS _) state =
 					       val monos' = foldr (fn ((tv, labs', stts', deps'), tvs) =>
 								      if isInGe state tv
 								      then tvs
-								      else let val labs0 = L.union  labs labs'
-									       val stts0 = L.union  stts stts'
-									       val deps0 = CD.union deps deps'
+								      else let val labs0 = labs@labs'
+									       val stts0 = stts@stts'
+									       val deps0 = deps@deps'
 									   in MS.insert (tvs, T.typeVarToInt tv, (tv, labs0, stts0, deps0))
 									   end)
 								  MS.empty
@@ -1090,10 +1090,7 @@ fun pushEnvToState bempty env state =
     else let (*N*)val tyvars  = MS.foldr (fn (v as (tv, _, _, _), tyvars) => (updateStateGe state tv v; tv :: tyvars))
 					 []
 					 (getMonoTyVars env state)
-	     (*val tyvars  = map (fn v as (tv, _, _, _) => (updateStateGe state tv v; tv))
-				 (getMonoTyVars env state)*)
-	     (*val _ = D.printdebug2 (T.printTypeVarlist tyvars)*)
-	     val tns     = map (fn {id, lab, kind, name} => (name, L.empty, L.empty, CD.empty)) (getAllTns env state)
+	     val tns     = map (fn {id, lab, kind, name} => (name, [], [], [])) (getAllTns env state)
 	     val statena = getStateNa state
 	     val _       = statena := NA.addList (!statena, tns)
 	     val stateid = getStateId state

@@ -146,12 +146,12 @@ fun printTFun tfun =
 (** Decomposes a field type into a pair of a list of an occty and an integer. *)
 fun decomptyfield (T.FIELD_VAR rv)                ll deps ids = ([R (rv, ll, deps, ids)], 0)
   | decomptyfield (T.FC (_, ty, _))        ll deps ids = decomptyty ty ll deps ids
-  | decomptyfield (T.FIELD_DEPENDANCY (r, x, y, z))      ll deps ids = decomptyfield r (L.union x ll) (L.union y deps) (CD.union z ids)
+  | decomptyfield (T.FIELD_DEPENDANCY (r, x, y, z))      ll deps ids = decomptyfield r (x@ll) (y@deps) (z@ids)
   | decomptyfield T.FIELD_NO_OVERLOAD                     ll deps ids = ([], 0)
 (** Decomposes a sequence type into a pair of a list of an occty and an integer. *)
 and decomptysq  (T.ROW_VAR sv)                ll deps ids = ([S (sv, ll, deps, ids)], 0)
   | decomptysq  (T.ROW_C (rtl, _, _))       ll deps ids = (decomptyfieldlist rtl ll deps ids, 1)
-  | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (L.union x ll) (L.union y deps) (CD.union z ids)
+  | decomptysq  (T.ROW_DEPENDANCY (s, x, y, z))      ll deps ids = decomptysq s (x@ll) (y@deps) (z@ids)
 (** Decomposes a type into a pair of a list of an occty and an integer. *)
 and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, deps, ids)], 0)
   | decomptyty  (T.EXPLICIT_TYPE_VAR (n, tv, l, eqtv))         ll deps ids = ([], 0) (* TODO: because it's a constant type but check that anyway with a circularity test *)
@@ -159,7 +159,7 @@ and decomptyty  (T.TYPE_VAR (tv, _, _, _))         ll deps ids = ([T (tv, ll, de
   | decomptyty  (T.APPLICATION (tyf, sq, _))       ll deps ids = ([], 0) (* NOTE: Can a circularity error go through a type/datatype definition? *)
   | decomptyty  (T.TYPE_POLY  (sq, _, _, _, _, _)) ll deps ids = decomptysq sq ll deps ids
   | decomptyty  (T.GEN ty)               ll deps ids = ([], 0) (*(2010-06-23)Isn'y that risky?*)
-  | decomptyty  (T.TYPE_DEPENDANCY (t, x, y, z))      ll deps ids = decomptyty t (L.union x ll) (L.union y deps) (CD.union z ids)
+  | decomptyty  (T.TYPE_DEPENDANCY (t, x, y, z))      ll deps ids = decomptyty t (x@ll) (y@deps) (z@ids)
 (** Decomposes a list of field types. *)
 and decomptyfieldlist xs ll deps ids = foldr (fn (x, y) => (#1 (decomptyfield x ll deps ids)) @ y) [] xs
 
@@ -234,66 +234,66 @@ fun decorateCst xs labs stts deps =
 (** Collapsing of dependencies - have to be moved to Ty.sml. *)
 fun collapseTy (T.TYPE_DEPENDANCY (T.TYPE_DEPENDANCY (ty, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTy ty
-	       (L.union  (L.union  labs1 labs2) labs3)
-	       (L.union  (L.union  stts1 stts2) stts3)
-	       (CD.union (CD.union deps1 deps2) deps3)
+	       (labs1@labs2@labs3)
+	       (stts1@stts2@stts3)
+	       (deps1@deps2@deps3)
   | collapseTy (T.TYPE_DEPENDANCY (ty, labs1, stts1, deps1)) labs2 stts2 deps2 =
     T.TYPE_DEPENDANCY (ty,
-	  L.union  labs1 labs2,
-	  L.union  stts1 stts2,
-	  CD.union deps1 deps2)
+	  labs1@labs2,
+	  stts1@stts2,
+	  deps1@deps2)
   | collapseTy ty labs stts deps = T.TYPE_DEPENDANCY (ty, labs, stts, deps)
 
 (** Collapses dependencies in a sequence type. *)
 fun collapseSq (T.ROW_DEPENDANCY (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseSq sq
-	       (L.union  (L.union  labs1 labs2) labs3)
-	       (L.union  (L.union  stts1 stts2) stts3)
-	       (CD.union (CD.union deps1 deps2) deps3)
+	       (labs1@labs2@labs3)
+	       (stts1@stts2@stts3)
+	       (deps1@deps2@deps3)
   | collapseSq (T.ROW_DEPENDANCY (sq, labs1, stts1, deps1)) labs2 stts2 deps2 =
     T.ROW_DEPENDANCY (sq,
-	  L.union  labs1 labs2,
-	  L.union  stts1 stts2,
-	  CD.union deps1 deps2)
+	  labs1@labs2,
+	  stts1@stts2,
+	  deps1@deps2)
   | collapseSq sq labs stts deps = T.ROW_DEPENDANCY (sq, labs, stts, deps)
 
 (** Collapses dependencies in a field type. *)
 fun collapseRt (T.FIELD_DEPENDANCY (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseRt rt
-	       (L.union  (L.union  labs1 labs2) labs3)
-	       (L.union  (L.union  stts1 stts2) stts3)
-	       (CD.union (CD.union deps1 deps2) deps3)
+	       (labs1@labs2@labs3)
+	       (stts1@stts2@stts3)
+	       (deps1@deps2@deps3)
   | collapseRt (T.FIELD_DEPENDANCY (rt, labs1, stts1, deps1)) labs2 stts2 deps2 =
     T.FIELD_DEPENDANCY (rt,
-	  L.union  labs1 labs2,
-	  L.union  stts1 stts2,
-	  CD.union deps1 deps2)
+	  labs1@labs2,
+	  stts1@stts2,
+	  deps1@deps2)
   | collapseRt rt labs stts deps = T.FIELD_DEPENDANCY (rt, labs, stts, deps)
 
 (** Collapses dependencies in a typename type. *)
 fun collapseTn (T.TYPENAME_DEPENDANCY (T.TYPENAME_DEPENDANCY (tn, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTn tn
-	       (L.union  (L.union  labs1 labs2) labs3)
-	       (L.union  (L.union  stts1 stts2) stts3)
-	       (CD.union (CD.union deps1 deps2) deps3)
+	       (labs1@labs2@labs3)
+	       (stts1@stts2@stts3)
+	       (deps1@deps2@deps3)
   | collapseTn (T.TYPENAME_DEPENDANCY (tn, labs1, stts1, deps1)) labs2 stts2 deps2 =
     T.TYPENAME_DEPENDANCY (tn,
-	  L.union  labs1 labs2,
-	  L.union  stts1 stts2,
-	  CD.union deps1 deps2)
+	  labs1@labs2,
+	  stts1@stts2,
+	  deps1@deps2)
   | collapseTn tn labs stts deps = T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)
 
 (** Collapses dependencies in a function type. *)
 fun collapseTf (T.TYPE_FUNCTION_DEPENDANCY (T.TYPE_FUNCTION_DEPENDANCY (tf, labs1, stts1, deps1), labs2, stts2, deps2)) labs3 stts3 deps3 =
     collapseTf tf
-	       (L.union  (L.union  labs1 labs2) labs3)
-	       (L.union  (L.union  stts1 stts2) stts3)
-	       (CD.union (CD.union deps1 deps2) deps3)
+	       (labs1@labs2@labs3)
+	       (stts1@stts2@stts3)
+	       (deps1@deps2@deps3)
   | collapseTf (T.TYPE_FUNCTION_DEPENDANCY (tf, labs1, stts1, deps1)) labs2 stts2 deps2 =
     T.TYPE_FUNCTION_DEPENDANCY (tf,
-	  L.union  labs1 labs2,
-	  L.union  stts1 stts2,
-	  CD.union deps1 deps2)
+	  labs1@labs2,
+	  stts1@stts2,
+	  deps1@deps2)
   | collapseTf tf labs stts deps = T.TYPE_FUNCTION_DEPENDANCY (tf, labs, stts, deps)
 
 (** Gathers all typenames in a type. *)
@@ -301,39 +301,39 @@ fun gatherAllTnTy (T.TYPE_CONSTRUCTOR (tn, _, _, _)) = gatherAllTnTn tn
   | gatherAllTnTy (T.TYPE_POLY (sq, _, _, _, _, _)) = gatherAllTnSq sq
   | gatherAllTnTy (T.TYPE_DEPENDANCY (ty, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnTy ty
-    in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
+    in (list, labs@labs', stts@stts', deps@deps')
     end
-  | gatherAllTnTy _ = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnTy _ = ([], [], [], [])
 (** Gathers all typenames in a sequnce type. *)
-and gatherAllTnSq (T.ROW_VAR _) = ([], L.empty, L.empty, CD.empty)
+and gatherAllTnSq (T.ROW_VAR _) = ([], [], [], [])
   | gatherAllTnSq (T.ROW_C (rtl, _, _)) =
     foldr (fn ((list1, labs1, stts1, deps1), (list2, labs2, stts2, deps2)) =>
 	      (list1 @ list2,
-	       L.union  labs1 labs2,
-	       L.union  stts1 stts2,
-	       CD.union deps1 deps2))
-	  ([], L.empty, L.empty, CD.empty)
+	       labs1@labs2,
+	       stts1@stts2,
+	       deps1@deps2))
+	  ([], [], [], [])
 	  (map gatherAllTnRt rtl)
   | gatherAllTnSq (T.ROW_DEPENDANCY (seq, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnSq seq
-    in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
+    in (list, labs@labs', stts@stts', deps@deps')
     end
 (** Gathers all typenames in a row type. *)
-and gatherAllTnRt (T.FIELD_VAR _) = ([], L.empty, L.empty, CD.empty)
+and gatherAllTnRt (T.FIELD_VAR _) = ([], [], [], [])
   | gatherAllTnRt (T.FC (_, ty, _)) = gatherAllTnTy ty
   | gatherAllTnRt (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnRt field
-    in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
+    in (list, labs@labs', stts@stts', deps@deps')
     end
-  | gatherAllTnRt T.FIELD_NO_OVERLOAD = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnRt T.FIELD_NO_OVERLOAD = ([], [], [], [])
 (** Gathers all typenames in a typename type. *)
 and gatherAllTnTn (T.NC (tn, _, l)) =
-    ([(L.toInt l, T.typenameToInt tn)], L.empty, L.empty, CD.empty)
+    ([(L.toInt l, T.typenameToInt tn)], [], [], [])
   | gatherAllTnTn (T.TYPENAME_DEPENDANCY (tn, labs, stts, deps)) =
     let val (list, labs', stts', deps') = gatherAllTnTn tn
-    in (list, L.union labs labs', L.union stts stts', CD.union deps deps')
+    in (list, labs@labs', stts@stts', deps@deps')
     end
-  | gatherAllTnTn (T.TYPENAME_VAR _) = ([], L.empty, L.empty, CD.empty)
+  | gatherAllTnTn (T.TYPENAME_VAR _) = ([], [], [], [])
 
 (** Checks for presence of variables in a type. *)
 fun isAllTy (T.TYPE_POLY (sq, _, _, _, _, _)) = isAllSq sq
@@ -589,13 +589,13 @@ fun duplicateIdCheck state env =
 	    let
 		val (ids,idLabs) = E.getLabsIdsEnv env
 	    in
-		[(ids, L.union idLabs labs)]
+		[(ids, idLabs@labs)]
 	    end
 	  | parseEnvCons _ _ = raise EH.DeadBranch "Expected an environment constructor but got something else (unification algorithm)."
 
 	(** Parses row environments for duplicate identifiers. *)
 	fun parseRows (E.ROW_ENV (_, E.ENVDEP (E.ENV_CONS consValue, labs,_,_))) labels =
-	    (parseEnvCons (E.ENV_CONS consValue) (L.union labs labels))
+	    (parseEnvCons (E.ENV_CONS consValue) (labs@labels))
 	  | parseRows (E.ROW_ENV (_, E.ENV_CONS consValue)) labels =
 	    (parseEnvCons (E.ENV_CONS consValue) labels)
 	  | parseRows (E.ROW_ENV (E.ENV_CONS consValue, _)) labels =
@@ -616,20 +616,20 @@ fun duplicateIdCheck state env =
 	    (D.printDebug D.UNIF D.STATE (fn _ => S.printState state);
 	     case S.getValStateEv state ev of
 		 NONE => []
-	       | SOME (E.ENVDEP(E.ENV_VAR(ev, lab), depLabs, _, _)) => parseIncludeSpec state (E.ENV_VAR(ev, lab)) (L.cons lab (L.cons evlab (L.union labs depLabs)))
+	       | SOME (E.ENVDEP(E.ENV_VAR(ev, lab), depLabs, _, _)) => parseIncludeSpec state (E.ENV_VAR(ev, lab)) (labs@depLabs@[L.singleton lab]@[L.singleton evlab])
 	       | SOME (E.ENVDEP(E.ENV_CONS consValue, depLabs, _, _)) =>
 		 let
-		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab (L.union labs depLabs))
+		     val x = parseEnvCons (E.ENV_CONS consValue) ([L.singleton evlab]@labs@depLabs)
 		 in
 		      x
 		 end
 	       | SOME (E.ENV_CONS consValue) =>
 		 let
-		     val x = parseEnvCons (E.ENV_CONS consValue) (L.cons evlab labs)
+		     val x = parseEnvCons (E.ENV_CONS consValue) ((L.singleton evlab)::labs)
 		 in
 		     x
 		 end
-	       | SOME (E.ROW_ENV (r1, r2)) => parseRows (E.ROW_ENV (r1,r2)) (L.cons evlab labs)
+	       | SOME (E.ROW_ENV (r1, r2)) => parseRows (E.ROW_ENV (r1,r2)) ((L.singleton evlab)::labs)
 	       | SOME x  => raise EH.DeadBranch ("While following a chain of environment variables values to environment constructors, got something which wasn't an environment constructor: " ^ (E.printEnv x "")))
 	  | parseIncludeSpec _ _ _ = raise EH.DeadBranch "While looking for duplicate typename specificaions in signatures, found something which isn't an ENV_VAR which should only be an ENV_VAR."
 
@@ -654,7 +654,7 @@ fun duplicateIdCheck state env =
 		(** Helper function for #formatIdentifiers. *)
 		fun parseIdLabelList [] _ = []
 		  | parseIdLabelList ((label,id)::t) labels =
-		    (id, L.fromInt label, L.cons (L.fromInt label) labels) :: (parseIdLabelList t labels)
+		    (id, L.fromInt label, (L.singleton(L.fromInt label))::labels) :: (parseIdLabelList t labels)
 	    in
 		(parseIdLabelList idLabelList labels) @ (formatIdentifiers t)
 	    end
@@ -905,9 +905,9 @@ fun freshenv' env tvl bstr = freshenv env tvl (F.finitState ()) bstr
 (** Keeps looking up a class argument in the state until we can't look it up any longer. *)
 fun buildClass (CL.CLVAR clv) state =
     (case S.getValStateCl state clv of
-	 NONE => (CL.CLVAR clv, L.empty, L.empty, CD.empty)
+	 NONE => (CL.CLVAR clv, [], [], [])
        | SOME (cl, labs, stts, deps) => EL.updExtLab (buildClass cl state) labs stts deps)
-  | buildClass class state = (class, L.empty, L.empty, CD.empty)
+  | buildClass class state = (class, [], [], [])
 
 (** Keeps looking up a typename type argument in the state until we can't look it up any longer. *)
 fun buildtnty (T.TYPENAME_VAR tnv) state =
@@ -1154,7 +1154,7 @@ fun getExplicitTyVars vids tyvs state =
 	fun searchTy (T.TYPE_VAR _) = NONE
 	  | searchTy (T.EXPLICIT_TYPE_VAR (id, _, lab, _)) =
 	    if I.isin id dom
-	    then SOME (id, lab, getLabsTyvs id, L.empty, CD.empty)
+	    then SOME (id, lab, getLabsTyvs id, [], [])
 	    else NONE
 	  | searchTy (T.TYPE_CONSTRUCTOR (_, seqty, _, _)) = searchSeqTy seqty
 	  | searchTy (T.APPLICATION (typeFunction, seqty, lab)) =
@@ -1169,7 +1169,7 @@ fun getExplicitTyVars vids tyvs state =
 	    (case searchTy ty of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
-		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
+		 SOME (id, lab, labs@labs', stts@stts', deps@deps'))
 	and searchSeqTy (T.ROW_VAR _) = NONE
 	  | searchSeqTy (T.ROW_C (fields, _, _)) =
 	    foldr (fn (field, err) =>
@@ -1182,14 +1182,14 @@ fun getExplicitTyVars vids tyvs state =
 	    (case searchSeqTy seq of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
-		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
+		 SOME (id, lab, labs@labs', stts@stts', deps@deps'))
 	and searchField (T.FIELD_VAR _) = NONE
 	  | searchField (T.FC (_, ty, _)) = searchTy ty
 	  | searchField (T.FIELD_DEPENDANCY (field, labs, stts, deps)) =
 	    (case searchField field of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
-		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
+		 SOME (id, lab, labs@labs', stts@stts', deps@deps'))
 	  | searchField T.FIELD_NO_OVERLOAD = NONE
 	and searchTypeFunction (T.TYPE_FUNCTION_VAR _) = NONE
 	  | searchTypeFunction (T.TFC (seqty, ty, _)) =
@@ -1202,7 +1202,7 @@ fun getExplicitTyVars vids tyvs state =
 	    (case searchTypeFunction tf of
 		 NONE => NONE
 	       | SOME (id, lab, labs', stts', deps') =>
-		 SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps'))
+		 SOME (id, lab, labs@labs', stts@stts', deps@deps'))
     in if I.isEmpty dom
        then NONE
        else E.foldrienv (fn (_, sem, err) =>
@@ -1220,7 +1220,7 @@ fun getExplicitTyVars vids tyvs state =
 						in case searchTy ty of
 						       NONE => NONE
 						     | SOME (id, lab, labs', stts', deps') =>
-						       SOME (id, lab, L.union labs labs', L.union stts stts', CD.union deps deps')
+						       SOME (id, lab, labs@labs', stts@stts', deps@deps')
 						end)
 				       NONE
 				       sem)
@@ -1263,14 +1263,14 @@ fun checkIsNotTooGen bind1 bind2 bfun lab =
 	     val ls  = foldr (fn (ty, tvlabs) => (getGenTyvars ty) @ tvlabs) [] tys
 	 in case ls of
 		((id1, lab1) :: _) =>
-		let val labs = L.union  (EL.getExtLabL bind1) (EL.getExtLabL bind2)
-		    val stts = L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2)
-		    val deps = CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2)
+		let val labs = (EL.getExtLabL bind1)@(EL.getExtLabL bind2)
+		    val stts = (EL.getExtLabE bind1)@(EL.getExtLabE bind2)
+		    val deps = (EL.getExtLabD bind1)@(EL.getExtLabD bind2)
 		    val mono = P.getLabsPoly (E.getBindP bind2)
 		    val lab2 = E.getBindL bind2
 		    val id2  = E.getBindI bind2
-		    val ek   = EK.TooGenSig ((L.toInt lab2, I.toInt id2), (L.toInt lab1, I.toInt id1), L.toList (#1 mono))
-		    val err  = ERR.consPreError ERR.dummyId (L.cons lab labs) deps ek stts
+		    val ek   = EK.TooGenSig ((L.toInt lab2, I.toInt id2), (L.toInt lab1, I.toInt id1), L.toList (L.unions (#1 mono)))
+		    val err  = ERR.consPreError ERR.dummyId (L.unions ((L.singleton lab)::labs)) (CD.unions deps) ek (L.unions stts)
 		in raise errorfound err
 		end
 	      | _ => ()
@@ -1323,9 +1323,9 @@ fun filterLid (lid as I.ID (id, lab)) filters =
 
 (** Unions the labels and context dependencies given in the argument. *)
 fun unionLabs (labs1, stts1, deps1) (labs2, stts2, deps2) =
-    (L.union labs1 labs2,
-     L.union stts1 stts2,
-     CD.union deps1 deps2)
+    (labs1@ labs2,
+     stts1@stts2,
+     deps1@deps2)
 
 (** Extracts the type functions from a structure.
  * env1 is for the signature and env2 for the structure. *)
@@ -1437,15 +1437,15 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
   | getTypeFunctionEnv (E.ENVDEP (env1, labs', stts', deps')) env2 labs stts deps =
     getTypeFunctionEnv env1
 		env2
-		(L.union labs labs')
-		(L.union stts stts')
-		(CD.union deps deps')
+		(labs@labs')
+		(stts@stts')
+		(deps@deps')
   | getTypeFunctionEnv env1 (E.ENVDEP (env2, labs', stts', deps')) labs stts deps =
     getTypeFunctionEnv env1
 		env2
-		(L.union labs labs')
-		(L.union stts stts')
-		(CD.union deps deps')
+		(labs@labs')
+		(stts@stts')
+		(deps@deps')
   | getTypeFunctionEnv (env as E.ENV_CONS _) _ _ _ _ = getAllTypeFunctionEnv env
   | getTypeFunctionEnv (E.ROW_ENV (env0, env1)) env2 labs stts deps =
     let val (tfnDs1, tfnTs1) = getTypeFunctionEnv env0 env2 labs stts deps
@@ -1469,9 +1469,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
 
 (** Get all type functions in an environment extended with labels, calls #getTypeFunctionEnv. *)
 and getTypeFunctionExtEnv extenv extenv' =
-    let (*val labs = L.union  (EL.getExtLabL extenv) (EL.getExtLabL extenv')
-	val stts = L.union  (EL.getExtLabE extenv) (EL.getExtLabE extenv')
-	val deps = CD.union (EL.getExtLabD extenv) (EL.getExtLabD extenv')*)
+    let
 	val labs = EL.getExtLabL extenv'
 	val stts = EL.getExtLabE extenv'
 	val deps = EL.getExtLabD extenv'
@@ -1503,9 +1501,9 @@ fun mergeTypeFunctionSha tfn1 tfn2 =
 
 fun decorateTypeFunctionSha tfn labs stts deps =
     OM.map (fn (SOME (labs', stts', deps')) =>
-	       SOME (L.union  labs labs',
-		     L.union  stts stts',
-		     CD.union deps deps')
+	       SOME (labs@labs',
+		     stts@stts',
+		     deps@deps')
 	     | NONE => NONE)
 	   tfn
 
@@ -1534,9 +1532,9 @@ fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
 						   (tf, _, _) =>
 						   (case T.getTypename tf of
 							SOME _ =>
-							let val labs  = L.union  (EL.getExtLabL etv) (EL.getExtLabL etv')
-							    val stts  = L.union  (EL.getExtLabE etv) (EL.getExtLabE etv')
-							    val deps  = CD.union (EL.getExtLabD etv) (EL.getExtLabD etv')
+							let val labs  = (EL.getExtLabL etv)@(EL.getExtLabL etv')
+							    val stts  = (EL.getExtLabE etv)@(EL.getExtLabE etv')
+							    val deps  = (EL.getExtLabD etv)@(EL.getExtLabD etv')
 							    val utf'  = SOME (tf, labs, stts, deps)
 							    val v     = SOME (labs, stts, deps)
 							    val tfns' = OM.insert (tfns, T.typenameToInt name, v)
@@ -1590,9 +1588,9 @@ and getTypeFunctionShaExtEnv extenv extenv' =
     let (*val labs = EL.getExtLabL extenv'
 	val stts = EL.getExtLabE extenv'
 	val deps = EL.getExtLabD extenv'*)
-	val labs = L.union  (EL.getExtLabL extenv) (EL.getExtLabL extenv')
-	val stts = L.union  (EL.getExtLabE extenv) (EL.getExtLabE extenv')
-	val deps = CD.union (EL.getExtLabD extenv) (EL.getExtLabD extenv')
+	val labs = (EL.getExtLabL extenv) @ (EL.getExtLabL extenv')
+	val stts = (EL.getExtLabE extenv) @ (EL.getExtLabE extenv')
+	val deps = (EL.getExtLabD extenv) @ (EL.getExtLabD extenv')
 	val (utf, tfns) = getTypeFunctionEnvSha (E.getBindT extenv) (E.getBindT extenv')
     in (decorateUTypeFunctionSha utf labs stts deps, decorateTypeFunctionSha tfns labs stts deps)
     end
@@ -1616,7 +1614,7 @@ and getTypeFunctionShaStrEnv strenv strenv' =
 fun genTypeFunctionTy (x as T.TYPE_VAR _) _ _ = ([], x)
   | genTypeFunctionTy (x as T.EXPLICIT_TYPE_VAR _) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
   | genTypeFunctionTy (x as T.TYPE_CONSTRUCTOR (tnc, sq, l, eq)) tfun btyp =
-    (case collapseTn tnc L.empty L.empty CD.empty of
+    (case collapseTn tnc [] [] [] of
 	 T.TYPENAME_DEPENDANCY (T.NC (tn, _, _), labs, stts, deps) =>
 	 (case OM.find (tfun, T.typenameToInt tn) of
 	      NONE =>
@@ -1782,7 +1780,7 @@ fun genTypeFunctionEnv' env state tfun b =
 fun applyTypeFunctionTy (x as (T.TYPE_VAR _)) _ _ = ([], x)
   | applyTypeFunctionTy (x as (T.EXPLICIT_TYPE_VAR _)) _ _ = ([], x (*T.TYPE_VAR (T.freshTypeVar ())*))
   | applyTypeFunctionTy (x as (T.TYPE_CONSTRUCTOR (tnc, sq, l, eq))) tfun btyp =
-    (case collapseTn tnc L.empty L.empty CD.empty of
+    (case collapseTn tnc [] [] [] of
 	 T.TYPENAME_DEPENDANCY (T.NC (tn, _, _), labs, stts, deps) =>
 	 (case OM.find (tfun, T.typenameToInt tn) of
 	      NONE =>
@@ -1955,9 +1953,9 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	   (* If the signature is complete then we need to raise a unmatched error. *)
 	   then let val (idlabs, labs1) = E.getLabsIdsEnv envsig
 		    val lab'  = E.getLabEnv envsig
-		    val labs2 = L.cons lab' (L.union labs1 labs)
+		    val labs2 = L.singleton lab'::(labs1@labs)
 		    val ek    = EK.UnbWhere ((L.toInt labTc, I.toInt idTc), idlabs, L.toInt lab')
-		in raise errorfound (ERR.consPreError ERR.dummyId labs2 deps ek stts)
+		in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs2) (CD.unions deps) ek (L.unions stts))
 		end
 	   (* Otherwise, the type cons might be filtered out, so we can't do anything. *)
 	   (* TODO: we need to remove idTc's type name from envsig if it exists.
@@ -1970,13 +1968,13 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	 			    then ()
 				    else (case T.isTypename sem of
 					      (T.NOTTYPENAME, labs', stts', deps') =>
-					      let val labs = L.union  (L.union  labs labs') (EL.getExtLabL bind)
-						  val stts = L.union  (L.union  stts stts') (EL.getExtLabE bind)
-						  val deps = CD.union (CD.union deps deps') (EL.getExtLabD bind)
+					      let val labs = labs@labs'@(EL.getExtLabL bind)
+						  val stts = stts@(EL.getExtLabE bind)@stts'
+						  val deps = deps@deps'@(EL.getExtLabD bind)
 						  val lab' = E.getBindL bind
 						  val ek   = EK.IllFormedWhere ((L.toInt lab', I.toInt idTc), (L.toInt labTc, I.toInt idTc))
 						  (*val _ = D.printdebug2 (T.printtyf sem)*)
-					      in raise errorfound (ERR.consPreError ERR.dummyId labs deps ek stts)
+					      in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts))
 					      end
 					    | _ => ())
 			 | E.TYPE => ()
@@ -1991,19 +1989,11 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 		  (* TODO: check (1) *)
 		  (* TODO: replace name in the list of type names of envsig
 		   * - This is done when applying the mapping. *)
-		  let (*val _ = if S.isAName name state andalso not (CL.classIsANY class)
-			      then let val labs = L.union  labs (EL.getExtLabL bind)
-				       val stts = L.union  stts (EL.getExtLabE bind)
-				       val deps = CD.union deps (EL.getExtLabD bind)
-				       val lab' = E.getBindL bind
-				       val ek   = EK.RigidWhere (*((L.toInt lab', I.toInt idTc), (L.toInt labTc, I.toInt idTc))*)
-				   in raise errorfound (ERR.consPreError ERR.dummyId labs deps ek stts L.dummyLab)
-				   end
-			      else ()*)
+		  let
 		      fun loopTf (T.TFC _) = (* The the sem is not a dummy one *)
-			  let val labs = L.union  (L.union  labs labs') (EL.getExtLabL bind)
-			      val stts = L.union  (L.union  stts stts') (EL.getExtLabE bind)
-			      val deps = CD.union (CD.union deps deps') (EL.getExtLabD bind)
+			  let val labs = labs@labs'@(EL.getExtLabL bind)
+			      val stts = stts@stts'@(EL.getExtLabE bind)
+			      val deps = deps@deps'@(EL.getExtLabD bind)
 			  in (insertInTypeFunction tmap name (collapseTf sem labs stts deps), true)
 			  end
 			| loopTf (T.TYPE_FUNCTION_DEPENDANCY etf) = loopTf (EL.getExtLabT etf)
@@ -2023,12 +2013,12 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 				  * 'E(longtycon) = (t, VE)' for where clauses (tf is not a t).
 				  * (Called non-flexible type in HaMLet.) *)
 		  if not (CL.classIsANY class)
-		  then let val labs = L.union  (L.union  labs labs') (EL.getExtLabL bind)
-			   val stts = L.union  (L.union  stts stts') (EL.getExtLabE bind)
-			   val deps = CD.union (CD.union deps deps') (EL.getExtLabD bind)
+		  then let val labs = labs@labs'@(EL.getExtLabL bind)
+			   val stts = stts@stts'@(EL.getExtLabE bind)
+			   val deps = deps@deps'@(EL.getExtLabD bind)
 			   val lab' = E.getBindL bind
 			   val ek   = EK.NonFlexWhere ((L.toInt lab', I.toInt idTc), (L.toInt labTc, I.toInt idTc))
-		       in raise errorfound (ERR.consPreError ERR.dummyId labs deps ek stts)
+		       in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts))
 		       end
 		  else (tmap, true)
 	   end
@@ -2041,20 +2031,21 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
 	 (* If the signature is complete then we need to raise a unmatched error. *)
 	 then let val (idlabs, labs1) = E.getLabsIdsEnv envsig
 		  val lab'  = E.getLabEnv envsig
-		  val labs2 = L.cons lab' (L.union labs1 labs)
+		  val labs2 = L.singleton lab'::(labs1@labs)
 		  val ek    = EK.UnbWhere ((L.toInt lab1, I.toInt id), idlabs, L.toInt lab')
-	      in raise errorfound (ERR.consPreError ERR.dummyId labs2 deps ek stts)
+	      in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs2) (CD.unions deps) ek (L.unions stts))
 	      end
 	 (* Otherwise, the structure might be filtered out, so we can't do anything. *)
 	 else (OM.empty, false)
        | [bind] =>
-	 let val labs    = L.union  labs (EL.getExtLabL bind)
-	     val stts    = L.union  stts (EL.getExtLabE bind)
-	     val deps    = CD.union deps (EL.getExtLabD bind)
+	 let val labs    = labs@(EL.getExtLabL bind)
+	     val stts    = stts@(EL.getExtLabE bind)
+	     val deps    = deps@(EL.getExtLabD bind)
 	     val longtyp = SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem, class = class, lab = lab}, labs, stts, deps)
 	 in matchWhereEnv (E.getBindT bind) longtyp state
 	 end
        | _ => raise EH.DeadBranch "There should be only one binding per identifier during constraint solving")
+
   | matchWhereEnv (envsig as E.ROW_ENV (env1, env2)) longtyp state =
     (let val (tmap, found) = matchWhereEnv env2 longtyp state
      (* If found then it means that we found the matching.
@@ -2070,9 +2061,9 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
      (* If we found an error it might just be because the matching is in env1. *)
      handle errorfound err => (matchWhereEnv env1 longtyp state handle errorfound _ => raise errorfound err))
   | matchWhereEnv (E.ENVDEP (env, labs, stts, deps)) (SOME (longtyp, labs', stts', deps')) state =
-    let val labs0 = L.union  labs labs'
-	val stts0 = L.union  stts stts'
-	val deps0 = CD.union deps deps'
+    let val labs0 = labs@labs'
+	val stts0 = stts@stts'
+	val deps0 = deps@deps'
     in matchWhereEnv env (SOME (longtyp, labs0, stts0, deps0)) state
     end
   | matchWhereEnv (E.ENV_VAR _) _ _ = (OM.empty, false)
@@ -2347,7 +2338,7 @@ fun unif env filters user =
 	    if feq var1 var2
 	    then if depth = 0
 		 then foc (c (var1, sem1)) vars depth lab
-		 else foch (ERR.consPreError ERR.dummyId labs deps EK.Circularity stts) (c (var1, sem1)) vars depth lab
+		 else foch (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) EK.Circularity (L.unions stts)) (c (var1, sem1)) vars depth lab
 	    else occursGenList c var1 var2 sem1 labs stts deps vars depth lab fget fdecomp foc
 
 	(** The function which checks for circularity errors.
@@ -2391,7 +2382,7 @@ fun unif env filters user =
 
 	(** Value polymorphism restriction solver. *)
 	fun solveMono (x as P.EXPANS (X.Expdep (lid, labels))) =
-	    if FI.testtodos filters labels
+	    if FI.testtodos filters (L.unions labels)
 	    then case S.getValStateIdVa state lid false of
 		     (SOME (({id, bind, equalityTypeVar, lab, poly, class}, labs, _, _), _), _, _) =>
 		     if CL.classIsCON class orelse
@@ -2402,15 +2393,15 @@ fun unif env filters user =
 		     else if CL.classIsREC class(* orelse
 						 CL.classIsVRC class*) (*orelse
 									CL.classIsVAL class*)
-		     then let val labs' = L.union labels labs
+		     then let val labs' = labels@labs
 			  in SOME (P.EXPANS (X.Expexp labs'))
 			  end
 		     else if CL.classIsVRC class
 		     then NONE
 		     else if CL.classIsVAL class orelse
 			     CL.classIsPAT class
-		     then let val labs' = L.union labels labs
-			  in SOME (P.EXPANS (X.Expdep (lid, labs')))
+		     then let val labs' = labels@labs
+			  in SOME (P.EXPANS (X.Expdep (lid, (labs'))))
 			  end
 		     else raise EH.DeadBranch "wrong kind of identifier"
 		   | (NONE, SOME _, true)  => SOME x (* we went down some structure but couldn't find all of lid             *)
@@ -2419,11 +2410,11 @@ fun unif env filters user =
 		   | (NONE, NONE,   false) => SOME x (* we didn't start going down some structure and didn't find lid at all *)
 	    else NONE
 	  | solveMono (P.EXPANS (X.Expexp labels)) =
-	    if FI.testtodos filters labels
+	    if FI.testtodos filters (L.unions labels)
 	    then SOME (P.EXPANS (X.Expexp labels))
 	    else NONE
 	  | solveMono (P.MONBIN labels) =
-	    if FI.testtodos filters labels
+	    if FI.testtodos filters (L.unions labels)
 	    then SOME (P.MONBIN labels)
 	    else NONE
 
@@ -2455,7 +2446,7 @@ fun unif env filters user =
 	fun solveextvarkeep bind =
 	    (* NOTE: we might want to use 'FI.getStateLabs filters (EL.getExtLabL bind)' here. *)
 	    case (*FI.getStateLab filters (E.getBindL bind)*)
-		FI.getStateLabs filters (EL.getExtLabL bind) of
+		FI.getStateLabs filters (L.unions (EL.getExtLabL bind)) of
 		FI.IN   => let val bind1 =
 				   case E.getBindC bind of
 				       CL.CLVAR clv =>
@@ -2499,10 +2490,10 @@ fun unif env filters user =
 	    in case S.getValStateIdVa state lid false of
 		   (SOME (({id, bind = _, equalityTypeVar=eqtv, lab = _, poly, class}, labs', stts', deps'), _), _, _) =>
 		   (case class of
-			CL.VID CL.VAL => BINDIN (EL.updExtLabD bind (CD.sing id lab))
-		      | CL.VID CL.PAT => BINDIN (EL.updExtLabD bind (CD.sing id lab)) (* The one in the context comes from an AS in a pattern *)
-		      | CL.VID CL.REC => BINDIN (EL.updExtLab (EL.mapExtLab bind C.toVRC) labs' (L.union labs' stts') deps')
-		      | CL.VID CL.VRC => BINDIN (EL.updExtLab (EL.mapExtLab bind C.toVRC) labs' (L.union labs' stts') deps')
+			CL.VID CL.VAL => BINDIN (EL.updExtLabD bind [(CD.sing id lab)])
+		      | CL.VID CL.PAT => BINDIN (EL.updExtLabD bind [(CD.sing id lab)]) (* The one in the context comes from an AS in a pattern *)
+		      | CL.VID CL.REC => BINDIN (EL.updExtLab (EL.mapExtLab bind C.toVRC) labs' (stts'@labs') deps')
+		      | CL.VID CL.VRC => BINDIN (EL.updExtLab (EL.mapExtLab bind C.toVRC) labs' (stts'@labs') deps')
 		      | CL.VID CL.CO0 => generateAcc ()
 		      | CL.VID CL.CO1 => generateAcc ()
 		      | CL.VID CL.CON => generateAcc ()
@@ -2535,7 +2526,7 @@ fun unif env filters user =
 						      equalityTypeVar=(T.freshEqualityTypeVar()),
 						      classOfId=(CL.consANY ()),
 						      labelOfConstraint=lab})
-			else BINDIN (EL.updExtLabD bind (CD.sing id lab))
+			else BINDIN (EL.updExtLabD bind [(CD.sing id lab)])
 	    end
 
 	fun solveextvarrebind bind =
@@ -2600,7 +2591,7 @@ fun unif env filters user =
 
 	(** Solves an extended explicit type variable. *)
 	fun solveexttyp (bind as (btyp, labs, stts, deps)) =
-	    case FI.getStateLabs filters (EL.getExtLabL bind)
+	    case FI.getStateLabs filters (L.unions (EL.getExtLabL bind))
 	     (*FI.getStateLab filters (E.getBindL bind)*) of
 		FI.IN   => let val (tyf, tnKind, cons) = E.getBindT bind
 			       val tyf' = buildtypeFunction tyf state I.empty false false
@@ -2618,7 +2609,7 @@ fun unif env filters user =
 
 	(** Solves an extended overloading type constructor. *)
 	fun solveextovc (bind as (bovc, labs, stts, deps)) =
-	    case FI.getStateLabs filters (EL.getExtLabL bind) of
+	    case FI.getStateLabs filters (L.unions (EL.getExtLabL bind)) of
 		FI.IN   => let val ovc  = E.getBindT bind
 			       val ovc' = buildseqty ovc state I.empty false false
 			   in BINDIN (C.mapBind bovc (fn _ => ovc'),
@@ -2688,11 +2679,11 @@ fun unif env filters user =
 	    in if (CL.classIsVAL cl1 orelse CL.classIsVRC cl1)
 		  andalso
 		  (CL.classIsVAL cl2 orelse CL.classIsVRC cl2)
-	       then let val labs = L.union  (EL.getExtLabL bind1) (EL.getExtLabL bind2)
-			val stts = L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2)
-			val deps = CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2)
+	       then let val labs = (EL.getExtLabL bind1)@(EL.getExtLabL bind2)
+			val stts = (EL.getExtLabE bind1)@(EL.getExtLabE bind2)
+			val deps = (EL.getExtLabD bind1)@(EL.getExtLabD bind2)
 			val ek   = EK.MultiOcc NONE
-		    in raise errorfound (ERR.consPreError ERR.dummyId labs deps ek stts)
+		    in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts))
 		    end
 	       else ()
 	    end
@@ -2784,7 +2775,7 @@ fun unif env filters user =
 	    end
 	  | solveenv (E.ENVOPN opnenv) bmon = solveopnenv opnenv bmon
 	  | solveenv (E.ENVDEP (env, labs, stts, deps)) bmon =
-	    (case FI.getStateLabs filters labs of
+	    (case FI.getStateLabs filters (L.unions labs) of
 		 FI.OUT  => E.emptyEnv
 	       | FI.BIND => E.newEnvVar L.dummyLab
 	       | FI.IN   => E.pushExtEnv (solveenv env bmon) labs stts deps)
@@ -2806,24 +2797,23 @@ fun unif env filters user =
 			   NONE => E.updateValueIds vids env
 			 | SOME (id, lab, labs0, stts0, deps0) =>
 			   let val ek    = EK.TypeVarBind NONE
-			       val labs1 = L.union  labs labs0
-			       val stts1 = L.union  stts stts0
-			       val deps1 = CD.union deps deps0
-			       val err   = ERR.consPreError ERR.dummyId labs1 deps1 ek stts1
-			   (*val _ = D.printdebug2 (E.printEnv (E.projValueIds vids) "")*)
+			       val labs1 = labs@labs0
+			       val stts1 = stts@stts0
+			       val deps1 = deps@deps0
+			       val err   = ERR.consPreError ERR.dummyId (L.unions labs1) (CD.unions deps1) ek (L.unions stts1)
 			   in handleSolveEnv err (E.projValueIds vids)
 			   end
 		    end
 		  | checkTyVars (env as E.ENV_VAR _) _ _ _ = env
 		  | checkTyVars (E.ENVDEP (env, labs1, stts1, deps1)) labs stts deps =
-		    let val labs2 = L.union  labs1 labs
-			val stts2 = L.union  stts1 stts
-			val deps2 = CD.union deps1 deps
+		    let val labs2 = labs1@labs
+			val stts2 = stts1@stts
+			val deps2 = deps1@deps
 			val env'  = checkTyVars env labs2 stts2 deps2
 		    in E.pushExtEnv env' labs1 stts1 deps1
 		    end
 		  | checkTyVars _ _ _ _ = raise EH.DeadBranch "DeadBranch15"
-	    in checkTyVars env' L.empty L.empty CD.empty
+	    in checkTyVars env' [] [] []
 	    end
 	  | solveenv (E.DATATYPE_CONSTRUCTOR_ENV (idlab, env)) bmon =
 	    let val env' = solveenv env bmon
@@ -2841,7 +2831,6 @@ fun unif env filters user =
 	  | solveenv (envwhere as E.ENVWHR (env, longtyp)) bmon =
 	    (let (*val env0 = solveenv env bmon*)
 		 (*val _ = D.printdebug2 (E.printEnv env0 "")*)
-		 (*val (labs1, stts1, deps1) = (L.empty, L.empty, CD.empty)*)
 		 val env0 = justBuildEnv (solveenv env bmon) state false
 		 val solvedLongTyp = solveLongTyp longtyp
 		 (*Modify matchWhere so that it takes solvedlongTyp instead of env2
@@ -2872,18 +2861,15 @@ fun unif env filters user =
 				OM.map (fn NONE => newTypeFunction ()
 					 | SOME (labs', stts', deps') =>
 					   collapseTf tf
-						      (L.union labs labs')
-						      (L.union  stts stts')
-						      (CD.union deps deps'))
+						      (labs@labs')
+						      (stts@stts')
+						      (deps@deps'))
 				       tfun
 		 val (cs0, env1) = genTypeFunctionEnv' env0 state tfun false
 		 (* Do we need this switch here? *)
 		 val _ = sigVsStrON ()
 		 val _ = fsimplify cs0 L.dummyLab
 		 val _ = sigVsStrOFF ()
-	     (*val _ = if E.isEmptyEnv env1
-		       then S.updateStateEv state ev1 (env1, L.cons lab labs, stts, deps)
-		       else S.updateStateEv state ev1 (env1, L.singleton lab, L.empty, CD.empty)*)
 	     in env1
 	     end
 	     handle errorfound err => handleSolveEnv err envsha)
@@ -2892,9 +2878,9 @@ fun unif env filters user =
 		 val env0 = buildFEnv e1 state false
 		 val env2 = buildFEnv e2 state true
 		 val _ = D.printdebug2 (E.printEnv env0 "" ^ "\n" ^ E.printEnv env2 "")
-		 val (tfnD, tfnT) = getTypeFunctionEnv env0 env2 L.empty L.empty CD.empty
+		 val (tfnD, tfnT) = getTypeFunctionEnv env0 env2 [] [] []
 		 val (cs0, env1) = genTypeFunctionEnv' env0 state tfnT true
-		 val (cs1, cs2) = matchSigStr env1 env2 L.dummyLab filters L.empty L.empty CD.empty true err
+		 val (cs1, cs2) = matchSigStr env1 env2 L.dummyLab filters [] [] [] true err
 		 val _ = sigVsStrON ()
 		 val _ = fsimplify (cs0 @ cs1) L.dummyLab
 		 val _ = sigVsStrTypON ()
@@ -2920,7 +2906,7 @@ fun unif env filters user =
 		val env1 = solveenv env bmon
 		val b    = E.isEmptyEnv env1
 		val tvs  = S.pushEnvToState b env1 state
-		val env2 = (*E.emptyEnv*) solveenv (strm ()) bmon
+		val env2 = solveenv (strm ()) bmon
 		val _    = S.remEnvFromState b tvs state
 	    in E.plusEnv env1 env2
 	    end
@@ -2936,10 +2922,7 @@ fun unif env filters user =
 	and solveLongTyp ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps) =
 	    let
 		(** Helper function for #solveLongTyp. *)
-		fun genDum () = SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem, class = CL.consANY (), lab = lab},
-				      L.empty,
-				      L.empty,
-				      CD.empty)
+		fun genDum () = SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem, class = CL.consANY (), lab = lab}, [], [], [])
 	    in case FI.getStateLab filters lab of
 		   FI.OUT  => NONE
 		 | FI.BIND => genDum ()
@@ -2949,7 +2932,7 @@ fun unif env filters user =
 		      | SOME (_, true) =>
 			let val sem0 = buildtypeFunction sem state I.empty false false
 			in SOME ({lid = lid, equalityTypeVar = equalityTypeVar, sem = sem0, class = class, lab = lab},
-				 L.union labs (I.getLabs lid),
+				 (I.getLabs lid)::labs,
 				 stts,
 				 deps)
 			end
@@ -2964,13 +2947,12 @@ fun unif env filters user =
 	       | SOME (_, true) =>
 		 (case S.getValStateIdSt state lid true of
 		      (SOME ((bind, labs, stts, deps), _), _, _) =>
-		      let val labs' = L.cons lab (L.union (I.getLabs lid) labs)
+		      let val labs' = L.singleton lab::((I.getLabs lid)::labs)
 			  val env   = preSolveEnv ((*solveenv*) (C.getBindT bind) (*bmon*))
-		      (*val _ = D.printdebug2 (E.printEnv env "")*)
 		      in E.pushExtEnv env labs' stts deps
 		      end
 		    | (_, SOME (x as ((id1, lab1), (env, labs', stts', deps'))), true) =>
-		      (handleUnmatched lid (L.singleton lab) L.empty CD.empty x lab; E.newEnvVar lab)
+		      (handleUnmatched lid (L.singleton lab) [] [] x lab; E.newEnvVar lab)
 		    | (NONE, _, false) => (* FREE ID *)
 		      (handleFreeIdent lid true; E.newEnvVar lab)
 		    | _ => E.newEnvVar lab)
@@ -2983,13 +2965,13 @@ fun unif env filters user =
 		      (SOME (({id, bind = (bind, tnKind, cons), equalityTypeVar, lab = _, poly, class = CL.ANY}, labs, stts, deps), _), _, _) =>
 		      E.newEnvVar lab
 		    | (SOME (({id, bind = (bind, tnKind, cons), equalityTypeVar, lab = _, poly, class}, labs, stts, deps), _), _, _) =>
-		      let val labs' = L.cons lab (L.union (I.getLabs lid) labs)
+		      let val labs' = L.singleton lab::(I.getLabs lid)::labs
 			  val (varenv, cmp) = !cons
 		      (*val _ = D.printdebug2 (I.printLid lid ^ " " ^ L.printLab lab)*)
 		      in E.pushExtEnv (E.projValueIds varenv) labs' stts deps
 		      end
 		    | (_, SOME (x as ((id1, lab1), (env, labs', stts', deps'))), true) =>
-		      (handleUnmatched lid (L.singleton lab) L.empty CD.empty x lab; E.newEnvVar lab)
+		      (handleUnmatched lid (L.singleton lab) [] [] x lab; E.newEnvVar lab)
 		    | (NONE, _, false) => (* FREE ID *)
 		      (handleFreeIdent lid true; E.newEnvVar lab)
 		    | _ => E.newEnvVar lab)
@@ -3000,11 +2982,11 @@ fun unif env filters user =
 	       | SOME (_, true) =>
 		 (case S.getValStateIdSi state lid true of
 		      (SOME ((bind, labs, stts, deps), _), _, _) =>
-		      let val labs' = L.cons lab (L.union (I.getLabs lid) labs)
+		      let val labs' = L.singleton lab::(I.getLabs lid)::labs
 		      in E.pushExtEnv (solveenv (C.getBindT bind) bmon) labs' stts deps
 		      end
 		    | (_, SOME (x as ((id1, lab1), (env, labs', stts', deps'))), true) =>
-		      (handleUnmatched lid (L.singleton lab) L.empty CD.empty x lab; E.newEnvVar lab)
+		      (handleUnmatched lid (L.singleton lab) [] [] x lab; E.newEnvVar lab)
 		    | (NONE, _, false) => (* FREE ID *)
 		      (handleFreeIdent lid true; E.newEnvVar lab)
 		    | _ => E.newEnvVar lab)
@@ -3032,18 +3014,17 @@ fun unif env filters user =
 	       | SOME (_, true) =>
 		 (case S.getValStateIdVa state lid false of
 		      (SOME (({id, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = CL.ANY}, labs', _, _), _), _, _) =>
-		      (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder))); fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l)
+		      (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder))); fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), (L.singleton l::L.singleton lab::(labs@labs')), stts, deps) ] l)
 		    | (SOME (({id = bindId, bind, equalityTypeVar = equalityTypeVarBinder, lab = l, poly, class = cl}, labs', stts', deps'), b), _, _) =>
 		      (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Creating equality type variable constraint between accessor VALUE_ID_ACCESSOR and binder. Accessor variable = "^(T.printEqualityTypeVar equalityTypeVarAccessor)^", equalityTypeVarBinder = "^(T.printEqualityTypeVar equalityTypeVarBinder)));
-		       fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.cons lab (L.union labs (L.cons l labs')), stts, deps) ] l;
+		       fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarBinder, T.EQUALITY_TYPE_VAR equalityTypeVarAccessor), L.singleton lab::L.singleton l::(labs@labs'), stts, deps) ] l;
 
 		       (* if the sem portion is a type variable, it might contain an equality type variable which should be constrained correctly *)
 		       (* this case was built from test functor-with-signature-of-structure-visible.sml
 			* needs to be checked that this solution will work in all cases. Can we count on a (TYPE_VAR,TYPE_DEPENDANCY) constraint? *)
 
 		       (case sem of
-		       	    T.TYPE_VAR(_,_,_,typeVarEqualityTypeVar) => fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, typeVarEqualityTypeVar),
-		       	    											L.empty, stts, deps) ] l
+		       	    T.TYPE_VAR(_,_,_,typeVarEqualityTypeVar) => fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, typeVarEqualityTypeVar), [], stts, deps) ] l
 		       	  | _ => ());
 
 		       (* fsimplify [E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVarBinder) (T.consEQUALITY_TYPE_VAR equalityTypeVarAccessor) l ] l; *)
@@ -3064,11 +3045,11 @@ fun unif env filters user =
 						     * bind we can check if it is GEN and then chain
 						     * the GENs. *)
 		      then let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			       val labs1 = L.union labs0 (I.getLabs lid)
+			       val labs1 = (I.getLabs lid)::labs0
 			   in updateStateTyGen state bind sem labs1 stts0 deps (* returns a unit *)
 			   end
 		      else let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			       val labs1 = L.union labs0 (I.getLabs lid)
+			       val labs1 = (I.getLabs lid)::labs0
 			       (*val timer = VT.startTimer ()*)
 			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "bind = "^(T.printty bind)^"\n")
 			       val bind1 = freshTy bind (SOME (S.getDomGe state)) poly
@@ -3086,13 +3067,7 @@ fun unif env filters user =
 								SOME(existingEntry as T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,a,b),T.ROW_C([T.FC(c,T.TYPE_VAR(lhsTypeVar,d,e,T.EQUALITY_TYPE_VAR(eqtvL)),f),T.FC(g,T.TYPE_VAR(rhsTypeVar,z,y,T.EQUALITY_TYPE_VAR(eqtvR)),i)],j,k),l,m),depLabs,p,q)) =>
 								if T.typenameToInt arrow = 1
 								then
-								    (* let val newTy = freshty (T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (T.NC(arrow,a,b),T.ROW_C([T.FC(c,T.TYPE_VAR(rhsTypeVar,d,e,eqtvSem),f),T.FC(g,h,i)],j,k),l,m),n,p,q))	NONE (F.finitState ()) false *)
-								    (* 	val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Case matched. Old ty: "^(T.printty existingEntry)) *)
-								    (* 	val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Made fresh ty: "^(T.printty newTy)) *)
-								    (* in *)
-									(* fsimplify [E.genCstTyAll newTy bind2 labs1 stts0 deps0] l *) (* () *)
-								    fsimplify [E.EQUALITY_TYPE_CONSTRAINT (((eqtvSem, (T.consEQUALITY_TYPE_VAR eqtvR)), L.union depLabs labs1, stts0, deps0))] l
-								(* end *)
+								    fsimplify [E.EQUALITY_TYPE_CONSTRAINT (((eqtvSem, (T.consEQUALITY_TYPE_VAR eqtvR)), depLabs@labs1, stts0, deps0))] l
 								else ()
 							      | _ => ())
 							 | _ => ()
@@ -3111,7 +3086,7 @@ fun unif env filters user =
 			   end)
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
 		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "case 2");
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
+		      handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l)
 		    | (NONE, _, false) => (* FREE ID *)
 		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "in this case, it is suspected we have a free identifier");
 		      handleFreeIdent lid false)
@@ -3143,7 +3118,7 @@ fun unif env filters user =
 
 	  | solveacc (E.EQUALITY_TYPE_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
 	    let
-		val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor. Labels = " ^ L.toString labs)
+		val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type accessor. Labels = " ^ L.toString (L.unions labs))
 	    in
 		case filterLid lid filters of
 		    NONE => ()
@@ -3161,12 +3136,13 @@ fun unif env filters user =
 					 T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR(_,_,_,T.EQUALITY_TYPE_VAR(x)),_,_,_) =>
 					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab of
 					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
-					     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)), deps, ids) ] l
+					     fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), (L.singleton (I.getLabId lid))::(L.singleton l)::(labs@labs'@ls), deps, ids) ] l
 					   | _ => raise EH.DeadBranch "Impossible pattern match failure while solving equality type accessors")
 				       | T.TYPE_DEPENDANCY(T.TYPE_POLY(_,_,_,_,typePolyLabel,T.EQUALITY_TYPE_VAR(x)),depLabels,_,_) =>
 					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(x)) lab of
 					      E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
-					      fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), L.union depLabels (L.cons typePolyLabel (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))), deps, ids) ] l
+					      fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), 
+										      depLabels@[L.singleton typePolyLabel]@[L.singleton (I.getLabId lid)]@[(L.singleton l)]@labs@labs'@ls, deps, ids) ] l
 					    | _ => raise EH.DeadBranch ("Impossible pattern match failure while solving equality type accessors")
 					 )
 				       | _ => ()
@@ -3176,15 +3152,15 @@ fun unif env filters user =
 					 (case E.initEqualityTypeConstraint sem (T.EQUALITY_TYPE_VAR(h)) lab of
 					     E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids) =>
 					     let
-						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripping equality type variables = " ^ L.toString labels))
-						 val newConstraintLabels = L.union labels (L.cons (I.getLabId lid) (L.cons l (L.union (L.union labs labs') ls)))
-						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString newConstraintLabels))
+						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Labels got back from stripping equality type variables = " ^ L.toString (L.unions labels)))
+						 val newConstraintLabels = (L.singleton l)::(L.singleton (I.getLabId lid))::(labs@labs'@ls@labels)
+						 val _  = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => ("Created a new equality type constraint. Labels = " ^ L.toString (L.unions newConstraintLabels)))
 					     in
 						 fsimplify [ E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR(eqtv2)), newConstraintLabels, deps, ids) ] l
 					     end
 					   | _ => raise EH.DeadBranch "Impossible pattern match failure while solving equality type accessors")
 
-			     val (vars,labels) = T.stripEqualityVariables bind L.empty
+			     val (vars,labels) = T.stripEqualityVariables bind []
 			     val _ = createConstraintsFromBinding vars labels
 
 
@@ -3201,7 +3177,7 @@ fun unif env filters user =
 
 	  | solveacc (E.TYPE_CONSTRUCTOR_ACCESSOR ({lid, equalityTypeVar = eqTypeVarAccessor, sem=(sem, isSharing), class, lab = accessorLabel}, labs, stts, deps)) l =
 	    if not isSharing then
-	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (not sharing). Labels = " ^ L.toString labs);
+	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (not sharing). Labels = " ^ L.toString (L.unions labs));
 	     case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3209,7 +3185,7 @@ fun unif env filters user =
 		      (SOME (({id, bind = (bind, _, _), equalityTypeVar, lab = l, poly, class = CL.ANY}, _, _, _), _), _, _) =>
 		      let
 			  val sq   = S.getValStateAr state lid (SOME l)
-			  val labs = L.union labs (I.getLabs lid)
+			  val labs = (I.getLabs lid)::labs
 			  val tf   = T.TFC (sq, T.newTYPE_VAR (), accessorLabel)
 			  val c    = E.genCstTfAll sem tf labs stts deps
 		      in fsimplify [c] l
@@ -3217,7 +3193,7 @@ fun unif env filters user =
 		    | (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binding for type constructor accessor (binding label: "^(L.printLab l)^"): "^(T.printtyf bind))
 			  val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val labs1 = L.union labs0 (I.getLabs lid)
+			  val labs1 = (I.getLabs lid)::labs0
 			  (* we constrain the equality type variable of the accessor to be equal to the equality type variable of the binder
 			   * this is an EQUALITY_TYPE_DEPENDANCY because we need to take all the labels in 'labs1' with us (can contain structure information) *)
 			  val equalityTypeConstraint = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR eqTypeVarAccessor)
@@ -3229,7 +3205,7 @@ fun unif env filters user =
 		      in fsimplify [equalityTypeConstraint, c] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		      handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		    | (_, _, b) =>
 		      (*(2010-06-16)Similar as for ANY.*)
 		      if b orelse S.hasEnvVar state
@@ -3237,7 +3213,7 @@ fun unif env filters user =
 			       * the incomplete structure returned as second component in the triple
 			       * to be at least sem. *)
 		      else let val sq   = S.getValStateAr state lid NONE
-			       val labs = L.union labs (I.getLabs lid)
+			       val labs = (I.getLabs lid)::labs
 			       val tf   = T.TFC (sq, T.newTYPE_VAR (), accessorLabel)
 			       val c    = E.genCstTfAll sem tf labs stts deps
 			       val _    = if enum then S.updateStateFr state (I.getLeftId lid) else () (* FREE ID *)
@@ -3245,7 +3221,7 @@ fun unif env filters user =
 			   end)
 	       | SOME (lid', false) => ())
 	    else
-		(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (WITH sharing). Labels = " ^ L.toString labs);
+		(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "solving a type constructor accessor (WITH sharing). Labels = " ^ L.toString (L.unions labs));
 		 case filterLid lid filters of
 		     NONE => (D.printDebug D.UNIF D.TEMP (fn _ => "None case"))
 		   | SOME (_, true) =>
@@ -3254,7 +3230,7 @@ fun unif env filters user =
 		     	| (SOME (({id, bind = (bind, _, _), equalityTypeVar = eqTypeVarBinder', lab = l, poly, class}, labs', stts', deps'), _), _, _) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 4"))
 		     	| (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
 			  (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 6");
-		     	  handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l)
+		     	  handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l)
 			| (_, _, b) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 5")))
 		   | SOME (lid', false) => (D.printDebug D.UNIF D.TEMP (fn _ => "Some case 2"))
 		)
@@ -3267,13 +3243,13 @@ fun unif env filters user =
 		   | (SOME (({id, bind, equalityTypeVar, lab = binderLabel, poly, class}, labs', stts', deps'), _), _, _) =>
 		     let
 			 val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			 val labs1 = L.union labs0 (I.getLabs lid)
+			 val labs1 = (I.getLabs lid)::labs0
 			 val c     = E.genCstSqAll sem bind labs1 stts0 deps0
 		     (*val _     = D.printdebug2 (T.printseqty sem ^ "\n" ^ T.printseqty bind)*)
 		     in fsimplify [c] l
 		     end
 		   | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		     handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		     handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		   | (NONE, _, false) => (* FREE ID *)
 		     handleFreeIdent lid false
 		   | _ => ())
@@ -3286,12 +3262,12 @@ fun unif env filters user =
 		      (SOME (({id, bind, equalityTypeVar, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind, equalityTypeVar, lab, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val labs1 = L.union labs0 (I.getLabs lid)
+			  val labs1 = (I.getLabs lid)::labs0
 			  val c = E.genCstEvAll sem bind labs1 stts0 deps0
 		      in fsimplify [c] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		      handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		    | (NONE, _, false) => (* FREE ID *)
 		      handleFreeIdent lid false
 		    | _ => ())
@@ -3304,12 +3280,12 @@ fun unif env filters user =
 		      (SOME (({id, bind, equalityTypeVar, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind, equalityTypeVar, lab, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val labs1 = L.union labs0 (I.getLabs lid)
+			  val labs1 = (I.getLabs lid)::labs0
 			  val c = E.genCstEvAll sem bind labs1 stts0 deps0
 		      in fsimplify [c] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		      handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		    | (NONE, _, false) => (* FREE ID *)
 		      handleFreeIdent lid false
 		    | _ => ())
@@ -3322,13 +3298,13 @@ fun unif env filters user =
 		      (SOME (({id, bind, equalityTypeVar, lab, poly, class = CL.ANY}, _, _, _), _), _, _) => ()
 		    | (SOME (({id, bind = (env3, env4), equalityTypeVar, lab, poly, class}, labs', stts', deps'), _), _, _) =>
 		      let val (labs0, stts0, deps0) = unionLabs (labs, stts, deps) (labs', stts', deps')
-			  val labs1 = L.union labs0 (I.getLabs lid)
+			  val labs1 = (I.getLabs lid)::labs0
 			  val c1 = E.genCstEvAll env1 env3 labs1 stts0 deps0
 			  val c2 = E.genCstEvAll env2 env4 labs1 stts0 deps0
 		      in fsimplify [c1, c2] l
 		      end
 		    | (_, SOME ((id1, lab1), (env, labs', stts', deps')), true) =>
-		      handleUnmatched lid labs stts deps ((id1, lab1), (env, labs', stts', deps')) l
+		      handleUnmatched lid (L.unions labs) stts deps ((id1, lab1), (env, labs', stts', deps')) l
 		    | (NONE, _, false) => (* FREE ID *)
 		      handleFreeIdent lid false
 		    | _ => ())
@@ -3340,13 +3316,13 @@ fun unif env filters user =
 			    l =
 	    if completeEnv env err
 	    then let val (idlabs, labs1) = E.getLabsIdsEnv env
-		     val labs2 = L.union (I.getLabs lid) (L.union labs labs1)
-		     val (labs0, stts0, deps0) = unionLabs (labs2, stts, deps) (labs', stts', deps')
+		     val labs2 = L.union labs (L.unions ((I.getLabs lid)::(labs1)))
+		     val (labs0, stts0, deps0) = unionLabs ([labs2], stts, deps) (labs', stts', deps')
 		     val lab2  = E.getLabEnv env
 		     val ek    = EK.Unmatched ((L.toInt lab1, I.toInt id1), idlabs, L.toInt lab2)
 		 in
 		     (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected - long identifier not found in structure");
-		     handleSimplify (ERR.consPreError ERR.dummyId labs0 deps0 ek stts0) [] l)
+		     handleSimplify (ERR.consPreError ERR.dummyId (L.unions labs0) (CD.unions deps0) ek (L.unions stts0)) [] l)
 		 end
 	    else ()
 
@@ -3372,9 +3348,9 @@ fun unif env filters user =
 		    if completeEnv env2 err (*labs*)
 		    then let val (idlabs, labs1) = E.getLabsIdsEnv env2
 			     val lab'  = E.getLabEnv env2
-			     val labs2 = L.cons l (L.union labs1 labs)
+			     val labs2 = L.singleton l::(labs1@labs)
 			     val ek    = EK.Unmatched ((L.toInt lab, I.toInt id), idlabs, L.toInt lab')
-			 in raise errorfound (ERR.consPreError ERR.dummyId labs2 deps ek stts)
+			 in raise errorfound (ERR.consPreError ERR.dummyId (L.unions labs2) (CD.unions deps) ek (L.unions stts))
 			 end
 		    else ()
 		fun compone id [] bind =
@@ -3382,9 +3358,9 @@ fun unif env filters user =
 		     then ()
 		     else genError (E.getBindL bind)
 				   id
-				   (L.union  labs (EL.getExtLabL bind))
-				   (L.union  stts (EL.getExtLabE bind))
-				   (CD.union deps (EL.getExtLabD bind)); [])
+				   (labs@(EL.getExtLabL bind))
+				   (stts@(EL.getExtLabE bind))
+				   (deps@(EL.getExtLabD bind)); [])
 		  (* btype iff we're dealing with type names *)
 		  | compone _ es bind1 = (* bind1 is signature *)
 		    foldr (fn (bind2, cs) =>
@@ -3393,9 +3369,9 @@ fun unif env filters user =
 			      else let val _    = checkIsNotTooGen bind1 bind2 bfun l
 				       val tys1 = extractTyGen (E.getBindT bind1) bfun
 				       val ty2  = E.getBindT bind2
-				       val labs = L.union  labs (L.cons l (L.union (EL.getExtLabL bind1) (EL.getExtLabL bind2)))
-				       val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
-				       val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
+				       val labs = L.singleton l::(labs@(EL.getExtLabL bind1)@(EL.getExtLabL bind2))
+				       val stts = stts@(EL.getExtLabE bind1)@(EL.getExtLabE bind2)
+				       val deps = deps@(EL.getExtLabD bind1)@(EL.getExtLabD bind2)
 				       fun getTy2 () = if bfun then ty2 else freshty ty2 (SOME O.empty) (F.finitState ()) false
 				       val cs'  = map (fn ty1 => ((*D.printdebug2 (T.printty ty1 ^ "\n" ^
 									 T.printty ty2 ^ "\n" ^
@@ -3409,9 +3385,9 @@ fun unif env filters user =
 		     then ()
 		     else genError (E.getBindL bind)
 				   id
-				   (L.union  labs (EL.getExtLabL bind))
-				   (L.union  stts (EL.getExtLabE bind))
-				   (CD.union deps (EL.getExtLabD bind)); [])
+				   (labs@(EL.getExtLabL bind))
+				   (stts@(EL.getExtLabE bind))
+				   (deps@(EL.getExtLabD bind)); [])
 		  | componeTyp _ es bind1 =
 		    List.mapPartial
 			(fn bind2 =>
@@ -3426,9 +3402,9 @@ fun unif env filters user =
 				    val equalityTypeVar2       = E.getBindEqualityTypeVar bind2
 
 				    (* union information such as label *)
-				    val labs = L.union  labs (L.cons l (L.union (EL.getExtLabL bind1) (EL.getExtLabL bind2)))
-				    val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
-				    val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
+				    val labs = L.singleton l::(labs@(EL.getExtLabL bind1)@(EL.getExtLabL bind2))
+				    val stts = stts@(EL.getExtLabE bind1)@(EL.getExtLabE bind2)
+				    val deps = deps@(EL.getExtLabD bind1)@(EL.getExtLabD bind2)
 
 				    (* constrain the equality type variables to one another, and then solve
 				     * this is an EQUALITY_TYPE_DEPENDANCY because we want to take all the labels information from 'labs' with us *)
@@ -3445,9 +3421,9 @@ fun unif env filters user =
 		     then ()
 		     else genError (E.getBindL bind)
 				   id
-				   (L.union  labs (EL.getExtLabL bind))
-				   (L.union  stts (EL.getExtLabE bind))
-				   (CD.union deps (EL.getExtLabD bind));
+				   (labs@(EL.getExtLabL bind))
+				   (stts@(EL.getExtLabE bind))
+				   (deps@(EL.getExtLabD bind));
 		     ([], []))
 		  (* b false means that we're dealing with a where clause as a structure *)
 		  | componestr _ es bind1 =
@@ -3456,11 +3432,11 @@ fun unif env filters user =
 			      then (cstV, cstT)
 			      else let val env1 = E.getBindT bind1
 				       val env2 = E.getBindT bind2
-				       val labs = L.union  labs (L.union  (EL.getExtLabL bind1) (EL.getExtLabL bind2))
-				       val stts = L.union  stts (L.union  (EL.getExtLabE bind1) (EL.getExtLabE bind2))
-				       val deps = CD.union deps (CD.union (EL.getExtLabD bind1) (EL.getExtLabD bind2))
+				       val labs = labs@(EL.getExtLabL bind1)@(EL.getExtLabL bind2)
+				       val stts = stts@(EL.getExtLabE bind1)@(EL.getExtLabE bind2)
+				       val deps = deps@(EL.getExtLabD bind1)@(EL.getExtLabD bind2)
 				       val (x, y) = matchSigStr env1 env2 l filters labs stts deps bfun err
-						    handle errorfound err => raise errorfound (ERR.labelError err labs stts deps)
+						    handle errorfound err => raise errorfound (ERR.labelError err (L.unions labs) (L.unions stts) (CD.unions deps))
 				   in ((decorateCst x labs stts deps) @ cstV, (decorateCst y labs stts deps) @ cstT)
 				   end)
 			  ([], [])
@@ -3493,15 +3469,15 @@ fun unif env filters user =
 	    in case (env1, env2) of (* env1/env2 : signature/structure *)
 		   (E.ENV_CONS _, E.ENV_CONS _) => linkstr env1 env2
 		 | (E.ENVDEP (env1, labs', stts', deps'), env2) =>
-		   let val labs0 = L.union  labs labs'
-		       val stts0 = L.union  stts stts'
-		       val deps0 = CD.union deps deps'
+		   let val labs0 = labs@labs'
+		       val stts0 = stts@stts'
+		       val deps0 = deps@deps'
 		   in matchSigStr env1 env2 l filters labs0 stts0 deps0 bfun err
 		   end
 		 | (env1, E.ENVDEP (env2, labs', stts', deps')) =>
-		   let val labs0 = L.union  labs labs'
-		       val stts0 = L.union  stts stts'
-		       val deps0 = CD.union deps deps'
+		   let val labs0 = labs@labs'
+		       val stts0 = stts@stts'
+		       val deps0 = deps@deps'
 		   in matchSigStr env1 env2 l filters labs0 stts0 deps0 bfun err
 		   end
 		 | _ => ([], [])
@@ -3511,22 +3487,22 @@ fun unif env filters user =
 	(** The equality constraint solver. *)
 	and fsimplify [] l = ()
 	  (**)
-	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_DEPENDANCY  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_DEPENDANCY  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LABEL_DEPENDANCY  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_DEPENDANCY  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_DEPENDANCY  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LABEL_DEPENDANCY  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
 	  (**)
-	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TYPE_FUNCTION_DEPENDANCY (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TYPE_DEPENDANCY  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.TYPENAME_DEPENDANCY  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((sq1, T.ROW_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.FIELD_CONSTRAINT ((rt1, T.FIELD_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LABEL_DEPENDANCY  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TYPE_FUNCTION_DEPENDANCY (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TYPE_DEPENDANCY  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.TYPENAME_DEPENDANCY  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.ROW_CONSTRAINT ((sq1, T.ROW_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.FIELD_CONSTRAINT ((rt1, T.FIELD_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
+	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LABEL_DEPENDANCY  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
 	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), ls@ls', deps@deps', ids@ids')) :: cs') l
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), ls@ls', deps@deps', ids@ids')) :: cs') l
 	  (**)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc1 as T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), tc2 as T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
 	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
@@ -3543,7 +3519,7 @@ fun unif env filters user =
 		    orelse
 		    (T.isArrowTy tn2 andalso T.isDecTy tn2 andalso T.isExcTy tn1)
 		 then let val ek  = EK.ConsArgNApp (L.toInt l1, L.toInt l2)
-			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
+			  val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		      in
 			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (1)");
 			   handleSimplify err cs' l)
@@ -3556,7 +3532,7 @@ fun unif env filters user =
 			 orelse
 			 (T.isArrowTy tn2 andalso T.isPatTy tn2 andalso T.isExcTy tn1)
 		 then let val ek  = EK.ConsNArgApp (L.toInt l1, L.toInt l2)
-			  val err = ERR.consPreError ERR.dummyId ls ids ek deps
+			  val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		      in
 			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (2)");
 			   handleSimplify err cs' l)
@@ -3564,7 +3540,7 @@ fun unif env filters user =
 		 else let val name1 = T.tntyToTyCon tn1
 			  val name2 = T.tntyToTyCon tn2
 			  val ek    = EK.TyConsClash ((L.toInt l1, T.typenameToInt name1), (L.toInt l2, T.typenameToInt name2))
-			  val err   = ERR.consPreError ERR.dummyId ls ids ek deps
+			  val err   = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		      (*
 		       * (2011-02-17) We don't actually need to try to remove l from the error because it
 		       * has to be in the error.  Is that the only one we're sure about?
@@ -3574,7 +3550,7 @@ fun unif env filters user =
 				then D.printdebug2 ("foo")
 				else ()*)
 		      in
-			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (3). Joining labels = "^L.toString ls);
+			  (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type constructors (3). Joining labels = "^L.toString (L.unions ls));
 			  handleSimplify err cs' l)
 		      end
 	     else
@@ -3589,9 +3565,9 @@ fun unif env filters user =
 	     if T.eqTypename tn1 tn2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt tn1), (L.toInt l2, T.typenameToInt tn2))
-		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
+		      val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		  in
-		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a typename constraint of two T.NC constructors. Labs " ^ (L.toString ls));
+		      (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a typename constraint of two T.NC constructors. Labs " ^ (L.toString (L.unions ls)));
 		       handleSimplify err cs' l)
 		  end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((rc1 as T.ROW_C (rtl1, b1, l1), rc2 as T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
@@ -3609,7 +3585,7 @@ fun unif env filters user =
 	    in if n1 = n2 orelse (T.isflex b1 andalso n1 < n2) orelse (T.isflex b2 andalso n2 < n1)
                then let val ls1 = [T.getflex b1] handle unflex => []
 			val ls2 = [T.getflex b2] handle unflex => []
-			val ls' = L.unions [L.ord ls1, L.ord ls2, ls]
+			val ls' = [L.ord ls1, L.ord ls2]@ls
 			(* we want to use ls' instead of ls below,
 			 * but for some strange reason it seems to slow down the code a lot
 			 * - that's normal that's because there is no constraint with ls1 or ls2 *)
@@ -3624,16 +3600,16 @@ fun unif env filters user =
 			 | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] =>
 			   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (1)");
 			   handleSimplify (ERR.consPreError ERR.dummyId
-							    ell
-							    eids
+							    (L.unions ell)
+							    (CD.unions eids)
 							    (EK.LabTyClash (ek1, ek2, ek3, ek4))
-							    edeps)
+							    (L.unions edeps))
 					  cs'
 					  l)
 			 | _ => raise EH.DeadBranch "DeadBranch16"
 		    end
                else let val ek  = EK.ArityClash ((L.toInt l1, n1), (L.toInt l2, n2))
-			val err = ERR.consPreError ERR.dummyId ls ids ek deps
+			val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		    in
 			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a row constraint of two row constructions (2)");
 			 handleSimplify err cs' l)
@@ -3679,7 +3655,7 @@ fun unif env filters user =
 			if I.eqId id1 id2
 			then continue ()
 			else let val ek  = EK.TyConsClash ((L.toInt lab1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt lab2, T.typenameToInt (T.DUMMYTYPENAME)))
-				 val err = ERR.consPreError ERR.dummyId ls ids ek deps
+				 val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 			     in
 				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type variables");
 				  handleSimplify err cs' l)
@@ -3691,7 +3667,7 @@ fun unif env filters user =
 	     if I.eqId n1 n2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
-		      val err = ERR.consPreError ERR.dummyId ls ids ek deps
+		      val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 		  in (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two explicit type variables");
 		      handleSimplify err cs' l)
 		  end)
@@ -3699,7 +3675,7 @@ fun unif env filters user =
 	    let
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
-		val err = ERR.consPreError ERR.dummyId ls ids ek deps
+		val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 	    in
 		(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type constructor");
 		handleSimplify err cs' l)
@@ -3748,7 +3724,7 @@ fun unif env filters user =
 			    val tn  = Option.valOf (T.getTypenameType ty) handle Option => raise EH.DeadBranch "DeadBranch19"
 			    val fek = if isSigVsStrTyp () then EK.TyFunClash else EK.NotGenClash
 			    val ek  = fek ((L.toInt l1, T.typeVarToInt tv), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
-			    val err = ERR.consPreError ERR.dummyId ls ids ek deps
+			    val err = ERR.consPreError ERR.dummyId (L.unions ls) (CD.unions ids) ek (L.unions deps)
 			(* We should raise another error here:
 			 * something like, signature too general. *)
 			in
@@ -3766,14 +3742,14 @@ fun unif env filters user =
 		val cs' = (case (eq, ty) of
 			       (T.EQUALITY_TYPE_VAR eq, T.TYPE_POLY (sq', idor, poly, orKind, lab2, T.EQUALITY_TYPE_VAR eq2)) =>
 			       let
-				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq2, T.EQUALITY_TYPE_VAR eq), L.cons lab2 (L.cons l ls), L.cons lab2 deps, ids)
+				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq2, T.EQUALITY_TYPE_VAR eq), L.singleton lab2::L.singleton l::ls, L.singleton lab2::deps, ids)
 			       in
 				   (c::cs')
 			       end
 			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (_, _, lab2, T.EQUALITY_TYPE_VAR eq2)) =>
 			       let
 				   (* we don't take the lab2 label, this can give incorrect endpoints (e.g. endpoint 'real' instead of 'type real', which is actually the endpoint *)
-				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.cons lab2 (L.cons l ls), deps, ids)
+				   val c = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR eq2), L.singleton lab2::L.singleton l::ls, deps, ids)
 			       in
 				   (* if the context dependancies are not empty, then that means that we are checking that the type var and
 				    * type constructor match, based on other information we inferred from another type var. For example:
@@ -3792,7 +3768,7 @@ fun unif env filters user =
 				    * check the equality type variables against each other in this case.
 				    *)
 
-				   if (CD.length ids) < 2 (* CD.isEmpty ids *)
+				   if (CD.length (CD.unions ids)) < 2
 				   then (c::cs')
 				   else cs' end
 
@@ -3807,9 +3783,9 @@ fun unif env filters user =
 			     (* | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (_,_,lab2,_)) => *)
 			     | (T.EQUALITY_TYPE_VAR eq, T.TYPE_CONSTRUCTOR (T.TYPENAME_DEPENDANCY(T.NC(_,_,typenameLab),typenameDepLab,_,_),T.ROW_DEPENDANCY(rowConstruction,rowDependancyLabs,_,_),typeConstructorLab,_)) =>
 			       let
- 				   val (strippedEqualityVars, strippedEqualityLabels) = T.stripEqualityVariables_sequenceType rowConstruction L.empty
-				   val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "stripped equality type variables and found: "^(T.printEqualityTypeVarList strippedEqualityVars)^" with labels: "^(L.toString strippedEqualityLabels))
-				   val newConstraints = List.map (fn newEqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR newEqtv), L.union typenameDepLab (L.union rowDependancyLabs (L.union strippedEqualityLabels (L.cons typeConstructorLab (L.cons l (L.cons typenameLab ls))))), deps, ids)) strippedEqualityVars
+ 				   val (strippedEqualityVars, strippedEqualityLabels) = T.stripEqualityVariables_sequenceType rowConstruction []
+				   val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "stripped equality type variables and found: "^(T.printEqualityTypeVarList strippedEqualityVars)^" with labels: "^(L.toString (L.unions strippedEqualityLabels)))
+				   val newConstraints = List.map (fn newEqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eq, T.EQUALITY_TYPE_VAR newEqtv), L.singleton typeConstructorLab::L.singleton l::L.singleton typenameLab::typenameDepLab@rowDependancyLabs@strippedEqualityLabels@ls, deps, ids)) strippedEqualityVars
 			       in
 				   newConstraints@cs'
 			       end
@@ -3841,7 +3817,7 @@ fun unif env filters user =
 					    of SOME (typeVarGe, labsGe, sttsGe, depsGe)  =>
 					     (* put labsGe in eqtv' mapping in StateEQ *)
 					       (case S.getValStateEq state eqtv'
-						of SOME (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, labsEq, sttsEq, depsEq),eqTypeVarList) => S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, L.union labsEq labsGe, sttsEq, depsEq),eqTypeVarList)
+						of SOME (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, labsEq, sttsEq, depsEq),eqTypeVarList) => S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY(eqtvEq, labsEq@labsGe, sttsEq, depsEq),eqTypeVarList)
 						 | _ => raise EH.DeadBranch "Equality type dependant variable mapping expected in state but is not present.")
 					     | NONE => ())
 					 | _ => ()
@@ -3888,10 +3864,10 @@ fun unif env filters user =
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
 			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a field constraint of a field variable and a field construction");
 			 handleSimplify (ERR.consPreError ERR.dummyId
-							 ell
-							 eids
+							 (L.unions ell)
+							 (CD.unions eids)
 							 (EK.LabTyClash (ek1, ek2, ek3, ek4))
-							 edeps)
+							 (L.unions edeps))
 				       cs'
 				       l)
 		      | _  => raise EH.DeadBranch "DeadBranch20"
@@ -3910,10 +3886,10 @@ fun unif env filters user =
 		      | [((ek1, ek2, ek3, ek4), ell, edeps, eids)] => (* Can that happen? *)
 			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a label constraint of a label variable and a label construction");
 			 handleSimplify (ERR.consPreError ERR.dummyId
-							  ell
-							  eids
+							  (L.unions ell)
+							  (CD.unions eids)
 							  (EK.LabTyClash (ek1, ek2, ek3, ek4))
-							  edeps)
+							  (L.unions edeps))
 					cs'
 					l)
 		      | _  => raise EH.DeadBranch "DeadBranch22"
@@ -3930,13 +3906,13 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
-		val labs = L.cons lab1 (L.cons lab2 ls)
+		val labs = L.singleton lab1::L.singleton lab2::ls
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
 		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_DEPENDANCY (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
+	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), labs@labs2, stts@stts2, deps@deps2)) :: cs') l
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let
@@ -3959,10 +3935,10 @@ fun unif env filters user =
 			in case findInOrSq tn [] seq of
 			       ([], false, _) =>
 			       let val (kind, labs2, stts2, deps2) = getErr ()
-				   val labs' = L.union  labs labs2
-				   val stts' = L.union  stts stts2
-				   val deps' = CD.union deps deps2
-				   val err   = ERR.consPreError ERR.dummyId labs' deps' kind stts'
+				   val labs' = labs@labs2
+				   val stts' = stts@stts2
+				   val deps' = deps@deps2
+				   val err   = ERR.consPreError ERR.dummyId (L.unions labs') (CD.unions deps') kind (L.unions stts')
 			       in
 				   (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of a type constructor and a type poly");
 				    handleSimplify err cs' l)
@@ -3975,9 +3951,9 @@ fun unif env filters user =
 			     | _ => raise EH.DeadBranch "DeadBranch24"
 			end
 		      | T.TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1) => checkTn tn1
-								   (L.union labs labs1)
-								   (L.union stts stts1)
-								   (CD.union deps deps1)
+								   (labs@labs1)
+								   (stts@stts1)
+								   (deps@deps1)
 								   seq
 
 	    in
@@ -3989,16 +3965,16 @@ fun unif env filters user =
 		   (case gotoInOrSq path sq' of
 			NONE => fsimplify cs' l
 		      | SOME t =>
-			let val labs0 = L.union ls ls'
-			    val stts0 = L.union deps deps'
-			    val deps0 = CD.union ids ids'
+			let val labs0 = ls@ls'
+			    val stts0 = deps@deps'
+			    val deps0 = ids@ids'
 			    val c = E.genCstTyAll tc t labs0 stts0 deps0
 			in fsimplify (c :: cs') l
 			end)
 		 | SOME (paths, ls', deps', ids') =>
-		   let val labs0 = L.union ls ls'
-		       val stts0 = L.union deps deps'
-		       val deps0 = CD.union ids ids'
+		   let val labs0 = ls@ls'
+		       val stts0 = deps@deps'
+		       val deps0 = ids@ids'
 		   in checkTn tnty labs0 stts0 deps0 (selectPaths paths sq')
 		   end)
 	    end
@@ -4016,12 +3992,12 @@ fun unif env filters user =
 		    end
 	    in if isAllSq sq
 	       then let val (kind, labs1, stts1, deps1) = getErr ()
-			val labs' = L.union  labs1 ls
-			val stts' = L.union  stts1 deps
-			val deps' = CD.union deps1 ids
+			val labs' = labs1@ls
+			val stts' = stts1@deps
+			val deps' = deps1@ids
 		    in
 			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of an explicit type variable and a type poly");
-			 handleSimplify (ERR.consPreError ERR.dummyId labs' deps' kind stts') cs' l)
+			 handleSimplify (ERR.consPreError ERR.dummyId (L.unions labs') (CD.unions deps') kind (L.unions stts')) cs' l)
 		    end
 	       else
 		   fsimplify cs' l
@@ -4040,43 +4016,43 @@ fun unif env filters user =
 			     (T.CONSTANT (st1, id1, lab1), T.CONSTANT (st2, id2, lab2)) =>
 			     let val (tnerrs1, labs1, stts1, deps1) = gatherAllTnSq seq1
 				 val (tnerrs2, labs2, stts2, deps2) = gatherAllTnSq seq2
-				 val labs = L.union (L.union labs1 labs2) ls
-				 val stts = L.union (L.union stts1 stts2) deps
-				 val deps = CD.union (CD.union deps1 deps2) ids
+				 val labs = labs1@labs2@ls
+				 val stts = stts1@stts2@deps (* actually correct! *)
+				 val deps = deps1@deps2@ids
 				 val ek = EK.OverloadClash ((L.toInt lab1, I.toInt id1, st1),
 							    tnerrs1,
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
 			     in
 				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (1)");
-				  handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
+				  handleSimplify (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts)) cs' l)
 			     end
 			   | (T.CONSTANT (st1, id1, lab1), T.VALUE (id2, lab2)) =>
 			     let val (tnerrs1, labs1, stts1, deps1) = gatherAllTnSq seq1
 				 val (tnerrs2, labs2, stts2, deps2) = gatherAllTnSq seq2
-				 val labs = L.union (L.union labs1 labs2) ls
-				 val stts = L.union (L.union stts1 stts2) deps
-				 val deps = CD.union (CD.union deps1 deps2) ids
+				 val labs = labs1@labs2@ls
+				 val stts = stts1@stts2@deps (* actually correct! *)
+				 val deps = deps1@deps2@ids
 				 val ek = EK.OverloadIdCst ((L.toInt lab2, I.toInt id2),
 							    tnerrs2,
 							    (L.toInt lab1, I.toInt id1, st1),
 							    tnerrs1)
 			     in (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (2)");
-				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
+				 handleSimplify (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts)) cs' l)
 			     end
 			   | (T.VALUE (id1, lab1), T.CONSTANT (st2, id2, lab2)) =>
 			     let val (tnerrs1, labs1, stts1, deps1) = gatherAllTnSq seq1
 				 val (tnerrs2, labs2, stts2, deps2) = gatherAllTnSq seq2
-				 val labs = L.union (L.union labs1 labs2) ls
-				 val stts = L.union (L.union stts1 stts2) deps
-				 val deps = CD.union (CD.union deps1 deps2) ids
+				 val labs = labs1@labs2@ls
+				 val stts = stts1@stts2@deps
+				 val deps = deps1@deps2@ids
 				 val ek = EK.OverloadIdCst ((L.toInt lab1, I.toInt id1),
 							    tnerrs1,
 							    (L.toInt lab2, I.toInt id2, st2),
 							    tnerrs2)
 			     in
 				 (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying a type constraint of two type poly constructors (3)");
-				 handleSimplify (ERR.consPreError ERR.dummyId labs deps ek stts) cs' l)
+				 handleSimplify (ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) ek (L.unions stts)) cs' l)
 			     end
 			   | _ => fsimplify cs' l)
 		      | ((typaths1, f1), (typaths2, f2), true) =>
@@ -4109,23 +4085,23 @@ fun unif env filters user =
 			let (* (2010-02-05) This is never happening, is it? *)
 			    val c = E.genCstTyAll t1
 						  t2
-						  (L.unions [ls,   ls1,   ls2])
-						  (L.unions [deps, deps1, deps2])
-						  (CD.unions [ids,  ids1,  ids2])
+						  (ls@ls1@ls2)
+						  (deps@deps1@deps2)
+						  (ids@ids1@ids2)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (SOME ([path1], labs1, stts1, deps1), NONE) =>
 		   (case gotoInOrSq path1 sq1 of
 			SOME t1 =>
-			let val c = E.genCstTyAll t1 ty2 (L.union ls labs1) (L.union deps stts1) (CD.union ids  deps1)
+			let val c = E.genCstTyAll t1 ty2 (ls@labs1) (deps@stts1) (ids@deps1)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
 		 | (NONE, SOME ([path2], labs2, stts2, deps2)) =>
 		   (case gotoInOrSq path2 sq2 of
 			SOME t2 =>
-			let val c = E.genCstTyAll ty1 t2 (L.union ls labs2) (L.union deps stts2) (CD.union ids  deps2)
+			let val c = E.genCstTyAll ty1 t2 (ls@labs2) (deps@stts2) (ids@deps2)
 			in fsimplify (c :: cs') l
 			end
 		      | _ => fsimplify cs' l)
@@ -4134,21 +4110,21 @@ fun unif env filters user =
 		 | (NONE, SOME (paths2, ls2, deps2, ids2)) =>
 		   match sq1
 			 (selectPaths paths2 sq2)
-			 (L.union  ls   ls2)
-			 (L.union  deps deps2)
-			 (CD.union ids  ids2)
+			 (ls@ls2)
+			 (deps@deps2)
+			 (ids@ids2)
 		 | (SOME (paths1, ls1, deps1, ids1), NONE) =>
 		   match (selectPaths paths1 sq1)
 			 sq2
-			 (L.union  ls   ls1)
-			 (L.union  deps deps1)
-			 (CD.union ids  ids1)
+			 (ls@ls1)
+			 (deps@deps1)
+			 (ids@ids1)
 		 | (SOME (paths1, ls1, deps1, ids1), SOME (paths2, ls2, deps2, ids2)) =>
 		   match (selectPaths paths1 sq1)
 			 (selectPaths paths2 sq2)
-			 (L.unions  [ls,   ls1,   ls2])
-			 (L.unions  [deps, deps1, deps2])
-			 (CD.unions [ids,  ids1,  ids2])
+			 (ls@ls1@ls2)
+			 (deps@deps1@deps2)
+			 (ids@ids1@ids2)
 		 | (NONE, NONE) =>
 		   (* The 2 rows are not set yet to a path (a path set),
 		    * so we don't know yet whether they match on at least a type.
@@ -4185,7 +4161,8 @@ fun unif env filters user =
 			  | ((filterId,filterLabel,filterLabels)::t) =>
 			    let
 				val errorKind   = EK.DuplicateId ((L.toInt label, id), (L.toInt filterLabel,filterId))
-				val error  = ERR.consPreError ERR.dummyId (L.cons filterLabel (L.cons label (L.cons l (L.union ls (L.union filterLabels labels))))) ids errorKind L.empty
+				val allNewLabels = L.singleton filterLabel::L.singleton label::L.singleton l::(ls@filterLabels@labels)
+				val error  = ERR.consPreError ERR.dummyId (L.unions allNewLabels) (CD.unions ids) errorKind L.empty
 	  		    in
 				handleSimplify error cs' l
 			    end
@@ -4250,10 +4227,10 @@ fun unif env filters user =
 		     val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is in the state, mapped to: "^(T.printtyf typeFunction'))
 		     val typeFunction' = case typeFunction' of
 					     T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(_)),lab),labs,stts,cds) =>
-					     if L.length stts > 0
+					     if L.length (L.unions stts) > 0
 					     then
 						 let
-						     val newEntry = T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(T.freshEqualityTypeVar())),lab),labs,L.empty,cds)
+						     val newEntry = T.TYPE_FUNCTION_DEPENDANCY(T.TFC(rowVar,T.TYPE_VAR(typeVar,x,poly,T.EQUALITY_TYPE_VAR(T.freshEqualityTypeVar())),lab),labs,[],cds)
 						     val _ = S.updateStateTf state tfv newEntry
 						 in
 						     newEntry
@@ -4279,9 +4256,9 @@ fun unif env filters user =
 		 let val _ = S.updateStateCl state clvar (cl, labs, stts, deps)
 		 in fsimplify cs' l end
 	       | SOME (cl', labs', stts', deps') =>
-		 let val labs0 = L.union labs labs'
-		     val stts0 = L.union stts stts'
-		     val deps0 = CD.union deps deps'
+		 let val labs0 = labs@labs'
+		     val stts0 = stts@stts'
+		     val deps0 = deps@deps'
 		     val c     = E.genCstClAll cl' cl labs0 stts0 deps0
 		 in fsimplify (c :: cs') l
 		 end)
@@ -4291,7 +4268,7 @@ fun unif env filters user =
 	    let
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun genError kind =
-		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts
+		    let val err = ERR.consPreError ERR.dummyId (L.unions labs) (CD.unions deps) kind (L.unions stts)
 		    in
 			(D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an identifier class constraint of two CL.VID constructors");
 			 handleSimplify err cs' l)
@@ -4421,7 +4398,7 @@ fun unif env filters user =
 			 * The (SOME O.empty) is to specify that we refresh all the internal and explicit type variables. *)
 			(*(2010-03-03)We only refresh env2 to refresh the explicit type variables. We then could have a faster function that does less work! *)
 			(*tfun are the type functions of the structure/realisation specified by the signature. *)
-			val (tfnD, tfnT) = getTypeFunctionEnv env0 env2 L.empty L.empty CD.empty
+			val (tfnD, tfnT) = getTypeFunctionEnv env0 env2 [] [] []
 			val (cs0, env1) = genTypeFunctionEnv' env0 state tfnT true
 			(* If mk is E.STR then env0 is a signature and env2 is a structure. If env2 is incomplete then we don't need to turn the datatypes
 			 * into dummy types, just the type functions. *)
@@ -4429,9 +4406,9 @@ fun unif env filters user =
 			 * during enumeration (when removing labels) and it might cause type errors to occur for typable programs.
 			 * We might however tag structureEnvVar when dealing with a dummy structure in the basis. *)
 			(*(2010-03-03)The second constraint set if for datatypes and type functions.*)
-			val (cs1, cs2) = matchSigStr env1 env2 lab filters L.empty L.empty CD.empty true err
+			val (cs1, cs2) = matchSigStr env1 env2 lab filters [] [] [] true err
 			val _ = sigVsStrON ()
-			val _ = fsimplify ((decorateCst cs0 (L.singleton lab) L.empty CD.empty) @ cs1) l
+			val _ = fsimplify ((decorateCst cs0 [(L.singleton lab)] [] []) @ cs1) l
 			val _ = sigVsStrTypON ()
 			val _ = fsimplify cs2 l
 			val _ = sigVsStrTypOFF ()
@@ -4443,7 +4420,7 @@ fun unif env filters user =
 				     * generated by matchSigStr.  We don't need to refresh though. *)
 				    let
 					val env1' = buildFEnv (*justBuildEnv*) env1 state true
-					val stateEntry = (E.pushExtEnv env1' (L.singleton lab) L.empty CD.empty)
+					val stateEntry = (E.pushExtEnv env1' [(L.singleton lab)] [] [])
 				    in
 					S.updateStateEv state ev stateEntry
 				    end
@@ -4452,7 +4429,7 @@ fun unif env filters user =
 				  | SOME ev =>
 				    let
 					val env3 = freshenv' (renameenv' env0 state) (SOME O.empty) false
-					val stateEntry = (E.pushExtEnv env3 (L.singleton lab) L.empty CD.empty)
+					val stateEntry = (E.pushExtEnv env3 [(L.singleton lab)] [] [])
 					val (stateEntryWithOpaqueConstraints, newConstraints) = E.createOpaqueEqualityConstraints stateEntry l
 					val _ = fsimplify newConstraints l
 				    in
@@ -4473,20 +4450,20 @@ fun unif env filters user =
 	    then let val env1 = buildFEnv (E.consENV_VAR ev1 lab) state false
 		     val env2 = buildFEnv (E.consENV_VAR ev2 lab) state true
 		     val env3 = buildFEnv (E.consENV_VAR ev3 lab) state true
-		     val (tfnD, tfnT) = getTypeFunctionEnv env1 env3 L.empty L.empty CD.empty
+		     val (tfnD, tfnT) = getTypeFunctionEnv env1 env3 [] [] []
 		     val tfun = mergeTypeFunction tfnD tfnT
 		     val (cs0, env1') = genTypeFunctionEnv' env1 state tfun true
 		     val (cs1, env2') = genTypeFunctionEnv' env2 state tfun true
-		     val (cs2, cs3) = matchSigStr env1' env3 lab filters L.empty L.empty CD.empty false err
+		     val (cs2, cs3) = matchSigStr env1' env3 lab filters [] [] [] false err
 		     val _ = sigVsStrON ()
-		     val _ = fsimplify ((decorateCst (cs0 @ cs1) (L.singleton lab) L.empty CD.empty) @ cs2) l
+		     val _ = fsimplify ((decorateCst (cs0 @ cs1) [(L.singleton lab)] [] []) @ cs2) l
 		     val _ = sigVsStrTypON ()
 		     val _ = fsimplify cs3 l
 		     val _ = sigVsStrTypOFF ()
 		     val _ = sigVsStrOFF ()
 		     (*val _ = D.printdebug2 (E.printEnv env2 "" ^ "\n" ^ E.printEnv env2' "")*)
 		     val env2'' = buildFEnv env2' state true
-		     val _ = S.updateStateEv state ev4 (E.pushExtEnv env2'' (L.singleton lab) L.empty CD.empty)
+		     val _ = S.updateStateEv state ev4 (E.pushExtEnv env2'' [(L.singleton lab)] [] [])
 		 in fsimplify cs' l
 		 end
 		 handle errorfound err =>
@@ -4508,16 +4485,16 @@ fun unif env filters user =
 				    OM.map (fn NONE => newTypeFunction ()
 					     | SOME (labs', stts', deps') =>
 					       collapseTf tf
-							  (L.union  labs labs')
-							  (L.union  stts stts')
-							  (CD.union deps deps'))
+							  (labs@labs')
+							  (stts@stts')
+							  (deps@deps'))
 					   tfun
 		     val (cs0, env1) = genTypeFunctionEnv' env0 state tfun false
 		     (* Do we need this switch here? *)
 		     val _ = sigVsStrON ()
-		     val _ = fsimplify (decorateCst cs0 (L.singleton lab) L.empty CD.empty) l
+		     val _ = fsimplify (decorateCst cs0 [(L.singleton lab)] [] []) l
 		     val _ = sigVsStrOFF ()
-		     val _ = S.updateStateEv state ev1 (E.pushExtEnv env1 (L.singleton lab) L.empty CD.empty)
+		     val _ = S.updateStateEv state ev1 (E.pushExtEnv env1 [(L.singleton lab)] [] [])
 		 in fsimplify cs' l
 		 end
 		 handle errorfound err =>
@@ -4583,7 +4560,7 @@ fun unif env filters user =
 	   * action: we turn that into an equality type constarint of eq1 to eq2, unifying the labels
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, T.EQUALITY_TYPE_DEPENDANCY  (eq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+	    fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), labs1@labs, stts1@stts, deps1@deps)) :: cs') l
 
 	  (*
 	   * constraint solving - equality types
@@ -4605,7 +4582,7 @@ fun unif env filters user =
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ "EQUALITY_TYPE_VAR_LIST[" ^ T.printEqualityTypeVarList (recordInformation) ^ "]"
-										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
+										  ^ ". Deps = "^(L.toString (L.unions deps))^" and Labels = " ^ L.toString (L.unions ls))
 			else ()
 	    in
 		(* check whether the equality type variable already exists in the state map *)
@@ -4615,7 +4592,7 @@ fun unif env filters user =
 	  	    (* we haven't seen this equality type variable before, so let's put it in *)
 		    let
 			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Not seen this equality type variable before. Adding this constraint to the state environment.")
-			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST recordInformation), (L.cons l ls), deps, ids), [])
+			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST recordInformation), (L.singleton l::ls), deps, ids), [])
 		    in
 			fsimplify cs' l
 		    end
@@ -4624,15 +4601,15 @@ fun unif env filters user =
 		     * all equality type variables in the recordInformation list also need to be constrained to this status *)
 		    let
 			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type variable discoverd in map to have status " ^ T.printEqualityTypeStatus statusInMap ^ "! Mapping constraint to this status over EQAULITY_TYPE_VAR_LIST")
-			val constraints = List.map (fn eqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS statusInMap), L.cons l (L.union resultLabels ls), L.union resultDeps deps, ids)) recordInformation
+			val constraints = List.map (fn eqtv => E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS statusInMap), L.singleton l::(resultLabels@ls), resultDeps@deps, ids)) recordInformation
 		    in
 			fsimplify (constraints@cs') l
 		    end
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY((T.EQUALITY_TYPE_VAR eqtv'), resultLabels, resultDeps, resultIds), recordInformation') =>
 		    let
 			val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "\n*****\n*****\nWARNING: equaltiy type variable already exists in map when creating mapping from equality type variable to a list of other equality type variables. Adding variable in map to list it depends on and unioning deps.\n*****\n*****")
-			val _ = S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.cons l (L.union resultLabels ls)), L.union resultDeps deps, ids), [])
-			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.cons l (L.union resultLabels ls)), L.union resultDeps deps, ids), [])
+			val _ = S.updateStateEq state eqtv' (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.singleton l::(resultLabels@ls)), resultDeps@deps, ids), [])
+			val _ = S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_VAR_LIST (recordInformation)), (L.singleton l::(resultLabels@ls)), resultDeps@deps, ids), [])
 		    in
 			fsimplify cs' l
 		    end
@@ -4666,11 +4643,11 @@ fun unif env filters user =
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeStatus)
-										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
+										  ^ ". Deps = "^(L.toString (L.unions deps))^" and Labels = " ^ L.toString (L.unions ls))
 			else ()
 
 		val deps = if (status = T.UNKNOWN)
-			   then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "status is UNKNOWN, we don't care about deps. Resetting to empty deps.)"); L.empty)
+			   then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "status is UNKNOWN, we don't care about deps. Resetting to empty deps.)"); [])
 			   else deps
 	    in
 		(* check whether the equality type variable already exists in the state map *)
@@ -4679,11 +4656,11 @@ fun unif env filters user =
 	  	    (* we haven't seen this equality type variable before, so let's put it in *)
 		    NONE =>
 		    let
-			val _ = if Label.length ls = 1
+			val _ = if Label.length (L.unions ls) = 1
 				then (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (unioning ls with deps in deps field as deps are empty)");
-				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), L.union ls deps, ids), []))
+				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.singleton l::ls), deps, ids), []))
 				else (D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "not seen this variable before, inserting into map (more than one label in ls, not altering deps)");
-				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.cons l ls), deps, ids), []))
+				      S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY ((T.EQUALITY_TYPE_STATUS status), (L.singleton l::ls), deps, ids), []))
 		    in
 			fsimplify cs' l
 		    end
@@ -4705,10 +4682,11 @@ fun unif env filters user =
 		     then
 			 let
 			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Status in map is UNKNOWN but right now it is something other than UNKNOWN. Replacing entry and unioning label information.")
-			     val _ = case L.length ls of
+			     val unionedLs = L.unions ls
+			     val _ = case L.length unionedLs of
 					 (* we now have an equality type status so THIS label is the real endpoint, overwrite the deps *)
-					 1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, ls, ids), recordInformation)
-				       | _ => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, L.union ls resultLabels, deps, ids), recordInformation);
+					 1 => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, (unionedLs::resultLabels), ls, ids), recordInformation)
+				       | _ => S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS status, unionedLs::resultLabels , deps, ids), recordInformation);
 
 			     val _ =
 				 case recordInformation of
@@ -4723,23 +4701,22 @@ fun unif env filters user =
 	  	     else
 			 (* otherwise, an equality type variable is constrained to be both an EQUALITY_TYPE and NOT_EQUALITY_TYPE. Generate an error! *)
 	  		 let
-			     val _ = ("deps = "^(L.toString deps)^", resultDeps = "^(L.toString resultDeps))
-			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected. Label information: l = "^(L.printLab l)^
-											  ", ls = "^(L.toString (L.union resultLabels ls))^", deps = "^(L.toString (L.union deps resultDeps))^"\n")
+			     val _ = ("deps = "^(L.toString (L.unions deps))^", resultDeps = "^(L.toString (L.unions resultDeps)))
+			     val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "Equality type error detected.\n")
 
 			     (* jpirie: we are doing the unioning twice, once above and once below, do this only one *)
-			     val endpointLabels =  if Label.length ls = 1  (* if there is only one label, then this is an endpoint label *)
-						   then Label.toList (L.union ls resultDeps)
-						   else Label.toList (L.union deps resultDeps)
+			     val endpointLabels =  if Label.length (L.unions ls) = 1  (* if there is only one label, then this is an endpoint label *)
+						   then Label.toList (L.unions (resultDeps@ls))
+						   else Label.toList (L.unions (deps@resultDeps))
 
 			     val _ = case endpointLabels of
 					 (l1::l2::[]) =>
 					 let
 					     val errorKind   = EK.EqTypeRequired (l1, l2)
-					     val error  = ERR.consPreError ERR.dummyId (L.cons l (L.union resultLabels ls)) ids errorKind (L.union deps resultDeps)
+					     val allLabels = L.singleton l::(resultLabels@ls)
+					     val error  = ERR.consPreError ERR.dummyId (L.unions allLabels) (CD.unions ids) errorKind (L.unions (deps@resultDeps))
 	  				 in
-					     (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Error detected while fsimplifying an equality type constraint of a variable ("^(T.printEqualityType equalityTypeVar)^") and a status ("^(T.printEqualityTypeStatus status)^"). Labels: "^(L.toString (L.union resultLabels ls)));
-					      handleSimplify error cs' l)
+					      handleSimplify error cs' l
 					 end
 				       | [l1] => raise EH.DeadBranch ("Only got one endpoint label for an equality type error: "^(Int.toString l1))
 				       | [] => raise EH.DeadBranch "Got NO endpoint labels for an equality type error!"
@@ -4750,18 +4727,18 @@ fun unif env filters user =
 	  	    )
 		  | SOME (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, labs, stts, cd), recordInformation) =>
 		    if status = T.UNKNOWN
-		    then (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, L.union ls labs, L.union deps stts, cd), recordInformation);
+		    then (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_VAR eqTypeVarDep, ls@labs, deps@stts, cd), recordInformation);
 			 fsimplify cs' l)
 		    else
 			let
 			    (* here we update the map so that the equality type variable is no longer mapped to a dependancy on an equality type variable,
 			     * but now to the eqaulity type status (status dependancies are more important than equality type variable dependencies).
 			     * we check whether the length of the labels is 1, if it is then this is an endpoint label, so we put it in the deps list *)
-			    val c = if Label.length ls = 1
-				    then (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.cons l (L.union ls labs), L.union ls deps, ids), recordInformation);
-					  E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.cons l (L.union labs ls), L.union ls deps, ids))
-				    else (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.cons l (L.union ls labs), deps, ids), recordInformation);
-					  E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.cons l (L.union labs ls), deps, ids))
+			    val c = if Label.length (L.unions ls) = 1
+				    then (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.singleton l::(ls@labs), ls@deps, ids), recordInformation);
+					  E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.singleton l::(labs@ls), ls@deps, ids))
+				    else (S.replaceStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeStatus, L.singleton l::(ls@labs), deps, ids), recordInformation);
+					  E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqTypeVarDep, T.EQUALITY_TYPE_STATUS status), L.singleton l::(labs@ls), deps, ids))
 			in
 			    fsimplify (c::cs') l
 			end
@@ -4796,13 +4773,13 @@ fun unif env filters user =
 				  | SOME newTy =>
 				    (* we have found something in the state, let's recurse on that
 				     * jpirie: maybe we should union the labels here? *)
-			    	   (E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_ON_TYPE (newTy)), L.union depLabels ls, deps, ids))::cs')
+			    	   (E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_ON_TYPE (newTy)), depLabels@ls, deps, ids))::cs')
 			     |  (T.TYPE_DEPENDANCY(T.TYPE_CONSTRUCTOR (_, _, _, T.EQUALITY_TYPE_VAR eqtv),depLabels,depDeps,depContext)) =>
-			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.consEQUALITY_TYPE_VAR(eqtv))), L.union ls depLabels, deps, ids)::cs')
+			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.consEQUALITY_TYPE_VAR(eqtv))), ls@depLabels, deps, ids)::cs')
 			     (* in the case where we see an UNKNOWN status in a constraint such as this, but equalityTypeVar1 is mapped to equality type,
 			      * we actually have an error. (built for test single-tick-in-value-declarations.sml) *)
 			     |  (T.TYPE_DEPENDANCY(T.EXPLICIT_TYPE_VAR (_, _, _, T.EQUALITY_TYPE_STATUS T.UNKNOWN),depLabels,depDeps,depContext)) =>
-			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE))), L.union ls depLabels, L.cons l deps, ids)::cs')
+			    	(E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, (T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE))), ls@depLabels, L.singleton l::deps, ids)::cs')
 			     | _ =>
 			      if (not (!analysingBasis))
 			      then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors))^"Warning, ignoring constraint: "^(E.printOneConstraint currentConstraint)); cs')
@@ -4834,7 +4811,7 @@ fun unif env filters user =
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar1)^(!D.textReset)^" and "^(#green (!D.colors))
 	  									  ^ T.printEqualityType(equalityTypeVar2)
-										  ^ ". Deps = "^(L.toString deps)^" and Labels = " ^ L.toString ls)
+										  ^ ". Deps = "^(L.toString (L.unions deps))^" and Labels = " ^ L.toString (L.unions ls))
 			else ()
 	    in
 	  	if T.eqEqualityTypeVar eqtv1 eqtv2
@@ -4850,7 +4827,7 @@ fun unif env filters user =
 				(* we don't take deps because we know already that the variable we're handling can't be an endpoint label, it's dependant on another equality type variable *)
 				val _ = if mapStatus = T.UNKNOWN
 					then S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (equalityTypeVar1, ls, deps, ids), [])
-					else S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS mapStatus, L.union ls labs, stts, ids), [])
+					else S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY (T.EQUALITY_TYPE_STATUS mapStatus, ls@labs, stts, ids), [])
 			    in fsimplify cs' l
 			    end
 			  | _ =>
@@ -4864,7 +4841,7 @@ fun unif env filters user =
 		       * we want to go create a constraint to see whether all the constraints are still satisfyable *)
 		      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS mapStatus, labs, stts, cd), recordInformation) =>
 			let
-			    val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.cons l (L.union labs ls), L.union stts deps, ids)
+			    val c = E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1, T.EQUALITY_TYPE_STATUS mapStatus), L.singleton l::(labs@ls), stts@deps, ids)
 			in
 			    fsimplify (c::cs') l
 			end
@@ -4876,8 +4853,8 @@ fun unif env filters user =
 											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR mapEqualityTypeVar))^". Replacing entry in map and unioning labels and deps.")
 			    (* this does seem to happen. I think what we want to do is create constraint equalityTypeVar1 |-> mapEqualityTypeVar *)
 			    (* this constraint breaks another tuple test when used on its own! The state map also needs to be updated. *)
-			    val newConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR mapEqualityTypeVar), L.union labs ls, L.union deps stts, cd)
-			    val _ = S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR eqtv1, L.union labs ls, L.union deps stts, cd), recordInformation)
+			    val newConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR mapEqualityTypeVar), labs@ls, deps@stts, cd)
+			    val _ = S.updateStateEq state eqtv2 (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_VAR eqtv1, labs@ls, deps@stts, cd), recordInformation)
 			in  fsimplify (newConstraint::cs') l
 			end
 
@@ -4885,7 +4862,7 @@ fun unif env filters user =
 			let
 			    val _ = D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "This equality type variable already exists in the state map. It is mapped to: "
 											 ^ (T.printEqualityType (T.EQUALITY_TYPE_VAR_LIST recordInformation))^". Creating constraint to this list.")
-			    val newConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR_LIST recordInformation), L.union ls ls', L.union deps deps', ids')
+			    val newConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR eqtv1, T.EQUALITY_TYPE_VAR_LIST recordInformation), ls@ls', deps@deps', ids')
 			in  fsimplify (newConstraint::cs') l
 			end
 		      | _ => raise EH.TODO "Impossible pattern match case occurred"
@@ -4926,7 +4903,7 @@ fun unif env filters user =
 			case S.getValStateEq state h of
 			    NONE => raise EH.DeadBranch "An impossible case occurred"
 			  | SOME (T.EQUALITY_TYPE_DEPENDANCY(_,labs',stts',deps'),_) =>
-			    S.updateStateEq state h (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE), L.cons l (L.union labs labs'), stts, deps'), [])
+			    S.updateStateEq state h (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_STATUS(T.NOT_EQUALITY_TYPE), L.singleton l::(labs@labs'), stts, deps'), [])
 			  | _ => raise EH.DeadBranch "Something is in the state is not a dependancy."
 		in setNonEqualityType depList
 		end

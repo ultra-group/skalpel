@@ -23,25 +23,25 @@
 signature EXTLAB = sig
 
     type 'a extLab = 'a           *
-		     Label.labels *
-		     Label.labels *
-		     LongId.set
+		     Label.labels list *
+		     Label.labels list *
+		     LongId.set list
 
     val getExtLabT   : 'a extLab -> 'a
-    val getExtLabL   : 'a extLab -> Label.labels
-    val getExtLabE   : 'a extLab -> Label.labels
-    val getExtLabD   : 'a extLab -> LongId.set
+    val getExtLabL   : 'a extLab -> Label.labels list
+    val getExtLabE   : 'a extLab -> Label.labels list
+    val getExtLabD   : 'a extLab -> LongId.set list
 
     val initExtLab   : 'a -> Label.label -> 'a extLab
-    val consExtLab   : 'a -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
+    val consExtLab   : 'a -> Label.labels list -> Label.labels list -> LongId.set list -> 'a extLab
 
     val mapExtLab    : 'a extLab -> ('a -> 'b) -> 'b extLab
     val stripExtLab  : 'a extLab list -> 'a list
     val unionExtLab  : 'a extLab -> 'b extLab -> ('a * 'b -> 'c) -> 'c extLab
-    val updExtLab    : 'a extLab -> Label.labels -> Label.labels -> LongId.set -> 'a extLab
-    val updExtLabL   : 'a extLab -> Label.labels -> 'a extLab
-    val updExtLabE   : 'a extLab -> Label.labels -> 'a extLab
-    val updExtLabD   : 'a extLab -> LongId.set   -> 'a extLab
+    val updExtLab    : 'a extLab -> Label.labels list -> Label.labels list -> LongId.set list -> 'a extLab
+    val updExtLabL   : 'a extLab -> Label.labels  list-> 'a extLab
+    val updExtLabE   : 'a extLab -> Label.labels list -> 'a extLab
+    val updExtLabD   : 'a extLab -> LongId.set list  -> 'a extLab
     val resetExtLab  : 'a extLab -> 'a extLab
 
     val printExtLab' : 'a extLab      ->

@@ -31,21 +31,33 @@ structure ContextDependancy = LongId
  * \arg #Label.labels labels labelling the term.
  * \arg #Label.labels distinguished labels : id term.
  * \arg #ContextDependency.set Context dependencies labelling the term. *)
-type 'a extLab = 'a * L.labels * L.labels * ContextDependancy.set
+type 'a extLab = 'a * L.labels list * L.labels list * ContextDependancy.set list
+
+fun printLabelsList [] = ""
+  | printLabelsList (h::h2::t) = (L.toString h) ^ "," ^ (printLabelsList (h2::t))
+  | printLabelsList (h::t) = L.toString h
+
+fun printCdList [] ascid = ""
+  | printCdList (h::h2::t) ascid = (ContextDependancy.toStringListSt h ascid) ^ "," ^ (printCdList (h2::t) ascid)
+  | printCdList (h::t) ascid = ContextDependancy.toStringListSt h ascid
+
+fun printCdList' [] = ""
+  | printCdList' (h::h2::t) = (ContextDependancy.toString h) ^ "," ^ (printCdList' (h2::t))
+  | printCdList' (h::t) = ContextDependancy.toString h
 
 (** Prints a dependent form. *)
 fun printExtLab (term, labs, stats, cdeps) f ascid =
     "(" ^ f term                        ^
-    "," ^ L.toString        labs        ^
-    "," ^ L.toString        stats       ^
-    ", contextDependancies=" ^ ContextDependancy.toStringListSt cdeps ascid ^ ")"
+    "," ^ printLabelsList   labs        ^
+    "," ^ printLabelsList   stats       ^
+    ", contextDependancies=" ^ printCdList cdeps ascid ^ ")"
 
 (** Prints a dependent form but doesn't explicity name the contextDependencies. *)
 fun printExtLab' (x, labs, st, deps) f =
     "(" ^ f x              ^
-    "," ^ L.toString  labs ^
-    "," ^ L.toString  st   ^
-    "," ^ ContextDependancy.toString deps ^ ")"
+    "," ^ printLabelsList  labs ^
+    "," ^ printLabelsList  st   ^
+    "," ^ printCdList' deps ^ ")"
 
 (** Gets the term of a dependent form. *)
 fun getExtLabT (x, _, _, _) = x
@@ -60,7 +72,7 @@ fun getExtLabD (_, _, _, x) = x
 fun consExtLab x labs stats cdeps = (x, labs, stats, cdeps)
 
 (** Initialises a depentent form given a term and a label. *)
-fun initExtLab x lab = consExtLab x (L.singleton lab) L.empty ContextDependancy.empty
+fun initExtLab x lab = consExtLab x [L.singleton lab] [] []
 
 (** Replaces both sets of labels and context dependencies in a depentent form. *)
 fun setExtLab x labs stats cdeps = consExtLab (getExtLabT x) labs stats cdeps
@@ -76,24 +88,24 @@ fun unionExtLab (x1, labs1, stats1, cdeps1)
 		(x2, labs2, stats2, cdeps2)
 		funion =
     (funion (x1, x2),
-     L.union  labs1  labs2,
-     L.union  stats1 stats2,
-     ContextDependancy.union cdeps1 cdeps2)
+     labs1@labs2,
+     stats1@stats2,
+     cdeps1@cdeps2)
 
 (** Updating of annotation of an extLab. *)
 fun updExtLab elab labs2 stats2 cdeps2 =
     unionExtLab elab ((), labs2, stats2, cdeps2) (fn (x, _) => x)
 
 (** Updates the first set of labels in a dependent form. *)
-fun updExtLabL (x, labs, stts, deps) labs' = (x, L.union labs labs', stts, deps)
+fun updExtLabL (x, labs, stts, deps) labs' = (x, labs@labs', stts, deps)
 
 (** Updates the second set of labels in a dependent form. *)
-fun updExtLabE (x, labs, stts, deps) stts' = (x, labs, L.union stts stts', deps)
+fun updExtLabE (x, labs, stts, deps) stts' = (x, labs, stts@stts', deps)
 
 (** Updates the context dependencies in a dependent form. *)
-fun updExtLabD (x, labs, stts, deps) deps' = (x, labs, stts, ContextDependancy.union deps deps')
+fun updExtLabD (x, labs, stts, deps) deps' = (x, labs, stts, deps@deps')
 
 (** Creates a dependent form from a term with two empty label sets and no context dependencies. *)
-fun resetExtLab x = (getExtLabT x, L.empty, L.empty, ContextDependancy.empty)
+fun resetExtLab x = (getExtLabT x, [], [], [])
 
 end

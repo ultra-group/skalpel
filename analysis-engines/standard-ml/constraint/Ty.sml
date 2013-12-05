@@ -355,37 +355,37 @@ fun getTypename (TFC (_, ty, _)) = getNameTypenameTy ty
 (** Strips the dependencies off type functions. *)
 fun stripDepsTf (tf as TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1)) =
     let val (tf2, labs2, stts2, deps2) = stripDepsTf tf1
-    in (tf2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (tf2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
   | stripDepsTf (tf as TFC (sq, ty, lab)) =
     let val (sq', labs1, stts1, deps1) = stripDepsSq sq
 	val (ty', labs2, stts2, deps2) = stripDepsTy ty
     in (TFC (sq', ty', lab),
-	L.union  labs1 labs2,
-	L.union  stts1 stts2,
-	CD.union deps1 deps2)
+	labs1@labs2,
+	stts1@stts2,
+	deps1@deps2)
     end
   | stripDepsTf (tf as TYPE_FUNCTION_VAR _) =
-    (tf, L.empty, L.empty, CD.empty)
+    (tf, [], [], [])
 
 (** Strips the dependencies off #ty values. *)
-and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
-  | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
+and stripDepsTy (ty as TYPE_VAR _) = (ty, [], [], [])
+  | stripDepsTy (ty as EXPLICIT_TYPE_VAR _) = (ty, [], [], [])
   | stripDepsTy (ty as TYPE_CONSTRUCTOR(tn, sq, lab, _)) =
     let val (tn', labs1, stts1, deps1) = stripDepsTn tn
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
     in (TYPE_CONSTRUCTOR (tn', sq', lab, EQUALITY_TYPE_STATUS(UNKNOWN)),
-	L.union  labs1 labs2,
-	L.union  stts1 stts2,
-	CD.union deps1 deps2)
+	labs1@labs2,
+	stts1@stts2,
+	deps1@deps2)
     end
   | stripDepsTy (ty as APPLICATION (tf, sq, lab)) =
     let val (tf', labs1, stts1, deps1) = stripDepsTf tf
 	val (sq', labs2, stts2, deps2) = stripDepsSq sq
     in (APPLICATION (tf', sq', lab),
-	L.union  labs1 labs2,
-	L.union  stts1 stts2,
-	CD.union deps1 deps2)
+	labs1@labs2,
+	stts1@stts2,
+	deps1@deps2)
     end
   | stripDepsTy (ty as TYPE_POLY (sq, id, p, k, lab, eq)) =
     let val (sq', labs, stts, deps) = stripDepsSq sq
@@ -396,70 +396,70 @@ and stripDepsTy (ty as TYPE_VAR _) = (ty, L.empty, L.empty, CD.empty)
 	    foldr (fn (ty, (tys, labs, stts, deps)) =>
 		      let val (ty', labs', stts', deps') = stripDepsTy ty
 		      in (ty' :: tys,
-			  L.union  labs labs',
-			  L.union  stts stts',
-			  CD.union deps deps')
+			  labs@labs',
+			  stts@stts',
+			  deps@deps')
 		      end)
-		  ([], L.empty, L.empty, CD.empty)
+		  ([], [], [], [])
 		  (!tyr)
     in tyr := tys;
        (GEN tyr, labs, stts, deps)
     end
   | stripDepsTy (ty as TYPE_DEPENDANCY (ty1, labs1, stts1, deps1)) =
     let val (ty2, labs2, stts2, deps2) = stripDepsTy ty1
-    in (ty2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (ty2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
 
 (** Strips the dependencies off a row type. *)
-and stripDepsSq (sq as ROW_VAR _) = (sq, L.empty, L.empty, CD.empty)
+and stripDepsSq (sq as ROW_VAR _) = (sq, [], [], [])
   | stripDepsSq (sq as ROW_C (fields, flex, lab)) =
     let val (fields', labs, stts, deps) =
 	    foldr (fn (field, (fields, labs, stts, deps)) =>
 		      let val (field', labs', stts', deps') = stripDepsRt field
 		      in (field' :: fields,
-			  L.union  labs labs',
-			  L.union  stts stts',
-			  CD.union deps deps')
+			  labs@labs',
+			  stts@stts',
+			  deps@deps')
 		      end)
-		  ([], L.empty, L.empty, CD.empty)
+		  ([], [], [], [])
 		  fields
     in (ROW_C (fields', flex, lab), labs, stts, deps)
     end
   | stripDepsSq (sq as ROW_DEPENDANCY (sq1, labs1, stts1, deps1)) =
     let val (sq2, labs2, stts2, deps2) = stripDepsSq sq1
-    in (sq2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (sq2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
 
 (** Strips the dependencies from a field type. *)
-and stripDepsRt (rt as FIELD_VAR _) = (rt, L.empty, L.empty, CD.empty)
+and stripDepsRt (rt as FIELD_VAR _) = (rt, [], [], [])
   | stripDepsRt (rt as FC (lt, ty, lab)) =
     let val (lt', labs1, stts1, deps1) = stripDepsLt lt
 	val (ty', labs2, stts2, deps2) = stripDepsTy ty
     in (FC (lt', ty', lab),
-	L.union  labs1 labs2,
-	L.union  stts1 stts2,
-	CD.union deps1 deps2)
+	labs1@labs2,
+	stts1@stts2,
+	deps1@deps2)
     end
   | stripDepsRt (rt as FIELD_DEPENDANCY (rt1, labs1, stts1, deps1)) =
     let val (rt2, labs2, stts2, deps2) = stripDepsRt rt1
-    in (rt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (rt2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
-  | stripDepsRt RO = (RO, L.empty, L.empty, CD.empty)
+  | stripDepsRt RO = (RO, [], [], [])
 
 (** Strips dependencies from a label type. *)
-and stripDepsLt (lt as LABEL_VAR _) = (lt, L.empty, L.empty, CD.empty)
-  | stripDepsLt (lt as LC _) = (lt, L.empty, L.empty, CD.empty)
+and stripDepsLt (lt as LABEL_VAR _) = (lt, [], [], [])
+  | stripDepsLt (lt as LC _) = (lt, [], [], [])
   | stripDepsLt (lt as LABEL_DEPENDANCY (lt1, labs1, stts1, deps1)) =
     let val (lt2, labs2, stts2, deps2) = stripDepsLt lt1
-    in (lt2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (lt2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
 
 (** Strips dependencies from a typename type. *)
-and stripDepsTn (tn as TYPENAME_VAR _) = (tn, L.empty, L.empty, CD.empty)
-  | stripDepsTn (tn as NC _) = (tn, L.empty, L.empty, CD.empty)
+and stripDepsTn (tn as TYPENAME_VAR _) = (tn, [], [], [])
+  | stripDepsTn (tn as NC _) = (tn, [], [], [])
   | stripDepsTn (tn as TYPENAME_DEPENDANCY (tn1, labs1, stts1, deps1)) =
     let val (tn2, labs2, stts2, deps2) = stripDepsTn tn1
-    in (tn2, L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2)
+    in (tn2, labs1@labs2, stts1@stts2, deps1@deps2)
     end
 
 (** NONE means not a type name, SOME SOME tn means a type name tn, SOME NONE means we can't now.*)
@@ -839,12 +839,12 @@ fun isShallowSeq (ROW_VAR _)            = true
 
 fun decorateExtTypeVars set labs stts deps =
     S.map (fn (labs0, stts0, deps0) =>
-	      (L.union labs labs0, L.union stts stts0, CD.union deps deps0))
+	      (labs@labs0, stts@stts0, deps@deps0))
 	  set
 
 fun unionExtTypeVars (set1, set2) =
     S.unionWith (fn ((labs1, stts1, deps1), (labs2, stts2, deps2)) =>
-		    (L.union labs1 labs2, L.union stts1 stts2, CD.union deps1 deps2))
+		    (labs1@labs2, stts1@stts2, deps1@deps2))
 		(set1, set2)
 
 
@@ -862,8 +862,8 @@ and getTypeVarstytf  (TYPE_FUNCTION_VAR _)                      = S.empty
   | getTypeVarstytf  (TFC (sq, ty, _))            = unionExtTypeVars (getTypeVarstyseq sq, getTypeVarsty ty)
   | getTypeVarstytf  (TYPE_FUNCTION_DEPENDANCY etf)                    = getTypeVarstytf (EL.getExtLabT etf)
 (** Extracts types variables from a #ty value. *)
-and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty))
-  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, (L.empty, L.empty, CD.empty)) (*??*)
+and getTypeVarsty    (TYPE_VAR  (v, _, _, _))               = S.insert (S.empty, v, ([], [], []))
+  | getTypeVarsty    (EXPLICIT_TYPE_VAR (_, v, _, _))               = S.insert (S.empty, v, ([], [], [])) (*??*)
   | getTypeVarsty    (TYPE_CONSTRUCTOR  (_,  sq, _, _))             = getTypeVarstyseq sq
   | getTypeVarsty    (APPLICATION  (tf, sq, _))             = unionExtTypeVars (getTypeVarstytf tf, getTypeVarstyseq sq)
   | getTypeVarsty    (TYPE_POLY (sq, _, _, _, _, _))        = getTypeVarstyseq sq
@@ -1112,21 +1112,21 @@ fun striplistgen xs f = foldr (op @) [] (List.map f xs)
 
 (** Strips equality type variables from a field type. *)
 fun stripEqualityVariables_fieldType (FIELD_VAR rv) labels   = ([], labels)
-  | stripEqualityVariables_fieldType (FC (_, tv, label)) labels  = stripEqualityVariables tv (L.cons label labels)
-  | stripEqualityVariables_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityVariables_fieldType term (L.union labs labels)
+  | stripEqualityVariables_fieldType (FC (_, tv, label)) labels  = stripEqualityVariables tv ((L.singleton label)::labels)
+  | stripEqualityVariables_fieldType (FIELD_DEPENDANCY (term,labs,_,_)) labels = stripEqualityVariables_fieldType term (labs@labels)
   | stripEqualityVariables_fieldType FIELD_NO_OVERLOAD labels = ([], labels)
 (** Strips equality type variables from a sequence type. *)
 and stripEqualityVariables_sequenceType (ROW_VAR _) labels = ([], labels)
-  | stripEqualityVariables_sequenceType (ROW_C ([],_,label)) labels = ([], L.cons label labels)
+  | stripEqualityVariables_sequenceType (ROW_C ([],_,label)) labels = ([], (L.singleton label)::labels)
   | stripEqualityVariables_sequenceType (ROW_C ((h::t),x,label)) labels =
     let
-	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_fieldType h (L.cons label labels)
-	val (nextEqTypeStatuses, nextEqTypeLabels) = stripEqualityVariables_sequenceType (ROW_C (t,x,label)) (L.cons label labels)
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_fieldType h ((L.singleton label)::labels)
+	val (nextEqTypeStatuses, nextEqTypeLabels) = stripEqualityVariables_sequenceType (ROW_C (t,x,label)) ((L.singleton label)::labels)
     in
-	(eqTypeStatuses@nextEqTypeStatuses, L.union eqTypeLabels nextEqTypeLabels)
+	(eqTypeStatuses@nextEqTypeStatuses, eqTypeLabels@nextEqTypeLabels)
     end
 	(* val (eqTypeStatuses, eqTypeLabels) = striplistgen rtl stripEqualityVariables_fieldType (L.cons label labels) *)
-  | stripEqualityVariables_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityVariables_sequenceType term (L.union labs labels)
+  | stripEqualityVariables_sequenceType (ROW_DEPENDANCY (term, labs,_,_)) labels = stripEqualityVariables_sequenceType term (labs@labels)
 
 (** Strips equality type variables from a #ty value. *)
 and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYPE_VAR eqtv)) labels =
@@ -1140,10 +1140,10 @@ and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYP
      ([], labels))
   | stripEqualityVariables (TYPE_CONSTRUCTOR (typename, sequenceType, label, EQUALITY_TYPE_VAR(eq))) labels =
     (D.printDebug D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality type var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");
-     ([eq], L.cons label labels))
+     ([eq], (L.singleton label)::labels))
   | stripEqualityVariables (TYPE_CONSTRUCTOR (typename, sequenceType, label, eq)) labels =
     let
-	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_sequenceType sequenceType (L.cons label labels)
+	val (eqTypeStatuses, eqTypeLabels) = stripEqualityVariables_sequenceType sequenceType ((L.singleton label)::labels)
     in
 	(eqTypeStatuses, eqTypeLabels)
     end
@@ -1152,14 +1152,14 @@ and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYP
      ([], labels))
   | stripEqualityVariables (TYPE_POLY(_,_,_,_,label,EQUALITY_TYPE_VAR(eq))) labels =
     (D.printDebug D.TY D.CONSTRAINT_GENERATION (fn _ => "Stripping an equality var from a TYPE_POLY ("^(printEqualityTypeVar eq)^")");
-     ([eq], L.cons label labels))
+     ([eq], (L.singleton label)::labels))
   | stripEqualityVariables (TYPE_POLY(_,_,_,_,label,eq)) labels =
     (D.printDebug D.TY D.CONSTRAINT_GENERATION (fn _ => "(Not) stripping an equality type from a TYPE_POLY ("^(printEqualityType eq)^")");
      ([], labels))
   | stripEqualityVariables (GEN _) labels =
     (D.printDebug D.TY D.CONSTRAINT_GENERATION (fn _ => "WARNING: No code to strip equality type status from GEN!");
      ([], labels))
-  | stripEqualityVariables (TYPE_DEPENDANCY (term, depLabels, _, _)) labels = stripEqualityVariables term (L.union depLabels labels)
+  | stripEqualityVariables (TYPE_DEPENDANCY (term, depLabels, _, _)) labels = stripEqualityVariables term (depLabels@labels)
 
 and stripEqualityVariablesList _ = raise EH.TODO ""
 
