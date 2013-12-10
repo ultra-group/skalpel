@@ -163,7 +163,7 @@ fun minimize err (envContextSensitiveSyntaxPair as (env, css)) (parse as (ast, _
 		    | U.Success _ =>
 		      let val err' = ERR.printOneXmlErr (ERR.setSlice ast err) "" true
 			  val _   =
-			      D.printdebug2
+			      D.printDebug D.MIN D.MINIMISATION (fn _ =>
 				  ("after minimisation, the error should still be an error" ^
 				   "\n" ^ err' ^
 				   "\nlabs:  " ^ L.toString labs  ^
@@ -171,7 +171,7 @@ fun minimize err (envContextSensitiveSyntaxPair as (env, css)) (parse as (ast, _
 				   "\nlabs1: " ^ L.toString labs1 ^
 				   "\nkeep:  " ^ L.toString keep  ^
 				   "\nlabs2: " ^ L.toString labs2 ^
-				   "\n" ^ S.printSlice (S.slice ast labs2) true)
+				   "\n" ^ S.printSlice (S.slice ast labs2) true))
 		      in err
 		      end
 	val _ = D.printdebug1 ("[minimisation]")

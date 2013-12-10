@@ -104,6 +104,7 @@ signature ENV = sig
 			| ENVFIL of string * env * (unit -> env)
 			| TOP_LEVEL_ENV
 			| NO_DUPLICATE_ID
+			| SHARING_BINDER_CHECK
 
 	and accessor        = VALUEID_ACCESSOR of Ty.ty       accessorId ExtLab.extLab
 			    | EXPLICIT_TYPEVAR_ACCESSOR of Ty.ty    accessorId ExtLab.extLab
@@ -280,6 +281,7 @@ signature ENV = sig
     val unionEnvList         : 'a genericEnv list -> 'a genericEnv
     val plusenv      : 'a genericEnv -> 'a genericEnv -> 'a genericEnv
     val foldrienv    : ((Id.id * 'a * 'b) -> 'b) -> 'b -> 'a envMap -> 'b
+    val getItems     : 'a envMap -> 'a list
     val dom          : 'a envMap -> Id.set
 
     val isMonoBind   : 'a bind -> bool
@@ -365,6 +367,7 @@ signature ENV = sig
 
     val createOpaqueEqualityConstraints : env -> Label.label -> (env * oneConstraint list)
 
+    val printTypeName : names -> string
     val printEnv     : env    -> string -> string
     val printTypeEnv : typeEnv    -> string -> string
     val printTnKind  : typeNameKind -> string

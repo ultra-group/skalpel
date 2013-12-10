@@ -80,6 +80,7 @@ type synerr   = (int list * int) option
  * \arg Unmatched.
  * \arg UnbWhere.
  * \arg DatTypClash.
+ * \arg SharingTypeNotInSig. For types which are to be shared in signatures, yet were not defined in the signature containing the sharing expression.
  * \arg ConsArgNApp.
  * \arg ConsNArgApp.
  * \arg MissConsSig.
@@ -122,6 +123,7 @@ datatype kind = Circularity
 	      | Unmatched      of unmerr
 	      | UnbWhere       of unmerr
               | DatTypClash    of id * label * label
+	      | SharingTypeNotInSig of label
 	      | ConsArgNApp    of label * label
 	      | ConsNArgApp    of label * label
 	      | MissConsSig    of (label * id) * (label * id) list
@@ -333,6 +335,7 @@ fun printErrKind Circularity _ = ("CIR", "Circularity")
   | printErrKind (TypeVarBind  eo) _ = ("UNG", "Ungeneralisable bound type variable")
   | printErrKind Inclusion       _ = ("INC", "Unbound type variable in type or datatype declaration")
   | printErrKind AppNotApp       _ = ("APP", "Applied and not applied value")
+  | printErrKind (SharingTypeNotInSig _) _ = ("SHAN", "Sharing type in signature not defined in signature")
   | printErrKind (ConsArgNApp _) _ = ("CAN", "Non applied constructor that is defined to take an argument")
   | printErrKind (ConsNArgApp _) _ = ("CNA", "Applied constructor that is defined to take no argument")
   | printErrKind DiffFunName     _ = ("FUN", "Different function name")
@@ -463,6 +466,8 @@ fun printSmlErrKind Circularity = "ErrorKind.Circularity"
     ^ "," ^ "[" ^ printSmlUnm ls ^ "]" ^ ")"
   | printSmlErrKind (DatTypClash (n, l1, l2)) =
     "ErrorKind.DatTypClash(" ^ Int.toString n ^ "," ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
+  | printSmlErrKind (SharingTypeNotInSig lab) =
+    "ErrorKind.SharingTypeNotInSig(" ^ printLab lab ^ ")"
   | printSmlErrKind (ConsArgNApp (l1, l2)) =
     "ErrorKind.ConsArgNApp(" ^ printLab l1 ^ "," ^ printLab l2 ^ ")"
   | printSmlErrKind (ConsNArgApp (l1, l2)) =
@@ -573,6 +578,9 @@ fun printJsonErrKind Circularity = "{\"errorKindName\": \"ErrorKind.Circularity\
   | printJsonErrKind (DatTypClash (n, l1, l2)) =
     "{\"errorKindName\": \"ErrorKind.DatTypClash\", \"errorKindInfo\": {"
     ^ "\"id\": " ^ Int.toString n ^ ", \"label1\": " ^ printLab l1 ^ ", \"label2\": " ^ printLab l2 ^ "}}"
+  | printJsonErrKind (SharingTypeNotInSig lab) =
+    "{\"errorKindName\": \"ErrorKind.SharingTypeNotInSig\", \"errorKindInfo\": {"
+    ^ "\"label1\": " ^ printLab lab ^ "}}"
   | printJsonErrKind (ConsArgNApp (l1, l2)) =
     "{\"errorKindName\": \"ErrorKind.ConsArgNApp\", \"errorKindInfo\": {"
     ^ "\"label1\": " ^ printLab l1 ^ ", \"label2\": " ^ printLab l2 ^ "}}"
@@ -631,6 +639,7 @@ fun issem Circularity        = true
   | issem (TyFunClash     _) = true
   | issem (LabTyClash     _) = true
   | issem (DatTypClash    _) = true
+  | issem (SharingTypeNotInSig    _) = true
   | issem (ConsArgNApp    _) = true
   | issem (ConsNArgApp    _) = true
   | issem RigidWhere         = true

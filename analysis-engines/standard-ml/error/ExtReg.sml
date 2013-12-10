@@ -813,6 +813,8 @@ fun getCol' _ EK.Circularity                      = Red
   | getCol' _ EK.FreeOpen                         = Yellow
   | getCol' _ (EK.Warning _)                      = Yellow
   | getCol' _ (EK.Parsing _)                      = Yellow
+  | getCol' x (EK.SharingTypeNotInSig lab)           =
+    if x = lab then Blue else Red
   | getCol' x (EK.ConsArgNApp (l1, l2))           =
     if x = l1 then Blue else if x = l2 then Purple else Red
   | getCol' x (EK.ConsNArgApp (l1, l2))           =

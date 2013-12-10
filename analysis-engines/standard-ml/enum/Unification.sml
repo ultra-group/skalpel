@@ -46,6 +46,7 @@ structure EH  = ErrorHandler
 structure OM  = SplayMapFn(OrdKey)
 structure ERR = Error
 structure D   = Debug
+structure envOrdMap = SplayMapFn (OrdId)
 
 (** A boolean that's set to true when we are analyzing the basis. *)
 val analysingBasis : bool ref = ref false
@@ -893,6 +894,7 @@ fun freshenv (E.ENV_VAR (ev, lab)) tvl state _ = E.ENV_VAR (F.freshEnvVar ev sta
   | freshenv (E.CONSTRAINT_ENV _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVPTY _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
   | freshenv (E.ENVFIL _) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
+  | freshenv (E.SHARING_BINDER_CHECK) tvl state bstr = raise EH.DeadBranch "this should have been built by now"
 
 (** Freshens an extended environment by calling the #freshextgen function with #freshenv. *)
 and freshextenv extenv tvl state bstr = freshextgen extenv tvl state bstr freshenv
@@ -1390,6 +1392,7 @@ fun getAllTypeFunctionEnv (env as E.ENV_CONS _) =
   | getAllTypeFunctionEnv (E.ENVPTY _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTypeFunctionEnv (E.ENVFIL _) = raise EH.DeadBranch "This should have been built by now"
   | getAllTypeFunctionEnv (E.NO_DUPLICATE_ID) = raise EH.DeadBranch "This should have been built by now"
+  | getAllTypeFunctionEnv (E.SHARING_BINDER_CHECK) = raise EH.DeadBranch "This should have been built by now"
 
 (** Get all type functions in a structure environment. *)
 and getAllTypeFunctionStrEnv strenv =
@@ -1466,6 +1469,7 @@ fun getTypeFunctionEnv (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) labs stts d
   | getTypeFunctionEnv (E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnv (E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnv (E.NO_DUPLICATE_ID) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | getTypeFunctionEnv (E.SHARING_BINDER_CHECK) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
 (** Get all type functions in an environment extended with labels, calls #getTypeFunctionEnv. *)
 and getTypeFunctionExtEnv extenv extenv' =
@@ -1585,6 +1589,7 @@ fun getTypeFunctionEnvSha (env1 as E.ENV_CONS _) (env2 as E.ENV_CONS _) =
   | getTypeFunctionEnvSha (E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnvSha (E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
   | getTypeFunctionEnvSha (E.NO_DUPLICATE_ID) _ = raise EH.DeadBranch "This should have been built by now"
+  | getTypeFunctionEnvSha (E.SHARING_BINDER_CHECK) _ = raise EH.DeadBranch "This should have been built by now"
 
 and getTypeFunctionShaExtEnv extenv extenv' =
     let (*val labs = EL.getExtLabL extenv'
@@ -1764,6 +1769,7 @@ fun genTypeFunctionEnv (env as E.ENV_CONS _) state tfun dom b =
   | genTypeFunctionEnv (x as E.ENVPTY _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTypeFunctionEnv (x as E.ENVFIL _) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
   | genTypeFunctionEnv (x as E.NO_DUPLICATE_ID) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
+  | genTypeFunctionEnv (x as E.SHARING_BINDER_CHECK) _ _ _ _ = raise EH.DeadBranch "This should have been built by now"
 
 and genTypeFunctionExtEnv extenv state tfun dom b =
     genTypeFunctionExtGen extenv tfun (fn env => fn _ => fn _ => genTypeFunctionEnv env state tfun dom b) true
@@ -1929,6 +1935,7 @@ fun applyTypeFunctionEnv (env as E.ENV_CONS _) tfun =
   | applyTypeFunctionEnv (x as E.ENVPTY _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTypeFunctionEnv (x as E.ENVFIL _) _ = raise EH.DeadBranch "This should have been built by now"
   | applyTypeFunctionEnv (x as E.NO_DUPLICATE_ID) _ = raise EH.DeadBranch "This should have been built by now"
+  | applyTypeFunctionEnv (x as E.SHARING_BINDER_CHECK) _ = raise EH.DeadBranch "This should have been built by now"
 
 and applyTypeFunctionExtEnv extenv tfun =
     applyTypeFunctionExtGen extenv tfun (fn env => fn tfun => fn _ => applyTypeFunctionEnv env tfun) true
@@ -2089,6 +2096,7 @@ fun matchWhereEnv envsig NONE state = (OM.empty, true)
   | matchWhereEnv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | matchWhereEnv (E.NO_DUPLICATE_ID) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | matchWhereEnv (E.SHARING_BINDER_CHECK) _ _ = raise EH.DeadBranch "This should have been built by now"
 
 (** A ref cell. *)
 fun initRen () = ref OM.empty
@@ -2207,6 +2215,7 @@ and renameenv (env as E.ENV_CONS _) state ren =
   | renameenv (E.ENVPTY _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.ENVFIL _) _ _ = raise EH.DeadBranch "This should have been built by now"
   | renameenv (E.NO_DUPLICATE_ID) _ _ = raise EH.DeadBranch "This should have been built by now"
+  | renameenv (E.SHARING_BINDER_CHECK) _ _ = raise EH.DeadBranch "This should have been built by now"
 and renameextstr extstr state ren = renameextgen extstr state ren renameenv
 and renameextfun extfun state ren = renameextgen extfun state ren (fn (x, y) => fn state => fn ren => (renameenv x state ren, renameenv y state ren))
 and renamestrenv strenv state ren =
@@ -2755,6 +2764,7 @@ fun unif env filters user =
 		     val env' = preSolveEnv env
 		 in env'
 		 end)
+	  | solveenv (E.SHARING_BINDER_CHECK) bmon = raise EH.DeadBranch "no description, raised in the 'solveenv' function of Unification.sml"
 	  (* Here we don't need to re-solve env, preSolveEnv is enough *)
 	  | solveenv (env as E.ENV_CONS _) bmon =
 	    (let val (vids, compValueIds, cst) = solvevarenv (E.getValueIds env) bmon
@@ -3358,6 +3368,118 @@ fun unif env filters user =
 		 else S.updateStateFr state (I.getLeftId lid)
 	    else ()
 
+	and printIdLabList [] = ""
+	  | printIdLabList ((id,label)::[]) = "(" ^ I.printId id ^ ", " ^ (L.printLab label) ^ ")"
+	  | printIdLabList ((id,label)::t) = "(" ^ I.printId id ^ ", " ^ (L.printLab label) ^ "), " ^ printIdLabList t
+
+	(** Wrapper function for verifySharingTypes', which Checks that types which are to be shared in a signature are actually defined in that signature. *)
+	and verifySharingTypes env =
+	    let
+		val discoveredIds = ref []
+		val labels = ref L.empty
+
+		(** Checks that types which are to be shared in a signature are actually defined in that signature.
+		 * Different tyypes of supported environent are:
+		 * \arg \b ROW_ENV. We need to parse environment inside a composition environment so we recurse on the constrained environments.
+		 * \arg \b ENV_VAR. No use for this here, we just return unit.
+		 * \arg \b CONSTRAINT_ENV.
+		 * \arg \b ENV_CONS.
+		 * \arg \b DATATYPE_CONSTRUCTOR. Datatype type names exist in the first part of the argument so we gather these. Wraps also an ENVPOL (see below).
+		 * \arg \b ENVPOL. Inside this contains datatype constructor identifiers, we recurse in the environment given as an argument. *)
+		fun verifySharingTypes' (E.ROW_ENV(e1,e2)) = (verifySharingTypes' e1; verifySharingTypes' e2)
+		  | verifySharingTypes' (E.ENV_VAR _) = ()
+		  | verifySharingTypes' (E.CONSTRAINT_ENV constraintEnv) =
+		    let
+			fun handleSharingConstraint ev =
+			    let
+				val resultingEnv = S.getValStateEv state ev
+			    in
+				case resultingEnv of
+				    NONE => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "WARNING: Env var in sharing constraint does not exist in the state."); ([], L.empty))
+				  | SOME (E.ENV_CONS x) => handleEnvCons x
+				  | _ => (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "WARNING: Env var in sharing constraint is mapped to something unhandled in the state."); ([], L.empty))
+			    end
+
+			and parseConstraintItems [] = ()
+			  | parseConstraintItems ((E.ENV_CONSTRAINT((e1,e2),labs,_,_)::t)) = (labels := (L.union (!labels) labs); verifySharingTypes' e1; verifySharingTypes' e2; parseConstraintItems t)
+			  | parseConstraintItems ((E.EQUALITY_TYPE_CONSTRAINT((_,_),labs,_,_)::t)) = parseConstraintItems t
+			  | parseConstraintItems ((E.SHARING_CONSTRAINT(ev1,ev2,ev3,lab))::t) =
+			    let
+				val (ids,labs) = handleSharingConstraint(ev3)
+				val _ = D.printDebug D.UNIF D.TEMP (fn _ => ("Discovered ids so far: " ^ printIdLabList (!discoveredIds)))
+				val idsWithoutSharing = List.filter (fn (id,lab) => not (List.exists (fn (id', lab') => (I.eqId id id' andalso L.eq lab lab')) ids)) (!discoveredIds)
+				(** Contains the result of removing identifiers in 'idsWithoutSharing' from 'ids' (identifiers in the sharing constraint) - the result is undefined identifiers. *)
+				val missingIdentifiers = List.filter (fn (id,lab) => not (List.exists (fn (id', lab') => I.eqId id id') idsWithoutSharing)) ids
+
+				val _ = D.printDebug D.UNIF D.TEMP (fn _ => ("Discovered typenames in sharing constraint: " ^ printIdLabList ids))
+				val _ = D.printDebug D.UNIF D.TEMP (fn _ => ("Filtered typenames: " ^ printIdLabList idsWithoutSharing))
+				val _ = D.printDebug D.UNIF D.TEMP (fn _ => ("=> MISSING: " ^ printIdLabList missingIdentifiers))
+				val _ = if (List.length missingIdentifiers <> 0)
+			    	then
+			    	    (** \todo This could raise the labels of *all* the missing identifiers by reporting all labels instead of just the one in List.hd.
+			      	     * To do this, SharingTypeNotInSig should take a list of labels, not just one. *)
+			    	    let
+			    		val discoveredIdsLabs = foldl (fn ((discoveredIdsId, discoveredIdsLab), rest) => L.cons discoveredIdsLab rest) L.empty (!discoveredIds)
+					val missingIdLabel = #2 (List.hd missingIdentifiers)
+			    		val ek = EK.SharingTypeNotInSig (L.toInt missingIdLabel)
+			    	     in raise errorfound (ERR.consPreError ERR.dummyId (L.cons missingIdLabel (L.cons lab (L.union (!labels) discoveredIdsLabs))) CD.empty ek L.empty)
+			    	     end
+			    	else ()
+			    in
+				parseConstraintItems t
+			    end
+			  | parseConstraintItems (h::t) = (D.printDebug D.UNIF D.TEMP (fn _ => "UNHANDLED parseConstraintItems: " ^ (E.printOneConstraint h)); parseConstraintItems t)
+
+			val constraintItems = (foldr (op @) [] (E.getConstraintItems constraintEnv))
+		    in
+			parseConstraintItems constraintItems
+		    end
+		  | verifySharingTypes' (E.ENV_CONS envCons) = let val (ids, labs) = handleEnvCons envCons
+							       in (discoveredIds := ((!discoveredIds)@ids);
+								   labels := (L.union (!labels) labs))
+							       end
+		  | verifySharingTypes' (E.DATATYPE_CONSTRUCTOR_ENV (lid, env)) = (discoveredIds := (lid::(!discoveredIds)); verifySharingTypes' env)
+		  | verifySharingTypes' (E.ENVPOL (_, env)) = verifySharingTypes' env
+		  | verifySharingTypes' env = D.printDebug D.UNIF D.TEMP (fn _ => "UNHANDLED verifySharingTypes called on: " ^ (E.printEnv env ""))
+
+		and handleEnvCons envCons =
+		    let
+			val _ = D.printDebug D.UNIF D.TEMP (fn _ => "TYPENAMES ENV: " ^ (E.printEnv (E.ENV_CONS envCons) ""))
+
+			(* we use these for gathering datatype constructor identifiers. *)
+			val vids = #valueIds envCons
+			val listOfListEnvs = E.getItems vids
+			val listOfBindExtLabDatCons = foldr (op @) [] listOfListEnvs
+
+			(* we use these for gathering type identifiers *)
+			val typenames = #typeNames envCons
+			val listOfListEnvs = E.getItems typenames
+			val listOfBindExtLabType = foldr (op @) [] listOfListEnvs
+
+			(**START: new lab carrier in parseBindExtLab is thrown away. *)
+			fun parseBindExtLab [] = []
+			  | parseBindExtLab (({bind=bind,class=class,equalityTypeVar=eqtv,id=id,lab=lab,poly=poly},labs,labs',cds)::t) =
+			    (D.printDebug D.UNIF D.TEMP (fn _ => "----> found id: " ^ (I.printId id) ^ ", lab: " ^ L.printLab lab);
+			     (id,lab,labs)::(parseBindExtLab t))
+
+			fun formatIds [] = []
+			  | formatIds  ((id,lab,labs)::t) = (id,lab)::(formatIds t)
+			fun formatLabels [] = L.empty
+			  | formatLabels ((id,lab,labs)::t) = L.union labs (formatLabels t)
+
+			val result = parseBindExtLab listOfBindExtLabType
+			val ids = formatIds result
+			val labels =  formatLabels result
+
+			val result' = parseBindExtLab listOfBindExtLabDatCons
+			val ids' = formatIds result'
+			val labels' = formatLabels result'
+
+		    in (ids@ids', L.union labels labels') end
+
+	    in
+		verifySharingTypes' env
+	    end
 
 	(** Handles the matching of structures and signatures to check that all types etc are declared.
 	 * Generalises the structure env2 so that it is equal to the signature env1. For functors, b is
@@ -4169,6 +4291,17 @@ fun unif env filters user =
                       let val c = E.genCstEvAll env (E.ENV_VAR (ev2, lab2)) ls deps ids
                       in fsimplify (c :: cs') l
                       end))
+	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.SHARING_BINDER_CHECK, env), ls, deps, ids)) :: cs') l =
+ 	    (D.printDebug D.UNIF D.TEMP (fn _ => "TeMp ls: " ^ L.toString ls ^ " and l = " ^ L.printLab l);
+	      verifySharingTypes env handle errorfound error =>
+					      let
+						  val newLabs = ERR.setL error (L.cons l (L.union (ERR.getL error) ls))
+						  val newDeps  = ERR.setD newLabs (CD.union (ERR.getD newLabs) ids)
+						  val _ = handleSimplify newDeps cs' l
+					      in
+						  ()
+					      end;
+	     fsimplify cs' l)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.NO_DUPLICATE_ID, env), ls, deps, ids)) :: cs') l =
 	    let
 		val _ = D.printDebug D.UNIF D.STATE (fn _ => S.printState state)

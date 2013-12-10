@@ -324,6 +324,10 @@ fun parseTest testfile =
 		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
 			EK.DatTypClash( getInt(findIdVal errInfo "id"), getInt(findIdVal errInfo "label1"), getInt(findIdVal errInfo "label2") )
 		    end
+		  | "ErrorKind.SharingTypeNotInSig" =>
+		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
+			EK.SharingTypeNotInSig( getInt(findIdVal errInfo "label1"))
+		    end
 		  | "ErrorKind.ConsArgNApp" =>
 		    let val (errInfo, rest) = getObject rest "errorKindInfo" in
 			EK.ConsArgNApp( getInt(findIdVal errInfo "label1"), getInt(findIdVal errInfo "label2") )

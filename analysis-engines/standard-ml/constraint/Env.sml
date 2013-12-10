@@ -162,6 +162,7 @@ datatype matchKind  = OPAQUE | TRANSLUCENT
  * \arg ENVFIL. Like a SEQ but the first env is from a file which has the name given by the string and the second env is a stream.
  * \arg TOP_LEVEL_ENV. To make that we have reached the top level of an environment.
  * \arg NO_DUPLICATE_ID. Used to indicate that we need to check inside envVar for duplicate identifier specifications.
+ * \arg SHARING_BINDER_CHECK. Verifies that in a signature, the references to any types exist within the signature they are supposed to be defined in.
  *)
 
 
@@ -189,6 +190,7 @@ datatype matchKind  = OPAQUE | TRANSLUCENT
 	      | ENVFIL of string * env * (unit -> env)
 	      | TOP_LEVEL_ENV
 	      | NO_DUPLICATE_ID
+	      | SHARING_BINDER_CHECK
 
       (** Holds the different kinds of accessor we use.
        * \arg VALUEID_ACCESSOR. For accessors of value identifiers.
@@ -218,7 +220,9 @@ datatype matchKind  = OPAQUE | TRANSLUCENT
       * \arg FUNCTION_TYPE_CONSTRAINT. Constraint between two #Ty.typeFunction values.
       * \arg ACCESSOR_CONSTRAINT. Constraint on an accessor.
       * \arg LET_CONSTRAINT. A constraint on a let environment.
-      * \arg SIGNATURE_CONSTRAINT. A constraint on signatures.
+      * \arg SIGNATURE_CONSTRAINT. A constraint on signatures. This is not generated
+      *                            for a signature itself, but represents a constraint
+      *                            of a signature on a structure or functor.
       * \arg FUNCTOR_CONSTRAINT. A constraint on functors.
       * \arg SHARING_CONSTRAINT. A constraint for the type sharing feature of ML.
       * \arg EQUALITY_TYPE_CONSTRAINT. A constraint between two #Ty.equalityType values.
@@ -334,6 +338,16 @@ fun printEvOp       x = printOp x printEnvVar
 (** Prints a typename kind to a string. *)
 fun printTnKind DATATYPE = "DATATYPE"
   | printTnKind TYPE = "TYPE"
+
+(** Prints out a typename *)
+fun printTypeName (TYPENAME ({id=id,lab=lab,kind=kind,name=name},_,_,_)) =
+    ("(" ^ I.printId     id   ^
+    "," ^ L.printLab    lab  ^
+    "," ^ printTnKind   kind ^
+    "," ^ T.printTypename name ^ ")")
+  | printTypeName (DUMTYPENAME tn) = raise EH.TODO "Write me! (Env.printTypeNames)"
+  | printTypeName (MAYTYPENAME) = "MAYTYPENAME"
+  | printTypeName (NOTTYPENAME idExtLab) = raise EH.TODO "Write me! (Env.printTypeNames)"
 
 (** Prints a generic environment. *)
 fun printGenEnv xs ind f =
@@ -491,6 +505,7 @@ and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, fu
     "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL labelledId ^ "," ^ printEnv env ind ^ ")"
   | printEnv (ENVPTY st) ind = "ENVPTY(" ^ st ^ ")"
   | printEnv NO_DUPLICATE_ID ind = "NO_DUPLICATE_ID"
+  | printEnv SHARING_BINDER_CHECK ind = "SHARING_BINDER_CHECK"
   | printEnv (ENVFIL (st, env, stream)) ind =
     "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
   | printEnv ENVTOP ind = "ENVTOP"
@@ -842,6 +857,8 @@ fun foldlenv  ffold init env = envOrdMap.foldl  ffold init env
 fun foldrienv ffold init env = envOrdMap.foldri ffold init env
 (** Folds left over an environment (including keys, not just values). *)
 fun foldlienv ffold init env = envOrdMap.foldli ffold init env
+(** Lists items in an environment map. *)
+fun getItems env = envOrdMap.listItems env
 
 (** Applies a function to an environment. *)
 fun appenv  fmap env = envOrdMap.app  fmap env

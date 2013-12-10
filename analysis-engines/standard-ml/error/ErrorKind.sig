@@ -57,6 +57,7 @@ signature ERRORKIND = sig
 		  | MissConsSig    of (label * id) * (label * id) list
 		  | MissConsStr    of (label * id) * (label * id) list
 		  | DuplicateId    of iderr * iderr
+		  | SharingTypeNotInSig    of label (* or trying to rebind a cons *)
 		  | ConsArgNApp    of label * label (* or trying to rebind a cons *)
 		  | ConsNArgApp    of label * label (* not used yet *)
 		  | MultiOcc       of synerr (* Do we need the argument here? *)
