@@ -3010,22 +3010,32 @@ infexp :
 		in [F.L (fexp, reg)]
 		end
 
-	    fun convNonOp [] rest = toApp' rest
-	      | convNonOp ((F.O (st, reg)) :: xs) rest =
+	    fun convNonOp [] rest prevPrec prevDir = toApp' rest
+	      | convNonOp ((F.O (st, reg)) :: xs) rest prevPrec prevDir =
 		if F.isInfix st
-		then (toApp' rest) @ [F.O (st, reg)] @ (convNonOp xs [])
+		then
+                    let
+                        val (dir,prec) = F.getInfixPrecDir st
+                        val _ = D.printDebug D.MLGRM D.PARSING (fn _ => "Dealing with syntax with string: " ^ st ^ ", dir: " ^ (F.printAssoc dir)
+                                                                        ^ " and prec: " ^ (F.printPrec prec) ^ ". Prev prec: " ^ Int.toString prevPrec
+                                                                        ^ ", prev dir: " ^ (F.printAssoc prevDir) ^ "\n")
+                    in
+                        if not (F.eqAssoc dir prevDir) andalso (F.precToInt prec) = prevPrec
+                        then raise PD.ParseError ("Infixity precedences the same but direciton of associativity differs", getRegion appexpleft appexpright)
+                        else (toApp' rest) @ [F.O (st, reg)] @ (convNonOp xs [] (F.precToInt prec) dir)
+                    end
 		else let val atexp =
 			  fn (n, nasc) =>
 			     let val (v, masc) = updateAscId st nasc
 				 val next = L.nextLabel n
 			     in (A.AtExpId (A.LongIdId (A.Ident (st, v, reg, n, next))), (next, masc))
 			     end
-		     in convNonOp xs (rest @ [F.L (atexp, reg)])
+		     in convNonOp xs (rest @ [F.L (atexp, reg)]) prevPrec prevDir
 		     end
-	      | convNonOp ((F.L (atexp, reg)) :: xs) rest = convNonOp xs (rest @ [F.L (atexp, reg)])
-	      | convNonOp ((F.N _) :: xs) _ = raise EH.DeadBranch "there should be no node at this stage"
+	      | convNonOp ((F.L (atexp, reg)) :: xs) rest prevPrec prevDir = convNonOp xs (rest @ [F.L (atexp, reg)]) prevPrec prevDir
+	      | convNonOp ((F.N _) :: xs) _ prevPrec prevDir = raise EH.DeadBranch "there should be no node at this stage"
 
-	    val cv = (F.convert (convNonOp appexp []))
+	    val cv = (F.convert (convNonOp appexp [] ~1 F.LEFT))
 
 	in cons1 cv (n, nasc)
 	end handle EH.DeadBranch st =>

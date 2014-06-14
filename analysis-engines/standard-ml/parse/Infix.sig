@@ -19,8 +19,16 @@
  *  o File name:   Infix.sig
  *)
 
+
+
 (** Defines the signature INFIX to deal with infix operators. *)
 signature INFIX = sig
+
+    type prec
+    type fixity
+    type 'a infixMap
+
+    datatype assoc = LEFT | RIGHT
 
     type 'a pack = 'a * Reg.region (* Shouldn't that be a region list? *)
     type packstr = string pack
@@ -28,7 +36,8 @@ signature INFIX = sig
 		     | O of packstr
 		     | N of packstr * 'a tree * 'a tree
 
-    val isInfix    : string -> bool
+    val isInfix         : string -> bool
+    val getInfixPrecDir : string -> (assoc * prec)
 
     val convert    : 'a tree list -> 'a tree
 
@@ -43,5 +52,10 @@ signature INFIX = sig
     val rmInfix    : string -> unit
 
     val reset      : unit -> unit
+
+    val eqAssoc     : assoc -> assoc -> bool
+    val precToInt  : prec -> int
+    val printPrec  : prec -> string
+    val printAssoc : assoc -> string
 
 end

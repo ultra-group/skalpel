@@ -981,8 +981,7 @@ fun generateConstraints' prog pack nenv =
 
 		(* note that we should only generate equality constraints here if we are
 		 * dealing with the equals operator. We do not want to generate these constraints
-		 * if, for example, we are dealing with the + operator
-		 *)
+		 * if, for example, we are dealing with the + operator *)
 
 		val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.ExpOp (st = \"" ^ st ^ "\", lab="^Int.toString(L.toInt lab)^")")
 		val indent = convertIndentToSpaces indent
@@ -1182,11 +1181,6 @@ fun generateConstraints' prog pack nenv =
 		val equalityTypeAccessor   = E.initEqualityTypeAccessor (E.consAccessorId (I.ID(id,lab)) eqTypeVar (T.consEQUALITY_TYPE_VAR eqTypeVar) class lab) lab
 		val newConstraints = (E.consConstraint (lab, c) (E.conscsts (lab, [E.ACCESSOR_CONSTRAINT explicitTypeVarAccessor]) (E.singleConstraint (lab, E.ACCESSOR_CONSTRAINT equalityTypeAccessor))))
 		val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "printing constraints for f_typevar:\n"^E.printConstraints(newConstraints))
-
-	    (* jpirie: I'm adding in the constraint I created above, but two things are using the same label?
-	     * is that right? Or is that wrong? Other examples use dummylab?
-	     * Maybe that's actually right, look at the debug output for other examples and labels
-	     * do seem to sometimes get bound sometimes to two things (usually one of which is an accessor) *)
 	    in (SOME id, tv, eqTypeVar, newConstraints)
 	    end
 	  | f_typevar _ A.TypeVarDots =
@@ -1496,7 +1490,7 @@ fun generateConstraints' prog pack nenv =
 	    in (tv, T.freshEqualityTypeVar (), E.emvar, cst, E.unionContextSensitiveSyntaxErrors [contextSensitiveSyntaxError, contextSensitiveSyntaxError'])
 	    end
 	  | f_atpat indent (A.AtPatTuple (labpats, _, lab, _)) =
-	    let val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.AtPatTuple")
+	    let val _ = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.AtPatTuple")
 		val tv   = T.freshTypeVar ()
 		val (tvs, eqtv, vidss, csts, csss) = unzipFive (map (f_labpat "X") labpats)
 		val vids = E.unionEnvList    vidss
@@ -2565,30 +2559,21 @@ fun generateConstraints' prog pack nenv =
 	    end
 	  | f_dec indent (A.DecInfix (i, identseq, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecInfix")
-		val css1 = if getBasis ()
-			   then E.emptyContextSensitiveSyntaxError
-			   else E.singcss (notFullyCs lab "infix")
 		val css2 = if 0 <= i andalso i <= 9
 			   then E.emptyContextSensitiveSyntaxError
 			   else E.singcss (fixityCs lab)
-	    in (E.emptyEnv, E.unionContextSensitiveSyntaxErrors [css1, css2])
+	    in (E.emptyEnv, css2)
 	    end
 	  | f_dec indent (A.DecInfixr (i, identseq, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecInfixr")
-		val css1 = if getBasis ()
-			   then E.emptyContextSensitiveSyntaxError
-			   else E.singcss (notFullyCs lab "infixr")
 		val css2 = if 0 <= i andalso i <= 9
 			   then E.emptyContextSensitiveSyntaxError
 			   else E.singcss (fixityCs lab)
-	    in (E.emptyEnv, E.unionContextSensitiveSyntaxErrors [css1, css2])
+	    in (E.emptyEnv, css2)
 	    end
 	  | f_dec indent (A.DecNonfix (identseq, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => "generating constraints for A.DecNonfix")
-		val css = if getBasis ()
-			  then E.emptyContextSensitiveSyntaxError
-			  else E.singcss (notFullyCs lab "nonfix")
-	    in (E.emptyEnv, css)
+	    in (E.emptyEnv, E.emptyContextSensitiveSyntaxError)
 	    end
 	  | f_dec indent (A.DecOverload (labid, labtyp, labTypeVar, tyclassseq, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.DecOverload")
@@ -3169,12 +3154,7 @@ fun generateConstraints' prog pack nenv =
 	    in (env2, css')
 	    end
 	  (* Can multiple signature can be included at a time, perhaps in some extension? *)
-	  | f_specone indent (A.SpecIsi (_, _, lab, _)) =
-	    let val css = if getBasis ()
-			  then E.emptyContextSensitiveSyntaxError
-			  else E.singcss (sorryCsS lab "include")
-	    in (E.emptyEnv, css)
-	    end
+	  | f_specone indent (A.SpecIsi (_, _, lab, _)) = (E.emptyEnv, E.emptyContextSensitiveSyntaxError)
 	  | f_specone indent (A.SpecRep (tycon, longtycon, _, lab, _)) =
 	    let val _   = D.printDebug D.AZE D.CONSTRAINT_PATH (fn _ => indent^"A.SpecRep")
 		val indent = convertIndentToSpaces indent
@@ -3489,13 +3469,6 @@ fun generateConstraints' prog pack nenv =
 		    (** This results from a call to #Env.genLongEnv - why do we want to create binders here? We want *accessors*. No? *)
 		    val (cst, env) = E.genLongEnv lid (T.consTYPE_FUNCTION_VAR typeFunctionVar)
 
-		    (** jpirie: testing my stuff.
-		     * What about one new type of special accessor?
-		     * If binder doesn't exist, raise error.
-		     * If binder exists outside of structure, raise error.
-		     * If binder has been realised (type x = int), raise error.
-		     * Otherwise throw everything away and get success, leaving Vincent's work to do the rest.
-		     *)
 		    val (id, lab') = I.getTopIdl lid
 		    (* val accessor  = E.genAccIoEm (E.consAccessorId (I.ID (id, lab')) (T.freshEqualityTypeVar()) (T.ROW_VAR (T.freshRowVar())) (CL.consOC ()) lab') lab' *)
 		    (* val accessor   = E.initValueIDAccessor (E.consAccessorId (I.ID (id, lab')) (T.freshEqualityTypeVar()) (T.consTYPE_VAR (T.freshTypeVar())) (CL.consDA1 ()) lab') lab' *)

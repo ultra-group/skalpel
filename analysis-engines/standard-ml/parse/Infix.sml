@@ -27,6 +27,8 @@ structure L  = Label
 structure EH = ErrorHandler
 structure MS = SplayMapFn(OrdStr)
 
+type 'a infixMap = 'a MS.map
+
 (** A type and datatype declarations *)
 type 'a pack = 'a * R.region
 
@@ -93,6 +95,19 @@ fun reset () = operators := [(L.dummyLab, initOperatorsMap)]
 
 (** Returns whether a given parameter is registered as being infix. *)
 fun isInfix st = List.exists (fn (lab, map) => Option.isSome (MS.find (map, st))) (!operators)
+
+(** Gives the precedence and direction of an infix operator. *)
+fun getInfixPrecDir st =
+    let
+        val item = List.find (fn (lab, map) => Option.isSome (MS.find (map, st))) (!operators)
+        val mapItem = case item of
+                    NONE => raise EH.DeadBranch "Non-infix operator passed to Infix.getInfixPrecDir"
+                    | SOME (lab, map) => MS.find(map, st)
+    in
+        case mapItem of
+            NONE => raise EH.DeadBranch "An error which should be impossible has occurred (Infix.getInfixPrecDir)."
+          | SOME (assoc,prec) => (assoc,prec)
+    end
 
 (** We use foldl because we start with the tighter binding. *)
 fun getOperator st = List.foldl (fn ((lab, map), SOME x) => SOME x
@@ -216,5 +231,21 @@ fun convert xs =
 	[x] => x
       | _   => raise EH.DeadBranch "DeadBranch88"
 
+
+(** Checks whether two precedences are the same. *)
+fun eqAssoc LEFT LEFT = true
+  | eqAssoc LEFT RIGHT = false
+  | eqAssoc RIGHT LEFT = false
+  | eqAssoc RIGHT RIGHT = true
+
+(** Gives an integer for a precedence. *)
+fun precToInt prec = prec
+
+(** Prints an association to a string value. *)
+fun printAssoc LEFT = "LEFT"
+  | printAssoc RIGHT = "RIGHT"
+
+(** Prints a precedence. *)
+fun printPrec prec = Int.toString prec
 
 end
