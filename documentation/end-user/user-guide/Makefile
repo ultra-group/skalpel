@@ -28,6 +28,7 @@ default:
 	pdflatex user-guide.tex
 
 clean:
+	rm -rf auto/
 	rm -f user-guide.dvi
 	rm -f user-guide.log
 	rm -f user-guide.pdf
