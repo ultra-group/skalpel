@@ -51,6 +51,11 @@ structure envOrdMap = SplayMapFn (OrdId)
 (** A boolean that's set to true when we are analyzing the basis. *)
 val analysingBasis : bool ref = ref false
 
+(** A value which states how many fsimplify calls we have processed so far. *)
+val fsimplifyCalls : int ref = ref 0
+(** We mod #fsimplifyCalls with this value and print when the result is 0. *)
+val progressMod  = 1000000
+
 (** Represents unification termination states.
  * Our constraint solver terminates in either one of two states:
  * \arg \b Success (of type S.state). Represents success, and holds
@@ -3629,29 +3634,61 @@ fun unif env filters user =
 		 | _ => ([], [])
 	    end
 
+        (** This isn't designed to be accurate, just give a rough estimation for the user. *)
+        and progressMessages length = (fsimplifyCalls := !fsimplifyCalls + 1;
+                                       if !fsimplifyCalls mod progressMod = 0
+                                       then print ("Equality solving progress: ["
+                                                   ^ Int.toString(!fsimplifyCalls)
+                                                   ^ "/" ^ (Int.toString(!fsimplifyCalls+length+1)) ^ "]" ^ "\n")
+                                       else ())
 
 	(** The equality constraint solver. *)
-	and fsimplify [] l = ()
-	  (**)
-	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_DEPENDANCY  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_DEPENDANCY  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LABEL_DEPENDANCY  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  (**)
-	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TYPE_FUNCTION_DEPENDANCY (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TYPE_DEPENDANCY  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.TYPENAME_DEPENDANCY  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((sq1, T.ROW_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.FIELD_CONSTRAINT ((rt1, T.FIELD_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LABEL_DEPENDANCY  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l = fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
-	  (**)
-	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
-	  (**)
+	and fsimplify [] l = progressMessages 0
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_DEPENDANCY (tf1, labs1, stts1, deps1), tf2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+              fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_DEPENDANCY  (ty1, labs1, stts1, deps1), ty2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_DEPENDANCY  (tn1, labs1, stts1, deps1), tn2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_DEPENDANCY  (sq1, labs1, stts1, deps1), sq2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.FIELD_CONSTRAINT ((T.FIELD_DEPENDANCY  (rt1, labs1, stts1, deps1), rt2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.LABEL_CONSTRAINT ((T.LABEL_DEPENDANCY  (lt1, labs1, stts1, deps1), lt2), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, T.TYPE_FUNCTION_DEPENDANCY (tf2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((tf1, tf2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((ty1, T.TYPE_DEPENDANCY  (ty2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((ty1, ty2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, T.TYPENAME_DEPENDANCY  (tn2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPENAME_CONSTRAINT ((tn1, tn2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.ROW_CONSTRAINT ((sq1, T.ROW_DEPENDANCY  (sq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.ROW_CONSTRAINT ((sq1, sq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.FIELD_CONSTRAINT ((rt1, T.FIELD_DEPENDANCY  (rt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.FIELD_CONSTRAINT ((rt1, rt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.LABEL_CONSTRAINT ((lt1, T.LABEL_DEPENDANCY  (lt2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.LABEL_CONSTRAINT ((lt1, lt2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
+	  | fsimplify ((E.ENV_CONSTRAINT ((env1, E.ENVDEP (env2, ls', deps', ids')), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l)
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc1 as T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), tc2 as T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 		orelse
 		(T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3707,7 +3744,8 @@ fun unif env filters user =
 		     fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((nc1 as T.NC (tn1, b1, l1), nc2 as T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqTypename tn1 tn2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt tn1), (L.toInt l2, T.typenameToInt tn2))
@@ -3718,6 +3756,7 @@ fun unif env filters user =
 		  end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((rc1 as T.ROW_C (rtl1, b1, l1), rc2 as T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val n1 = length rtl1
 		val n2 = length rtl2
@@ -3763,6 +3802,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun continue () =
 		    case S.getValStateTv state tv1 of
@@ -3809,7 +3849,8 @@ fun unif env filters user =
 		      | _ => continue ()
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n1, tv1, l1, eqtv1), T.EXPLICIT_TYPE_VAR (n2, tv2, l2, eqtv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if I.eqId n1 n2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
@@ -3819,6 +3860,7 @@ fun unif env filters user =
 		  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, _), T.TYPE_CONSTRUCTOR (tn, _, l2, _)), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps
@@ -3827,7 +3869,8 @@ fun unif env filters user =
 		handleSimplify err cs' l)
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, T.TYPENAME_VAR tnv2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqTypenameVar tnv1 tnv2
 	    then fsimplify cs' l
 	    else (case S.getValStateTn state tnv1 of
@@ -3842,7 +3885,8 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2 as (T.ROW_VAR sqv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if T.eqRowVar sqv1 sqv2
 	     then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
@@ -3858,6 +3902,7 @@ fun unif env filters user =
                       end))
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 
 		fun reportGenError () =
@@ -3973,7 +4018,8 @@ fun unif env filters user =
 		   end
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, tnty2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTn state tnv1 of
 		 NONE =>
 		 let val _ = S.updateStateTn state tnv1 (T.TYPENAME_DEPENDANCY (tnty2, ls, deps, ids))
@@ -3983,7 +4029,8 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -3997,7 +4044,8 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.FIELD_CONSTRAINT ((T.FIELD_VAR rv, rt as T.FC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateRt state rv of
 		 NONE =>
 		 let val (rho, n) = decomptyfield rt ls deps ids
@@ -4022,7 +4070,8 @@ fun unif env filters user =
 	  (* we update and store *)
 	  (* if it's 2 variables we raise deadbranch, same if it's 2 cons *)
 	  | fsimplify ((currentConstraint as E.LABEL_CONSTRAINT ((T.LABEL_VAR lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateLt state lv of
 		 NONE =>
 		 let val _ = S.updateStateLt state lv (T.LABEL_DEPENDANCY (lt, ls, deps, ids))
@@ -4042,7 +4091,8 @@ fun unif env filters user =
 		 end
                | SOME lt' => raise EH.DeadBranch "DeadBranch23")
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_VAR tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
@@ -4051,6 +4101,7 @@ fun unif env filters user =
                  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val labs = L.cons lab1 (L.cons lab2 ls)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
@@ -4058,10 +4109,12 @@ fun unif env filters user =
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
 	  | fsimplify ((E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_DEPENDANCY (tf2, labs2, stts2, deps2), seqty2, lab2), ty2), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l
+            (progressMessages (List.length cs');
+	     fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION (tf2, seqty2, lab2), ty2), L.union labs labs2, L.union stts stts2, CD.union deps deps2)) :: cs') l)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun checkTn tnty labs stts deps seq =
 		    case tnty of
@@ -4126,6 +4179,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, x, poly, orKind, l2, eqtv2)), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME))
@@ -4154,6 +4208,7 @@ fun unif env filters user =
 							      ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
 							     ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
@@ -4279,7 +4334,8 @@ fun unif env filters user =
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
@@ -4292,7 +4348,8 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.SHARING_BINDER_CHECK, env), ls, deps, ids)) :: cs') l =
- 	    (D.printDebug D.UNIF D.TEMP (fn _ => "TeMp ls: " ^ L.toString ls ^ " and l = " ^ L.printLab l);
+ 	    (progressMessages (List.length cs');
+             D.printDebug D.UNIF D.TEMP (fn _ => "TeMp ls: " ^ L.toString ls ^ " and l = " ^ L.printLab l);
 	      verifySharingTypes env handle errorfound error =>
 					      let
 						  val newLabs = ERR.setL error (L.cons l (L.union (ERR.getL error) ls))
@@ -4304,6 +4361,7 @@ fun unif env filters user =
 	     fsimplify cs' l)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.NO_DUPLICATE_ID, env), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = D.printDebug D.UNIF D.STATE (fn _ => S.printState state)
 		val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#red (!D.colors)) ^ "checking environment for duplicate identifiers: " ^ (E.printEnv env ""))
 
@@ -4330,7 +4388,8 @@ fun unif env filters user =
 		 fsimplify cs' l)
 	    end
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev, lab), env), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -4343,6 +4402,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((env1 as E.ENV_CONS _, env2 as E.ENV_CONS _), ls, deps, ids)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
@@ -4371,7 +4431,8 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_VAR tfv, typeFunction), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateTf state tfv of
 		 NONE =>
 		 let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is not in the state, inserting mapping.")
@@ -4398,15 +4459,18 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
 		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
 	    in fsimplify (c1 :: c2 :: cs') l
 	    end
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction1, typeFunction2 as T.TYPE_FUNCTION_VAR tfv), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction2, typeFunction1), labs, stts, deps)) :: cs') l
+            (progressMessages (List.length cs');
+	     fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction2, typeFunction1), labs, stts, deps)) :: cs') l)
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR clvar, cl), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     case S.getValStateCl state clvar of
 		 NONE =>
 		 let val _ = S.updateStateCl state clvar (cl, labs, stts, deps)
@@ -4419,9 +4483,11 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((x, CL.CLVAR cv), ls, deps, ids)) :: cs') l =
-	    fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l
+	    (progressMessages (List.length cs');
+             fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l)
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		fun genError kind =
 		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts
@@ -4513,14 +4579,14 @@ fun unif env filters user =
 		 | (CL.EX0, CL.EX1) => genError (EK.ConsArgNApp (0, 0))
 		 | _ => fsimplify cs' l
 	    end
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, CL.TYCON), _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, CL.TYVAR), _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR,   CL.STR),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG,   CL.SIG),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC,  CL.FUNC),  _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC,    CL.OC),    _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.ANY, _),   _, _, _)) :: cs') l = fsimplify cs' l
-	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.ANY),   _, _, _)) :: cs') l = fsimplify cs' l
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, CL.TYCON), _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYVAR, CL.TYVAR), _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.STR,   CL.STR),   _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.SIG,   CL.SIG),   _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.FUNC,  CL.FUNC),  _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.OC,    CL.OC),    _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.ANY, _),   _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
+	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.ANY),   _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l)
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYCON), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch30"
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.TYCON, _), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch31"
 	  | fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((_, CL.TYVAR), _, _, _)) :: cs') l = raise EH.DeadBranch "DeadBranch32"
@@ -4537,12 +4603,14 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.LET_CONSTRAINT env) :: cs') l =
 	    let
 		(* val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else () *)
+                val _ = progressMessages (List.length cs')
 		val _ = solveenv env false
 	    in fsimplify cs' l
 	    end
 
 	  | fsimplify ((currentConstraint as E.SIGNATURE_CONSTRAINT (signatureEnvVar, translucentEnvVar, structureEnvVar, opaqueEnvVar, lab)) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val btest = FI.testtodo filters lab
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "btest is: "^(Bool.toString btest)) else ()
@@ -4601,7 +4669,8 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.FUNCTOR_CONSTRAINT (ev1, ev2, ev3, ev4, lab)) :: cs') l =
 	    (* functor: ev1 -> ev2, argument : ev3, result ev4 *)
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	     if FI.testtodo filters lab
 	    then let val env1 = buildFEnv (E.consENV_VAR ev1 lab) state false
 		     val env2 = buildFEnv (E.consENV_VAR ev2 lab) state true
@@ -4629,7 +4698,8 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in env as I've done for WHR. *)
 	    (* 0: spec, 1: returned, 2: longTyCons *)
-	    (if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
+	    (progressMessages (List.length cs');
+             if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ();
 	    if FI.testtodo filters lab
 	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev0 lab) state false
 		     val env2 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev2 lab) state false
@@ -4660,6 +4730,7 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((currentConstraint as E.ACCESSOR_CONSTRAINT acc) :: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 	    in
 		(solveacc acc l; fsimplify cs' l)
@@ -4668,7 +4739,7 @@ fun unif env filters user =
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.EXPLICIT_TYPE_VAR   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.APPLICATION   _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.TYPE_POLY  _), _, _, _)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = fsimplify cs' l (*raise EH.TODO*)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN _, T.GEN _), _, _, _)) :: cs') l = (progressMessages (List.length cs'); fsimplify cs' l) (*raise EH.TODO*)
 
 
 	  (*(2010-06-23)We keep unifying but we should really chain the GENs.*)
@@ -4683,23 +4754,57 @@ fun unif env filters user =
 	   * and flip the arguments around.
 	   *
 	   *)
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.GEN x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.TYPE_CONSTRUCTOR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.APPLICATION   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.APPLICATION   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.APPLICATION   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.GEN y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.TYPENAME_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR  y, T.NC  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C  x, T.ROW_VAR  y), ls, deps, ids)) :: cs') l = fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR  y, T.ROW_C  x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l
-	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l = fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.GEN x, T.TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_VAR   y, T.GEN x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.TYPE_CONSTRUCTOR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.APPLICATION   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.APPLICATION   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.APPLICATION   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.APPLICATION   y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.GEN y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.GEN y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   x, T.GEN y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.GEN y, T.EXPLICIT_TYPE_VAR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_POLY  x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_POLY  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPE_CONSTRAINT ((T.TYPE_CONSTRUCTOR   x, T.EXPLICIT_TYPE_VAR   y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR   y, T.TYPE_CONSTRUCTOR   x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.TYPENAME_CONSTRAINT ((T.NC  x, T.TYPENAME_VAR  y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR  y, T.NC  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.ROW_CONSTRAINT ((T.ROW_C  x, T.ROW_VAR  y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.ROW_CONSTRAINT ((T.ROW_VAR  y, T.ROW_C  x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ROW_ENV x, E.ENV_VAR y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ROW_ENV x), ls, deps, ids)) :: cs') l)
+	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.ENV_VAR y), ls, deps, ids)) :: cs') l =
+            (progressMessages (List.length cs');
+             fsimplify ((E.ENV_CONSTRAINT ((E.ENV_VAR y, E.ENV_CONS x), ls, deps, ids)) :: cs') l)
 	  | fsimplify ((E.ENV_CONSTRAINT _) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 
 
@@ -4716,7 +4821,8 @@ fun unif env filters user =
 	   * action: we turn that into an equality type constarint of eq1 to eq2, unifying the labels
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, T.EQUALITY_TYPE_DEPENDANCY  (eq2, labs1, stts1, deps1)), labs, stts, deps)) :: cs') l =
-	    fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l
+            (progressMessages (List.length cs');
+	     fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((eq1, eq2), L.union labs1 labs, L.union stts1 stts, CD.union deps1 deps)) :: cs') l)
 
 	  (*
 	   * constraint solving - equality types
@@ -4733,6 +4839,7 @@ fun unif env filters user =
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_VAR_LIST recordInformation), ls, deps, ids)):: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		(* print debugging information only if we are not currently handling the basis *)
 		val _ = if (not (!analysingBasis))
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
@@ -4794,6 +4901,7 @@ fun unif env filters user =
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar as T.EQUALITY_TYPE_VAR eqtv, equalityTypeStatus as T.EQUALITY_TYPE_STATUS status), ls, deps, ids)):: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		(* print debugging information only if we are not currently handling the basis *)
 		val _ = if (not (!analysingBasis))
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
@@ -4906,6 +5014,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (tyterm)), ls, deps, ids)):: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 
 		val cs' = (case tyterm of
@@ -4962,6 +5071,7 @@ fun unif env filters user =
 	   *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, equalityTypeVar2 as T.EQUALITY_TYPE_VAR eqtv2), ls, deps, ids)):: cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		(* only print debugging output for files which are not the basis *)
 	  	val _ = if (not (!analysingBasis))
 			then D.printDebug D.UNIF D.EQUALITY_TYPES (fn _ => "solving an equality type constraint of "^(#red (!D.colors))
@@ -5026,6 +5136,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT(((T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_TYPENAME(eqtvList)),labs,stts,ids)))::cs') l =
 	    let
+                val _ = progressMessages (List.length cs')
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)) else ()
 		val _ = case S.getValStateEq state eqtv of
 			    NONE =>
@@ -5049,7 +5160,8 @@ fun unif env filters user =
 	    end
 
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS (T.NOT_EQUALITY_TYPE), T.EQUALITY_TYPE_TYPENAME [eqtv]), labs, stts, deps))::cs') l =
-	    (case S.getValStateEq state eqtv of
+	    (progressMessages (List.length cs');
+             case S.getValStateEq state eqtv of
 		NONE => raise EH.DeadBranch "An impossible case occurred when solving equality type status values of datatype constructor typenames."
 	      | SOME (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME(depList),_,_,_), _) =>
 		let
@@ -5068,10 +5180,12 @@ fun unif env filters user =
 
 	  (* if we see a (stutus, variable) constraint, flip it around *)
 	  | fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS status, T.EQUALITY_TYPE_VAR eqtv), labs1, labs2, deps))::cs') l =
-	    fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), labs1, labs2, deps))::cs') l
+            (progressMessages (List.length cs');
+	     fsimplify ((E.EQUALITY_TYPE_CONSTRAINT ((T.consEQUALITY_TYPE_VAR eqtv, T.EQUALITY_TYPE_STATUS status), labs1, labs2, deps))::cs') l)
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_STATUS status1, T.EQUALITY_TYPE_STATUS status2), labs1, labs2, deps))::cs') l =
-	    (case (status1, status2) of
+	    (progressMessages (List.length cs');
+             case (status1, status2) of
 		(T.UNKNOWN, _) => (fsimplify cs' l)    (* can we do anything useful in these cases? *)
 	      | (_, T.UNKNOWN) => (fsimplify cs' l)
 	      | _ => raise EH.TODO ("unhandled equality type status = status constraint in the constraint solver, raised in the 'f_simplify' function of Unification.sml:"^(E.printOneConstraint currentConstraint)^"\n"))
