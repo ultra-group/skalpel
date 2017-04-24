@@ -439,7 +439,7 @@ structure Int :> sig type int = int end = _structInt
 signature INT_INF =
   sig
     (* It includes INTEGER *)
-    type int(* = int*)
+    eqtype int(* = int*)
     val precision : (*Int31*)Int.int option
     val minInt : int option
     val maxInt : int option
@@ -482,7 +482,11 @@ signature INT_INF =
     val ~>> : int * word -> int
   end
 
-structure IntInf :> INT_INF
+(* *** WARNING: The translucent signature matching (“:”) in the next
+ * line can not be replaced by an opaque signature matching (“:>”) or
+ * else Skalpel will think IntInf.int is not an eqtype.  Presumably a
+ * Skalpel bug. *)
+structure IntInf : INT_INF
 (*!*)(*where type int = int*) = _structIntInf
 
 signature INTEGER =
