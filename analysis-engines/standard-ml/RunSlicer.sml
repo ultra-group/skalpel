@@ -32,17 +32,17 @@
  *
  * 2 - Checkout a compatible version of the doxygen repository (if master fails to build)
  *
- * $ git checkout 7cda115a6830bf816a094e37c498e5a50ce1b29c
+ * $ git checkout 929ea15c46c55562862181f59ae2c6b00c046dc0
  *
  * 3 - Apply the patch for SML support:
  *
- * $ git apply --ignore-space-change --ignore-whitespace /path/to/skalpel/repo/doxygen-sml.patch
+ * $ git am < /path/to/skalpel/repo/documentation/doxygen-sml.patch
  *
  * 4 - Configure doxygen (specifying path to python2 - assuming /usr/bin/python2)
  *
  * $ ./configure --prefix `pwd` --python /usr/bin/python2
  *
- * 5 - Bulid doxygen:
+ * 5 - Build doxygen:
  *
  * $ make
  *
