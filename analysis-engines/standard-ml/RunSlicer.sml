@@ -91,7 +91,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with MLton on Sat Jun 14 18:36:58 BST 2014. Skalpel version: fc21ea0cc32b2be766d83925182d6f220d7c668f"
+val SKALPEL_VERSION = "Built with MLton on Wed 25 Oct 2017 12:34:41 BST. Skalpel version: aea0ddc298ed36e2aeb613d77daf47203a8add5e"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -505,89 +505,62 @@ fun smlTesStrArgs strArgs =
 
 	(** Parses the arguments specified on the command-line. *)
 	fun parse [] = ()
- 	  | parse [option] =
-	    if option = "--help" then
-		printHelp ()
-	    else if option = "-v"
-	    then (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
-	    else if option = "--show-legend"
-	    then (filesNeeded:=false; printLegend())
-	    else filein:=option
+	 |  parse ["--help"] = printHelp ()
+	 |  parse ["-v"] = (filesNeeded := false; print ("Version (git SHA1 hash): "^SKALPEL_VERSION))
+	 |  parse ["--show-legend"] = (filesNeeded:=false; printLegend())
+	 |  parse [file] = (filein:=file)
 	  (* have a 0/1/2 case for emacs ui *)
-	  | parse ("-b"::"0"::tail) =
-	    (basisSpecified := true; basop:="0"; parse tail)
-	  | parse ("-b"::"1"::tail) =
-	    (basisSpecified := true; basop:="1"; parse tail)
-	  | parse ("-b"::"2"::file::tail) =
+	 |  parse ("-b"::"0"::t) = (basisSpecified := true; basop:="0"; parse t)
+	 |  parse ("-b"::"1"::t) = (basisSpecified := true; basop:="1"; parse t)
+	 |  parse ("-b"::"2"::file::t) =
 	    (* why do we have two filebas here? *)
-	    (basisSpecified := true; Tester.myfilebas:=file; filebas:=file; basop:="2"; parse tail)
-	  | parse ("-e"::"0"::tail) =
-	    (terminalSet := true; terminalSlices := NO_DISPLAY; parse tail)
-	  | parse ("-e"::"1"::tail) =
-	    (terminalSet := true; terminalSlices := NON_INTERACTIVE; parse tail)
-	  | parse (option::str::tail)=
-	     ((if option = "-f"
-	     then filein:=str
-	     else if option = "-h"
-	     then filehtml:=str
-	     else if option = "-x"
-	     then filexml:=str
-	     else if option = "-s"
-	     then filesml:=str
-	     else if option = "-j"
-	     then filejson:=str
-	     else if option = "-l"
-	     then filelisp:=str
-	     else if option = "-p" (*  *)
-	     then fileperl:=str
-	     else if option = "-b"
-	     then basop:=str
-	     else if option = "-c"
-	     then (runtests := true; Tester.testFolder := str; filesNeeded := false; Tester.checktests [])
-	     else if option = "-d"
-	     then (dev:="true";
-		   case str of
-		       (* note that at this current time, no debugging information is printed for the basis.
-			* In Analyze.sml we turn off D.debug when looking at the basis, the user should really
-			* be able to toggle such an option, but for the moment this is simply disabled *)
-		       "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
-					D.boldColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
-					D.underlineColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
-					D.backgroundColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
-					D.textReset := "")
-		     | "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
-		     | "MINIMISATION" => (D.debug := true; D.enableDebugFeature D.MINIMISATION)
-		     | "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
-		     | "BASIS_LABELLING" => (D.debug := true; D.enableDebugFeature D.BASIS_LABELLING)
-		     | "BASIS" => (D.debug := true; D.debugBasis := true)
-		     | "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
-		     | "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
-		     | "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
-		     | "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
-		     | "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
-		     | "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
-		     | "ONE_RUN" => D.oneRunOnly := true
-		     | "TEMP" => (D.debug := true; D.enableDebugFeature D.TEMP)
-		     | str  => (print ("Unrecognised debugging feature: "^str^"\n");
-				raise Fail ("Unrecognised debugging feature: "^str));
-		   outputFilesNeeded := false)
-	     else if option = "-bo"
-	     then basisoverloading:=str
-	     else if option = "-t"
-	     then tlim:=str
-	     else if option = "-tab"
-	     then tab:=str
-	     else if option = "-sol"
-	     then sol:=str
-	     else if option = "-min"
-	     then min:=str
-	     else if option = "--print-env"
-	     then bcs:=str
-	     else if option = "--search-space"
-	     then search:=str
-	     else (TextIO.output (TextIO.stdErr, "Unknown argument fed as input");
-		   raise Fail "Unknown argument fed as input"));
-	      parse tail)
+	    (basisSpecified := true; Tester.myfilebas:=file; filebas:=file; basop:="2"; parse t)
+	 |  parse ("-e"::"0"::t) =
+	    (terminalSet := true; terminalSlices := NO_DISPLAY; parse t)
+	 |  parse ("-e"::"1"::t) =
+	    (terminalSet := true; terminalSlices := NON_INTERACTIVE; parse t)
+	 |  parse ("-f"::str::t) = (filein:=str; parse t)
+	 |  parse ("-h"::str::t) = (filehtml:=str; parse t)
+	 |  parse ("-x"::str::t) = (filexml:=str; parse t)
+	 |  parse ("-s"::str::t) = (filesml:=str; parse t)
+	 |  parse ("-j"::str::t) = (filejson:=str; parse t)
+	 |  parse ("-l"::str::t) = (filelisp:=str; parse t)
+	 |  parse ("-p"::str::t) = (fileperl:=str; parse t)
+	 |  parse ("-b"::str::t) = (basop:=str; parse t)
+	 |  parse ("-c"::str::t) = (runtests:=true;Tester.testFolder:=str;filesNeeded:=false;Tester.checktests []; parse t)
+	 |  parse ("-bo"::str::t) = (basisoverloading:=str; parse t)
+	 |  parse ("-t"::str::t) = (tlim:=str; parse t)
+	 |  parse ("-tab"::str::t) = (tab:=str; parse t)
+	 |  parse ("-sol"::str::t) = (sol:=str; parse t)
+	 |  parse ("-min"::str::t) = (min:=str; parse t)
+	 |  parse ("--print-env"::str::t) = (bcs:=str; parse t)
+	 |  parse ("-search-space"::str::t) = (search:=str; parse t)
+	 |  parse ("-d"::str::t) = (dev:="true";
+			(* note that at this current time, no debugging information is printed for the basis.
+			 * In Analyze.sml we turn off D.debug when looking at the basis, the user should really
+			 * be able to toggle such an option, but for the moment this is simply disabled *)
+			(case str
+			of "NO_COLOURS" => (D.colors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+				D.boldColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+				D.underlineColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+				D.backgroundColors := {black="",red="",green="",yellow="",blue="",purple="",cyan="",white=""};
+				D.textReset := "")
+			| "EQUALITY_TYPES" => (D.debug := true; D.enableDebugFeature D.EQUALITY_TYPES)
+			| "MINIMISATION" => (D.debug := true; D.enableDebugFeature D.MINIMISATION)
+			| "PROGRAM_LABELLING" => (D.debug := true; D.enableDebugFeature D.PROGRAM_LABELLING)
+			| "BASIS_LABELLING" => (D.debug := true; D.enableDebugFeature D.BASIS_LABELLING)
+			| "BASIS" => (D.debug := true; D.debugBasis := true)
+			| "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
+			| "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
+			| "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
+			| "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
+			| "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
+			| "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
+			| "ONE_RUN" => D.oneRunOnly := true
+			| "TEMP" => (D.debug := true; D.enableDebugFeature D.TEMP)
+			| str  => (print ("Unrecognised debugging feature: "^str^"\n"); raise Fail ("Unrecognised debugging feature: "^str)));
+			outputFilesNeeded := false; parse t)
+	 |  parse (opt::str::t) = (TextIO.output (TextIO.stdErr, "Unknown argument fed as input"); raise Fail "Unknown argument fed as input"; parse t)
     in
 	(* parse the arguments *)
 	if strArgs = ""
