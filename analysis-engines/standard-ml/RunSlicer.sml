@@ -355,17 +355,13 @@ fun printLegend () =
 	 printReset "  - Indicates that the highlighted code is an endpoint of either\n";
 	 printReset  "\t - a type constructor clash\n\t - an arity clash\n\t - a record clash\n";
 	 printReset  "\t NOTE: The cyan used here is equivalent to the gray\n\t       used by other interfaces of the type error slicer.\n\n";
-
 	 printReset ("  "^(#green (!D.backgroundColors))^"green highlights\n");
 	 printReset "  - Indicates that the highlighted code is the endpoint of a record clash.\n\n";
-
 	 printReset  ("  "^(#purple (!D.backgroundColors))^"purple highlights\n");
 	 printReset "  - Indicates that the highlighted code either\n";
 	 printReset  "\t - provides information about an identifier\n\t - is expansive.\n\n";
-
 	 printReset ("  "^(#yellow (!D.backgroundColors))^"yellow highlights\n");
 	 printReset "  - Indicates that the type error slicer cannot parse the file.\n\n";
-
 	 printReset  ("  "^ (#purple (!D.underlineColors)) ^"underlined text\n");
 	 printReset "  - The use of the underline with no background highlighting is used to\n";
 	 printReset  "    signify that the underlined text may be irrelevant, but its presence\n";
@@ -378,16 +374,12 @@ fun printLegend () =
 	 printReset "  - NOTE: The colour of the underline can be any of those above.\n";
 	 printReset "  - NOTE: This notation is equivalent to the box notation used in\n";
 	 printReset "          other interfaces to the type error slicer.\n\n";
-
-
 	 printReset ("  " ^ (#blue (!D.underlineColors)) ^ "foo" ^ (#red (!D.underlineColors)) ^ "underlined text" ^ (#blue (!D.underlineColors)) ^ "foo\n");
 	 printReset "  - The use of the strike through effect is to use to show that the\n";
 	 printReset "    highlighted code is in a nested underlined.\n";
 	 printReset "  - The colour of the nested box is that of the strike through and\n";
 	 printReset "    the colour of the external box is the colour of the underlines\n";
-	 printReset "    which immediately precede and follow the strike through.\n"
-
-	)
+	 printReset "    which immediately precede and follow the strike through.\n")
     end
 
 (** A function which has been created so that the slicer can be used
