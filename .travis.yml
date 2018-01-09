@@ -1,0 +1,33 @@
+# Copyright 2018 Christian Gregg
+#
+# Skalpel is a free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Skalpel is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+
+# Standard ML project builds are not pre-supported by TravisCI :(
+# Use `generic` to give us an empty pipeline
+language: generic
+dist: trusty
+sudo: required
+
+matrix:
+  fast_finish: true
+  include:
+#    - env: SML_IMPL=smlnj
+#           CC=gcc-4.9
+    - env: SML_IMPL=mlton
+
+install:
+    - .travis/install.sh
+
+script:
+    - .travis/build.sh && .travis/test.sh
