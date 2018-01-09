@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 2017 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli, John Pirie
+ *  o Authors:     Vincent Rahli, John Pirie, Christian Gregg
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   RunSlicer.sml
