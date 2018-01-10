@@ -1,4 +1,4 @@
-(* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+(* Copyright 2009 2010 2011 2012 2013 2017 Heriot-Watt University
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  o Authors:     Vincent Rahli, John Pirie
+ *  o Authors:     Vincent Rahli, John Pirie, Christian Gregg
  *  o Affiliation: Heriot-Watt University, MACS
  *  o Date:        24 May 2010
  *  o File name:   RunSlicer.sml
@@ -32,17 +32,17 @@
  *
  * 2 - Checkout a compatible version of the doxygen repository (if master fails to build)
  *
- * $ git checkout 7cda115a6830bf816a094e37c498e5a50ce1b29c
+ * $ git checkout 929ea15c46c55562862181f59ae2c6b00c046dc0
  *
  * 3 - Apply the patch for SML support:
  *
- * $ git apply --ignore-space-change --ignore-whitespace /path/to/skalpel/repo/doxygen-sml.patch
+ * $ git am < /path/to/skalpel/repo/documentation/doxygen-sml.patch
  *
  * 4 - Configure doxygen (specifying path to python2 - assuming /usr/bin/python2)
  *
  * $ ./configure --prefix `pwd` --python /usr/bin/python2
  *
- * 5 - Bulid doxygen:
+ * 5 - Build doxygen:
  *
  * $ make
  *
