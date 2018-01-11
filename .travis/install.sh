@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright 2018 Christian Gregg
 #
@@ -20,7 +20,7 @@
 
 echo "Installing MLton (20130715)"
 
-set -v
+set -ev
 wget -q "https://sourceforge.net/projects/mlton/files/mlton/20130715/mlton-20130715-2.amd64-linux.tgz"
 mkdir -p mlton-install
 tar -xzf mlton-20130715-2.amd64-linux.tgz

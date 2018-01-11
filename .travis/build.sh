@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright 2018 Christian Gregg
 #
@@ -20,6 +20,7 @@
 echo "Executing Build Script - Building for [${SML_IMPL}]"
 
 BUILD_HOME="${TRAVIS_BUILD_DIR}/analysis-engines/standard-ml"
+set -ev
 cd ${BUILD_HOME}
 
 autoconf

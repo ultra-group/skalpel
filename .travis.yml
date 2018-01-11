@@ -22,9 +22,11 @@ sudo: required
 matrix:
   fast_finish: true
   include:
-#    - env: SML_IMPL=smlnj
-#           CC=gcc-4.9
+    - env: SML_IMPL=smlnj
     - env: SML_IMPL=mlton
+  allow_failures:
+    # Allow failure while we're getting it set up
+    - env: SML_IMPL=smlnj
 
 install:
     - .travis/install.sh
