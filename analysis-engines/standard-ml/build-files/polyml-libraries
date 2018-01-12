@@ -1,4 +1,4 @@
-val prefix   = "/usr/lib/mlton/sml";
+val prefix   = "/usr/lib64/mlton/sml";
 
 use (prefix ^ "/smlnj-lib/Util/ord-key-sig.sml");
 use (prefix ^ "/smlnj-lib/Util/ord-map-sig.sml");
@@ -20,8 +20,8 @@ use (prefix ^ "/smlnj-lib/Util/utf8-sig.sml");
 use (prefix ^ "/smlnj-lib/Util/utf8.sml");
 use (prefix ^ "/smlnj-lib/JSON/json.sml");
 use (prefix ^ "/smlnj-lib/JSON/json-tokens.sml");
-use (prefix ^ "/smlnj-lib/ml-lpt/lib/stream-pos.sml");
-use (prefix ^ "/smlnj-lib/ml-lpt/lib/ulex-buffer.sml");
+use (prefix ^ "/mllpt-lib/stream-pos.sml");
+use (prefix ^ "/mllpt-lib/ulex-buffer.sml");
 use (prefix ^ "/smlnj-lib/JSON/json.lex.sml");
 use (prefix ^ "/smlnj-lib/JSON/json-parser.sml");
 use (prefix ^ "/mlyacc-lib/base.sig");
