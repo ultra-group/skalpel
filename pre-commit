@@ -1,30 +1,26 @@
 #!/bin/sh
-
-###############################################################
-###############################################################
-##
-## Copyright 2011 2012 Heriot-Watt University
-##
-## This file is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## This file is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
-##
-## Authors: John Pirie
-## Date: October 2011
-## Description: A pre-commit script for git to check for copyright
-##              licenses (like this one)
-##
-################################################################
-################################################################
+#
+# Copyright 2011 2012 Heriot-Watt University
+# Copyright 2018 Christian Gregg
+#
+# This file is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: John Pirie, Chrisitan Gregg
+# Date: October 2011, Jan 2018
+# Description: A pre-commit script for git to check for copyright
+#              licenses (like this one)
+#
 
 gitConfigName=`git config user.name`
 errorFlag=false
@@ -38,7 +34,7 @@ fi
 
 grepCommand="Copyright".*"`date +%Y`[[:space:]]`echo $checkName | sed s/" "/"[[:space:]]"/g`"
 
-for FILE in `git diff --cached --name-only`
+for FILE in `git diff --diff-filter=AM --cached --name-only . ':(exclude)*.md'`
 do
     output="`cat $FILE | grep $grepCommand`"
     if [ "$output" = "" ]
