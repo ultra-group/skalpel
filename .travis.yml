@@ -32,4 +32,7 @@ install:
     - .travis/install.sh
 
 script:
-    - .travis/build.sh && .travis/test.sh
+    - .travis/build.sh
+
+after_success:
+    - .travis/test.sh

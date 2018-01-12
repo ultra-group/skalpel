@@ -17,13 +17,28 @@
 #
 
 # Install script
+set -ue
 
-echo "Installing MLton (20130715)"
+echo "> Installing MLton (20130715)"
 
-set -ev
+cd ${TRAVIS_BUILD_DIR}
 wget -q "https://sourceforge.net/projects/mlton/files/mlton/20130715/mlton-20130715-2.amd64-linux.tgz"
-mkdir -p mlton-install
 tar -xzf mlton-20130715-2.amd64-linux.tgz
+rm mlton-20130715-2.amd64-linux.tgz
 cd mlton-20130715-2
 sudo make install
+cd ${TRAVIS_BUILD_DIR}
 rm -rf mlton-20130715-2
+
+echo "> Installing SML/NJ (110.82)"
+# SML/NJ is 32-bit
+sudo apt-get install -y gcc-multilib g++-multilib lib32ncurses5 lib32z1 lib32bz2-1.0
+
+sudo mkdir /usr/local/share/smlnj
+cd /usr/local/share/smlnj
+sudo wget -q "http://smlnj.cs.uchicago.edu/dist/working/110.82/config.tgz"
+sudo gunzip <config.tgz | sudo tar xf -
+sudo /bin/bash -c 'echo "request heap2asm" >> config/targets'
+sudo config/install.sh
+sudo cp -fpR bin/. /usr/local/bin/
+
