@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +67,7 @@ signature TESTER = sig
     val debuggingJSON : string temptype
     val debuggingLISP : string temptype
     val debuggingPERL : string temptype
+    val debuggingVIZ  : string temptype
     val debuggingBASH : unit temptype
     val debuggingHTML : Error.error list ->
 			AstSML.packs     ->

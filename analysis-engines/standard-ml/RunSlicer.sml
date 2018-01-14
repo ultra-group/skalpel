@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Sun 14 Jan 12:59:42 GMT 2018. Skalpel version: 41483cf059a7365a088650ee998930e6f124a8f5"
+val SKALPEL_VERSION = "Built with MLton on Sun 14 Jan 2018 13:38:53 GMT. Skalpel version: 483ee77ec27b96d276cf355a1b7faa792f19268b"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -224,7 +224,7 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingVIZ with the errors we generated. *)
-	val dbgviz  = Tester.debuggingJSON errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgviz  = Tester.debuggingVIZ errs parse bmin times cs initlab true name true nenv basisoverloading
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()

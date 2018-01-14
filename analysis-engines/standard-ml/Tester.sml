@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -745,6 +746,8 @@ fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab b
     (debuggingBASH' errl ascid "" bslice basisoverloading)
 
 
+fun debuggingVIZ errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab
+  bfinal name bslice nenv basisoverloading _ = let val () = print "VIZ NYI :(\n" in "VIZ NYI :(" end
 
 (************************************************************)
 (*                  RUNNING THE SLICER                      *)
