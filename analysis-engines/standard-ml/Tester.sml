@@ -780,113 +780,96 @@ fun exportErrors [] _ _ _ _ counter = counter
  * \param basisoverloading Value set to control overloading information in the basis.
  *)
 fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basisoverloading =
+	let
+		(** Calls functions to execute parsing, constraint generation, and enumeration. *)
+		fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
+			let
+				val _ = resetAll ()
+				val _ = print ("[Skalpel: parsing...]\n")
+				val (progs, m, ascid, nenv) = consProgs filebas nenv filesin initLab I.emAssoc webdemo
+				val parse = (progs, m, ascid)
+				val _ = L.setNextLab m
+				val _ = print ("[Skalpel: constraint generation...]\n")
+				val envContextSensitiveSyntaxPair = AN.fullConsGen progs ascid nenv
+				val _ = print ("[Skalpel: enumeration...]\n")
+				val (errl1, filters) = preEnum envContextSensitiveSyntaxPair parse
+				val errl2 = ERR.setSlices progs errl1
+				val errl3 = ERR.setRegs errl2 true
+				val firstCounter = 1
+				val counter = exportErrors errl3 funout 0 parse envContextSensitiveSyntaxPair firstCounter
+			in (parse, envContextSensitiveSyntaxPair, errl3, filters, counter) end
 
-    let
-	(** Calls functions to execute parsing, constraint generation, and enumeration. *)
-	fun preSlicing funout filebas filesin nenv webdemo (preEnum, initEnum, runEnum) =
-	    let val _ = resetAll ()
-		val _ = print ("[Skalpel: parsing...]\n")
-		val (progs, m, ascid, nenv) =
-		    consProgs filebas nenv filesin initLab I.emAssoc webdemo
-		val parse = (progs, m, ascid)
-		val _ = L.setNextLab m
-		val _ = print ("[Skalpel: constraint generation...]\n")
-		val envContextSensitiveSyntaxPair = AN.fullConsGen progs ascid nenv
-		val _ = print ("[Skalpel: enumeration...]\n")
-		val (errl1, filters) = preEnum envContextSensitiveSyntaxPair parse
-		val errl2 = ERR.setSlices progs errl1
-		val errl3 = ERR.setRegs errl2 true
-		val firstCounter = 1
-		val counter = exportErrors errl3 funout 0 parse envContextSensitiveSyntaxPair firstCounter
-	    in (parse, envContextSensitiveSyntaxPair, errl3, filters, counter)
-	    end
+		(** Helper function for #loopSlicing, calls #initEnum. *)
+		fun initSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
+			let
+				val export = if !nonmin then SOME funout else NONE
+				val (errs1, found', filters', counter', continue) = initEnum envContextSensitiveSyntaxPair found filters timerEnum parse export counter
+				val found'' = found'
+				val errs2 = errs1
+				(** (2010-07-05)We shouldn't need these 2 lines anymore because this was
+				 * when record errors were not directly reported as merged errors. *)
+				val time = Int.fromLarge (VT.getMilliTime timerEnum)
+				val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
+			in (found'', filters', counter'', continue) end
 
-	(** Helper function for #loopSlicing, calls #initEnum. *)
-	fun initSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
-	    let val export = if !nonmin then SOME funout else NONE
-		val (errs1, found', filters', counter', continue) =
-		    initEnum envContextSensitiveSyntaxPair found filters timerEnum parse export counter
-		val found''   = found'
-		val errs2     = errs1
-		(** (2010-07-05)We shouldn't need these 2 lines anymore because this was
-		 * when record errors were not directly reported as merged errors. *)
-		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
-		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
-	    in (found'', filters', counter'', continue)
-	    end
+		(** Helper function for #loopSlicing, runs the enumeration algorithm once. *)
+		fun runSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
+			let
+				val export = if !nonmin then SOME funout else NONE
+				val timelimit = gettimelimit ()
+				val (errs1, found', filters', counter', continue) = runEnum envContextSensitiveSyntaxPair found filters timelimit timerEnum parse export counter
+				val found'' = found'
+				val errs2 = errs1
+				(**(2010-07-05)Same as above concerning found'' and errs2.*)
+				val time = Int.fromLarge (VT.getMilliTime timerEnum)
+				val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
+			in
+				if continue then
+					runSlicing funout counter'' parse envContextSensitiveSyntaxPair found'' filters' timerEnum (preEnum, initEnum, runEnum)
+				else (counter'', found'')
+			end
 
-	(** Helper function for #loopSlicing, runs the enumeration algorithm once. *)
-	fun runSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
-	    let val export    = if !nonmin then SOME funout else NONE
-		val timelimit = gettimelimit ()
-		val (errs1, found', filters', counter', continue) =
-		    runEnum envContextSensitiveSyntaxPair found filters timelimit timerEnum parse export counter
-		val found''   = found'
-		val errs2     = errs1
-		(**(2010-07-05)Same as above concerning found'' and errs2.*)
-		val time      = Int.fromLarge (VT.getMilliTime timerEnum)
-		val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
-	    in if continue
-	       then runSlicing funout counter'' parse envContextSensitiveSyntaxPair found'' filters' timerEnum (preEnum, initEnum, runEnum)
-	       else (counter'', found'')
-	    end
+		(** Loops the slicing algorithm by calling #preSlicing, #initSlicing, and #runSlicing in order to get a minimised error, then reports the errors found. *)
+		fun loopSlicing filebas filesin funout nenv webdemo bmin (preEnum, initEnum, runEnum) =
+			let
+				(** Calls #funout. *)
+				fun funout' errors parse cs counter time = funout errors parse false dummyTimes cs initLab dummyName "" counter time
+				val _ = setNonMin bmin
+				val timer = VT.startTimer ()
+				val (parse, envcs, errs, filters, counter) = preSlicing funout' filebas filesin nenv webdemo (preEnum, initEnum, runEnum)
+				val timeCG = VT.getMilliTime timer
+				val timerEnum = VT.startTimer ()
+				val _ = print ("[Skalpel: unification...]\n")
+				val (counter'', errors) = case initSlicing funout' counter parse envcs errs filters timerEnum (preEnum, initEnum, runEnum)
+					of (found', filters', counter', false) => (counter', found')
+					|  (found', filters', counter', true) => runSlicing funout' counter' parse envcs found' filters' timerEnum (preEnum, initEnum, runEnum)
+				val timeEN = VT.getMilliTime timer
+				val time = Int.fromLarge (VT.getMilliTime timerEnum)
+				val _ = print ("Errors found: " ^ (Int.toString (List.length errors))^"\n")
+				val _ = print ("[Skalpel: finished time=" ^ Int.toString time ^ "]\n")
+			in
+				(counter'', errors, parse, envcs, timeCG, timeEN)
+			end
 
-	(** Loops the slicing algorithm by calling #preSlicing, #initSlicing, and #runSlicing in order to get a minimised error, then reports the errors found. *)
-	fun loopSlicing filebas filesin funout nenv webdemo bmin (preEnum, initEnum, runEnum) =
-	    let
-		(** Calls #funout. *)
-		fun funout' errors parse cs counter time = funout errors parse false dummyTimes cs initLab dummyName "" counter time
-		val _         = setNonMin bmin
-		val timer     = VT.startTimer ()
-		val (parse, envcs, errs, filters, counter) = preSlicing funout' filebas filesin nenv webdemo (preEnum, initEnum, runEnum)
-		val timeCG    = VT.getMilliTime timer
-		val timerEnum = VT.startTimer ()
-		val _ = print ("[Skalpel: unification...]\n")
-		val (counter'', errors) =
-		    case initSlicing funout' counter parse envcs errs filters timerEnum (preEnum, initEnum, runEnum) of
-			(found', filters', counter', false) => (counter', found')
-		      | (found', filters', counter', true)  =>
-			runSlicing funout' counter' parse envcs found' filters' timerEnum (preEnum, initEnum, runEnum)
-		val timeEN = VT.getMilliTime timer
-		val time   = Int.fromLarge (VT.getMilliTime timerEnum)
-		val _ = print ("Errors found: " ^ (Int.toString (List.length errors))^"\n")
-		val _      = print ("[Skalpel: finished time=" ^ Int.toString time ^ "]\n")
-	    in (counter'', errors, parse, envcs, timeCG, timeEN)
-	    end
+		val (counter, errors, parse, envContextSensitiveSyntaxPair as (env, css), timeCG, timeEN) = (case searchspace
+			of 1 => loopSlicing filebas filesin funout nenv webdemo bmin (EN1.preEnum, EN1.initEnum, EN1.runEnum)
+			 | 2 => loopSlicing filebas filesin funout nenv webdemo bmin (EN2.preEnum, EN2.initEnum, EN2.runEnum)
+			 | 3 => loopSlicing filebas filesin funout nenv webdemo bmin (EN3.preEnum, EN3.initEnum, EN3.runEnum)
+			 | _ => loopSlicing filebas filesin funout nenv webdemo bmin (EN.preEnum,  EN.initEnum,  EN.runEnum))
 
-	val (counter, errors, parse, envContextSensitiveSyntaxPair as (env, css), timeCG, timeEN) =
-	    (case searchspace of
-		 1 => loopSlicing filebas filesin funout nenv webdemo bmin (EN1.preEnum, EN1.initEnum, EN1.runEnum)
-	       | 2 => loopSlicing filebas filesin funout nenv webdemo bmin (EN2.preEnum, EN2.initEnum, EN2.runEnum)
-	       | 3 => loopSlicing filebas filesin funout nenv webdemo bmin (EN3.preEnum, EN3.initEnum, EN3.runEnum)
-	       | _ => loopSlicing filebas filesin funout nenv webdemo bmin (EN.preEnum,  EN.initEnum,  EN.runEnum))
-
-    in if badmin
-       then let val (nenv, filebas) = getFileBasAndNum nenv filebas
-		val name    = "dummy"
-		val times   = (timeCG, timeEN, timeEN, timeEN, timeEN)
-		val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
-		val berr    = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
-		val _       = D.printDebug D.TEST D.TESTING (fn _ => jsonOutput)
-		val _       = if bcs then print (Env.printEnv env "" ^ "\n") else ()
-		val _       = assignError (berr "")
-	    in counter
-	    end
-       else ((* print ("Number of union operations: " ^ (Int.toString (List.length (!L.unionSizes))) ^ "\n"); *)
-	     (* let *)
-	     (* 	 val x = List.foldl (op +) 0 (!L.unionSizes) *)
-	     (* 	 val avg = x div (List.length (!L.unionSizes)) *)
-
-	     (* 	 fun findMax max [] = max *)
-	     (* 	   | findMax max (h::t) = if h > max then findMax h t else findMax max t *)
-	     (* 	 val max = findMax 0 (!L.unionSizes) *)
-	     (* in *)
-	     (* 	 (print ("Next label number: " ^ (L.printLab (!L.nextlab)) ^ "\n"); *)
-	     (* 	  print ("Average combined union set length: " ^ (Int.toString avg) ^ "\n"); *)
-	     (* 	  print ("Maximum combined union set length: " ^ (Int.toString max) ^ "\n")) *)
-	     (* end; *)
-	     counter)
-    end
+	in
+		if badmin then
+			let
+				val (nenv, filebas) = getFileBasAndNum nenv filebas
+				val name = "dummy"
+				val times = (timeCG, timeEN, timeEN, timeEN, timeEN)
+				val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
+				val berr = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
+				val _ = D.printDebug D.TEST D.TESTING (fn _ => jsonOutput)
+				val _ = if bcs then print (Env.printEnv env "" ^ "\n") else ()
+				val _ = assignError (berr "")
+			in counter end
+		else counter end
 
 
 (** Bulids up the abstract syntax tree. *)
