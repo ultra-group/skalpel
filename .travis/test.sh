@@ -24,6 +24,5 @@ BASIS_FILE="${BUILD_DIR}/lib/basis.sml"
 TESTS_DIR="${BUILD_DIR}/testing/analysis-engine-tests/standard-ml"
 
 # run the analysis engine tests
-set -x
-${SKALPEL} -d NO_COLOURS -b 2 ${BASIS_FILE} -c ${TESTS_DIR}
+${SKALPEL} -b 2 ${BASIS_FILE} -c ${TESTS_DIR}
 
