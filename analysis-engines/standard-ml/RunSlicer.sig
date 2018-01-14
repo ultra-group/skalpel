@@ -37,6 +37,7 @@ signature SLICER = sig
     			     string      ->
     			     string      ->
     			     string      ->
+    			     string      ->
     			     int         ->
     			     int         ->
     			     int         ->

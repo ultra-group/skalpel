@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with SML/NJ on Fri 12 Jan 2018 10:55:37 GMT. Skalpel version: 813f105a70be12eff1e2ecc2664707d580d8cfa7"
+val SKALPEL_VERSION = "Built with Poly/ML on Sun 14 Jan 12:59:42 GMT 2018. Skalpel version: 41483cf059a7365a088650ee998930e6f124a8f5"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -208,7 +208,7 @@ fun printFound counter errors time =
 	   " errors="        ^ printErrors  errors  ^ "]\n")
 
 (** Calls the necessary functions to write the *.html, *.xml, *.sml etc to the system. *)
-fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisoverloading filesin
+fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz basisoverloading filesin
 	   errs parse bmin times cs initlab name st counter time =
     let
 	(** Holds result of calling #Tester.debuggingHTML with the errors we generated. *)
@@ -223,6 +223,8 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisove
 	val dbglisp  = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
 	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
+	(** Holds result of calling #Tester.debuggingVIZ with the errors we generated. *)
+	val dbgviz  = Tester.debuggingJSON errs parse bmin times cs initlab true name true nenv basisoverloading
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
@@ -232,13 +234,14 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl basisove
 	val _ = genOutputFile bfjson  ""    counter dbgjson st filesin
 	val _ = genOutputFile bflisp ".el"  counter dbglisp st filesin
 	val _ = genOutputFile bfperl ".pl"  counter dbgperl st filesin
+	val _ = genOutputFile bfviz ".viz"  counter dbgviz  st filesin
 	val _ = printFound counter errs time
     in ()
     end
 
 (** The primary function in this file which calls the functions necessary to run the slicer, including the main Testing.slicing function. *)
-fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
-    let val (nenv, filebas) = getFileBasAndNum nenv filebas
+fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading =
+	let val (nenv, filebas) = getFileBasAndNum nenv filebas
 
 	(** Checks that the HTML file specified has a .html extension. *)
 	val bfhtml = getBoolFile filehtml ".html"
@@ -252,9 +255,11 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val bflisp = getBoolFile filelisp ".el"
 	(** Checks that the PERL file specified has a .pl extension. *)
 	val bfperl = getBoolFile fileperl ".pl"
+	(** Checks that the VIZ file specified has a .viz extension *)
+	val bfviz = getBoolFile fileviz ".viz"
 
 	(* write the files to the system *)
-	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl basisoverloading (List.hd filesin)
+	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl bfviz basisoverloading (List.hd filesin)
 
 	(* get various information from Tester, such as solution number *)
 	val _      = Option.map (fn t => Tester.setTabSize t) tab
@@ -294,22 +299,23 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 		then genFinished bfperl ".pl"   fmperl
 		else ()
 	val _ = genFinished bfjson "" ""
+	val _ = genFinished bfviz ".viz" ""
 
     in ()
     end
 
 (** calls commslicerp', if we are not developing (not dev) then the error is handled, otherwise we leave the error so we can debug. *)
-fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading =
+fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading =
     if dev
-    then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
-    else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl nenv time tab sol min dev bcs searchspace basisoverloading
+    then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
+    else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
 
 (** Called by the emacs interface; sets no tab and uses the solution from sol in utils/Solution.sml. *)
-fun commslicerp  filebas filesin filehtml filexml filesml filelisp fileperl nenv time basisoverloading =
-    slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl nenv time NONE 9 true false false 1 basisoverloading
+fun commslicerp  filebas filesin filehtml filexml filesml filelisp fileperl fileviz nenv time basisoverloading =
+    slicerCheckDevMode filebas filesin filehtml filexml filesml "" filelisp fileperl fileviz nenv time NONE 9 true false false 1 basisoverloading
 
 (** The full version of the slicer function with all arguments. *)
-fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp, fileperl, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
+fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp, fileperl, fileviz, basop, tlim, tab, sol, min, dev, bcs, searchSpace, basisoverloading] =
     let
 	val mtl = Int.fromLarge Tester.mytimelimit
 	val nop = Int.fromString  basop         handle Overflow => SOME 2
@@ -327,7 +333,7 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
 	val basisoverloading = Option.valOf(Int.fromString  basisoverloading)
 	val _   =
 	    slicerCheckDevMode
-		filebas [filein] filehtml filexml filesml filejson filelisp fileperl
+		filebas [filein] filehtml filexml filesml filejson filelisp fileperl fileviz
 		n
 		t
 		(Int.fromString tab handle Overflow => NONE)
@@ -344,44 +350,44 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
 
 (** Prints the legend that is used when we output slices into the terminal. *)
 fun printLegend () =
-    let
-	val indent=""
-	(** A function which prints the sting argument and appnds the string #Debug.textReset. *)
-	fun printReset str = print (str^(!D.textReset))
-    in
-	(printReset ((#yellow (!D.underlineColors))^"Legend:\n\n");
-	 printReset ("  "^(#red (!D.backgroundColors))^"red highlights\n");
-	 printReset "  - Indicates that the highlighted code contributes to the error.\n\n";
-	 printReset ("  "^(#blue (!D.backgroundColors))^"blue" ^ (!D.textReset) ^ " / " ^ (#cyan (!D.backgroundColors)) ^ "cyan" ^ (!D.textReset) ^ " highlights \n");
-	 printReset "  - Indicates that the highlighted code is an endpoint of either\n";
-	 printReset  "\t - a type constructor clash\n\t - an arity clash\n\t - a record clash\n";
-	 printReset  "\t NOTE: The cyan used here is equivalent to the gray\n\t       used by other interfaces of the type error slicer.\n\n";
-	 printReset ("  "^(#green (!D.backgroundColors))^"green highlights\n");
-	 printReset "  - Indicates that the highlighted code is the endpoint of a record clash.\n\n";
-	 printReset  ("  "^(#purple (!D.backgroundColors))^"purple highlights\n");
-	 printReset "  - Indicates that the highlighted code either\n";
-	 printReset  "\t - provides information about an identifier\n\t - is expansive.\n\n";
-	 printReset ("  "^(#yellow (!D.backgroundColors))^"yellow highlights\n");
-	 printReset "  - Indicates that the type error slicer cannot parse the file.\n\n";
-	 printReset  ("  "^ (#purple (!D.underlineColors)) ^"underlined text\n");
-	 printReset "  - The use of the underline with no background highlighting is used to\n";
-	 printReset  "    signify that the underlined text may be irrelevant, but its presence\n";
-	 printReset  "    definitely contributes to the error.\n";
-	 printReset "  - The use of the underline can indicate on of two things;\n";
-	 printReset  "\t1. The application of a function to an argument (the underlined\n";
-	 printReset  "\t    code) takes part in an error.\n";
-	 printReset  "\t2. The underlined code is the unique argument of a type name\n";
-	 printReset  "\t   to make explicit that its arity is 1 (that is, it has 1 argument).\n";
-	 printReset "  - NOTE: The colour of the underline can be any of those above.\n";
-	 printReset "  - NOTE: This notation is equivalent to the box notation used in\n";
-	 printReset "          other interfaces to the type error slicer.\n\n";
-	 printReset ("  " ^ (#blue (!D.underlineColors)) ^ "foo" ^ (#red (!D.underlineColors)) ^ "underlined text" ^ (#blue (!D.underlineColors)) ^ "foo\n");
-	 printReset "  - The use of the strike through effect is to use to show that the\n";
-	 printReset "    highlighted code is in a nested underlined.\n";
-	 printReset "  - The colour of the nested box is that of the strike through and\n";
-	 printReset "    the colour of the external box is the colour of the underlines\n";
-	 printReset "    which immediately precede and follow the strike through.\n")
-    end
+	let
+		val indent=""
+		(** A function which prints the sting argument and appnds the string #Debug.textReset. *)
+		fun printReset str = print (str^(!D.textReset))
+	in
+		(printReset ((#yellow (!D.underlineColors))^"Legend:\n\n");
+		printReset ("  "^(#red (!D.backgroundColors))^"red highlights\n");
+		printReset "  - Indicates that the highlighted code contributes to the error.\n\n";
+		printReset ("  "^(#blue (!D.backgroundColors))^"blue" ^ (!D.textReset) ^ " / " ^ (#cyan (!D.backgroundColors)) ^ "cyan" ^ (!D.textReset) ^ " highlights \n");
+		printReset "  - Indicates that the highlighted code is an endpoint of either\n";
+		printReset  "\t - a type constructor clash\n\t - an arity clash\n\t - a record clash\n";
+		printReset  "\t NOTE: The cyan used here is equivalent to the gray\n\t       used by other interfaces of the type error slicer.\n\n";
+		printReset ("  "^(#green (!D.backgroundColors))^"green highlights\n");
+		printReset "  - Indicates that the highlighted code is the endpoint of a record clash.\n\n";
+		printReset  ("  "^(#purple (!D.backgroundColors))^"purple highlights\n");
+		printReset "  - Indicates that the highlighted code either\n";
+		printReset  "\t - provides information about an identifier\n\t - is expansive.\n\n";
+		printReset ("  "^(#yellow (!D.backgroundColors))^"yellow highlights\n");
+		printReset "  - Indicates that the type error slicer cannot parse the file.\n\n";
+		printReset  ("  "^ (#purple (!D.underlineColors)) ^"underlined text\n");
+		printReset "  - The use of the underline with no background highlighting is used to\n";
+		printReset  "    signify that the underlined text may be irrelevant, but its presence\n";
+		printReset  "    definitely contributes to the error.\n";
+		printReset "  - The use of the underline can indicate on of two things;\n";
+		printReset  "\t1. The application of a function to an argument (the underlined\n";
+		printReset  "\t    code) takes part in an error.\n";
+		printReset  "\t2. The underlined code is the unique argument of a type name\n";
+		printReset  "\t   to make explicit that its arity is 1 (that is, it has 1 argument).\n";
+		printReset "  - NOTE: The colour of the underline can be any of those above.\n";
+		printReset "  - NOTE: This notation is equivalent to the box notation used in\n";
+		printReset "          other interfaces to the type error slicer.\n\n";
+		printReset ("  " ^ (#blue (!D.underlineColors)) ^ "foo" ^ (#red (!D.underlineColors)) ^ "underlined text" ^ (#blue (!D.underlineColors)) ^ "foo\n");
+		printReset "  - The use of the strike through effect is to use to show that the\n";
+		printReset "    highlighted code is in a nested underlined.\n";
+		printReset "  - The colour of the nested box is that of the strike through and\n";
+		printReset "    the colour of the external box is the colour of the underlines\n";
+		printReset "    which immediately precede and follow the strike through.\n")
+	end
 
 (** A function which has been created so that the slicer can be used
  * in various ways without the need to program a new function every
@@ -390,7 +396,7 @@ fun printLegend () =
  * in any directories.
  *)
 fun smlTesStrArgs strArgs =
-    let
+	let
 	(* these are the arguments passed to slicerFull *in order* *)
 	val filebas  = ref "../lib/basis.sml"
 	(** The file to be used as input. *)
@@ -407,6 +413,8 @@ fun smlTesStrArgs strArgs =
 	val filelisp = ref ""
 	(** The filename for perl slices. *)
 	val fileperl = ref ""
+	(** The filename for visualisation slices. *)
+	val fileviz = ref ""
 	(** Basis operator. *)
 	val basop    = ref ""
 	(** Holds the timelimit for Skalpel. *)
@@ -472,7 +480,7 @@ fun smlTesStrArgs strArgs =
 				    \    --search-space <1,2,3> Use search space 1 (lists), 2 (sets), or 3 (red black tree)\n\
 				    \    --help Show this help text\n");
 
-        (** Split into tokens to allow for easy parsing. *)
+	(** Split into tokens to allow for easy parsing. *)
 	val split = String.tokens Char.isSpace strArgs
 
 	(** Checks the file suffixes of the files the user has specified (.html for HTML output, etc.). *)
@@ -493,6 +501,9 @@ fun smlTesStrArgs strArgs =
 		val _ = if (String.isSuffix ".pl" (!fileperl) orelse (!fileperl = ""))
 			then ()
 			else fileperl := (!fileperl) ^ ".pl"
+		val _ = if (String.isSuffix ".viz" (!fileviz) orelse (!fileviz = ""))
+			then ()
+			else fileviz := (!fileviz) ^ ".viz"
 	    in
 		()
 	    end
@@ -518,6 +529,7 @@ fun smlTesStrArgs strArgs =
 	 |  parse ("-x"::str::t) = (filexml:=str; parse t)
 	 |  parse ("-s"::str::t) = (filesml:=str; parse t)
 	 |  parse ("-j"::str::t) = (filejson:=str; parse t)
+	 |  parse ("-z"::str::t) = (fileviz:=str; parse t)
 	 |  parse ("-l"::str::t) = (filelisp:=str; parse t)
 	 |  parse ("-p"::str::t) = (fileperl:=str; parse t)
 	 |  parse ("-b"::str::t) = (basop:=str; parse t)
@@ -529,7 +541,6 @@ fun smlTesStrArgs strArgs =
 	 |  parse ("-min"::str::t) = (min:=str; parse t)
 	 |  parse ("--print-env"::str::t) = (bcs:=str; parse t)
 	 |  parse ("-search-space"::str::t) = (search:=str; parse t)
-	 |  parse ("-z"::str::t) = (print ("-viz NYI\n"); parse t)
 	 |  parse ("-d"::str::t) = (dev:="true";
 			(* note that at this current time, no debugging information is printed for the basis.
 			 * In Analyze.sml we turn off D.debug when looking at the basis, the user should really
@@ -556,68 +567,68 @@ fun smlTesStrArgs strArgs =
 			| str  => (print ("Unrecognised debugging feature: "^str^"\n"); raise Fail ("Unrecognised debugging feature: "^str)));
 			outputFilesNeeded := false; parse t)
 	 |  parse (opt::str::t) = (TextIO.output (TextIO.stdErr, "Unknown argument fed as input"); raise Fail "Unknown argument fed as input"; parse t)
-    in
+	in
 	(* parse the arguments *)
-	if strArgs = ""
-	then (printHelp ();
-	      raise Fail "No arguments specified.")
-	else
-	    (parse split;
+		if strArgs = "" then
+			(printHelp (); raise Fail "No arguments specified.")
+		else
+		(parse split;
 
-	     (* check that the user specified an input file *)
-	     if (!filein = "" andalso !filesNeeded = true)
-	     then (print ("Error: No input file specified.");
-		   raise Fail("No input file specified"))
-	     else
-		 if (!filein = "")
-		 then OS.Process.success (* the user was checking tests *)
-		 else (
-		     (* display slices in the terminal by default *)
-		     if (!filehtml^(!filexml)^(!filesml)^(!filelisp)^(!filejson) = ""
-			 andalso !runtests = false andalso (!terminalSet = false orelse !terminalSlices <> NO_DISPLAY))
-		     then if (!fileperl) = ""
-			  then (fileperl := "/tmp/output.pl"; terminalSlices := NON_INTERACTIVE)
-			  else (terminalSlices := NON_INTERACTIVE)
-		     else ();
+		(* check that the user specified an input file *)
+		if (!filein = "" andalso !filesNeeded) then
+			(print ("Error: No input file specified.");
+			raise Fail("No input file specified"))
+		else if (!filein = "") then
+			OS.Process.success (* the user was checking tests *)
+		else (
+			(* display slices in the terminal by default *)
+			if ((!filehtml)^(!filexml)^(!filesml)^(!filelisp)^(!filejson)^(!fileviz) = "" andalso
+				!runtests = false andalso
+				(!terminalSet = false orelse !terminalSlices <> NO_DISPLAY)
+			) then
+				if (!fileperl) = "" then
+					(fileperl := "/tmp/output.pl"; terminalSlices := NON_INTERACTIVE)
+				else (terminalSlices := NON_INTERACTIVE)
+			else ();
 
-		     checkFileSuffix();
+			checkFileSuffix ();
 
-		     (* if a basis option hasn't been stated, then look for the SKALPEL_BASIS environment variable
-		      * if we find one, use its contents
-		      * if we do not, print a warning and default to -b 0 *)
-		     if (!basisSpecified = false)
-		     then case OS.Process.getEnv "SKALPEL_BASIS" of
-			      NONE => (print "Error: Couldn't find basis file location in command line argument or environment variable (SKALPEL_BASIS).\n"; raise Fail("No basis option specified"))
-			    | SOME file => (Tester.myfilebas:=file; filebas:=file; basop:="2")
-		     else ();
+			(* if a basis option hasn't been stated, then look for the SKALPEL_BASIS environment variable
+			 * if we find one, use its contents
+			 * if we do not, print a warning and default to -b 0 *)
+			if (!basisSpecified = false) then
+				case (OS.Process.getEnv "SKALPEL_BASIS")
+				of NONE => (print "Error: Couldn't find basis file location in command line argument or environment variable (SKALPEL_BASIS).\n";
+							raise Fail("No basis option specified"))
+				|  SOME file => (Tester.myfilebas:=file; filebas:=file; basop:="2")
+			else ();
 
-		     (* now all arguments are dereferenced and passed to slicerFull *)
-		     slicerFull [!filebas,
-				 !filein,
-				 !filehtml,
-				 !filexml,
-				 !filesml,
-				 !filejson,
-				 !filelisp,
-				 !fileperl,
-				 !basop,
-				 !tlim,
-				 !tab,
-				 !sol,
-				 !min,
-				 !dev,
-				 !bcs,
-				 !search,
-				 !basisoverloading];
-		     OS.Process.success))
-    end
+			(* now all arguments are dereferenced and passed to slicerFull *)
+			slicerFull [!filebas,
+				!filein,
+				!filehtml,
+				!filexml,
+				!filesml,
+				!filejson,
+				!filelisp,
+				!fileperl,
+				!fileviz,
+				!basop,
+				!tlim,
+				!tab,
+				!sol,
+				!min,
+				!dev,
+				!bcs,
+				!search,
+				!basisoverloading];
+			OS.Process.success))
+	end
     handle Fail _ => OS.Process.failure
 
 (** Used by the MLton and Poly/ML entry points. *)
-fun slicerGen [] name =
-    smlTesStrArgs ""
-  | slicerGen args name =
-    smlTesStrArgs (foldr (fn (a,b) => a^" "^b) "" args)
+fun slicerGen [] name = smlTesStrArgs ""
+ |  slicerGen args name = smlTesStrArgs (foldr (fn (a,b) => a^" "^b) "" args)
 
 (******************************************************************************
  *                           Entry point functions                            *
