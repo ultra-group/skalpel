@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with MLton on Sun 14 Jan 2018 13:38:53 GMT. Skalpel version: 483ee77ec27b96d276cf355a1b7faa792f19268b"
+val SKALPEL_VERSION = "Built with Poly/ML on Mon 15 Jan 2018 14:43:32 GMT. Skalpel version: 7769975be5be7e5c7aa5c099c169033cdf3b9bea"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -212,22 +212,22 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	   errs parse bmin times cs initlab name st counter time =
     let
 	(** Holds result of calling #Tester.debuggingHTML with the errors we generated. *)
-	val dbghtml  = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading ER.removeBasisSlice
+	val dbghtml = Tester.debuggingHTML errs parse bmin times cs initlab true name true nenv basisoverloading ER.removeBasisSlice
 	(** Holds result of calling #Tester.debuggingXML with the errors we generated. *)
-	val dbgxml   = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgxml = Tester.debuggingXML  errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingSML with the errors we generated. *)
-	val dbgsml   = Tester.debuggingSML  errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgsml = Tester.debuggingSML  errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingJSON with the errors we generated. *)
-	val dbgjson  = Tester.debuggingJSON  errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgjson = Tester.debuggingJSON  errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingLISP with the errors we generated. *)
-	val dbglisp  = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbglisp = Tester.debuggingLISP errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
-	val dbgperl  = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgperl = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingVIZ with the errors we generated. *)
-	val dbgviz  = Tester.debuggingVIZ errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgviz = Tester.debuggingVIZ errs parse bmin times cs initlab true name true nenv basisoverloading
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
-	val _  = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
+	val _ = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
 	val _ = if bhtml then dbghtml' st else ()
 	val _ = genOutputFile bfxml  ".xml" counter dbgxml  st filesin
 	val _ = genOutputFile bfsml  ".sml" counter dbgsml  st filesin
@@ -236,13 +236,13 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	val _ = genOutputFile bfperl ".pl"  counter dbgperl st filesin
 	val _ = genOutputFile bfviz ".viz"  counter dbgviz  st filesin
 	val _ = printFound counter errs time
-    in ()
-    end
+	in ()
+	end
 
 (** The primary function in this file which calls the functions necessary to run the slicer, including the main Testing.slicing function. *)
 fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading =
-	let val (nenv, filebas) = getFileBasAndNum nenv filebas
-
+	let
+	val (nenv, filebas) = getFileBasAndNum nenv filebas
 	(** Checks that the HTML file specified has a .html extension. *)
 	val bfhtml = getBoolFile filehtml ".html"
 	(** Checks that the XML file specified has a .xml extension. *)
@@ -266,10 +266,10 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val _      = Tester.settimelimit ((Int.toLarge time) handle Overflow => Tester.mytimelimit)
 
 	(** Calls the slicing function in Tester.sml. *)
-	fun run () = case Tester.slicing filebas filesin fout nenv (!webdemo) min dev bcs searchspace basisoverloading of
-			 0 => (false, "this case should never happen")
-		       | 1 => (true,  "it detected no errors (some might be undetected)"(*"program is typable"*))
-		       | _ => (true,  "program has type or syntax errors")
+	fun run () = case Tester.slicing filebas filesin fout nenv (!webdemo) min dev bcs searchspace basisoverloading
+					of 0 => (false, "this case should never happen")
+					 | 1 => (true,  "it detected no errors (some might be undetected)"(*"program is typable"*))
+					 | _ => (true,  "program has type or syntax errors")
 
 	(* handle errors depending on the developer option *)
 	val (bfm, msg) = if dev
@@ -332,7 +332,7 @@ fun slicerFull [filebas, filein, filehtml, filexml, filesml, filejson, filelisp,
 	val p   = Option.valOf    pop           handle Option   => 1
 	val basisoverloading = Option.valOf(Int.fromString  basisoverloading)
 	val _   =
-	    slicerCheckDevMode
+		slicerCheckDevMode
 		filebas [filein] filehtml filexml filesml filejson filelisp fileperl fileviz
 		n
 		t
