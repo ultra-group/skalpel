@@ -47,7 +47,7 @@
  *
  * $ make
  *
- * 6 - Generate documentation (assuming directory is Standard ML analysis egnine repo directory).
+ * 6 - Generate documentation (assuming directory is Standard ML analysis engine repo directory).
  *
  * $ make documentation
  *
@@ -59,7 +59,7 @@
  *
  * $ git format-patch -1 SHA
  *
- * Pleasae try to keep this documentation updated for the sanity of future Skalpel developers. ;-)
+ * Please try to keep this documentation updated for the sanity of future Skalpel developers. ;-)
  *
  *)
 
