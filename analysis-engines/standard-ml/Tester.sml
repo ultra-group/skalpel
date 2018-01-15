@@ -770,7 +770,7 @@ fun exportErrors [] _ _ _ _ counter = counter
 (** slicing function - a function to run the slicer. Arguments are as follows:
  * \param filebas file containing the basis
  * \param filesin list containing input files
- * \param funout Function used to export errors.
+ * \para funout Function used to export errors.
  * \param nenv see Analyze.sig for this integer - related to the basis
  * \param webdemo true if building a webdemo binary
  * \param bmin true if we want to report non-minimal errors
@@ -804,13 +804,9 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 			let
 				val export = if !nonmin then SOME funout else NONE
 				val (errs1, found', filters', counter', continue) = initEnum envContextSensitiveSyntaxPair found filters timerEnum parse export counter
-				val found'' = found'
-				val errs2 = errs1
-				(** (2010-07-05)We shouldn't need these 2 lines anymore because this was
-				 * when record errors were not directly reported as merged errors. *)
 				val time = Int.fromLarge (VT.getMilliTime timerEnum)
-				val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
-			in (found'', filters', counter'', continue) end
+				val counter'' = exportErrors errs1 funout time parse envContextSensitiveSyntaxPair counter'
+			in (found', filters', counter'', continue) end
 
 		(** Helper function for #loopSlicing, runs the enumeration algorithm once. *)
 		fun runSlicing funout counter parse envContextSensitiveSyntaxPair found filters timerEnum (preEnum, initEnum, runEnum) =
@@ -818,15 +814,12 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 				val export = if !nonmin then SOME funout else NONE
 				val timelimit = gettimelimit ()
 				val (errs1, found', filters', counter', continue) = runEnum envContextSensitiveSyntaxPair found filters timelimit timerEnum parse export counter
-				val found'' = found'
-				val errs2 = errs1
-				(**(2010-07-05)Same as above concerning found'' and errs2.*)
 				val time = Int.fromLarge (VT.getMilliTime timerEnum)
-				val counter'' = exportErrors errs2 funout time parse envContextSensitiveSyntaxPair counter'
+				val counter'' = exportErrors errs1 funout time parse envContextSensitiveSyntaxPair counter'
 			in
 				if continue then
-					runSlicing funout counter'' parse envContextSensitiveSyntaxPair found'' filters' timerEnum (preEnum, initEnum, runEnum)
-				else (counter'', found'')
+					runSlicing funout counter'' parse envContextSensitiveSyntaxPair found' filters' timerEnum (preEnum, initEnum, runEnum)
+				else (counter'', found')
 			end
 
 		(** Loops the slicing algorithm by calling #preSlicing, #initSlicing, and #runSlicing in order to get a minimised error, then reports the errors found. *)
@@ -840,7 +833,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 				val timeCG = VT.getMilliTime timer
 				val timerEnum = VT.startTimer ()
 				val _ = print ("[Skalpel: unification...]\n")
-				val (counter'', errors) = case initSlicing funout' counter parse envcs errs filters timerEnum (preEnum, initEnum, runEnum)
+				val (counter'', errors) = case (initSlicing funout' counter parse envcs errs filters timerEnum (preEnum, initEnum, runEnum))
 					of (found', filters', counter', false) => (counter', found')
 					|  (found', filters', counter', true) => runSlicing funout' counter' parse envcs found' filters' timerEnum (preEnum, initEnum, runEnum)
 				val timeEN = VT.getMilliTime timer
@@ -863,8 +856,8 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 				val (nenv, filebas) = getFileBasAndNum nenv filebas
 				val name = "dummy"
 				val times = (timeCG, timeEN, timeEN, timeEN, timeEN)
-				val jsonOutput = debuggingJSON  errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
-				val berr = buildError    errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
+				val jsonOutput = debuggingJSON errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv basisoverloading true
+				val berr = buildError errors parse bmin times envContextSensitiveSyntaxPair initLab false name true nenv
 				val _ = D.printDebug D.TEST D.TESTING (fn _ => jsonOutput)
 				val _ = if bcs then print (Env.printEnv env "" ^ "\n") else ()
 				val _ = assignError (berr "")
