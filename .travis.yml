@@ -25,6 +25,9 @@ matrix:
   include:
     - env: SML_IMPL=mlton
     - env: SML_IMPL=polyml
+    - env: SML_IMPL=mlton TEST=true
+  allow_failures:
+    - env: SML_IMPL=mlton TEST=true
 
 install:
     - .travis/install.sh

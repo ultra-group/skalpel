@@ -16,6 +16,11 @@
 # along with Skalpel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+if [ -z "${TEST}" ] || [ "${TEST}" = "false" ]; then
+	echo "TEST is not set to true, will not run Skalpel test suite";
+	exit 0
+fi
+
 set -eu
 
 BUILD_DIR="${TRAVIS_BUILD_DIR}"
