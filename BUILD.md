@@ -6,7 +6,7 @@ A (hopefully) short and easy step by step to building Skalpel from source.
 
 - [`autoconf`](http://www.gnu.org/software/autoconf/autoconf.html)
 - [`mlton`](https://mlton.org) (>= 20130715) (Skalpel requires mllpt-lib)
-- [`smlnj`](https://www.smlnj.org) (Recommended for development builds)
+- [`polyml`](http://www.polyml.org) (Recommended for development builds)
 
 ## Building
 
