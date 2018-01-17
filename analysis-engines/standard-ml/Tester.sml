@@ -745,9 +745,34 @@ fun debuggingBASH' [] _ _ _ _ = ()
 fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     (debuggingBASH' errl ascid "" bslice basisoverloading)
 
-
-fun debuggingVIZ errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab
-  bfinal name bslice nenv basisoverloading _ = let val () = print "VIZ NYI :(\n" in "VIZ NYI :(" end
+fun debuggingVIZ errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _ =
+	let
+		val error : ERR.error = List.hd errl
+		(* builtInBasis : bool *)
+		val builtInBasis = ERR.getB error
+		(* dependencies : LongId.set *)
+		val dependencies = ERR.getD error
+		(* errorKind : ErrorKind.kind *)
+		val errorKind = ERR.getK error
+		(* id : Error.id *)
+		val id = ERR.getI error
+		(* labels : Label.labels *)
+		val labels = ERR.getL error
+		(* minimisationValue : true *)
+		val minimisationValue = ERR.getM error
+		(* regions : ExtReg.regs*)
+		val regions = ERR.getR error
+		(* removes : id list *)
+		val removes = ERR.getE error
+		(* boundFunction : Label.labels *)
+		val boundFunctions = ERR.getF error
+		(* slice : AstSML.progs*)
+		val slice = ERR.getS error
+		(* time : LargeInt.int*)
+		val time = ERR.getT error
+	in
+		"{ \"id\":" ^ Int.toString (ERR.idToInt id) ^ "}"
+	end
 
 (************************************************************)
 (*                  RUNNING THE SLICER                      *)
@@ -763,9 +788,11 @@ fun getFileBasAndNum nenv filebas =
 
 (** Calls the output function (funout) on each error and then returns how many applications to funout were made. *)
 fun exportErrors [] _ _ _ _ counter = counter
-  | exportErrors (error :: errors) funout time parse cs counter =
-    (funout [error] parse cs counter time;
-     exportErrors errors funout time parse cs (counter + 1))
+ |  exportErrors (error::errors) funout time parse cs counter =
+		let
+			val _ = funout [error] parse cs counter time
+			val _ = print ("> \n")
+		in exportErrors errors funout time parse cs (counter + 1) end
 
 (** slicing function - a function to run the slicer. Arguments are as follows:
  * \param filebas file containing the basis
@@ -867,148 +894,124 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 
 (** Bulids up the abstract syntax tree. *)
 fun initialise filebas filesin nenv bprint =
-    let val webdemo = false
+let val webdemo = false
 	val _ = setNonMin false
-        val timer = VT.startTimer ()
-        (* Initialisation of all the variable counters *)
-        val _ = resetAll ()
+	val timer = VT.startTimer ()
+	(* Initialisation of all the variable counters *)
+	val _ = resetAll ()
 	val initlab = L.firstLab (* 0 is a dummy label *)
 	(* Creation of the AST *)
 	val _ = if bprint then print "creation of the ast...\n" else ()
-	val (progs, m, ascid, nenv) =
-	    consProgs filebas nenv filesin initlab I.emAssoc webdemo
-	(*val _ = D.printdebug2 (I.printAssoc ascid)*)
+	val (progs, m, ascid, nenv) = consProgs filebas nenv filesin initlab I.emAssoc webdemo
 	val parse = (progs, m, ascid)
 	val _ = L.setNextLab m
 	(* Generation of the constraints *)
 	val _ = if bprint then print "constraint generation...\n" else ()
-        val envContextSensitiveSyntaxPair as (env, css) = AN.fullConsGen progs ascid nenv
-        val t1 = VT.getMilliTime timer
-    in (initlab, parse, envContextSensitiveSyntaxPair, timer, t1)
-    end
+	val envContextSensitiveSyntaxPair as (env, css) = AN.fullConsGen progs ascid nenv
+	val t1 = VT.getMilliTime timer
+in (initlab, parse, envContextSensitiveSyntaxPair, timer, t1) end
 
 (** Called when the user requests Skalpel to be run on a test database. *)
 fun slicergen filebas filesin nenv bprint =
-    let val (initlab,
-	     parse as (ast, m, ascid),
-	     envContextSensitiveSyntaxPair as (env, css),
-	     timer,
-	     t1) = initialise filebas filesin nenv bprint
-
-	val _      = if bprint then print "enumeration...\n" else ()
-        val (errl1, space) = EN.preEnum envContextSensitiveSyntaxPair parse
-        val (errl2, bmin)  = EN.enum envContextSensitiveSyntaxPair errl1 space (gettimelimit ()) parse
-        val t2     = VT.getMilliTime timer
-
-        val errl3  = errl2
-        val t3     = VT.getMilliTime timer
-	val errl5  = errl3
-	val errl6  = ERR.orderErrors     errl5
-	val errl7  = errl6
-	val errl8  = errl7
-        val t4     = VT.getMilliTime timer
+let
+	val (initlab,parse as (ast, m, ascid), envContextSensitiveSyntaxPair as (env, css), timer, t1) = initialise filebas filesin nenv bprint
+	val _ = if bprint then print "enumeration...\n" else ()
+	val (errl1, space) = EN.preEnum envContextSensitiveSyntaxPair parse
+	val (errl2, bmin) = EN.enum envContextSensitiveSyntaxPair errl1 space (gettimelimit ()) parse
+	val t2 = VT.getMilliTime timer
+	val t3 = VT.getMilliTime timer
+	val errl6 = ERR.orderErrors     errl2
+	val t4 = VT.getMilliTime timer
 	val bmerge = true
 	(* use false for a better precision on the regions *)
 	(* When changing bmerge to false, enable clW in Html.sml.
 	 * It should be automatic, but this is still under construction.
 	 * It's also possible to play with reorderFilters in Enumeration.sml. *)
-	(*val errl9  = ERR.setRegs errl8 bmerge*)
-	val errl9  = errl8
-	val errl10 = if bmerge then errl9 else ERR.consWeight errl9 []
-        val t5     = VT.getMilliTime timer
+	val errl10 = if bmerge then errl6 else ERR.consWeight errl6 []
+        val t5 = VT.getMilliTime timer
 	(* Times *)
 	val times = (t1, t2, t3, t4, t5)
-    in SOME (errl10, parse, bmin, times, envContextSensitiveSyntaxPair, initlab)
-    end
+in SOME (errl10, parse, bmin, times, envContextSensitiveSyntaxPair, initlab) end
 
 (** Retrieves a list of test files.
  * \deprecated There should now be no used of this with the new JSON database. *)
 fun getTests _ =
-    let
+let
 	(** Strips out a test number.
 	 * Has a magic numbers 'bad smell'. We should get rid of that. *)
 	fun stripnb file = String.substring (file, 4, (String.size file) - 4)
-	    handle Subscript => raise EH.DeadBranch ""
+		handle Subscript => raise EH.DeadBranch ""
 	val dir = OS.FileSys.openDir (!testFolder)
 	val b   = ref true
 	val l   = ref (IntListSet.empty)
-	val _   = while !b do case OS.FileSys.readDir dir of
-				  SOME file =>  if String.isPrefix "test" file
-						then (case Int.fromString (stripnb file) of
-							 SOME nb => l := IntListSet.add (!l, nb)
-						       | NONE    => ())
-						else ()
-				| NONE => b := false
+	val _   = while !b do
+		case (OS.FileSys.readDir dir)
+		of SOME file =>  if (String.isPrefix "test" file) then
+			(case (Int.fromString (stripnb file))
+			of SOME nb => l := IntListSet.add (!l, nb)
+			|  NONE    => ())
+			else ()
+		|  NONE => b := false
 	val _   = OS.FileSys.closeDir dir
-    in IntListSet.listItems (!l)
-    end
-	handle SysErr => raise EH.DeadBranch "problem in reading tests\n"
+in IntListSet.listItems (!l) end
+handle SysErr => raise EH.DeadBranch "problem in reading tests\n"
 
 (** Prints the intervals between number as <N>-<N'>. *)
 fun printIntervals [] = ""
-  | printIntervals ((x, y) :: xs) =
-    "[" ^ Int.toString x ^
-    "-" ^ Int.toString y ^
-    "]" ^ printIntervals xs
+ |  printIntervals ((x, y) :: xs) =
+	"[" ^ Int.toString x ^
+	"-" ^ Int.toString y ^
+	"]" ^ printIntervals xs
 
 (** Finds intervals in a list of numbers.. *)
 fun findIntervals _ [] = []
-  | findIntervals first [x] = [(first, x)]
-  | findIntervals first (x :: y :: xs) =
-    if y - x > 1
-    then (first, x) :: (findIntervals y (y :: xs))
-    else findIntervals first (y :: xs)
+ |  findIntervals first [x] = [(first, x)]
+ |  findIntervals first (x :: y :: xs) =
+	if y - x > 1 then
+		(first, x) :: (findIntervals y (y :: xs))
+	else findIntervals first (y :: xs)
 
 (** Helper function for #findIntervals. *)
 fun findIntervals' [] = []
-  | findIntervals' (x :: xs) = findIntervals x (x :: xs)
+ |  findIntervals' (x :: xs) = findIntervals x (x :: xs)
 
 (** List the tests that we are to run Skalpel against. *)
 fun listTests' msg tests =
-    let val inter = findIntervals' tests
+let
+	val inter = findIntervals' tests
 	val interst = printIntervals inter
-    in print msg;
-       print interst;
-       print "\n"
-    end
+in print msg; print interst; print "\n" end
 
 (** List the tests that we are to run Skalpel against by calling #listTests'. *)
 fun listTests _ = listTests' "Tests:" (getTests ())
 
 (** Returns the 'errors' portion of the #error record. *)
-fun getErrors _ =
-    (#errors (Option.valOf (!error)))
-    handle Option => raise FormatTest "errors"
+fun getErrors _ = (#errors (Option.valOf (!error)))
+handle Option => raise FormatTest "errors"
 
 (** Returns the 'slices' portion of the #error record. *)
-fun getSlices _ =
-    (map (fn x => #slice x) (#errors (Option.valOf (!error))))
-    handle Option => raise FormatTest "slices"
+fun getSlices _ = (map (fn x => #slice x) (#errors (Option.valOf (!error))))
+handle Option => raise FormatTest "slices"
 
 (** Returns the 'regions' portion of the #error record. *)
-fun getRegions _ =
-    (map (fn x => #regions x) (#errors (Option.valOf (!error))))
-    handle Option => raise FormatTest "regions"
+fun getRegions _ = (map (fn x => #regions x) (#errors (Option.valOf (!error))))
+handle Option => raise FormatTest "regions"
 
 (** Returns the 'dependencies' portion of the #error record. *)
-fun getDependencies _ =
-    (map (fn x => CD.inSet (#assumptions x)) (#errors (Option.valOf (!error))))
-    handle Option => raise FormatTest "dependencies"
+fun getDependencies _ = (map (fn x => CD.inSet (#assumptions x)) (#errors (Option.valOf (!error))))
+handle Option => raise FormatTest "dependencies"
 
 (** Returns the 'min' portion of the #error record. *)
-fun getMin _ =
-    (#minimisation (Option.valOf (!error)))
-    handle Option => raise FormatTest "min"
+fun getMin _ = (#minimisation (Option.valOf (!error)))
+handle Option => raise FormatTest "min"
 
 (** Returns the 'final' portion of the #error record. *)
-fun getFinal _ =
-    (#final (Option.valOf (!error)))
-    handle Option => raise FormatTest "final"
+fun getFinal _ = (#final (Option.valOf (!error)))
+handle Option => raise FormatTest "final"
 
 (** Returns the enumeration time of the #error record. *)
-fun getTimeEnum _ =
-    (#enumeration (#time (Option.valOf (!error))))
-    handle Option => raise FormatTest "enumeration time"
+fun getTimeEnum _ = (#enumeration (#time (Option.valOf (!error))))
+handle Option => raise FormatTest "enumeration time"
 
 (** Returns the analysis time of the #error record. *)
 fun getTimeCg _ =
@@ -1016,25 +1019,16 @@ fun getTimeCg _ =
     handle Option => raise FormatTest "constraint generation time"
 
 (** Returns the 'timelimit' portion of the #error record. *)
-fun getTimeLim _ =
-    (#timelimit (Option.valOf (!error)))
-    handle Option => raise FormatTest "time limit"
+fun getTimeLim _ = (#timelimit (Option.valOf (!error)))
+handle Option => raise FormatTest "time limit"
 
 (** Returns the 'basis' portion of the #error record. *)
-fun getBasis _ =
-    (#basis (Option.valOf (!error)))
-    handle Option => raise FormatTest "basis"
+fun getBasis _ = (#basis (Option.valOf (!error)))
+handle Option => raise FormatTest "basis"
 
 (** Returns the 'ident' portion of the #error record. *)
-fun getAssoc _ =
-    (#ident (Option.valOf (!error)))
-    handle Option => raise FormatTest "assoc. list ids"
-
-(** Returns the 'solution' portion of the #error record.
- * \deprecated We no longer have different 'solutions' in Skalpel. *)
-fun getSolution _ =
-    (#solution (Option.valOf (!error)))
-    handle Option => raise FormatTest "solution"
+fun getAssoc _ = (#ident (Option.valOf (!error)))
+handle Option => raise FormatTest "assoc. list ids"
 
 (** Calls #getRegions, handling the FormatTest exception. *)
 fun getLastRegs   _ = (getRegions ()) handle FormatTest _ => []
@@ -1045,19 +1039,19 @@ fun getLastMin    _ = (getMin     ()) handle FormatTest _ => false
 
 (** Transform the old parentheses into the new ones. *)
 fun transParen #"\227"  = "\226" (* 1st old ldots and rdots *)
-  | transParen #"\128"  = "\159"
-  | transParen #"\154"  = "\168"
-  | transParen #"\155"  = "\169"
-  | transParen #"\226"  = "\226" (* 2nd old ldots and rdots *)
-  | transParen #"\167"  = "\159"
-  | transParen #"\188"  = "\168"
-  | transParen #"\189"  = "\169"
-  | transParen #"\159"  = "\159" (* new ldots and rdots *)
-  | transParen #"\168"  = "\168"
-  | transParen #"\169"  = "\169"
-  | transParen #"\152"  = "\168" (* sequence dots *)
-  | transParen #"\153"  = "\169"
-  | transParen x        = Char.toString x
+ |  transParen #"\128"  = "\159"
+ |  transParen #"\154"  = "\168"
+ |  transParen #"\155"  = "\169"
+ |  transParen #"\226"  = "\226" (* 2nd old ldots and rdots *)
+ |  transParen #"\167"  = "\159"
+ |  transParen #"\188"  = "\168"
+ |  transParen #"\189"  = "\169"
+ |  transParen #"\159"  = "\159" (* new ldots and rdots *)
+ |  transParen #"\168"  = "\168"
+ |  transParen #"\169"  = "\169"
+ |  transParen #"\152"  = "\168" (* sequence dots *)
+ |  transParen #"\153"  = "\169"
+ |  transParen x        = Char.toString x
 
 fun upToBasis slice =
     let val (dots, ldots, rdots, _, _) = S.getDots ()
@@ -1089,8 +1083,6 @@ fun upToValTyVarSeq slice dec =
 	    if b
 	    then pref ^ dec ^ upToValTyVarSeq (String.substring (suff, 12, (String.size suff) - 12)) dec
 	    else slice
-	(*val _ = print ("1-" ^ slice ^ "\n")*)
-	(*val _ = print ("2-" ^ newslice ^ "\n")*)
     in newslice
     end
 
@@ -1107,7 +1099,6 @@ fun upTos (id, slice0, deps, regs) =
     let val slice1 = upToValTyVarSeq slice0 "val"
 	val slice2 = upToValTyVarSeq slice1 "fun"
 	val slice3 = upToBasis slice2
-	(*val _ = D.printdebug2 (slice3)*)
     in (id, slice3, deps, regs) end
 
 (** A slice is a string here. *)
@@ -1201,21 +1192,22 @@ fun messageTodo       test    = (#red (!D.colors)) ^ "PROBLEM: test " ^  test ^ 
 (** Generates a temporary file used when checking the test database.
  * Might not still be needed... *)
 fun generateTmpDBFile () =
-    let val date = Date.toString (Date.fromTimeLocal (Time.now ()))
+let
+	val date = Date.toString (Date.fromTimeLocal (Time.now ()))
 	val tr   = fn #" " => "_" | #":" => "-" | x => Char.toString x
-    in tmpdatabase ^ "_" ^ String.translate tr date
-    end
+in tmpdatabase ^ "_" ^ String.translate tr date end
 
 (** Outputs a line of text to the database output file. *)
 fun outputDB str stout =
-    let val _ = print str
+let
+	val _ = print str
 	val _ = TextIO.output (stout, str)
-    in ()
-    end
+in () end
 
 (** Function that handles the testing of Skalpel against the test database. *)
 fun checktests listtests =
-    let val timerCheck = VT.startTimer ()
+let
+	val timerCheck = VT.startTimer ()
 	(** Temporary file for output. *)
 	val tmpfile    = generateTmpDBFile ()
 	(** Create an output stream from tmpfile. *)
@@ -1275,7 +1267,6 @@ fun checktests listtests =
 		 val tlim1  = getTimeLim  ()
 		 val bas    = getBasis    ()
 		 val assoc1 = getAssoc    ()
-		 val sol1   = getSolution ()
 		 val (errs1, warns1) = toErrsAndWarns1 errs1
 		 val sls1   = map (fn x =>
 				      (#identifier x,
@@ -1336,25 +1327,17 @@ fun checktests listtests =
 	val _ = outputDB ("[sol     tests: " ^ Int.toString (!newertests) ^ "]\n") stout
 	val _ = outputDB ("[end database checking (" ^ endTime ^ ")]\n") stout
 	val _ = TextIO.closeOut stout
-    in ()
-    end
+in () end
 
 (** Prints the typeable tests. *)
-fun printTypables _ =
-    let val _ = PP.silence_compiler ()
+fun printTypables _ = let
+	val _ = PP.silence_compiler ()
 	val tests = getTests ()
-	val xs =
-	    List.mapPartial
-		(fn nb =>
-		    let val _ = PP.use (getfileerr nb)
-			    handle Error => error := NONE
-			val errs = getLastSlices ()
-			val typable = List.null errs
-		    in if typable then SOME nb else NONE
-		    end)
-		tests
+	val xs = List.mapPartial (fn nb => let
+		val _ = PP.use (getfileerr nb) handle Error => error := NONE
+		val errs = getLastSlices ()
+		val typable = List.null errs
+	in if typable then SOME nb else NONE end) tests
 	val _ = PP.unsilence_compiler ()
-    in listTests' "Typables:" xs
-    end
-
+in listTests' "Typables:" xs end
 end
