@@ -1,4 +1,5 @@
 (* Copyright 2010 2011 2012 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +33,7 @@ type label  = S.item
 (** A set of program position, declared as an S.set. *)
 type labels = S.set
 
-val unionSizes = ref []
+val unionSizes : int list ref = ref []
 
 (** Prints a set of labels. *)
 fun printsetgen xs f = "[" ^ #1 (S.foldr (fn (t, (s, c)) => (f t ^ c ^ s, ",")) ("", "") xs) ^ "]"
@@ -276,7 +277,7 @@ type label  = O.ord_key
 (** A map of labels. *)
 type map    = label S.map
 
-val unionSizes = ref []
+val unionSizes : int list ref = ref []
 
 type labels = {from : map, to : map, size : int}
 
