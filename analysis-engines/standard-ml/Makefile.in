@@ -32,6 +32,15 @@ TMPDIR=/tmp
 #  - count: how many times each function is called
 MLTONPROFOP=time
 
+# Detect OS (Linux or OSX)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    PLATFORM = linux
+endif
+ifeq ($(UNAME_S),Darwin)
+    PLATFORM = darwin
+endif
+
 default:
 	# Make targets are described as follows:
 	#  - generate a binary (using MLton, recommended)               : 'mlton-bin'
@@ -67,7 +76,7 @@ smlnj-bin: gen-cm-sources gen-parse
 	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with SML\/NJ on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/skalpel\", Slicer.smlnjEntryPoint);" | sml
-	heap2exec ${TMPDIR}/skalpel.x86-linux ${TMPDIR}/skalpel
+	heap2exec ${TMPDIR}/skalpel.x86-${PLATFORM} ${TMPDIR}/skalpel
 	mkdir -p bin
 	mv ${TMPDIR}/skalpel bin/skalpel
 	mv RunSlicer.sml.original RunSlicer.sml
@@ -144,7 +153,7 @@ bin/cmtodot: PGOps.sml
 
 cmtodot:
 	@echo "use \"PGOps.sml\"; open SmlTesDeps; SMLofNJ.exportFn (\"${TMPDIR}/cmtodot\", cmToDot);" | sml
-	heap2exec ${TMPDIR}/cmtodot.x86-linux ${TMPDIR}/cmtodot
+	heap2exec ${TMPDIR}/cmtodot.x86-${PLATFORM} ${TMPDIR}/cmtodot
 	mkdir -p bin
 	mv ${TMPDIR}/cmtodot bin/cmtodot
 
