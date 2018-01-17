@@ -33,7 +33,6 @@ rm -rf mlton-20130715-2
 
 if [[ "${SML_IMPL}" = "polyml" ]] ; then
 	echo "> Installing PolyML (5.7.1)"
-
 	POLY_RELEASE_COMMIT=44b7b88e1a46757dfcddaab0166ca86c7024f198
 	git clone https://github.com/polyml/polyml.git
 	cd polyml

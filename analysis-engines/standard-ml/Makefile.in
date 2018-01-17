@@ -94,7 +94,7 @@ polyml-bin: gen-poly-sources gen-parse
 	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with Poly\/ML on `date`. Skalpel version: `git rev-parse HEAD`"\"/ RunSlicer.sml > RunSlicer.sml.tmp
 	mv RunSlicer.sml.tmp RunSlicer.sml
 	poly < sources.poly
-	cc -o skalpel skalpel.o -lpolymain -lpolyml
+	cc -o skalpel skalpel.o -lpolymain -lpolyml -pthread -lgmp -ldl -lm -lstdc++
 	rm skalpel.o
 	mkdir -p bin
 	mv skalpel bin/skalpel
