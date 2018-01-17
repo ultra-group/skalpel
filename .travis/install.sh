@@ -19,10 +19,11 @@
 # Install script
 set -ue
 
+cd ${TRAVIS_BUILD_DIR}
+
 if [[ "${SML_IMPL}" = "mlton" ]] ; then
 	echo "> Installing MLton (20130715)"
 
-	cd ${TRAVIS_BUILD_DIR}
 	wget -q "https://sourceforge.net/projects/mlton/files/mlton/20130715/mlton-20130715-2.amd64-linux.tgz"
 	tar -xzf mlton-20130715-2.amd64-linux.tgz
 	rm mlton-20130715-2.amd64-linux.tgz
@@ -30,18 +31,17 @@ if [[ "${SML_IMPL}" = "mlton" ]] ; then
 	sudo make install
 	cd ${TRAVIS_BUILD_DIR}
 	rm -rf mlton-20130715-2
-elif [[ "${SML_IMPL}" = "smlnj" ]] ; then
-	echo "> Installing SML/NJ (110.82)"
-	# SML/NJ is 32-bit, need some stuff to enable travis to run 32-bit binaries
-	sudo apt-get install -y gcc-multilib g++-multilib lib32ncurses5 lib32z1 lib32bz2-1.0
+elif [[ "${SML_IMPL}" = "polyml" ]] ; then
+	echo "> Installing PolyML (5.7.1)"
 
-	sudo mkdir /usr/local/share/smlnj
-	cd /usr/local/share/smlnj
-	sudo wget -q "http://smlnj.cs.uchicago.edu/dist/working/110.82/config.tgz"
-	sudo gunzip <config.tgz | sudo tar xf -
-	sudo /bin/bash -c 'echo "request heap2asm" >> config/targets'
-	sudo config/install.sh
-	sudo cp -fpR bin/. /usr/local/bin/
+	POLY_RELEASE_COMMIT=44b7b88e1a46757dfcddaab0166ca86c7024f198
+	git clone https://github.com/polyml/polyml.git
+	cd polyml
+	git checkout "${POLY_RELEASE_COMMIT}" -b release-5-7-1
+	./configure
+	make
+	make compiler
+	sudo make install
 else
 	echo "SML_IMPL [${SML_IMPL}] not reconised."
 	exit 1
