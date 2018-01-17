@@ -22,7 +22,7 @@ sudo: required
 matrix:
   fast_finish: true
   include:
-    - env: SML_IMPL=smlnj
+    - env: SML_IMPL=mlton
     - env: SML_IMPL=polyml
   allow_failures:
     # Allow failure while we're getting it set up
