@@ -302,7 +302,7 @@ fun consProgsSml [] n nasc fnames _ = ([], fnames, false, n, nasc)
     (D.printDebug D.PARSER D.PARSING (fn _ => "[Skalpel: parsing file: "^file^"]\n");
     case convertToFull file opf fnames of
 	(NONE, xs) =>
-	(* we carry on, so that if a file is not found eg in SKALPEL-USE-FIE, then the
+	(* we carry on, so that if a file is not found eg in SKALPEL-USE-FILE, then the
 	 * user gets an error about it *)
 	let val (prog, m, masc) = dummyparsing xs n nasc
 	    val (progs, fnames', clear, p, pasc) = consProgsSml files m masc fnames webdemo
