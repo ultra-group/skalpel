@@ -53,4 +53,6 @@ signature EXTLAB = sig
 		       Id.assoc       ->
 		       string
 
+    val ppExtLab : 'a extLab -> string -> ('a -> string -> string) -> string
+
 end

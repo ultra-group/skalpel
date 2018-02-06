@@ -96,4 +96,6 @@ fun updExtLabD (x, labs, stts, deps) deps' = (x, labs, stts, ContextDependency.u
 (** Creates a dependent form from a term with two empty label sets and no context dependencies. *)
 fun resetExtLab x = (getExtLabT x, L.empty, L.empty, ContextDependency.empty)
 
+fun ppExtLab (term, labs, stats, cdeps) ind ppTermFun = (L.toString  labs)^"," ^(L.toString  stats)^","^(ContextDependency.toString cdeps)^")\n"^(ppTermFun term ind)
+
 end

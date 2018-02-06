@@ -3115,7 +3115,11 @@ fun unif env filters user =
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts deps0
 			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs1, stts, deps)
 			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
+			       val _ = print ((#yellow (!D.colors))^(E.ppOneConstraint equalityTypeConstraint ""))
+			       val _ = print (!D.textReset)
 			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
+			       val _ = print ((#yellow (!D.colors))^(E.ppOneConstraint c1 ""))
+			       val _ = print (!D.textReset)
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   in fsimplify [equalityTypeConstraint, c1, c2] l
 			   end)

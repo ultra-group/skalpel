@@ -376,4 +376,6 @@ signature ENV = sig
     val printOneConstraintList : oneConstraint list -> string
     val printOneConstraint : oneConstraint -> string
     val printOneAccessor : accessor -> string
+
+    val ppOneConstraint : oneConstraint -> string -> string
 end

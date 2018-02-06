@@ -1683,4 +1683,21 @@ and filterEnv (env as ENV_CONS _) labs =
 (** Filters the constraintss that are not in the label set. *)
 val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateIComplete false emptyEnv | SOME env' => env'
 
+val tab = "        ";
+
+fun ppOneConstraint (TYPE_CONSTRAINT x) ind = ind ^ "TYPE_CONSTRAINT(" ^ (EL.ppExtLab x (ind^tab) (T.ppTyPair T.ppTyCon))
+ |  ppOneConstraint (TYPENAME_CONSTRAINT (x)) ind = ind^"TYPENAME_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppTyNameCon))
+ |  ppOneConstraint (ROW_CONSTRAINT (x)) ind = ind^"ROW_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppRowCon))
+ |  ppOneConstraint (EQUALITY_TYPE_CONSTRAINT (x)) ind = ind^"EQUALITY_TYPE_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppEqTyCon))
+ |  ppOneConstraint (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"FIELD_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (LABEL_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"LABEL_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (ENV_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"ENV_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (IDENTIFIER_CLASS_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"IDENTIFIER_CLASS_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (FUNCTION_TYPE_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"FUNCTION_TYPE_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (ACCESSOR_CONSTRAINT x) ind = ind^"ACCESSOR_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (LET_CONSTRAINT x) ind = ind^"LET_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (SIGNATURE_CONSTRAINT x) ind = ind^"SIGNATURE_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (FUNCTOR_CONSTRAINT x) ind = ind^"FUNCTION_CONSTRAINT(NYI)\n"
+ |  ppOneConstraint (SHARING_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"SHARING_CONSTRAINT(NYI)\n";
+
 end

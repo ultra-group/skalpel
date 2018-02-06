@@ -277,4 +277,9 @@ signature TY = sig
     val printFieldVar       : fieldVar      -> string
     val printlabty        : labelType       -> string
 
+    val ppTyPair : ('a -> string -> string) -> ('a * 'a) -> string -> string
+    val ppTyCon :  ty -> string -> string
+    val ppTyNameCon : typenameType -> string -> string
+    val ppRowCon : rowType -> string -> string
+    val ppEqTyCon : equalityType -> string -> string
 end
