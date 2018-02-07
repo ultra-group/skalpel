@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1686,7 +1687,7 @@ val filterEnv = fn env => fn labs => case filterEnv env labs of NONE => updateIC
 val tab = "        ";
 
 fun ppOneConstraint (TYPE_CONSTRAINT x) ind = ind ^ "TYPE_CONSTRAINT(" ^ (EL.ppExtLab x (ind^tab) (T.ppTyPair T.ppTyCon))
- |  ppOneConstraint (TYPENAME_CONSTRAINT (x)) ind = ind^"TYPENAME_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppTyNameCon))
+ |  ppOneConstraint (TYPENAME_CONSTRAINT (x)) ind = ind^"TYPENAME_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppTyNameTyCon))
  |  ppOneConstraint (ROW_CONSTRAINT (x)) ind = ind^"ROW_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppRowCon))
  |  ppOneConstraint (EQUALITY_TYPE_CONSTRAINT (x)) ind = ind^"EQUALITY_TYPE_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppEqTyCon))
  |  ppOneConstraint (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"FIELD_CONSTRAINT(NYI)\n"

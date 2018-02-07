@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -279,7 +280,7 @@ signature TY = sig
 
     val ppTyPair : ('a -> string -> string) -> ('a * 'a) -> string -> string
     val ppTyCon :  ty -> string -> string
-    val ppTyNameCon : typenameType -> string -> string
+    val ppTyNameTyCon : typenameType -> string -> string
     val ppRowCon : rowType -> string -> string
     val ppEqTyCon : equalityType -> string -> string
 end

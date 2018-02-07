@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +47,7 @@ signature DEBUG = sig
 			  | CONSTRAINT_PATH
 			  | CONSTRAINT_GENERATION
 			  | CONSTRAINT_SOLVING
+			  | CONSTRAINT_SOLVE_PP
 			  | TESTING
 			  | PARSING
 			  | STATE
