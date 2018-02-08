@@ -559,6 +559,7 @@ fun smlTesStrArgs strArgs =
 			| "CONSTRAINT_PATH" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_PATH)
 			| "CONSTRAINT_GENERATION" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_GENERATION)
 			| "CONSTRAINT_SOLVING" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVING)
+      | "CONSTRAINT_SOLVE_PP" => (D.debug := true; D.enableDebugFeature D.CONSTRAINT_SOLVE_PP)
 			| "TESTING" => (D.debug := true; D.enableDebugFeature D.TESTING)
 			| "PARSING" => (D.debug := true; D.enableDebugFeature D.PARSING)
 			| "STATE" => (D.debug := true; D.enableDebugFeature D.STATE)
