@@ -1163,42 +1163,42 @@ and stripEqualityVariables (typeVar as TYPE_VAR (tv, x, monoOrPoly, EQUALITY_TYP
 
 and stripEqualityVariablesList _ = raise EH.TODO ""
 
-val tab = "        ";
+val tab = "     ";
 fun ppTyPair f (x,y) ind = ((f x ind))^((f y ind))
 
 fun ppList ppFun [] ind = ""
  |  ppList ppFun (h::t) ind = (ppFun h ind)^(ppList ppFun t ind);
 
-fun ppTyCon (TYPE_VAR (v, b, p, eqtv)) ind = ind^"TYPE_VAR("^(printTypeVar v)^", "^(printExplicit b)^", "^(printPoly p)^")\n"^(ppEqTyCon eqtv (tab^ind))
- |  ppTyCon (EXPLICIT_TYPE_VAR (id, tv, l, eqtv)) ind = ind^"EXPLICIT_TYPE_VAR(NYI)\n"
- |  ppTyCon (TYPE_CONSTRUCTOR (tn, sq, l, eq)) ind = ind^"TYPE_CONSTRUCTOR("^(L.printLab l)^")\n"^(ppTyNameTyCon tn (ind^tab))^(ppRowCon sq (ind^tab))^(ppEqTyCon eq (tab^ind))
- |  ppTyCon (APPLICATION (tf, sq, l)) ind = ind^"APPLICATION(NYI)\n"
- |  ppTyCon (TYPE_POLY (sq, i ,p, k, l, eq)) ind = ind^"TYPE_POLY(NYI)\n"
- |  ppTyCon (GEN tys) ind = ind^"GEN(NYI)\n"
- |  ppTyCon (TYPE_DEPENDANCY ety) ind = ind^"TYPE_DEPENDENCY("^(EL.ppExtLab ety (ind^tab) ppTyCon)
+fun ppTyCon (TYPE_VAR (v, b, p, eqtv)) ind = ind ^ "TYPE_VAR("^(printTypeVar v)^", "^(printExplicit b)^", "^(printPoly p)^")\n"^(ppEqTyCon eqtv (ind^tab))
+ |  ppTyCon (EXPLICIT_TYPE_VAR (id, tv, l, eqtv)) ind = ind ^ "EXPLICIT_TYPE_VAR(NYI)\n"
+ |  ppTyCon (TYPE_CONSTRUCTOR (tn, sq, l, eq)) ind = ind ^ "TYPE_CONSTRUCTOR("^(L.printLab l)^")\n"^(ppTyNameTyCon tn (ind^tab))^(ppRowCon sq (ind^tab))^(ppEqTyCon eq (ind^tab))
+ |  ppTyCon (APPLICATION (tf, sq, l)) ind = ind ^ "APPLICATION(NYI)\n"
+ |  ppTyCon (TYPE_POLY (sq, i ,p, k, l, eq)) ind = ind ^ "TYPE_POLY(NYI)\n"
+ |  ppTyCon (GEN tys) ind = ind ^ "GEN(NYI)\n"
+ |  ppTyCon (TYPE_DEPENDANCY ety) ind = ind ^ "TYPE_DEPENDENCY("^(EL.ppExtLab ety (ind^tab) ppTyCon)
 
-and ppTyNameTyCon (TYPENAME_VAR x) ind = ind^"TYPENAME_VAR(NYI)\n"
- |  ppTyNameTyCon (NC (tn, k, l)) ind = ind^"TYPENAME_CONSTRUCTION("^(printTypename' tn)^", "^(printKCons k)^", "^(L.printLab l)^")\n"
- |  ppTyNameTyCon (TYPENAME_DEPENDANCY x) ind = ind^"TYPENAME_DEPENDENCY(NYI)\n"
+and ppTyNameTyCon (TYPENAME_VAR x) ind = ind ^ "TYPENAME_VAR(NYI)\n"
+ |  ppTyNameTyCon (NC (tn, k, l)) ind = ind ^ "TYPENAME_CONSTRUCTION("^(printTypename' tn)^", "^(printKCons k)^", "^(L.printLab l)^")\n"
+ |  ppTyNameTyCon (TYPENAME_DEPENDANCY x) ind = ind ^ "TYPENAME_DEPENDENCY(NYI)\n"
 
-and ppRowCon (ROW_VAR x) ind = ind^"ROW_VAR("^(printRowVar x)^")\n"
- |  ppRowCon (ROW_C (rl, b, l)) ind = ind^"ROW_CONSTRUCTION("^(printflex b)^", "^(L.printLab l)^")\n"^(ppList ppFieldTy rl (ind^tab))
- |  ppRowCon (ROW_DEPENDANCY eseq) ind = ind^"ROW_DEPENDENCY(NYI)\n"
+and ppRowCon (ROW_VAR x) ind = ind ^ "ROW_VAR("^(printRowVar x)^")\n"
+ |  ppRowCon (ROW_C (rl, b, l)) ind = ind ^ "ROW_CONSTRUCTION("^(printflex b)^", "^(L.printLab l)^")\n"^(ppList ppFieldTy rl (ind^tab))
+ |  ppRowCon (ROW_DEPENDANCY eseq) ind = ind ^ "ROW_DEPENDENCY(NYI)\n"
 
-and ppFieldTy (FIELD_VAR x) ind = ind^"FIELV_VAR("^(printFieldVar x)^")\n"
- |  ppFieldTy (FC (lt, tv, l)) ind = ind^"FIELD_CONSTRUCTION("^(L.printLab l)^")\n"^(ppLabTy lt (ind^tab))^(ppTyCon tv (ind^tab))
- |  ppFieldTy (FIELD_DEPENDANCY x) ind = ind^"FIELD_DEPENDENCY(NYI)\n"
- |  ppFieldTy (FIELD_NO_OVERLOAD) ind = ind^"FIELD_NO_OVERLOAD\n"
+and ppFieldTy (FIELD_VAR x) ind = ind ^ "FIELV_VAR("^(printFieldVar x)^")\n"
+ |  ppFieldTy (FC (lt, tv, l)) ind = ind ^ "FIELD_CONSTRUCTION("^(L.printLab l)^")\n"^(ppLabTy lt (ind^tab))^(ppTyCon tv (ind^tab))
+ |  ppFieldTy (FIELD_DEPENDANCY x) ind = ind ^ "FIELD_DEPENDENCY(NYI)\n"
+ |  ppFieldTy (FIELD_NO_OVERLOAD) ind = ind ^ "FIELD_NO_OVERLOAD\n"
 
-and ppLabTy (LABEL_VAR x) ind = ind^"LABEL_VAR("^(printLabelVar x)^")\n"
- |  ppLabTy (LC (lc, l)) ind = ind^"LABEL_CONSTRUCTION("^(lc)^", "^(L.printLab l)^")\n"
- |  ppLabTy (LABEL_DEPENDANCY x) ind = ind^"LABEL_DEPENDENCY(NYI)\n"
+and ppLabTy (LABEL_VAR x) ind = ind ^ "LABEL_VAR("^(printLabelVar x)^")\n"
+ |  ppLabTy (LC (lc, l)) ind = ind ^ "LABEL_CONSTRUCTION("^(lc)^", "^(L.printLab l)^")\n"
+ |  ppLabTy (LABEL_DEPENDANCY x) ind = ind ^ "LABEL_DEPENDENCY(NYI)\n"
 
-and ppEqTyCon (EQUALITY_TYPE_VAR x) ind = ind^"EQUALITY_TYPE_VAR("^(printEqualityTypeVar x)^")\n"
- |  ppEqTyCon (EQUALITY_TYPE_VAR_LIST x) ind = ind^"EQUALITY_TYPE_VAR_LIST("^(printEqualityTypeVarList x)^")\n"
- |  ppEqTyCon (EQUALITY_TYPE_STATUS x) ind = ind^"EQUALITY_TYPE_STATUS("^(printEqualityTypeStatus x)^")\n"
- |  ppEqTyCon (EQUALITY_TYPE_TYPENAME x) ind = ind^"EQUALITY_TYPE_TYPENAME("^(printEqualityTypeVarList x)^")\n"
- |  ppEqTyCon (EQUALITY_TYPE_DEPENDANCY x) ind = ind^"EQUALITY_TYPE_DEPENDANCY(NYI)\n"
- |  ppEqTyCon (EQUALITY_TYPE_ON_TYPE x) ind = ind^"EQUALITY_TYPE_ON_TYPE\n"^(ppTyCon x (ind^tab))
+and ppEqTyCon (EQUALITY_TYPE_VAR x) ind = ind ^ "EQUALITY_TYPE_VAR("^(printEqualityTypeVar x)^")\n"
+ |  ppEqTyCon (EQUALITY_TYPE_VAR_LIST x) ind = ind ^"EQUALITY_TYPE_VAR_LIST("^(printEqualityTypeVarList x)^")\n"
+ |  ppEqTyCon (EQUALITY_TYPE_STATUS x) ind = ind ^ "EQUALITY_TYPE_STATUS("^(printEqualityTypeStatus x)^")\n"
+ |  ppEqTyCon (EQUALITY_TYPE_TYPENAME x) ind = ind ^ "EQUALITY_TYPE_TYPENAME("^(printEqualityTypeVarList x)^")\n"
+ |  ppEqTyCon (EQUALITY_TYPE_DEPENDANCY x) ind = ind ^ "EQUALITY_TYPE_DEPENDANCY(NYI)\n"
+ |  ppEqTyCon (EQUALITY_TYPE_ON_TYPE x) ind = ind ^ "EQUALITY_TYPE_ON_TYPE\n"^(ppTyCon x (ind^tab))
 
 end

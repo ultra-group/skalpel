@@ -791,7 +791,6 @@ fun exportErrors [] _ _ _ _ counter = counter
  |  exportErrors (error::errors) funout time parse cs counter =
 		let
 			val _ = funout [error] parse cs counter time
-			val _ = print ("> \n")
 		in exportErrors errors funout time parse cs (counter + 1) end
 
 (** slicing function - a function to run the slicer. Arguments are as follows:
