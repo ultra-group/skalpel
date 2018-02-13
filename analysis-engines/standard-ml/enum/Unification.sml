@@ -3116,9 +3116,9 @@ fun unif env filters user =
 			       val c1    = E.genCstTyAll sem bind2 labs1 stts deps0
 			       val equalityTypeConstraint = E.EQUALITY_TYPE_CONSTRAINT ((T.EQUALITY_TYPE_VAR equalityTypeVarAccessor, T.EQUALITY_TYPE_ON_TYPE (bind2)), labs1, stts, deps)
 			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint (equality types) = "^(E.printOneConstraint equalityTypeConstraint))
-			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint equalityTypeConstraint ""))
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint equalityTypeConstraint "" I.emAssoc))
 			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => (#cyan (!D.colors))^"new type constraint = "^(E.printOneConstraint c1))
-			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c1 ""))
+			       val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c1 "" I.emAssoc))
 			       val c2    = E.genCstClAll class cl  labs1 stts0 deps0
 			   in fsimplify [equalityTypeConstraint, c1, c2] l
 			   end)
@@ -3132,7 +3132,7 @@ fun unif env filters user =
 	       | SOME (lid', false) => ()))
 	  | solveacc (currentConstraint as E.EXPLICIT_TYPEVAR_ACCESSOR ({lid, equalityTypeVar, sem, class, lab}, labs, stts, deps)) l =
 	    (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneAccessor currentConstraint));
-	    (*D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""));*)
+	    (*D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc));*)
 	     (case filterLid lid filters of
 		 NONE => ()
 	       | SOME (_, true) =>
@@ -3150,8 +3150,8 @@ fun unif env filters user =
 			  val c   = E.genCstTyAll ty1 ty2 labs0 stts0 deps0
 			  val c2  = E.initEqualityTypeConstraint (T.consEQUALITY_TYPE_VAR equalityTypeVar) (T.consEQUALITY_TYPE_VAR eqtvBind) l
 			  val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "found binder, made new constraints:"^(E.printOneConstraint c)^(E.printOneConstraint c2));
-			  val () = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c ""));
-			  val () = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c2 ""));
+			  val () = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c "" I.emAssoc));
+			  val () = D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint c2 "" I.emAssoc));
 		      in fsimplify [c, c2] l
 		      end
 		    | _ => ())
@@ -3657,7 +3657,7 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENVDEP (env1, ls', deps', ids'), env2), ls, deps, ids)) :: cs') l = simplify ((E.ENV_CONSTRAINT ((env1, env2), L.union ls ls', L.union deps deps', CD.union ids ids')) :: cs') l
 	  (**)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc1 as T.TYPE_CONSTRUCTOR (tn1, sq1, l1, eq1), tc2 as T.TYPE_CONSTRUCTOR (tn2, sq2, l2, eq2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if (T.isBaseTy tn1 andalso not (T.isBaseTy tn2))
 		orelse
 		(T.isBaseTy tn2 andalso not (T.isBaseTy tn1))
@@ -3713,7 +3713,7 @@ fun unif env filters user =
 		     fsimplify (c1 :: c2 :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((nc1 as T.NC (tn1, b1, l1), nc2 as T.NC (tn2, b2, l2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if T.eqTypename tn1 tn2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt tn1), (L.toInt l2, T.typenameToInt tn2))
@@ -3724,7 +3724,7 @@ fun unif env filters user =
 		  end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((rc1 as T.ROW_C (rtl1, b1, l1), rc2 as T.ROW_C (rtl2, b2, l2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val n1 = length rtl1
 		val n2 = length rtl2
 	    (*val _  = D.printdebug2 ("-("  ^ (O.printelt l1)   ^
@@ -3769,7 +3769,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((ty1 as T.TYPE_VAR (tv1, b1, p1, eq1), ty2 as T.TYPE_VAR (tv2, b2, p2, eq2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		fun continue () =
 		    case S.getValStateTv state tv1 of
 			NONE =>
@@ -3815,7 +3815,7 @@ fun unif env filters user =
 		      | _ => continue ()
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n1, tv1, l1, eqtv1), T.EXPLICIT_TYPE_VAR (n2, tv2, l2, eqtv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if I.eqId n1 n2
 	     then fsimplify cs' l
 	     else let val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.DUMMYTYPENAME)))
@@ -3825,7 +3825,7 @@ fun unif env filters user =
 		  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, _), T.TYPE_CONSTRUCTOR (tn, _, l2, _)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val ek  = EK.TyConsClash ((L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME)), (L.toInt l2, T.typenameToInt (T.tntyToTyCon tn)))
 		val err = ERR.consPreError ERR.dummyId ls ids ek deps
 	    in
@@ -3833,7 +3833,7 @@ fun unif env filters user =
 		handleSimplify err cs' l)
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, T.TYPENAME_VAR tnv2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if T.eqTypenameVar tnv1 tnv2
 	    then fsimplify cs' l
 	    else (case S.getValStateTn state tnv1 of
@@ -3848,7 +3848,7 @@ fun unif env filters user =
                       in fsimplify (c :: cs') l
                       end))
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2 as (T.ROW_VAR sqv2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if T.eqRowVar sqv1 sqv2
 	     then fsimplify cs' l
 	    else (case S.getValStateSq state sqv1 of
@@ -3864,7 +3864,7 @@ fun unif env filters user =
                       end))
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tyv as T.TYPE_VAR (tv, b, p, eq), ty), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 
 		fun reportGenError () =
 		    if Option.isSome b       (* Type variable comes from an explicit type variable        *)
@@ -3979,7 +3979,7 @@ fun unif env filters user =
 		   end
 	    end
 	  | fsimplify ((currentConstraint as E.TYPENAME_CONSTRAINT ((T.TYPENAME_VAR tnv1, tnty2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateTn state tnv1 of
 		 NONE =>
 		 let val _ = S.updateStateTn state tnv1 (T.TYPENAME_DEPENDANCY (tnty2, ls, deps, ids))
@@ -3989,7 +3989,7 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.ROW_CONSTRAINT ((T.ROW_VAR sqv1, sq2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateSq state sqv1 of
 		 NONE =>
 		 let val (rho, n) = decomptysq sq2 ls deps ids
@@ -4003,7 +4003,7 @@ fun unif env filters user =
 		 in fsimplify (c :: cs') l
 		 end)
 	  | fsimplify ((currentConstraint as E.FIELD_CONSTRAINT ((T.FIELD_VAR rv, rt as T.FC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateRt state rv of
 		 NONE =>
 		 let val (rho, n) = decomptyfield rt ls deps ids
@@ -4028,7 +4028,7 @@ fun unif env filters user =
 	  (* we update and store *)
 	  (* if it's 2 variables we raise deadbranch, same if it's 2 cons *)
 	  | fsimplify ((currentConstraint as E.LABEL_CONSTRAINT ((T.LABEL_VAR lv, lt as T.LC _), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint)); D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateLt state lv of
 		 NONE =>
 		 let val _ = S.updateStateLt state lv (T.LABEL_DEPENDANCY (lt, ls, deps, ids))
@@ -4048,7 +4048,7 @@ fun unif env filters user =
 		 end
                | SOME lt' => raise EH.DeadBranch "DeadBranch23")
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TYPE_FUNCTION_VAR tfv, seqty, lab), t2), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateTf state tfv of
                  NONE => fsimplify cs' l
 	       | SOME tf =>
@@ -4057,7 +4057,7 @@ fun unif env filters user =
                  end)
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((t1 as T.APPLICATION (T.TFC (seqty1, ty1, lab1), seqty2, lab2), ty2), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val labs = L.cons lab1 (L.cons lab2 ls)
 		val c1 = E.genCstSqAll seqty1 seqty2 labs deps ids
 		val c2 = E.genCstTyAll ty1 ty2 labs deps ids
@@ -4068,7 +4068,7 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((tc as (T.TYPE_CONSTRUCTOR (tnty, sq, lab1, eq1)), to as T.TYPE_POLY (sq', idor, poly, orKind, lab2, eq2)), ls, deps, ids)) :: cs') l =
 	    (* Build the sq' in case it's a variable. *)
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		fun checkTn tnty labs stts deps seq =
 		    case tnty of
 			T.TYPENAME_VAR _ => fsimplify cs' l
@@ -4132,7 +4132,7 @@ fun unif env filters user =
 	    end
 	  | fsimplify ((currentConstraint as E.TYPE_CONSTRAINT ((T.EXPLICIT_TYPE_VAR (n, tv, l1, eqtv1), T.TYPE_POLY (sq, x, poly, orKind, l2, eqtv2)), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		fun getErr () =
 		    let val tnerr  = (L.toInt l1, T.typenameToInt (T.DUMMYTYPENAME))
 			val (tnerrs, labs, stts, deps) = gatherAllTnSq sq
@@ -4160,7 +4160,7 @@ fun unif env filters user =
 							      ty2 as T.TYPE_POLY (sq2, i2, poly2, orKind2, lab2, eq2)),
 							     ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		fun match seq1 seq2 ls deps ids =
 		    case tryToMatchOrs seq1 seq2 of
 			(_, _, false) => (* tryToMatchOrs can be simplified as it is just a checking *)
@@ -4285,7 +4285,7 @@ fun unif env filters user =
 	    end
 	  (* TODO: check that *)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev1, lab1), env2 as E.ENV_VAR (ev2, lab2)), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if E.eqEnvVar ev1 ev2
 	    then fsimplify cs' l
 	    else (case S.getValStateEv state ev1 of
@@ -4336,7 +4336,7 @@ fun unif env filters user =
 		 fsimplify cs' l)
 	    end
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((E.ENV_VAR (ev, lab), env), ls, deps, ids)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateEv state ev of
 		 NONE =>
 		 let val env' = solveenv env false (*Why do we need to solve here?*)
@@ -4349,7 +4349,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.ENV_CONSTRAINT ((env1 as E.ENV_CONS _, env2 as E.ENV_CONS _), ls, deps, ids)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val cs = compareenv env1 env2 filters ls deps ids
 	    (* do something for idV and idS *)
 	    in fsimplify (cs @ cs') l
@@ -4377,7 +4377,7 @@ fun unif env filters user =
 	  | fsimplify ((E.ENV_CONSTRAINT ((E.ENV_CONS x, E.CONSTRAINT_ENV y), ls, deps, ids)) :: cs') l = raise EH.TODO "unhandled case in the constraint solver, raised in the 'f_simplify' function of Unification.sml"
 	  (**)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TYPE_FUNCTION_VAR tfv, typeFunction), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateTf state tfv of
 		 NONE =>
 		 let val _ = D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Type function variable is not in the state, inserting mapping.")
@@ -4404,7 +4404,7 @@ fun unif env filters user =
 		 end)
 	  | fsimplify ((currentConstraint as E.FUNCTION_TYPE_CONSTRAINT ((T.TFC (seqty1, ty1, lab1), T.TFC (seqty2, ty2, lab2)), labs, stts, deps)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val c1 = E.genCstSqAll seqty1 seqty2 labs stts deps
 		val c2 = E.genCstTyAll ty1    ty2    labs stts deps
 	    in fsimplify (c1 :: c2 :: cs') l
@@ -4412,7 +4412,7 @@ fun unif env filters user =
 	  | fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction1, typeFunction2 as T.TYPE_FUNCTION_VAR tfv), labs, stts, deps)) :: cs') l =
 	    fsimplify ((E.FUNCTION_TYPE_CONSTRAINT ((typeFunction2, typeFunction1), labs, stts, deps)) :: cs') l
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR clvar, cl), labs, stts, deps)) :: cs') l =
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     case S.getValStateCl state clvar of
 		 NONE =>
 		 let val _ = S.updateStateCl state clvar (cl, labs, stts, deps)
@@ -4428,7 +4428,7 @@ fun unif env filters user =
 	    fsimplify ((E.IDENTIFIER_CLASS_CONSTRAINT ((CL.CLVAR cv, x), ls, deps, ids)) :: cs') l
 	  | fsimplify ((currentConstraint as E.IDENTIFIER_CLASS_CONSTRAINT ((CL.VID vid1, CL.VID vid2), labs, stts, deps)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		fun genError kind =
 		    let val err = ERR.consPreError ERR.dummyId labs deps kind stts
 		    in
@@ -4549,7 +4549,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.SIGNATURE_CONSTRAINT (signatureEnvVar, translucentEnvVar, structureEnvVar, opaqueEnvVar, lab)) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val btest = FI.testtodo filters lab
 		val _ = if (not (!analysingBasis)) then D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "btest is: "^(Bool.toString btest)) else ()
 	    in if btest
@@ -4607,7 +4607,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.FUNCTOR_CONSTRAINT (ev1, ev2, ev3, ev4, lab)) :: cs') l =
 	    (* functor: ev1 -> ev2, argument : ev3, result ev4 *)
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	     if FI.testtodo filters lab
 	    then let val env1 = buildFEnv (E.consENV_VAR ev1 lab) state false
 		     val env2 = buildFEnv (E.consENV_VAR ev2 lab) state true
@@ -4635,7 +4635,7 @@ fun unif env filters user =
 	  | fsimplify ((currentConstraint as E.SHARING_CONSTRAINT (ev0, ev1, ev2, lab)) :: cs') l =
 	    (* I need to transform this constraint in env as I've done for WHR. *)
 	    (* 0: spec, 1: returned, 2: longTyCons *)
-	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ();
+	    (if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ();
 	    if FI.testtodo filters lab
 	    then let val env0 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev0 lab) state false
 		     val env2 = buildFEnv (*justBuildEnv*) (E.consENV_VAR ev2 lab) state false
@@ -4666,7 +4666,7 @@ fun unif env filters user =
 	  (**)
 	  | fsimplify ((currentConstraint as E.ACCESSOR_CONSTRAINT acc) :: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 	    in
 		(solveacc acc l; fsimplify cs' l)
 	    end
@@ -4912,7 +4912,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT ((equalityTypeVar1 as T.EQUALITY_TYPE_VAR eqtv1, ty as T.EQUALITY_TYPE_ON_TYPE (tyterm)), ls, deps, ids)):: cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 
 		val cs' = (case tyterm of
 			     (T.TYPE_VAR (tv, extv, poly, eqtv)) =>
@@ -5032,7 +5032,7 @@ fun unif env filters user =
 
 	  | fsimplify ((currentConstraint as E.EQUALITY_TYPE_CONSTRAINT(((T.EQUALITY_TYPE_VAR(eqtv),T.EQUALITY_TYPE_TYPENAME(eqtvList)),labs,stts,ids)))::cs') l =
 	    let
-		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint ""))) else ()
+		val _ = if (not (!analysingBasis)) then (D.printDebug D.UNIF D.CONSTRAINT_SOLVING (fn _ => "Solving constraint: "^(E.printOneConstraint currentConstraint));D.printDebug D.UNIF D.CONSTRAINT_SOLVE_PP (fn _ => (E.ppOneConstraint currentConstraint "" I.emAssoc))) else ()
 		val _ = case S.getValStateEq state eqtv of
 			    NONE =>
  			    S.updateStateEq state eqtv (T.EQUALITY_TYPE_DEPENDANCY(T.EQUALITY_TYPE_TYPENAME (eqtvList), labs, stts, ids), [])

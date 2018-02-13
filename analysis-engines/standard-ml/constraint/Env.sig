@@ -378,5 +378,5 @@ signature ENV = sig
     val printOneConstraint : oneConstraint -> string
     val printOneAccessor : accessor -> string
 
-    val ppOneConstraint : oneConstraint -> string -> string
+    val ppOneConstraint : oneConstraint -> string -> Id.assoc -> string
 end

@@ -45,15 +45,9 @@ signature EXTLAB = sig
     val updExtLabD   : 'a extLab -> LongId.set   -> 'a extLab
     val resetExtLab  : 'a extLab -> 'a extLab
 
-    val printExtLab' : 'a extLab      ->
-		       ('a -> string) ->
-		       string
+    val printExtLab' : 'a extLab -> ('a -> string) -> string
+    val printExtLab  : 'a extLab -> ('a -> string) -> Id.assoc -> string
 
-    val printExtLab  : 'a extLab      ->
-		       ('a -> string) ->
-		       Id.assoc       ->
-		       string
-
-    val ppExtLab : 'a extLab -> string -> ('a -> string -> string) -> string
-
+    val ppExtLab : 'a extLab -> string -> ('a -> string -> string) -> Id.assoc -> string
+    val ppExtLab' : 'a extLab -> string -> ('a -> string -> string) -> string
 end

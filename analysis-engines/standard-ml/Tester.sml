@@ -817,6 +817,7 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 				val _ = L.setNextLab m
 				val _ = print ("[Skalpel: constraint generation...]\n")
 				val envContextSensitiveSyntaxPair = AN.fullConsGen progs ascid nenv
+				val _ = D.printDebug D.AZE D.CONSTRAINT_GENERATION (fn _ => "Env generated:\n"^ (Env.printEnv (#1 envContextSensitiveSyntaxPair) "") ^ "\n")
 				val _ = print ("[Skalpel: enumeration...]\n")
 				val (errl1, filters) = preEnum envContextSensitiveSyntaxPair parse
 				val errl2 = ERR.setSlices progs errl1

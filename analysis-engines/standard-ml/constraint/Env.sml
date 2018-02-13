@@ -444,14 +444,18 @@ fun printShaBind (ev1, ev2, ev3, lab) =
 
 (** Print a pair (x,y) appling the function f to both the left and right hand side. *)
 fun printPair (x, y) f = "(" ^ f x ^ "," ^ f y ^ ")"
+fun ppPair f (x, y) ind = (f x ind) ^ (f y ind)
 
 (** Prints out an accessor as a string. *)
-fun printAccessorId {lid, equalityTypeVar, sem, class, lab} f ind ascid =
+fun printAccessorId f {lid, equalityTypeVar, sem, class, lab} ind ascid =
+    ind ^
     "{" ^ I.printLid' lid ascid ^
     "," ^ T.printEqualityTypeVar equalityTypeVar ^
-    "," ^ f sem                 ^
-    "," ^ CL.toString class     ^
-    "," ^ L.printLab lab        ^ "}"
+    "," ^ CL.toString class ^
+    "," ^ L.printLab lab ^ "}\n"
+    ^ f sem ind
+
+fun printAccessorId' f ascid term ind = printAccessorId f term ind ascid
 
 (** Prints a match kind, either OPAQUE or TRANSLUCENT. *)
 fun printMatchKind OPAQUE = "OPAQUE"
@@ -459,24 +463,24 @@ fun printMatchKind OPAQUE = "OPAQUE"
 
 (** Prints a long type constructor binder. *)
 fun printLongTypeConsBinder longTypeConsBinder ind =
-    "LONGTYPECONSBINDER(" ^ EL.printExtLab' longTypeConsBinder (fn x => printAccessorId x T.printtyf' ind I.emAssoc) ^ ")"
+    "LONGTYPECONSBINDER(" ^ EL.printExtLab' longTypeConsBinder (fn x => printAccessorId (fn a => fn b => T.printtyf' a) x ind I.emAssoc) ^ ")"
 
 val tab = "    ";
 
-fun ppOneConstraint (TYPE_CONSTRAINT x) ind = ind ^ "TYPE_CONSTRAINT(" ^ (EL.ppExtLab x (ind^tab) (T.ppTyPair T.ppTyCon))
- |  ppOneConstraint (TYPENAME_CONSTRAINT (x)) ind = ind^"TYPENAME_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppTyNameTyCon))
- |  ppOneConstraint (ROW_CONSTRAINT (x)) ind = ind^"ROW_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppRowCon))
- |  ppOneConstraint (EQUALITY_TYPE_CONSTRAINT (x)) ind = ind^"EQUALITY_TYPE_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppEqTyCon))
- |  ppOneConstraint (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"FIELD_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (LABEL_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"LABEL_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (LABEL_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (ENV_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"ENV_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (ENV_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (IDENTIFIER_CLASS_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"IDENTIFIER_CLASS_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (IDENTIFIER_CLASS_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (FUNCTION_TYPE_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"FUNCTION_TYPE_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FUNCTION_TYPE_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (ACCESSOR_CONSTRAINT x) ind = ind ^ "ACCESSOR_CONSTRAINT(Pretty Printing Not Yet Implemented)(" ^ printocst (ACCESSOR_CONSTRAINT x) ind I.emAssoc ^ ")\n"
- |  ppOneConstraint (LET_CONSTRAINT x) ind = ind^"LET_CONSTRAINT\n" ^ printEnv x (ind ^ tab)
- |  ppOneConstraint (SIGNATURE_CONSTRAINT x) ind = ind^"SIGNATURE_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (SIGNATURE_CONSTRAINT x) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (FUNCTOR_CONSTRAINT x) ind = ind^"FUNCTION_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FUNCTOR_CONSTRAINT x) ind I.emAssoc ^ "\n"
- |  ppOneConstraint (SHARING_CONSTRAINT (term, labs, stats, cdeps)) ind = ind^"SHARING_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (SHARING_CONSTRAINT (term, labs, stats, cdeps)) ind I.emAssoc ^ "\n"
+fun ppOneConstraint (TYPE_CONSTRAINT x) ind ascid = ind ^ "TYPE_CONSTRAINT(" ^ (EL.ppExtLab x (ind^tab) (T.ppTyPair T.ppTyCon) ascid)
+ |  ppOneConstraint (TYPENAME_CONSTRAINT (x)) ind ascid = ind^"TYPENAME_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppTyNameTyCon) ascid)
+ |  ppOneConstraint (ROW_CONSTRAINT (x)) ind ascid = ind^"ROW_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppRowCon) ascid)
+ |  ppOneConstraint (EQUALITY_TYPE_CONSTRAINT (x)) ind ascid = ind^"EQUALITY_TYPE_CONSTRAINT("^(EL.ppExtLab (x) (ind^tab) (T.ppTyPair T.ppEqTyCon) ascid)
+ |  ppOneConstraint (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"FIELD_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FIELD_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
+ |  ppOneConstraint (LABEL_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"LABEL_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (LABEL_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
+ |  ppOneConstraint (ENV_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"ENV_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (ENV_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
+ |  ppOneConstraint (IDENTIFIER_CLASS_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"IDENTIFIER_CLASS_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (IDENTIFIER_CLASS_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
+ |  ppOneConstraint (FUNCTION_TYPE_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"FUNCTION_TYPE_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FUNCTION_TYPE_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
+ |  ppOneConstraint (ACCESSOR_CONSTRAINT x) ind ascid = ind ^ "ACCESSOR_CONSTRAINT\n" ^ ppAcc x (ind^tab) ascid
+ |  ppOneConstraint (LET_CONSTRAINT x) ind ascid = ind^"LET_CONSTRAINT\n" ^ printEnv x (ind ^ tab)
+ |  ppOneConstraint (SIGNATURE_CONSTRAINT x) ind ascid = ind^"SIGNATURE_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (SIGNATURE_CONSTRAINT x) ind ascid ^ "\n"
+ |  ppOneConstraint (FUNCTOR_CONSTRAINT x) ind ascid = ind^"FUNCTION_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (FUNCTOR_CONSTRAINT x) ind ascid ^ "\n"
+ |  ppOneConstraint (SHARING_CONSTRAINT (term, labs, stats, cdeps)) ind ascid = ind^"SHARING_CONSTRAINT(Pretty Printing Not Yet Implemented)" ^ printocst (SHARING_CONSTRAINT (term, labs, stats, cdeps)) ind ascid ^ "\n"
 
 (** Prints a binder using #printEnv. *)
 and printExtEnv     x      = printBind' x (fn x => printEnv x "")
@@ -504,33 +508,33 @@ and printEnv (ENV_CONS {valueIds, typeNames, explicitTypeVars, structs, sigs, fu
     "\n" ^ ind ^ tab ^ "overloadingClasses:" ^ printOvcEnv overloadingClasses ind ^
     "\n" ^ ind ^ tab ^ "info:" ^ printNfoEnv info ^
     "\n"
-  | printEnv (ENV_VAR (ev, lab))  ind   = ind ^ "ENV_VAR(" ^ printEnvVar ev ^ "," ^ L.printLab lab ^ ")"
-  | printEnv (ENVOPN openEnv)     ind = ind ^ "ENVOPN(" ^ printOpenEnv openEnv ind ^ ")"
-  | printEnv (ENVDEP extenv)     ind = ind ^ "ENVDEP(" ^ EL.printExtLab' extenv (fn env => printEnv env ind) ^ ")"
+  | printEnv (ENV_VAR (ev, lab))  ind   = ind ^ "ENV_VAR(" ^ printEnvVar ev ^ "," ^ L.printLab lab ^ ")\n"
+  | printEnv (ENVOPN openEnv)     ind = ind ^ "ENVOPN(" ^ printOpenEnv openEnv ind ^ ")\n"
+  | printEnv (ENVDEP extenv)     ind = ind ^ "ENVDEP(" ^ EL.printExtLab' extenv (fn env => printEnv env ind) ^ ")\n"
   | printEnv (FUNCTOR_ENV cst) ind = ind ^ "FUNCTOR_ENV\n" ^ printcst' cst (ind^tab) I.emAssoc
   | printEnv (CONSTRAINT_ENV cst) ind = ind ^ "CONSTRAINT_ENV\n" ^ printcst' cst (ind^tab) I.emAssoc
   | printEnv (ROW_ENV (env1, env2)) ind = ind ^ "ROW_ENV\n" ^ (printEnv env1 (ind^tab)) ^ (printEnv env2 (ind^tab))
-  | printEnv (LOCAL_ENV (env1, env2)) ind = ind ^ "LOCAL_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
-  | printEnv (ENVWHR (env, longTypeConsBinder)) ind = ind ^ "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTypeConsBinder longTypeConsBinder ind ^ ")"
-  | printEnv (ENVSHA (env1, env2)) ind = ind ^ "ENVSHA(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ ")"
-  | printEnv (SIGNATURE_ENV (env1, env2, kind)) ind = ind ^ "SIGNATURE_ENV(" ^ printEnv env1 ind ^ ",\n" ^ ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")"
+  | printEnv (LOCAL_ENV (env1, env2)) ind = ind ^ "LOCAL_ENV\n" ^ (printEnv env1 (ind^tab)) ^ (printEnv env2 (ind^tab))
+  | printEnv (ENVWHR (env, longTypeConsBinder)) ind = ind ^ "ENVWHR(" ^ printEnv env ind ^ ",\n" ^ ind ^ printLongTypeConsBinder longTypeConsBinder ind ^ ")\n"
+  | printEnv (ENVSHA (env1, env2)) ind = ind ^ "ENVSHA\n" ^ (printEnv env1 (ind^tab)) ^ (printEnv env2 (ind^tab))
+  | printEnv (SIGNATURE_ENV (env1, env2, kind)) ind = ind ^ "SIGNATURE_ENV(" ^ printEnv env1 ind ^ printEnv env2 ind ^ "," ^ printMatchKind kind ^ ")\n"
   | printEnv (ENVPOL (typeVarEnv, env)) ind = ind ^ "ENVPOL(" ^ printTypeVarEnv typeVarEnv ind ^ ")\n" ^ printEnv env (ind^tab)
-  | printEnv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env)) ind = ind ^ "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL labelledId ^ "," ^ printEnv env ind ^ ")"
-  | printEnv (ENVPTY st) ind = ind ^ "ENVPTY(" ^ st ^ ")"
-  | printEnv NO_DUPLICATE_ID ind = ind ^ "NO_DUPLICATE_ID"
-  | printEnv SHARING_BINDER_CHECK ind = ind ^ "SHARING_BINDER_CHECK"
-  | printEnv (ENVFIL (st, env, stream)) ind = ind ^ "ENVFIL(" ^ st ^ "," ^ printEnv env ind ^ ",\n" ^ printEnv (stream ()) ind ^ ")"
-  | printEnv ENVTOP ind = ind ^ "ENVTOP"
+  | printEnv (DATATYPE_CONSTRUCTOR_ENV (labelledId, env)) ind = ind ^ "DATATYPE_CONSTRUCTOR_ENV(" ^ I.printIdL labelledId ^ "," ^ printEnv env ind ^ ")\n"
+  | printEnv (ENVPTY st) ind = ind ^ "ENVPTY(" ^ st ^ ")\n"
+  | printEnv NO_DUPLICATE_ID ind = ind ^ "NO_DUPLICATE_ID\n"
+  | printEnv SHARING_BINDER_CHECK ind = ind ^ "SHARING_BINDER_CHECK\n"
+  | printEnv (ENVFIL (st, env, stream)) ind = ind ^ "ENVFIL(" ^ st ^ ")\n" ^ (printEnv env (ind^tab)) ^ (printEnv (stream ()) (ind^tab))
+  | printEnv ENVTOP ind = ind ^ "ENVTOP\n"
 
 (** Prints an accessor. *)
-and printAcc (VALUEID_ACCESSOR x) ind ascid = "VALUEID_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printty' ind ascid) ascid ^ ")"
-  | printAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid = "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printty ind ascid) ascid ^ ")"
-  | printAcc (EQUALITY_TYPE_ACCESSOR x) ind ascid = "EQUALITY_TYPE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printEqualityType ind ascid) ascid ^ ")"
-  | printAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid = "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn (x,y) => "(" ^ (T.printtyf' x) ^ "," ^ (Bool.toString y) ^ ")") ind ascid) ascid ^ ")"
-  | printAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid = "OVERLOADING_CLASSES_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x T.printseqty' ind ascid) ascid ^ ")"
-  | printAcc (STRUCTURE_ACCESSOR x) ind ascid = "STRUCTURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
-  | printAcc (SIGNATURE_ACCESSOR x) ind ascid = "SIGNATURE_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn e => printEnv e (ind ^ tab)) ind ascid) ascid ^ ")"
-  | printAcc (FUNCTOR_ACCESSOR x) ind ascid = "FUNCTOR_ACCESSOR(" ^ EL.printExtLab x (fn x => printAccessorId x (fn (e1, e2) => "(" ^ printEnv e1 (ind ^ tab) ^ ",\n" ^ printEnv e1 (ind ^ tab) ^ ")") ind ascid) ascid ^ ")"
+and ppAcc (VALUEID_ACCESSOR x) ind ascid = ind ^ "VALUEID_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' T.ppTyCon ascid) ascid
+  | ppAcc (EXPLICIT_TYPEVAR_ACCESSOR x) ind ascid = ind ^ "EXPLICIT_TYPEVAR_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' T.ppTyCon ascid) ascid
+  | ppAcc (EQUALITY_TYPE_ACCESSOR x) ind ascid = ind ^ "EQUALITY_TYPE_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' T.ppEqTyCon ascid) ascid
+  | ppAcc (TYPE_CONSTRUCTOR_ACCESSOR x) ind ascid = ind ^ "TYPE_CONSTRUCTOR_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (fn term => fn indent => "NYI") ascid
+  | ppAcc (OVERLOADING_CLASSES_ACCESSOR x) ind ascid = ind ^ "OVERLOADING_CLASSES_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' T.ppRowCon ascid) ascid
+  | ppAcc (STRUCTURE_ACCESSOR x) ind ascid = ind ^ "STRUCTURE_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' printEnv ascid) ascid
+  | ppAcc (SIGNATURE_ACCESSOR x) ind ascid = ind ^ "SIGNATURE_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' printEnv ascid) ascid
+  | ppAcc (FUNCTOR_ACCESSOR x) ind ascid = ind ^ "FUNCTOR_ACCESSOR(" ^ EL.ppExtLab x (ind^tab) (printAccessorId' (ppPair printEnv) ascid) ascid
 
 (** Prints a single constraint. *)
 and printocst (TYPE_CONSTRAINT x) _ ascid =
@@ -555,7 +559,7 @@ and printocst (TYPE_CONSTRAINT x) _ ascid =
   | printocst (FUNCTOR_CONSTRAINT evfbind) ind ascid = "  FUN(" ^ printEvfBind evfbind ^ ")"
   | printocst (SHARING_CONSTRAINT shabind) ind ascid = "  SHA(" ^ printShaBind shabind ^ ")"
   | printocst (LET_CONSTRAINT env)     ind ascid = "  LET(" ^ printEnv env (ind ^ "      ") ^ ")"
-  | printocst (ACCESSOR_CONSTRAINT acc)     ind ascid = "  ACCESSOR_CONSTRAINT(" ^ printAcc acc ind ascid ^ ")"
+  | printocst (ACCESSOR_CONSTRAINT acc)     ind ascid = "  ACCESSOR_CONSTRAINT(" ^ ppAcc acc ind ascid ^ ")"
 
 (** Prints a list of single constraints.
 and printocstlist []        ind1 ind2 ind3 ascid = ""
@@ -563,18 +567,12 @@ and printocstlist []        ind1 ind2 ind3 ascid = ""
   | printocstlist (x :: xs) ind1 ind2 ind3 ascid = ind2 ^ (ppOneConstraint x tab) (* ascid *)^ "\n" ^ (printocstlist xs ind1 (ind1 ^ ind3) ind3 ascid)
 *)
 
-and printocstlist [] ind = ""
-  | printocstlist (h::t) ind = (ppOneConstraint h ind) (* ascid *)^ (printocstlist t ind)
+and printocstlist [] ind ascid = ""
+  | printocstlist (h::t) ind ascid = (ppOneConstraint h ind ascid) ^ (printocstlist t ind ascid)
 
 (** Folds right over a CONSTRAINTS map, and prints the constraints within. *)
 and printcst' (CONSTRAINTS cst) ind ascid =
-    OMC.foldri (fn (n, oneConstraint, y) =>
-      (*Int.toString n
-      ^ ":"
-      ^*)
-      printocstlist oneConstraint ind (*"" (" " ^ (String.translate (fn _ => " ") (Int.toString n))) ascid
-      ^ "\n"
-      ^ y*)) "" cst
+OMC.foldri (fn (n, oneConstraint, y) => (*Int.toString n ^ ":" ^*) (printocstlist oneConstraint ind ascid) ^ y) "" cst
 
 (** Calls #printcst'. *)
 and printcst cst ascid = printcst' cst "" ascid
@@ -583,7 +581,7 @@ and printcst cst ascid = printcst' cst "" ascid
 fun printConstraints cst = printcst cst I.emAssoc
 
 (** Prints one constraint using #printocst. *)
-fun printOneConstraint cst = ppOneConstraint cst ""
+fun printOneConstraint cst = ppOneConstraint cst "" I.emAssoc
 
 (** Prints a list of single constraints using #printOneConstraint. *)
 fun printOneConstraintList [] = ""
@@ -591,7 +589,7 @@ fun printOneConstraintList [] = ""
   | printOneConstraintList (h::t) = printOneConstraint h
 
 (** Prints an accessor using #printAcc. *)
-fun printOneAccessor   cst = printAcc cst "" I.emAssoc
+fun printOneAccessor   cst = ppAcc cst "" I.emAssoc
 
 (* Bindings constructors *)
 

@@ -1175,7 +1175,7 @@ fun ppTyCon (TYPE_VAR (v, b, p, eqtv)) ind = ind ^ "TYPE_VAR("^(printTypeVar v)^
  |  ppTyCon (APPLICATION (tf, sq, l)) ind = ind ^ "APPLICATION(NYI)\n"
  |  ppTyCon (TYPE_POLY (sq, i ,p, k, l, eq)) ind = ind ^ "TYPE_POLY(NYI)\n"
  |  ppTyCon (GEN tys) ind = ind ^ "GEN(NYI)\n"
- |  ppTyCon (TYPE_DEPENDANCY ety) ind = ind ^ "TYPE_DEPENDENCY("^(EL.ppExtLab ety (ind^tab) ppTyCon)
+ |  ppTyCon (TYPE_DEPENDANCY ety) ind = ind ^ "TYPE_DEPENDENCY("^(EL.ppExtLab' ety (ind^tab) ppTyCon)
 
 and ppTyNameTyCon (TYPENAME_VAR x) ind = ind ^ "TYPENAME_VAR(NYI)\n"
  |  ppTyNameTyCon (NC (tn, k, l)) ind = ind ^ "TYPENAME_CONSTRUCTION("^(printTypename' tn)^", "^(printKCons k)^", "^(L.printLab l)^")\n"
