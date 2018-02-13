@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Mon 15 Jan 2018 14:43:32 GMT. Skalpel version: 7769975be5be7e5c7aa5c099c169033cdf3b9bea"
+val SKALPEL_VERSION = "Built with Poly/ML on Tue 13 Feb 2018 16:11:06 GMT. Skalpel version: 1784421e90a6469f5f9fd0c4661cdc74c4402c32"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b

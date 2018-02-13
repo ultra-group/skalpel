@@ -280,6 +280,9 @@ signature TY = sig
 
     val ppTyPair : ('a -> string -> string) -> ('a * 'a) -> string -> string
     val ppTyCon :  ty -> string -> string
+    val ppFieldTy : fieldType -> string -> string
+    val ppLabTy : labelType -> string -> string
+    val ppTyFun : typeFunction -> string -> string
     val ppTyNameTyCon : typenameType -> string -> string
     val ppRowCon : rowType -> string -> string
     val ppEqTyCon : equalityType -> string -> string
