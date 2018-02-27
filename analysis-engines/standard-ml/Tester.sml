@@ -888,8 +888,8 @@ fun slicing filebas filesin funout nenv webdemo bmin badmin bcs searchspace basi
 				val _ = D.printDebug D.TEST D.TESTING (fn _ => jsonOutput)
 				val _ = if bcs then print (Env.printEnv env "" ^ "\n") else ()
 				val _ = assignError (berr "")
-			in counter end
-		else counter end
+			in (counter, errors) end
+		else (counter, errors) end
 
 
 (** Bulids up the abstract syntax tree. *)

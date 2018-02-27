@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Tue 13 Feb 2018 16:11:06 GMT. Skalpel version: 1784421e90a6469f5f9fd0c4661cdc74c4402c32"
+val SKALPEL_VERSION = "Built with Poly/ML on Fri 16 Feb 2018 12:20:25 GMT. Skalpel version: faf87e4fec74f419c6dbf959607ddb358cfb8f38"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -267,8 +267,8 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 
 	(** Calls the slicing function in Tester.sml. *)
 	fun run () = case Tester.slicing filebas filesin fout nenv (!webdemo) min dev bcs searchspace basisoverloading
-					of 0 => (false, "this case should never happen")
-					 | 1 => (true,  "it detected no errors (some might be undetected)"(*"program is typable"*))
+					of (0, _) => (false, "this case should never happen")
+					 | (1, _) => (true,  "it detected no errors (some might be undetected)"(*"program is typable"*))
 					 | _ => (true,  "program has type or syntax errors")
 
 	(* handle errors depending on the developer option *)
@@ -306,8 +306,36 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 
 (** calls commslicerp', if we are not developing (not dev) then the error is handled, otherwise we leave the error so we can debug. *)
 fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading =
-    if dev
-    then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
+    if dev then
+    let
+      val () = print D.sep1'
+      val _ = print "In Dev Mode...\n"
+
+      fun dummy _ _ _ _ _ _ _ _ _ _ = ()
+      val (c, errors) = Tester.slicing filebas filesin (dummy) 1 false min true bcs searchspace basisoverloading
+
+      val () = print D.sep1'
+      val (progs, nextLabel, assoc, basisVal) = Parser.consProgs [] filesin Label.firstLab Id.emAssoc 1 false
+      val labels = Error.labelsFromList errors
+      fun eachLabelSet [] f = ()
+       |  eachLabelSet (h::t) f = let
+          val _ = f h
+       in () end
+       val () = print "Labelled program:\n"
+       val () = print (AstSML.printAstProgs progs ^ "\n")
+       val () = print "Label sets:\n"
+       val _ = eachLabelSet labels (fn (id, labs) => let
+          val () = print ("\n" ^ Int.toString id ^ ": ")
+          val () = print (Label.toString labs ^ "\n")
+       in () end)
+
+      val () = print D.sep1'
+
+      val () = print "Labelled AST Traversal...\n"
+      val () = () (* TODO *)
+
+    in () end
+    (*commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading *)
     else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
 
 (** Called by the emacs interface; sets no tab and uses the solution from sol in utils/Solution.sml. *)

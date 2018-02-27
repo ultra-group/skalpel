@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -632,5 +633,16 @@ fun setReg err bmerge =
 (** Sets the regions for an error by calling #setReg. *)
 fun setRegs errors bmerge = map (fn err => setReg err bmerge) errors
 
+fun printErrorLabels {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} = let
+  val i = "id: " ^ Int.toString id
+  val labels = L.toString labs
+in i ^ " " ^ labels end
 
+fun printErrorListLabels [] = ""
+ |  printErrorListLabels (h::t) = printErrorLabels h ^ "\n" ^ printErrorListLabels t
+
+fun labelsFromError {id, labs, deps, ek, rf, bb, rem, time, sl, regs, min} = (id, labs)
+
+fun labelsFromList [] = []
+ |  labelsFromList (h::t) = (labelsFromError h)::(labelsFromList t)
 end

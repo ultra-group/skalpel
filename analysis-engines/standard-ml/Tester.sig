@@ -60,7 +60,7 @@ signature TESTER = sig
 			bool         ->
 			int          ->
 			int          ->
-			int
+			(int * Error.error list)
 
     val debuggingXML  : string temptype
     val debuggingSML  : string temptype
