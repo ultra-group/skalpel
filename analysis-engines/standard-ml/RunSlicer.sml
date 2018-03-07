@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Tue  6 Mar 2018 17:16:41 GMT. Skalpel version: 94e2fb153a75f9f842db4b63ee02961092bf308b"
+val SKALPEL_VERSION = "Built with Poly/ML on Wed  7 Mar 2018 19:58:52 GMT. Skalpel version: 52ecfd265c84e3f025c15f142c4f19482e1bd239"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -320,16 +320,11 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
 
       fun eachLabelSet [] f = ()
        |  eachLabelSet (h::t) f = let
-          val () = f h
-       in eachLabelSet t f end
+            val () = f h
+          in eachLabelSet t f end
 
-       val () = print "Labelled program:\n"
-       val () = print (AstSML.printAstProgs progs ^ "\n")
-       val () = print "Label sets:\n"
-       val _ = eachLabelSet labels (fn (id, labs) => let
-          val () = print ("\n" ^ Int.toString id ^ ": ")
-          val () = print (Label.toString labs ^ "\n")
-       in () end)
+      val () = print "Labelled program:\n"
+      val () = print (AstSML.printAstProgs progs ^ "\n")
 
       val () = print D.sep1'
 
@@ -337,7 +332,10 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
       (* traverse looking for accessors in the slice that bindings are also in
        * slice! *)
       val () = eachLabelSet labels (fn (id, labs) => let
-        val () = AstSML.vizTraverse progs labs []
+        val () = print ("\n" ^ Int.toString id ^ ": ")
+        val () = print (Label.toString labs ^ "\n")
+        val () = print "Traversing...\n"
+        val _ = AstSML.vizTraverse progs labs []
       in () end)
 
     in () end
