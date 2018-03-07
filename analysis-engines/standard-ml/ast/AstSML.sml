@@ -1788,7 +1788,7 @@ and printAstPat (PatAtPat (atp))                         = printAstAtpat atp
  * within a type error slice...
  * Dot Terms are ignored - Only full (non-sliced) AST should be passed in. *)
 val indent = "  "
-fun vizTraverse (Progs p) slice bindings = let val () = print ("Progs\n") in (vizTraverseProgList p slice bindings "") end
+fun vizTraverse (Progs p) slice = let val () = print ("Progs\n") in (vizTraverseProgList p slice [] "") end
 
 and vizTraverseProgList [] slice bindings ind = []
  |  vizTraverseProgList (h::t) slice bindings ind = (vizTraverseProg (#1 h) slice bindings (ind^indent))@(vizTraverseProgList t slice bindings ind)

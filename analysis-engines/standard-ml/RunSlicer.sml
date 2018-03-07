@@ -335,7 +335,7 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val () = print ("\n" ^ Int.toString id ^ ": ")
         val () = print (Label.toString labs ^ "\n")
         val () = print "Traversing...\n"
-        val _ = AstSML.vizTraverse progs labs []
+        val _ = AstSML.vizTraverse progs labs
       in () end)
 
     in () end
