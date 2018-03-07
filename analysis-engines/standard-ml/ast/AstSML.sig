@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -839,4 +840,5 @@ signature ASTSML = sig
 
     val getNamesIdentSeq   : identseq -> string list
 
+    val vizTraverse : progs -> Label.labels -> (Label.label * Reg.region) list -> ((Label.label * Reg.region) * (Label.label * Reg.region)) list
 end
