@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Wed  7 Mar 2018 19:58:52 GMT. Skalpel version: 52ecfd265c84e3f025c15f142c4f19482e1bd239"
+val SKALPEL_VERSION = "Built with Poly/ML on Thu  8 Mar 2018 10:29:21 GMT. Skalpel version: b9394e0a7203e3cbea060b4694ec700a7b01fea0"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -329,6 +329,10 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
       val () = print D.sep1'
 
       val () = print "Labelled AST Traversal...\n"
+
+      (* Print AST out *)
+      val _ = AstSML.vizTraverse progs Label.empty
+
       (* traverse looking for accessors in the slice that bindings are also in
        * slice! *)
       val () = eachLabelSet labels (fn (id, labs) => let
