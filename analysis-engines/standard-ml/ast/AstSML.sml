@@ -1791,7 +1791,7 @@ val indent = "  "
 fun inBindings [] _ = false
  |  inBindings ((Ident h)::t) id = if ((#1 h) = id) then true else inBindings t id
 
- fun getBinding ((Ident h)::t) id = if ((#1 h) = id) then (Ident h) else getBinding t id
+fun getBinding ((Ident h)::t) id = if ((#1 h) = id) then (Ident h) else getBinding t id
 
 (* return list of `ident` pairs representing (binding, access) *)
 fun vizTraverse (Progs p) slice = let val () = print ("Progs\n") in (vizTraverseProgList p slice "") end
@@ -1824,7 +1824,11 @@ and vizTraverseExp (ExpAtExp x) slice bindings ind = let val () = print (ind^"Ex
  |  vizTraverseExp (ExpApp x) slice bindings ind =  let val () = print (ind^"ExpApp\n") in [] end
  |  vizTraverseExp (ExpCase x) slice bindings ind =  let val () = print (ind^"ExpCase\n") in [] end
  |  vizTraverseExp (ExpConsList x) slice bindings ind =  let val () = print (ind^"ExpConsList\n") in [] end
- |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) slice bindings ind =  let val () = print (ind^"ExpOp ["^str^"]\n") in [] end
+ |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) slice bindings ind =  let
+      val () = print (ind^"ExpOp ["^str^"]\n")
+      val left = vizTraverseLabExp expl slice bindings (ind^indent)
+      val right = vizTraverseLabExp expr slice bindings (ind^indent)
+    in left@right end
  |  vizTraverseExp (ExpOr x) slice bindings ind =  let val () = print (ind^"ExpOr\n") in [] end
  |  vizTraverseExp (ExpAnd x) slice bindings ind =  let val () = print (ind^"ExpAnd\n") in [] end
  |  vizTraverseExp (ExpTyped x) slice bindings ind =  let val () = print (ind^"ExpTyped\n") in [] end
@@ -1836,8 +1840,8 @@ and vizTraverseExp (ExpAtExp x) slice bindings ind = let val () = print (ind^"Ex
 
 and vizTraverseAtExp (AtExpId x) slice bindings ind =  let
       val () = print (ind^"AtExpId\n")
-      val _ = vizTraverseLongId x slice bindings (ind^indent)
-    in [] end
+      val (binds, access) = vizTraverseLongId x slice bindings (ind^indent)
+    in access end
  |  vizTraverseAtExp (AtExpScon x) slice bindings ind =  let val () = print (ind^"AtExpScon\n") in [] end
  |  vizTraverseAtExp (AtExpTuple x) slice bindings ind =  let val () = print (ind^"AtExpTuple\n") in [] end
  |  vizTraverseAtExp (AtExpRecord x) slice bindings ind =  let val () = print (ind^"AtExpRecord\n") in [] end
@@ -1856,8 +1860,8 @@ and vizTraverseMatch (Match (rules, region, nextLabel)) slice bindings ind = viz
 
 and vizTraverseMatchRuleList [] _ _ _ = []
  |  vizTraverseMatchRuleList (h::t) slice bindings ind = let
-      val (binds, accesses) = vizTraverseMatchRule h slice bindings ind
-    in (vizTraverseMatchRuleList t slice bindings ind) end
+      val accesses = vizTraverseMatchRule h slice bindings ind
+    in accesses@(vizTraverseMatchRuleList t slice bindings ind) end
 
 (* The left hand side of a match rule will most likely constitute a binding that is in scope of everything on the RHS
  * However there are cases where this is not necesarilly true...
@@ -1878,9 +1882,9 @@ and vizTraverseMatchRuleList [] _ _ _ = []
 and vizTraverseMatchRule (Mrule (p, e, region, label, nextLabel)) slice bindings ind = let
       val () = print (ind^"Mrule\n")
       val (binds, accesses) = vizTraverseLabPat p slice bindings (ind^indent)
-      val _ = vizTraverseLabExp e slice (binds@bindings) (ind^indent)
-    in (bindings, []) end
- |  vizTraverseMatchRule _ _ _ _ = ([],[])
+      val acc = vizTraverseLabExp e slice (binds@bindings) (ind^indent)
+    in accesses@acc end
+ |  vizTraverseMatchRule _ _ _ _ = []
 
 and vizTraverseLabPat (LabPat (x, _, _, _, _)) slice bindings ind = let val () = print (ind^"LabPat\n") in vizTraversePat x slice bindings (ind^indent) end
  |  vizTraverseLabPat _ _ _ _ = ([],[])
@@ -1909,11 +1913,15 @@ and vizTraverseLongId (LongIdQual l) slice bindings ind =  let val () = print (i
 
 and vizTraverseId (Ident x) slice bindings ind = let
       val (str, id, r, l, n) = x
-      val isBind = inBindings bindings str
-      val binds = if isBind then "[access]" else "[bind]"
+      val isBound = inBindings bindings str
+      val binds = if isBound then "[access]" else "[bind]"
       val () = print (ind ^ "Ident ["^str^"] "^binds^" \n")
       val () = if (L.isin l slice) then print (ind^"in slice: [" ^ str ^ "]\n") else ()
-    in ([],[]) end
+
+    in if isBound
+       then ([] ,[((getBinding bindings str), (Ident x))])
+       else ([(Ident x)], [])
+    end
  |  vizTraverseId (IdentPcon pcon) slice bindings ind =  let val () = print (ind^"IdentPcon\n") in ([],[]) end
  |  vizTraverseId _ _ _ _ = ([],[])
 
