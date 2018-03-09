@@ -1788,104 +1788,76 @@ and printAstPat (PatAtPat (atp))                         = printAstAtpat atp
  * within a type error slice...
  * Dot Terms are ignored - Only full (non-sliced) AST should be passed in. *)
 val indent = "  "
+fun inBindings [] _ = false
+ |  inBindings ((Ident h)::t) id = if ((#1 h) = id) then true else inBindings t id
+
+ fun getBinding ((Ident h)::t) id = if ((#1 h) = id) then (Ident h) else getBinding t id
 
 (* return list of `ident` pairs representing (binding, access) *)
-fun vizTraverse (Progs p) slice = let val () = print ("Progs\n") in (vizTraverseProgList p slice [] [] "") end
+fun vizTraverse (Progs p) slice = let val () = print ("Progs\n") in (vizTraverseProgList p slice "") end
 
 (* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseProgList [] slice bindings accessors ind = accessors
- |  vizTraverseProgList (h::t) slice bindings accessors ind = let
-      val a = vizTraverseProg (#1 h) slice bindings accessors (ind^indent)
-    in vizTraverseProgList t slice bindings (accessors@a) ind end
+and vizTraverseProgList [] slice ind = []
+ |  vizTraverseProgList (h::t) slice ind = let
+      val a = vizTraverseProg (#1 h) slice (ind^indent)
+    in a@(vizTraverseProgList t slice ind) end
 
 (* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseProg (Prog p) slice bindings accessors ind = let val () = print (ind ^ "Prog\n") in vizTraverseProgOneList p slice bindings accessors (ind^indent) end
- |  vizTraverseProg _ _ _ _ _ = []
+and vizTraverseProg (Prog p) slice ind = let val () = print (ind ^ "Prog\n") in vizTraverseProgOneList p slice (ind^indent) end
+ |  vizTraverseProg _ _ _ = []
 
 (* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseProgOneList [] _ _ a _ = a
- |  vizTraverseProgOneList (h::t) slice bindings accessors ind = let
-      val a = vizTraverseProgOne h slice bindings accessors ind
-    in vizTraverseProgOneList t slice bindings (accessors@a) ind end
+and vizTraverseProgOneList [] _ _ = []
+ |  vizTraverseProgOneList (h::t) slice ind = (vizTraverseProgOne h slice ind)@(vizTraverseProgOneList t slice ind)
 
 (* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseProgOne (ProgOneDec p) slice bindings accessors ind = let val () = print (ind ^ "ProgOneDec\n") in vizTraverseTopDec p slice bindings accessors (ind^indent) end
- |  vizTraverseProgOne (ProgOneExp (p, _, _, _, _)) slice bindings accessors ind = let val () = print (ind ^ "ProgOneExp\n") in vizTraverseExp p slice bindings accessors (ind^indent) end
- |  vizTraverseProgOne (ProgOneFile p) slice bindings accessors ind = let val () = print (ind ^ "ProgOneFile\n") in visTraverseFile p slice bindings accessors (ind^indent) end
- |  vizTraverseProgOne _ _ _ _ _ = []
+and vizTraverseProgOne (ProgOneDec p) slice ind = let val () = print (ind ^ "ProgOneDec\n") in (*vizTraverseTopDec p slice (ind^indent) *) [] end
+ |  vizTraverseProgOne (ProgOneExp (p, _, _, _, _)) slice ind = let val () = print (ind ^ "ProgOneExp\n") in vizTraverseExp p slice [] (ind^indent) end
+ |  vizTraverseProgOne (ProgOneFile p) slice ind = let val () = print (ind ^ "ProgOneFile\n") in [] end
+ |  vizTraverseProgOne _ _ _ = []
 
-(* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseTopDec (TopDec t) slice bindings accessors ind = let val () = print (ind ^ "TopDec\n") in vizTraverseTopDecOneList t slice bindings accessors (ind^indent) end
- |  vizTraverseTopDec _ _ _ _ _ = []
+and vizTraverseLabExp (LabExp (x, _, _, _, _)) slice bindings ind = let val () = print (ind^"LabExp\n") in vizTraverseExp x slice bindings (ind^indent) end
+ |  vizTraverseLabExp _ _ _ _ = []
 
-(* return list of `ident` pairs representing (binding, access) *)
-and vizTraverseTopDecOneList [] _ _ a _ = a
- |  vizTraverseTopDecOneList (h::t) slice bindings accessors ind = let
-      val (binds, accesses) = vizTraverseTopDecOne h slice bindings accessors ind
-    in vizTraverseTopDecOneList t slice (binds@bindings) (accessors@accesses) ind end
+and vizTraverseExp (ExpAtExp x) slice bindings ind = let val () = print (ind^"ExpAtExp\n") in vizTraverseAtExp x slice bindings (ind^indent) end
+ |  vizTraverseExp (ExpFn (m, _, _, _)) slice bindings ind = let val () = print (ind^"ExpFn\n") in vizTraverseMatch m slice bindings (ind^indent) end
+ |  vizTraverseExp (ExpApp x) slice bindings ind =  let val () = print (ind^"ExpApp\n") in [] end
+ |  vizTraverseExp (ExpCase x) slice bindings ind =  let val () = print (ind^"ExpCase\n") in [] end
+ |  vizTraverseExp (ExpConsList x) slice bindings ind =  let val () = print (ind^"ExpConsList\n") in [] end
+ |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) slice bindings ind =  let val () = print (ind^"ExpOp ["^str^"]\n") in [] end
+ |  vizTraverseExp (ExpOr x) slice bindings ind =  let val () = print (ind^"ExpOr\n") in [] end
+ |  vizTraverseExp (ExpAnd x) slice bindings ind =  let val () = print (ind^"ExpAnd\n") in [] end
+ |  vizTraverseExp (ExpTyped x) slice bindings ind =  let val () = print (ind^"ExpTyped\n") in [] end
+ |  vizTraverseExp (ExpIte x) slice bindings ind =  let val () = print (ind^"ExpIte\n") in [] end
+ |  vizTraverseExp (ExpWhile x) slice bindings ind =  let val () = print (ind^"ExpWhile\n") in [] end
+ |  vizTraverseExp (ExpRaise x) slice bindings ind =  let val () = print (ind^"ExpRaise\n") in [] end
+ |  vizTraverseExp (ExpHandle x) slice bindings ind =  let val () = print (ind^"ExpHandle\n") in [] end
+ |  vizTraverseExp (ExpDots x) slice bindings ind =  let val () = print (ind^"ExpDots\n") in [] end
 
-(* returns pair (bindings, accessings)
- * where bindings is a `ident list` representing bindings in scope
- * and accessings is a `(ident * ident) list` represent accesings *)
-and vizTraverseTopDecOne (TopDecOneTes (t, _)) slice bindings accessors ind = let val () = print (ind ^ "TopDecOneTes\n") in vizTraverseTopDecOneTes t slice bindings accessors (ind^indent) end
- |  vizTraverseTopDecOne (TopDecOneDec (t, _)) slice bindings accessors ind = let val () = print (ind ^ "TopDecOneDec\n") in vizTraverseTopDecOneDec t slice bindings accessors (ind^indent) end
- |  vizTraverseTopDecOne _ _ _ _ _ = ([],[])
-
-and vizTraverseTopDecOneDec (ATopDecStr s) slice bindings accessors ind = let val () = print (ind ^ "ATopDecStr\n") in vizTraverseStrDec s slice bindings accessors (ind^indent) end
- |  vizTraverseTopDecOneDec (ATopDecSig s) slice bindings accessors ind = let val () = print (ind ^ "ATopDecSig\n") in vizTraverseSigDec s slice bindings accessors (ind^indent) end
- |  vizTraverseTopDecOneDec _ _ _ _ _ = ([],[])
-
-and vizTraverseLabExp (LabExp (x, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"LabExp\n") in vizTraverseExp x slice bindings accessors (ind^indent) end
- |  vizTraverseLabExp _ _ _ _ _ = []
-
-and vizTraverseExp (ExpAtExp x) slice bindings accessors ind = let val () = print (ind^"ExpAtExp\n") in vizTraverseAtExp x slice bindings accessors (ind^indent) end
- |  vizTraverseExp (ExpFn (m, _, _, _)) slice bindings accessors ind = let val () = print (ind^"ExpFn\n") in vizTraverseMatch m slice bindings accessors (ind^indent) end
- |  vizTraverseExp (ExpApp x) slice bindings accessors ind =  let val () = print (ind^"ExpApp\n") in [] end
- |  vizTraverseExp (ExpCase x) slice bindings accessors ind =  let val () = print (ind^"ExpCase\n") in [] end
- |  vizTraverseExp (ExpConsList x) slice bindings accessors ind =  let val () = print (ind^"ExpConsList\n") in [] end
- |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) slice bindings accessors ind =  let
-      val () = print (ind^"ExpOp ["^str^"]\n")
-      val _ = vizTraverseLabExp expl slice bindings accessors (ind^indent)
-      val _ = vizTraverseLabExp expr slice bindings accessors (ind^indent)
-    in [] end
- |  vizTraverseExp (ExpOr x) slice bindings accessors ind =  let val () = print (ind^"ExpOr\n") in [] end
- |  vizTraverseExp (ExpAnd x) slice bindings accessors ind =  let val () = print (ind^"ExpAnd\n") in [] end
- |  vizTraverseExp (ExpTyped x) slice bindings accessors ind =  let val () = print (ind^"ExpTyped\n") in [] end
- |  vizTraverseExp (ExpIte x) slice bindings accessors ind =  let val () = print (ind^"ExpIte\n") in [] end
- |  vizTraverseExp (ExpWhile x) slice bindings accessors ind =  let val () = print (ind^"ExpWhile\n") in [] end
- |  vizTraverseExp (ExpRaise x) slice bindings accessors ind =  let val () = print (ind^"ExpRaise\n") in [] end
- |  vizTraverseExp (ExpHandle x) slice bindings accessors ind =  let val () = print (ind^"ExpHandle\n") in [] end
- |  vizTraverseExp (ExpDots x) slice bindings accessors ind =  let val () = print (ind^"ExpDots\n") in [] end
-
-and vizTraverseAtExp (AtExpId x) slice bindings accessors ind =  let
+and vizTraverseAtExp (AtExpId x) slice bindings ind =  let
       val () = print (ind^"AtExpId\n")
-      val _ = vizTraverseLongId x slice bindings accessors (ind^indent)
+      val _ = vizTraverseLongId x slice bindings (ind^indent)
     in [] end
- |  vizTraverseAtExp (AtExpScon x) slice bindings accessors ind =  let val () = print (ind^"AtExpScon\n") in vizTraverseScon x slice bindings accessors (ind^indent) end
- |  vizTraverseAtExp (AtExpTuple x) slice bindings accessors ind =  let val () = print (ind^"AtExpTuple\n") in [] end
- |  vizTraverseAtExp (AtExpRecord x) slice bindings accessors ind =  let val () = print (ind^"AtExpRecord\n") in [] end
- |  vizTraverseAtExp (AtExpSlRec x) slice bindings accessors ind =  let val () = print (ind^"AtExpSlRec\n") in [] end
- |  vizTraverseAtExp (AtExpLet x) slice bindings accessors ind =  let val () = print (ind^"AtExpLet\n") in [] end
- |  vizTraverseAtExp (AtExpDLet x) slice bindings accessors ind =  let val () = print (ind^"AtExpDLet\n") in [] end
- |  vizTraverseAtExp (AtExpParen x) slice bindings accessors ind =  let val () = print (ind^"AtExpParen\n") in [] end
- |  vizTraverseAtExp (AtExpList x) slice bindings accessors ind =  let val () = print (ind^"AtExpList\n") in [] end
- |  vizTraverseAtExp (AtExpProj x) slice bindings accessors ind =  let val () = print (ind^"AtExpProj\n") in [] end
- |  vizTraverseAtExp (AtExpSeq x) slice bindings accessors ind =  let val () = print (ind^"AtExpSeq\n") in [] end
- |  vizTraverseAtExp (AtExpQuote x) slice bindings accessors ind = let val () = print (ind^"AtExpQuote\n") in [] end
- |  vizTraverseAtExp _ _ _ _ _ = []
+ |  vizTraverseAtExp (AtExpScon x) slice bindings ind =  let val () = print (ind^"AtExpScon\n") in [] end
+ |  vizTraverseAtExp (AtExpTuple x) slice bindings ind =  let val () = print (ind^"AtExpTuple\n") in [] end
+ |  vizTraverseAtExp (AtExpRecord x) slice bindings ind =  let val () = print (ind^"AtExpRecord\n") in [] end
+ |  vizTraverseAtExp (AtExpSlRec x) slice bindings ind =  let val () = print (ind^"AtExpSlRec\n") in [] end
+ |  vizTraverseAtExp (AtExpLet x) slice bindings ind =  let val () = print (ind^"AtExpLet\n") in [] end
+ |  vizTraverseAtExp (AtExpDLet x) slice bindings ind =  let val () = print (ind^"AtExpDLet\n") in [] end
+ |  vizTraverseAtExp (AtExpParen x) slice bindings ind =  let val () = print (ind^"AtExpParen\n") in [] end
+ |  vizTraverseAtExp (AtExpList x) slice bindings ind =  let val () = print (ind^"AtExpList\n") in [] end
+ |  vizTraverseAtExp (AtExpProj x) slice bindings ind =  let val () = print (ind^"AtExpProj\n") in [] end
+ |  vizTraverseAtExp (AtExpSeq x) slice bindings ind =  let val () = print (ind^"AtExpSeq\n") in [] end
+ |  vizTraverseAtExp (AtExpQuote x) slice bindings ind = let val () = print (ind^"AtExpQuote\n") in [] end
+ |  vizTraverseAtExp _ _ _ _ = []
 
-and vizTraverseScon (SconInt (str, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"SconInt ["^str^"]\n") in [] end
- |  vizTraverseScon (SconWord (str, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"SconWord ["^str^"]\n") in [] end
- |  vizTraverseScon (SconReal (str, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"SconReal ["^str^"]\n") in [] end
- |  vizTraverseScon (SconString (str, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"SconString ["^str^"]\n") in [] end
- |  vizTraverseScon (SconChar (str, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"SconChar ["^str^"]\n") in [] end
- |  vizTraverseScon _ _ _ _ _ = []
+and vizTraverseMatch (Match (rules, region, nextLabel)) slice bindings ind = vizTraverseMatchRuleList rules slice bindings ind
+ |  vizTraverseMatch _ _ _ _ = []
 
-and vizTraverseMatch (Match (rules, region, nextLabel)) slice bindings accessors ind = vizTraverseMatchRuleList rules slice bindings accessors ind
- |  vizTraverseMatch _ _ _ _ _ = []
-
-and vizTraverseMatchRuleList [] _ _ _ _ = []
- |  vizTraverseMatchRuleList (h::t) slice bindings accessors ind = (vizTraverseMatchRule h slice bindings accessors ind)@(vizTraverseMatchRuleList t slice bindings accessors ind)
+and vizTraverseMatchRuleList [] _ _ _ = []
+ |  vizTraverseMatchRuleList (h::t) slice bindings ind = let
+      val (binds, accesses) = vizTraverseMatchRule h slice bindings ind
+    in (vizTraverseMatchRuleList t slice bindings ind) end
 
 (* The left hand side of a match rule will most likely constitute a binding that is in scope of everything on the RHS
  * However there are cases where this is not necesarilly true...
@@ -1903,113 +1875,47 @@ and vizTraverseMatchRuleList [] _ _ _ _ = []
  * ```
  * A unary type constructor with the same label & contained in slice may cause ambiguity, we need to check for this.
  * The opened struct may also define x, unlikely that open will be supported - need to fail gracefully if open is encountered. *)
-and vizTraverseMatchRule (Mrule (p, e, region, label, nextLabel)) slice bindings accessors ind = let
+and vizTraverseMatchRule (Mrule (p, e, region, label, nextLabel)) slice bindings ind = let
       val () = print (ind^"Mrule\n")
-      val binds = vizTraverseLabPat p slice bindings accessors (ind^indent)
-      val _ = vizTraverseLabExp e slice bindings accessors (ind^indent)
-    in [] end
- |  vizTraverseMatchRule _ _ _ _ _ = []
+      val (binds, accesses) = vizTraverseLabPat p slice bindings (ind^indent)
+      val _ = vizTraverseLabExp e slice (binds@bindings) (ind^indent)
+    in (bindings, []) end
+ |  vizTraverseMatchRule _ _ _ _ = ([],[])
 
-and vizTraverseLabPat (LabPat (x, _, _, _, _)) slice bindings accessors ind = let val () = print (ind^"LabPat\n") in vizTraversePat x slice bindings accessors (ind^indent) end
- |  vizTraverseLabPat _ _ _ _ _ = []
+and vizTraverseLabPat (LabPat (x, _, _, _, _)) slice bindings ind = let val () = print (ind^"LabPat\n") in vizTraversePat x slice bindings (ind^indent) end
+ |  vizTraverseLabPat _ _ _ _ = ([],[])
 
-and vizTraversePat (PatAtPat p) slice bindings accessors ind = let val () = print (ind^"PatAtPat\n") in vizTraverseAtPat p slice bindings accessors (ind^indent) end
- |  vizTraversePat (PatApp p) slice bindings accessors ind =  let val () = print (ind^"PatApp\n") in [] end
- |  vizTraversePat (PatConsList p) slice bindings accessors ind =  let val () = print (ind^"PatConsList\n") in [] end
- |  vizTraversePat (PatOp p) slice bindings accessors ind =  let val () = print (ind^"PatOp\n") in [] end
- |  vizTraversePat (PatTyped p) slice bindings accessors ind =  let val () = print (ind^"PatTyped\n") in [] end
- |  vizTraversePat (PatAs p) slice bindings accessors ind =  let val () = print (ind^"PatAs\n") in [] end
- |  vizTraversePat _ _ _ _ _ = []
+and vizTraversePat (PatAtPat p) slice bindings ind = let val () = print (ind^"PatAtPat\n") in vizTraverseAtPat p slice bindings (ind^indent) end
+ |  vizTraversePat (PatApp p) slice bindings ind =  let val () = print (ind^"PatApp\n") in ([],[]) end
+ |  vizTraversePat (PatConsList p) slice bindings ind =  let val () = print (ind^"PatConsList\n") in ([],[]) end
+ |  vizTraversePat (PatOp p) slice bindings ind =  let val () = print (ind^"PatOp\n") in ([],[]) end
+ |  vizTraversePat (PatTyped p) slice bindings ind =  let val () = print (ind^"PatTyped\n") in ([],[]) end
+ |  vizTraversePat (PatAs p) slice bindings ind =  let val () = print (ind^"PatAs\n") in ([],[]) end
+ |  vizTraversePat _ _ _ _ = ([],[])
 
-and vizTraverseAtPat (AtPatWild (r, _)) slice bindings accessors ind =  let val () = print (ind^"AtPatWild\n") in [] end
- |  vizTraverseAtPat (AtPatId id) slice bindings accessors ind = let val () = print (ind^"AtPatId\n") in vizTraverseLongId id slice bindings accessors (ind^indent) end
- |  vizTraverseAtPat (AtPatScon scon) slice bindings accessors ind =  let val () = print (ind^"AtPatScon\n") in [] end
- |  vizTraverseAtPat (AtPatTuple t) slice bindings accessors ind =  let val () = print (ind^"AtPatTuple\n") in [] end
- |  vizTraverseAtPat (AtPatRecord r) slice bindings accessors ind =  let val () = print (ind^"AtPatRecord\n") in [] end
- |  vizTraverseAtPat (AtPatParen p) slice bindings accessors ind =  let val () = print (ind^"AtPatParen\n") in [] end
- |  vizTraverseAtPat (AtPatList l) slice bindings accessors ind = let val () = print (ind^"printAstPartList\n") in [] end
- |  vizTraverseAtPat (AtPatOr x) slice bindings accessors ind =  let val () = print (ind^"AtPatOr\n") in [] end
- |  vizTraverseAtPat _ _ _ _ _ = []
+and vizTraverseAtPat (AtPatWild (r, _)) slice bindings ind =  let val () = print (ind^"AtPatWild\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatId id) slice bindings ind = let val () = print (ind^"AtPatId\n") in vizTraverseLongId id slice bindings (ind^indent) end
+ |  vizTraverseAtPat (AtPatScon scon) slice bindings ind =  let val () = print (ind^"AtPatScon\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatTuple t) slice bindings ind =  let val () = print (ind^"AtPatTuple\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatRecord r) slice bindings ind =  let val () = print (ind^"AtPatRecord\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatParen p) slice bindings ind =  let val () = print (ind^"AtPatParen\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatList l) slice bindings ind = let val () = print (ind^"printAstPartList\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatOr x) slice bindings ind =  let val () = print (ind^"AtPatOr\n") in ([],[]) end
+ |  vizTraverseAtPat _ _ _ _ = ([],[])
 
-and vizTraverseLongId (LongIdQual l) slice bindings accessors ind =  let val () = print (ind^"LongIdQual\n") in [] end
- |  vizTraverseLongId (LongIdId l) slice bindings accessors ind = let val () = print (ind^"LongIdId\n") in vizTraverseId l slice bindings accessors (ind^indent) end
- |  vizTraverseLongId _ _ _ _ _ = []
+and vizTraverseLongId (LongIdQual l) slice bindings ind =  let val () = print (ind^"LongIdQual\n") in ([],[]) end
+ |  vizTraverseLongId (LongIdId l) slice bindings ind = let val () = print (ind^"LongIdId\n") in vizTraverseId l slice bindings (ind^indent) end
+ |  vizTraverseLongId _ _ _ _ = ([],[])
 
-and vizTraverseId (Ident (str, id, r, l, _)) slice bindings accessors ind = let
-      val () = print (ind ^ "Ident ["^str^"]\n")
+and vizTraverseId (Ident x) slice bindings ind = let
+      val (str, id, r, l, n) = x
+      val isBind = inBindings bindings str
+      val binds = if isBind then "[access]" else "[bind]"
+      val () = print (ind ^ "Ident ["^str^"] "^binds^" \n")
       val () = if (L.isin l slice) then print (ind^"in slice: [" ^ str ^ "]\n") else ()
-    in [] end
- |  vizTraverseId (IdentPcon pcon) slice bindings accessors ind =  let val () = print (ind^"IdentPcon\n") in [] end
- |  vizTraverseId _ _ _ _ _ = []
-
-and vizTraverseTopDecOneTes (SmlTesDec s) slice bindings accessors ind =  let val () = print (ind^"SmlTesDec\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesSpec s) slice bindings accessors ind =  let val () = print (ind^"SmlTesSpec\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesUse s) slice bindings accessors ind =  let val () = print (ind^"SmlTesUse\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesSBas s) slice bindings accessors ind =  let val () = print (ind^"SmlTesSBas\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesCBas s) slice bindings accessors ind =  let val () = print (ind^"SmlTesCBas\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesQuote s) slice bindings accessors ind =  let val () = print (ind^"SmlTesQuote\n") in ([],[]) end
- |  vizTraverseTopDecOneTes (SmlTesType s) slice bindings accessors ind =  let val () = print (ind^"SmlTesType\n") in ([],[]) end
- |  vizTraverseTopDecOneTes _ _ _ _ _ = ([],[])
-
- and vizTraverseStrDec (StrDec (l, _, _)) slice bindings accessors ind = vizTraverseStrDecOneList l slice bindings accessors ind
-  |  vizTraverseStrDec _ _ _ _ _ = ([], [])
-
-and vizTraverseStrDecOneList [] slice bindings accessors ind = (bindings, accessors)
- |  vizTraverseStrDecOneList (h::t) slice bindings accessors ind = let
-      val (binds, accesses) = vizTraverseStrDecOne h slice bindings accessors ind
-    in vizTraverseStrDecOneList t slice (binds@bindings) (accessors@accesses) ind end
-
-and vizTraverseStrDecOne (StrDecOneDec d) slice bindings accessors ind = let val () = print (ind^"StrDecOneDev\n") in vizTraverseDecs d slice bindings accessors (ind^indent) end
- |  vizTraverseStrDecOne _ _ _ _ _ = ([],[])
-
-and vizTraverseDecs (Decs (d, _)) slice bindings accessors ind = let val () = print (ind^"Decs\n") in vizTraverseDecList d slice bindings accessors (ind^indent) end
- |  vizTraverseDecs _ _ _ _ _ = ([],[])
-
-and vizTraverseDecList [] slice bindings accessors ind = (bindings, accessors)
- |  vizTraverseDecList (h::t) slice bindings accessors ind = let
-      val _ = vizTraverseDec h slice bindings accessors ind
-    in vizTraverseDecList t slice bindings accessors ind end
-
-and vizTraverseDec (DecVal (_, valbind, _, _)) slice bindings accessors ind =  vizTraverseValBind valbind slice bindings accessors ind
- |  vizTraverseDec (DecFVal x) slice bindings accessors ind =  let val () = print (ind^"DecFVal\n") in [] end
- |  vizTraverseDec (DecDatType x) slice bindings accessors ind =  let val () = print (ind^"DecDatType\n") in [] end
- |  vizTraverseDec (DecDatWith x) slice bindings accessors ind =  let val () = print (ind^"DecDatWith\n") in [] end
- |  vizTraverseDec (DecDatRep x) slice bindings accessors ind =  let val () = print (ind^"DecDatRep\n") in [] end
- |  vizTraverseDec (DecType x) slice bindings accessors ind =  let val () = print (ind^"DecType\n") in [] end
- |  vizTraverseDec (DecEx x) slice bindings accessors ind =  let val () = print (ind^"DecEx\n") in [] end
- |  vizTraverseDec (DecOpen x) slice bindings accessors ind =  let val () = print (ind^"DecOpen\n") in [] end
- |  vizTraverseDec (DecLocal x) slice bindings accessors ind =  let val () = print (ind^"DecLocal\n") in [] end
- |  vizTraverseDec (DecAbsType x) slice bindings accessors ind =  let val () = print (ind^"DecAbsType\n") in [] end
- |  vizTraverseDec (DecAbsWith x) slice bindings accessors ind =  let val () = print (ind^"DecAbsWith\n") in [] end
- |  vizTraverseDec (DecInfix x) slice bindings accessors ind =  let val () = print (ind^"DecInfix\n") in [] end
- |  vizTraverseDec (DecInfixr x) slice bindings accessors ind =  let val () = print (ind^"DecInfixr\n") in [] end
- |  vizTraverseDec (DecNonfix x) slice bindings accessors ind =  let val () = print (ind^"DecNonfix\n") in [] end
- |  vizTraverseDec (DecOverload x) slice bindings accessors ind =  let val () = print (ind^"DecOverload\n") in [] end
- |  vizTraverseDec (DecClass x) slice bindings accessors ind =  let val () = print (ind^"DecClass\n") in [] end
- |  vizTraverseDec _ _ _ _ _ = []
-
-and vizTraverseValBind (ValBindRec x) slice bindings accessors ind = let val () = print (ind^"ValBindRec\n") in [] end
- |  vizTraverseValBind (ValBind x) slice bindings accessors ind = let val () = print (ind^"ValBind\n") in vizTraverseValBindSeq x slice bindings accessors (ind^indent) end
- |  vizTraverseValBind _ _ _ _ _ = []
-
-and vizTraverseValBindSeq (ValBindSeq (s, _, _)) slice bindings accessors ind = let val () = print (ind^"ValBindSeq\n") in vizTraverseValBindCoreList s slice bindings accessors (ind^indent) end
- |  vizTraverseValBindSeq _ _ _ _ _ = []
-
-and vizTraverseValBindCoreList [] _ _ _ _ = []
- |  vizTraverseValBindCoreList (h::t) slice bindings accessors ind = let
-      val (binds, access) = (vizTraverseValBindCore h slice bindings accessors ind)
-    in (vizTraverseValBindCoreList t slice bindings (accessors@access) ind) end
-
-and vizTraverseValBindCore (ValBindCore (p, e, _, _, _)) slice bindings accessors ind = let
-      val () = print (ind ^ "ValBindCore\n")
-      val _ = vizTraverseLabPat p slice bindings accessors (ind^indent)
-      val _ = vizTraverseLabExp e slice bindings accessors (ind^indent)
-    in (bindings,accessors) end
- |  vizTraverseValBindCore _ _ _ _ _ = ([],[])
-
-(* TODO: empty placeholder functions for parts of the SML Syntax Tree not yet supported for visualisation *)
-and vizTraverseSigDec _ _ _ _ ind =  let val () = print (ind^"SigDec\n") in ([],[]) end
-and visTraverseFile _ _ _ _ ind = let val () = print (ind^"File\n") in [] end
+    in ([],[]) end
+ |  vizTraverseId (IdentPcon pcon) slice bindings ind =  let val () = print (ind^"IdentPcon\n") in ([],[]) end
+ |  vizTraverseId _ _ _ _ = ([],[])
 
 (* End fun vizTraverse *)
 

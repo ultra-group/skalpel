@@ -840,5 +840,5 @@ signature ASTSML = sig
 
     val getNamesIdentSeq   : identseq -> string list
 
-    val vizTraverse : progs -> Label.labels -> ((Label.label * Reg.region) * (Label.label * Reg.region)) list
+    val vizTraverse : progs -> Label.labels -> (ident * ident) list
 end
