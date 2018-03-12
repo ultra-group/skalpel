@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 18:19:58 GMT. Skalpel version: 46aab9175b9d757be46de60fc8c32e53f4791ee7"
+val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 18:45:09 GMT. Skalpel version: ff5f532a08e925b5c10d16fb45cc40811a5bb52a"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -361,7 +361,7 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val bruh = AstSML.vizTraverse progs labs
         val () = print ("Found: [" ^ (Int.toString (List.length bruh)) ^ "] accesses\n")
         val json = JSON.ARRAY (accessorListToJson bruh)
-        val out = TextIO.openOut ("viz."^(Int.toString idma)^".json");
+        val out = TextIO.openOut ("viz."^(Int.toString id)^".json");
         val () = JSONPrinter.print' {strm = out, pretty = true } json
       in () end)
 
