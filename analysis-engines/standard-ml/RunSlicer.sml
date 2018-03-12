@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 17:57:02 GMT. Skalpel version: 9bec7d0c6747a5207b91e31dce1ccfee82d5b95e"
+val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 18:19:58 GMT. Skalpel version: 46aab9175b9d757be46de60fc8c32e53f4791ee7"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -352,10 +352,6 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
       val () = print D.sep1'
 
       val () = print "Labelled AST Traversal...\n"
-
-      (* Print AST out *)
-      val _ = AstSML.vizTraverse progs Label.empty
-
       (* traverse looking for accessors in the slice that bindings are also in
        * slice! *)
       val () = eachLabelSet labels (fn (id, labs) => let
@@ -365,7 +361,8 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val bruh = AstSML.vizTraverse progs labs
         val () = print ("Found: [" ^ (Int.toString (List.length bruh)) ^ "] accesses\n")
         val json = JSON.ARRAY (accessorListToJson bruh)
-        val () = JSONPrinter.print' {strm = TextIO.stdOut, pretty = true } json
+        val out = TextIO.openOut ("viz."^(Int.toString idma)^".json");
+        val () = JSONPrinter.print' {strm = out, pretty = true } json
       in () end)
 
     in () end
