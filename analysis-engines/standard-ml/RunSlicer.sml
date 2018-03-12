@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Fri  9 Mar 2018 19:42:41 GMT. Skalpel version: f6dc4462d1e5f397a47e61da22cf618c8572cb8a"
+val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 17:57:02 GMT. Skalpel version: 9bec7d0c6747a5207b91e31dce1ccfee82d5b95e"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -323,6 +323,29 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
             val () = f h
           in eachLabelSet t f end
 
+      fun identToJson (AstSML.Ident (str, id, reg, lab, _)) = let
+            val identStr = JSON.STRING str
+            val identId = JSON.INT (IntInf.fromInt (Id.toInt id))
+            val {from = (lineFrom, charFrom), to = (lineTo, charTo)} = reg
+            val fromPosition = JSON.OBJECT [("line", (JSON.INT (IntInf.fromInt lineFrom))), ("char", (JSON.INT (IntInf.fromInt charFrom)))]
+            val toPosition = JSON.OBJECT [("line", (JSON.INT (IntInf.fromInt lineTo))), ("char", (JSON.INT (IntInf.fromInt charTo)))]
+
+            val identObj = JSON.OBJECT [
+              ("identifier-string", identStr),
+              ("identifier-id", identId),
+              ("from-position", fromPosition),
+              ("to-position", toPosition)
+            ]
+          in identObj end
+
+      fun accessorPairToJson (bind, access) = let
+            val bindObj = ("bind", identToJson bind)
+            val accessObj = ("access", identToJson access)
+          in JSON.OBJECT [bindObj, accessObj] end
+
+      fun accessorListToJson [] = []
+       |  accessorListToJson (h::t) = (accessorPairToJson h)::(accessorListToJson t)
+
       val () = print "Labelled program:\n"
       val () = print (AstSML.printAstProgs progs ^ "\n")
 
@@ -341,6 +364,8 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val () = print "Traversing...\n"
         val bruh = AstSML.vizTraverse progs labs
         val () = print ("Found: [" ^ (Int.toString (List.length bruh)) ^ "] accesses\n")
+        val json = JSON.ARRAY (accessorListToJson bruh)
+        val () = JSONPrinter.print' {strm = TextIO.stdOut, pretty = true } json
       in () end)
 
     in () end
