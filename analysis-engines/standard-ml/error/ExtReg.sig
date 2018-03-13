@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,4 +50,8 @@ signature EXTREG = sig
     val printLispExtRegs : regs -> string
     val printPerlExtRegs : regs -> string
     val printBashExtRegs : regs -> unit
+
+    val extRegsToJson : regs -> JSON.value
+    val extRegListToJson : treeReg list -> JSON.value
+    val getExplodedLinesJson : TextIO.instream -> JSON.value
 end

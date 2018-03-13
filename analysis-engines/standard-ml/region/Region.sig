@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +72,8 @@ signature REG = sig
     val printJsonReg    : region -> string
     val printLispReg    : region -> string
     val printRegList    : region list -> string
+
+    val regToJson : region -> JSON.value
 
     (*val getRegsLine     : int -> region list -> region list * region list*)
 

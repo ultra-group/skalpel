@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2012 2013 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +39,7 @@ datatype constr  = CL | CH | CN
  * These should be changed to meaningful names:
  *   - Red    -> DEFAULT_ERROR_LOCATION
  *   - Blue   -> END_POINT_1
- *   - Purple -> END_POINT_2 
+ *   - Purple -> END_POINT_2
 *   - Green  -> COMMON_RECORD_FIELD
  *   - Orange -> SPECIAL_ERROR_LOCATION
  *       (used to indicate that a location is part of an error
@@ -180,6 +181,24 @@ fun printJsonExtReg (L (r, c, w))     =
 and printJsonExtRegList []         = ""
   | printJsonExtRegList [t]        = printJsonExtReg t
   | printJsonExtRegList (t :: tl)  = printJsonExtReg t ^ "," ^ printJsonExtRegList tl
+
+
+fun extRegsToJson x = JSON.ARRAY (extRegsToJson' x)
+
+and extRegsToJson' [] = []
+ |  extRegsToJson' ((f,r)::t) = (JSON.OBJECT [(f, (extRegListToJson r))])::(extRegsToJson' t)
+
+and extRegListToJson x = JSON.ARRAY (extRegListToJson' x)
+
+and extRegListToJson' [] = []
+ |  extRegListToJson' (h::t) = (extRegToJson h)::(extRegListToJson' t)
+
+and rcwToJSON t r c w = [("type", JSON.STRING t), ("color", JSON.STRING (printColor c)), ("weight", JSON.INT (IntInf.fromInt w)), ("region", Reg.regToJson r)]
+
+and extRegToJson (L (r, c, w)) = JSON.OBJECT (rcwToJSON "leaf" r c w)
+ |  extRegToJson (H (r, c, w)) = JSON.OBJECT (rcwToJSON "head" r c w)
+ |  extRegToJson (N (r, c, w, tl)) = JSON.OBJECT (rcwToJSON "node" r c w)
+
 
 (** Prints extended regions SML style for files in a list of tuples (file, regions) *)
 fun printSmlExtRegs [] = ""
@@ -416,6 +435,19 @@ and printBashExtRegList []        explodedLines previousLineNum = ()
   | printBashExtRegList [t]       explodedLines previousLineNum = printBashExtReg t explodedLines NONE previousLineNum
   | printBashExtRegList (t :: tl) explodedLines previousLineNum = (printBashExtReg t explodedLines (getNextLineRegs (getReg t) (getReg(List.hd tl))) previousLineNum;
 								   printBashExtRegList tl explodedLines (R.getPosLine (R.getTo (getReg t))))
+
+fun explodeLineToJson line = let
+  fun charToJsonString c = JSON.STRING (Char.toString c)
+  val JsonStringArray = (map charToJsonString (String.explode line))
+in JSON.ARRAY JsonStringArray end
+
+fun getExplodedLinesJson' stream =
+      case (TextIO.inputLine stream)
+      of SOME line => (explodeLineToJson line)::(getExplodedLinesJson' stream)
+      | NONE => []
+
+fun getExplodedLinesJson stream = JSON.ARRAY (getExplodedLinesJson' stream)
+
 
 (** getExplodedLines - returns an list of lists, each element is a line of
  * the input stream, which each element of that being a character from the line *)

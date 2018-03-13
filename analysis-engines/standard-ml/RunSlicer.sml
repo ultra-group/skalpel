@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Mon 12 Mar 2018 18:45:09 GMT. Skalpel version: ff5f532a08e925b5c10d16fb45cc40811a5bb52a"
+val SKALPEL_VERSION = "Built with Poly/ML on Tue 13 Mar 2018 16:59:17 GMT. Skalpel version: 1ca987c61dae65d7e82eed459db24d668ecac8fd"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -318,23 +318,13 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
       val (progs, nextLabel, assoc, basisVal) = Parser.consProgs [] filesin Label.firstLab Id.emAssoc 1 false
       val labels = Error.labelsFromList errors
 
-      fun eachLabelSet [] f = ()
-       |  eachLabelSet (h::t) f = let
-            val () = f h
-          in eachLabelSet t f end
-
       fun identToJson (AstSML.Ident (str, id, reg, lab, _)) = let
             val identStr = JSON.STRING str
             val identId = JSON.INT (IntInf.fromInt (Id.toInt id))
-            val {from = (lineFrom, charFrom), to = (lineTo, charTo)} = reg
-            val fromPosition = JSON.OBJECT [("line", (JSON.INT (IntInf.fromInt lineFrom))), ("char", (JSON.INT (IntInf.fromInt charFrom)))]
-            val toPosition = JSON.OBJECT [("line", (JSON.INT (IntInf.fromInt lineTo))), ("char", (JSON.INT (IntInf.fromInt charTo)))]
-
             val identObj = JSON.OBJECT [
               ("identifier-string", identStr),
               ("identifier-id", identId),
-              ("from-position", fromPosition),
-              ("to-position", toPosition)
+              ("region", (Reg.regToJson reg))
             ]
           in identObj end
 
@@ -354,16 +344,27 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
       val () = print "Labelled AST Traversal...\n"
       (* traverse looking for accessors in the slice that bindings are also in
        * slice! *)
-      val () = eachLabelSet labels (fn (id, labs) => let
-        val () = print ("\n" ^ Int.toString id ^ ": ")
+      val each = map (fn err => let
+        val id = Error.getI err
+        val labs = Error.getL err
+        val regs = Error.getR err
+        (*val _ = ExtReg.printBashExtRegs regs*)
+        val () = print ("\n" ^ Int.toString (Error.idToInt id) ^ ": ")
         val () = print (Label.toString labs ^ "\n")
         val () = print "Traversing...\n"
         val bruh = AstSML.vizTraverse progs labs
         val () = print ("Found: [" ^ (Int.toString (List.length bruh)) ^ "] accesses\n")
+        val (f, r) = List.hd regs
+        val extReg = ExtReg.extRegListToJson r
+        val stream = TextIO.openIn (List.hd filesin)
+        val src = ExtReg.getExplodedLinesJson stream
         val json = JSON.ARRAY (accessorListToJson bruh)
-        val out = TextIO.openOut ("viz."^(Int.toString id)^".json");
-        val () = JSONPrinter.print' {strm = out, pretty = true } json
+        val out = TextIO.openOut ("viz."^(Int.toString (Error.idToInt id))^".json");
+        val obj = JSON.OBJECT [("source", src), ("regions", extReg), ("links", json)]
+        val () = JSONPrinter.print' {strm = out, pretty = true } obj
       in () end)
+
+      val _ = each errors
 
     in () end
     (*commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading *)

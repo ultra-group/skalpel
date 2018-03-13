@@ -1,4 +1,5 @@
 (* Copyright 2009 2010 2011 2013 Heriot-Watt University
+ * Copyright 2018 Christian Gregg
  *
  * Skalpel is a free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,6 +95,13 @@ fun printJsonReg {from=(fromLine, fromColumn), to=(toLine, toColumn)} =
     "\"fromColumn\": " ^ Int.toString(fromColumn) ^ ", " ^
     "\"toLine\": " ^ Int.toString(toLine) ^ ", " ^
     "\"toColumn\": " ^ Int.toString(toColumn)
+
+fun regToJson {from=(fromLine, fromColumn), to=(toLine, toColumn)} = JSON.OBJECT [
+  ("fromLine", JSON.INT (IntInf.fromInt(fromLine))),
+  ("fromColumn", JSON.INT (IntInf.fromInt(fromColumn))),
+  ("toLine", JSON.INT (IntInf.fromInt(toLine))),
+  ("toColumn", JSON.INT (IntInf.fromInt(toColumn)))
+]
 
 (** Prints a region in LISP format. *)
 fun printLispReg {from = (x1, y1), to = (x2, y2)} =

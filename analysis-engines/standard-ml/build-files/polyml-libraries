@@ -1,3 +1,4 @@
+structure Word31 = Word;
 structure Unsafe = struct
   structure CharVector = CharVector
   structure Array = Array
