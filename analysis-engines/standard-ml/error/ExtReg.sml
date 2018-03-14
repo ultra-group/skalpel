@@ -438,8 +438,11 @@ and printBashExtRegList []        explodedLines previousLineNum = ()
 
 fun explodeLineToJson line = let
   fun charToJsonString c = JSON.STRING (Char.toString c)
-  val JsonStringArray = (map charToJsonString (String.explode line))
-in JSON.ARRAY JsonStringArray end
+
+	fun convert [] = []
+	 |  convert (h::t) = if (h= #"\n") then convert t else (charToJsonString (h))::(convert t)
+
+in JSON.ARRAY (convert (String.explode line)) end
 
 fun getExplodedLinesJson' stream =
       case (TextIO.inputLine stream)
