@@ -97,10 +97,10 @@ fun printJsonReg {from=(fromLine, fromColumn), to=(toLine, toColumn)} =
     "\"toColumn\": " ^ Int.toString(toColumn)
 
 fun regToJson {from=(fromLine, fromColumn), to=(toLine, toColumn)} = JSON.OBJECT [
-  ("fromLine", JSON.INT (IntInf.fromInt(fromLine))),
-  ("fromColumn", JSON.INT (IntInf.fromInt(fromColumn))),
-  ("toLine", JSON.INT (IntInf.fromInt(toLine))),
-  ("toColumn", JSON.INT (IntInf.fromInt(toColumn)))
+  ("fromLine", JSON.INT (IntInf.fromInt(fromLine-1))),
+  ("fromColumn", JSON.INT (IntInf.fromInt(fromColumn-1))),
+  ("toLine", JSON.INT (IntInf.fromInt(toLine-1))),
+  ("toColumn", JSON.INT (IntInf.fromInt(toColumn-1)))
 ]
 
 (** Prints a region in LISP format. *)

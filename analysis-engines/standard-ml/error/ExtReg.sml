@@ -94,6 +94,13 @@ fun printColor Red    = "R"
   | printColor Orange = "O"
   | printColor Yellow = "Y"
 
+fun printHexColor Red    = "#FF0000"
+ |  printHexColor Blue   = "#0000FF"
+ |  printHexColor Purple = "#FF00FF"
+ |  printHexColor Green  = "#00FF00"
+ |  printHexColor Orange = "#FFA500"
+ |  printHexColor Yellow = "#FFFF00"
+
 (** Boolean value is to denote whether the colour should be boxed *)
 fun printBashColor Red    LEAF = #red (!D.backgroundColors)
   | printBashColor Blue   LEAF = #blue (!D.backgroundColors)
@@ -193,7 +200,7 @@ and extRegListToJson x = JSON.ARRAY (extRegListToJson' x)
 and extRegListToJson' [] = []
  |  extRegListToJson' (h::t) = (extRegToJson h)::(extRegListToJson' t)
 
-and rcwToJSON t r c w = [("type", JSON.STRING t), ("color", JSON.STRING (printColor c)), ("weight", JSON.INT (IntInf.fromInt w)), ("region", Reg.regToJson r)]
+and rcwToJSON t r c w = [("type", JSON.STRING t), ("color", JSON.STRING (printHexColor c)), ("weight", JSON.INT (IntInf.fromInt w)), ("region", Reg.regToJson r)]
 
 and extRegToJson (L (r, c, w)) = JSON.OBJECT (rcwToJSON "leaf" r c w)
  |  extRegToJson (H (r, c, w)) = JSON.OBJECT (rcwToJSON "head" r c w)
