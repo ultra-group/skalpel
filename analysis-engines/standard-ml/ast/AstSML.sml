@@ -1923,11 +1923,13 @@ and vizTraverseId (Ident x) slice bindings ind = let
       val isBound = inBindings bindings str
       val binds = if isBound then "[access]" else "[bind]"
       val () = print (ind ^ "Ident ["^str^"] "^binds^" id: ["^(Int.toString (Id.toInt id))^"]\n")
-      val () = if (L.isin l slice) then print (ind^"in slice: [" ^ str ^ "]\n") else ()
+      val labelIsInSlice = (L.isin l slice)
 
-    in if isBound
-       then ([] ,[((getBinding bindings str), (Ident x))])
-       else ([(Ident x)], [])
+    in if labelIsInSlice
+       then if isBound
+            then ([] ,[((getBinding bindings str), (Ident x))])
+            else ([(Ident x)], [])
+       else ([],[])
     end
  |  vizTraverseId (IdentPcon pcon) slice bindings ind =  let val () = print (ind^"IdentPcon\n") in ([],[]) end
  |  vizTraverseId _ _ _ _ = ([],[])
