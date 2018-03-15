@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Wed 14 Mar 2018 20:05:36 GMT. Skalpel version: cd5aad9804ecaa39baf06c896117deb439f0541d"
+val SKALPEL_VERSION = "Built with Poly/ML on Thu 15 Mar 2018 22:02:37 GMT. Skalpel version: 27236fe126d99c574632a29bd0e5bc11fc5ac2d5"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -348,6 +348,7 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val id = Error.getI err
         val labs = Error.getL err
         val regs = Error.getR err
+        val errorKind = Error.getK err
         (*val _ = ExtReg.printBashExtRegs regs*)
         val () = print ("\n" ^ Int.toString (Error.idToInt id) ^ ": ")
         val () = print (Label.toString labs ^ "\n")
@@ -359,8 +360,9 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val stream = TextIO.openIn (List.hd filesin)
         val src = ExtReg.getExplodedLinesJson stream
         val json = JSON.ARRAY (accessorListToJson bruh)
+        val errorMessage = JSON.STRING (#2 (ErrorKind.printErrKind errorKind assoc))
         val out = TextIO.openOut ("viz."^(Int.toString (Error.idToInt id))^".json");
-        val obj = JSON.OBJECT [("source", src), ("regions", extReg), ("links", json)]
+        val obj = JSON.OBJECT [("source", src), ("regions", extReg), ("links", json), ("msg", errorMessage)]
 
         (* JSONPrinter ends up using Char.toCString to print stuff out, this causes
          * problems for some characters (like the ' character...) and outputs invalid JSON *)
