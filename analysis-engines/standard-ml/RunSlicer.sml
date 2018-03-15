@@ -361,6 +361,9 @@ fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelis
         val json = JSON.ARRAY (accessorListToJson bruh)
         val out = TextIO.openOut ("viz."^(Int.toString (Error.idToInt id))^".json");
         val obj = JSON.OBJECT [("source", src), ("regions", extReg), ("links", json)]
+
+        (* JSONPrinter ends up using Char.toCString to print stuff out, this causes
+         * problems for some characters (like the ' character...) and outputs invalid JSON *)
         val () = JSONPrinter.print' {strm = out, pretty = false } obj
       in () end)
 
