@@ -91,9 +91,6 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 (** Setting for showing slices in the terminal; we set the default setting to NO_DISPLAY. *)
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
-(** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Fri 16 Mar 2018 19:21:32 GMT. Skalpel version: 46ae4067b24b698707dfb280dc20128681139db7"
-
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
 
@@ -508,7 +505,7 @@ fun smlTesStrArgs strArgs =
 	(** Parses the arguments specified on the command-line. *)
 	fun parse [] = ()
 	 |  parse ["--help"] = printHelp ()
-	 |  parse ["-v"] = (filesNeeded := false; print (SKALPEL_VERSION ^ "\n"))
+	 |  parse ["-v"] = (filesNeeded := false; print (Version.SKALPEL_VERSION ^ "\n"))
 	 |  parse ["--show-legend"] = (filesNeeded:=false; printLegend())
 	 |  parse [file] = (filein:=file)
 	  (* have a 0/1/2 case for emacs ui *)

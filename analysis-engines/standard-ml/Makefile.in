@@ -57,11 +57,15 @@ default:
 #                          Building a Skalpel binary                           #
 ################################################################################
 
+gen-version:
+	cp Version.sml Version.sml.original
+	sed -e s/"val BUILT_AT = \".*\""/"val BUILT_AT = \"`date`\""/ -i.tmp Version.sml
+	sed -e s/"val GIT_HASH = \".*\""/"val GIT_HASH = \"`git rev-parse HEAD`\""/ -i.tmp Version.sml
+
 gen-parse:
 	mllex  parse/ML.lex
 	mlyacc parse/ML.grm
-	sed 's/raise (mlyAction i392)/raise (Fail ("Parsing failure: No rule matching program syntax"))/' parse/ML.grm.sml > parse/ML.grm.sml.tmp
-	mv parse/ML.grm.sml.tmp parse/ML.grm.sml
+	sed -e s/"raise (mlyAction i392)"/"raise (Fail (\"Parsing failure: No rule matching program syntax\"))"/ -i.tmp parse/ML.grm.sml
 	mllex  parse/MLB.lex
 	mlyacc parse/MLB.grm
 	mv parse/ML.lex.sml parse/ML-mlton.lex.sml
@@ -71,43 +75,34 @@ gen-parse:
 	mv parse/MLB.grm.sml parse/MLB-mlton.grm.sml
 	mv parse/MLB.grm.sig parse/MLB-mlton.grm.sig
 
-smlnj-bin: gen-cm-sources gen-parse
-	cp RunSlicer.sml RunSlicer.sml.original
-	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with SML\/NJ on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
-	mv RunSlicer.sml.tmp RunSlicer.sml
+smlnj-bin: gen-cm-sources gen-parse gen-version
+	sed -e s/"val BUILT_WITH = \".*\""/"val BUILT_WITH = \"SML\/NJ\""/ -i.tmp Version.sml
 	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/skalpel\", Slicer.smlnjEntryPoint);" | sml
+	mv Version.sml.original Version.sml
 	heap2exec ${TMPDIR}/skalpel.x86-${PLATFORM} ${TMPDIR}/skalpel
 	mkdir -p bin
 	mv ${TMPDIR}/skalpel bin/skalpel
-	mv RunSlicer.sml.original RunSlicer.sml
-
-mlton-base: gen-parse
-	cp RunSlicer.sml RunSlicer.sml.original
-	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with MLton on `date`. Skalpel version: "`git rev-parse HEAD`\"/ RunSlicer.sml > RunSlicer.sml.tmp
-	mv RunSlicer.sml.tmp RunSlicer.sml
 
 documentation:
 	cp doxygen-config-file doxygen-config-file.original
-	sed s/"PROJECT_NUMBER = \".*\""/"PROJECT_NUMBER = \"Git SHA-1: "`git rev-parse HEAD`\"/ doxygen-config-file > doxygen-config-file.tmp
-	mv doxygen-config-file.tmp doxygen-config-file
+	sed -e s/"PROJECT_NUMBER = \".*\""/"PROJECT_NUMBER = \"Git SHA-1: "`git rev-parse HEAD`\"/ -i.tmp doxygen-config-file
 	doxygen doxygen-config-file
 
-mlton-bin: gen-mlb-sources mlton-base
+mlton-bin: gen-mlb-sources gen-parse gen-version
+	sed -e s/"val BUILT_WITH = \".*\""/"val BUILT_WITH = \"MLton\""/ -i.tmp Version.sml
 	echo "val _ = Slicer.mltonEntryPoint ();" > build-files/mlton-control.sml
 	mkdir -p bin
 	mlton -prefer-abs-paths true -output bin/skalpel sources.mlb
-	mv RunSlicer.sml.original RunSlicer.sml
+	mv Version.sml.original Version.sml
 
-polyml-bin: gen-poly-sources gen-parse
-	cp RunSlicer.sml RunSlicer.sml.original
-	sed s/"val SKALPEL_VERSION = \".*\""/"val SKALPEL_VERSION = \"Built with Poly\/ML on `date`. Skalpel version: `git rev-parse HEAD`"\"/ RunSlicer.sml > RunSlicer.sml.tmp
-	mv RunSlicer.sml.tmp RunSlicer.sml
+polyml-bin: gen-poly-sources gen-parse gen-version
+	sed -e s/"val BUILT_WITH = \".*\""/"val BUILT_WITH = \"Poly\/ML\""/ -i.tmp Version.sml
 	poly < sources.poly
+	mv Version.sml.original Version.sml
 	cc -o skalpel skalpel.o -lpolymain -lpolyml -pthread -lgmp -ldl -lm -lstdc++
 	rm skalpel.o
 	mkdir -p bin
 	mv skalpel bin/skalpel
-	mv RunSlicer.sml.original RunSlicer.sml
 
 ################################################################################
 #                          Generating sources.* files                          #
@@ -134,9 +129,6 @@ gen-poly-sources:
 	cat build-files/sources.tes | sed s/^/"use \""/ | sed s/$$/"\";"/ >> sources.poly
 	echo "TextIO.flushOut TextIO.stdOut;" >> sources.poly
 	echo "PolyML.export(\"skalpel\", Slicer.polymlEntryPoint);" >> sources.poly
-
-
-
 
 ################################################################################
 #                          Extra tools (e.g. webdemo)                          #
@@ -169,7 +161,7 @@ mlton-profile: gen-mlb-sources mlton-base
 	mv sources bin/skalpel-profiling
 	./bin/skalpel-profiling -b 2 ../../lib/basis.sml -h out.html -t 60000 test-prog.sml
 	mlprof -show-line true -raw true sources mlmon.out > profile-mlton-`date +%Y-%m-%d`
-	mv RunSlicer.sml.original RunSlicer.sml
+	mv Version.sml.original Version.sml
 
 ################################################################################
 #                        Installation/Uninstall Section                        #

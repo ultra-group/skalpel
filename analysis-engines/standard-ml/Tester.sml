@@ -760,11 +760,17 @@ fun  debuggingVIZ [error] (ast, m, ascid) file fileout counter = let
 	val errorMessageJSON = JSON.STRING (#2 (ErrorKind.printErrKind errorKind ascid))
 	val edgesJSON = AstSML.accessorListToJson accessors
 
+	val versionJSON = JSON.OBJECT [
+		("commit", JSON.STRING (Version.GIT_HASH)),
+		("compiler", JSON.STRING (Version.BUILT_WITH))
+	]
+
 	val json = JSON.OBJECT [
 		("regions", regionsJSON),
 		("links", edgesJSON),
 		("msg", errorMessageJSON),
-		("source", sourceJSON)
+		("source", sourceJSON),
+		("version", versionJSON)
 	]
 
 	val outFile = fileout ^ "-" ^ (Int.toString counter) ^ ".viz.json"
