@@ -656,7 +656,6 @@ fun debuggingJSON errl
     in errorString
     end
 
-
 (** Builds lisp in perl format, called by #debuggingLisp. *)
 fun debuggingLISP' [] _ _ _ _ = ""
   | debuggingLISP' [err] ascid ind bslice basisoverloading =
@@ -732,7 +731,6 @@ fun debuggingPERL errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab b
     "my @error = (" ^ (debuggingPERL' errl ascid "" bslice basisoverloading) ^ ");\n" ^
     "sub getError { return @error; }"
 
-
 (** Bulids errors in BASH format. *)
 fun debuggingBASH' [] _ _ _ _ = ()
   | debuggingBASH' [err] ascid ind bslice basisoverloading =
@@ -745,34 +743,33 @@ fun debuggingBASH' [] _ _ _ _ = ()
 fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     (debuggingBASH' errl ascid "" bslice basisoverloading)
 
-fun debuggingVIZ errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _ =
-	let
-		val error : ERR.error = List.hd errl
-		(* builtInBasis : bool *)
-		val builtInBasis = ERR.getB error
-		(* dependencies : LongId.set *)
-		val dependencies = ERR.getD error
-		(* errorKind : ErrorKind.kind *)
-		val errorKind = ERR.getK error
-		(* id : Error.id *)
-		val id = ERR.getI error
-		(* labels : Label.labels *)
-		val labels = ERR.getL error
-		(* minimisationValue : true *)
-		val minimisationValue = ERR.getM error
-		(* regions : ExtReg.regs*)
-		val regions = ERR.getR error
-		(* removes : id list *)
-		val removes = ERR.getE error
-		(* boundFunction : Label.labels *)
-		val boundFunctions = ERR.getF error
-		(* slice : AstSML.progs*)
-		val slice = ERR.getS error
-		(* time : LargeInt.int*)
-		val time = ERR.getT error
-	in
-		"{ \"id\":" ^ Int.toString (ERR.idToInt id) ^ "}"
-	end
+fun  debuggingVIZ [error] (ast, m, ascid) file fileout counter = let
+	(* errorKind : ErrorKind.kind *)
+	val errorKind = ERR.getK error
+	(* labels : Label.labels *)
+	val labels = ERR.getL error
+	(* regions : ExtReg.regs*)
+	val regions = ERR.getR error
+	(* slice : AstSML.progs*)
+	val slice = ERR.getS error
+
+	val accessors = AstSML.vizTraverse ast labels
+
+	val regionsJSON = ExtReg.extRegListToJson (#2 (List.hd regions))
+	val sourceJSON = ExtReg.getExplodedLinesJson (TextIO.openIn file)
+	val errorMessageJSON = JSON.STRING (#2 (ErrorKind.printErrKind errorKind ascid))
+	val edgesJSON = AstSML.accessorListToJson accessors
+
+	val json = JSON.OBJECT [
+		("regions", regionsJSON),
+		("links", edgesJSON),
+		("msg", errorMessageJSON),
+		("source", sourceJSON)
+	]
+
+	val outFile = fileout ^ "-" ^ (Int.toString counter) ^ ".viz.json"
+	val outSteam = TextIO.openOut outFile
+in JSONPrinter.print' {strm = outSteam, pretty = false } json end
 
 (************************************************************)
 (*                  RUNNING THE SLICER                      *)
@@ -790,6 +787,7 @@ fun getFileBasAndNum nenv filebas =
 fun exportErrors [] _ _ _ _ counter = counter
  |  exportErrors (error::errors) funout time parse cs counter =
 		let
+			(* why do we wrap error into a list????? *)
 			val _ = funout [error] parse cs counter time
 		in exportErrors errors funout time parse cs (counter + 1) end
 

@@ -1793,6 +1793,27 @@ fun inBindings [] _ = false
 
 fun getBinding ((Ident h)::t) id = if ((#1 h) = id) then (Ident h) else getBinding t id
 
+fun accessorListToJson [] = JSON.ARRAY []
+ |  accessorListToJson l = JSON.ARRAY (accessorListToJson' l)
+
+and accessorListToJson' [] = []
+ |  accessorListToJson' (h::t) = (accessorPairToJson h)::(accessorListToJson' t)
+
+and accessorPairToJson (bind, access) = let
+			val bindObj = ("bind", identToJson bind)
+			val accessObj = ("access", identToJson access)
+		in JSON.OBJECT [bindObj, accessObj] end
+
+and identToJson (Ident (str, id, reg, lab, _)) = let
+			val identStr = JSON.STRING str
+			val identId = JSON.INT (IntInf.fromInt (Id.toInt id))
+			val identObj = JSON.OBJECT [
+				("identifier-string", identStr),
+				("identifier-id", identId),
+				("region", (Reg.regToJson reg))
+			]
+		in identObj end
+
 (* return list of `ident` pairs representing (binding, access) *)
 fun vizTraverse (Progs p) slice = let val () = print ("Progs\n") in (vizTraverseProgList p slice "") end
 

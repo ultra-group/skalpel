@@ -67,7 +67,6 @@ signature TESTER = sig
     val debuggingJSON : string temptype
     val debuggingLISP : string temptype
     val debuggingPERL : string temptype
-    val debuggingVIZ  : string temptype
     val debuggingBASH : unit temptype
     val debuggingHTML : Error.error list ->
 			AstSML.packs     ->
@@ -86,6 +85,8 @@ signature TESTER = sig
 			bool        ->
 			string      ->
 			unit
+
+    val debuggingVIZ  : Error.error list -> AstSML.progs * 'a * Id.assoc -> string -> string -> int -> unit
 
     val testFolder     : string ref
     val checktests     : int list -> unit

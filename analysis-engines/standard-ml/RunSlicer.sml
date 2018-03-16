@@ -92,7 +92,7 @@ datatype terminalSliceDisplay = NO_DISPLAY | NON_INTERACTIVE | INTERACTIVE
 val terminalSlices : terminalSliceDisplay ref = ref NO_DISPLAY
 
 (** A value which should not be manually edited, the git hash of the repository is automatically inserted here during compilation. *)
-val SKALPEL_VERSION = "Built with Poly/ML on Thu 15 Mar 2018 22:02:37 GMT. Skalpel version: 27236fe126d99c574632a29bd0e5bc11fc5ac2d5"
+val SKALPEL_VERSION = "Built with Poly/ML on Fri 16 Mar 2018 19:21:32 GMT. Skalpel version: 46ae4067b24b698707dfb280dc20128681139db7"
 
 (** Takes a boolean value b, if true then we are generating a binary for the web demo. *)
 fun setWebDemo b = webdemo := b
@@ -224,7 +224,7 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
 	val dbgperl = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingVIZ with the errors we generated. *)
-	val dbgviz = Tester.debuggingVIZ errs parse bmin times cs initlab true name true nenv basisoverloading
+	val dbgviz = Tester.debuggingVIZ errs parse (List.hd filesin) (#2 bfviz) counter
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _ = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
@@ -234,7 +234,6 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	val _ = genOutputFile bfjson  ""    counter dbgjson st filesin
 	val _ = genOutputFile bflisp ".el"  counter dbglisp st filesin
 	val _ = genOutputFile bfperl ".pl"  counter dbgperl st filesin
-	val _ = genOutputFile bfviz ".viz"  counter dbgviz  st filesin
 	val _ = printFound counter errs time
 	in ()
 	end
@@ -259,7 +258,7 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 	val bfviz = getBoolFile fileviz ".viz"
 
 	(* write the files to the system *)
-	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl bfviz basisoverloading (List.hd filesin)
+	val fout   = export nenv filebas bfhtml bfxml bfsml bfjson bflisp bfperl bfviz basisoverloading filesin
 
 	(* get various information from Tester, such as solution number *)
 	val _      = Option.map (fn t => Tester.setTabSize t) tab
@@ -299,80 +298,13 @@ fun commslicerp' filebas filesin filehtml filexml filesml filejson filelisp file
 		then genFinished bfperl ".pl"   fmperl
 		else ()
 	val _ = genFinished bfjson "" ""
-	val _ = genFinished bfviz ".viz" ""
-
     in ()
     end
 
 (** calls commslicerp', if we are not developing (not dev) then the error is handled, otherwise we leave the error so we can debug. *)
 fun slicerCheckDevMode filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading =
-    if dev then
-    let
-      val () = print D.sep1'
-      val _ = print "In Dev Mode...\n"
-
-      fun dummy _ _ _ _ _ _ _ _ _ _ = ()
-      val (c, errors) = Tester.slicing filebas filesin (dummy) 1 false min true bcs searchspace basisoverloading
-
-      val () = print D.sep1'
-      val (progs, nextLabel, assoc, basisVal) = Parser.consProgs [] filesin Label.firstLab Id.emAssoc 1 false
-      val labels = Error.labelsFromList errors
-
-      fun identToJson (AstSML.Ident (str, id, reg, lab, _)) = let
-            val identStr = JSON.STRING str
-            val identId = JSON.INT (IntInf.fromInt (Id.toInt id))
-            val identObj = JSON.OBJECT [
-              ("identifier-string", identStr),
-              ("identifier-id", identId),
-              ("region", (Reg.regToJson reg))
-            ]
-          in identObj end
-
-      fun accessorPairToJson (bind, access) = let
-            val bindObj = ("bind", identToJson bind)
-            val accessObj = ("access", identToJson access)
-          in JSON.OBJECT [bindObj, accessObj] end
-
-      fun accessorListToJson [] = []
-       |  accessorListToJson (h::t) = (accessorPairToJson h)::(accessorListToJson t)
-
-      val () = print "Labelled program:\n"
-      val () = print (AstSML.printAstProgs progs ^ "\n")
-
-      val () = print D.sep1'
-
-      val () = print "Labelled AST Traversal...\n"
-      (* traverse looking for accessors in the slice that bindings are also in
-       * slice! *)
-      val each = map (fn err => let
-        val id = Error.getI err
-        val labs = Error.getL err
-        val regs = Error.getR err
-        val errorKind = Error.getK err
-        (*val _ = ExtReg.printBashExtRegs regs*)
-        val () = print ("\n" ^ Int.toString (Error.idToInt id) ^ ": ")
-        val () = print (Label.toString labs ^ "\n")
-        val () = print "Traversing...\n"
-        val bruh = AstSML.vizTraverse progs labs
-        val () = print ("Found: [" ^ (Int.toString (List.length bruh)) ^ "] accesses\n")
-        val (f, r) = List.hd regs
-        val extReg = ExtReg.extRegListToJson r
-        val stream = TextIO.openIn (List.hd filesin)
-        val src = ExtReg.getExplodedLinesJson stream
-        val json = JSON.ARRAY (accessorListToJson bruh)
-        val errorMessage = JSON.STRING (#2 (ErrorKind.printErrKind errorKind assoc))
-        val out = TextIO.openOut ("viz."^(Int.toString (Error.idToInt id))^".json");
-        val obj = JSON.OBJECT [("source", src), ("regions", extReg), ("links", json), ("msg", errorMessage)]
-
-        (* JSONPrinter ends up using Char.toCString to print stuff out, this causes
-         * problems for some characters (like the ' character...) and outputs invalid JSON *)
-        val () = JSONPrinter.print' {strm = out, pretty = false } obj
-      in () end)
-
-      val _ = each errors
-
-    in () end
-    (*commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading *)
+    if dev
+    then commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
     else commslicerp' filebas filesin filehtml filexml filesml filejson filelisp fileperl fileviz nenv time tab sol min dev bcs searchspace basisoverloading
 
 (** Called by the emacs interface; sets no tab and uses the solution from sol in utils/Solution.sml. *)
