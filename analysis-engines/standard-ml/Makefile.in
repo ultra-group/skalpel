@@ -66,6 +66,7 @@ gen-parse:
 	mllex  parse/ML.lex
 	mlyacc parse/ML.grm
 	sed -e s/"raise (mlyAction i392)"/"raise (Fail (\"Parsing failure: No rule matching program syntax\"))"/ -i.tmp parse/ML.grm.sml
+	rm parse/ML.grm.sml.tmp
 	mllex  parse/MLB.lex
 	mlyacc parse/MLB.grm
 	mv parse/ML.lex.sml parse/ML-mlton.lex.sml
@@ -79,6 +80,7 @@ smlnj-bin: gen-cm-sources gen-parse gen-version
 	sed -e s/"val BUILT_WITH = \".*\""/"val BUILT_WITH = \"SML\/NJ\""/ -i.tmp Version.sml
 	@echo "CM.make \"sources.cm\"; open Slicer; SMLofNJ.exportFn (\"${TMPDIR}/skalpel\", Slicer.smlnjEntryPoint);" | sml
 	mv Version.sml.original Version.sml
+	rm Version.sml.tmp
 	heap2exec ${TMPDIR}/skalpel.x86-${PLATFORM} ${TMPDIR}/skalpel
 	mkdir -p bin
 	mv ${TMPDIR}/skalpel bin/skalpel
@@ -94,11 +96,13 @@ mlton-bin: gen-mlb-sources gen-parse gen-version
 	mkdir -p bin
 	mlton -prefer-abs-paths true -output bin/skalpel sources.mlb
 	mv Version.sml.original Version.sml
+	rm Version.sml.tmp
 
 polyml-bin: gen-poly-sources gen-parse gen-version
 	sed -e s/"val BUILT_WITH = \".*\""/"val BUILT_WITH = \"Poly\/ML\""/ -i.tmp Version.sml
 	poly < sources.poly
 	mv Version.sml.original Version.sml
+	rm Version.sml.tmp
 	cc -o skalpel skalpel.o -lpolymain -lpolyml -pthread -lgmp -ldl -lm -lstdc++
 	rm skalpel.o
 	mkdir -p bin
