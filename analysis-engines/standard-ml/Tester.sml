@@ -743,7 +743,7 @@ fun debuggingBASH' [] _ _ _ _ = ()
 fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab bfinal name bslice nenv basisoverloading _  =
     (debuggingBASH' errl ascid "" bslice basisoverloading)
 
-fun  debuggingVIZ [error] (ast, m, ascid) file fileout counter = let
+fun  debuggingVIZ [error] (ast, m, ascid) file (create, fileout) counter = let
 	(* errorKind : ErrorKind.kind *)
 	val errorKind = ERR.getK error
 	(* labels : Label.labels *)
@@ -774,8 +774,10 @@ fun  debuggingVIZ [error] (ast, m, ascid) file fileout counter = let
 	]
 
 	val outFile = fileout ^ "-" ^ (Int.toString counter) ^ ".viz.json"
-	val outSteam = TextIO.openOut outFile
-in JSONPrinter.print' {strm = outSteam, pretty = false } json end
+in if create
+   then JSONPrinter.print' {strm = (TextIO.openOut outFile), pretty = false } json
+	 else ()
+end
 
 (************************************************************)
 (*                  RUNNING THE SLICER                      *)

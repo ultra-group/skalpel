@@ -86,7 +86,12 @@ signature TESTER = sig
 			string      ->
 			unit
 
-    val debuggingVIZ  : Error.error list -> AstSML.progs * 'a * Id.assoc -> string -> string -> int -> unit
+    val debuggingVIZ  : Error.error list ->
+                        AstSML.progs * 'a * Id.assoc ->
+                        string ->
+                        bool * string -> 
+                        int ->
+                        unit
 
     val testFolder     : string ref
     val checktests     : int list -> unit

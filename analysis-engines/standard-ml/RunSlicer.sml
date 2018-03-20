@@ -221,7 +221,7 @@ fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz ba
 	(** Holds result of calling #Tester.debuggingPERL with the errors we generated. *)
 	val dbgperl = Tester.debuggingPERL errs parse bmin times cs initlab true name true nenv basisoverloading
 	(** Holds result of calling #Tester.debuggingVIZ with the errors we generated. *)
-	val dbgviz = Tester.debuggingVIZ errs parse (List.hd filesin) (#2 bfviz) counter
+	val dbgviz = Tester.debuggingVIZ errs parse (List.hd filesin) (bfviz) counter
 
 	val dbghtml' = fn sep => dbghtml (fhtml ^ "-" ^ Int.toString counter ^ ".html") filebas false sep
 	val _ = if (!terminalSlices <> NO_DISPLAY) then Tester.debuggingBASH errs parse bmin times cs initlab true name true nenv basisoverloading "" else ()
