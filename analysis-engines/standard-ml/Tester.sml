@@ -753,6 +753,7 @@ fun  debuggingVIZ [error] (ast, m, ascid) file (create, fileout) counter = let
 	(* slice : AstSML.progs*)
 	val slice = ERR.getS error
 
+	(* returns list of accessor/binder pairs that occur within the error slice *)
 	val accessors = AstSML.vizTraverse ast labels
 
 	val regionsJSON = ExtReg.extRegListToJson (#2 (List.hd regions))
@@ -795,10 +796,22 @@ fun getFileBasAndNum nenv filebas =
 fun exportErrors [] _ _ _ _ counter = counter
  |  exportErrors (error::errors) funout time parse cs counter =
 		let
-			(* why do we wrap error into a list????? *)
+			(* cg23: why do we wrap error into a list????? *)
 			val _ = funout [error] parse cs counter time
 		in exportErrors errors funout time parse cs (counter + 1) end
 
+(* NOTE (cg23: on how tf Skalpel gets slicey dicey):
+ * The slicing function is split into 4 helper functions - preSlicing, initSlicing,
+ * runSlicing, and loopSlicing...
+ *
+ * loopSlicing each other function when required.
+ * preSlicing and initSlicing parse the program into an AST, do initial constraint
+ * generation and initialise stuff for enumeration.
+ *
+ * The actual looping is done in runSlicing, which will recursively call itself
+ * until there are no more error to find / we've run out of time. runSlicing also
+ * call exportErrors on every iteration.
+ *)
 (** slicing function - a function to run the slicer. Arguments are as follows:
  * \param filebas file containing the basis
  * \param filesin list containing input files

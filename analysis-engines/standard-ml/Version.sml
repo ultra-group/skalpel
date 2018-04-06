@@ -21,7 +21,8 @@ structure Version : sig
     val SKALPEL_VERSION : string
 
 end = struct
-
+  (* These variables are set automatically during compilation, no manual editting
+   * should be required. No changes should be committed either. *)
   val BUILT_WITH = ""
   val BUILT_AT = ""
   val GIT_HASH = ""

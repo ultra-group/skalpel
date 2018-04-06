@@ -204,6 +204,29 @@ fun printFound counter errors time =
 	   " time="          ^ Int.toString time    ^
 	   " errors="        ^ printErrors  errors  ^ "]\n")
 
+(* NOTE (cg23: on how tf Skalpel gets to output stuff):
+ * This `export` function has a good chunk of its parameters applied in `commslicerp'`
+ * before it gets passed to `Tester.slicing` as `funout` or `fout` (if you see
+ * those in Tester.slicing, they reference this function...)
+ *
+ * The actual outputting format is done through the Tester.debugging* functions,
+ * But actual is delayed until `exportErrors` is called during slicing...
+ *
+ * Arguments from nenv - filesin are applied in `commslicerp'`
+ * The rest are applied in `Tester.exportErrors`
+ *
+ * Somewhere along the line output went from taking a list of errors to only a
+ * single error (probably to make output occur as errors are found, as opposed
+ * to outputting only after all analysis has occured, which could take a while),
+ * but the functions were only 'patched' really, so what happens now is that
+ * `Tester.exportErrors` actually only exports a single error, but that error is
+ * wrapped into a list so that the outputting functions still work.
+ *
+ * Would be ideal to fix how this outputting works, Skalpel supports too many
+ * formats at them moment, and the way output has been implemented feels like
+ * we're missing a trick design-wise.
+ *)
+
 (** Calls the necessary functions to write the *.html, *.xml, *.sml etc to the system. *)
 fun export nenv filebas (bhtml, fhtml) bfxml bfsml bfjson bflisp bfperl bfviz basisoverloading filesin
 	   errs parse bmin times cs initlab name st counter time =
@@ -628,6 +651,42 @@ fun slicerGen [] name = smlTesStrArgs ""
 (******************************************************************************
  *                           Entry point functions                            *
  ******************************************************************************)
+
+(* NOTE (cg23: on how tf Skalpel gets from entry to actual slicing):
+ *  Have 3 different entry points (i.e 'main' functions) for different compilers,
+ *  because for some reason no one can agree on one way to compile SML.
+ *
+ * They all do the same thing in a somewhat convuluted way (convert string list
+ * back to string only to end up back as a string list later on?).
+ *
+ * They all end up calling `smlTesStrArgs`.
+ *
+ * `smlTestArgs` is pretty big, it basically sets up a bunch of ref vals to defaults,
+ * and parses command line flags, again setting appropriate ref vals depending
+ * on the flag being passed (see `parse` inside `smlTesStrArgs`). `parse` has
+ * been refatored, and it should be fairly obvious of how to add a new flag.
+ *
+ * After parsing parameters `slicerFull` is called with a list (why?!) of all
+ * dereferenced parameters (that's what the `!` before the val references do).
+ *
+ * `slicerFull` parses some more parameter (parsing from string to int etc..)
+ * before calling `slicerCheckDevMode`. `slicerCheckDevMode` is a nice helper
+ * for testing stuff out, if you pass the `-d` flag on running skalpel then `dev`
+ * will be set to true and you can run some sketchy code there to test some out.
+ * If dev mode is not set it just passes all the params through to `commslicerp'`.
+ *
+ * `commslicerp'` is where the the output file are set up and the slicing
+ * actually happens, the way output is done is strange (see note on outputting on top
+ * of definition of `export`)
+ *
+ * The actual slicing loop is defined in the `Tester` structure (./Tester.sml)
+ * See note on top of the definition of the `slicing` function in there for a bit
+ * of an overview.
+ *
+ * P.S: all comments are out of date as soon as they are commited... check git logs
+ * to see if changes have been made, keep comments up to date for the sake of
+ * the next devs sanity pls <3
+ *)
 
 (** Entry point for the SML/NJ compiler. *)
 fun smlnjEntryPoint (binaryName, argumentList) = smlTesStrArgs (foldr (fn (x,y)=>x^" "^y) "" argumentList)
