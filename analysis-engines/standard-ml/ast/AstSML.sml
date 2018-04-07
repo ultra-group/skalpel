@@ -1842,7 +1842,9 @@ and vizTraverseExp (ExpAtExp x) bindings ind = let val () = print (ind^"ExpAtExp
  			val () = print (ind^"ExpApp\n")
 			val access = (vizTraverseExp exp bindings (ind^indent))@(vizTraverseAtExp atexp bindings (ind^indent))
 		in access end
- |  vizTraverseExp (ExpCase x) bindings ind =  let val () = print (ind^"ExpCase\n") in raise (ConstructNotSupported "ExpCase") end
+ |  vizTraverseExp (ExpCase (exp, match, _, _, _, _)) bindings ind =  let
+ 			val () = print (ind^"ExpCase\n")
+		in  (vizTraverseLabExp exp bindings (ind^indent))@(vizTraverseMatch match bindings (ind^indent)) end
  |  vizTraverseExp (ExpConsList x) bindings ind =  let val () = print (ind^"ExpConsList\n") in raise (ConstructNotSupported "ExpCase") end
  |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) bindings ind =  let
       val () = print (ind^"ExpOp ["^str^"]\n")
@@ -1924,9 +1926,12 @@ and vizTraversePat (PatAtPat p) bindings ind = let val () = print (ind^"PatAtPat
  |  vizTraversePat (PatAs p) bindings ind =  let val () = print (ind^"PatAs\n") in raise (ConstructNotSupported "PatAs") end
  |  vizTraversePat _ _ _ = ([],[])
 
-and vizTraverseAtPat (AtPatWild (r, _)) bindings ind =  let val () = print (ind^"AtPatWild\n") in raise (ConstructNotSupported "AtPatWild") end
+and vizTraverseAtPat (AtPatWild (r, _)) bindings ind =  let val () = print (ind^"AtPatWild\n") in ([], []) end
  |  vizTraverseAtPat (AtPatId id) bindings ind = let val () = print (ind^"AtPatId\n") in vizTraverseLongId id bindings (ind^indent) end
- |  vizTraverseAtPat (AtPatScon scon) bindings ind =  let val () = print (ind^"AtPatScon\n") in raise (ConstructNotSupported "AtPatScon") end
+ |  vizTraverseAtPat (AtPatScon scon) bindings ind =  let
+ 			val () = print (ind^"AtPatScon\n")
+			val _ = vizTraverseScon scon bindings (ind^indent)
+		in ([], []) end
  |  vizTraverseAtPat (AtPatTuple (labpatlist, _, _, _)) bindings ind =  let val () = print (ind^"AtPatTuple\n") in vizTraverseLabPatList labpatlist bindings [] (ind^indent) end
  |  vizTraverseAtPat (AtPatRecord r) bindings ind =  let val () = print (ind^"AtPatRecord\n") in raise (ConstructNotSupported "AtPatRecord") end
  |  vizTraverseAtPat (AtPatParen p) bindings ind =  let val () = print (ind^"AtPatParen\n") in raise (ConstructNotSupported "AtPatParen") end
@@ -2049,17 +2054,35 @@ in vizTraverseFValBindCoreList t (binds@bindings) (accessors@access) ind end
 and vizTraverseFValBindCore (FVBCoreDots x) bindings ind = ([], [])
  |  vizTraverseFValBindCore (FValBindCore (match, labexp, _, _, _)) bindings ind = let
   val () = print (ind^"FValBindCore\n")
+
+	fun vizTraverseFunNameHelper (FMatchT (labfmatch)) = vizTraverseFunNameHelperLabFMatch labfmatch
+	 |  vizTraverseFunNameHelper (FMatchTTy (labfmatch, labtype, _, _, _)) = vizTraverseFunNameHelperLabFMatch labfmatch
+	 |  vizTraverseFunNameHelper _ = []
+
+	and vizTraverseFunNameHelperLabFMatch (LabFMatch (f, _, _, _)) = vizTraverseFunNameHelperFMatch f
+	 |  vizTraverseFunNameHelperLabFMatch (LabFMatchSl (f, _)) = []
+
+	and vizTraverseFunNameHelperFMatch (FMatchApp (f, _, _, _, _, _) ) = vizTraverseFunNameHelperFMatch f
+	 |  vizTraverseFunNameHelperFMatch (FMatchId (id, b, _)) = [id]
+
+	(* get fun name *)
+	val funName = vizTraverseFunNameHelper match
+
+	(* LHS of fun clause *)
 	val (binds, accessor) = vizTraverseFMatchTy match bindings (ind^indent)
- 	(* lab exp = function body *)
+
+	(* RHS of fun clause *)
 	val accesses = vizTraverseLabExp labexp (binds@bindings) (ind^indent)
-in (binds@bindings, accessor@accesses) end
+in (funName@bindings, accessor@accesses) end
 
 and vizTraverseFMatchTy (FMatchTDots) bindings ind = ([],[])
  |  vizTraverseFMatchTy (FMatchT (labfmatch)) bindings ind = let val () = print (ind^"FMatchT\n") in vizTraverseLabFMatch labfmatch bindings (ind^indent) end
  |  vizTraverseFMatchTy (FMatchTTy (labfmatch, labtype, _, _, _)) bindings ind = let val () = print (ind^"FMatchTTy\n") in vizTraverseLabFMatch labfmatch bindings (ind^indent) end
 
 and vizTraverseLabFMatch LabFMatchDots _ _ = ([], [])
- |  vizTraverseLabFMatch (LabFMatch (f, _, _, _)) bindings ind = let val () = print (ind^"LabFMatch\n") in vizTraverseFMatch f bindings (ind^indent)end
+ |  vizTraverseLabFMatch (LabFMatch (f, _, _, _)) bindings ind = let
+ 			val () = print (ind^"LabFMatch\n")
+		in vizTraverseFMatch f bindings (ind^indent) end
  |  vizTraverseLabFMatch (LabFMatchSl (f, _)) bindings ind = let val () = print (ind^"LabFMatchSl\n") in raise (ConstructNotSupported "LabFMatchSl") end
 
 and vizTraverseFMatch (FMatchId (id, b, _)) bindings ind = let
