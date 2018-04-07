@@ -840,6 +840,8 @@ signature ASTSML = sig
 
     val getNamesIdentSeq   : identseq -> string list
 
+    exception ConstructNotSupported of string
+
     val accessorListToJson : (ident * ident) list -> JSON.value
     val vizTraverse : progs -> Label.labels -> (ident * ident) list
 end

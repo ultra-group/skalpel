@@ -973,18 +973,6 @@ and printAstLTReaDOneList []        = ""
 and printAstLTReaDesc (LTReaDesc (xs, _, _, _)) = printAstLTReaDOneList xs
   | printAstLTReaDesc (LTReaDescDots pl)        = printAstPartList pl
 
-(*and printAstTReaDOne (TReaDOne (dn, ty, _, l, _)) =
-    ldots () ^ printAstDatName dn ^ " = " ^ printAstLabType ty ^ rfdots l
-  | printAstTReaDOne (TReaDOneDots pl)            =
-    printAstPartList pl
-
-and printAstTReaDOneList []        = ""
-  | printAstTReaDOneList [x]       = printAstTReaDOne x
-  | printAstTReaDOneList (x :: xs) = printAstTReaDOne x ^ " and " ^ printAstTReaDOneList xs
-
-and printAstTReaDesc (TReaDesc (xs, _, _)) = printAstTReaDOneList xs
-  | printAstTReaDesc (TReaDescDots pl)     = printAstPartList pl*)
-
 (** Prints an abstract syntax tree form. *)
 and printAstLabSigExp (LabSigExp (e, _, _, l, _)) = ldots () ^ printAstSigExp e ^ rfdots l
   | printAstLabSigExp (LabSigExpDots pl)          = ldots () ^ printAstPartList pl ^ rdots ()
@@ -1784,9 +1772,6 @@ and printAstPat (PatAtPat (atp))                         = printAstAtpat atp
   | printAstPat (PatDots pl)                             =
     ldots () ^ printAstPartList pl ^ rdots ()
 
-(* functions to traverse AST and find/link binder/bindings pairs that exist
- * within a type error...
- * Dot Terms are ignored - Only full (non-sliced) AST should be passed in. *)
 val indent = "    "
 fun inBindings [] _ = false
  |  inBindings ((Ident h)::t) id = if ((#1 h) = id) then true else inBindings t id
@@ -1814,63 +1799,63 @@ and identToJson (Ident (str, id, reg, lab, _)) = let
 			]
 		in identObj end
 
+(* Filters the list of accessors to only contain the identifiers such that their
+ * label is in the slice *)
 fun accessInSlice slice (_, Ident (_, _, _, lab, _)) = L.isin lab slice
-(* return list of `ident` pairs representing (binding, access) *)
+
+exception ConstructNotSupported of string
+
+(* functions to traverse AST and find/link binder/bindings pairs that exist
+ * within a type error...
+ * Dot Terms are ignored - Only full (non-sliced) AST should be passed in.
+ * returns list of `ident` pairs representing (binding, access) *)
 fun vizTraverse (Progs p) slice = let
 	val () = print ("Progs\n")
 	val accesses = vizTraverseProgList p ""
-	val () = print ("accessors: ["^ Int.toString (List.length accesses) ^"]\n")
+	val numberOfAccesses = List.length accesses
+	val () = print ("found [" ^ Int.toString numberOfAccesses ^ "] accesses...\n")
 	val filtered = List.filter (accessInSlice slice) accesses
-	val () = print ("filtered: ["^ Int.toString (List.length filtered) ^"]\n")
+	val numberOfFiltered = List.length filtered
+	val () = print ("[" ^ (Int.toString numberOfFiltered) ^ "/" ^ (Int.toString numberOfAccesses) ^ "] were relevant (in the slice)\n")
 in filtered end
 
-(* return list of `ident` pairs representing (binding, access) *)
 and vizTraverseProgList [] ind = []
- |  vizTraverseProgList (h::t) ind = let
-      val a = vizTraverseProg (#1 h) (ind^indent)
-    in a@(vizTraverseProgList t ind) end
+ |  vizTraverseProgList (h::t) ind = (vizTraverseProg (#1 h) (ind^indent))@(vizTraverseProgList t ind)
 
-(* return list of `ident` pairs representing (binding, access) *)
 and vizTraverseProg (Prog p) ind = let val () = print (ind ^ "Prog\n") in vizTraverseProgOneList p (ind^indent) end
  |  vizTraverseProg _ _ = []
 
-(* return list of `ident` pairs representing (binding, access) *)
 and vizTraverseProgOneList [] _ = []
  |  vizTraverseProgOneList (h::t) ind = (vizTraverseProgOne h ind)@(vizTraverseProgOneList t ind)
 
-(* return list of `ident` pairs representing (binding, access) *)
 and vizTraverseProgOne (ProgOneDec p) ind = let val () = print (ind ^ "ProgOneDec\n") in vizTraverseTopDec p (ind^indent) end
  |  vizTraverseProgOne (ProgOneExp (p, _, _, _, _)) ind = let val () = print (ind ^ "ProgOneExp\n") in vizTraverseExp p [] (ind^indent) end
  |  vizTraverseProgOne (ProgOneFile p) ind = let val () = print (ind ^ "ProgOneFile\n") in [] end
  |  vizTraverseProgOne _ _ = []
 
-and vizTraverseLabExp (LabExp (x, _, _, _, _)) bindings ind = let
-      val () = print (ind^"LabExp\n")
-      val acc = vizTraverseExp x bindings (ind^indent)
-     in acc end
+and vizTraverseLabExp (LabExp (x, _, _, _, _)) bindings ind = let val () = print (ind^"LabExp\n") in vizTraverseExp x bindings (ind^indent) end
  |  vizTraverseLabExp _ _ _ = []
 
 and vizTraverseExp (ExpAtExp x) bindings ind = let val () = print (ind^"ExpAtExp\n") in vizTraverseAtExp x bindings (ind^indent) end
  |  vizTraverseExp (ExpFn (m, _, _, _)) bindings ind = let val () = print (ind^"ExpFn\n") in vizTraverseMatch m bindings (ind^indent) end
  |  vizTraverseExp (ExpApp (exp, atexp, _, _, _, _, _)) bindings ind =  let
  			val () = print (ind^"ExpApp\n")
-			val access = vizTraverseExp exp bindings (ind^indent)
-			val access1 = vizTraverseAtExp atexp bindings (ind^indent)
-		in access@access1 end
- |  vizTraverseExp (ExpCase x) bindings ind =  let val () = print (ind^"ExpCase\n") in [] end
- |  vizTraverseExp (ExpConsList x) bindings ind =  let val () = print (ind^"ExpConsList\n") in [] end
+			val access = (vizTraverseExp exp bindings (ind^indent))@(vizTraverseAtExp atexp bindings (ind^indent))
+		in access end
+ |  vizTraverseExp (ExpCase x) bindings ind =  let val () = print (ind^"ExpCase\n") in raise (ConstructNotSupported "ExpCase") end
+ |  vizTraverseExp (ExpConsList x) bindings ind =  let val () = print (ind^"ExpConsList\n") in raise (ConstructNotSupported "ExpCase") end
  |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) bindings ind =  let
       val () = print (ind^"ExpOp ["^str^"]\n")
       val left = vizTraverseLabExp expl bindings (ind^indent)
       val right = vizTraverseLabExp expr bindings (ind^indent)
     in left@right end
- |  vizTraverseExp (ExpOr x) bindings ind =  let val () = print (ind^"ExpOr\n") in [] end
- |  vizTraverseExp (ExpAnd x) bindings ind =  let val () = print (ind^"ExpAnd\n") in [] end
- |  vizTraverseExp (ExpTyped x) bindings ind =  let val () = print (ind^"ExpTyped\n") in [] end
- |  vizTraverseExp (ExpIte x) bindings ind =  let val () = print (ind^"ExpIte\n") in [] end
- |  vizTraverseExp (ExpWhile x) bindings ind =  let val () = print (ind^"ExpWhile\n") in [] end
- |  vizTraverseExp (ExpRaise x) bindings ind =  let val () = print (ind^"ExpRaise\n") in [] end
- |  vizTraverseExp (ExpHandle x) bindings ind =  let val () = print (ind^"ExpHandle\n") in [] end
+ |  vizTraverseExp (ExpOr x) bindings ind =  let val () = print (ind^"ExpOr\n") in raise (ConstructNotSupported "ExpOr") end
+ |  vizTraverseExp (ExpAnd x) bindings ind =  let val () = print (ind^"ExpAnd\n") in raise (ConstructNotSupported "ExpAnd") end
+ |  vizTraverseExp (ExpTyped x) bindings ind =  let val () = print (ind^"ExpTyped\n") in raise (ConstructNotSupported "ExpTyped") end
+ |  vizTraverseExp (ExpIte x) bindings ind =  let val () = print (ind^"ExpIte\n") in raise (ConstructNotSupported "ExpIte") end
+ |  vizTraverseExp (ExpWhile x) bindings ind =  let val () = print (ind^"ExpWhile\n") in raise (ConstructNotSupported "ExpWhile") end
+ |  vizTraverseExp (ExpRaise x) bindings ind =  let val () = print (ind^"ExpRaise\n") in raise (ConstructNotSupported "ExpRaise") end
+ |  vizTraverseExp (ExpHandle x) bindings ind =  let val () = print (ind^"ExpHandle\n") in raise (ConstructNotSupported "ExpHandle") end
  |  vizTraverseExp (ExpDots x) bindings ind =  let val () = print (ind^"ExpDots\n") in [] end
 
 and vizTraverseAtExp (AtExpId x) bindings ind =  let
@@ -1878,20 +1863,20 @@ and vizTraverseAtExp (AtExpId x) bindings ind =  let
       val (binds, access) = vizTraverseLongId x bindings (ind^indent)
     in access end
  |  vizTraverseAtExp (AtExpScon x) bindings ind =  let val () = print (ind^"AtExpScon\n") in [] end
- |  vizTraverseAtExp (AtExpTuple x) bindings ind =  let val () = print (ind^"AtExpTuple\n") in [] end
- |  vizTraverseAtExp (AtExpRecord x) bindings ind =  let val () = print (ind^"AtExpRecord\n") in [] end
- |  vizTraverseAtExp (AtExpSlRec x) bindings ind =  let val () = print (ind^"AtExpSlRec\n") in [] end
+ |  vizTraverseAtExp (AtExpTuple x) bindings ind =  let val () = print (ind^"AtExpTuple\n") in raise (ConstructNotSupported "AtExpTuple") end
+ |  vizTraverseAtExp (AtExpRecord x) bindings ind =  let val () = print (ind^"AtExpRecord\n") in raise (ConstructNotSupported "AtExpRecord") end
+ |  vizTraverseAtExp (AtExpSlRec x) bindings ind =  let val () = print (ind^"AtExpSlRec\n") in raise (ConstructNotSupported "AtExpSlRec") end
  |  vizTraverseAtExp (AtExpLet (d, lexp, r, l, n)) bindings ind =  let
       val () = print (ind^"AtExpLet\n")
       val (binds, accesses) = vizTraverseDecs d bindings (ind^indent)
       val a = vizTraverseLabExp lexp (binds@bindings) (ind^indent)
     in a@accesses end
- |  vizTraverseAtExp (AtExpDLet x) bindings ind =  let val () = print (ind^"AtExpDLet\n") in [] end
- |  vizTraverseAtExp (AtExpParen x) bindings ind =  let val () = print (ind^"AtExpParen\n") in [] end
- |  vizTraverseAtExp (AtExpList x) bindings ind =  let val () = print (ind^"AtExpList\n") in [] end
- |  vizTraverseAtExp (AtExpProj x) bindings ind =  let val () = print (ind^"AtExpProj\n") in [] end
- |  vizTraverseAtExp (AtExpSeq x) bindings ind =  let val () = print (ind^"AtExpSeq\n") in [] end
- |  vizTraverseAtExp (AtExpQuote x) bindings ind = let val () = print (ind^"AtExpQuote\n") in [] end
+ |  vizTraverseAtExp (AtExpDLet x) bindings ind =  let val () = print (ind^"AtExpDLet\n") in raise (ConstructNotSupported "AtExpDLet") end
+ |  vizTraverseAtExp (AtExpParen x) bindings ind =  let val () = print (ind^"AtExpParen\n") in raise (ConstructNotSupported "AtExpParen") end
+ |  vizTraverseAtExp (AtExpList x) bindings ind =  let val () = print (ind^"AtExpList\n") in raise (ConstructNotSupported "AtExpList") end
+ |  vizTraverseAtExp (AtExpProj x) bindings ind =  let val () = print (ind^"AtExpProj\n") in raise (ConstructNotSupported "AtExpProj") end
+ |  vizTraverseAtExp (AtExpSeq x) bindings ind =  let val () = print (ind^"AtExpSeq\n") in raise (ConstructNotSupported "AtExpSeq") end
+ |  vizTraverseAtExp (AtExpQuote x) bindings ind = let val () = print (ind^"AtExpQuote\n") in raise (ConstructNotSupported "AtExpQuote") end
  |  vizTraverseAtExp _ _ _ = []
 
 and vizTraverseMatch (Match (rules, region, nextLabel)) bindings ind = vizTraverseMatchRuleList rules bindings ind
@@ -1929,24 +1914,24 @@ and vizTraverseLabPat (LabPat (x, _, _, _, _)) bindings ind = let val () = print
  |  vizTraverseLabPat _ _ _ = ([],[])
 
 and vizTraversePat (PatAtPat p) bindings ind = let val () = print (ind^"PatAtPat\n") in vizTraverseAtPat p bindings (ind^indent) end
- |  vizTraversePat (PatApp p) bindings ind =  let val () = print (ind^"PatApp\n") in ([],[]) end
- |  vizTraversePat (PatConsList p) bindings ind =  let val () = print (ind^"PatConsList\n") in ([],[]) end
- |  vizTraversePat (PatOp p) bindings ind =  let val () = print (ind^"PatOp\n") in ([],[]) end
- |  vizTraversePat (PatTyped p) bindings ind =  let val () = print (ind^"PatTyped\n") in ([],[]) end
- |  vizTraversePat (PatAs p) bindings ind =  let val () = print (ind^"PatAs\n") in ([],[]) end
+ |  vizTraversePat (PatApp p) bindings ind =  let val () = print (ind^"PatApp\n") in raise (ConstructNotSupported "PatApp") end
+ |  vizTraversePat (PatConsList p) bindings ind =  let val () = print (ind^"PatConsList\n") in raise (ConstructNotSupported "PatConsList") end
+ |  vizTraversePat (PatOp p) bindings ind =  let val () = print (ind^"PatOp\n") in raise (ConstructNotSupported "PatOp") end
+ |  vizTraversePat (PatTyped p) bindings ind =  let val () = print (ind^"PatTyped\n") in raise (ConstructNotSupported "PatTyped") end
+ |  vizTraversePat (PatAs p) bindings ind =  let val () = print (ind^"PatAs\n") in raise (ConstructNotSupported "PatAs") end
  |  vizTraversePat _ _ _ = ([],[])
 
-and vizTraverseAtPat (AtPatWild (r, _)) bindings ind =  let val () = print (ind^"AtPatWild\n") in ([],[]) end
+and vizTraverseAtPat (AtPatWild (r, _)) bindings ind =  let val () = print (ind^"AtPatWild\n") in raise (ConstructNotSupported "AtPatWild") end
  |  vizTraverseAtPat (AtPatId id) bindings ind = let val () = print (ind^"AtPatId\n") in vizTraverseLongId id bindings (ind^indent) end
- |  vizTraverseAtPat (AtPatScon scon) bindings ind =  let val () = print (ind^"AtPatScon\n") in ([],[]) end
- |  vizTraverseAtPat (AtPatTuple t) bindings ind =  let val () = print (ind^"AtPatTuple\n") in ([],[]) end
- |  vizTraverseAtPat (AtPatRecord r) bindings ind =  let val () = print (ind^"AtPatRecord\n") in ([],[]) end
- |  vizTraverseAtPat (AtPatParen p) bindings ind =  let val () = print (ind^"AtPatParen\n") in ([],[]) end
- |  vizTraverseAtPat (AtPatList l) bindings ind = let val () = print (ind^"printAstPartList\n") in ([],[]) end
- |  vizTraverseAtPat (AtPatOr x) bindings ind =  let val () = print (ind^"AtPatOr\n") in ([],[]) end
+ |  vizTraverseAtPat (AtPatScon scon) bindings ind =  let val () = print (ind^"AtPatScon\n") in raise (ConstructNotSupported "AtPatScon") end
+ |  vizTraverseAtPat (AtPatTuple t) bindings ind =  let val () = print (ind^"AtPatTuple\n") in raise (ConstructNotSupported "AtPatTuple") end
+ |  vizTraverseAtPat (AtPatRecord r) bindings ind =  let val () = print (ind^"AtPatRecord\n") in raise (ConstructNotSupported "AtPatRecord") end
+ |  vizTraverseAtPat (AtPatParen p) bindings ind =  let val () = print (ind^"AtPatParen\n") in raise (ConstructNotSupported "AtPatParen") end
+ |  vizTraverseAtPat (AtPatList l) bindings ind = let val () = print (ind^"AtPatList\n") in raise (ConstructNotSupported "AtPatList") end
+ |  vizTraverseAtPat (AtPatOr x) bindings ind =  let val () = print (ind^"AtPatOr\n") in raise (ConstructNotSupported "AtPatOr") end
  |  vizTraverseAtPat _ _ _ = ([],[])
 
-and vizTraverseLongId (LongIdQual l) bindings ind =  let val () = print (ind^"LongIdQual\n") in ([],[]) end
+and vizTraverseLongId (LongIdQual l) bindings ind =  let val () = print (ind^"LongIdQual\n") in raise (ConstructNotSupported "LongQualId") end
  |  vizTraverseLongId (LongIdId l) bindings ind = let val () = print (ind^"LongIdId\n") in vizTraverseId l bindings (ind^indent) end
  |  vizTraverseLongId _ _ _ = ([],[])
 
@@ -1959,28 +1944,25 @@ and vizTraverseId (Ident x) bindings ind = let
        then ([] ,[((getBinding bindings str), (Ident x))])
        else ([(Ident x)], [])
     end
- |  vizTraverseId (IdentPcon pcon) bindings ind =  let val () = print (ind^"IdentPcon\n") in ([],[]) end
+ |  vizTraverseId (IdentPcon pcon) bindings ind =  let val () = print (ind^"IdentPcon\n") in raise (ConstructNotSupported "IdentPcon") end
  |  vizTraverseId _ _ _ = ([],[])
 
  (* return list of `ident` pairs representing (binding, access) *)
+
 and vizTraverseTopDec (TopDec t) ind = let val () = print (ind ^ "TopDec\n") in vizTraverseTopDecOneList t [] (ind^indent) end
  |  vizTraverseTopDec _ _ = []
 
- (* return list of `ident` pairs representing (binding, access) *)
 and vizTraverseTopDecOneList [] _ _ = []
  |  vizTraverseTopDecOneList (h::t) bindings ind = let
       val (binds, accesses) = vizTraverseTopDecOne h bindings ind
     in (accesses)@(vizTraverseTopDecOneList t (binds@bindings) ind) end
 
-(* returns pair (bindings, accessings)
- * where bindings is a `ident list` representing bindings in scope
- * and accessings is a `(ident * ident) list` represent accesings *)
-and vizTraverseTopDecOne (TopDecOneTes (t, _)) bindings ind = let val () = print (ind ^ "TopDecOneTes\n") in ([],[]) end
+and vizTraverseTopDecOne (TopDecOneTes (t, _)) bindings ind = let val () = print (ind ^ "TopDecOneTes\n") in raise (ConstructNotSupported "TopDecOneTes") end
  |  vizTraverseTopDecOne (TopDecOneDec (t, _)) bindings ind = let val () = print (ind ^ "TopDecOneDec\n") in vizTraverseTopDecOneDec t bindings (ind^indent) end
  |  vizTraverseTopDecOne _ _ _ = ([],[])
 
 and vizTraverseTopDecOneDec (ATopDecStr s) bindings ind = let val () = print (ind ^ "ATopDecStr\n") in vizTraverseStrDec s bindings (ind^indent) end
- |  vizTraverseTopDecOneDec (ATopDecSig s) bindings ind = let val () = print (ind ^ "ATopDecSig\n") in ([],[]) end
+ |  vizTraverseTopDecOneDec (ATopDecSig s) bindings ind = let val () = print (ind ^ "ATopDecSig\n") in raise (ConstructNotSupported "ATopDecSig") end
  |  vizTraverseTopDecOneDec _ _ _ = ([],[])
 
 and vizTraverseStrDec (StrDec (l, _, _)) bindings ind = vizTraverseStrDecOneList l bindings [] ind
@@ -2004,23 +1986,23 @@ and vizTraverseDecList [] bindings accessors ind = (bindings, accessors)
 
 and vizTraverseDec (DecVal (_, valbind, _, _)) bindings ind =  vizTraverseValBind valbind bindings ind
  |  vizTraverseDec (DecFVal (_, valbind, _, _)) bindings ind = vizTraverseFValBind valbind bindings ind
- |  vizTraverseDec (DecDatType x) bindings ind =  let val () = print (ind^"DecDatType\n") in ([],[]) end
- |  vizTraverseDec (DecDatWith x) bindings ind =  let val () = print (ind^"DecDatWith\n") in ([],[]) end
- |  vizTraverseDec (DecDatRep x) bindings ind =  let val () = print (ind^"DecDatRep\n") in ([],[]) end
- |  vizTraverseDec (DecType x) bindings ind =  let val () = print (ind^"DecType\n") in ([],[]) end
- |  vizTraverseDec (DecEx x) bindings ind =  let val () = print (ind^"DecEx\n") in ([],[]) end
- |  vizTraverseDec (DecOpen x) bindings ind =  let val () = print (ind^"DecOpen\n") in ([],[]) end
- |  vizTraverseDec (DecLocal x) bindings ind =  let val () = print (ind^"DecLocal\n") in ([],[]) end
- |  vizTraverseDec (DecAbsType x) bindings ind =  let val () = print (ind^"DecAbsType\n") in ([],[]) end
- |  vizTraverseDec (DecAbsWith x) bindings ind =  let val () = print (ind^"DecAbsWith\n") in ([],[]) end
- |  vizTraverseDec (DecInfix x) bindings ind =  let val () = print (ind^"DecInfix\n") in ([],[]) end
- |  vizTraverseDec (DecInfixr x) bindings ind =  let val () = print (ind^"DecInfixr\n") in ([],[]) end
- |  vizTraverseDec (DecNonfix x) bindings ind =  let val () = print (ind^"DecNonfix\n") in ([],[]) end
- |  vizTraverseDec (DecOverload x) bindings ind =  let val () = print (ind^"DecOverload\n") in ([],[]) end
- |  vizTraverseDec (DecClass x) bindings ind =  let val () = print (ind^"DecClass\n") in ([],[]) end
+ |  vizTraverseDec (DecDatType x) bindings ind =  let val () = print (ind^"DecDatType\n") in raise (ConstructNotSupported "DecDatType") end
+ |  vizTraverseDec (DecDatWith x) bindings ind =  let val () = print (ind^"DecDatWith\n") in raise (ConstructNotSupported "DecDatWith") end
+ |  vizTraverseDec (DecDatRep x) bindings ind =  let val () = print (ind^"DecDatRep\n") in raise (ConstructNotSupported "DecDatRep") end
+ |  vizTraverseDec (DecType x) bindings ind =  let val () = print (ind^"DecType\n") in raise (ConstructNotSupported "DecType") end
+ |  vizTraverseDec (DecEx x) bindings ind =  let val () = print (ind^"DecEx\n") in raise (ConstructNotSupported "DecEx") end
+ |  vizTraverseDec (DecOpen x) bindings ind =  let val () = print (ind^"DecOpen\n") in raise (ConstructNotSupported "DecOpen") end
+ |  vizTraverseDec (DecLocal x) bindings ind =  let val () = print (ind^"DecLocal\n") in raise (ConstructNotSupported "DecLocal") end
+ |  vizTraverseDec (DecAbsType x) bindings ind =  let val () = print (ind^"DecAbsType\n") in raise (ConstructNotSupported "DecAbsType") end
+ |  vizTraverseDec (DecAbsWith x) bindings ind =  let val () = print (ind^"DecAbsWith\n") in raise (ConstructNotSupported "DecAbsWith") end
+ |  vizTraverseDec (DecInfix x) bindings ind =  let val () = print (ind^"DecInfix\n") in raise (ConstructNotSupported "DecInfix") end
+ |  vizTraverseDec (DecInfixr x) bindings ind =  let val () = print (ind^"DecInfixr\n") in raise (ConstructNotSupported "DecInfixr") end
+ |  vizTraverseDec (DecNonfix x) bindings ind =  let val () = print (ind^"DecNonfix\n") in raise (ConstructNotSupported "DecNonfix") end
+ |  vizTraverseDec (DecOverload x) bindings ind =  let val () = print (ind^"DecOverload\n") in raise (ConstructNotSupported "DecOverload") end
+ |  vizTraverseDec (DecClass x) bindings ind =  let val () = print (ind^"DecClass\n") in raise (ConstructNotSupported "DecClass") end
  |  vizTraverseDec _ _ _ = ([],[])
 
-and vizTraverseValBind (ValBindRec x) bindings ind = let val () = print (ind^"ValBindRec\n") in ([],[]) end
+and vizTraverseValBind (ValBindRec x) bindings ind = let val () = print (ind^"ValBindRec\n") in raise (ConstructNotSupported "ValBindRec") end
  |  vizTraverseValBind (ValBind x) bindings ind = let val () = print (ind^"ValBind\n") in vizTraverseValBindSeq x bindings (ind^indent) end
  |  vizTraverseValBind _ _ _ = ([],[])
 
@@ -2070,23 +2052,21 @@ and vizTraverseFMatchTy (FMatchTDots) bindings ind = ([],[])
 
 and vizTraverseLabFMatch LabFMatchDots _ _ = ([], [])
  |  vizTraverseLabFMatch (LabFMatch (f, _, _, _)) bindings ind = let val () = print (ind^"LabFMatch\n") in vizTraverseFMatch f bindings (ind^indent)end
- |  vizTraverseLabFMatch (LabFMatchSl (f, _)) bindings ind = let val () = print (ind^"LabFMatchSl\n") in ([], []) end
+ |  vizTraverseLabFMatch (LabFMatchSl (f, _)) bindings ind = let val () = print (ind^"LabFMatchSl\n") in raise (ConstructNotSupported "LabFMatchSl") end
 
 and vizTraverseFMatch (FMatchId (id, b, _)) bindings ind = let
 			val () = print (ind^"FMatchId\n")
-
 			(* gets binding of fun name *)
 			val (binds, accesses) = vizTraverseId id bindings (ind^indent)
 		in (binds@bindings, accesses) end
-
  |  vizTraverseFMatch (FMatchApp (f, labatpat, _, _, _, _)) bindings ind = let
  			val () = print (ind^"FMatchApp\n")
  			val (binds, accesses) = vizTraverseFMatch f bindings (ind^indent)
 			val (b1, a1) = vizTraverseLabAtPat labatpat (binds@bindings) (ind^indent)
 		in (b1@binds@bindings, accesses@a1) end
- |  vizTraverseFMatch (FMatchSlApp (f, labpat, _)) bindings ind = let val () = print (ind^"FMatchSlApp\n") in ([], []) end
- |  vizTraverseFMatch (FMatchNoApp (f, _)) bindings ind = let val () = print (ind^"FMatchNoApp\n") in ([], []) end
- |  vizTraverseFMatch FMatchDots _ ind = let val () = print (ind^"FMatchDots\n") in ([], []) end
+ |  vizTraverseFMatch (FMatchSlApp (f, labpat, _)) bindings ind = let val () = print (ind^"FMatchSlApp\n") in raise (ConstructNotSupported "FMatchSlApp") end
+ |  vizTraverseFMatch (FMatchNoApp (f, _)) bindings ind = let val () = print (ind^"FMatchNoApp\n") in raise (ConstructNotSupported "FMatchNoApp") end
+ |  vizTraverseFMatch FMatchDots _ ind = let val () = print (ind^"FMatchDots\n") in raise (ConstructNotSupported "FMatchDots") end
 
 and vizTraverseLabAtPat (LabAtPat (a, _, _, _)) bindings ind = let val () = print (ind^"LabAtPat\n") in vizTraverseAtPat a bindings (ind^indent) end
  |  vizTraverseLabAtPat (LabAtPatDots x) bindings ind = ([], [])
@@ -2101,6 +2081,7 @@ and vizTraverseScon (SconInt (str, _, _, _, _)) bindings ind = let val () = prin
 
 (** Prints non-basis programs. *)
 fun printNonBasProgs (Progs xs) = printNonBasProgList xs
+
 (** Prints an abstract syntax tree form. *)
 and printNonBasProgList [] = ""
  | printNonBasProgList [(prog, file, _, _)] =
@@ -2116,9 +2097,9 @@ and printNonBasProgList [] = ""
       else ldots () ^ printAstProg prog ^ rpdots file ^ sep () ^ printNonBasProgList xs
    end
 
-
 (** Extracts the non basis part of a program. *)
 fun getNonBasProgs (Progs xs) = Progs (getNonBasProgList xs)
+
 (** Extracts the non basis part of a program. *)
 and getNonBasProgList [] = []
   | getNonBasProgList ((prog, file, x, y) :: xs) =
@@ -2127,7 +2108,6 @@ and getNonBasProgList [] = []
        then getNonBasProgList xs
        else (prog, file, x, y) :: (getNonBasProgList xs)
     end
-
 
 (** Extracting the labels of fval bindings *)
 and getLabsFValFMatch (FMatchId _) = SOME []
@@ -2225,16 +2205,13 @@ fun longstridToLid (LongStrIdQual (sid, lid, _, lab, _)) =
   | longstridToLid (LongStrIdId sid) = stridToLid sid
   | longstridToLid (LongStrIdDots _) = NONE
 
-
 (** True if a long id is a pcon. *)
 fun longidIsPcon (LongIdId (IdentPcon _)) = true
   | longidIsPcon _ = false
 
-
 (** True if a long id is not long. *)
 fun shortLongId (LongIdId _) = true
   | shortLongId _ = false
-
 
 (** Turns a pcon into a Pcon.  *)
 fun pconToPcon PconDots = NONE
@@ -2249,8 +2226,6 @@ fun longidToPcon (LongIdQual (_, lid, _, _, _)) =
     longidToPcon lid
   | longidToPcon (LongIdId id) = identToPcon id
   | longidToPcon (LongIdDots _) = NONE
-
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun getlabIdent (Ident (_, _, _, l, _))   = L.singleton l
@@ -2277,9 +2252,7 @@ fun getlabDatName (DatName (tvs, _, _, _)) = getlabTypeVarseq tvs
 fun getlabLDatName (LDatName (tvs, _, _, _)) = getlabTypeVarseq tvs
   | getlabLDatName LDatNameDots              = L.empty
 
-
 (* get labels of a labidty *)
-
 
 (*fun getlabelsPcon (PconBool (_, _, _, l, _)) = L.singleton l
   | getlabelsPcon (PconNil  (_, _, _, l, _)) = L.singleton l
@@ -2306,11 +2279,7 @@ fun getlabelsIdentTy (IdentTyId id)               = getlabelsIdent id
 fun getlabelsLabIdTy (LabIdTy (id, _, l, _)) = L.cons l (getlabelsIdentTy id)
   | getlabelsLabIdTy (LabIdTyDots _)         = L.empty
 
-
-
-
 (* get label and name of an identifier *)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun getlabstPcon (PconBool (s, _, _, l, _)) = SOME (l, l, s)
@@ -2337,9 +2306,7 @@ fun getlabstIdentTy (IdentTyId id)               = getlabstIdent id
 fun getlabstLabIdTy (LabIdTy (id, _, _, _)) = getlabstIdentTy id
   | getlabstLabIdTy (LabIdTyDots _)         = NONE
 
-
 (* get id and lab of a strid *)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun getlabidStrId (StrId (_, n, _, l, _)) = SOME (n, l)
@@ -2372,13 +2339,11 @@ fun getlabidClass (Class (_, id, _, lab, _)) = SOME (id, lab)
 fun getlabidLabclass (LabClass (class, _, _, _)) = getlabidClass class
   | getlabidLabclass (LabClassDots _)            = NONE
 
-
 (* Extract the label from a labid *)
 
 (** Extracts information from a abstract syntax tree node. *)
 fun getLabelLabId (LabId (_, _, lab, _)) = L.singleton lab
   | getLabelLabId (LabIdDots _)          = L.empty
-
 
 (* Extract the ident label from a labid *)
 
@@ -2399,7 +2364,6 @@ fun getLabelsIdLabId (LabId (ident, _, lab, _)) =
 	 NONE      => NONE
        | SOME lab' => SOME (lab, lab'))
   | getLabelsIdLabId (LabIdDots _) = NONE
-
 
 (* Get the type variables from some type related expressions *)
 
@@ -2809,7 +2773,6 @@ and getTypeVarProg (Prog xs)     = foldr (fn (x, y) => (getTypeVarProgOne x) @ y
 
 (** Extracts information from a abstract syntax tree node. *)
 and getTypeVarProgs (Progs xs) = foldr (fn ((x, _, _, _), y) => (getTypeVarProg x) @ y) [] xs
-
 
 (* return the next label of a term *)
 
@@ -3365,9 +3328,7 @@ and getProgOneListNext []                            = NONE
 and getProgNext (Prog xs)                            = getProgOneListNext xs
   | getProgNext (ProgDots pl)                        = getPartListNext pl
 
-
 (* First ones *)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun getFirstList xs f =
@@ -3749,9 +3710,7 @@ and getProgOneListFirst xs                            = getFirstList xs getProgO
 and getProgFirst (Prog xs)                            = getProgOneListFirst xs
   | getProgFirst (ProgDots pl)                        = getPartListFirst pl
 
-
 (* expressions within a rec value binding must be functions *)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun isExpFnScon (SconInt    (_, _, _, l, _)) = L.singleton l
@@ -3850,7 +3809,6 @@ fun isExpFnValBindSeq (ValBindSeq (xs, _, _)) =
 
 (* within a pattern, there cannot be real constants *)
 
-
 (** Extracts information from a abstract syntax tree node. *)
 fun isPatScon (SconInt    _)             = NONE
   | isPatScon (SconWord   _)             = NONE
@@ -3858,7 +3816,6 @@ fun isPatScon (SconInt    _)             = NONE
   | isPatScon (SconString _)             = NONE
   | isPatScon (SconChar   _)             = NONE
   | isPatScon SconDots                   = NONE
-
 
 (* extract the files used by another one *)
 
@@ -3888,17 +3845,13 @@ fun extractFilesProgOne (ProgOneDec x)        = extractFilesTopDec x
 fun extractFilesProg (Prog xs) = foldr (fn (x, y) => (extractFilesProgOne x) @ y) [] xs
   | extractFilesProg _ = []
 
-
 (**)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun combineProg (Prog xs) (Prog ys) = Prog (xs @ ys)
   | combineProg _ _ = raise EH.DeadBranch "80"
 
-
 (**)
-
 
 (** Extracts information from a abstract syntax tree node. *)
 fun isClearBasisSmlTes (SmlTesCBas _) = true
@@ -3922,7 +3875,6 @@ fun isClearBasisProgOne (ProgOneDec x)  = isClearBasisTopDec x
 fun isClearBasisProg (Prog xs) =
     foldr (fn (x, y) => (isClearBasisProgOne x) orelse y) false xs
   | isClearBasisProg _ = false
-
 
 (* Extract the identifier from an identifier row.
  * This is used by the parser to record the infix operators.*)

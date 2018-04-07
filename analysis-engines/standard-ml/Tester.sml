@@ -755,6 +755,10 @@ fun  debuggingVIZ [error] (ast, m, ascid) file (create, fileout) counter = let
 
 	(* returns list of accessor/binder pairs that occur within the error slice *)
 	val accessors = AstSML.vizTraverse ast labels
+	handle AstSML.ConstructNotSupported s => let
+		val () = print ("> Language Construct [" ^ s ^ "] has not been implemented.\n")
+		val () = print ("> No Links will be drawn.\n")
+	in [] end
 
 	val regionsJSON = ExtReg.extRegListToJson (#2 (List.hd regions))
 	val sourceJSON = ExtReg.getExplodedLinesJson (TextIO.openIn file)
