@@ -746,30 +746,47 @@ fun debuggingBASH errl (ast, m, ascid) bmin (t1, t2, t3, t4, t5) envcs initlab b
 fun  debuggingVIZ [error] (ast, m, ascid) file (create, fileout) counter = let
 	(* errorKind : ErrorKind.kind *)
 	val errorKind = ERR.getK error
+
 	(* labels : Label.labels *)
 	val labels = ERR.getL error
+
 	(* regions : ExtReg.regs*)
 	val regions = ERR.getR error
+
 	(* slice : AstSML.progs*)
 	val slice = ERR.getS error
 
-	(* returns list of accessor/binder pairs that occur within the error slice *)
+	(* returns list of accessor/binder pairs that occur within the error slice
+   * handle the ConstructNotSupported exception (which is raised upon traversing
+	 * an un-implemented construct) by returning an empty list of accessors.
+	 * Empty list so that we don't confuse output by only drawing some links -
+	 * doing this might confuse user by implying some identifiers are less important
+	 * than others. *)
 	val accessors = AstSML.vizTraverse ast labels
 	handle AstSML.ConstructNotSupported s => let
 		val () = print ("> Language Construct [" ^ s ^ "] has not been implemented.\n")
 		val () = print ("> No Links will be drawn.\n")
 	in [] end
 
+  (* encodes highlighting regions into JSON format *)
 	val regionsJSON = ExtReg.extRegListToJson (#2 (List.hd regions))
+
+	(* encodes the original source code into JSON format *)
 	val sourceJSON = ExtReg.getExplodedLinesJson (TextIO.openIn file)
+
+	(* encodes the error message into JSON format *)
 	val errorMessageJSON = JSON.STRING (#2 (ErrorKind.printErrKind errorKind ascid))
+
+	(* encodes accessor/binding information into json *)
 	val edgesJSON = AstSML.accessorListToJson accessors
 
+	(* encodes Skalpel version information into JSON *)
 	val versionJSON = JSON.OBJECT [
 		("commit", JSON.STRING (Version.GIT_HASH)),
 		("compiler", JSON.STRING (Version.BUILT_WITH))
 	]
 
+	(* creates the top-level JSON object for output *)
 	val json = JSON.OBJECT [
 		("regions", regionsJSON),
 		("links", edgesJSON),
