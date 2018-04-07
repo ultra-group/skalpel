@@ -1862,8 +1862,8 @@ and vizTraverseAtExp (AtExpId x) bindings ind =  let
       val () = print (ind^"AtExpId\n")
       val (binds, access) = vizTraverseLongId x bindings (ind^indent)
     in access end
- |  vizTraverseAtExp (AtExpScon x) bindings ind =  let val () = print (ind^"AtExpScon\n") in [] end
- |  vizTraverseAtExp (AtExpTuple x) bindings ind =  let val () = print (ind^"AtExpTuple\n") in raise (ConstructNotSupported "AtExpTuple") end
+ |  vizTraverseAtExp (AtExpScon x) bindings ind =  let val () = print (ind^"AtExpScon\n") in vizTraverseScon x bindings (ind^indent) end
+ |  vizTraverseAtExp (AtExpTuple (labexplist, _, _, _)) bindings ind =  let val () = print (ind^"AtExpTuple\n") in vizTraverseLabExpList labexplist bindings (ind^indent) end
  |  vizTraverseAtExp (AtExpRecord x) bindings ind =  let val () = print (ind^"AtExpRecord\n") in raise (ConstructNotSupported "AtExpRecord") end
  |  vizTraverseAtExp (AtExpSlRec x) bindings ind =  let val () = print (ind^"AtExpSlRec\n") in raise (ConstructNotSupported "AtExpSlRec") end
  |  vizTraverseAtExp (AtExpLet (d, lexp, r, l, n)) bindings ind =  let
@@ -1878,6 +1878,9 @@ and vizTraverseAtExp (AtExpId x) bindings ind =  let
  |  vizTraverseAtExp (AtExpSeq x) bindings ind =  let val () = print (ind^"AtExpSeq\n") in raise (ConstructNotSupported "AtExpSeq") end
  |  vizTraverseAtExp (AtExpQuote x) bindings ind = let val () = print (ind^"AtExpQuote\n") in raise (ConstructNotSupported "AtExpQuote") end
  |  vizTraverseAtExp _ _ _ = []
+
+ and vizTraverseLabExpList [] bindings ind = []
+  |  vizTraverseLabExpList (h::t) bindings ind = (vizTraverseLabExp h bindings ind)@(vizTraverseLabExpList t bindings ind)
 
 and vizTraverseMatch (Match (rules, region, nextLabel)) bindings ind = vizTraverseMatchRuleList rules bindings ind
  |  vizTraverseMatch _ _ _ = []
