@@ -1845,7 +1845,7 @@ and vizTraverseExp (ExpAtExp x) bindings ind = let val () = print (ind^"ExpAtExp
  |  vizTraverseExp (ExpCase (exp, match, _, _, _, _)) bindings ind =  let
  			val () = print (ind^"ExpCase\n")
 		in  (vizTraverseLabExp exp bindings (ind^indent))@(vizTraverseMatch match bindings (ind^indent)) end
- |  vizTraverseExp (ExpConsList x) bindings ind =  let val () = print (ind^"ExpConsList\n") in raise (ConstructNotSupported "ExpCase") end
+ |  vizTraverseExp (ExpConsList x) bindings ind =  let val () = print (ind^"ExpConsList\n") in raise (ConstructNotSupported "ExpConsList") end
  |  vizTraverseExp (ExpOp (str,_,expl,expr,_,_,_)) bindings ind =  let
       val () = print (ind^"ExpOp ["^str^"]\n")
       val left = vizTraverseLabExp expl bindings (ind^indent)
@@ -1874,8 +1874,8 @@ and vizTraverseAtExp (AtExpId x) bindings ind =  let
       val a = vizTraverseLabExp lexp (binds@bindings) (ind^indent)
     in a@accesses end
  |  vizTraverseAtExp (AtExpDLet x) bindings ind =  let val () = print (ind^"AtExpDLet\n") in raise (ConstructNotSupported "AtExpDLet") end
- |  vizTraverseAtExp (AtExpParen x) bindings ind =  let val () = print (ind^"AtExpParen\n") in raise (ConstructNotSupported "AtExpParen") end
- |  vizTraverseAtExp (AtExpList x) bindings ind =  let val () = print (ind^"AtExpList\n") in raise (ConstructNotSupported "AtExpList") end
+ |  vizTraverseAtExp (AtExpParen (p, _, _, _, _)) bindings ind =  let val () = print (ind^"AtExpParen\n") in vizTraverseLabExp p bindings (ind^indent) end
+ |  vizTraverseAtExp (AtExpList (l, _, _, _)) bindings ind =  let val () = print (ind^"AtExpList\n") in vizTraverseLabExpList l bindings (ind^indent) end
  |  vizTraverseAtExp (AtExpProj x) bindings ind =  let val () = print (ind^"AtExpProj\n") in raise (ConstructNotSupported "AtExpProj") end
  |  vizTraverseAtExp (AtExpSeq x) bindings ind =  let val () = print (ind^"AtExpSeq\n") in raise (ConstructNotSupported "AtExpSeq") end
  |  vizTraverseAtExp (AtExpQuote x) bindings ind = let val () = print (ind^"AtExpQuote\n") in raise (ConstructNotSupported "AtExpQuote") end
@@ -1921,7 +1921,11 @@ and vizTraverseLabPat (LabPat (x, _, _, _, _)) bindings ind = let val () = print
 and vizTraversePat (PatAtPat p) bindings ind = let val () = print (ind^"PatAtPat\n") in vizTraverseAtPat p bindings (ind^indent) end
  |  vizTraversePat (PatApp p) bindings ind =  let val () = print (ind^"PatApp\n") in raise (ConstructNotSupported "PatApp") end
  |  vizTraversePat (PatConsList p) bindings ind =  let val () = print (ind^"PatConsList\n") in raise (ConstructNotSupported "PatConsList") end
- |  vizTraversePat (PatOp p) bindings ind =  let val () = print (ind^"PatOp\n") in raise (ConstructNotSupported "PatOp") end
+ |  vizTraversePat (PatOp (ope, _, l, r, _, _, _)) bindings ind =  let
+ 			val () = print (ind^"PatOp [" ^ ope ^ "]\n")
+			val (b1,a1) = vizTraverseLabPat l bindings (ind^indent)
+			val (b2,a2) = vizTraverseLabPat r bindings (ind^indent)
+		in (b2@b1,a1@a2) end
  |  vizTraversePat (PatTyped p) bindings ind =  let val () = print (ind^"PatTyped\n") in raise (ConstructNotSupported "PatTyped") end
  |  vizTraversePat (PatAs p) bindings ind =  let val () = print (ind^"PatAs\n") in raise (ConstructNotSupported "PatAs") end
  |  vizTraversePat _ _ _ = ([],[])
@@ -1933,9 +1937,9 @@ and vizTraverseAtPat (AtPatWild (r, _)) bindings ind =  let val () = print (ind^
 			val _ = vizTraverseScon scon bindings (ind^indent)
 		in ([], []) end
  |  vizTraverseAtPat (AtPatTuple (labpatlist, _, _, _)) bindings ind =  let val () = print (ind^"AtPatTuple\n") in vizTraverseLabPatList labpatlist bindings [] (ind^indent) end
- |  vizTraverseAtPat (AtPatRecord r) bindings ind =  let val () = print (ind^"AtPatRecord\n") in raise (ConstructNotSupported "AtPatRecord") end
- |  vizTraverseAtPat (AtPatParen p) bindings ind =  let val () = print (ind^"AtPatParen\n") in raise (ConstructNotSupported "AtPatParen") end
- |  vizTraverseAtPat (AtPatList l) bindings ind = let val () = print (ind^"AtPatList\n") in raise (ConstructNotSupported "AtPatList") end
+ |  vizTraverseAtPat (AtPatRecord p) bindings ind =  let val () = print (ind^"AtPatRecord\n") in raise (ConstructNotSupported "AtPatRecord") end
+ |  vizTraverseAtPat (AtPatParen (p, _, _, _, _)) bindings ind =  let val () = print (ind^"AtPatParen\n") in vizTraverseLabPat p bindings (ind^indent) end
+ |  vizTraverseAtPat (AtPatList (l, _, _, _)) bindings ind = let val () = print (ind^"AtPatList\n") in vizTraverseLabPatList l bindings [] (ind^indent) end
  |  vizTraverseAtPat (AtPatOr x) bindings ind =  let val () = print (ind^"AtPatOr\n") in raise (ConstructNotSupported "AtPatOr") end
  |  vizTraverseAtPat _ _ _ = ([],[])
 
