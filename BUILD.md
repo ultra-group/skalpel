@@ -12,8 +12,9 @@ A (hopefully) short and easy step by step to building Skalpel from source.
 
 1. Clone this repository: `git clone https://github.com/ultra-group/skalpel`
 2. Move to source root: `cd skalpel/analysis-engines/standard-ml`
-3. Run autoconf: `autoconf configure.ac`
-4. Run configuration script: `./configure`
+3. Run autoconf: `autoconf configure.ac > configure`
+4. Allow script to execute: `chmod +x configure`
+5. Run configuration script: `./configure`
     - You can pass `./configure --prefix=<path>` to change the installation location
-5. Build! `make mlton-bin`
-6. Install: `make install`
+6. Build! `make mlton-bin`
+7. Install: `make install`
