@@ -1854,7 +1854,12 @@ and vizTraverseExp (ExpAtExp x) bindings ind = let val () = print (ind^"ExpAtExp
  |  vizTraverseExp (ExpOr x) bindings ind =  let val () = print (ind^"ExpOr\n") in raise (ConstructNotSupported "ExpOr") end
  |  vizTraverseExp (ExpAnd x) bindings ind =  let val () = print (ind^"ExpAnd\n") in raise (ConstructNotSupported "ExpAnd") end
  |  vizTraverseExp (ExpTyped x) bindings ind =  let val () = print (ind^"ExpTyped\n") in raise (ConstructNotSupported "ExpTyped") end
- |  vizTraverseExp (ExpIte x) bindings ind =  let val () = print (ind^"ExpIte\n") in raise (ConstructNotSupported "ExpIte") end
+ |  vizTraverseExp (ExpIte (i, t, e, _, _, _)) bindings ind =  let
+ 			val () = print (ind^"ExpIte\n")
+			val ifExp = vizTraverseLabExp i bindings (ind^indent)
+			val thenExp = vizTraverseLabExp t bindings (ind^indent)
+			val elseExp = vizTraverseLabExp e bindings (ind^indent)
+		in ifExp@thenExp@elseExp end
  |  vizTraverseExp (ExpWhile x) bindings ind =  let val () = print (ind^"ExpWhile\n") in raise (ConstructNotSupported "ExpWhile") end
  |  vizTraverseExp (ExpRaise x) bindings ind =  let val () = print (ind^"ExpRaise\n") in raise (ConstructNotSupported "ExpRaise") end
  |  vizTraverseExp (ExpHandle x) bindings ind =  let val () = print (ind^"ExpHandle\n") in raise (ConstructNotSupported "ExpHandle") end
@@ -1952,6 +1957,13 @@ and vizTraverseLongId (LongIdQual l) bindings ind =  let val () = print (ind^"Lo
  |  vizTraverseLongId (LongIdId l) bindings ind = let val () = print (ind^"LongIdId\n") in vizTraverseId l bindings (ind^indent) end
  |  vizTraverseLongId _ _ _ = ([],[])
 
+(* NOTE: having the logic for whether an identifier is a access of a binding here
+ * is probably not the best...
+ * A better solution would be to just return the identifier her and implement the
+ * the logic higher uo in the AST traversal...., sometimes we probably dont even
+ * need any logic - the identifier will inherently be an access of binding depending
+ * on the construct of which it is part.
+ *)
 and vizTraverseId (Ident x) bindings ind = let
       val (str, id, r, l, n) = x
       val isBound = inBindings bindings str
