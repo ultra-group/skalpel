@@ -1800,14 +1800,16 @@ and identToJson (Ident (str, id, reg, lab, _)) = let
 		in identObj end
 
 (* Filters the list of accessors to only contain the identifiers such that their
- * label is in the slice *)
+ * label is in the slice
+ * Could remove this if we pass the sliced AST to vizTraverse ...
+ *)
 fun accessInSlice slice (_, Ident (_, _, _, lab, _)) = L.isin lab slice
 
 exception ConstructNotSupported of string
 
 (* functions to traverse AST and find/link binder/bindings pairs that exist
  * within a type error...
- * Dot Terms are ignored - Only full (non-sliced) AST should be passed in.
+ *
  * returns list of `ident` pairs representing (binding, access) *)
 fun vizTraverse (Progs p) slice = let
 	val () = print ("Progs\n")
@@ -1969,7 +1971,7 @@ and vizTraverseLongId (LongIdQual l) bindings ind =  let val () = print (ind^"Lo
  * is probably not the best...
  * A better solution would be to just return the identifier her and implement the
  * the logic higher uo in the AST traversal...., sometimes we probably dont even
- * need any logic - the identifier will inherently be an access of binding depending
+ * need any logic - the identifier will inherently be an access or binding depending
  * on the construct of which it is part.
  *)
 and vizTraverseId (Ident x) bindings ind = let
@@ -1983,8 +1985,6 @@ and vizTraverseId (Ident x) bindings ind = let
     end
  |  vizTraverseId (IdentPcon pcon) bindings ind =  let val () = print (ind^"IdentPcon\n") in raise (ConstructNotSupported "IdentPcon") end
  |  vizTraverseId _ _ _ = ([],[])
-
- (* return list of `ident` pairs representing (binding, access) *)
 
 and vizTraverseTopDec (TopDec t) ind = let val () = print (ind ^ "TopDec\n") in vizTraverseTopDecOneList t [] (ind^indent) end
  |  vizTraverseTopDec _ _ = []
