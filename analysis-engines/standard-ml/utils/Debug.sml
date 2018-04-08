@@ -57,7 +57,7 @@ datatype debugFiles = JSON | UNIF | LABEL | TY | MLGRM | AZE | RUN | ENV | TEST 
  *  file specified in environment variable $SKALPEL_LABELLED_BASIS.
  * \arg \b TEMP. For debugging of temporary values. Debug statements
  *  with these values should \b not exist for long. *)
-datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP | MINIMISATION | CONSTRAINT_SOLVE_PP
+datatype debugFeature = EQUALITY_TYPES | CONSTRAINT_PATH | CONSTRAINT_GENERATION | CONSTRAINT_SOLVING | TESTING | PARSING | STATE | PROGRAM_LABELLING | BASIS_LABELLING | TEMP | MINIMISATION | CONSTRAINT_SOLVE_PP | VISUALISATION
 
 (* used to generate random colors for brackets of labelled program output *)
 (* val rand = Random.rand (0,6) *)
@@ -134,6 +134,8 @@ val debugBasisLabelling       : bool ref = ref false
 
 val debugConstraintSolvePp : bool ref = ref false
 
+val debugVisualisation : bool ref = ref false
+
 
 (** Appends #textReset to the string given as an argument *)
 fun printReset str =
@@ -152,6 +154,7 @@ fun enableDebugFeature EQUALITY_TYPES = debugEqualityTypes := true
   | enableDebugFeature BASIS_LABELLING   = debugBasisLabelling   := true
   | enableDebugFeature MINIMISATION      = debugMinimisation     := true
   | enableDebugFeature CONSTRAINT_SOLVE_PP = debugConstraintSolvePp := true
+  | enableDebugFeature VISUALISATION = debugVisualisation := true
 
 (** Given a constructor of #debugFiles, prints the filename it stands to represent. *)
 fun printFilename JSON   = "JsonParser.sml"
@@ -191,6 +194,8 @@ fun printDebug file EQUALITY_TYPES stringFunction =
     if (!debug) andalso (!debugConstraintSolving) then print ("(CONSTRAINT_SOLVING) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n") else ()
   | printDebug file CONSTRAINT_SOLVE_PP stringFunction =
     if (!debug) andalso (!debugConstraintSolvePp) then print ("(CONSTRAINT_SOLV_PP) "^printFilename file^":\n" ^ (stringFunction()) ^ !textReset ^ "\n") else ()
+  | printDebug file VISUALISATION stringFunction =
+    if (!debug) andalso (!debugVisualisation) then print ("(VISUALISATION): " ^ (stringFunction ()) ^ !textReset ^ "\n") else ()
   | printDebug file TESTING stringFunction =
     if (!debug) andalso (!debugTesting) then print ("(TESTING) "^printFilename file^": " ^ (stringFunction()) ^ !textReset ^ "\n") else ()
   | printDebug file PARSING stringFunction =
