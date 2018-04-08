@@ -1851,8 +1851,16 @@ and vizTraverseExp (ExpAtExp x) bindings ind = let val () = print (ind^"ExpAtExp
       val left = vizTraverseLabExp expl bindings (ind^indent)
       val right = vizTraverseLabExp expr bindings (ind^indent)
     in left@right end
- |  vizTraverseExp (ExpOr x) bindings ind =  let val () = print (ind^"ExpOr\n") in raise (ConstructNotSupported "ExpOr") end
- |  vizTraverseExp (ExpAnd x) bindings ind =  let val () = print (ind^"ExpAnd\n") in raise (ConstructNotSupported "ExpAnd") end
+ |  vizTraverseExp (ExpOr (l, r, _, _, _)) bindings ind =  let
+ 			val () = print (ind^"ExpOr\n")
+			val left = vizTraverseLabExp l bindings (ind^indent)
+			val right = vizTraverseLabExp r bindings (ind^indent)
+		in left@right end
+ |  vizTraverseExp (ExpAnd (l, r, _, _, _)) bindings ind =  let
+ 			val () = print (ind^"ExpAnd\n")
+			val left = vizTraverseLabExp l bindings (ind^indent)
+			val right = vizTraverseLabExp r bindings (ind^indent)
+		in left@right end
  |  vizTraverseExp (ExpTyped x) bindings ind =  let val () = print (ind^"ExpTyped\n") in raise (ConstructNotSupported "ExpTyped") end
  |  vizTraverseExp (ExpIte (i, t, e, _, _, _)) bindings ind =  let
  			val () = print (ind^"ExpIte\n")
