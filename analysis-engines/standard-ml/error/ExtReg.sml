@@ -204,7 +204,7 @@ and rcwToJSON t r c w = [("type", JSON.STRING t), ("color", JSON.STRING (printHe
 
 and extRegToJson (L (r, c, w)) = JSON.OBJECT (rcwToJSON "leaf" r c w)
  |  extRegToJson (H (r, c, w)) = JSON.OBJECT (rcwToJSON "head" r c w)
- |  extRegToJson (N (r, c, w, tl)) = JSON.OBJECT (rcwToJSON "node" r c w)
+ |  extRegToJson (N (r, c, w, tl)) = JSON.OBJECT ((rcwToJSON "node" r c w)@[("regions", extRegListToJson tl)])
 
 
 (** Prints extended regions SML style for files in a list of tuples (file, regions) *)
