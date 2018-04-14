@@ -1826,16 +1826,18 @@ in filtered end
 and vizTraverseProgList [] ind = []
  |  vizTraverseProgList (h::t) ind = (vizTraverseProg (#1 h) (ind^indent))@(vizTraverseProgList t ind)
 
-and vizTraverseProg (Prog p) ind = let val () = printViz (ind ^ "Prog") in vizTraverseProgOneList p (ind^indent) end
+and vizTraverseProg (Prog p) ind = let val () = printViz (ind ^ "Prog") in vizTraverseProgOneList p [] (ind^indent) end
  |  vizTraverseProg _ _ = []
 
-and vizTraverseProgOneList [] _ = []
- |  vizTraverseProgOneList (h::t) ind = (vizTraverseProgOne h ind)@(vizTraverseProgOneList t ind)
+and vizTraverseProgOneList [] _ _ = []
+ |  vizTraverseProgOneList (h::t) bindings ind = let
+ 		val (b, a) = (vizTraverseProgOne h bindings ind)
+in a@(vizTraverseProgOneList t (b@bindings) ind) end
 
-and vizTraverseProgOne (ProgOneDec p) ind = let val () = printViz (ind ^ "ProgOneDec") in vizTraverseTopDec p (ind^indent) end
- |  vizTraverseProgOne (ProgOneExp (p, _, _, _, _)) ind = let val () = printViz (ind ^ "ProgOneExp") in vizTraverseExp p [] (ind^indent) end
- |  vizTraverseProgOne (ProgOneFile p) ind = let val () = printViz (ind ^ "ProgOneFile") in [] end
- |  vizTraverseProgOne _ _ = []
+and vizTraverseProgOne (ProgOneDec p) bindings ind = let val () = printViz (ind ^ "ProgOneDec") in vizTraverseTopDec p bindings (ind^indent) end
+ |  vizTraverseProgOne (ProgOneExp (p, _, _, _, _)) bindings ind = let val () = printViz (ind ^ "ProgOneExp") in ([], (vizTraverseExp p bindings (ind^indent))) end
+ |  vizTraverseProgOne (ProgOneFile p) bindings ind = let val () = printViz (ind ^ "ProgOneFile") in raise (ConstructNotSupported "ProgOneFile") end
+ |  vizTraverseProgOne _ _ _ = ([], [])
 
 and vizTraverseLabExp (LabExp (x, _, _, _, _)) bindings ind = let val () = printViz (ind^"LabExp") in vizTraverseExp x bindings (ind^indent) end
  |  vizTraverseLabExp _ _ _ = []
@@ -1988,13 +1990,13 @@ and vizTraverseId (Ident x) bindings ind = let
  |  vizTraverseId (IdentPcon pcon) bindings ind =  let val () = printViz (ind^"IdentPcon") in raise (ConstructNotSupported "IdentPcon") end
  |  vizTraverseId _ _ _ = ([],[])
 
-and vizTraverseTopDec (TopDec t) ind = let val () = printViz (ind ^ "TopDec") in vizTraverseTopDecOneList t [] (ind^indent) end
- |  vizTraverseTopDec _ _ = []
+and vizTraverseTopDec (TopDec t) bindings ind = let val () = printViz (ind ^ "TopDec") in vizTraverseTopDecOneList t bindings [] (ind^indent) end
+ |  vizTraverseTopDec _ bindings _ = ([], [])
 
-and vizTraverseTopDecOneList [] _ _ = []
- |  vizTraverseTopDecOneList (h::t) bindings ind = let
-      val (binds, accesses) = vizTraverseTopDecOne h bindings ind
-    in (accesses)@(vizTraverseTopDecOneList t (binds@bindings) ind) end
+and vizTraverseTopDecOneList [] b a _ = (b, a)
+ |  vizTraverseTopDecOneList (h::t) bindings accesses ind = let
+      val (binds, a) = vizTraverseTopDecOne h bindings ind
+    in (vizTraverseTopDecOneList t (binds@bindings) (a@accesses) ind) end
 
 and vizTraverseTopDecOne (TopDecOneTes (t, _)) bindings ind = let val () = printViz (ind ^ "TopDecOneTes") in raise (ConstructNotSupported "TopDecOneTes") end
  |  vizTraverseTopDecOne (TopDecOneDec (t, _)) bindings ind = let val () = printViz (ind ^ "TopDecOneDec") in vizTraverseTopDecOneDec t bindings (ind^indent) end
